@@ -9,7 +9,8 @@ from pathlib import Path
 from ._export import derive_export_layouts_from_bindings
 from ._schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._temporal import select_revision
-from ._validate import RegistryValidator, _check_all_id_references
+from ._validate import RegistryValidator
+from ._validate_references import _check_all_id_references
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]

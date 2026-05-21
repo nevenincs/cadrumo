@@ -30,6 +30,7 @@ from ._bindings import (
     resolve_previous_filing_binding_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
+    unsupported_ledger_iva_observations,
     validate_invoice_binding_definition,
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
@@ -216,9 +217,9 @@ from ._schema import (
 )
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
-from ._validate import (
+from ._validate import RegistryValidator
+from ._validate_references import (
     CrossDomainSnapshotCheck,
-    RegistryValidator,
     register_cross_domain_snapshot_check,
 )
 from ._workbook_parity import (
@@ -464,6 +465,7 @@ __all__ = [
     "save_parity_scenario",
     "save_parity_tape",
     "scan_workbook",
+    "unsupported_ledger_iva_observations",
     "validate_invoice_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
