@@ -31,6 +31,13 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    # The round-trip helper writes its synthetic certificate to
+    # `<backend>/certificate.p12`. The certificate auth backend probes
+    # the path from `Settings.aeat_certificate_path`, so the env var
+    # must name the same file the operator configures — otherwise
+    # `configured` (operational readiness) and the backend health
+    # summary would describe two different paths.
+    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(tmp_path / "certificate.p12"))
     monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))

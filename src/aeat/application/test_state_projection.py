@@ -201,3 +201,51 @@ def test_projection_without_active_profile_is_empty() -> None:
     assert projection.workspace.drafts == 0
     assert projection.auth.configured is False
     assert projection.pending_obligations == ()
+
+
+def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
+    """The auth readiness sub-record reports the same "no provider
+    configured" state whether or not the live backend is probed.
+
+    ``auth test`` probes; ``auth status`` does not. When no provider is
+    configured and none requested, the projection must not invent a
+    default provider for the probing caller — both report the empty
+    provider, ``available: False``, and an empty health summary.
+    """
+
+    _register_active_profile()
+
+    unprobed = build_operator_state_projection(probe_live_backend=False)
+    probed = build_operator_state_projection(probe_live_backend=True)
+
+    assert unprobed.auth.provider == ""
+    assert probed.auth.provider == unprobed.auth.provider
+    assert probed.auth.available == unprobed.auth.available is False
+    assert probed.auth.configured == unprobed.auth.configured is False
+    assert probed.auth.health_summary == unprobed.auth.health_summary == ""
+
+
+def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
+    """``configured`` must never be ``True`` while ``health_summary``
+    reports the certificate path is not configured.
+
+    A certificate path recorded only in workflow state — with the live
+    backend probe sourcing its path from ``Settings`` and seeing none —
+    is not operationally ready. The probed projection reconciles
+    ``configured`` with the same ``describe()`` evaluation that
+    produces ``health_summary``, so the two cannot contradict.
+    """
+
+    from .auth._operator import configure_operator_auth
+
+    _register_active_profile()
+    configure_operator_auth("certificate")
+
+    projection = build_operator_state_projection(probe_live_backend=True)
+
+    auth = projection.auth
+    if auth.health_summary == "certificate path not configured":
+        assert auth.configured is False, (
+            "configured must not contradict the health summary — "
+            f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
+        )

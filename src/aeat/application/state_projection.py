@@ -27,6 +27,7 @@ so neither is silently zero.
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -238,13 +239,33 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
     )
 
 
-def _certificate_configured(state: WorkflowState) -> bool:
+def _certificate_path_resolves(certificate_path: str) -> bool:
+    """Return whether a recorded certificate path resolves to an existing file.
+
+    ``configured`` for the certificate provider means genuine
+    operational readiness, not merely that a path string was recorded.
+    A path that is blank, or that does not resolve to an existing
+    file, is not usable — and the backend health probe agrees,
+    reporting ``certificate path not configured``. Resolving the path
+    here keeps ``configured`` coherent with that health summary.
+    """
+
+    if not certificate_path:
+        return False
+    try:
+        return Path(certificate_path).is_file()
+    except OSError:
+        return False
+
+
+def _provider_configured(state: WorkflowState) -> bool:
     """Return the one canonical ``configured`` flag for the workflow state.
 
     A provider must be selected in workflow state. For the certificate
     provider, ``configured`` additionally requires a certificate path
-    on disk: selecting the provider without supplying a file leaves the
-    slot empty, and the field must stay consistent with
+    that resolves to an existing file: selecting the provider without
+    a usable file leaves the slot operationally incomplete, and the
+    flag must stay consistent with
     ``health_summary: certificate path not configured``.
     """
 
@@ -252,7 +273,7 @@ def _certificate_configured(state: WorkflowState) -> bool:
     if not auth.provider:
         return False
     if auth.provider == AuthProviderKind.CERTIFICATE.value:
-        return bool(auth.certificate_path)
+        return _certificate_path_resolves(auth.certificate_path or "")
     return True
 
 
@@ -264,20 +285,24 @@ def _build_auth_readiness(
 ) -> ProjectionAuthReadiness:
     """Compute the auth-readiness sub-record once.
 
-    ``configured`` is computed exactly here. When ``probe_live_backend``
-    is set, the live backend is queried for the ``available`` /
-    ``health_*`` fields — but ``configured`` is never sourced from the
-    backend probe, so ``auth status`` and ``auth test`` agree.
+    ``configured`` is computed exactly here, so ``auth status`` and
+    ``auth test`` read one value and cannot disagree. When
+    ``probe_live_backend`` is set, the live backend is queried for the
+    ``available`` / ``health_*`` fields — and the backend's own
+    ``configured`` reading is folded into the canonical ``configured``
+    too. The backend's ``configured`` and ``health_summary`` come from
+    one ``describe()`` evaluation; folding them together keeps the
+    canonical ``configured`` coherent with the health summary, so
+    ``configured: True`` can never co-exist with
+    ``health_summary: certificate path not configured``.
     """
 
     auth = state.auth
     normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
     provider = normalized_request or auth.provider or ""
-    configured = bool(auth.provider) and (
+    configured = _provider_configured(state) and (
         normalized_request is None or auth.provider == normalized_request
     )
-    if configured and auth.provider == AuthProviderKind.CERTIFICATE.value:
-        configured = bool(auth.certificate_path)
 
     available = configured and bool(auth.authenticated_at)
     health_summary = ""
@@ -289,6 +314,7 @@ def _build_auth_readiness(
             available = description.available
             health_summary = description.health_summary or ""
             health_severity = description.health_severity or ""
+            configured = configured and description.configured
         except Exception:
             _log.warning(
                 "auth backend probe failed for provider %s; reporting unavailable",
