@@ -86,12 +86,12 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
             # from the AEAT justificante.
             captured_at = datetime.now(UTC).replace(microsecond=0)
             repo = CalculationObservationRepository()
-            repo.save(
+            repo.save_observation(
                 original,
                 source_kind="aeat_sede_justificante",
                 captured_at=captured_at,
             )
-            loaded = repo.load("303", 2025, "1T")
+            loaded = repo.load_observation("303", 2025, "1T")
 
             assert loaded is not None
             # The envelope carries observation + metadata; pin both layers.
@@ -155,7 +155,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             original = _populated_observation()
             captured_at = datetime.now(UTC).replace(microsecond=0)
             repo = CalculationObservationRepository()
-            repo.save(
+            repo.save_observation(
                 original,
                 source_kind="aeat_sede_justificante",
                 captured_at=captured_at,
@@ -184,7 +184,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             # tolerates an empty legal_refs tuple or the load path surfaces
             # the dropped grounding as inequality, the boundary must catch
             # the drift somewhere.
-            loaded = repo.load("303", 2025, "1T")
+            loaded = repo.load_observation("303", 2025, "1T")
             assert loaded is not None
             assert loaded.observation != original, (
                 "anti-tautology proof failed: deleting legal_refs from a "

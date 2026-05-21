@@ -150,7 +150,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         observation = payload.observation
         return observation_key(observation.modelo, observation.filing_year, observation.period)
 
-    def load(  # type: ignore[override]
+    def load_observation(
         self,
         modelo: str,
         filing_year: int,
@@ -158,9 +158,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     ) -> _ObservationEnvelopePayload | None:
         """Return the persisted observation for one (modelo, year, period) or None."""
 
-        return super().load(observation_key(modelo, filing_year, period))
+        return self.load(observation_key(modelo, filing_year, period))
 
-    def save(  # type: ignore[override]
+    def save_observation(
         self,
         observation: RegistryModeloObservation,
         *,
@@ -175,15 +175,17 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
             captured_at=when,
             source_kind=source_kind,
         )
-        super().save(payload)
+        self.save(payload)
 
-    def delete(  # type: ignore[override]
+    def delete_observation(
         self,
         modelo: str,
         filing_year: int,
         period: str,
     ) -> bool:
-        return super().delete(observation_key(modelo, filing_year, period))
+        """Remove the observation for one (modelo, year, period); return whether a row was deleted."""
+
+        return self.delete(observation_key(modelo, filing_year, period))
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
         """Yield every persisted observation for `modelo` in unspecified order.
