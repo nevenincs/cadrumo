@@ -196,12 +196,17 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
     no-tautological-calculation-tests rule: the test fails if the
     registry formula diverges from the AEAT manual.
 
-    The retenciones and pagos-fraccionados casillas hold their positive
-    amounts; the manual table renders the subtracted items with a
+    The retenciones and pagos-fraccionados amounts hold their positive
+    values; the manual table renders the subtracted items with a
     leading minus as a display convention. The registry formula
     ``00599 = (00625 / 100) x (00592 - 01766 - 01784)`` and
-    ``00611 = 00599 - (00601 + 00603 + 00605)`` produce the signed
-    results.
+    ``00611 = 00599 - pagos_fraccionados`` produce the signed results.
+    Pagos fraccionados ``(00601 + 00603 + 00605)`` are sourced from the
+    company's Modelo 202 instalment filings and reach Modelo 200 through
+    the ``modelo-200-2024-rel-202-pagos-fraccionados`` cross-model
+    relation, which aggregates the 1P/2P/3P instalments; the worked
+    example's 10.000 pagos fraccionados is supplied as that relation's
+    resolved value.
     """
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
@@ -219,10 +224,8 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "DP200014B:01766": Decimal("20000"),
             "DP200014B:01784": Decimal("0"),
             "DP200026:00625": Decimal("100"),
-            "DP200014B:00601": Decimal("10000"),
-            "DP200014B:00603": Decimal("0"),
-            "DP200014B:00605": Decimal("0"),
         },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
 
@@ -269,10 +272,8 @@ def test_modelo_200_cuota_integra_chain_applies_manual_rate_to_post_nivelacion_b
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
             "DP200026:00625": Decimal("100"),
-            "DP200014B:00601": Decimal("0"),
-            "DP200014B:00603": Decimal("0"),
-            "DP200014B:00605": Decimal("0"),
         },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
 

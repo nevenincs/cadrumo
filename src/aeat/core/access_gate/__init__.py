@@ -103,7 +103,9 @@ class AeatAccessGate:
         """
         if self.settings.aeat_live_tests_enabled != "1":
             raise AeatLiveReadNotEnabledError(
-                f"live AEAT reads require {_LIVE_TESTS_ENV}=1; current value: {self.settings.aeat_live_tests_enabled!r}"
+                f"live AEAT reads require {_LIVE_TESTS_ENV} set to the literal "
+                f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
+                f"current value: {self.settings.aeat_live_tests_enabled!r}"
             )
 
     def require_live_write(self) -> None:

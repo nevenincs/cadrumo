@@ -424,6 +424,8 @@ cli:
         period_help: Period token used to resolve the modelo revision; for Modelo
           036 use alta, modificacion, or baja; periodic examples include 2026Q1 and
           2026-01
+        period_token_invalid: '--period ''%{period}'' is not a valid period token
+          for modelo %{modelo}. Valid tokens: %{tokens}.'
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
@@ -541,6 +543,14 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
           or baja; periodic examples include Q1, 4T, 0A, and 01
+        period_token_invalid: '--period ''%{token}'' is not a valid period token for
+          modelo %{modelo}. --year and --period are composed separately: pass --year
+          %{year} for the filing year and one of the declared period tokens for --period.
+          Valid tokens: %{tokens}.'
+        period_token_unrecognised: '--period ''%{token}'' is not a recognised period
+          token. --year and --period are composed separately: pass --year %{year}
+          for the filing year and a period token (0A for annual, Qn for a quarter,
+          or MM for a month) for --period.'
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
@@ -567,8 +577,6 @@ cli:
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
-      no_active_profile: No active profile. Run `aeat config profile create NAME`
-        before using profile-scoped data commands.
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
   config:
@@ -1873,6 +1881,11 @@ wizard:
       \ this profile state may be stale or corrupt, inspect it first:\n  aeat config\
       \ repair\n\nTo discard only local profile state and start over:\n  aeat config\
       \ reset --scope profile --yes"
+    unsupported_console_edit: "The guided setup could not open an interactive prompt\
+      \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
+      \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<field> VALUE\n\nOr re-run the guided edit from an interactive terminal\
+      \ session:\n  aeat config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:

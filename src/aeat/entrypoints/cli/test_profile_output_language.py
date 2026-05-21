@@ -306,3 +306,41 @@ def test_create_error_renders_in_command_line_output_language(
     # Spanish run does not carry the English wording.
     assert "Required flags are missing" in english.output
     assert "Required flags are missing" not in spanish.output
+
+
+def test_config_repair_labels_render_in_profile_output_language(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``config repair`` renders its labels in the active profile's language.
+
+    ``config repair`` is bootstrap-exempt, so it skipped the
+    session-open path that drops the cached output language. Under an
+    ``en`` profile the diagnostic labels (Overall, Version, Checks,
+    Next) stayed Spanish. The verb now opens the bucket session
+    opportunistically when a profile exists and re-resolves the
+    language through the active-profile resolver.
+    """
+
+    from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.application.user_profile._orchestration import set_active_field
+    from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.domain.user_profile import UserProfileFact
+
+    _isolate(monkeypatch, tmp_path)
+    with get_master_key_provider():
+        _seed_profile()
+        workflow_state_repository().update(
+            lambda state: set_active_field(
+                state, UserProfileFact(path="preferences.output_language", value="en")
+            )
+        )
+
+    result = _invoke(["config", "repair"])
+
+    assert result.exit_code == 0, result.output
+    # The diagnostic labels render in English.
+    assert "Overall\t" in result.output
+    assert "Checks" in result.output
+    # The Spanish labels must not appear.
+    assert "Estado\t" not in result.output
+    assert "Comprobaciones" not in result.output

@@ -415,3 +415,34 @@ def test_deleted_profile_name_is_reusable_by_rename(_backend: Path) -> None:
 
     renamed = repository.rename(live.profile_id, new_label="Old Label")
     assert renamed.label == "Old Label"
+
+
+def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
+    """Hand-desyncing the manifest status from the record makes load raise.
+
+    The lifecycle status is denormalised: the encrypted record is the
+    authority, the plaintext manifest mirrors it. This anti-tautology
+    test corrupts one store — the manifest ``status`` — so the two
+    copies disagree. ``load`` must raise :class:`ProfileIntegrityError`;
+    if it returned an aggregate the drift would be served silently and
+    the tombstone leak could recur undetected.
+    """
+
+    repository = ProfileRepository()
+    created = repository.create(label="Status Drift", facts=_VALID_FACTS)
+    # The fresh profile's record is ACTIVE and the manifest mirrors it.
+    assert created.status is UserProfileStatus.ACTIVE
+
+    # Hand-edit the on-disk manifest to claim TOMBSTONED while the
+    # encrypted record stays ACTIVE — the exact drift state a crashed
+    # delete or a manual edit could leave.
+    target = manifest_path(bucket_paths(_backend, created.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        'status = "active"',
+        'status = "tombstoned"',
+    )
+    assert 'status = "tombstoned"' in corrupted, "manifest status mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
+        repository.load(created.profile_id)

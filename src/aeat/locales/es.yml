@@ -461,6 +461,8 @@ cli:
         period_help: Token de periodo para resolver la revision del modelo; para Modelo
           036 usa alta, modificacion o baja; ejemplos periodicos incluyen 2026Q1 y
           2026-01
+        period_token_invalid: '--period ''%{period}'' no es un token de periodo válido
+          para el modelo %{modelo}. Tokens válidos: %{tokens}.'
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
@@ -592,6 +594,14 @@ cli:
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
           o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
+        period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
+          para el modelo %{modelo}. --year y --period se componen por separado: pasa
+          --year %{year} para el ejercicio fiscal y uno de los tokens de periodo declarados
+          en --period. Tokens válidos: %{tokens}.'
+        period_token_unrecognised: '--period ''%{token}'' no es un token de periodo
+          reconocido. --year y --period se componen por separado: pasa --year %{year}
+          para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
+          trimestre o MM para un mes) en --period.'
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
@@ -618,8 +628,6 @@ cli:
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
-      no_active_profile: No hay perfil activo. Ejecuta `aeat config profile create
-        NAME` antes de usar comandos de datos del perfil.
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: Periodo no reconocido
   config:
@@ -1946,6 +1954,11 @@ wizard:
       \ perfil puede estar obsoleto o corrupto, revísalo primero:\n  aeat config repair\n\
       \nPara descartar solo el estado local del perfil y empezar de nuevo:\n  aeat\
       \ config reset --scope profile --yes"
+    unsupported_console_edit: "No pude abrir el asistente guiado en esta ejecución.\n\
+      Todavía no se ha guardado nada.\n\nEdita este perfil de forma no interactiva\
+      \ indicando el campo a cambiar:\n  aeat config profile edit %{profile_name}\
+      \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
+      \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
   other:
     description: Other configuration options
     section:

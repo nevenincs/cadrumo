@@ -15,7 +15,10 @@ from datetime import UTC, datetime
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.bucket._manifest import ManifestKdfParams
+from ...adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    ManifestKdfParams,
+)
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ._aggregate import ProfileAggregate
 from ._integrity import ProfileIntegrityError, verify_profile_integrity
@@ -112,6 +115,8 @@ def test_verify_integrity_passes_when_every_store_agrees() -> None:
         directory_name=_PROFILE_UUID,
         manifest_bucket_id=_PROFILE_UUID,
         record_profile_id=_PROFILE_UUID,
+        manifest_status="active",
+        record_status="active",
     )
 
 
@@ -124,6 +129,8 @@ def test_verify_integrity_raises_on_manifest_drift() -> None:
             directory_name=_PROFILE_UUID,
             manifest_bucket_id="00000000-0000-4000-8000-000000000000",
             record_profile_id=_PROFILE_UUID,
+            manifest_status="active",
+            record_status="active",
         )
 
 
@@ -136,4 +143,40 @@ def test_verify_integrity_raises_on_record_drift() -> None:
             directory_name=_PROFILE_UUID,
             manifest_bucket_id=_PROFILE_UUID,
             record_profile_id="00000000-0000-4000-8000-000000000000",
+            manifest_status="active",
+            record_status="active",
+        )
+
+
+def test_lifecycle_status_enums_stay_value_synced() -> None:
+    """``BucketLifecycleStatus`` and ``UserProfileStatus`` carry the same values.
+
+    The plaintext manifest mirrors the encrypted record's lifecycle
+    status; ``_manifest_status_for`` maps the two enums by string
+    value, and ``verify_profile_integrity`` compares them by value. A
+    state added to one enum but not the other would silently break
+    that mapping — this guard fails the moment the two diverge.
+    """
+
+    assert {member.value for member in UserProfileStatus} == {
+        member.value for member in BucketLifecycleStatus
+    }
+
+
+def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
+    """A manifest status that disagrees with the record status raises.
+
+    A manifest saying ``active`` over a tombstoned record is the drift
+    state that re-opens the tombstone leak; the integrity gate must
+    surface it rather than serve the profile.
+    """
+
+    with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
+        verify_profile_integrity(
+            profile_id=_PROFILE_UUID,
+            directory_name=_PROFILE_UUID,
+            manifest_bucket_id=_PROFILE_UUID,
+            record_profile_id=_PROFILE_UUID,
+            manifest_status="active",
+            record_status="tombstoned",
         )

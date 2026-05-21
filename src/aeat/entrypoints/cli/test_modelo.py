@@ -815,4 +815,110 @@ def test_work_create_normalizes_valid_period_tokens(period: str, expected_normal
     from aeat.entrypoints.cli._modelo import _resolve_year_period
 
     _, normalized = _resolve_year_period(2026, period)
-    assert normalized == expected_normalized, f"period {period!r} normalized to {normalized!r}, expected {expected_normalized!r}"
+    assert normalized == expected_normalized, (
+        f"period {period!r} normalized to {normalized!r}, expected {expected_normalized!r}"
+    )
+
+
+# --- Period-token confusion: --year and --period are composed ---
+
+
+def test_work_create_year_repeated_into_period_explains_composition() -> None:
+    """``--year 2024 --period 2024`` is refused with a clear composition hint.
+
+    The disaster-recovery testimony flagged the M100 annual confusion:
+    repeating the filing year into ``--period`` composed internally to
+    ``2024-2024`` and was refused with an opaque registry message. The
+    error must instead explain that ``--year`` and ``--period`` are
+    composed separately and enumerate the modelo's valid period tokens.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "work",
+            "create",
+            "--modelo",
+            "100",
+            "--year",
+            "2024",
+            "--period",
+            "2024",
+            "--revision",
+            "2024",
+        ]
+    )
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    # The opaque internal composition must not surface verbatim.
+    assert "2024-2024" not in flat
+    # The error explains the year + period composition.
+    assert "--year" in flat and "--period" in flat
+    # M100 is annual-only: the valid token 0A must be surfaced.
+    assert "0A" in flat
+
+
+def test_period_token_error_enumerates_modelo_specific_tokens() -> None:
+    """The period-token error lists the registry-declared tokens for the modelo.
+
+    Modelo 100 is annual (``0A`` only); the helper must ground the
+    valid-token set in the registry's declared periods rather than a
+    generic shape hint.
+    """
+
+    from aeat.entrypoints.cli._modelo import _declared_period_tokens
+
+    annual = _declared_period_tokens("100")
+    assert annual == ("0A",), f"M100 declared periods: {annual!r}"
+
+    quarterly = _declared_period_tokens("303")
+    assert quarterly == ("1T", "2T", "3T", "4T"), f"M303 declared periods: {quarterly!r}"
+
+    # Unknown / unspecified modelo yields an empty tuple so the caller
+    # falls back to the generic period-shape hint.
+    assert _declared_period_tokens(None) == ()
+    assert _declared_period_tokens("999") == ()
+
+
+@pytest.mark.parametrize(
+    "modelo,bad_period,expected_token",
+    [
+        ("100", "INVALID", "0A"),
+        ("303", "99", "1T"),
+    ],
+)
+def test_describe_invalid_period_enumerates_modelo_tokens(
+    modelo: str, bad_period: str, expected_token: str
+) -> None:
+    """``modelo describe --period INVALID`` lists the modelo's valid tokens.
+
+    A malformed bare ``--period`` previously surfaced only the generic
+    ``period must be YYYY...`` registry shape hint. The error now names
+    the registry-declared period tokens for the modelo.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "describe", modelo, "--period", bad_period])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    flat = result.output.replace("\n", " ")
+    assert expected_token in flat, f"expected token {expected_token!r} not enumerated: {result.output}"
+
+
+def test_describe_unknown_modelo_keeps_its_own_error() -> None:
+    """An unknown modelo with a period flag keeps the unknown-modelo error.
+
+    The period-token enrichment must not mask a genuine unknown-modelo
+    refusal as a period-token problem.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "describe", "999", "--period", "0A"])
+
+    assert result.exit_code != 0, result.output
+    flat = result.output.replace("\n", " ").lower()
+    assert "999" in flat
+    # The error is about the modelo, not the (valid) period token.
+    assert "period token" not in flat

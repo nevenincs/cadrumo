@@ -564,7 +564,7 @@ def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Pat
     )
 
     assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
 
 
 def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path: Path) -> None:
@@ -602,7 +602,7 @@ def test_capture_filed_data_cli_requires_live_gate_before_local_writes(tmp_path:
     )
 
     assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
     assert not output_root.exists()
 
 
@@ -637,7 +637,7 @@ def test_capture_iva_history_cli_requires_live_gate_before_local_writes(tmp_path
     )
 
     assert result.exit_code != 0
-    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1" in result.output
+    assert "live AEAT reads require AEAT_LIVE_TESTS_ENABLED" in result.output
     assert not output_root.exists()
 
 
@@ -651,7 +651,7 @@ def test_capture_source_filed_data_requires_live_gate_before_local_writes(tmp_pa
     )
     output_root = tmp_path / "captured-sources"
 
-    with pytest.raises(AeatLiveReadNotEnabledError, match="live AEAT reads require AEAT_LIVE_TESTS_ENABLED=1"):
+    with pytest.raises(AeatLiveReadNotEnabledError, match=r"live AEAT reads require AEAT_LIVE_TESTS_ENABLED"):
         asyncio.run(
             capture_source_filed_data(
                 modelo="180",

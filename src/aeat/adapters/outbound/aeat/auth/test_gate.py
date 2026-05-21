@@ -85,6 +85,32 @@ def test_require_live_read_raises_when_not_one(monkeypatch: pytest.MonkeyPatch) 
         AeatAccessGate(settings).require_live_read()
 
 
+def test_require_live_read_refusal_states_only_literal_one_is_accepted(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The refusal for a truthy spelling names the literal accepted value.
+
+    The gate intentionally accepts only the exact string ``1`` — bool
+    coercion would widen the safety surface. When an operator supplies
+    a near-miss like ``true`` the refusal must say so unambiguously,
+    naming both the required literal and the rejected spellings, so the
+    operator does not assume ``true`` enabled the gate.
+    """
+
+    monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "true")
+    settings = _fresh_settings(monkeypatch, AEAT_LIVE_TESTS_ENABLED="true")
+    with pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
+        AeatAccessGate(settings).require_live_read()
+    message = str(excinfo.value)
+    # The refusal names the literal accepted value.
+    assert "literal" in message and "1" in message
+    # It explicitly names the rejected near-miss spelling so the
+    # operator sees why `true` did not work.
+    assert "'true'" in message
+    # It echoes the current value for traceability.
+    assert repr("true") in message
+
+
 def test_require_live_write_always_raises_permanent_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PYTEST_CURRENT_TEST", "placeholder")
     settings = _fresh_settings(monkeypatch)

@@ -64,6 +64,7 @@ from ._common import (
     _bad,
     _canonical_period,
     _emit,
+    _no_active_profile_refusal,
     _parse_iso_date,
     _state,
     _tx_repo,
@@ -1379,7 +1380,7 @@ def _ratios_bucket_id() -> str:
     try:
         return active_bucket_id_or_raise()
     except Exception as exc:  # NoActiveProfileError + downstream raises
-        raise _bad(tr("cli.config.errors.no_active_profile")) from exc
+        raise _no_active_profile_refusal() from exc
 
 
 def _ratios_bucket_and_profile() -> tuple[str, str | None]:
@@ -1396,7 +1397,7 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     try:
         bucket_id = active_bucket_id_or_raise()
     except Exception as exc:  # NoActiveProfileError + downstream raises
-        raise _bad(tr("cli.config.errors.no_active_profile")) from exc
+        raise _no_active_profile_refusal() from exc
     return bucket_id, resolve_active_bucket_id()
 
 

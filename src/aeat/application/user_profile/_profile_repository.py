@@ -45,6 +45,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -59,6 +60,8 @@ from ._repository import UserProfileLifecycleRepository
 
 if TYPE_CHECKING:
     from ._lifecycle import ProfileLifecycleService
+
+_log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -88,8 +91,9 @@ def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
     """Map the encrypted-record lifecycle status to its manifest mirror.
 
     The two enums carry identical string values; the mapping is by
-    value so a new lifecycle state in either enum surfaces here as a
-    :class:`KeyError` rather than silently mismatching.
+    value so a new lifecycle state added to one enum but not the other
+    surfaces here as a :class:`ValueError` (the enum lookup rejects an
+    unknown value) rather than silently mismatching.
     """
 
     return BucketLifecycleStatus(status.value)
@@ -318,13 +322,14 @@ class ProfileRepository:
 
         Reads the plaintext manifest and the encrypted record, runs
         :func:`verify_profile_integrity` to confirm the directory, the
-        manifest, and the record all agree on the UUID, then builds the
-        :class:`ProfileAggregate`.
+        manifest, and the record all agree on the UUID and on the
+        lifecycle status, then builds the :class:`ProfileAggregate`.
 
         Raises:
             ProfileNotFoundError: If the bucket directory or manifest
                 is absent.
-            ProfileIntegrityError: If the stores disagree on the UUID.
+            ProfileIntegrityError: If the stores disagree on the UUID
+                or on the lifecycle status.
         """
 
         paths = bucket_paths(self._root, profile_id)
@@ -340,6 +345,8 @@ class ProfileRepository:
             directory_name=paths.bucket_dir.name,
             manifest_bucket_id=manifest.bucket_id,
             record_profile_id=record.profile_id,
+            manifest_status=manifest.status.value,
+            record_status=record.status.value,
         )
 
         return ProfileAggregate(
@@ -450,41 +457,54 @@ class ProfileRepository:
         tombstoned and re-saved; the bucket directory and manifest are
         left intact so audit and history reads still resolve.
 
-        The two stores mutate in an order that has no torn intermediate:
-        the active-profile pointer is cleared FIRST, then the record is
-        tombstoned. A failure between the two steps leaves a still-live
-        record with no active pointer — benign, the operator simply
-        re-selects. The reverse order could strand the pointer at a
-        tombstoned record.
+        Three stores mutate, in an order chosen so every torn
+        intermediate fails closed:
 
-        ``load`` runs the cross-store integrity check, so a profile
-        whose stores have drifted raises :class:`ProfileIntegrityError`
-        here rather than being tombstoned in a torn state — reclaiming
-        a drifted profile is the ``repair`` surface's domain.
+        1. The active-profile pointer is cleared first. A crash here
+           leaves a still-live record with no active pointer — benign,
+           the operator simply re-selects.
+        2. The plaintext manifest ``status`` is mirrored to
+           ``tombstoned`` BEFORE the record tombstone. A crash between
+           this write and the record tombstone leaves a manifest saying
+           ``tombstoned`` over a still-live record. That is the safe
+           direction: the profile immediately drops off every live
+           surface (``list`` / ``switch`` / name-uniqueness all read
+           the manifest), and the record is still loadable for repair.
+           The reverse order — record first — would leave a manifest
+           saying ``active`` over a tombstoned record, re-opening the
+           leak.
+        3. The encrypted record is tombstoned last.
+
+        ``load`` runs the cross-store integrity check, which compares
+        the manifest status against the record status, so a profile
+        left in the step-2/step-3 drift state by a crash raises
+        :class:`ProfileIntegrityError` on the next load — reclaiming a
+        drifted profile is the ``repair`` surface's domain.
 
         Raises:
             ProfileNotFoundError: If the profile is not registered.
-            ProfileIntegrityError: If the stores disagree on the UUID.
+            ProfileIntegrityError: If the stores disagree on the UUID
+                or on the lifecycle status.
         """
 
         aggregate = self.load(profile_id)
         if self._active_pointer_targets(profile_id):
             self._clear_pointer()
-        result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
-        tombstoned_record = result.profile
-        # Mirror the tombstone onto the plaintext manifest so the
-        # manifest scan excludes this profile from every live operator
-        # surface (list / switch / name-uniqueness) without unlocking
-        # the encrypted bucket. The repository is the sole writer of
-        # both stores, so the two never drift.
+        # Step 2: mirror the tombstone onto the plaintext manifest
+        # before the record tombstone. The manifest scan excludes this
+        # profile from every live operator surface without unlocking
+        # the encrypted bucket; doing this first means a crash before
+        # the record write fails closed (manifest tombstoned, record
+        # still loadable for repair) instead of re-opening the leak.
         paths = bucket_paths(self._root, profile_id)
         manifest = read_manifest(paths)
         write_manifest(
             paths,
-            manifest.model_copy(
-                update={"status": _manifest_status_for(tombstoned_record.status)}
-            ),
+            manifest.model_copy(update={"status": BucketLifecycleStatus.TOMBSTONED}),
         )
+        # Step 3: tombstone the encrypted record.
+        result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
+        tombstoned_record = result.profile
         return aggregate.model_copy(
             update={"record": tombstoned_record, "status": tombstoned_record.status}
         )
@@ -608,7 +628,14 @@ class ProfileRepository:
                 continue
             try:
                 aggregate = self.load(summary.profile_id)
-            except Exception:  # noqa: BLE001 — a torn / unreadable bucket cannot claim an id
+            except Exception as exc:
+                # A torn / unreadable bucket cannot claim a tax id; log
+                # the skip at debug so the silent omission is traceable.
+                _log.debug(
+                    "tax-id uniqueness scan skipped unreadable profile %s: %s",
+                    summary.profile_id,
+                    exc,
+                )
                 continue
             existing_tax_id = _canonical_tax_id(aggregate.record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:

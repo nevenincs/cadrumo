@@ -1,8 +1,9 @@
 """Unit tests for the SQLAlchemy engine factory.
 
 Exercises :func:`aeat.adapters.persistence.storage.sql.create_engine_from_settings`
-covering the round-trip happy path, parent-directory creation, fail-fast
-on empty URLs, and the project-root anchoring of relative SQLite URLs.
+covering the round-trip happy path, parent-directory creation, the
+storage-root fallback derivation, and the project-root anchoring of
+relative SQLite URLs.
 """
 
 from __future__ import annotations
@@ -13,7 +14,6 @@ import pytest
 from sqlalchemy import text
 
 from .....core.config import PROJECT_ROOT, Settings
-from ..errors import StorageError
 from . import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -52,22 +52,32 @@ def test_engine_creates_parent_directory(tmp_path: Path) -> None:
         dispose_engine(settings)
 
 
-def test_engine_rejects_empty_url(tmp_path: Path) -> None:
-    """An empty URL is fail-fast, not a silent fallback.
+def test_engine_builds_against_derived_storage_root_fallback(tmp_path: Path) -> None:
+    """An absent database URL derives a root-level SQLite fallback.
 
-    The active-profile resolver leaves ``aeat_database_url`` empty only
-    when no profile is selected and no pointer file exists; the test
-    anchors ``aeat_local_storage_root`` at an empty tmp directory so the
-    resolver cannot pick up a real worktree profile.
+    With no explicit ``aeat_database_url`` and no selected profile, the
+    settings layer derives ``sqlite:///<storage-root>/aeat.db`` rather
+    than leaving the URL empty; the engine factory then builds a working
+    engine against that fallback file. This is the engine-boundary
+    counterpart of the config layer's database-URL derivation, and
+    guards the operator cold-start path where only
+    ``aeat_local_storage_root`` is set.
     """
+    storage_root = tmp_path / "derived-storage-root"
     settings = Settings(
-        aeat_database_url="",
         aeat_active_profile=None,
-        aeat_local_storage_root=tmp_path / "empty-storage-root",
+        aeat_local_storage_root=storage_root,
     )
-    assert settings.aeat_database_url == ""
-    with pytest.raises(StorageError):
-        create_engine_from_settings(settings)
+    fallback_db = storage_root / "aeat.db"
+    assert settings.aeat_database_url == f"sqlite:///{fallback_db.as_posix()}"
+    engine = create_engine_from_settings(settings)
+    try:
+        with engine.connect() as conn:
+            assert conn.execute(text("select 5")).scalar_one() == 5
+        assert fallback_db.exists()
+    finally:
+        engine.dispose()
+        dispose_engine(settings)
 
 
 def test_engine_anchors_relative_sqlite_urls_to_project_root(

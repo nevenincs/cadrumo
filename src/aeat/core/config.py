@@ -365,9 +365,12 @@ class Settings(BaseSettings):
             "SQLAlchemy URL for the primary persistence backend. When empty, "
             "the model validator resolves the URL through the active-profile "
             "precedence chain to "
-            "``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``. "
-            "Tests that need a deterministic location supply this field "
-            "explicitly; production reads the computed value."
+            "``sqlite:///<aeat_local_storage_root>/buckets/<bucket-id>/db/aeat.db``; "
+            "with no active profile it derives a root-level fallback at "
+            "``sqlite:///<aeat_local_storage_root>/aeat.db`` so the URL is "
+            "never empty when the storage root is set. Tests that need a "
+            "deterministic location supply this field explicitly; production "
+            "reads the computed value."
         ),
     )
     aeat_storage_backup_dir: Path = Field(
@@ -890,11 +893,15 @@ class Settings(BaseSettings):
            pointer file written by ``profile create`` / ``profile
            switch``.
 
-        When neither rung resolves, the field stays empty and
-        :func:`get_engine` raises ``StorageError`` on first access —
-        the operator must run ``aeat config profile create`` or
-        ``aeat config profile switch`` before any persistence path
-        opens.
+        When neither rung resolves, the field derives a root-level
+        fallback at ``sqlite:///<aeat_local_storage_root>/aeat.db`` so
+        the two storage settings stay coherent: setting
+        ``AEAT_LOCAL_STORAGE_ROOT`` alone never leaves
+        ``aeat_database_url`` empty. Cold-start commands still refuse
+        before touching this fallback database — every profile-scoped
+        path checks for an active profile first — so the fallback
+        database is a placeholder that real per-profile data never
+        lands in.
         """
 
         if self.aeat_database_url:
@@ -915,6 +922,12 @@ class Settings(BaseSettings):
             if pointer is not None:
                 bucket_id = pointer.bucket_id.strip()
         if not bucket_id:
+            fallback_db_path = self.aeat_local_storage_root / "aeat.db"
+            object.__setattr__(
+                self,
+                "aeat_database_url",
+                f"sqlite:///{fallback_db_path.as_posix()}",
+            )
             return self
         bucket_db_path = (
             self.aeat_local_storage_root / "buckets" / bucket_id / "db" / "aeat.db"

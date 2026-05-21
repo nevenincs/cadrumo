@@ -54,6 +54,22 @@ def _bad(message: str) -> typer.BadParameter:
     return typer.BadParameter(message)
 
 
+def _no_active_profile_refusal() -> Exception:
+    """Return the canonical no-active-profile refusal exception.
+
+    A missing active profile is a workflow-state refusal, not a
+    user-input error: it must read as ``Refused. No active profile…``
+    rather than be wrapped in a Click ``Invalid value:`` header. Every
+    cold-start command path — ledger, modelo work, overview — raises
+    this same translated refusal so first-contact guidance is
+    consistent across the CLI surface.
+    """
+
+    from ._errors import CliRefusedBoundaryError
+
+    return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
+
+
 def _exit(code: int) -> None:
     raise typer.Exit(code=code)
 
@@ -67,7 +83,7 @@ def _state() -> WorkflowState:
     # operator. Refuse early with the operator-facing no-active-profile
     # message instead.
     if resolve_active_bucket_id() is None:
-        raise _bad(tr("cli.common.errors.no_active_profile"))
+        raise _no_active_profile_refusal()
     return workflow_state_repository().load()
 
 
@@ -158,14 +174,14 @@ def _active_bucket_id_or_bad(state: WorkflowState) -> str:
     try:
         return active_bucket_id_or_raise()
     except NoActiveProfileError as exc:
-        raise _bad(tr("cli.common.errors.no_active_profile")) from exc
+        raise _no_active_profile_refusal() from exc
 
 
 def _tx_repo(state: WorkflowState) -> TransactionCatalogueRepository:
     try:
         return active_transaction_catalogue_repository(state)
     except LedgerNoActiveBucketError as exc:
-        raise _bad(tr("cli.common.errors.no_active_profile")) from exc
+        raise _no_active_profile_refusal() from exc
 
 
 def _invoice_repo() -> InvoiceCatalogueRepository:

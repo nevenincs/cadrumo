@@ -510,6 +510,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.wizard._prompter.WizardEditUnsupportedConsoleError",
+        ErrorCode(
+            code="REFUSED_WIZARD_EDIT_UNSUPPORTED_CONSOLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_unsupported_console",
+            default_suggestion="aeat config profile edit NAME --quiet --<field> VALUE",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.wizard._status.WizardStatusError",
         ErrorCode(
             code="REFUSED_WIZARD_STATUS",

@@ -165,7 +165,16 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
 
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.user_profile._orchestration import set_active_field
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
     from aeat.domain.user_profile import UserProfileFact
+
+    # Profile identity is an immutable UUIDv4 minted at creation; the
+    # ``operator`` string is only the operator-facing display label.
+    # The bucket directory, the lifecycle-repository ``bucket_id``, and
+    # the ``load`` profile-id argument all key on that UUID.
+    operator_pointer = read_profile_bucket("operator")
+    assert operator_pointer is not None, "config profile create did not register the 'operator' bucket"
+    operator_profile_id = operator_pointer.bucket_id
 
     provider = get_master_key_provider()
     with activate_master_key_provider(provider):
@@ -175,19 +184,20 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
             )
         )
 
-        refreshed = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        refreshed = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
         assert fact_value(refreshed, "preferences.output_language") == "en"
 
     status_result = _invoke(["--format", "json", "config", "profile", "status"])
     assert status_result.exit_code == 0, status_result.output
     status_payload = json.loads(_json_output(status_result))
     assert status_payload["active_profile"] == "operator"
+    assert status_payload["profile_id"] == operator_profile_id
     assert status_payload["iva_regime"] == "GENERAL"
 
     with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
-        assert state.active_profile_bucket_id() == "operator"
-        stored = UserProfileLifecycleRepository(bucket_id="operator").load("operator")
+        assert state.active_profile_bucket_id() == operator_profile_id
+        stored = UserProfileLifecycleRepository(bucket_id=operator_profile_id).load(operator_profile_id)
         assert fact_value(stored, "identity.tax_id") == "00000000T"
         assert fact_value(stored, "preferences.output_language") == "en"
 
@@ -490,6 +500,7 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
     unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_permanente"])
     unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
+    unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
     unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
 
     assert configure.exit_code == 0, configure.output
@@ -500,6 +511,8 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "clave_permanente" in unsupported.output
     assert unsupported_test.exit_code != 0
     assert "dnie_pkcs" in unsupported_test.output
+    assert unsupported_login.exit_code != 0
+    assert "dnie_pkcs" in unsupported_login.output
     assert unsupported_clear.exit_code != 0
     assert "clave_pin" in unsupported_clear.output
 
@@ -669,7 +682,11 @@ def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.
     assert config_status.exit_code == 0, config_status.output
     assert overview.exit_code == 0, overview.output
     config_payload = json.loads(_json_output(config_status))
-    assert config_payload["active_profile"] == "default"
+    # ``active_profile`` carries the operator-facing display label after
+    # the UUID-identity cutover; ``profile_id`` carries the immutable
+    # bucket identity that ``_seed_profile`` registered as ``default``.
+    assert config_payload["active_profile"] == "operator"
+    assert config_payload["profile_id"] == "default"
     assert config_payload["tax_id_present"] is True
     assert config_payload["activity_present"] is True
     assert json.loads(_json_output(overview))["transactions"] == 0

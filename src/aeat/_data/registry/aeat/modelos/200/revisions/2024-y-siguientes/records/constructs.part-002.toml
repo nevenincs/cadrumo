@@ -1426,7 +1426,12 @@ casillas = [
     "03646",
 ]
 parameters = ["is.modelo-200.tipo-gravamen-general"]
-formulas = ["modelo-200-cuota-ejercicio-a-ingresar-devolver"]
+formulas = [
+    "modelo-200-base-imponible-despues-reserva-nivelacion",
+    "modelo-200-cuota-integra",
+    "modelo-200-cuota-ejercicio-a-ingresar-devolver",
+    "modelo-200-cuota-diferencial",
+]
 bindings = ["modelo-200-2024-pagos-fraccionados-anuales"]
 relations = ["modelo-200-2024-rel-202-pagos-fraccionados"]
 dependency_classifications = ["modelo-200-2024-dep-202-instalments"]

@@ -62,13 +62,13 @@ def _json(result) -> dict:
     return json.loads(result.output)
 
 
-def _create(name: str) -> None:
+def _create(name: str, tax_id: str = "12345678Z") -> None:
     result = _invoke(
         [
             "--format", "json",
             "config", "profile", "create", name,
             "--quiet",
-            "--tax-id", "12345678Z",
+            "--tax-id", tax_id,
             "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",
@@ -125,10 +125,15 @@ def test_atomic_create_roundtrip_facts_survive_to_show(_cli_storage: Path) -> No
 
 
 def test_atomic_create_roundtrip_two_profiles_resolve_independently(_cli_storage: Path) -> None:
-    """Two profiles created in sequence each read back with their own identity."""
+    """Two profiles created in sequence each read back with their own identity.
 
-    _create("alice")
-    _create("bob")
+    The two profiles model two distinct taxpayers, so they carry
+    distinct valid Spanish NIFs — one taxpayer, one profile is enforced
+    by the duplicate-tax-id refusal at create.
+    """
+
+    _create("alice", tax_id="12345678Z")
+    _create("bob", tax_id="87654321X")
 
     listing = _invoke(["--format", "json", "config", "profile", "list"])
     assert listing.exit_code == 0, listing.output
