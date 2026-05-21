@@ -410,7 +410,8 @@ cli:
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
         json_not_object: '{flag} debe ser un objeto JSON.'
-        json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte {pos}.'
+        json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
+          {pos}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -451,7 +452,8 @@ cli:
           ejemplos periodicos incluyen 2026Q1 y 2026-01
         preview_help: Previsualizar bindings con sobrescrituras temporales sin mutar
           el estado
-        unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones conocidas para {code}@{revision} ({period}): {suggestion}.'
+        unknown_keys: 'Clave(s) de --binding desconocida(s) {keys}; vinculaciones
+          conocidas para {code}@{revision} ({period}): {suggestion}.'
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -498,10 +500,11 @@ cli:
           (repetible; al menos uno requerido)
         import_help: Persistir una declaración presentada externamente como filing
           record base con evidencia oficial importada de la AEAT
-        import_set_required: '--set es obligatorio al menos una vez para una importación.'
+        import_set_required: --set es obligatorio al menos una vez para una importación.
         include_superseded_help: Incluir los filing records superados (excluidos por
           defecto)
-        invalid_evidence_kind: '--evidence-kind debe ser uno de {canonical}; se recibió {kind}.'
+        invalid_evidence_kind: --evidence-kind debe ser uno de {canonical}; se recibió
+          {kind}.
         list_help: Listar los filing records registrados
         view_help: Mostrar un filing record por id
       formulas:
@@ -560,7 +563,7 @@ cli:
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
-        amend_set_required: '--set es obligatorio al menos una vez para una complementaria.'
+        amend_set_required: --set es obligatorio al menos una vez para una complementaria.
         amendment_kind_help: Tipo legal de la amendación (complementaria o sustitutiva)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
@@ -594,15 +597,16 @@ cli:
           ver
         include_discarded_help: Incluir las unidades descartadas en el listado (excluidas
           por defecto)
-        invalid_amendment_kind: '--kind debe ser uno de {choices}; se recibió {kind}.'
+        invalid_amendment_kind: --kind debe ser uno de {choices}; se recibió {kind}.
         invalid_binding_key: 'La clave --binding no es un BindingId válido (alfanumérico
           en minúsculas más separadores . _ : -, máx. 128 caracteres)'
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
-        kv_empty_key_error: 'La clave de {flag} no puede estar vacía; se recibió {spec}.'
-        kv_format_error: '{flag} debe tener el formato {key_label}={value_label}; se recibió {spec}.'
+        kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
+        kv_format_error: '{flag} debe tener el formato {key_label}={value_label};
+          se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
@@ -622,7 +626,8 @@ cli:
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
-        relation_not_decimal: 'El valor de --relation para {key} no es un decimal: {value}.'
+        relation_not_decimal: 'El valor de --relation para {key} no es un decimal:
+          {value}.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT
@@ -630,7 +635,7 @@ cli:
         revision_help: Identificador estable de la revisión registrada del modelo
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
-        set_not_decimal: 'El valor de --set debe ser un decimal; se recibió {value}.'
+        set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
         status_help: Mostrar los metadatos de una unidad de trabajo
@@ -714,6 +719,9 @@ cli:
       bucket_id_help: Identificador del bucket cuyo historial de eventos se inspecciona
       event_type_help: Filtrar el historial por uno o varios tipos de evento (repetible)
       help: Inspeccionar el almacenamiento por bucket y su historial de eventos
+      history:
+        invalid_timestamp: '{flag} debe ser una marca de tiempo ISO-8601 (p. ej. 2026-04-01T00:00:00+00:00); se recibió {raw}.'
+        since_after_until: '--since debe ser anterior o igual a --until.'
       history_help: Mostrar el historial de eventos solo-append de un bucket
       object_id_help: Filtrar el historial a eventos sobre un object_id concreto (coincidencia
         exacta)
@@ -1618,6 +1626,7 @@ cli:
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
     quiet_help: Mostrar solo errores en stderr
+    startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta la dependencia {dependency}. Ejecuta `aeat config repair`.'
     unavailable_app_help: Los comandos de app no están disponibles porque falta una
       dependencia opcional
     verbose_help: Mostrar logs internos informativos en stderr

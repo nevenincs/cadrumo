@@ -417,7 +417,8 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
         preview_help: Preview bindings with temporary overrides without mutating state
-        unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision} ({period}): {suggestion}.'
+        unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision}
+          ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -458,9 +459,9 @@ cli:
           at least one required)
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
-        import_set_required: '--set is required at least once for an import.'
+        import_set_required: --set is required at least once for an import.
         include_superseded_help: Include superseded filing records (excluded by default)
-        invalid_evidence_kind: '--evidence-kind must be one of {canonical}; got {kind}.'
+        invalid_evidence_kind: --evidence-kind must be one of {canonical}; got {kind}.
         list_help: List registered filing records
         view_help: Show one filing record by id
       formulas:
@@ -515,7 +516,7 @@ cli:
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
-        amend_set_required: '--set is required at least once for an amendment.'
+        amend_set_required: --set is required at least once for an amendment.
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -543,7 +544,7 @@ cli:
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
-        invalid_amendment_kind: '--kind must be one of {choices}; got {kind}.'
+        invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
@@ -578,7 +579,7 @@ cli:
         revision_help: Stable id of the targeted registry modelo revision
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
-        set_not_decimal: 'The --set value must be a decimal; got {value}.'
+        set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
@@ -660,6 +661,9 @@ cli:
       bucket_id_help: Bucket identifier whose event history should be inspected
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
+      history:
+        invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw}.'
+        since_after_until: '--since must be before or equal to --until.'
       history_help: Show the append-only event history for one bucket
       object_id_help: Filter the history to events targeting a specific object_id
         (exact match)
@@ -1550,6 +1554,7 @@ cli:
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
     quiet_help: Show only errors on stderr
+    startup_import_error: 'Cannot start the AEAT command surface: missing dependency {dependency}. Run `aeat config repair`.'
     unavailable_app_help: App commands are unavailable because an optional dependency
       is missing
     verbose_help: Show internal informational logs on stderr

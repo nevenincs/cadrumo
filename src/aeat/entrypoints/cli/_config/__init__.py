@@ -1602,7 +1602,9 @@ def auth_diagnostics_show(
 
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
-        raise CliRefusedBoundaryError(f"auth diagnostic not found: {diagnostic_id}")
+        raise CliRefusedBoundaryError(
+            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
+        )
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     _emit(
         ctx,
@@ -1864,7 +1866,7 @@ def bucket_history(
     since_dt = _parse_bucket_history_instant(since, flag="--since")
     until_dt = _parse_bucket_history_instant(until, flag="--until")
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
-        raise typer.BadParameter("--since must be before or equal to --until")
+        raise typer.BadParameter(tr("cli.config.bucket.history.since_after_until"))
     object_id_token = object_id.strip() if object_id else None
     actor_token = actor.strip() if actor else None
 
@@ -1924,7 +1926,7 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str):  # type: ignor
         return datetime.fromisoformat(raw.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            f"{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00); got {raw!r}",
+            tr("cli.config.bucket.history.invalid_timestamp", flag=flag, raw=raw),
         ) from exc
 
 
