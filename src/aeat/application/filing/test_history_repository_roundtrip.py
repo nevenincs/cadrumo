@@ -19,6 +19,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
+from ...domain._identifiers import ModeloIdentifier
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 
@@ -30,22 +31,22 @@ def _populated_history() -> ModeloHistory:
 
     now = datetime.now(UTC).replace(microsecond=0)
     return ModeloHistory(
-        modelo="303",
+        modelo=ModeloIdentifier("303"),
         entries=(
             ModeloHistoryEntry(
-                modelo="303",
+                modelo=ModeloIdentifier("303"),
                 period="2025Q1",
                 submitted_at=now - timedelta(days=90),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
-                modelo="303",
+                modelo=ModeloIdentifier("303"),
                 period="2025Q2",
                 submitted_at=now - timedelta(days=30),
                 status="ACEPTADA",
             ),
             ModeloHistoryEntry(
-                modelo="303",
+                modelo=ModeloIdentifier("303"),
                 period="2025Q3",
                 submitted_at=now,
                 status="RECHAZADA",
