@@ -295,11 +295,21 @@ def verify_export(
             verified_at=datetime.now(tz=UTC),
             narrative="filing.export.malformed_file",
         )
+    # Draft casillas the export parser never re-read: the wire layout
+    # carries them as RESERVED literals or derived fields, so they round-
+    # trip outside the deserialised-currency set. Surface them as
+    # ``unchecked_casillas`` so the verdict is honest about its coverage —
+    # a MATCH does not mean every draft casilla was confirmed on disk.
+    checked_set = set(checked)
+    unchecked = tuple(
+        sorted(value.casilla_id for value in draft.values if value.casilla_id not in checked_set)
+    )
     return DeclaracionVerifyResult(
         draft_id=draft.draft_id,
         file_path=file_path,
         verdict=DeclaracionVerifyVerdict.MATCH if not mismatched else DeclaracionVerifyVerdict.DRIFT,
         mismatched_casillas=mismatched,
+        unchecked_casillas=unchecked,
         casilla_provenance=_provenance_for_casillas(draft, checked),
         mismatched_casilla_provenance=_provenance_for_casillas(draft, mismatched),
         file_sha256=digest,
