@@ -6,6 +6,7 @@ tags:
 date: '2026-05-21'
 related:
   - '[[2026-05-21-declaracion-extraction-architecture-adr]]'
+  - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
   - '[[2026-05-21-declaracion-extraction-architecture-research]]'
 ---
 
@@ -18,6 +19,10 @@ Auto-generated index of all documents tagged with `#declaracion-extraction-archi
 ### adr
 
 - `2026-05-21-declaracion-extraction-architecture-adr` - `declaracion-extraction-architecture` adr: `registry-driven declaración extraction supersedes per-modelo extractor classes` | (**status:** `accepted`)
+
+### plan
+
+- `2026-05-21-declaracion-extraction-architecture-plan` - `declaracion-extraction-architecture` umbrella plan
 
 ### research
 
