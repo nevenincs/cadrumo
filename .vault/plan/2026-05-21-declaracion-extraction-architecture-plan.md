@@ -148,38 +148,38 @@ Named-field tier Wave. Corrects or removes the dead modelo 720 and 840 stub prof
 
 Scoped discovery sweep of the named-field modelo corpus and registry presence.
 
-- [ ] `W04.P08.S24` - Sweep the named-field modelo corpus and registry presence for modelos 036, 037, 369, 720, and 840 and append any surfaced schema-tweak Steps via the vault plan CLI; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W04.P08.S80` - Classify per dead-stub modelo 184 193 232 347 349 720 and 840 whether each non-matchable decl slug target resolves to a numeric casilla or a named-field target; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W04.P08.S24` - Sweep the named-field modelo corpus and registry presence for modelos 036, 037, 369, 720, and 840 and append any surfaced schema-tweak Steps via the vault plan CLI; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W04.P08.S80` - Classify per dead-stub modelo 184 193 232 347 349 720 and 840 whether each non-matchable decl slug target resolves to a numeric casilla or a named-field target; `src/aeat/_data/registry/aeat/modelos/`.
 - [ ] `W04.P08.S86` - Decide fetch-versus-defer for the source-blocked Modelo 037 which has no Diseno instructions or fixtures in the corpus and record the fetch-or-descope decision; `src/aeat/_data/registry/aeat/modelos/037/`.
-- [ ] `W04.P08.S91` - Record that W02 code-review fix removed the dead declaracion_pdf profiles for Modelo 347 (revision 2008-y-siguientes) and Modelo 840 (revision 2003-y-siguientes) because both carried decl.tipo-declaracion (data_type=text) with match_strategy=numeric_casilla; `W04 P09 and P10 must author real named-field profiles for these two modelos; `src/aeat/_data/registry/aeat/modelos/347.toml src/aeat/_data/registry/aeat/modelos/840.toml`.
+- [x] `W04.P08.S91` - Record that W02 code-review fix removed the dead declaracion_pdf profiles for Modelo 347 (revision 2008-y-siguientes) and Modelo 840 (revision 2003-y-siguientes) because both carried decl.tipo-declaracion (data_type=text) with match_strategy=numeric_casilla; `W04 P09 and P10 must author real named-field profiles for these two modelos; `src/aeat/_data/registry/aeat/modelos/347.toml src/aeat/_data/registry/aeat/modelos/840.toml`.
 
 ### Phase `W04.P09` - dead-stub repair and modelo 037 registration
 
 Correct or remove the dead 720/840 stubs and register modelo 037.
 
-- [ ] `W04.P09.S25` - Correct or remove the dead Modelo 720 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/720/`.
-- [ ] `W04.P09.S26` - Correct or remove the dead Modelo 840 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/840/`.
+- [x] `W04.P09.S25` - Correct or remove the dead Modelo 720 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/720/`.
+- [x] `W04.P09.S26` - Correct or remove the dead Modelo 840 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/840/`.
 - [ ] `W04.P09.S27` - Register Modelo 037 in the registry which has no registry presence today; `src/aeat/_data/registry/aeat/modelos/037/`.
 
 ### Phase `W04.P14` - newly-surfaced dead-stub repair
 
 Repair the five dead-stub declaracion_pdf profiles W01 discovery surfaced beyond the ADR-named set: modelos 184 193 232 347 and 349 each load green today but extract nothing; replace each non-matchable decl slug stub with the real numeric or named-field targets its classification determined.
 
-- [ ] `W04.P14.S81` - Replace the Modelo 184 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/184.toml`.
-- [ ] `W04.P14.S82` - Replace the Modelo 193 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/193.toml`.
-- [ ] `W04.P14.S83` - Replace the Modelo 232 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/232/`.
-- [ ] `W04.P14.S84` - Replace the Modelo 347 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/347.toml`.
-- [ ] `W04.P14.S85` - Replace the Modelo 349 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/349/`.
+- [x] `W04.P14.S81` - Replace the Modelo 184 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/184.toml`.
+- [x] `W04.P14.S82` - Replace the Modelo 193 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/193.toml`.
+- [x] `W04.P14.S83` - Replace the Modelo 232 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/232/`.
+- [x] `W04.P14.S84` - Replace the Modelo 347 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/347.toml`.
+- [x] `W04.P14.S85` - Replace the Modelo 349 dead decl slug stub targets with the real numeric or named-field targets its classification determined; `src/aeat/_data/registry/aeat/modelos/349/`.
 
 ### Phase `W04.P10` - named-field profile authoring
 
 Author named-field declaracion_pdf profiles for modelos 036, 037, 369, 720, and 840.
 
-- [ ] `W04.P10.S28` - Author the named-field declaracion_pdf profile for Modelo 036 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/036/`.
+- [x] `W04.P10.S28` - Author the named-field declaracion_pdf profile for Modelo 036 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/036/`.
 - [ ] `W04.P10.S29` - Author the named-field declaracion_pdf profile for Modelo 037 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/037/`.
-- [ ] `W04.P10.S30` - Author the named-field declaracion_pdf profile for Modelo 369 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/369/`.
-- [ ] `W04.P10.S31` - Author the named-field declaracion_pdf profile for Modelo 720 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/720/`.
-- [ ] `W04.P10.S32` - Author the named-field declaracion_pdf profile for Modelo 840 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/840/`.
+- [x] `W04.P10.S30` - Author the named-field declaracion_pdf profile for Modelo 369 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/369/`.
+- [x] `W04.P10.S31` - Author the named-field declaracion_pdf profile for Modelo 720 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/720/`.
+- [x] `W04.P10.S32` - Author the named-field declaracion_pdf profile for Modelo 840 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/840/`.
 
 ## Wave `W05` - verification and rollout
 
