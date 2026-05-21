@@ -1755,12 +1755,28 @@ errors:
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
   censo:
-    no_snapshot_captured: 'No s''ha capturat cap instantània del cens per al perfil {profile_id}.'
-    profile_not_found: 'El perfil {profile_id} no existeix; crea''l abans d''aplicar el cens.'
-    sede_g313_no_census: 'La seu electrònica de l''AEAT (G313) no ha retornat cap cens llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve està registrat per a aquest NIF.'
-    sede_no_census: 'La seu electrònica de l''AEAT no ha retornat cap cens llegible per al perfil {profile_id}.'
+    no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
+      {profile_id}.
+    profile_not_found: El perfil {profile_id} no existeix; crea'l abans d'aplicar
+      el cens.
+    sede_g313_no_census: La seu electrònica de l'AEAT (G313) no ha retornat cap cens
+      llegible per al perfil {profile_id}; confirma que el teu certificat o Cl@ve
+      està registrat per a aquest NIF.
+    sede_no_census: La seu electrònica de l'AEAT no ha retornat cap cens llegible
+      per al perfil {profile_id}.
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
+  identity:
+    cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'
+    cif_check_digit_mismatch: 'El dígit de control del CIF és incorrecte (tipus {kind}): s''esperava {expected}, s''ha obtingut {got}.'
+    cif_check_letter_mismatch_kind: 'La lletra de control del CIF és incorrecta (tipus {kind}): s''esperava {expected}, s''ha obtingut {got}.'
+    cif_invalid_shape: '{candidate} no és un CIF vàlid.'
+    document_empty: 'El document d''identitat és buit.'
+    nie_check_letter_mismatch: 'La lletra de control del NIE és incorrecta: s''esperava {expected}, s''ha obtingut {got}.'
+    nie_invalid_shape: '{candidate} no és un NIE vàlid.'
+    nif_check_letter_mismatch: 'La lletra de control del NIF és incorrecta: s''esperava {expected}, s''ha obtingut {got}.'
+    nif_invalid_shape: '{candidate} no és un NIF vàlid.'
+    validate_expects_str: 'La validació d''identitat espera un valor de text; s''ha obtingut {got_type}.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
   refused:
