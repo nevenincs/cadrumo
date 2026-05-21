@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from ..adapters.outbound.aeat.browser import SiteHealthStatus
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectNamespaceIntegrity
     from .wizard._status import WizardStatusReport
+    from .workflow._models import WorkflowState
     from .workflow._profile_health import ActiveProfileHealth
 
 _log = get_logger(__name__)
@@ -62,6 +63,37 @@ class CliVersionReport(BaseModel):
     registry: RegistryVersionSummary
 
 
+DiagnosticAudience = Literal["operator", "internal"]
+"""Who can act on a check.
+
+``operator`` rows describe a state the taxpayer can themselves resolve
+(an incomplete profile, a missing certificate). ``internal`` rows
+describe an application-side defect the taxpayer cannot fix (a
+registry-integrity regression). The renderer words the two distinctly
+so a taxpayer is never alarmed into thinking an internal bug is a field
+they forgot to fill in.
+"""
+
+
+class DiagnosticFinding(BaseModel):
+    """One concrete, named sub-finding inside a :class:`DiagnosticCheck`.
+
+    A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
+    operator *that* something is wrong but never *what*. Each finding
+    names one specific cause in operator language and, where an
+    automated route exists, the exact ``aeat ...`` command that resolves
+    it. The profile-keys check emits one finding per unset key; a
+    failing check emits one finding per concrete cause.
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    summary: str
+    detail: str | None = None
+    next_action: str | None = None
+    requirement: Literal["required", "optional"] | None = None
+
+
 class DiagnosticCheck(BaseModel):
     """One concrete config repair check.
 
@@ -70,6 +102,11 @@ class DiagnosticCheck(BaseModel):
     (a short explanation of why no automated route exists). A row that
     supplies neither, or both, is a :class:`pydantic.ValidationError` at
     construction time. ``ok`` rows MUST carry neither.
+
+    ``findings`` carries the per-cause breakdown: the specific keys that
+    are unset, the specific reasons a check failed. ``audience`` records
+    whether the operator can act on the row or whether it reports an
+    internal application defect.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -80,6 +117,8 @@ class DiagnosticCheck(BaseModel):
     detail: str | None = None
     next_action: str | None = None
     dead_end: str | None = None
+    audience: DiagnosticAudience = "operator"
+    findings: tuple[DiagnosticFinding, ...] = ()
 
     @model_validator(mode="after")
     def _enforce_actionable_contract(self) -> DiagnosticCheck:
@@ -243,6 +282,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             ),
             detail=registry.error,
             dead_end=(None if registry.available else tr("cli.diagnostics.dead_end.registry_bundled")),
+            audience="operator" if registry.available else "internal",
         ),
     ]
 
@@ -270,7 +310,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             profile_health = assess_active_profile_health(state)
             checks.append(_active_profile_storage_check(profile_health))
             setup_report = build_wizard_status(state)
-            checks.append(_profile_check(setup_report, profile_health=profile_health))
+            checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
             from .workflow._profile_health import assess_active_profile_health
@@ -410,14 +450,40 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
         lines.append(f"{tr('cli.diagnostics.repair.auth_label', default='Auth')}\t{report.setup.auth_provider or '-'}")
     lines.append(tr("cli.diagnostics.repair.checks_heading", default="Checks"))
     for check in report.checks:
-        lines.append(f"{check.status}\t{check.name}\t{check.summary}")
+        scope = (
+            ""
+            if check.status == "ok" or check.audience == "operator"
+            else f" [{tr('cli.diagnostics.repair.audience_internal', default='internal application issue')}]"
+        )
+        lines.append(f"{check.status}\t{check.name}\t{check.summary}{scope}")
         if check.detail:
             lines.append(f"{tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{check.detail}")
+        for finding in check.findings:
+            tag = _finding_tag(finding)
+            lines.append(f"{tr('cli.diagnostics.repair.finding_label', default='-')}\t{tag}{finding.summary}")
+            if finding.detail:
+                lines.append(
+                    f"  {tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{finding.detail}"
+                )
+            if finding.next_action:
+                lines.append(
+                    f"  {tr('cli.diagnostics.repair.next_label', default='Next')}\t{finding.next_action}"
+                )
         if check.next_action:
             lines.append(f"{tr('cli.diagnostics.repair.next_label', default='Next')}\t{check.next_action}")
         if check.dead_end:
             lines.append(f"{tr('cli.diagnostics.repair.note_label', default='Note')}\t{check.dead_end}")
     return "\n".join(lines) + "\n"
+
+
+def _finding_tag(finding: DiagnosticFinding) -> str:
+    """Return the requirement prefix rendered ahead of a finding summary."""
+
+    if finding.requirement == "required":
+        return f"{tr('cli.diagnostics.repair.finding_required', default='required')}: "
+    if finding.requirement == "optional":
+        return f"{tr('cli.diagnostics.repair.finding_optional', default='optional')}: "
+    return ""
 
 
 def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSummary:
@@ -566,6 +632,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
             detail=str(exc),
             next_action=tr("cli.diagnostics.next_action.inspect_registry_toml"),
+            audience="internal",
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
         return DiagnosticCheck(
@@ -573,6 +640,8 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             status="warn",
             summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
             detail=f"{type(exc).__name__}: {exc}",
+            dead_end=tr("cli.diagnostics.dead_end.registry_integrity_internal"),
+            audience="internal",
         )
     return DiagnosticCheck(
         name="registry.integrity",
@@ -640,7 +709,63 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     )
 
 
-def _profile_check(report: WizardStatusReport, *, profile_health: ActiveProfileHealth | None = None) -> DiagnosticCheck:
+_PROFILE_EDIT_COMMAND = "aeat config profile edit NAME"
+"""The operator command that walks the profile wizard over an existing
+profile. There is deliberately no per-key setter on the ``aeat config``
+surface, so every unset-key finding routes to this single guided
+editor; the finding's ``summary`` names the specific key to fill."""
+
+
+def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[DiagnosticFinding, ...]:
+    """Return one finding per profile key the active profile leaves unset.
+
+    Each finding names the canonical key path, its operator-facing label,
+    whether the key is required or optional, and the guided-editor
+    command that fills it. This is what turns a bare ``31/40`` counter
+    into an actionable list: the operator sees precisely which fields
+    are unset and the one command that walks them through filling each.
+    """
+
+    from .user_profile._keys_validation import list_profile_key_records
+
+    if state is None:
+        return ()
+    try:
+        record = state.active_profile_record()
+    except Exception:  # pragma: no cover - record unreadability handled by storage checks
+        _log.debug("config repair profile-key finding probe could not read record", exc_info=True)
+        return ()
+    if record is None:
+        return ()
+
+    from .user_profile._projections import record_to_path_values
+
+    values = record_to_path_values(record)
+    findings: list[DiagnosticFinding] = []
+    for entry in list_profile_key_records():
+        raw = values.get(entry.key)
+        if raw is not None and raw.strip() != "":
+            continue
+        requirement: Literal["required", "optional"] = (
+            "required" if entry.requirement.value == "required" else "optional"
+        )
+        label = tr(str(entry.description))
+        findings.append(
+            DiagnosticFinding(
+                summary=f"{entry.key} — {label}",
+                requirement=requirement,
+                next_action=_PROFILE_EDIT_COMMAND,
+            )
+        )
+    return tuple(findings)
+
+
+def _profile_check(
+    report: WizardStatusReport,
+    *,
+    profile_health: ActiveProfileHealth | None = None,
+    state: WorkflowState | None = None,
+) -> DiagnosticCheck:
     if profile_health is not None and profile_health.status in {
         "dangling_pointer",
         "missing_profile_record",
@@ -660,16 +785,31 @@ def _profile_check(report: WizardStatusReport, *, profile_health: ActiveProfileH
             summary=tr("cli.diagnostics.summary.profile_none"),
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
+    unset_findings = _unset_profile_key_findings(state)
     if not report.profile_ready:
+        missing_required = tuple(f for f in unset_findings if f.requirement == "required")
+        # Fall back to the wizard report's missing-required tuple when the
+        # record probe is unavailable, so the row still names what is wrong.
+        if not missing_required:
+            missing_required = tuple(
+                DiagnosticFinding(summary=key, requirement="required")
+                for key in report.missing_required
+            )
+        enrolment_findings = tuple(
+            DiagnosticFinding(summary=key, requirement="required")
+            for key in report.missing_enrolment
+            if key not in {f.summary.split(" — ", 1)[0] for f in missing_required}
+        )
         return DiagnosticCheck(
             name="profile.readiness",
             status="warn",
             summary=tr(
                 "cli.diagnostics.summary.profile_missing_keys",
-                default="Profile is missing required keys: %{keys}",
-                keys=", ".join(report.missing_required),
+                default="Profile is missing %{count} required key(s)",
+                count=len(missing_required) + len(enrolment_findings),
             ),
-            next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
+            next_action=_PROFILE_EDIT_COMMAND,
+            findings=missing_required + enrolment_findings,
         )
     return DiagnosticCheck(
         name="profile.readiness",
@@ -680,6 +820,7 @@ def _profile_check(report: WizardStatusReport, *, profile_health: ActiveProfileH
             present=report.profile_present_keys,
             total=report.profile_total_keys,
         ),
+        findings=unset_findings,
     )
 
 
@@ -862,6 +1003,7 @@ __all__ = [
     "CliVersionReport",
     "ConfigRepairReport",
     "DiagnosticCheck",
+    "DiagnosticFinding",
     "RegistryIntegrityReport",
     "RegistryVersionSummary",
     "SecureObjectIntegrityReport",
