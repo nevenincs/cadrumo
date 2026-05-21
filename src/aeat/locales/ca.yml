@@ -571,13 +571,27 @@ cli:
         bucket_id_help: Identificador del bucket al qual pertany la unitat de treball
         calculate_help: Persistir una nova revisió draft de càlcul per a la unitat
           de treball
+        calculate_saved: 'Desat com a revisió de càlcul en esborrany %{revision_id}
+          (estat: %{state}). Està persistit i es pot reprendre més tard; llista les
+          revisions amb `aeat app modelo work revisions %{work_unit_id}` i torna a
+          consultar aquesta amb `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible)
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
+        create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
+        create_reused: S'ha retornat la unitat de treball existent (idempotent sobre
+          model/exercici/període/revisió); no s'ha creat res nou. Reanomena-la amb
+          `aeat app modelo work rename`.
+        create_reused_name_match: S'ha retornat la unitat de treball existent (idempotent
+          sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
+          indicat coincideix amb el nom desat.
+        create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
+          sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
+          indicat s'ha aplicat com a reanomenament a %{name}.
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -597,6 +611,8 @@ cli:
         invalid_amendment_kind: --kind ha de ser un de {choices}; s'ha rebut {kind}.
         invalid_binding_key: 'La clau --binding no és un BindingId vàlid (alfanumèric
           en minúscules més separadors . _ : -, màx. 128 caràcters)'
+        invalid_calculation_revision_id: calculation_revision_id ha de ser una cadena
+          hexadecimal en minúscules de 64 caràcters (resum SHA-256)
         invalid_casilla_key: 'La clau --casilla no és un CasillaId vàlid (alfanumèric
           més separadors . _ : -, màx. 64 caràcters)'
         invalid_work_unit_id: work_unit_id ha de ser una cadena hex en minúscules
@@ -636,6 +652,8 @@ cli:
         resume_workflow_run_id_help: Id d'execució de flux de 16 caràcters
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
+        revision_show_help: Mostrar els valors de casella desats d'una revisió de
+          càlcul concreta (sense recalcular)
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
@@ -746,13 +764,18 @@ cli:
     google:
       client_json_help: Ruta al fitxer JSON del client OAuth Desktop de Cloud Console
       detail:
-        client_json_bad_wrapper: 'el JSON de client a {path} té un embolcall "installed" que no és un objecte'
+        client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
+          que no és un objecte
         client_json_invalid: 'el JSON de client a {path} no és JSON vàlid: {reason}'
-        client_json_not_desktop: 'el JSON de client a {path} no és un client d''escriptori de Cloud Console; calia una clau embolcall "installed"'
-        client_json_schema_invalid: 'el JSON de client a {path} no ha superat la validació d''esquema: {reason}'
-        client_json_unreadable: 'no s''ha pogut llegir el JSON de client a {path}: {reason}'
+        client_json_not_desktop: el JSON de client a {path} no és un client d'escriptori
+          de Cloud Console; calia una clau embolcall "installed"
+        client_json_schema_invalid: 'el JSON de client a {path} no ha superat la validació
+          d''esquema: {reason}'
+        client_json_unreadable: 'no s''ha pogut llegir el JSON de client a {path}:
+          {reason}'
         client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
-        no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile}; no es pot renovar sense un inici de sessió previ
+        no_metadata_for_refresh: no hi ha cap sessió OAuth per al perfil {profile};
+          no es pot renovar sense un inici de sessió previ
       errors:
         auth_failed: 'L''autenticació amb Google ha fallat: {detail}'
         browser_open: 'No s''ha pogut obrir un navegador per autoritzar l''accés a
@@ -1182,21 +1205,31 @@ cli:
       amount: Import
       archived: Arxivades
       bucket: Bucket
+      business_classification: Classificació
+      business_pct: Percentatge de negoci
+      category_id: Categoria
       checked: Moviments comprovats
       children: filles
+      counterparty: Contrapart
       created_event_id: Esdeveniment bucket de creació
+      currency: Moneda
       date: Data
       description: Descripció
       dialect: Format detectat
+      direction: Sentit
       dry_run: MODE DE PROVA (DRY RUN)
       event_count: esdeveniments
       event_id: id_esdeveniment
       export_id: ID d'exportació
       id: ID
       imported: Entrades importades
+      irpf_category: Categoria IRPF
+      iva_amount: Import d'IVA
+      iva_rate: Tipus d'IVA
       lifecycle_state: Estat del cicle de vida
       merged_id: id_fusionat
       'no': 'No'
+      notes: Notes
       notice: Avís
       output: Sortida
       parent_id: id_pare
@@ -1214,7 +1247,9 @@ cli:
       source: Origen
       split_group_id: id_grup_divisio
       stashed: Apartades
+      taxable_base: Base imposable
       valid: Vàlid
+      value_date: Data valor
       warnings: Avisos
       'yes': Sí
     link:
@@ -1521,6 +1556,9 @@ cli:
       work_units_present: '%{count} unitat(s) de treball de models en curs en aquest
         emmagatzematge local; la teva feina de models esta desada, repren-la amb `aeat
         app modelo work list`.'
+      work_units_present_with_discarded: '%{count} unitat(s) de treball de models
+        actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
+        feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:

@@ -32,6 +32,7 @@ from ...application.modelo import (
     create_work_unit,
     discard_work_unit,
     file_modelo_revision,
+    get_calculation_revision,
     get_filing_record,
     get_verification_report,
     get_work_unit,
@@ -79,6 +80,28 @@ def _validate_work_unit_id(value: str) -> str:
             tr(
                 "cli.app.modelo.work.invalid_work_unit_id",
                 default=(f"work_unit_id must be a 64-character lowercase hex string (SHA-256 digest); got {value!r}"),
+            )
+        )
+    return stripped
+
+
+def _validate_calculation_revision_id(value: str) -> str:
+    """Validate that *value* is a 64-character lowercase hex string.
+
+    A ``calculation_revision_id`` is a SHA-256 digest, sharing the same
+    shape as a ``work_unit_id``. Rejecting a malformed identifier at the
+    CLI boundary keeps the application layer free of input-shape checks.
+    """
+
+    stripped = value.strip()
+    if not re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.invalid_calculation_revision_id",
+                default=(
+                    "calculation_revision_id must be a 64-character lowercase "
+                    f"hex string (SHA-256 digest); got {value!r}"
+                ),
             )
         )
     return stripped
@@ -227,10 +250,18 @@ def modelo_readiness(
         f"filing_year\t{filing_year}",
         f"period\t{period or ''}",
         f"ready\t{report.ready}",
+        f"profile_ready\t{report.profile_ready}",
         f"missing\t{len(report.missing)}",
+        f"ledger_preflight_required\t{report.ledger_preflight_required}",
+        f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
+        f"ledger_period\t{report.ledger_period or ''}",
+        f"ledger_checked\t{report.ledger_checked_transaction_count}",
+        f"ledger_issues\t{len(report.ledger_issues)}",
     ]
     for requirement in report.missing:
         lines.append(f"{requirement.section_key}.{requirement.field_key}\t{requirement.selector}")
+    for issue in report.ledger_issues:
+        lines.append(f"ledger_issue\t{issue.transaction_id}\t{issue.reason.value}\t{issue.detail}")
     _emit(ctx, payload, lines)
 
 
@@ -1164,6 +1195,26 @@ def work_create(
     # --bucket-id is an explicit override; without it the work unit binds
     # to the active profile's bucket (never the literal string "default").
     resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
+    resolved_actor = actor or _resolve_default_actor()
+
+    # create_work_unit is idempotent on the four-axis key but returns a
+    # bare WorkUnit, losing the create-vs-reuse distinction. Resolve the
+    # pre-existing unit here so the operator is told plainly whether a
+    # new unit was provisioned or an existing one returned.
+    existing_units = list_work_units(bucket_id=resolved_bucket, include_discarded=True)
+    prior = next(
+        (
+            candidate
+            for candidate in existing_units
+            if str(candidate.modelo) == modelo
+            and candidate.filing_year == resolved_year
+            and candidate.period == resolved_period
+            and candidate.revision_id == revision
+        ),
+        None,
+    )
+    reused = prior is not None
+
     unit = create_work_unit(
         bucket_id=resolved_bucket,
         modelo=modelo,
@@ -1171,13 +1222,66 @@ def work_create(
         period=resolved_period,
         revision_id=revision,
         name=name,
-        actor=actor or _resolve_default_actor(),
+        actor=resolved_actor,
     )
+
+    # A --name supplied on a reuse is not silently dropped: it is applied
+    # as a rename so the operator's intent is honoured, and the result
+    # reports the rename. On a fresh create the name is already set.
+    name_applied: str | None = None
+    if reused and name is not None and name.strip() and name.strip() != unit.name:
+        unit = rename_work_unit(unit.work_unit_id, name, actor=resolved_actor)
+        name_applied = unit.name
+
+    status = "reused" if reused else "created"
+    if reused:
+        if name_applied is not None:
+            status_message = tr(
+                "cli.app.modelo.work.create_reused_renamed",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. The supplied --name was applied as a rename "
+                    "to %{name}."
+                ),
+                name=name_applied,
+            )
+        elif name is not None and name.strip():
+            status_message = tr(
+                "cli.app.modelo.work.create_reused_name_match",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. The supplied --name matches the stored name."
+                ),
+            )
+        else:
+            status_message = tr(
+                "cli.app.modelo.work.create_reused",
+                default=(
+                    "Existing work unit returned (idempotent on modelo/year/period/revision); "
+                    "nothing new was created. Rename it with `aeat app modelo work rename`."
+                ),
+            )
+        operation = "modelo.work.reuse"
+    else:
+        status_message = tr(
+            "cli.app.modelo.work.create_created",
+            default="New work unit created.",
+        )
+        operation = "modelo.work.create"
+
     payload = {
-        "operation": "modelo.work.create",
+        "operation": operation,
+        "status": status,
+        "status_message": status_message,
+        "name_applied": name_applied,
         **_work_unit_payload(unit),
     }
-    lines = ["operation\tmodelo.work.create", *_work_unit_lines(unit)]
+    lines = [
+        f"operation\t{operation}",
+        f"status\t{status}",
+        *_work_unit_lines(unit),
+        status_message,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -1615,11 +1719,33 @@ def work_calculate(
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
 
+    # The casilla table alone gives the operator no signal that the
+    # result was persisted. Each calculate writes a `borrador` revision
+    # that survives the session; the confirmation line states that
+    # explicitly and names the verbs to resume or re-inspect it.
+    saved_confirmation = tr(
+        "cli.app.modelo.work.calculate_saved",
+        default=(
+            "Saved as draft calculation revision %{revision_id} "
+            "(state: %{state}). It is persisted and can be resumed later; "
+            "list revisions with `aeat app modelo work revisions %{work_unit_id}` "
+            "and re-inspect this one with `aeat app modelo work revision %{revision_id}`."
+        ),
+        revision_id=revision.calculation_revision_id,
+        state=revision.state.value,
+        work_unit_id=revision.work_unit_id,
+    )
     payload = {
         "operation": "modelo.work.calculate",
+        "saved": True,
+        "saved_confirmation": saved_confirmation,
         **_calculation_revision_payload(revision),
     }
-    lines = ["operation\tmodelo.work.calculate", *_calculation_revision_lines(revision)]
+    lines = [
+        "operation\tmodelo.work.calculate",
+        *_calculation_revision_lines(revision),
+        saved_confirmation,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -1628,7 +1754,7 @@ def work_revisions(
     ctx: typer.Context,
     work_unit_id: Annotated[
         str | None,
-        typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
     ] = None,
 ) -> None:
     """List calculation revisions, optionally filtered to one work unit."""
@@ -1653,6 +1779,34 @@ def work_revisions(
         f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
         for rev in revisions
     )
+    _emit(ctx, payload, lines)
+
+
+@work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
+def work_revision(
+    ctx: typer.Context,
+    calculation_revision_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
+    ],
+) -> None:
+    """Show one stored calculation revision's persisted casilla values.
+
+    Read-only: the persisted revision is rendered as-is, never
+    recomputed. Use ``work revisions`` to discover a revision id.
+    """
+
+    calculation_revision_id = _validate_calculation_revision_id(calculation_revision_id)
+    _require_active_profile()
+    try:
+        revision = get_calculation_revision(calculation_revision_id)
+    except CalculationRevisionNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    payload = {
+        "operation": "modelo.work.revision",
+        **_calculation_revision_payload(revision),
+    }
+    lines = ["operation\tmodelo.work.revision", *_calculation_revision_lines(revision)]
     _emit(ctx, payload, lines)
 
 

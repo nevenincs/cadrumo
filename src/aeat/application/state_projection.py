@@ -44,9 +44,11 @@ from ..domain.filing import ModeloDraftRepository
 from ..domain.invoices import InvoiceCatalogueRepository
 from ..domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ..domain.modelos._repository import WorkUnitCatalogueRepository
+from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
-from .user_profile import ProfilePreflightReport
+from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
+from .user_profile import ProfilePreflightReport, ProfilePreflightRequirement
 from .workflow._models import WorkflowState, resolve_active_bucket_id
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
@@ -133,8 +135,13 @@ class ProjectionWorkspaceSummary(BaseModel):
         transactions: Count of imported transactions.
         invoices: Count of imported invoices.
         drafts: Count of legacy ``ModeloDraft`` entries.
-        work_units: Count of ``WorkUnitCatalogue`` entries written by
-            ``modelo work create``.
+        work_units: Count of *active* (``BORRADOR``) ``WorkUnitCatalogue``
+            entries written by ``modelo work create``. Discarded units
+            are excluded so the counter is never inflated by units the
+            operator has abandoned.
+        discarded_work_units: Count of ``DESCARTADO`` ``WorkUnitCatalogue``
+            entries — carried distinctly so a surface can state the
+            active / discarded split rather than a misleading total.
         calculation_revisions: Count of ``CalculationRevisionCatalogue``
             entries written by ``modelo work calculate``.
         unreadable_rows: Count of secure-object rows that failed to
@@ -147,6 +154,7 @@ class ProjectionWorkspaceSummary(BaseModel):
     invoices: int = Field(default=0, ge=0)
     drafts: int = Field(default=0, ge=0)
     work_units: int = Field(default=0, ge=0)
+    discarded_work_units: int = Field(default=0, ge=0)
     calculation_revisions: int = Field(default=0, ge=0)
     unreadable_rows: int = Field(default=0, ge=0)
 
@@ -203,7 +211,7 @@ class OperatorStateProjection(BaseModel):
     active_profile: ProjectionActiveProfile
     auth: ProjectionAuthReadiness
     workspace: ProjectionWorkspaceSummary
-    modelo_readiness: tuple[ProfilePreflightReport, ...] = ()
+    modelo_readiness: tuple[ProjectionModeloReadiness, ...] = ()
     pending_obligations: tuple[ProjectionObligation, ...] = ()
 
 
@@ -351,11 +359,14 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     drafts = tuple(ModeloDraftRepository().iter_drafts())
     work_units = WorkUnitCatalogueRepository().load()
     revisions = CalculationRevisionCatalogueRepository().load()
+    active_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.BORRADOR)
+    discarded_work_units = sum(1 for unit in work_units.values() if unit.state is WorkUnitState.DESCARTADO)
     return ProjectionWorkspaceSummary(
         transactions=len(transactions.transactions),
         invoices=len(invoices),
         drafts=len(drafts),
-        work_units=len(work_units),
+        work_units=active_work_units,
+        discarded_work_units=discarded_work_units,
         calculation_revisions=len(revisions),
         unreadable_rows=secure_object_unreadable_total(),
     )
@@ -429,6 +440,26 @@ class ModeloReadinessRequest(BaseModel):
     period: str = ""
 
 
+class ProjectionModeloReadiness(BaseModel):
+    """Readiness for one modelo target across profile and ledger facts."""
+
+    model_config = _STRICT_FROZEN
+
+    profile_id: str = Field(min_length=1, max_length=96)
+    modelo: str = Field(min_length=1, max_length=16)
+    revision_id: str = Field(min_length=1, max_length=64)
+    filing_year: int = Field(ge=2000, le=2100)
+    period: str = Field(min_length=1, max_length=16)
+    missing: tuple[ProfilePreflightRequirement, ...] = ()
+    profile_ready: bool
+    ledger_preflight_required: bool = False
+    ledger_ready: bool | None = None
+    ledger_period: str | None = None
+    ledger_checked_transaction_count: int = 0
+    ledger_issues: tuple[LedgerPreflightIssue, ...] = ()
+    ready: bool
+
+
 def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
@@ -453,16 +484,78 @@ def _build_modelo_readiness(
         return ()
     record = build_lifecycle_service(bucket_id=pointer.bucket_id).read(active_profile_id)
     service = ProfilePreflightService(schema=_shared_schema())
-    return tuple(
-        service.report(
+    reports: list[ProjectionModeloReadiness] = []
+    for request in requests:
+        profile_report = service.report(
             record=record,
             modelo=request.modelo,
             revision_id=request.revision_id,
             filing_year=request.filing_year,
             period=request.period,
         )
-        for request in requests
-    )
+        ledger_report = None
+        if _modelo_requires_ledger_preflight(request):
+            ledger_report = preflight_ledger_tax_readiness(
+                bucket_id=pointer.bucket_id,
+                period=_ledger_period_for_modelo_readiness(request),
+            )
+        reports.append(
+            ProjectionModeloReadiness(
+                profile_id=profile_report.profile_id,
+                modelo=profile_report.modelo,
+                revision_id=profile_report.revision_id,
+                filing_year=profile_report.filing_year,
+                period=profile_report.period,
+                missing=profile_report.missing,
+                profile_ready=profile_report.ready,
+                ledger_preflight_required=ledger_report is not None,
+                ledger_ready=ledger_report.ready if ledger_report is not None else None,
+                ledger_period=ledger_report.period.raw if ledger_report is not None else None,
+                ledger_checked_transaction_count=(
+                    ledger_report.checked_transaction_count if ledger_report is not None else 0
+                ),
+                ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
+                ready=profile_report.ready and (ledger_report is None or ledger_report.ready),
+            )
+        )
+    return tuple(reports)
+
+
+_LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
+    {
+        "ledger_iva_aggregation",
+        "ledger_renta_expense_aggregation",
+    }
+)
+_ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
+
+
+def _modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
+    from ..core.resources import resources
+    from ..domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        snapshot = resources().modelos.authority.snapshot(
+            request.modelo,
+            filing_year=request.filing_year,
+            period=request.period,
+        )
+    except (FileNotFoundError, RegistrySnapshotError):
+        return False
+    return any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in snapshot.revision.bindings)
+
+
+def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> str:
+    token = request.period.strip().upper()
+    if token in {"1T", "2T", "3T", "4T"}:
+        return f"{request.filing_year}Q{token[0]}"
+    if token in {"Q1", "Q2", "Q3", "Q4"}:
+        return f"{request.filing_year}{token}"
+    if token in _ANNUAL_REGISTRY_PERIODS:
+        return str(request.filing_year)
+    if len(token) == 2 and token.isdigit():
+        return f"{request.filing_year}-{token}"
+    return token
 
 
 def build_operator_state_projection(
@@ -549,6 +642,7 @@ __all__ = [
     "OperatorStateProjection",
     "ProjectionActiveProfile",
     "ProjectionAuthReadiness",
+    "ProjectionModeloReadiness",
     "ProjectionObligation",
     "ProjectionWorkspaceSummary",
     "build_operator_state_projection",

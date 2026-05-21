@@ -536,11 +536,23 @@ cli:
           caller --binding overrides always take precedence.
         bucket_id_help: Bucket identifier the work unit belongs to
         calculate_help: Persist a new draft calculation revision for the work unit
+        calculate_saved: 'Saved as draft calculation revision %{revision_id} (state:
+          %{state}). It is persisted and can be resumed later; list revisions with
+          `aeat app modelo work revisions %{work_unit_id}` and re-inspect this one
+          with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
+        create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. Rename it with `aeat app modelo work rename`.
+        create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. The supplied --name matches the stored name.
+        create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
+          nothing new was created. The supplied --name was applied as a rename to
+          %{name}.
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -557,6 +569,8 @@ cli:
         invalid_amendment_kind: --kind must be one of {choices}; got {kind}.
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
+        invalid_calculation_revision_id: calculation_revision_id must be a 64-character
+          lowercase hex string (SHA-256 digest)
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
@@ -593,6 +607,8 @@ cli:
         resume_workflow_run_id_help: 16-character workflow run id
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
+        revision_show_help: Show one stored calculation revision's persisted casilla
+          values (without recomputing)
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         set_not_decimal: The --set value must be a decimal; got {value}.
@@ -700,13 +716,17 @@ cli:
     google:
       client_json_help: Path to a Cloud Console Desktop OAuth client JSON file
       detail:
-        client_json_bad_wrapper: 'client JSON at {path} has a non-object "installed" wrapper'
+        client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
+          wrapper
         client_json_invalid: 'client JSON at {path} is not valid JSON: {reason}'
-        client_json_not_desktop: 'client JSON at {path} is not a Cloud Console Desktop client; expected an "installed" wrapper key'
-        client_json_schema_invalid: 'client JSON at {path} failed schema validation: {reason}'
+        client_json_not_desktop: client JSON at {path} is not a Cloud Console Desktop
+          client; expected an "installed" wrapper key
+        client_json_schema_invalid: 'client JSON at {path} failed schema validation:
+          {reason}'
         client_json_unreadable: 'could not read client JSON from {path}: {reason}'
         client_unregistered: no OAuth client is registered for profile {profile}
-        no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh without a prior login
+        no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
+          without a prior login
       errors:
         auth_failed: 'Google authentication failed: {detail}'
         browser_open: 'Could not open a browser to authorise Google access: {detail}'
@@ -1126,21 +1146,31 @@ cli:
       amount: Amount
       archived: Archived
       bucket: Bucket
+      business_classification: Classification
+      business_pct: Business %
+      category_id: Category
       checked: Checked transactions
       children: Children
+      counterparty: Counterparty
       created_event_id: Created bucket event
+      currency: Currency
       date: Date
       description: Description
       dialect: Detected format
+      direction: Direction
       dry_run: DRY RUN MODE
       event_count: Event count
       event_id: Event id
       export_id: Export ID
       id: ID
       imported: Entries imported
+      irpf_category: IRPF category
+      iva_amount: IVA amount
+      iva_rate: IVA rate
       lifecycle_state: Lifecycle state
       merged_id: Merged transaction id
       'no': 'No'
+      notes: Notes
       notice: Notice
       output: Output
       parent_id: Parent transaction id
@@ -1158,7 +1188,9 @@ cli:
       source: Source
       split_group_id: Split group id
       stashed: Stashed
+      taxable_base: Taxable base
       valid: Valid
+      value_date: Value date
       warnings: Warnings
       'yes': 'Yes'
     link:
@@ -1471,6 +1503,9 @@ cli:
       work_units_present: '%{count} modelo work unit(s) are in progress in this local
         storage - your modelo work is saved; resume it with `aeat app modelo work
         list`.'
+      work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
+        discarded) in this local storage - your active modelo work is saved; resume
+        it with `aeat app modelo work list`.'
     status_help: Show profile, ledger, and modelo readiness
     verbose_help: Show details and next action when available
   registry:
