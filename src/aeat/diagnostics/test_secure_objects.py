@@ -10,6 +10,7 @@ in production.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -33,7 +34,7 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Wire the diagnostics CLI at a fresh per-test SQLite database."""
 
     dispose_engine()

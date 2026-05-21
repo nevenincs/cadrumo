@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import pytest
-from pydantic import ValidationError
+from pydantic import AnyHttpUrl, ValidationError
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
@@ -165,7 +165,7 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
     status = SiteHealthStatus(
         state=SiteHealthState.OK,
         evidence=SiteHealthEvidence(
-            url="https://example.org/",
+            url=AnyHttpUrl("https://example.org/"),
             http_status=200,
             html_fragment="<html></html>",
             detected_markers=("healthy",),
