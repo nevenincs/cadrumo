@@ -48,7 +48,7 @@ from ..domain.modelos._work_unit import WorkUnitState
 from ..domain.transactions import TransactionCatalogueRepository
 from .auth import AuthProviderKind, select_provider
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
-from .user_profile import ProfilePreflightReport, ProfilePreflightRequirement
+from .user_profile import ProfilePreflightRequirement
 from .workflow._models import WorkflowState, resolve_active_bucket_id
 from .workflow._persistence import workflow_state_repository
 from .workflow._profile_health import ActiveProfileHealth, assess_active_profile_health
@@ -464,7 +464,7 @@ def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
     active_profile_id: str | None,
-) -> tuple[ProfilePreflightReport, ...]:
+) -> tuple[ProjectionModeloReadiness, ...]:
     """Compute one preflight report per readiness request.
 
     Returns an empty tuple when no request is supplied or no profile is

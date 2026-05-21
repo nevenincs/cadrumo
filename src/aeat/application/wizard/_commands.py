@@ -84,7 +84,7 @@ def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
     return f"wizard.{flow.id}.flags.{question.id}.help"
 
 
-_SETUP_OPTION_INFOS: dict[str, object] = {
+_SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
     "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
@@ -343,7 +343,7 @@ def _python_parameter(
     if section_title is not None:
         # `OptionInfo` carries `rich_help_panel`; setting it groups the
         # flag under the section's panel in Typer's `--help` output.
-        option.rich_help_panel = section_title  # type: ignore[attr-defined]
+        option.rich_help_panel = section_title
     annotation: object
     default: object
     match question.widget:

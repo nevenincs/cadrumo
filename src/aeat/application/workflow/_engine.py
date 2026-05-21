@@ -1112,8 +1112,15 @@ class WorkflowEngine:
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
+        from ...adapters.outbound.aeat.browser import SiteHealthStatus
+
+        status = exc.status
+        if not isinstance(status, SiteHealthStatus):
+            raise TypeError(
+                "SiteHealthError carried a non-SiteHealthStatus payload"
+            ) from exc
         alert_run_id = self._compute_current_run_id() or "-"
-        summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {exc.status.state.value}")
+        summary = _summary_text(f"AEAT site unavailable at stage={stage.value}: {status.state.value}")
         steps.append(
             WorkflowStep(
                 stage=stage,
@@ -1123,7 +1130,7 @@ class WorkflowEngine:
                 summary=summary,
                 site_health_alert=SiteHealthAlert(
                     stage=stage,
-                    status=exc.status,
+                    status=status,
                     run_id=alert_run_id,
                 ),
             )

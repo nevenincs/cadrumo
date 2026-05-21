@@ -4,7 +4,7 @@ import re as _re
 from collections.abc import Iterable
 from datetime import date as _date
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NoReturn
 
 import typer
 
@@ -71,7 +71,7 @@ def _no_active_profile_refusal() -> Exception:
     return CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
 
 
-def _exit(code: int) -> None:
+def _exit(code: int) -> NoReturn:
     raise typer.Exit(code=code)
 
 

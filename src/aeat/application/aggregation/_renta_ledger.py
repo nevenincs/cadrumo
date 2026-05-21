@@ -520,17 +520,17 @@ def _casilla_aggregation(
 ) -> CasillaAggregation:
     totals: dict[str, Decimal] = {}
     provenance_rows: list[CasillaProvenance] = []
-    grouped: dict[tuple[str, str], list[RentaDeductibleExpenseObservation]] = {}
+    grouped: dict[tuple[str, SpendingCategory], list[RentaDeductibleExpenseObservation]] = {}
     for observation in observations:
         totals[observation.target_casilla] = (
             totals.get(observation.target_casilla, Decimal("0")) + observation.deductible_amount
         )
-        grouped.setdefault((observation.target_casilla, observation.category.value), []).append(observation)
-    for (casilla, category_id), rows in sorted(grouped.items()):
+        grouped.setdefault((observation.target_casilla, observation.category), []).append(observation)
+    for (casilla, category), rows in sorted(grouped.items()):
         provenance_rows.append(
             CasillaProvenance(
                 casilla=casilla,
-                category_id=category_id,
+                category_id=category,
                 transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
                 subtotal=sum((row.deductible_amount for row in rows), start=Decimal("0")),
             )
