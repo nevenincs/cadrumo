@@ -21,6 +21,11 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...core.i18n import tr
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
+from ..aggregation._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 from ..live import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -162,6 +167,66 @@ def resolve_modelo_100_borrador_bindings(
     )
 
 
+class Modelo100BorradorSourceResolver:
+    """Source mesh adapter for explicitly selected Modelo 100 borrador snapshots."""
+
+    resolver_id = "modelo_100_borrador"
+    owned_sources = ("borrador",)
+
+    def __init__(
+        self,
+        *,
+        borrador_snapshot_id: str | None,
+        caller_binding_values: Mapping[str, Decimal],
+        caller_enum_binding_values: Mapping[str, str],
+        registry_snapshot: RegistrySnapshot | None = None,
+        snapshot_repository: Borrador100SnapshotRepository | None = None,
+    ) -> None:
+        self._borrador_snapshot_id = borrador_snapshot_id
+        self._caller_binding_values = caller_binding_values
+        self._caller_enum_binding_values = caller_enum_binding_values
+        self._registry_snapshot = registry_snapshot
+        self._snapshot_repository = snapshot_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        snapshot = self._registry_snapshot
+        if snapshot is None:
+            from ...core.resources import resources
+
+            snapshot = resources().modelos.authority.snapshot(
+                context.modelo,
+                filing_year=context.filing_year,
+                period=context.period,
+            )
+        result = resolve_modelo_100_borrador_bindings(
+            Modelo100BorradorBindingCommand(
+                bucket_id=context.bucket_id,
+                modelo=context.modelo,
+                filing_year=context.filing_year,
+                period=context.period,
+                borrador_snapshot_id=self._borrador_snapshot_id,
+                caller_binding_values=self._caller_binding_values,
+                caller_enum_binding_values=self._caller_enum_binding_values,
+            ),
+            registry_snapshot=snapshot,
+            snapshot_repository=self._snapshot_repository,
+        )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=result.binding_values,
+            enum_binding_values=result.enum_binding_values,
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="borrador",
+                    source_ref=f"borrador:{result.borrador_snapshot_id}:binding:{binding_id}",
+                )
+                for binding_id in result.bindings_sourced_from_borrador
+                if result.borrador_snapshot_id is not None
+            ),
+        )
+
+
 def _assert_same_axis(
     *,
     bucket_id: str,
@@ -222,5 +287,6 @@ __all__ = [
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
     "Modelo100BorradorBindingResult",
+    "Modelo100BorradorSourceResolver",
     "resolve_modelo_100_borrador_bindings",
 ]

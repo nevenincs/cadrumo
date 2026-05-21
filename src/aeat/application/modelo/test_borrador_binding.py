@@ -13,11 +13,13 @@ from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
+from aeat.application.aggregation import CalculationSourceContext
 from aeat.application.live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
 from aeat.application.modelo import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
     Modelo100BorradorBindingResult,
+    Modelo100BorradorSourceResolver,
     calculate_modelo_revision,
     create_work_unit,
     resolve_modelo_100_borrador_bindings,
@@ -213,6 +215,47 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(snapshot_
     assert result.binding_values == {_DECIMAL_BINDING: Decimal("125.50")}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
     assert result.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
+
+
+def test_borrador_source_resolver_matches_application_binding_resolution(snapshot_repository) -> None:
+    snapshot_id = _save_snapshot(
+        snapshot_repository,
+        {
+            _DECIMAL_BINDING: Decimal("125.50"),
+            _ENUM_BINDING: "madrid",
+        },
+    )
+    registry_snapshot = _modelo_100_registry_snapshot()
+    expected = resolve_modelo_100_borrador_bindings(
+        _command(borrador_snapshot_id=snapshot_id),
+        registry_snapshot=registry_snapshot,
+        snapshot_repository=snapshot_repository,
+    )
+
+    resolution = Modelo100BorradorSourceResolver(
+        borrador_snapshot_id=snapshot_id,
+        caller_binding_values={},
+        caller_enum_binding_values={},
+        registry_snapshot=registry_snapshot,
+        snapshot_repository=snapshot_repository,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=_YEAR,
+            period=_PERIOD,
+            revision=registry_snapshot.revision,
+        )
+    )
+
+    assert resolution.binding_values == expected.binding_values
+    assert resolution.enum_binding_values == expected.enum_binding_values
+    assert resolution.owned_sources == ("borrador",)
+    assert {item.source_kind for item in resolution.provenance} == {"borrador"}
+    assert {item.source_ref for item in resolution.provenance} == {
+        f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",
+        f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}",
+    }
 
 
 def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
