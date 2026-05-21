@@ -1078,9 +1078,9 @@ def work_create(
         typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
     ],
     bucket_id: Annotated[
-        str,
+        str | None,
         typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = "default",
+    ] = None,
     name: Annotated[
         str | None,
         typer.Option("--name", help=tr("cli.app.modelo.work.name_help")),
@@ -1097,8 +1097,11 @@ def work_create(
     _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
+    # --bucket-id is an explicit override; without it the work unit binds
+    # to the active profile's bucket (never the literal string "default").
+    resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
     unit = create_work_unit(
-        bucket_id=bucket_id,
+        bucket_id=resolved_bucket,
         modelo=modelo,
         filing_year=resolved_year,
         period=resolved_period,
@@ -2278,7 +2281,7 @@ def _evidence_bundle_service():
     return EvidenceBundleService()
 
 
-def _audit_bucket_id() -> str:
+def _active_bucket_id() -> str:
     from ...application.workflow._models import active_bucket_id_or_raise
 
     try:
@@ -2301,7 +2304,7 @@ def audit_show(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = bundle.model_dump(mode="json")
     lines = [
@@ -2329,7 +2332,7 @@ def audit_check(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = report.model_dump(mode="json")
     lines = [
@@ -2373,7 +2376,7 @@ def audit_export(
         ),
     ] = False,
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     service = _evidence_bundle_service()
     output_path = service.export(
         bucket_id=bucket_id,
@@ -2412,7 +2415,7 @@ def audit_replay(
         typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
     ],
 ) -> None:
-    bucket_id = _audit_bucket_id()
+    bucket_id = _active_bucket_id()
     report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
     payload = report.model_dump(mode="json")
     lines = [
