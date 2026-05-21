@@ -869,6 +869,24 @@ def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
     assert verdict.mismatched_casillas == ()
 
 
+def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    exported = tmp_path / "modelo-130.txt"
+    provider = _schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
+    assert verdict.mismatched_casillas == ()
+    assert verdict.unchecked_casillas == ("saldo-negativo-fin-periodo",)
+
+
 def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
     draft = _approved_modelo_111_registry_draft()
     exported = tmp_path / "modelo-111.txt"
@@ -1067,19 +1085,21 @@ def test_export_rejects_modelo_without_registry_export_layout(tmp_path: Path) ->
     """A modelo whose registry revision declares no export layout is refused.
 
     ``export_draft`` reaches for ``subview.export_layouts[0]``. A modelo
-    with no layout (modelo 303 is filed via the AEAT web form, not an
-    "importar datos" file) must be refused with a typed
-    ``FilingExportError`` naming the gap — never crash with an
-    ``IndexError`` off the empty layout tuple.
+    with no layout must be refused with a typed ``FilingExportError``
+    naming the gap — never crash with an ``IndexError`` off the empty
+    layout tuple. The export layout is stripped via
+    ``_provider_without_export_layout`` to exercise this path for a
+    modelo that otherwise carries a layout.
     """
 
     draft = _approved_modelo_303_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(modelos=("303",)), "303")
     with pytest.raises(FilingExportError, match="no export layout"):
         export_draft(
             draft,
             output_path=tmp_path / "modelo-303.txt",
             headers={"declaration_type": "I"},
-            schema_provider=_schema_provider(modelos=("303",)),
+            schema_provider=provider,
         )
 
 
@@ -1089,14 +1109,17 @@ def test_verify_reports_missing_for_modelo_without_registry_export_layout(tmp_pa
     With no layout to parse the file against, the verifier cannot
     compute a casilla diff. It must surface a closed ``MISSING`` verdict
     carrying the ``missing_registry_layout`` narrative rather than
-    raising or fabricating a ``MATCH``.
+    raising or fabricating a ``MATCH``. The export layout is stripped via
+    ``_provider_without_export_layout`` to exercise this path for a
+    modelo that otherwise carries a layout.
     """
 
     draft = _approved_modelo_303_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(modelos=("303",)), "303")
     verdict = verify_export(
         draft,
         file_path=tmp_path / "modelo-303.txt",
-        schema_provider=_schema_provider(modelos=("303",)),
+        schema_provider=provider,
     )
 
     assert verdict.verdict is DeclaracionVerifyVerdict.MISSING
