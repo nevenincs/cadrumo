@@ -2115,6 +2115,46 @@ required_text = [
     "Declaración del Impuesto sobre la Renta de las Personas Físicas. Ejercicio 2025",
 ]
 
+[legal."orden-hac-277-2026:art-7"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-277-2026.html#articulo-7"
+document_id = "BOE-A-2026-7041"
+article = "7"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+published_at = 2026-03-27
+effective_from = 2026-03-28
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declaracion del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "8 de abril y 30 de junio de 2026",
+    "desde el día 8 de abril hasta el 25 de junio de 2026",
+]
+
+[legal."orden-hac-265-2024:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-265-2024.html#articulo-8"
+document_id = "BOE-A-2024-5721"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-5721"
+published_at = 2024-03-22
+effective_from = 2024-03-23
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declaracion del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "3 de abril y 1 de julio de 2024",
+    "desde el día 3 de abril hasta el 26 de junio de 2024",
+]
+
 [legal."ley-35-2006:art-17"]
 evidence_tier = "legal_authority"
 authority = "boe"

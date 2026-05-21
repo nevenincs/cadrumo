@@ -1,6 +1,6 @@
 """Registry-backed deadline computation engine.
 
-Takes an :class:`AutonomoProfile` and a year and produces a deterministic,
+Takes an :class:`TaxpayerProfile` and a year and produces a deterministic,
 typed :class:`Schedule`. Filing windows and applicability conditions are
 read from validated calculation registry data.
 """
@@ -22,13 +22,17 @@ from ..calculations.registry import (
     applicable_filing_schedules,
     evaluate_profile_conditions,
 )
-from ._errors import DeadlineValidationError, ScheduleComputationError
+from ._errors import (
+    DeadlineValidationError,
+    NoDeadlineWindowsError,
+    ScheduleComputationError,
+)
 from ._models import (
-    AutonomoProfile,
     ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
+    TaxpayerProfile,
 )
 from ._recargo import build_recovery_for_overdue
 
@@ -85,9 +89,7 @@ def _window_outside_activity_period(
 
     if activity_start_date is not None and closes_on < activity_start_date:
         return True
-    if activity_end_date is not None and opens_on > activity_end_date:
-        return True
-    return False
+    return activity_end_date is not None and opens_on > activity_end_date
 
 
 class DeadlineEngine:
@@ -137,7 +139,7 @@ class DeadlineEngine:
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -159,8 +161,13 @@ class DeadlineEngine:
             applies to ``profile`` for ``year``.
 
         Raises:
-            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If no
-                validated registry deadline windows apply to ``year``.
+            :exc:`aeat.domain.deadlines.NoDeadlineWindowsError`: If no
+                validated registry deadline windows are registered for
+                ``year`` — the benign data gap callers degrade around.
+            :exc:`aeat.domain.deadlines.ScheduleComputationError`: If
+                the registry fails validation or a profile condition
+                cannot be evaluated — a genuine integrity fault that
+                must not be masked.
         """
         reference_today = today or date.today()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
@@ -177,7 +184,7 @@ class DeadlineEngine:
                 obligations.append(obligation)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period))
         if not obligations and not self._has_deadline_windows(year):
-            raise ScheduleComputationError(f"No registry deadline windows registered for year {year}")
+            raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
         if obligations:
             _logger.debug("computed schedule year=%d obligations=%d", year, len(obligations))
         else:
@@ -192,7 +199,7 @@ class DeadlineEngine:
     def _obligation_for_window(
         self,
         *,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         modelo: str,
         revision: ModeloRevision,
         window: DeadlineWindowDefinition,
@@ -248,7 +255,7 @@ class DeadlineEngine:
             ),
         )
 
-    def explain(self, profile: AutonomoProfile, modelo: str, *, year: int | None = None) -> str:
+    def explain(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> str:
         """Return registry-backed deadline applicability text for ``modelo``."""
 
         selected_year = year or date.today().year
@@ -258,7 +265,7 @@ class DeadlineEngine:
             if code == modelo and self._schedule_applies(profile, revision, window)
         ]
         if not windows:
-            raise ScheduleComputationError(
+            raise NoDeadlineWindowsError(
                 f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}"
             )
         condition_text = self._evaluate_conditions(
@@ -270,7 +277,7 @@ class DeadlineEngine:
             return "No aplica segun las condiciones registrales del modelo."
         return condition_text
 
-    def applies_to(self, profile: AutonomoProfile, modelo: str, *, year: int | None = None) -> bool:
+    def applies_to(self, profile: TaxpayerProfile, modelo: str, *, year: int | None = None) -> bool:
         """Return whether registry deadline conditions match for ``modelo``."""
 
         selected_year = year or date.today().year
@@ -296,14 +303,14 @@ class DeadlineEngine:
         return bool(self._deadline_windows(year))
 
     @staticmethod
-    def _schedule_applies(profile: AutonomoProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+    def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
         if not revision.filing_schedules:
             return True
         return bool(applicable_filing_schedules(revision, profile, period=_window_registry_period(window)))
 
     @staticmethod
     def _evaluate_conditions(
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         conditions: tuple[ProfilePredicateDefinition, ...],
         *,
         mode: str,
@@ -397,7 +404,7 @@ class ScheduleProducer(Protocol):
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -408,7 +415,7 @@ class ScheduleProducer(Protocol):
 
 def compute_obligation_schedule(
     engine: ScheduleProducer,
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     *,
     today: date,
 ) -> Schedule:
@@ -442,13 +449,13 @@ def compute_obligation_schedule(
     return engine.compute(profile, today.year, today=today)
 
 
-def applies_to(profile: AutonomoProfile, modelo: str) -> bool:
+def applies_to(profile: TaxpayerProfile, modelo: str) -> bool:
     """Return whether registry deadline conditions match for ``modelo``."""
 
     return DeadlineEngine().applies_to(profile, modelo)
 
 
-def explain(profile: AutonomoProfile, modelo: str) -> str:
+def explain(profile: TaxpayerProfile, modelo: str) -> str:
     """Return registry-backed deadline applicability text for ``modelo``."""
 
     return DeadlineEngine().explain(profile, modelo)

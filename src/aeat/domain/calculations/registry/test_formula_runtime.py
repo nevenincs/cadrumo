@@ -100,6 +100,30 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
 def test_registry_formula_runtime_preserves_signed_intermediate_results_from_official_instructions(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
+    """Structural sign-propagation assertion — not a numeric tautology.
+
+    This test asserts no hand-computed Decimal. It exercises two
+    structural contracts of the modelo-130 pago-fraccionado graph that
+    hold regardless of the exact arithmetic:
+
+    * Sign propagation: the modelo-130 form (AEAT *Diseño de registros*
+      modelo 130) carries explicitly signable "diferencia" casillas —
+      a pago-fraccionado period whose deductible amounts (05/06/08/10)
+      and prior payments outweigh the period's gross liability must
+      drive its intermediate "diferencia" casillas (07, 11) negative.
+      A formula that clamped these or flipped a subtraction would fail
+      the strict-negative assertion.
+    * Floor contract: casilla 12 carries a ``MAX(_, 0)`` floor in the
+      registry (the period result the operator pays is never negative;
+      a refund is carried elsewhere). The ``>= 0`` assertion exercises
+      that declared floor, not a derived value.
+
+    Per the no-tautological-calculation-tests rule this is the
+    "structural assertion" alternative: it would fail if the registry
+    formula graph were wrong against AEAT, yet manufactures no Decimal
+    expectation from the formula under test.
+    """
+
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs={

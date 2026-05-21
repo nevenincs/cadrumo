@@ -34,17 +34,18 @@ from ...domain.buckets import (
 )
 from ...domain.calculations.registry import (
     CasillaDefinition,
+    CasillaObservation,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
-)
-from ...domain.calculations.registry._bindings import CasillaObservation
-from ...domain.calculations.registry._runtime_graph import (
+    calculate_registry_snapshot,
     enum_consumed_binding_ids,
+    expression_binding_refs,
     input_casilla_alias_map,
+    materialize_relation_binding_values,
 )
-from ...domain.deadlines import AutonomoProfile, DeadlineEngine
+from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -99,25 +100,30 @@ from ..filing import (
     approve_draft,
     build_draft,
     build_runtime_schema_provider,
-    filing_profile_from_autonomo,
+    filing_profile_from_taxpayer,
 )
 from ..live import Borrador100SnapshotRepository
 from ..workflow import (
     DeadlineEngineAdapter,
+    ModeloInputs,
     RegistryModeloDraftProtocol,
     WorkflowEngine,
+    WorkflowPurpose,
     WorkflowResult,
     WorkflowRunRepository,
     WorkflowStage,
 )
 from ._borrador_binding import (
-    Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingResult,
-    resolve_modelo_100_borrador_bindings,
+    Modelo100BorradorSourceResolver,
 )
 from ._profile_binding import ProfileSourcedBindingResult
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry import ValidatedRegistryAuthority
+    from ..calculations._iva_wallet_reconciliation import (
+        IvaCompensationReconciliationDecision,
+    )
     from ..calculations._observations_repository import IvaWalletDecisionRepository
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 2
@@ -325,8 +331,15 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
     return f"{modelo}-{filing_year}-{period}"
 
 
-def _workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
-    """Return the canonical period token consumed by WorkflowEngine."""
+def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
+    """Return the canonical period token consumed by WorkflowEngine.
+
+    The work unit stores the period as a short token (``"1T"``,
+    ``"0A"``, ``"03"``); the :class:`WorkflowEngine` consumes a
+    year-qualified token (``"2026Q1"``, ``"2026"``, ``"2026-03"``).
+    This is the single producer of that mapping, used by the workflow
+    gate and by run-id resolution so they cannot diverge.
+    """
 
     if work_unit.period.endswith("T") and len(work_unit.period) == 2:
         quarter = work_unit.period[0]
@@ -345,15 +358,15 @@ class _RevisionInputsProvider:
     def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
         self._revision = revision
         self._modelo = work_unit.modelo
-        self._period = _workflow_period_for_work_unit(work_unit)
+        self._period = workflow_period_for_work_unit(work_unit)
 
     def load_inputs(
         self,
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         del profile
         if modelo != self._modelo or period != self._period:
             raise ValueError("workflow input request does not match calculation revision")
@@ -381,14 +394,14 @@ class _RevisionDraftBuilder:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-        inputs: Mapping[str, object],
+        profile: TaxpayerProfile,
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         draft = build_draft(
             modelo=modelo,
             period=period,
-            profile=filing_profile_from_autonomo(profile),
+            profile=filing_profile_from_taxpayer(profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
@@ -408,7 +421,7 @@ class _RevisionDraftBuilder:
 class _RevisionDeadlineWindowChecker:
     """Checks the same deadline schedule the workflow gate already computed."""
 
-    def __init__(self, *, profile: AutonomoProfile, engine: DeadlineEngine) -> None:
+    def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
         self._profile = profile
         self._engine = engine
 
@@ -427,7 +440,7 @@ def _build_revision_workflow_engine(
     *,
     revision: CalculationRevision,
     work_unit: WorkUnit,
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     actor: str,
     clock: datetime,
     settings: Settings | None,
@@ -461,20 +474,22 @@ def _build_revision_workflow_engine(
 def _run_revision_workflow_gate(
     *,
     engine: WorkflowEngine,
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     work_unit: WorkUnit,
     today: date,
     runs_dir: Path | None,
     run_repository: WorkflowRunRepository,
     resumed_from: str | None = None,
+    purpose: WorkflowPurpose = WorkflowPurpose.FILE,
 ) -> WorkflowResult:
     result = asyncio.run(
         engine.run_for_period(
             profile,
             work_unit.modelo,
-            _workflow_period_for_work_unit(work_unit),
+            workflow_period_for_work_unit(work_unit),
             today=today,
             resumed_from=resumed_from,
+            purpose=purpose,
         )
     )
     run_repository.save(result, runs_dir=runs_dir)
@@ -851,13 +866,6 @@ def calculate_modelo_revision(
     explicitly to advance through the lifecycle.
     """
 
-    from ...domain.calculations.registry._formula_runtime import (
-        calculate_registry_snapshot,
-    )
-    from ...domain.calculations.registry._relations import (
-        materialize_relation_binding_values,
-    )
-
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
@@ -899,6 +907,8 @@ def calculate_modelo_revision(
         work_unit.modelo,
         work_unit.filing_year,
         work_unit.period,
+        bucket_id=work_unit.bucket_id,
+        revision=snapshot.revision,
         taxpayer_nif=_taxpayer_nif_for_bucket(work_unit.bucket_id),
         casilla_inputs=casilla_inputs,
         backend_casilla_inputs=backend_casilla_inputs,
@@ -1075,6 +1085,8 @@ def _apply_iva_compensation_decision_binding(
     filing_year: int,
     period: str,
     *,
+    bucket_id: str,
+    revision: ModeloRevision,
     taxpayer_nif: str | None = None,
     casilla_inputs: Mapping[str, Decimal] | None = None,
     backend_casilla_inputs: Mapping[str, Decimal] | None = None,
@@ -1141,7 +1153,19 @@ def _apply_iva_compensation_decision_binding(
         raise ModeloIvaWalletReconciliationBlocked(
             "backend casilla input for Modelo 303 prior compensation conflicts with IVA wallet reconciliation decision"
         )
-    backend_binding_values[binding_id] = selected
+    from ..aggregation import CalculationSourceContext
+    from ..calculations import IvaWalletDecisionSourceResolver
+
+    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+            revision=revision,
+        )
+    )
+    backend_binding_values.update(resolution.binding_values)
 
 
 def _require_persisted_iva_compensation_decision_for_work_unit(
@@ -1168,7 +1192,7 @@ def _load_persisted_iva_compensation_decision_for_work_unit(
     work_unit: WorkUnit,
     *,
     repository: IvaWalletDecisionRepository | None = None,
-) -> object | None:
+) -> IvaCompensationReconciliationDecision | None:
     if work_unit.modelo != "303":
         return None
     taxpayer_nif = _taxpayer_nif_for_bucket(work_unit.bucket_id)
@@ -1190,7 +1214,7 @@ def _persisted_blocked_iva_compensation_decision_for_work_unit(
     work_unit: WorkUnit,
     *,
     repository: IvaWalletDecisionRepository | None = None,
-) -> object | None:
+) -> IvaCompensationReconciliationDecision | None:
     decision = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is not None and bool(decision.blocked):
         return decision
@@ -1419,7 +1443,7 @@ def _resolve_profile_bindings_for_calculation(
     the profile already holds.
     """
 
-    from ._profile_binding import resolve_profile_sourced_bindings
+    from ..aggregation import CalculationSourceContext, ProfileSourceResolver
 
     caller_owned = (
         set(caller_binding_values)
@@ -1428,10 +1452,24 @@ def _resolve_profile_bindings_for_calculation(
         | set(borrador_result.enum_binding_values)
         | set(backend_binding_values)
     )
-    return resolve_profile_sourced_bindings(
-        snapshot,
-        bucket_id=bucket_id,
-        caller_binding_ids=frozenset(caller_owned),
+    resolution = ProfileSourceResolver(
+        caller_binding_ids=caller_owned,
+        registry_snapshot=snapshot,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=bucket_id,
+            modelo=snapshot.modelo.id,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+            revision=snapshot.revision,
+        )
+    )
+    return ProfileSourcedBindingResult(
+        binding_values=resolution.binding_values,
+        enum_binding_values=resolution.enum_binding_values,
+        bindings_sourced_from_profile=tuple(
+            sorted(set(resolution.binding_values) | set(resolution.enum_binding_values))
+        ),
     )
 
 
@@ -1482,8 +1520,6 @@ def _reject_binding_channel_mismatch(
 def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
     """Return whether any formula expression references ``binding_id``."""
 
-    from ...domain.calculations.registry._runtime_graph import expression_binding_refs
-
     return any(
         binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas
     )
@@ -1501,20 +1537,30 @@ def _resolve_borrador_bindings_for_calculation(
     registry_snapshot: RegistrySnapshot,
     snapshot_repository: Borrador100SnapshotRepository | None,
 ) -> Modelo100BorradorBindingResult:
-    return resolve_modelo_100_borrador_bindings(
-        Modelo100BorradorBindingCommand(
+    from ..aggregation import CalculationSourceContext
+
+    resolution = Modelo100BorradorSourceResolver(
+        borrador_snapshot_id=borrador_snapshot_id,
+        caller_binding_values=caller_binding_values,
+        caller_enum_binding_values=caller_enum_binding_values,
+        registry_snapshot=registry_snapshot,
+        snapshot_repository=snapshot_repository,
+    ).resolve(
+        CalculationSourceContext(
             bucket_id=bucket_id,
             modelo=modelo,
             filing_year=filing_year,
             period=period,
-            borrador_snapshot_id=borrador_snapshot_id,
-            caller_binding_values=caller_binding_values,
-            caller_enum_binding_values=caller_enum_binding_values,
-        ),
-        registry_snapshot=registry_snapshot,
-        snapshot_repository=snapshot_repository,
+            revision=registry_snapshot.revision,
+        )
     )
-
+    sourced = tuple(sorted(set(resolution.binding_values) | set(resolution.enum_binding_values)))
+    return Modelo100BorradorBindingResult(
+        borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+        binding_values=resolution.binding_values,
+        enum_binding_values=resolution.enum_binding_values,
+        bindings_sourced_from_borrador=sourced,
+    )
 
 def _resolve_bound_casilla_inputs_for_available_bindings(
     revision: ModeloRevision,
@@ -1548,6 +1594,9 @@ _FILING_PERIOD_ORDINALS: Mapping[str, int] = {
     "10": 10,
     "11": 11,
     "12": 12,
+    "1P": 1,
+    "2P": 2,
+    "3P": 3,
 }
 """Numeric ordinal for every registry-native period token.
 
@@ -1557,6 +1606,11 @@ Each work unit carries exactly one period family (a Modelo 303
 work unit is quarterly or monthly, never both), so the ordinal
 alone is an unambiguous numeric projection of that work unit's
 period for the ``decl.periodo`` informational casilla.
+
+The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
+instalment claves (Modelo 202); the ordinal mirrors the digit AEAT
+expects in the ``periodo`` clave (``1P`` → ``1``, ``2P`` → ``2``,
+``3P`` → ``3``).
 """
 
 
@@ -1759,7 +1813,7 @@ def _registry_root() -> Path:
     return bundled_path("registry", "aeat")
 
 
-def _authority_via_resources() -> object:
+def _authority_via_resources() -> ValidatedRegistryAuthority:
     """Return the registry authority via the central resource registry."""
     from ...core.resources import resources
     return resources().modelos.authority
@@ -1970,7 +2024,7 @@ def verify_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepository | None = None,
@@ -1999,7 +2053,12 @@ def verify_modelo_revision(
        the calculation revision transitions DRAFT →
        VERIFICADO_COMPLETO.
     5. If the report would grant ``VERIFICADO_COMPLETO``, run the
-       WorkflowEngine-owned gate before mutating state.
+       WorkflowEngine-owned gate before mutating state. The gate runs
+       with :attr:`WorkflowPurpose.VERIFY`: it validates the draft
+       against the registry but is independent of the AEAT filing
+       calendar — it never refuses because the filing window is closed
+       or absent. The ``NO_PENDING_OBLIGATION`` guard stays on the
+       filing path (``file_modelo_revision``).
     6. Persist the report in the verification-report catalogue.
        Failed attempts persist so the audit trail explains why a
        transition was refused.
@@ -2089,6 +2148,7 @@ def verify_modelo_revision(
             today=now.date(),
             runs_dir=workflow_runs_dir,
             run_repository=run_repo,
+            purpose=WorkflowPurpose.VERIFY,
         )
 
     # Persist the report regardless of outcome — failed attempts
@@ -2403,7 +2463,7 @@ def file_modelo_revision(
     calculation_revision_id: str,
     *,
     actor: str,
-    workflow_profile: AutonomoProfile,
+    workflow_profile: TaxpayerProfile,
     notes: str | None = None,
     work_unit_repository: WorkUnitCatalogueRepository | None = None,
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
@@ -3184,4 +3244,5 @@ __all__ = [
     "mark_revision_verificado_completo",
     "rename_work_unit",
     "verify_modelo_revision",
+    "workflow_period_for_work_unit",
 ]

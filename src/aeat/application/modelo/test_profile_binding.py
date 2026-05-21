@@ -32,7 +32,12 @@ from aeat.application.user_profile import UserProfileLifecycleRepository
 from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import RegistrySnapshot
+from aeat.domain.calculations.registry import (
+    DataBindingDefinition,
+    FormulaDefinition,
+    FormulaExpression,
+    RegistrySnapshot,
+)
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
@@ -44,6 +49,7 @@ _YEAR = 2025
 _PERIOD = "0A"
 _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING = "renta-2025-modelo-100-estimacion-directa-es-normal"
+_SYNTHETIC_DECIMAL_PROFILE_BINDING = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
 
 
@@ -162,6 +168,62 @@ def test_profile_resolution_routes_two_ccaa_values_distinctly() -> None:
         cataluna.enum_binding_values[_CCAA_BINDING]
         != madrid.enum_binding_values[_CCAA_BINDING]
     )
+
+
+def test_profile_numeric_fact_resolves_into_the_decimal_binding_channel() -> None:
+    """A formula-consumed numeric profile fact lands in the Decimal channel.
+
+    Modelo 100 currently consumes its real profile-sourced CCAA binding
+    through enum dispatch formulas. This synthetic revision extension
+    covers the sibling channel contract: a profile-sourced binding
+    referenced as a numeric formula operand must be Decimal-coerced and
+    must not leak into ``enum_binding_values``.
+    """
+    snapshot = _snapshot_with_decimal_profile_binding(_modelo_100_snapshot())
+    record = UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Numeric profile taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="usage_ratios.business_ratio", value=Decimal("0.37")),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+    result = resolve_profile_sourced_bindings(
+        snapshot,
+        bucket_id=_BUCKET_ID,
+        profile_record=record,
+    )
+
+    assert result.binding_values[_SYNTHETIC_DECIMAL_PROFILE_BINDING] == Decimal("0.37")
+    assert _SYNTHETIC_DECIMAL_PROFILE_BINDING not in result.enum_binding_values
+    assert _SYNTHETIC_DECIMAL_PROFILE_BINDING in result.bindings_sourced_from_profile
+
+
+def _snapshot_with_decimal_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    binding = DataBindingDefinition(
+        id=_SYNTHETIC_DECIMAL_PROFILE_BINDING,
+        source="profile",
+        selector={"profile_key": "usage_ratios.business_ratio"},
+        legal_refs=snapshot.revision.legal_refs,
+        source_refs=snapshot.revision.source_refs,
+    )
+    formula = FormulaDefinition(
+        id="test-profile-business-ratio-decimal-formula",
+        target=snapshot.revision.casillas[0].id,
+        expression=FormulaExpression(binding=_SYNTHETIC_DECIMAL_PROFILE_BINDING),
+        legal_refs=snapshot.revision.legal_refs,
+        source_refs=snapshot.revision.source_refs,
+    )
+    revision = snapshot.revision.model_copy(
+        update={
+            "bindings": (*snapshot.revision.bindings, binding),
+            "formulas": (*snapshot.revision.formulas, formula),
+        }
+    )
+    return snapshot.model_copy(update={"revision": revision})
 
 
 def _non_ccaa_decimal_binding_values(snapshot: RegistrySnapshot) -> dict[str, Decimal]:

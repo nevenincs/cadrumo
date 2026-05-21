@@ -13,10 +13,10 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
+    RegistrySnapshotRef,
     RegistryValidationError,
     calculate_registry_snapshot,
 )
-from ...domain.calculations.registry._schema import RegistrySnapshotRef
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
     AmendmentKind,
@@ -89,7 +89,7 @@ from .errors import ModeloApplicationError, ModeloCalculateError
 from .runtime import (
     ModeloOperatorProfile,
     build_runtime_schema_provider,
-    filing_profile_from_autonomo,
+    filing_profile_from_taxpayer,
     load_default_filing_profile,
 )
 
@@ -518,7 +518,7 @@ __all__ = [
     "derive_validation_status",
     "describe_stale_reason",
     "export_draft",
-    "filing_profile_from_autonomo",
+    "filing_profile_from_taxpayer",
     "import_filing_from_justificante",
     "iter_findings",
     "list_amendments",

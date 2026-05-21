@@ -164,6 +164,27 @@ def test_bindings_list_missing_drops_profile_resolved_bindings() -> None:
     assert missing_ids < full_ids
 
 
+def test_bindings_list_labels_profile_sourced_rows_as_profile_facts() -> None:
+    """``bindings list`` must not send operators to ledger work for
+    profile-sourced Modelo 100 bindings.
+
+    The registry uses ``source = "profile"`` for profile facts. The CLI
+    readiness column should render those rows as ``profile fact``.
+    """
+
+    result = invoke_cached_cli(
+        ["app", "modelo", "bindings", "list", "--modelo", "100", "--year", "2024"],
+    )
+    assert result.exit_code == 0, result.output
+    profile_rows = [
+        line
+        for line in result.output.splitlines()
+        if line.startswith("100\t") and line.split("\t")[4] == "profile"
+    ]
+    assert profile_rows, result.output
+    assert all(line.split("\t")[5] == "profile fact" for line in profile_rows), profile_rows
+
+
 # ---------------------------------------------------------------------------
 # D3 - bindings list --year resolves the year-covering revision
 # ---------------------------------------------------------------------------
@@ -282,6 +303,31 @@ def test_bindings_list_marks_decimal_consumed_typed_enum_binding() -> None:
     assert columns[-2] == "decimal", row
 
 
+def test_modelo_readiness_names_preflight_scope() -> None:
+    """``readiness`` must not read like filing completeness for manual
+    casilla modelos. It reports profile/source preflight readiness.
+    """
+
+    _create_profile()
+    result = invoke_cached_cli(
+        [
+            "app",
+            "modelo",
+            "readiness",
+            "--modelo",
+            "111",
+            "--revision-id",
+            "2019-y-siguientes",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+        ]
+    )
+    assert result.exit_code == 0, result.output
+    assert "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness" in result.output
+
+
 # ---------------------------------------------------------------------------
 # F1 - work calculate / work revision lead with a result summary
 # ---------------------------------------------------------------------------
@@ -324,3 +370,82 @@ def test_work_calculate_json_carries_the_result_summary() -> None:
     assert summary, result.output
     assert all({"role", "casilla_id", "value", "label"} <= set(row) for row in summary)
     assert any(row["casilla_id"] == "iva.resultado" for row in summary)
+
+
+# ---------------------------------------------------------------------------
+# Modelo 202 pago-fraccionado periods calculate end-to-end
+# ---------------------------------------------------------------------------
+
+
+def _create_202_work_unit(period: str) -> str:
+    """Create a Modelo 202 work unit for one pago-fraccionado clave."""
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "202", "--year", "2026", "--period", period,
+            "--revision", "2025-y-siguientes",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["period"] == period
+    return payload["work_unit_id"]
+
+
+@pytest.mark.parametrize("period", ["1P", "2P", "3P"])
+def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str) -> None:
+    """``work calculate`` accepts every pago-fraccionado clave Modelo 202
+    advertises (``1P`` / ``2P`` / ``3P``).
+
+    ``describe 202`` advertises ``1P``/``2P``/``3P`` and ``work create``
+    accepts them, but ``work calculate`` used to reject every one with
+    ``invalid registry period '1P'`` — the calculate path's
+    period-boundary resolution never learned the IS instalment claves.
+    The period token must now resolve end-to-end: the calculation runs
+    the registry engine and persists a draft revision, exactly as the
+    quarterly and annual modelos already do.
+    """
+
+    _create_profile()
+    work_unit_id = _create_202_work_unit(period)
+    result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+    )
+    assert result.exit_code == 0, result.output
+    assert "invalid registry period" not in result.output
+    payload = json.loads(result.output)
+    # The engine ran and persisted a draft calculation revision —
+    # the same end stage Modelo 200 / 303 reach.
+    assert payload["state"] == "borrador"
+    assert payload["calculation_revision_id"]
+    assert payload["saved"] is True
+    assert payload["casilla_values"], result.output
+
+
+def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
+    """``describe``, ``work create`` and ``work calculate`` agree on the
+    Modelo 202 period tokens.
+
+    Every clave ``describe 202`` lists under ``Periods`` must be
+    accepted by both ``work create`` and ``work calculate``; no surface
+    may advertise a period the others reject.
+    """
+
+    _create_profile()
+    described = invoke_cached_cli(["app", "modelo", "describe", "202"])
+    assert described.exit_code == 0, described.output
+    periods_line = next(
+        line for line in described.output.splitlines() if line.startswith("Periods\t")
+    )
+    advertised = {token.strip() for token in periods_line.split("\t", 1)[1].split(",")}
+    assert advertised == {"1P", "2P", "3P"}, described.output
+
+    for period in sorted(advertised):
+        work_unit_id = _create_202_work_unit(period)
+        calculated = invoke_cached_cli(
+            ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+        )
+        assert calculated.exit_code == 0, (period, calculated.output)
+        assert json.loads(calculated.output)["state"] == "borrador"

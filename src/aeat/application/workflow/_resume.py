@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...domain.deadlines import ModeloDeadline
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowResult, WorkflowStage
-from ._persistence import load_run
+from ._persistence import list_runs, load_run
 
 
 class WorkflowResumeRefusedError(WorkflowError):
@@ -104,8 +104,51 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
     )
 
 
+def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
+    """Return the most recent persisted workflow run for ``(modelo, period)``.
+
+    A workflow run id is a 16-character hash an operator cannot derive
+    by hand, so a caller that only knows the ``(modelo, period)`` of a
+    work unit needs a way to resolve the run id. This helper scans the
+    persisted run history and returns the newest run whose resolved
+    obligation matches the supplied ``(modelo, period)``.
+
+    The returned run is *not* gated for resumability — pass its
+    ``run_id`` to :func:`resume_modelo_workflow`, which applies the
+    resumability rules and produces a precise refusal if the latest
+    run cannot be retried.
+
+    Args:
+        modelo: Target modelo identifier.
+        period: Target workflow period token (e.g. ``"2026Q1"``).
+
+    Returns:
+        The newest matching :class:`WorkflowResult`.
+
+    Raises:
+        WorkflowError: When no persisted run targets ``(modelo, period)``.
+    """
+    matches = [
+        run
+        for run in list_runs()
+        if run.obligation is not None
+        and run.obligation.modelo == modelo
+        and run.obligation.period == period
+    ]
+    if not matches:
+        raise WorkflowError(
+            f"no persisted workflow run for modelo={modelo} period={period}; "
+            "drive the workflow at least once before resuming",
+        )
+    # list_runs() already sorts newest-first; be explicit so the
+    # contract does not depend on that ordering.
+    matches.sort(key=lambda run: run.started_at, reverse=True)
+    return matches[0]
+
+
 __all__ = [
     "WorkflowResumeContext",
     "WorkflowResumeRefusedError",
+    "find_latest_run_for_period",
     "resume_modelo_workflow",
 ]

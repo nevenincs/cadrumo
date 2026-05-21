@@ -35,6 +35,12 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...domain.calculations.registry._bindings import RegistryModeloObservation
+from ...domain.calculations.registry._schema import RegistrySnapshot
+from ..aggregation._source_mesh import (
+    CalculationSourceContext,
+    CalculationSourceProvenance,
+    CalculationSourceResolution,
+)
 from ._observations_repository import CalculationObservationRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -109,6 +115,51 @@ class MultiYearResolver:
         )
 
 
+class PreviousFilingSourceResolver:
+    """Resolve ``source = "previous_filing"`` bindings through the source mesh."""
+
+    resolver_id = "previous_filing"
+    owned_sources = ("previous_filing",)
+
+    def __init__(
+        self,
+        *,
+        repository: CalculationObservationRepository | None = None,
+        registry_snapshot: RegistrySnapshot | None = None,
+    ) -> None:
+        self._repository = repository
+        self._registry_snapshot = registry_snapshot
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        snapshot = self._registry_snapshot
+        if snapshot is None:
+            from ...core.resources import resources
+
+            snapshot = resources().modelos.authority.snapshot(
+                context.modelo,
+                filing_year=context.filing_year,
+                period=context.period,
+            )
+        from ._binding_prefill import resolve_bindings_from_local_store
+
+        report = resolve_bindings_from_local_store(snapshot, repository=self._repository)
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=report.binding_values,
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="previous_filing",
+                    source_ref=(
+                        f"{item.source_modelo}:{item.source_filing_year}:"
+                        f"{','.join(item.source_periods)}:{item.binding_id}"
+                    ),
+                )
+                for item in report.prefilled
+            ),
+        )
+
+
 def resolve_prior_year_observations(
     modelo: str,
     current_year: int,
@@ -137,5 +188,6 @@ __all__ = [
     "MultiYearResolutionReport",
     "MultiYearResolutionRequest",
     "MultiYearResolver",
+    "PreviousFilingSourceResolver",
     "resolve_prior_year_observations",
 ]

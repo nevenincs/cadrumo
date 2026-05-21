@@ -30,6 +30,7 @@ from ._models import (
     SiteHealthAlert,
     WorkflowAbortReason,
     WorkflowEvent,
+    WorkflowPurpose,
     WorkflowResult,
     WorkflowStage,
     WorkflowState,
@@ -57,7 +58,10 @@ from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
     ModeloDraftBuilderProtocol,
+    ModeloInputs,
+    ModeloInputScalar,
     ModeloInputsProviderProtocol,
+    ModeloInputValue,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
@@ -66,6 +70,7 @@ from ._protocols import (
 from ._resume import (
     WorkflowResumeContext,
     WorkflowResumeRefusedError,
+    find_latest_run_for_period,
     resume_modelo_workflow,
 )
 
@@ -76,6 +81,9 @@ __all__ = [
     "DeclaracionPointer",
     "ModeloDraftBuilderAdapter",
     "ModeloDraftBuilderProtocol",
+    "ModeloInputScalar",
+    "ModeloInputValue",
+    "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "NoActiveProfileError",
     "ProfileBucketPointer",
@@ -89,6 +97,7 @@ __all__ = [
     "WorkflowEngine",
     "WorkflowError",
     "WorkflowEvent",
+    "WorkflowPurpose",
     "WorkflowResult",
     "WorkflowResumeContext",
     "WorkflowResumeRefusedError",
@@ -102,6 +111,7 @@ __all__ = [
     "compute_run_id",
     "declaration_key",
     "default_engine",
+    "find_latest_run_for_period",
     "list_runs",
     "load_run",
     "resume_modelo_workflow",

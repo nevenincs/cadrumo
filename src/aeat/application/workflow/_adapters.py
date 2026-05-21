@@ -16,7 +16,6 @@ than failing.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING, cast
 
@@ -26,9 +25,9 @@ if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import AeatSession
 from ...core.logging import get_logger
 from ...domain.deadlines import (
-    AutonomoProfile,
     DeadlineEngine,
     Schedule,
+    TaxpayerProfile,
 )
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ..filing import (
@@ -44,6 +43,7 @@ from ._protocols import (
     DeadlineEngineProtocol,
     ExpedientesSource,
     ModeloDraftBuilderProtocol,
+    ModeloInputs,
     ModeloInputsProviderProtocol,
     NotificationsSource,
     RegistryModeloDraftProtocol,
@@ -62,7 +62,7 @@ class DeadlineEngineAdapter:
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -88,15 +88,15 @@ class ModeloDraftBuilderAdapter:
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-        inputs: Mapping[str, object],
+        profile: TaxpayerProfile,
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft`.
 
-        ``cast`` is used for ``profile`` because :class:`AutonomoProfile`
+        ``cast`` is used for ``profile`` because :class:`TaxpayerProfile`
         and :class:`aeat.application.filing.ModeloProfile` are structurally
-        compatible (both expose ``tax_id``) but ``AutonomoProfile`` does not
+        compatible (both expose ``tax_id``) but ``TaxpayerProfile`` does not
         declare ``display_name`` and therefore does not satisfy the Protocol
         statically. At this adapter boundary the structural bridging is
         intentional.
@@ -124,9 +124,15 @@ class SubmissionEngineAdapter:
         """Store the wrapped :class:`SubmissionEngine`."""
         self._engine = engine
 
-    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
+    def preflight(
+        self,
+        draft: RegistryModeloDraftProtocol,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         """Delegate to the engine's public preflight method."""
-        self._engine.preflight(draft, today=today)
+        self._engine.preflight(draft, today=today, skip_deadline_window=skip_deadline_window)
 
 
 async def _live_expedientes_source(session: object, modelo: str | None) -> object:

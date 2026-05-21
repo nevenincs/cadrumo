@@ -12,7 +12,13 @@ carry only ``nT`` for quarterly and rely on a separately-supplied
 ``ejercicio`` (filing year). Both callers ultimately resolve to the same
 ``(year, registry_period)`` shape, where ``registry_period`` is the
 registry-native period identifier (``"1T"`` … ``"4T"``, ``"01"`` … ``"12"``,
-``"0A"``).
+``"0A"``, ``"1P"`` … ``"3P"``).
+
+The ``nP`` tokens are the Impuesto sobre Sociedades pago-fraccionado
+instalment claves (Modelo 202). Per the AEAT Modelo 202 instructions,
+``1P`` is the payment made in the first twenty days of April, ``2P``
+the equivalent October payment, and ``3P`` the December payment; the
+period-boundary helpers map each instalment to its payment month.
 
 This module centralises that parsing and the canonical period-end-date
 mapping each surface needs. Callers wrap :class:`ValueError` into their
@@ -94,7 +100,9 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
     Returns:
         The first day of the period the token covers (e.g. ``"1T"`` →
         ``YYYY-01-01``, ``"4T"`` → ``YYYY-10-01``, ``"0A"`` →
-        ``YYYY-01-01``, ``"03"`` → ``YYYY-03-01``).
+        ``YYYY-01-01``, ``"03"`` → ``YYYY-03-01``, ``"1P"`` →
+        ``YYYY-04-01``, ``"2P"`` → ``YYYY-10-01``, ``"3P"`` →
+        ``YYYY-12-01``).
 
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
@@ -110,6 +118,12 @@ def period_start_date(filing_year: int, registry_period: str) -> date:
         return date(filing_year, 10, 1)
     if registry_period == "0A":
         return date(filing_year, 1, 1)
+    if registry_period == "1P":
+        return date(filing_year, 4, 1)
+    if registry_period == "2P":
+        return date(filing_year, 10, 1)
+    if registry_period == "3P":
+        return date(filing_year, 12, 1)
     try:
         return date(filing_year, int(registry_period), 1)
     except ValueError as exc:
@@ -129,7 +143,8 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
         The last day of the period the token covers (e.g. ``"1T"`` →
         ``YYYY-03-31``, ``"0A"`` and ``"4T"`` → ``YYYY-12-31``, ``"03"``
         → ``YYYY-03-01`` for the monthly-as-first-of-month convention
-        the application layer already uses).
+        the application layer already uses, ``"1P"`` → ``YYYY-04-30``,
+        ``"2P"`` → ``YYYY-10-31``, ``"3P"`` → ``YYYY-12-31``).
 
     Raises:
         PeriodValidationError: When ``registry_period`` is not a recognised shape.
@@ -142,6 +157,12 @@ def period_end_date(filing_year: int, registry_period: str) -> date:
     if registry_period == "3T":
         return date(filing_year, 9, 30)
     if registry_period in {"4T", "0A"}:
+        return date(filing_year, 12, 31)
+    if registry_period == "1P":
+        return date(filing_year, 4, 30)
+    if registry_period == "2P":
+        return date(filing_year, 10, 31)
+    if registry_period == "3P":
         return date(filing_year, 12, 31)
     try:
         return date(filing_year, int(registry_period), 1)

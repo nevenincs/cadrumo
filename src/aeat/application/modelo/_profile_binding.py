@@ -31,12 +31,12 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...domain.calculations.registry import RegistrySnapshot
-from ...domain.calculations.registry._runtime_graph import (
+from ...domain.calculations.registry import (
+    DataBindingDefinition,
+    RegistrySnapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
 )
-from ...domain.calculations.registry._schema import DataBindingDefinition
 from ...domain.modelos._errors import ModeloError
 from ...domain.user_profile import (
     ProfileNotFoundError,

@@ -71,7 +71,10 @@ class EncryptionMetadata(BaseModel):
             register their own identifier.
         nonce_b64: Base64-encoded 12-byte nonce.
         ciphertext_b64: Base64-encoded ``ciphertext_with_tag``.
-        associated_data_b64: Base64-encoded AAD bytes (may be empty).
+        associated_data_b64: Base64-encoded AAD bytes. The field is
+            required so persisted metadata distinguishes an explicitly
+            empty AAD from legacy or malformed metadata where the AAD
+            member is missing.
     """
 
     model_config = _STRICT_FROZEN
@@ -79,7 +82,7 @@ class EncryptionMetadata(BaseModel):
     algorithm: AeadAlgorithm = Field(default=AeadAlgorithm.AES_256_GCM_V1)
     nonce_b64: str
     ciphertext_b64: str
-    associated_data_b64: str = Field(default="")
+    associated_data_b64: str
 
     @classmethod
     def from_blob(cls, blob: EncryptedBlob, *, associated_data: bytes = b"") -> EncryptionMetadata:

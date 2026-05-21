@@ -9,7 +9,7 @@ from contextlib import suppress
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 import typer
 
@@ -53,7 +53,7 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _emit, _parse_iso_date, _profile_to_autonomo
+from ._common import _emit, _parse_iso_date, _profile_to_taxpayer
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
@@ -408,7 +408,19 @@ def _readiness_for_source(source: str) -> str:
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
-def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
+class _BindingReportLike(Protocol):
+    """Structural view of a modelo bindings report.
+
+    ``_profile_resolved_binding_ids`` needs only the modelo ``code``;
+    ``filing_year`` and ``period`` are read defensively via ``getattr``
+    because an unscoped (no ``--year``) report carries neither.
+    """
+
+    @property
+    def code(self) -> str: ...
+
+
+def _profile_resolved_binding_ids(report: _BindingReportLike) -> frozenset[str]:
     """Return binding ids the active profile already resolves for a report's scope.
 
     Backs ``bindings list --missing``: a binding the active profile
@@ -423,6 +435,7 @@ def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
     if filing_year is None:
         return frozenset()
     from ...application.modelo._binding_readiness import profile_resolvable_binding_ids
+    from ...domain.user_profile import ProfileNotFoundError
 
     try:
         bucket_id = _active_bucket_id()
@@ -435,7 +448,7 @@ def _profile_resolved_binding_ids(report: object) -> frozenset[str]:
             filing_year=int(filing_year),
             period=getattr(report, "period", None),
         )
-    except Exception:
+    except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
         return frozenset()
 
 
@@ -1161,6 +1174,67 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
         )
 
 
+def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> None:
+    """Refuse a ``work create`` for a modelo the active profile cannot file.
+
+    Round-4 finding M4: ``work create --modelo 202`` succeeded for a
+    natural person with no guard, provisioning a work unit for a modelo
+    the operator's taxpayer model positively excludes — the engine
+    would then be asked to run an IS cuota for a natural person.
+
+    The guard consults :func:`derive_modelo_applicability` against the
+    active profile's three-axis taxpayer model (corporate-entity ADR §4
+    routing contract). A ``NOT_APPLICABLE`` verdict (e.g. Modelo 202
+    for a natural person, Modelo 100 for a sociedad limitada) or an
+    ``ATTRIBUTION_PASS_THROUGH`` verdict (a cuota self-assessment asked
+    of an attribution entity, which runs no cuota of its own) is
+    refused with the registry-grounded rationale. An ``INCOMPLETE``
+    verdict — undeclared taxpayer model, or a modelo the seed table
+    cannot yet decide — does not block: the operator may not have
+    declared their type yet, and the seed coverage is intentionally
+    narrow; refusing there would be a confident wrong answer of the
+    opposite kind.
+
+    The ``--allow-not-applicable`` escape hatch lets an operator who
+    has a genuine reason override the refusal; the override is recorded
+    in the create payload so the audit trail shows the guard was
+    bypassed deliberately.
+    """
+
+    from ...application.overview._applicability import (
+        ApplicabilityVerdict,
+        derive_modelo_applicability,
+    )
+    from ...application.workflow._persistence import workflow_state_repository
+    from ._common import _profile_to_taxpayer
+    from ._errors import CliRefusedBoundaryError
+
+    state = workflow_state_repository().load()
+    profile = _profile_to_taxpayer(state)
+    applicability = derive_modelo_applicability(profile, modelo.strip())
+    blocking = {
+        ApplicabilityVerdict.NOT_APPLICABLE,
+        ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH,
+    }
+    if applicability.verdict not in blocking:
+        return
+    if allow_not_applicable:
+        return
+    raise CliRefusedBoundaryError(
+        tr(
+            "cli.app.modelo.work.create_not_applicable_refused",
+            default=(
+                "Modelo {modelo} no aplica al tipo de contribuyente del "
+                "perfil activo: {reason} Si tiene un motivo para crear la "
+                "unidad de trabajo de todas formas, repita el comando con "
+                "--allow-not-applicable."
+            ),
+            modelo=modelo.strip(),
+            reason=applicability.reason,
+        )
+    )
+
+
 #: Registry-validation translated-message keys that signal an
 #: unsatisfied calculation input the operator can supply with
 #: ``--binding`` / ``--relation``. The first ``work calculate`` of a
@@ -1251,6 +1325,19 @@ def work_create(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    allow_not_applicable: Annotated[
+        bool,
+        typer.Option(
+            "--allow-not-applicable",
+            help=tr(
+                "cli.app.modelo.work.allow_not_applicable_help",
+                default=(
+                    "Crear la unidad de trabajo aunque el modelo no aplique "
+                    "al tipo de contribuyente del perfil activo."
+                ),
+            ),
+        ),
+    ] = False,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
@@ -1263,6 +1350,12 @@ def work_create(
     _validate_registry_target(modelo, revision)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
+    # Round-4 M4: refuse a work unit for a modelo the active profile's
+    # taxpayer model positively excludes (a natural person has no
+    # Modelo 202; an attribution entity runs no cuota). The guard runs
+    # once the profile is known and before the bucket database is
+    # opened by create_work_unit.
+    _guard_modelo_applicability(modelo, allow_not_applicable=allow_not_applicable)
     # --bucket-id is an explicit override; without it the work unit binds
     # to the active profile's bucket (never the literal string "default").
     resolved_bucket = bucket_id if bucket_id is not None else _active_bucket_id()
@@ -1345,6 +1438,7 @@ def work_create(
         "status": status,
         "status_message": status_message,
         "name_applied": name_applied,
+        "applicability_guard_bypassed": allow_not_applicable,
         **_work_unit_payload(unit),
     }
     lines = [
@@ -2097,7 +2191,7 @@ def work_verify(
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
-        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
+        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         report = verify_modelo_revision(
             calculation_revision_id,
             actor=actor or _resolve_default_actor(),
@@ -2147,7 +2241,7 @@ def work_file(
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
-        workflow_profile = _profile_to_autonomo(workflow_state_repository().load())
+        workflow_profile = _profile_to_taxpayer(workflow_state_repository().load())
         record = file_modelo_revision(
             calculation_revision_id,
             actor=actor or _resolve_default_actor(),
@@ -2170,6 +2264,108 @@ def work_file(
     _emit(ctx, payload, lines)
 
 
+_WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
+
+
+def _resolve_workflow_run_id(target: str) -> str:
+    """Resolve a ``work resume`` argument to a 16-character run id.
+
+    The operator may pass either the run id directly, or the
+    64-character work-unit id — the only identifier most operators
+    have to hand. A run id is a hash an operator cannot derive, so a
+    work-unit id is resolved to the latest persisted run for that
+    work unit's ``(modelo, period)``.
+
+    Raises:
+        typer.BadParameter: When ``target`` is neither a 16-character
+            run id nor a 64-character work-unit id, when the work
+            unit does not exist, or when no run targets it yet.
+    """
+
+    from ...application.modelo import workflow_period_for_work_unit
+    from ...application.workflow import WorkflowError, find_latest_run_for_period
+
+    stripped = target.strip()
+    if re.fullmatch(_WORKFLOW_RUN_ID_RE, stripped):
+        return stripped
+    if re.fullmatch(_WORK_UNIT_ID_RE, stripped):
+        try:
+            unit = get_work_unit(stripped)
+        except WorkUnitNotFoundError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        try:
+            run = find_latest_run_for_period(
+                modelo=unit.modelo,
+                period=workflow_period_for_work_unit(unit),
+            )
+        except WorkflowError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        return run.run_id
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.resume_invalid_target",
+            default=(
+                "resume target must be a 16-character workflow run id or a "
+                f"64-character work-unit id; got {target!r}. "
+                "Run `aeat app modelo work runs` to list run ids."
+            ),
+        )
+    )
+
+
+@work_app.command(
+    "runs",
+    help=tr(
+        "cli.app.modelo.work.runs_help",
+        default=(
+            "List persisted workflow runs with their run ids, newest first. "
+            "Use a run id with `aeat app modelo work resume`. Local-only: "
+            "never contacts AEAT."
+        ),
+    ),
+)
+def work_runs(ctx: typer.Context) -> None:
+    """List persisted workflow runs so an operator can discover run ids."""
+
+    from ...application.workflow import list_runs
+
+    runs = list_runs()
+    payload = {
+        "operation": "modelo.work.runs",
+        "run_count": len(runs),
+        "runs": [
+            {
+                "run_id": run.run_id,
+                "modelo": run.obligation.modelo if run.obligation is not None else None,
+                "period": run.obligation.period if run.obligation is not None else None,
+                "final_stage": run.final_stage.value,
+                "aborted_reason": (run.aborted_reason.value if run.aborted_reason is not None else None),
+                "started_at": run.started_at.isoformat(),
+            }
+            for run in runs
+        ],
+    }
+    lines = [
+        "operation\tmodelo.work.runs",
+        f"run_count\t{len(runs)}",
+        "run_id\tmodelo\tperiod\tfinal_stage\taborted_reason\tstarted_at",
+    ]
+    lines.extend(
+        "\t".join(
+            (
+                run.run_id,
+                run.obligation.modelo if run.obligation is not None else "-",
+                run.obligation.period if run.obligation is not None else "-",
+                run.final_stage.value,
+                run.aborted_reason.value if run.aborted_reason is not None else "-",
+                run.started_at.isoformat(),
+            )
+        )
+        for run in runs
+    )
+    _emit(ctx, payload, lines)
+
+
 @work_app.command(
     "resume",
     help=tr(
@@ -2177,18 +2373,23 @@ def work_file(
         default=(
             "Validate that an aborted workflow run may be retried. Emits the "
             "(modelo, period, obligation) context the engine would consume to "
-            "drive a fresh attempt. Local-only: never contacts AEAT."
+            "drive a fresh attempt. Accepts a workflow run id or a work-unit "
+            "id. Local-only: never contacts AEAT."
         ),
     ),
 )
 def work_resume(
     ctx: typer.Context,
-    workflow_run_id: Annotated[
+    target: Annotated[
         str,
         typer.Argument(
             help=tr(
-                "cli.app.modelo.work.resume_workflow_run_id_help",
-                default="16-character workflow run id (see aeat config workflow runs list).",
+                "cli.app.modelo.work.resume_target_help",
+                default=(
+                    "16-character workflow run id, or the 64-character "
+                    "work-unit id (its latest run is resolved automatically). "
+                    "Run `aeat app modelo work runs` to list run ids."
+                ),
             ),
         ),
     ],
@@ -2200,6 +2401,8 @@ def work_resume(
         WorkflowResumeRefusedError,
         resume_modelo_workflow,
     )
+
+    workflow_run_id = _resolve_workflow_run_id(target)
 
     try:
         result = resume_modelo_workflow(workflow_run_id)
@@ -3112,7 +3315,7 @@ def modelo_export_verb(
     from ...application.workflow._persistence import workflow_state_repository
 
     workflow_state = workflow_state_repository().load()
-    workflow_profile = _profile_to_autonomo(workflow_state)
+    workflow_profile = _profile_to_taxpayer(workflow_state)
 
     target_revision_id = revision
     if target_revision_id is None:

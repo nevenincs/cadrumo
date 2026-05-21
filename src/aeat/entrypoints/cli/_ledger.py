@@ -6,6 +6,7 @@ from typing import Protocol
 
 import typer
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
@@ -82,6 +83,10 @@ app = typer.Typer(
     help=tr("cli.ledger.app_help"),
     no_args_is_help=True,
 )
+
+
+def _invoice_link_error_bad_parameter() -> typer.BadParameter:
+    return _bad(tr("errors.error.error_financial_invoices_invoice_link"))
 
 
 def _parse_decimal(raw: str | None, *, label: str) -> Decimal | None:
@@ -209,10 +214,8 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     )
 
 
-def _format_validation_error(item: object) -> str:
+def _format_validation_error(item: ErrorDetails) -> str:
     """Render one pydantic error entry as ``field: message`` text."""
-    if not isinstance(item, dict):
-        return str(item)
     location = item.get("loc", ())
     message = str(item.get("msg", "")).removeprefix("Value error, ").strip()
     field_path = ".".join(str(part) for part in location if part != "__root__")
@@ -546,6 +549,11 @@ def ledger_categories(ctx: typer.Context) -> None:
     refused. The grouped view lets an operator discover the correct id
     before classifying a transaction rather than after modelo
     calculations surface the drift.
+
+    The taxonomy is deductible-expense only. Income (INCOMING)
+    transactions are classified by direction alone and need no
+    ``--category-id``; ``ledger check`` / ``ledger preflight`` do not
+    flag a pure-income transaction as ``missing_category``.
     """
 
     families: list[dict[str, object]] = []
@@ -571,9 +579,11 @@ def ledger_categories(ctx: typer.Context) -> None:
             lines.append(f"{category_id}\t{family.value}")
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
+    lines.append(tr("cli.ledger.categories.income_note"))
     payload = {
         "families": families,
         "category_ids": [category.value for category in SpendingCategory],
+        "income_requires_category": False,
     }
     _emit(ctx, payload, lines)
 
@@ -1003,7 +1013,7 @@ def ledger_link(
                 transaction_repository=transaction_repository,
             )
         except InvoiceLinkError as exc:
-            raise _bad(str(exc)) from exc
+            raise _invoice_link_error_bad_parameter() from exc
 
     evidence_result_payload: dict[str, object] = {}
     if evidence_id is not None:
@@ -1064,7 +1074,10 @@ def ledger_check(
 ) -> None:
     """Surface ledger anomalies for the addressed bucket without mutating state."""
 
-    from ...application.ledger._preflight import preflight_transaction_catalogue
+    from ...application.ledger._preflight import (
+        LedgerPreflightIssue,
+        preflight_transaction_catalogue,
+    )
     from ...domain.transactions import TransactionCatalogueRepository
 
     if bucket_id_option is not None:
@@ -1102,7 +1115,7 @@ def ledger_check(
         _emit(ctx, payload, lines)
         return
 
-    aggregated_issues: list[object] = []
+    aggregated_issues: list[LedgerPreflightIssue] = []
     aggregated_payload_issues: list[dict[str, object]] = []
     checked_total = 0
     for year in years:

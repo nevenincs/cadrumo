@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry import ExtractionProfileDefinition
+from ....domain.calculations.registry import ExtractionProfileDefinition, ExtractionTargetDefinition
 from . import ArtefactKind, BorradorObservation, BorradorParseError, BorradorParseMode, parse_borrador
 
 pytestmark = [
@@ -65,7 +65,7 @@ def _generate_pdf(
 
 def _profile(
     *,
-    target_casillas: tuple[str, ...] = ("0550", "0700"),
+    target_casilla_ids: tuple[str, ...] = ("0550", "0700"),
     min_coverage: Decimal = Decimal("1"),
 ) -> ExtractionProfileDefinition:
     return ExtractionProfileDefinition(
@@ -74,7 +74,14 @@ def _profile(
         artefact_kind="modelo_100_renta",
         accepted_artefact_kinds=("declaration_pdf",),
         parser="aeat.adapters.inbound.borrador.parse_borrador",
-        target_casillas=target_casillas,
+        target_casillas=tuple(
+            ExtractionTargetDefinition(
+                casilla_id=cid,
+                match_strategy="numeric_casilla",
+                value_kind="amount",
+            )
+            for cid in target_casilla_ids
+        ),
         confidence="strict",
         min_coverage=min_coverage,
         failure_semantics="fail_hard",

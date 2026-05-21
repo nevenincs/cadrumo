@@ -150,7 +150,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         observation = payload.observation
         return observation_key(observation.modelo, observation.filing_year, observation.period)
 
-    def load(  # type: ignore[override]
+    def load_observation(
         self,
         modelo: str,
         filing_year: int,
@@ -158,9 +158,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     ) -> _ObservationEnvelopePayload | None:
         """Return the persisted observation for one (modelo, year, period) or None."""
 
-        return super().load(observation_key(modelo, filing_year, period))
+        return self.load(observation_key(modelo, filing_year, period))
 
-    def save(  # type: ignore[override]
+    def save_observation(
         self,
         observation: RegistryModeloObservation,
         *,
@@ -175,15 +175,17 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
             captured_at=when,
             source_kind=source_kind,
         )
-        super().save(payload)
+        self.save(payload)
 
-    def delete(  # type: ignore[override]
+    def delete_observation(
         self,
         modelo: str,
         filing_year: int,
         period: str,
     ) -> bool:
-        return super().delete(observation_key(modelo, filing_year, period))
+        """Remove the observation for one (modelo, year, period); return whether a row was deleted."""
+
+        return self.delete(observation_key(modelo, filing_year, period))
 
     def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
         """Yield every persisted observation for `modelo` in unspecified order.
@@ -193,24 +195,9 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         """
 
         safe_repository_id(modelo, context="modelo")
-        prefix = f"{modelo}:".encode()
-        for raw_row in self._objects.iter_all_records_raw():
-            if raw_row.namespace != self.namespace:
-                continue
-            object_key_bytes = (
-                raw_row.object_key if isinstance(raw_row.object_key, bytes) else str(raw_row.object_key).encode("utf-8")
-            )
-            if not object_key_bytes.startswith(prefix):
-                continue
-            payload_bytes = (
-                raw_row.payload if isinstance(raw_row.payload, bytes) else str(raw_row.payload).encode("utf-8")
-            )
-            envelope = Envelope[_ObservationEnvelopePayload].model_validate_json(payload_bytes.decode("utf-8"))
-            if envelope.classification is not self.sensitivity:
-                continue
-            if envelope.schema_version > self.schema_version:
-                continue
-            yield envelope.payload
+        for payload in self.iter_records():
+            if payload.observation.modelo == modelo:
+                yield payload
 
 
 class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelopePayload]):

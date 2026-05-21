@@ -111,11 +111,11 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             bucket_id = "profile-bucket-A"
-            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id)
-            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id)
+            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
+            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
 
             original_record = _populated_record()
             lifecycle.save(original_record)

@@ -1,7 +1,7 @@
 """Unit tests for the strict pydantic v2 models in :mod:`aeat.domain.deadlines._models`.
 
 Verifies the strictness invariants of
-:class:`aeat.domain.deadlines.AutonomoProfile` (extra fields,
+:class:`aeat.domain.deadlines.TaxpayerProfile` (extra fields,
 immutability, strict bool/enum coercion), the date-ordering
 invariants of :class:`aeat.domain.deadlines.ModeloDeadline`, and
 that :class:`aeat.domain.deadlines.Schedule` survives a JSON round
@@ -16,21 +16,21 @@ import pytest
 from pydantic import ValidationError
 
 from . import (
-    AutonomoProfile,
+    IVARegime,
+    ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
-    ModeloDeadline,
-    IVARegime,
     ObligationStatus,
     Schedule,
-    autonomo_profile_from_mapping,
+    TaxpayerProfile,
+    taxpayer_profile_from_mapping,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
         has_employees=True,
@@ -44,12 +44,12 @@ def _profile() -> AutonomoProfile:
     )
 
 
-class TestAutonomoProfile:
-    """Strictness invariants for :class:`AutonomoProfile`."""
+class TestTaxpayerProfile:
+    """Strictness invariants for :class:`TaxpayerProfile`."""
 
     def test_extra_fields_rejected(self) -> None:
         with pytest.raises(ValidationError, match=r"Extra inputs are not permitted"):
-            AutonomoProfile.model_validate(
+            TaxpayerProfile.model_validate(
                 {
                     "tax_id": "X",
                     "iva_regime": "GENERAL",
@@ -71,7 +71,7 @@ class TestAutonomoProfile:
 
     def test_strict_rejects_int_for_bool(self) -> None:
         with pytest.raises(ValidationError, match=r"valid boolean"):
-            AutonomoProfile.model_validate(
+            TaxpayerProfile.model_validate(
                 {
                     "tax_id": "X",
                     "iva_regime": "GENERAL",
@@ -87,7 +87,7 @@ class TestAutonomoProfile:
 
     def test_iva_regime_must_be_known(self) -> None:
         with pytest.raises(ValidationError, match=r"IVARegime"):
-            AutonomoProfile.model_validate(
+            TaxpayerProfile.model_validate(
                 {
                     "tax_id": "X",
                     "iva_regime": "WHATEVER",
@@ -102,7 +102,7 @@ class TestAutonomoProfile:
             )
 
     def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:
-        profile = autonomo_profile_from_mapping(
+        profile = taxpayer_profile_from_mapping(
             {
                 "tax.id": "12345678Z",
                 "activity": "design",

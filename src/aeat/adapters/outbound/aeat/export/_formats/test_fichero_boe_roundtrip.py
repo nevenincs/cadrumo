@@ -18,12 +18,23 @@ Every test uses real :func:`serialise` / :func:`deserialise` against
 inline-built record specs — no fixtures, no mocks, no reused
 registry data — so a regression in any of the encoders or decoders
 surfaces as a strict equality failure naming the divergent field.
+
+The Modelo 130 golden test at the bottom of this file exercises the
+full registry-driven export path (application layer ``export_draft``
+→ ``ExportLayoutDefinition`` → byte payload) against a fixed set of
+inputs whose expected bytes are derived field-by-field from the AEAT
+Diseño de Registros DR 13001 (Orden HAP/258/2015, v1.2, March 2019).
+The golden SHA locks byte identity; the per-offset assertions make the
+test non-tautological: the test would fail if the DR field at any
+asserted position were wrong, not just if the overall SHA changed.
 """
 
 from __future__ import annotations
 
+import hashlib
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -337,3 +348,389 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
 
     with pytest.raises(ExportFormatError, match="RESERVED"):
         deserialise(corrupted, specs=specs, encoding="iso-8859-1", total_length=4)
+
+
+# ---------------------------------------------------------------------------
+# Modelo 130 golden-SHA fichero-BOE round-trip
+# ---------------------------------------------------------------------------
+#
+# Source authority: AEAT Diseño de Registros DR 13001, Orden HAP/258/2015,
+# version 1.2, updated March 2019 ("ejercicios 2019 y siguientes").
+# Corpus path: src/aeat/_data/corpus/aeat_official/disenos_registro/
+#              modelo_130/files/01-130-orden-hap-258-2015-ejercicios-
+#              2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xlsx
+#
+# Record layout (derived from DR):
+#   Envelope header (DR 13000):  328 bytes
+#   Page-01 record  (DR 13001):  600 bytes
+#   Envelope footer (computed):   18 bytes
+#   Total:                        946 bytes  (no inter-record delimiter)
+#
+# The golden SHA below was obtained by running export_draft against the
+# fixed inputs below, then verifying every asserted byte position against
+# the DR offset table before recording the hash. Changing any registry
+# field offset, length, or encoding in 130.toml will change the SHA and
+# fail this test; changes must be re-grounded against the DR before
+# updating the constant.
+#
+# Per-offset assertions are non-tautological: each one names the DR row
+# it corresponds to so a reviewer can verify the expected value
+# independently from the registry.
+_M130_GOLDEN_SHA256 = "feaffb81b89ce8b897066ac0383d31e4bfd45a15c526b650f711a89f25fe0120"
+
+# Envelope header is 328 bytes; page record begins at byte index 328 (0-based).
+_PAGE_START = 328
+
+# Money encoding helper: amount (Decimal) → expected bytes in a 17-byte
+# signed field.  Positive: " " + 16 zero-padded digits.  Negative: "N" + …
+def _money_bytes(amount: Decimal, *, signed: bool = False) -> bytes:
+    cents = int(abs(amount * 100))
+    if amount < 0:
+        return ("N" + str(cents).zfill(16)).encode("latin-1")
+    if signed:
+        return (" " + str(cents).zfill(16)).encode("latin-1")
+    return str(cents).zfill(17).encode("latin-1")
+
+
+def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
+    """Modelo 130 serialises to a byte-exact 946-byte fichero-BOE.
+
+    Inputs are fixed; expected values at each asserted byte offset are
+    derived from DR 13001 (Orden HAP/258/2015 v1.2).  The test is
+    non-tautological because a change to any registry field (offset,
+    length, sign flag, encoding) would alter the bytes at the
+    corresponding position and break this assertion before changing the
+    SHA — making the SHA a *consequence* of structural correctness, not
+    the sole check.
+    """
+    from aeat.application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    provider = build_runtime_schema_provider(modelos=("130",))
+    draft = build_draft(
+        modelo="130",
+        period="2026Q1",
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Golden test",
+        ),
+        inputs={
+            "01": Decimal("10000.00"),
+            "02": Decimal("4000.00"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "modelo-130.txt"
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={
+            "declaration_type": "I",
+            "surnames": "GARCIA LOPEZ",
+            "name": "JUAN",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+        },
+        schema_provider=provider,
+    )
+    payload = output.read_bytes()
+
+    # --- DR-grounded structural assertions (non-tautological) ---------------
+
+    def _page(offset: int, length: int) -> bytes:
+        """Read bytes from DR 13001 page record (1-based offset)."""
+        s = _PAGE_START + offset - 1
+        return payload[s : s + length]
+
+    # Total length per DR: 328 (header) + 600 (page-01) + 18 (footer) = 946.
+    assert len(payload) == 946, f"expected 946-byte fichero-BOE; got {len(payload)}"
+
+    # DR 13001 rows 1-4: open tag <T, modelo 130, page 01, close 000>
+    assert _page(1, 2) == b"<T"
+    assert _page(3, 3) == b"130"
+    assert _page(6, 2) == b"01"
+    assert _page(8, 4) == b"000>"
+
+    # DR 13001 row 5: Indicador de pagina complementaria (offset 12, 1 byte).
+    # Blank = ordinary declaration.
+    assert _page(12, 1) == b" ", "complementaria indicator must be blank for ordinary declaration"
+
+    # DR 13001 row 6: Tipo declaracion (offset 13, 1 byte).
+    assert _page(13, 1) == b"I"
+
+    # DR 13001 row 7: NIF sujeto pasivo (offset 14, 9 bytes).
+    assert _page(14, 9) == b"12345678Z"
+
+    # DR 13001 rows 8-9: Apellidos / Nombre (offsets 23/83).
+    assert _page(23, 12) == b"GARCIA LOPEZ"
+    assert _page(83, 4) == b"JUAN"
+
+    # DR 13001 rows 10-11: Ejercicio / Periodo (offsets 103/107).
+    assert _page(103, 4) == b"2026"
+    assert _page(107, 2) == b"1T"
+
+    # DR 13001 rows 12-30: casillas 01-19 (17 bytes each, starting at offset 109).
+    # Unsigned (Num): 01, 02, 04, 05, 06, 08, 09, 10, 12, 13, 15, 16, 18
+    # Signed   (N):   03, 07, 11, 14, 17, 19
+    # Casilla 01: 10000.00 -> 1000000 cents -> 17-byte zero-padded
+    assert _page(109, 17) == _money_bytes(Decimal("10000.00"), signed=False)
+    # Casilla 02: 4000.00 -> 400000 cents
+    assert _page(126, 17) == _money_bytes(Decimal("4000.00"), signed=False)
+    # Casilla 03 (signed): rendimiento neto = 01 - 02 = 6000.00
+    assert _page(143, 17) == _money_bytes(Decimal("6000.00"), signed=True)
+    # Casilla 04 (unsigned): 20% x max(0, casilla 03) = 1200.00
+    assert _page(160, 17) == _money_bytes(Decimal("1200.00"), signed=False)
+    # Casilla 19 (signed): resultado final = casilla 17 - 18 = 1200.00 - 0
+    # Full chain: 04(1200)-05(0)-06(0)=07(1200); 08=0->09=0, 10=0->11(0)
+    # 12=max(0,1200+0)=1200; prev year income 13000>12000 -> casilla 13=0
+    # 14=12-13=1200; 15=0,16=0 -> 17=1200; 18=0 -> 19=1200
+    assert _page(415, 17) == _money_bytes(Decimal("1200.00"), signed=True)
+
+    # DR 13001 row 31: Declaración complementaria (offset 432, 1 byte An).
+    # This field is DISTINCT from the complementaria-indicator at offset 12.
+    # Blank = not a complementaria declaration.
+    assert _page(432, 1) == b" ", "declaracion-complementaria must be blank for ordinary declaration"
+
+    # DR 13001 row 32: Nº justificante anterior (offset 433, 13 bytes).
+    assert _page(433, 13) == b" " * 13, "previous receipt must be blank for first declaration"
+
+    # DR 13001 row 36: closing tag </T13001000> (offset 589, 12 bytes).
+    assert _page(589, 12) == b"</T13001000>"
+
+    # Envelope footer: dynamic closing tag (last 18 bytes of payload).
+    # Format: </T{modelo}0{AAAA}{PP}0000> e.g. </T130020261T0000>
+    assert payload[-18:] == b"</T130020261T0000>"
+
+    # --- Golden SHA (byte-identity lock) ------------------------------------
+    digest = hashlib.sha256(payload).hexdigest()
+    assert digest == _M130_GOLDEN_SHA256, (
+        f"Modelo 130 fichero-BOE SHA mismatch.\n"
+        f"  Expected: {_M130_GOLDEN_SHA256}\n"
+        f"  Got:      {digest}\n"
+        "Any change to the 130.toml export layout that alters byte output\n"
+        "must be re-grounded against the AEAT Diseño de Registros (DR 13001,\n"
+        "Orden HAP/258/2015 v1.2) before updating this constant."
+    )
+
+    # Receipt metadata sanity
+    assert receipt.byte_size == 946
+    assert receipt.file_sha256 == _M130_GOLDEN_SHA256
+
+
+# ---------------------------------------------------------------------------
+# Modelo 303 golden-SHA fichero-BOE round-trip
+# ---------------------------------------------------------------------------
+#
+# Source authority: AEAT Diseño de Registros DR303 (ejercicio 2024, updated
+# 2024-11-29), Orden EHA/3786/2008 as amended.
+# Corpus path: src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/
+#   files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-
+#   actualizado-29-11-24-381-kb-x.xlsx
+#
+# Record layout (8-segment envelope, derived from DR):
+#   DP30300  envelope header:    328 bytes  (DR sheet DP30300 rows 1-13)
+#   DP30301  page-01 IVA dev:   1581 bytes  (DR sheet DP30301 rows 1-88)
+#   DP30302  page-02 RS:        1706 bytes  (DR sheet DP30302 rows 1-91)
+#   DP30303  page-03 resultado: 1017 bytes  (DR sheet DP30303 rows 1-38)
+#   DP30304  page-04 exon 390:   998 bytes  (DR sheet DP30304 rows 1-43)
+#   DP30305  page-05 prorrata:  1523 bytes  (DR sheet DP30305 rows 1-72)
+#   DP303DID identification:     823 bytes  (DR sheet DP303DID rows 1-13)
+#   Envelope footer (computed):   18 bytes  (DR DP30300 row 15)
+#   Total:                       7994 bytes  (no inter-record delimiter)
+#
+# DP303DID note: the page identifier "DID00" is type An in the DR (not Num),
+# so it serialises as the literal string "DID00", NOT as a zero-padded number.
+#
+# Per-offset assertions are non-tautological: each names the DR sheet/row it
+# corresponds to.  The golden SHA is a byte-identity lock; any change to the
+# 303.toml export layout that alters offset, length, encoding, or sign flag
+# will alter the SHA and fail this test.
+_M303_GOLDEN_SHA256 = "17d837599f73c2be99ff71f443c064164ca3099e7767de1147add8343f6f7ac9"
+
+# Cumulative record-start offsets (0-based byte index):
+#   DP30300 starts at 0
+#   DP30301 starts at 328
+#   DP30302 starts at 328+1581 = 1909
+#   DP30303 starts at 1909+1706 = 3615
+#   DP30304 starts at 3615+1017 = 4632
+#   DP30305 starts at 4632+998  = 5630
+#   DP303DID starts at 5630+1523 = 7153
+#   Envelope footer starts at 7153+823 = 7976
+_M303_P01_START = 328
+_M303_DID_START = 7153
+
+
+def test_modelo_303_golden_sha_fichero_boe(tmp_path: Path) -> None:
+    """Modelo 303 serialises to a byte-exact 7994-byte fichero-BOE.
+
+    Inputs are fixed (IVA devengado tipo general 21% only).  Expected byte
+    values at each asserted position are derived from DR303 (2024 edition).
+    The test is non-tautological: a change to any 303.toml export field
+    (offset, length, sign flag, record type, DID00 literal) breaks the
+    per-offset assertion that names its DR row, before the SHA changes.
+    """
+    from aeat.application.filing import (
+        ModeloDraftStatus,
+        ModeloOperatorProfile,
+        build_draft,
+        build_runtime_schema_provider,
+        export_draft,
+    )
+
+    provider = build_runtime_schema_provider(modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period="2025Q1",
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Golden test IVA",
+        ),
+        inputs={
+            "07": Decimal("10000.00"),
+            "09": Decimal("2100.00"),
+        },
+        schema_provider=provider,
+    )
+    draft = draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+    output = tmp_path / "modelo-303.txt"
+    receipt = export_draft(
+        draft,
+        output_path=output,
+        headers={
+            "declaration_type": "I",
+            "surnames": "GARCIA LOPEZ",
+            "program_version": "A001",
+            "presenter_nif": "12345678Z",
+        },
+        schema_provider=provider,
+    )
+    payload = output.read_bytes()
+
+    # --- DR-grounded structural assertions (non-tautological) -----------------
+
+    def _hdr(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30300 envelope header (1-based offset)."""
+        return payload[offset - 1 : offset - 1 + length]
+
+    def _p1(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP30301 page-01 record (1-based field offset)."""
+        s = _M303_P01_START + offset - 1
+        return payload[s : s + length]
+
+    def _did(offset: int, length: int) -> bytes:
+        """Read bytes from DR DP303DID identification record (1-based offset)."""
+        s = _M303_DID_START + offset - 1
+        return payload[s : s + length]
+
+    # Total length per DR: 328+1581+1706+1017+998+1523+823+18 = 7994.
+    assert len(payload) == 7994, f"expected 7994-byte fichero-BOE; got {len(payload)}"
+
+    # DR DP30300 rows 1-7: envelope tag bytes
+    # Row 1 (offset 1-2): "<T"
+    assert _hdr(1, 2) == b"<T", "DR DP30300 row 1: opening tag must be '<T'"
+    # Row 2 (offset 3-5): modelo "303"
+    assert _hdr(3, 3) == b"303", "DR DP30300 row 2: modelo identifier must be '303'"
+    # Row 3 (offset 6): discriminante "0"
+    assert _hdr(6, 1) == b"0", "DR DP30300 row 3: discriminante must be '0'"
+    # Row 4 (offset 7-10): AAAA (filing year)
+    assert _hdr(7, 4) == b"2025", "DR DP30300 row 4: ejercicio must be '2025'"
+    # Row 5 (offset 11-12): PP (period code)
+    assert _hdr(11, 2) == b"1T", "DR DP30300 row 5: periodo must be '1T'"
+    # Row 6 (offset 13-17): "0000>"
+    assert _hdr(13, 5) == b"0000>", "DR DP30300 row 6: marker must be '0000>'"
+    # Row 7 (offset 18-22): "<AUX>"
+    assert _hdr(18, 5) == b"<AUX>", "DR DP30300 row 7: AUX open tag"
+    # Row 13 (offset 323-328): "</AUX>"
+    assert _hdr(323, 6) == b"</AUX>", "DR DP30300 row 13: AUX close tag"
+
+    # DR DP30301 rows 1-4: page-01 tag
+    # Row 1 (offset 1-2): "<T"
+    assert _p1(1, 2) == b"<T", "DR DP30301 row 1: page open tag"
+    # Row 2 (offset 3-5): "303"
+    assert _p1(3, 3) == b"303", "DR DP30301 row 2: modelo in page tag"
+    # Row 3 (offset 6-10): "01000"
+    assert _p1(6, 5) == b"01000", "DR DP30301 row 3: page-01 identifier must be '01000'"
+    # Row 4 (offset 11): ">"
+    assert _p1(11, 1) == b">", "DR DP30301 row 4: close of page tag"
+
+    # DR DP30301 row 7 (offset 14-22): NIF sujeto pasivo (9 bytes An)
+    assert _p1(14, 9) == b"12345678Z", "DR DP30301 row 7: NIF must match input profile"
+
+    # DR DP30301 row 9 (offset 103-106): Ejercicio (4 bytes Num)
+    assert _p1(103, 4) == b"2025", "DR DP30301 row 9: ejercicio must be '2025'"
+
+    # DR DP30301 row 10 (offset 107-108): Periodo (2 bytes An)
+    assert _p1(107, 2) == b"1T", "DR DP30301 row 10: periodo must be '1T'"
+
+    # DR DP30301 row 37 (offset 286-302): casilla [07] base imponible 21%
+    # Input: 10000.00 → 1000000 cents → 17-byte unsigned zero-padded
+    assert _p1(286, 17) == _money_bytes(Decimal("10000.00"), signed=False), (
+        "DR DP30301 row 37: casilla 07 base imponible 21% must be 10000.00"
+    )
+
+    # DR DP30301 row 38 (offset 303-307): tipo% [08] constant "02100" (21.00%)
+    # Per DR Nota 7 this field carries the literal constant for the 21% rate tier.
+    assert _p1(303, 5) == b"02100", "DR DP30301 row 38: tipo 08 must be constant '02100' (21%)"
+
+    # DR DP30301 row 39 (offset 308-324): casilla [09] cuota devengada 21%
+    # Input: 2100.00 → 210000 cents → 17-byte unsigned zero-padded
+    assert _p1(308, 17) == _money_bytes(Decimal("2100.00"), signed=False), (
+        "DR DP30301 row 39: casilla 09 cuota 21% must be 2100.00"
+    )
+
+    # DR DP30301 row 88 (offset 1570-1581): closing tag </T30301000> (12 bytes)
+    assert _p1(1570, 12) == b"</T30301000>", "DR DP30301 row 88: page-01 close tag"
+
+    # DR DP303DID rows 1-4: identification record tag
+    # Row 1-2 (offset 1-2): "<T"
+    assert _did(1, 2) == b"<T", "DR DP303DID row 1: DID open tag"
+    # Row 2 (offset 3-5): "303"
+    assert _did(3, 3) == b"303", "DR DP303DID row 2: modelo in DID tag"
+    # Row 3 (offset 6-10): "DID00" — type An in DR (not Num)
+    # This field must be the literal string "DID00", NOT a zero-padded number.
+    assert _did(6, 5) == b"DID00", (
+        "DR DP303DID row 3: page identifier must be literal 'DID00' (type An, not Num)"
+    )
+    # Row 4 (offset 11): ">"
+    assert _did(11, 1) == b">", "DR DP303DID row 4: close of DID tag"
+
+    # DR DP303DID row 13 (offset 812-823): closing tag </T303DID00> (12 bytes)
+    assert _did(812, 12) == b"</T303DID00>", "DR DP303DID row 13: DID close tag"
+
+    # Envelope footer: computed dynamic closing tag (last 18 bytes).
+    # Format: </T{modelo}0{AAAA}{PP}0000> = </T303020251T0000>
+    assert payload[-18:] == b"</T303020251T0000>", (
+        "Envelope footer must match </T303020251T0000> for modelo=303 year=2025 period=1T"
+    )
+
+    # --- Golden SHA (byte-identity lock) ------------------------------------
+    digest = hashlib.sha256(payload).hexdigest()
+    assert digest == _M303_GOLDEN_SHA256, (
+        f"Modelo 303 fichero-BOE SHA mismatch.\n"
+        f"  Expected: {_M303_GOLDEN_SHA256}\n"
+        f"  Got:      {digest}\n"
+        "Any change to the 303.toml export layout that alters byte output\n"
+        "must be re-grounded against the AEAT Diseño de Registros DR303\n"
+        "(Orden EHA/3786/2008, 2024 revision, updated 2024-11-29)\n"
+        "before updating this constant."
+    )
+
+    # Receipt metadata sanity
+    assert receipt.byte_size == 7994
+    assert receipt.file_sha256 == _M303_GOLDEN_SHA256

@@ -45,12 +45,24 @@ class BorradorParseMode(StrEnum):
     REGISTRY_PROFILE = "registry_profile"
 
 
+class BorradorExtractionTarget(Protocol):
+    """Per-target descriptor surface the parser reads from a profile."""
+
+    @property
+    def casilla_id(self) -> str: ...
+
+
 class BorradorExtractionProfile(Protocol):
     """Registry extraction-profile surface consumed by the parser."""
 
-    id: str
-    target_casillas: tuple[str, ...]
-    min_coverage: Decimal
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def target_casillas(self) -> tuple[BorradorExtractionTarget, ...]: ...
+
+    @property
+    def min_coverage(self) -> Decimal: ...
 
 
 class BorradorObservation(BaseModel):

@@ -66,6 +66,40 @@ def _ccaa_choice_values() -> list[str]:
 _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 
+def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
+    """Return choice tokens for the taxpayer-type and IRPF-regime enums.
+
+    Derived from the canonical domain enums (``EntityType``,
+    ``LegalEntityForm``, ``IrpfIncomeCategory``, ``IrpfEstimationRegime``)
+    so the ``--entity-type``, ``--legal-entity-form``,
+    ``--irpf-income-categories``, and ``--irpf-estimation-regime``
+    flag choices never drift from the values the wizard catalogue and
+    the profile schema validate against.
+    """
+
+    from ...domain.deadlines._models import (
+        EntityType,
+        IrpfEstimationRegime,
+        IrpfIncomeCategory,
+        LegalEntityForm,
+    )
+
+    return (
+        [member.value for member in EntityType],
+        [member.value for member in LegalEntityForm],
+        [member.value for member in IrpfIncomeCategory],
+        [member.value for member in IrpfEstimationRegime],
+    )
+
+
+(
+    _ENTITY_TYPE_CHOICE_VALUES,
+    _LEGAL_ENTITY_FORM_CHOICE_VALUES,
+    _IRPF_INCOME_CATEGORY_CHOICE_VALUES,
+    _IRPF_ESTIMATION_REGIME_CHOICE_VALUES,
+) = _taxpayer_type_choice_values()
+
+
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
 
@@ -90,6 +124,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
     "activity": typer.Option("--activity", help=tr("wizard.setup.flags.activity.help")),
     "address-postcode": typer.Option("--address-postcode", help=tr("wizard.setup.flags.address-postcode.help")),
+    "activity-start-date": typer.Option(
+        "--activity-start-date",
+        help=tr("wizard.setup.flags.activity-start-date.help"),
+    ),
     "taxation-type": typer.Option(
         "--taxation-type",
         click_type=click.Choice(["1", "2"]),
@@ -237,6 +275,34 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         ),
     ),
     "notes": typer.Option("--notes", help=tr("wizard.setup.flags.notes.help")),
+    "entity-type": typer.Option(
+        "--entity-type",
+        click_type=click.Choice(_ENTITY_TYPE_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.entity-type.help"),
+    ),
+    "legal-entity-form": typer.Option(
+        "--legal-entity-form",
+        click_type=click.Choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.legal-entity-form.help"),
+    ),
+    "irpf-income-categories": typer.Option(
+        "--irpf-income-categories",
+        click_type=click.Choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-income-categories.help"),
+    ),
+    "irpf-estimation-regime": typer.Option(
+        "--irpf-estimation-regime",
+        click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
+    ),
+    "iva-sii-enrolled": typer.Option(
+        "--iva-sii-enrolled/--no-iva-sii-enrolled",
+        help=tr("wizard.setup.flags.iva-sii-enrolled.help"),
+    ),
+    "iva-redeme-enrolled": typer.Option(
+        "--iva-redeme-enrolled/--no-iva-redeme-enrolled",
+        help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
+    ),
 }
 
 
@@ -279,21 +345,34 @@ def _format_missing_flags(missing: tuple[str, ...]) -> str:
     return " ".join(f"--{question_id}" for question_id in missing)
 
 
-def _scripted_from_canonical(flow: WizardFlow, canonical: dict[str, str]) -> ScriptedPrompter:
-    """Build a ``ScriptedPrompter`` driven by the canonical-token dict."""
+def _scripted_from_canonical(
+    flow: WizardFlow,
+    canonical: dict[str, str],
+    *,
+    force_visible: frozenset[str] = frozenset(),
+) -> ScriptedPrompter:
+    """Build a ``ScriptedPrompter`` driven by the canonical-token dict.
+
+    The scripted answer queue must match ``run_flow``'s question
+    sequence exactly. Visibility is therefore evaluated with the same
+    :func:`_condition_satisfied` predicate the runner uses — including
+    the same ``force_visible`` set — walking answer-by-answer so an
+    intra-section gate sees the earlier answer. A drift between this
+    projection and the runner desyncs the queue and feeds a question
+    the wrong token.
+    """
+
+    from ._runner import _condition_satisfied
 
     answers: deque[str] = deque()
-    pending: dict[str, str] = dict(canonical)
-    visible_ids: set[str] = set()
+    running: dict[str, str] = {}
     for section in flow.sections:
         for question in section.questions:
-            if question.visible_when is not None:
-                target = question.visible_when.question_id
-                if target not in visible_ids or pending.get(target) != question.visible_when.equals:
-                    continue
-            visible_ids.add(question.id)
-            value = pending.get(question.id, question.default or "")
+            if not _condition_satisfied(question, running, force_visible=force_visible):
+                continue
+            value = canonical.get(question.id, question.default or "")
             answers.append(value)
+            running[question.id] = value
     return ScriptedPrompter(answers)
 
 
@@ -476,11 +555,17 @@ def _run_full_flow(
     profile_name: str,
     profile_id: str,
     mode: WizardPersistMode,
+    explicit_question_ids: frozenset[str] = frozenset(),
 ) -> None:
     """Walk the full wizard flow and persist the resulting answer set.
 
     Used for ``create`` (every path) and for an interactive ``edit``,
     where the operator re-walks and confirms every visible question.
+
+    ``explicit_question_ids`` names the questions whose flag the
+    operator supplied on a non-interactive command line. Such a
+    question is collected even when its ``visible_when`` gate would
+    hide it, so an explicitly-given flag value is always honoured.
     """
 
     from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -517,9 +602,17 @@ def _run_full_flow(
                     "missing_flags": missing_flags,
                 },
             )
-        answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
+        answers = run_flow(
+            flow,
+            _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
+            force_visible=explicit_question_ids,
+        )
     elif accept_defaults:
-        answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
+        answers = run_flow(
+            flow,
+            _scripted_from_canonical(flow, canonical, force_visible=explicit_question_ids),
+            force_visible=explicit_question_ids,
+        )
     else:
         active = _prompter if _prompter is not None else QuestionaryPrompter()
         try:
@@ -694,6 +787,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
                 profile_name=profile_name,
                 profile_id=profile_id,
                 mode=mode,
+                explicit_question_ids=frozenset(explicit_flags),
             )
 
         import json as _json

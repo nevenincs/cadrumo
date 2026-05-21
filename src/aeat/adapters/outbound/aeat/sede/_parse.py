@@ -170,7 +170,7 @@ def parse_expediente_detail(
     )
 
 
-def _collect_category_path(anchor: object) -> tuple[str, ...]:
+def _collect_category_path(anchor: Tag) -> tuple[str, ...]:
     """Walk up from a leaf ``<a>`` collecting parent category labels.
 
     The sede tree uses nested ``<ul>/<li>`` where each ``<li>`` begins
@@ -179,13 +179,13 @@ def _collect_category_path(anchor: object) -> tuple[str, ...]:
     to root, then reverse for a root-to-leaf breadcrumb.
     """
     labels: list[str] = []
-    current = getattr(anchor, "parent", None)
+    current = anchor.parent
     while current is not None:
-        if getattr(current, "name", None) == "li":
+        if isinstance(current, Tag) and current.name == "li":
             label = _li_header_label(current, leaf=anchor)
             if label is not None:
                 labels.append(label)
-        current = getattr(current, "parent", None)
+        current = current.parent
     return tuple(reversed(labels))
 
 

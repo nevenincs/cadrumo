@@ -14,7 +14,7 @@ import pytest
 
 from aeat.application.wizard._catalogue import SETUP_FLOW, WIZARD_FLOWS
 from aeat.application.wizard._compiler import compile_profile_keys
-from aeat.application.wizard._models import WizardQuestion
+from aeat.application.wizard._models import WizardQuestion, iter_conditions
 from aeat.application.wizard._widgets import validate_widget_answer
 from aeat.domain.profile import PROFILE_KEYS
 
@@ -33,8 +33,8 @@ def test_every_question_id_is_unique_inside_the_setup_flow() -> None:
 def test_every_visible_when_resolves_to_an_earlier_question() -> None:
     seen: set[str] = set()
     for question in _setup_questions():
-        if question.visible_when is not None:
-            assert question.visible_when.question_id in seen
+        for clause in iter_conditions(question.visible_when):
+            assert clause.question_id in seen
         seen.add(question.id)
 
 

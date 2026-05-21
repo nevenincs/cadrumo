@@ -849,7 +849,7 @@ class TestSubmittedFileObservation:
         parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
         parsed_fields = {field.field_id: field.value for field in parsed.fields}
 
-        assert set(observed_values) == set(profile.target_casillas)
+        assert set(observed_values) == {t.casilla_id for t in profile.target_casillas}
         assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
         assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
         assert observed_values["28"] == calculated.values["28"]
@@ -947,7 +947,7 @@ class TestSubmittedFileObservation:
         registry_observation = registry_observation_from_filed_declaration(observation)
 
         assert {item.casilla_id: Decimal(item.value) for item in observed} == expected
-        assert set(registry_observation.casilla_values) == set(profile.target_casillas)
+        assert set(registry_observation.casilla_values) == {t.casilla_id for t in profile.target_casillas}
         assert registry_observation.casilla_values == expected
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
@@ -1054,8 +1054,8 @@ class TestDeclaracionPdfObservation:
         snapshot = _modelo_130_snapshot()
         profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
         values = {
-            casilla_id: Decimal(index).quantize(Decimal("0.01"))
-            for index, casilla_id in enumerate(profile.target_casillas, start=1)
+            target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+            for index, target in enumerate(profile.target_casillas, start=1)
         }
         declaration = Declaracion(
             modelo="130",
@@ -1080,8 +1080,8 @@ class TestDeclaracionPdfObservation:
         snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
         profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
         values = {
-            casilla_id: Decimal(index).quantize(Decimal("0.01"))
-            for index, casilla_id in enumerate(profile.target_casillas, start=1)
+            target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+            for index, target in enumerate(profile.target_casillas, start=1)
         }
         declaration = Declaracion(
             modelo="111",

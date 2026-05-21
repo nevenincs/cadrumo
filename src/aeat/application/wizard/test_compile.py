@@ -23,6 +23,7 @@ from aeat.application.wizard._models import (
     WizardFlow,
     WizardQuestion,
     WizardSection,
+    WizardVisibility,
     WizardWidget,
 )
 from aeat.core.i18n import Translatable as tr
@@ -194,7 +195,7 @@ def test_wizard_flows_carry_only_frozen_literals() -> None:
             return
         if isinstance(
             value,
-            WizardFlow | WizardSection | WizardQuestion | WizardChoice | WizardCondition,
+            WizardFlow | WizardSection | WizardQuestion | WizardChoice | WizardCondition | WizardVisibility,
         ):
             frozen = bool(value.model_config.get("frozen"))
             assert frozen, f"{path}: pydantic record is not frozen"

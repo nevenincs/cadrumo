@@ -37,6 +37,7 @@ from ._schema import (
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExtractionProfileDefinition,
+    ExtractionTargetDefinition,
     FormulaDefinition,
     FormulaExpression,
     LegalReference,
@@ -338,6 +339,17 @@ def test_dangling_casilla_binding_reference() -> None:
         _build_minimal_snapshot(revision)
 
 
+def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> None:
+    """A bound casilla cannot defer missing binding coverage to formula runtime."""
+    casilla = _minimal_casilla("01").model_copy(update={"input_kind": "bound"})
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"),)).model_copy(update={"casillas": (casilla,)})
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"casilla 01.binding has no binding definition for input_kind='bound'",
+    ):
+        _build_minimal_snapshot(revision)
+
+
 def test_dangling_casilla_export_refs() -> None:
     """casilla.export_refs pointing at nonexistent ExportFieldId raises."""
     casilla = _minimal_casilla("01").model_copy(update={"export_refs": ("nonexistent.export.field",)})
@@ -465,7 +477,13 @@ def test_dangling_extraction_profile_target_casilla() -> None:
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
         parser="aeat.domain.calculations.registry._validate.RegistryValidator",
-        target_casillas=("nonexistent-casilla",),
+        target_casillas=(
+            ExtractionTargetDefinition(
+                casilla_id="nonexistent-casilla",
+                match_strategy="numeric_casilla",
+                value_kind="amount",
+            ),
+        ),
         confidence="strict",
         min_coverage=Decimal("1"),
         failure_semantics="fail_hard",
@@ -475,6 +493,69 @@ def test_dangling_extraction_profile_target_casilla() -> None:
     revision = _minimal_revision(extraction_profiles=(profile,))
     with pytest.raises(RegistryValidationError, match=r"extraction_profile test.profile.target_casillas"):
         _build_minimal_snapshot(revision)
+
+
+def test_text_casilla_without_named_label_strategy_fails_gate() -> None:
+    """A declaracion_pdf profile targeting a text-typed casilla without named_label raises.
+
+    This is the snapshot-build gate that prevents dead decl.* slug stubs from
+    loading green: any profile where a target casilla has data_type='text' but
+    uses match_strategy='numeric_casilla' must surface a hard error.
+    """
+    text_casilla = _minimal_casilla("text-casilla").model_copy(update={"data_type": "text"})
+    profile = ExtractionProfileDefinition(
+        id="test.profile",
+        surface="declaracion_pdf",
+        artefact_kind="declaration_pdf",
+        accepted_artefact_kinds=("declaration_pdf",),
+        parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+        target_casillas=(
+            ExtractionTargetDefinition(
+                casilla_id="text-casilla",
+                match_strategy="numeric_casilla",
+                value_kind="text",
+            ),
+        ),
+        confidence="strict",
+        min_coverage=Decimal("1"),
+        failure_semantics="fail_hard",
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(text_casilla,), extraction_profiles=(profile,))
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"text-casilla.*data_type='text'.*match_strategy",
+    ):
+        _build_minimal_snapshot(revision)
+
+
+def test_text_casilla_with_named_label_strategy_passes_gate() -> None:
+    """A declaracion_pdf profile targeting a text-typed casilla with named_label passes."""
+    text_casilla = _minimal_casilla("text-casilla").model_copy(update={"data_type": "text"})
+    profile = ExtractionProfileDefinition(
+        id="test.profile",
+        surface="declaracion_pdf",
+        artefact_kind="declaration_pdf",
+        accepted_artefact_kinds=("declaration_pdf",),
+        parser="aeat.adapters.inbound.declaracion.parse_declaracion",
+        target_casillas=(
+            ExtractionTargetDefinition(
+                casilla_id="text-casilla",
+                match_strategy="named_label",
+                value_kind="text",
+                label_pattern=r"Mi etiqueta",
+            ),
+        ),
+        confidence="strict",
+        min_coverage=Decimal("1"),
+        failure_semantics="fail_hard",
+        legal_refs=(_DUMMY_LEGAL_ID,),
+        source_refs=(_DUMMY_SOURCE_ID,),
+    )
+    revision = _minimal_revision(casillas=(text_casilla,), extraction_profiles=(profile,))
+    snapshot = _build_minimal_snapshot(revision)
+    assert snapshot is not None
 
 
 def test_dangling_cross_reference_legal_refs() -> None:

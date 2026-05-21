@@ -14,8 +14,13 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.domain.deadlines import AutonomoProfile
-from aeat.domain.deadlines._models import IVARegime
+from aeat.domain.deadlines import TaxpayerProfile
+from aeat.domain.deadlines._models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+)
 
 from ._backlog import OverviewBacklog, build_overview_backlog
 
@@ -28,9 +33,14 @@ class _WindowArgs(TypedDict):
     as_of: date
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    """A declared autónomo en estimación directa (unchanged persona)."""
+
+    return TaxpayerProfile(
         tax_id="X1234567L",
+        entity_type=EntityType.NATURAL_PERSON,
+        irpf_income_categories=frozenset({IrpfIncomeCategory.ACTIVIDAD_ECONOMICA}),
+        irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_NORMAL,
         iva_regime=IVARegime.GENERAL,
     )
 

@@ -374,6 +374,13 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket(
     _assert_ledger_review_filtered_by_period_returns_empty(transaction_id)
 
 
+def _json_object(value: object) -> dict[str, object]:
+    """Narrow a JSON value to a string-keyed object for typed subscripting."""
+
+    assert isinstance(value, dict), f"expected a JSON object, got {type(value).__name__}"
+    return {str(key): item for key, item in value.items()}
+
+
 @dataclass(frozen=True, slots=True)
 class _LedgerLifecycleOutcome:
     """Bundle returned by _drive_ledger_lifecycle_round_trip.
@@ -567,7 +574,7 @@ def test_app_ledger_lifecycle_attach_records_purchase_invoice_evidence(
     tmp_path: Path,
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
-    transaction = outcome.attached_payload["transaction"]
+    transaction = _json_object(outcome.attached_payload["transaction"])
     assert transaction["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
     assert outcome.attached_payload["bucket_event_ids"]
 
@@ -653,7 +660,9 @@ def test_app_ledger_lifecycle_reset_with_yes_clears_three_rows(
 ) -> None:
     outcome = _drive_ledger_lifecycle_round_trip(monkeypatch, tmp_path)
     assert outcome.reset_payload["reset"] is True
-    assert len(outcome.reset_payload["removed_transaction_ids"]) == 3
+    removed_transaction_ids = outcome.reset_payload["removed_transaction_ids"]
+    assert isinstance(removed_transaction_ids, list)
+    assert len(removed_transaction_ids) == 3
 
 
 def test_app_ledger_import_reimport_review_round_trips_state(

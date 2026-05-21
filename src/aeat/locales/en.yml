@@ -115,6 +115,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -129,6 +130,20 @@ application:
       health:
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     operator:
+      alignment:
+        both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+          nor the active profile tax id is set. Set both to the same DNI/NIE before
+          live AEAT auth.
+        clave_identity_missing_detail: The Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+          is not set, so it cannot be compared with the active profile tax id. Set
+          it to the DNI/NIE of the active profile.
+        mismatch_detail: The Cl@ve identity DNI/NIE '%{clave_identity}' does not match
+          the active profile tax id '%{profile_tax_id}'. Live AEAT auth would bind
+          one taxpayer's session to another profile. Switch to the profile whose tax
+          id matches the Cl@ve DNI/NIE, or correct whichever value is wrong.
+        profile_tax_id_missing_detail: The active profile has no tax id, so it cannot
+          be compared with the Cl@ve identity. Set the profile tax id to the DNI/NIE
+          used for Cl@ve.
       errors:
         certificate_file_required: The certificate provider requires a certificate
           file. Run `aeat config auth configure --provider certificate --file PATH`
@@ -145,6 +160,12 @@ application:
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
+      probe:
+        no_provider: No auth provider is configured; nothing to probe locally.
+        no_session: No persisted AEAT session token on disk; run `aeat config auth
+          login` to acquire one.
+        session_expired: application.auth.operator.probe.session_expired
+        session_live: application.auth.operator.probe.session_live
     provider_impact:
       certificate_ready: Certificate auth is ready. The operator keeps the same CLI
         filing flow for AEAT-backed reads; every provider uses the same command workflow.
@@ -157,14 +178,24 @@ application:
         but AEAT-backed reads stay unavailable until an auth provider is configured.
     sessions:
       errors:
+        clave_identity_missing: Cl@ve Móvil live auth requires a configured DNI/NIE
+          (AEAT_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
+        clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
+          profile tax identity; switch to the matching profile or update the profile
+          before live AEAT auth.
         corrupt_session: Your saved auth session is damaged and cannot be read. Run
           `aeat config auth clear --sessions` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
+        profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
+          to carry identity.tax_id.
         sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
           auth test` before reading AEAT data.
         session_expired: AEAT session is expired; run `aeat config auth test` before
           reading AEAT data.
+        session_identity_profile_mismatch: AEAT session identity does not match the
+          active profile tax identity; clear auth sessions and authenticate the matching
+          profile before live AEAT reads.
         state_missing: AEAT session state is missing; run `aeat config auth test`
           before reading AEAT data.
         verify_failed: AEAT session could not be verified; run `aeat config auth test`
@@ -342,6 +373,8 @@ cli:
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         capture_history_help: Live-capture filed Modelo 303 history and persist secure
           IVA compensation state. No AEAT filing or wallet form choices are submitted.
+        history_details_help: Print detailed private rows and amounts; summary mode
+          prints counts only.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
@@ -457,8 +490,8 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision: Work unit has no verified-complete or filed calculation
-            revision to export. Run `aeat app modelo verify` first.
+          no_exportable_revision_work_verify: Work unit has no verified-complete or
+            filed calculation revision to export. Run `aeat app modelo work verify` first.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -530,6 +563,8 @@ cli:
         view_help: Show one verification report by id
       work:
         actor_help: Actor responsible for the action (free-text label up to 64 chars)
+        allow_not_applicable_help: Create the work unit even when the modelo does
+          not apply to the active profile's taxpayer type.
         amend_help: Build a corrective amendment over an externally-filed return.
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
@@ -556,6 +591,9 @@ cli:
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
+        create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
+          profile''s taxpayer type: %{reason} If you have a reason to create the work
+          unit anyway, re-run the command with --allow-not-applicable.'
         create_reused: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. Rename it with `aeat app modelo work rename`.
         create_reused_name_match: Existing work unit returned (idempotent on modelo/year/period/revision);
@@ -612,16 +650,24 @@ cli:
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
-        result_summary_header: 'result summary  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
-          contacting AEAT
-        resume_workflow_run_id_help: 16-character workflow run id
+          contacting AEAT. Accepts a workflow run id or a work-unit id.
+        resume_invalid_target: resume target must be a 16-character workflow run id
+          or a 64-character work-unit id; got {target}. Run `aeat app modelo work
+          runs` to list run ids.
+        resume_target_help: 16-character workflow run id, or the 64-character work-unit
+          id (its latest run is resolved automatically). Run `aeat app modelo work
+          runs` to list run ids.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
+        runs_help: List persisted workflow runs with their run ids, newest first.
+          Use a run id with `aeat app modelo work resume`. Local-only; never contacts
+          AEAT.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -705,6 +751,7 @@ cli:
       event_type_help: Filter the history to one or more event types (repeatable)
       help: Inspect bucket-scoped storage and event history
       history:
+        invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
         invalid_timestamp: '{flag} must be an ISO-8601 timestamp (e.g. 2026-04-01T00:00:00+00:00);
           got {raw}.'
         since_after_until: --since must be before or equal to --until.
@@ -934,7 +981,13 @@ cli:
         pointer; '%{profile}' is not active.
       profile_help: Inspect and repair the active-profile pointer.
       profile_name_help: Inspect a specific registered profile bucket.
-      profile_requires_yes: Pass --yes to clear the active-profile pointer.
+      profile_one_action: Choose either --clear-active or --repair-manifest-status,
+        not both.
+      profile_repair_manifest_status_help: Backfill a legacy active bucket manifest
+        status from the encrypted profile record.
+      profile_requires_yes: Pass --yes to apply the active-profile repair.
+      quarantine_dry_run_help: Preview the rows that would be quarantined without
+        moving anything
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
         requires --yes)
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
@@ -1048,7 +1101,8 @@ cli:
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1 (only when classification
         is MIXED)
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
         ...)
       counterparty_help: Counterparty descriptor
@@ -1070,7 +1124,8 @@ cli:
     allocate:
       actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for VAT workflows
@@ -1095,6 +1150,9 @@ cli:
       header: RECOGNISED LEDGER SPENDING CATEGORIES
       help: List the spending-category ids accepted by --category-id, grouped by family
       id_column: category-id (pass this exact value)
+      income_note: Deductible expenses only. Income (INCOMING) transactions are classified
+        by direction and need no --category-id; `ledger check` and `ledger preflight`
+        do not flag income as missing_category.
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).
     check:
@@ -1109,7 +1167,8 @@ cli:
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       classification_help: Business classification state for the transaction
       help: Classify one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to classify
@@ -1542,6 +1601,8 @@ cli:
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
     status_help: Show profile, ledger, and modelo readiness
+    taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
+      update the profile or rerun with the incomplete-profile override.
     verbose_help: Show details and next action when available
   registry:
     app_help: Tax models registry management
@@ -1559,6 +1620,10 @@ cli:
       view_help: Show one normative and, optionally, one of its articles
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
+    legal:
+      legal_ref_help: Legal reference id, e.g. ley-37-1992:art-99
+      view_help: Show one legal reference by id
+    legal_app_help: Inspect calculation-registry legal references
     manuals:
       app_help: Inspect AEAT Manual práctico records (Renta, IVA, Sociedades)
       kind_help: Filter by manual rule kind
@@ -1668,7 +1733,7 @@ cli:
     app_help: 'Spanish tax workflow assistant
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITY'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Show app workflow help
     debug_help: Show internal debug logs on stderr
     detail_help: Also show the detailed registry summary
@@ -1977,6 +2042,7 @@ errors:
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
     error_deadlines_deadline: An error occurred in the deadline calculation.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: The self-employed profile could not be loaded or validated
       for the deadline calculation.
     error_deadlines_schedule_computation: The engine could not produce a valid deadline
@@ -2687,7 +2753,7 @@ wizard:
       \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
       \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
       2. Or create it in one step by supplying the required details as flags:\n  \
-      \   aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
+      \   aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
@@ -2740,6 +2806,9 @@ wizard:
     flags:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
+      activity-start-date:
+        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional; when
+          set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
@@ -2750,20 +2819,32 @@ wizard:
         help: Large-company enrollment
       enrollment-public-administration-budget-gt-6000000:
         help: Public administration budget over 6,000,000
+      entity-type:
+        help: Natural person, legal entity, or attribution entity
       family-descendants-eu-eea-deduction:
         help: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
         help: Minor children in family unit
       has-employees:
         help: Has employees and pays salaries with retención
+      irpf-estimation-regime:
+        help: IRPF estimation regime for economic-activity income
+      irpf-income-categories:
+        help: IRPF income category; pass --irpf-income-categories once per category
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         help: Enrolled in OSS
+      iva-redeme-enrolled:
+        help: Whether the taxpayer is registered in REDEME
       iva-regime:
         help: IVA regime
       iva-roi-enrolled:
         help: Enrolled in ROI
+      iva-sii-enrolled:
+        help: Whether the taxpayer is enrolled in the SII
+      legal-entity-form:
+        help: Recognised legal form when the entity type is a legal entity
       name:
         help: Display name shown in local reviews
       notes:
@@ -2838,10 +2919,14 @@ wizard:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
         prompt: Enrolled in OSS
+      iva-redeme-enrolled:
+        prompt: Registered in REDEME (monthly VAT refund register)
       iva-regime:
         prompt: IVA regime
       iva-roi-enrolled:
         prompt: Enrolled in ROI
+      iva-sii-enrolled:
+        prompt: Enrolled in the SII (immediate information supply)
       title: IVA
     notes:
       notes:
@@ -2854,6 +2939,17 @@ wizard:
         prompt: Conducts intracomunitario operations
       has-employees:
         prompt: Has employees and pays salaries with retención
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Direct estimation, normal
+          directa-simplificada:
+            label: Direct estimation, simplified
+          objetiva:
+            label: Objective estimation (módulos)
+        help: How economic-activity net income is determined; selects Modelo 130 vs
+          131
+        prompt: IRPF estimation regime
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -2871,6 +2967,11 @@ wizard:
       activity:
         prompt: Business activity (plain text is fine; use the IAE heading if you
           know it)
+      activity-start-date:
+        help: When set, returns for periods before this date are not shown as overdue.
+          Leave blank if you do not know it.
+        prompt: From what date do you have filing obligations / when did you register?
+          (YYYY-MM-DD, optional)
       address-postcode:
         prompt: Tax address postcode
       iva-regime:
@@ -2879,6 +2980,8 @@ wizard:
             label: Exempt
           general:
             label: General regime
+          reagp:
+            label: Agriculture, livestock and fishing special regime (REAGP)
           recargo-equivalencia:
             label: Equivalence surcharge
           simplificado:
@@ -2989,6 +3092,51 @@ wizard:
       taxpayer-sex:
         prompt: First taxpayer sex code
       title: First taxpayer
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Attribution entity
+          legal-entity:
+            label: Legal entity (company)
+          natural-person:
+            label: Natural person
+        help: Natural person (IRPF), legal entity (Impuesto sobre Sociedades), or
+          attribution entity
+        prompt: Entity type
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Economic activity
+          capital-inmobiliario:
+            label: Immovable capital income (rental)
+          capital-mobiliario:
+            label: Movable capital income
+          ganancias-patrimoniales:
+            label: Capital gains
+          pension:
+            label: Pension
+          trabajo:
+            label: Employment income
+        help: Select every IRPF income category you have; only economic activity triggers
+          Modelo 130/131
+        prompt: IRPF income categories
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Cooperative
+          other:
+            label: Other legal form
+          sa:
+            label: Public limited company (S.A.)
+          sin-fines-lucrativos:
+            label: Non-profit entity
+          sl:
+            label: Limited liability company (S.L.)
+          sociedad-civil-mercantil:
+            label: Civil partnership with commercial object
+        prompt: Legal form
+      title: Taxpayer type
     title: Setup wizard
     verifier:
       activity_present: 'Economic activity: check that the profile declares an activity.'

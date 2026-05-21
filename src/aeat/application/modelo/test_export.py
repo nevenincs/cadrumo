@@ -23,7 +23,7 @@ from aeat.application.calculations import IvaCompensationReconciliationDecision,
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import Settings
-from aeat.domain.deadlines import AutonomoProfile
+from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 from aeat.domain.filing import ModeloCasillaProvenance
 from aeat.domain.modelos._calculation_repository import (
@@ -59,8 +59,8 @@ from ._export import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _profile() -> AutonomoProfile:
-    return AutonomoProfile(
+def _profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
         tax_id="X1234567L",
         iva_regime=IVARegime.GENERAL,
     )

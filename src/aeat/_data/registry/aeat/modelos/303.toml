@@ -243,6 +243,8 @@ source_refs = ["aeat-dr-303-2025"]
 # -----------------------------------------------------------------------------
 # Formulas backing the three computed result casillas.
 # -----------------------------------------------------------------------------
+export_refs = ["modelo-303-page-01-casilla-46"]
+
 
 [[revisions."2009-y-siguientes".formulas]]
 id = "modelo-303-iva-cuota-devengada-total"
@@ -427,6 +429,8 @@ binding = "modelo-303-compensacion-pendiente-anteriores"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+export_refs = ["modelo-303-page-03-casilla-110"]
+
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.compensacion-aplicada-periodo"
@@ -441,6 +445,8 @@ formula = "modelo-303-compensacion-aplicada-periodo"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+export_refs = ["modelo-303-page-03-casilla-78"]
+
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.compensacion-pendiente-periodos-posteriores"
@@ -457,6 +463,8 @@ formula = "modelo-303-compensacion-pendiente-periodos-posteriores"
 constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-99"], source_refs = ["aeat-dr-303-2025"] }
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+export_refs = ["modelo-303-page-03-casilla-87"]
+
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.resultado"
@@ -470,6 +478,8 @@ input_kind = "computed"
 formula = "modelo-303-iva-resultado"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+export_refs = ["modelo-303-page-03-casilla-69"]
+
 
 [[revisions."2009-y-siguientes".casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
@@ -749,6 +759,14 @@ requires_snapshot = true
 legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
+[[revisions."2009-y-siguientes".application_links]]
+id = "modelo-303-export"
+surface = "export"
+consumer = "aeat.application.filing.export_draft"
+requires_snapshot = true
+legal_refs = ["orden-eha-3786-2008:art-1", "ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+
 [[revisions."2009-y-siguientes".filing_schedules]]
 id = "modelo-303-trimestral"
 period_kind = "quarterly"
@@ -1007,3 +1025,3979 @@ number = "prorrata-volumen-con-derecho"
 
 [[revisions."2009-y-siguientes".completeness_manifest.casillas]]
 number = "prorrata-volumen-total"
+
+# ==============================================================================
+# Export-oriented casilla definitions added for fichero-BOE P03 layout
+# Source: AEAT DR303 DP30301 (2024 edition), DP30302 (2022 ed), DP30303 (2024)
+# Authority: Orden EHA/3786/2008 as amended through 2024
+# DR corpus: src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/
+# ==============================================================================
+
+# 2024 new VAT rate tier casillas 150-155 (DP30301 rows 25-33, DR updated 29-11-24)
+# These rows cover the new IVA rate tiers introduced from period 09/3T 2024.
+# Nota 8 in DR: [154] tipo "00500" for period 09-3T, "00750" from 10-4T 2024 onwards.
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "150"
+number = "150"
+label = "IVA devengado regimen general nuevo tipo tier 1 - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_150"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-150"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "151"
+number = "151"
+label = "IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_151"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "152"
+number = "152"
+label = "IVA devengado regimen general nuevo tipo tier 1 - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_152"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-152"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "153"
+number = "153"
+label = "IVA devengado regimen general nuevo tipo tier 2 - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_153"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-153"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "154"
+number = "154"
+label = "IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_154"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-154"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "155"
+number = "155"
+label = "IVA devengado regimen general nuevo tipo tier 2 - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_155"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# Recargo equivalencia tier (156-158 series) - DP30301 rows 46-48
+export_refs = ["modelo-303-page-01-casilla-155"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "156"
+number = "156"
+label = "Recargo equivalencia tipo 0.5pct - Base imponible"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "money"
+semantic_role = "dr303_156"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-156"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "157"
+number = "157"
+label = "Recargo equivalencia tipo 0.5pct - Tipo porcentaje"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_157"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "158"
+number = "158"
+label = "Recargo equivalencia tipo 0.5pct - Cuota"
+section = ["iva", "recargo_equivalencia", "devengado"]
+data_type = "money"
+semantic_role = "dr303_158"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# New 2024 rate tier casillas 165-170 (DP30301 rows 80-85)
+# Nota 10: only populated from periods 10/4T 2024 and subsequent exercises.
+# [165/167]: 2pct IVA tipo rate; [166]: constant "00200"
+# [168/170]: new recargo equivalencia; [169]: "00026","00050" or "00100"
+export_refs = ["modelo-303-page-01-casilla-158"] 
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "165"
+number = "165"
+label = "IVA devengado regimen general tipo 2pct desde 2024 - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_165"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-165"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "166"
+number = "166"
+label = "IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_166"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "167"
+number = "167"
+label = "IVA devengado regimen general tipo 2pct desde 2024 - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_167"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-167"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "168"
+number = "168"
+label = "Recargo equivalencia nuevo tipo desde 2024 - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_168"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-168"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "169"
+number = "169"
+label = "Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_169"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-169"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "170"
+number = "170"
+label = "Recargo equivalencia nuevo tipo desde 2024 - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_170"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-170"]
+
+# DP30301 IVA devengado individual rate-tier casillas (01-27)
+# Source: DR DP30301 rows 28-64. These are the individual form-numbered casillas
+# for the IVA devengado section of page 01, covering bases, tipos, and cuotas
+# at each rate tier and for intracomunitarias, inversion SP, modifications,
+# recargo equivalencia rows, and total cuota devengada.
+# The tipo% casillas (02,05,08,17,20,23) carry constants in the DR (Nota 7)
+# but are defined as registry casillas so export_refs can reference them.
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "01"
+number = "01"
+label = "IVA devengado RG tipo super-reducido 4pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_01"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-01"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "02"
+number = "02"
+label = "IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_02"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "03"
+number = "03"
+label = "IVA devengado RG tipo super-reducido 4pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_03"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-03"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "04"
+number = "04"
+label = "IVA devengado RG tipo reducido 10pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_04"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-04"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "05"
+number = "05"
+label = "IVA devengado RG tipo reducido 10pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_05"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "06"
+number = "06"
+label = "IVA devengado RG tipo reducido 10pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_06"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-06"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "07"
+number = "07"
+label = "IVA devengado RG tipo general 21pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_07"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-07"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "08"
+number = "08"
+label = "IVA devengado RG tipo general 21pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_08"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "09"
+number = "09"
+label = "IVA devengado RG tipo general 21pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_09"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-09"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "10"
+number = "10"
+label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Base"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_10"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-10"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "11"
+number = "11"
+label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_11"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-11"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "12"
+number = "12"
+label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Base"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_12"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-12"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "13"
+number = "13"
+label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_13"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-13"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "14"
+number = "14"
+label = "Modificacion bases y cuotas IVA devengado - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_14"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-14"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "15"
+number = "15"
+label = "Modificacion bases y cuotas IVA devengado - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_15"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-15"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "16"
+number = "16"
+label = "Recargo equivalencia tipo 1.0pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_16"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-16"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "17"
+number = "17"
+label = "Recargo equivalencia tipo 1.0pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_17"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-17"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "18"
+number = "18"
+label = "Recargo equivalencia tipo 1.0pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_18"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-18"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "19"
+number = "19"
+label = "Recargo equivalencia tipo 1.4pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_19"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-19"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "20"
+number = "20"
+label = "Recargo equivalencia tipo 1.4pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_20"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "21"
+number = "21"
+label = "Recargo equivalencia tipo 1.4pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_21"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-21"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "22"
+number = "22"
+label = "Recargo equivalencia tipo 5.2pct - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_22"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-22"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "23"
+number = "23"
+label = "Recargo equivalencia tipo 5.2pct - Tipo porcentaje"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "ratio"
+semantic_role = "dr303_23"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "24"
+number = "24"
+label = "Recargo equivalencia tipo 5.2pct - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_24"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-24"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "25"
+number = "25"
+label = "Modificacion bases y cuotas recargo equivalencia - Base imponible"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_25"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-25"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "26"
+number = "26"
+label = "Modificacion bases y cuotas recargo equivalencia - Cuota"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_26"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-26"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "27"
+number = "27"
+label = "Total cuota devengada"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "dr303_27"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# DP30301 IVA deducible (casillas 28-45) - DR rows 65-82
+export_refs = ["modelo-303-page-01-casilla-27"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "28"
+number = "28"
+label = "IVA deducible ops interiores corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_28"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-28"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "29"
+number = "29"
+label = "IVA deducible ops interiores corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_29"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-29"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "30"
+number = "30"
+label = "IVA deducible ops interiores bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_30"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-30"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "31"
+number = "31"
+label = "IVA deducible ops interiores bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_31"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-31"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "32"
+number = "32"
+label = "IVA deducible importaciones bienes corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_32"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-32"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "33"
+number = "33"
+label = "IVA deducible importaciones bienes corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_33"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-33"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "34"
+number = "34"
+label = "IVA deducible importaciones bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_34"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-34"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "35"
+number = "35"
+label = "IVA deducible importaciones bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_35"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-35"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "36"
+number = "36"
+label = "IVA deducible adquisiciones intracomunitarias corrientes - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_36"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-36"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "37"
+number = "37"
+label = "IVA deducible adquisiciones intracomunitarias corrientes - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_37"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-37"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "38"
+number = "38"
+label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_38"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-38"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "39"
+number = "39"
+label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_39"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-39"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "40"
+number = "40"
+label = "Rectificacion deducciones - Base"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_40"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-40"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "41"
+number = "41"
+label = "Rectificacion deducciones - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_41"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-41"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "42"
+number = "42"
+label = "Compensaciones regimen especial agricultura ganaderia y pesca - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_42"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-42"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "43"
+number = "43"
+label = "Regularizacion bienes de inversion - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_43"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-43"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "44"
+number = "44"
+label = "Regularizacion prorrata por porcentaje definitivo - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_44"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-01-casilla-44"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "45"
+number = "45"
+label = "Total a deducir - Cuota"
+section = ["iva", "regimen_general", "deducible"]
+data_type = "money"
+semantic_role = "dr303_45"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# DP30302 Regimen Simplificado result casillas (47-58)
+# Source: DR DP30302 2022 edition rows 78-89 (with descriptions)
+# These are the aggregated result fields for all simplified-regime activities
+# combined, appearing at the bottom of the page after the per-activity rows.
+export_refs = ["modelo-303-page-01-casilla-45"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "47"
+number = "47"
+label = "RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_47"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-47"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "48"
+number = "48"
+label = "RS - 4T - Suma cuotas derivadas regimen simplificado conjunto actividades"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_48"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-48"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "49"
+number = "49"
+label = "RS - 4T - Suma ingresos a cuenta realizados en el ejercicio"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_49"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-49"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "50"
+number = "50"
+label = "RS - 4T - Resultado ([48]-[49])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_50"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-50"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "51"
+number = "51"
+label = "RS - Cuotas devengadas adquisiciones intracomunitarias bienes"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_51"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-51"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "52"
+number = "52"
+label = "RS - Cuotas devengadas entregas activos fijos"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_52"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-52"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "53"
+number = "53"
+label = "RS - Cuotas devengadas IVA devengado inversion sujeto pasivo"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_53"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-53"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "54"
+number = "54"
+label = "RS - Total cuota resultante"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_54"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-54"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "55"
+number = "55"
+label = "RS - IVA deducible adquisicion o importacion activos fijos"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_55"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-55"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "56"
+number = "56"
+label = "RS - IVA deducible regularizacion bienes inversion"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_56"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-56"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "57"
+number = "57"
+label = "RS - Total IVA deducible regimen simplificado ([55]+[56])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_57"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-02-casilla-57"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "58"
+number = "58"
+label = "RS - Resultado regimen simplificado ([54]-[57])"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "dr303_58"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# DP30303 informativo and resultado casillas (59-120, 122-124, 62-111)
+# Source: DR DP30303 rows 5-42
+export_refs = ["modelo-303-page-02-casilla-58"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "59"
+number = "59"
+label = "Informacion adicional - Entregas intracomunitarias bienes y servicios"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_59"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-59"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "60"
+number = "60"
+label = "Informacion adicional - Exportaciones y operaciones asimiladas"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_60"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-60"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "120"
+number = "120"
+label = "Informacion adicional - Ops no sujetas reglas localizacion (excl casilla 123)"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_120"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-120"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "122"
+number = "122"
+label = "Informacion adicional - Ops sujetas inversion sujeto pasivo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_122"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-122"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "123"
+number = "123"
+label = "Informacion adicional - Ops no sujetas localizacion regimenes especiales ventanilla unica"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_123"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-123"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "124"
+number = "124"
+label = "Informacion adicional - Ops sujetas regimenes especiales ventanilla unica"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_124"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-124"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "62"
+number = "62"
+label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Base imponible"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_62"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-62"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "63"
+number = "63"
+label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Cuota"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_63"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-63"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "74"
+number = "74"
+label = "Informacion adicional - Adquisiciones criterio caja - Base imponible"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_74"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-74"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "75"
+number = "75"
+label = "Informacion adicional - Adquisiciones criterio caja - Cuota"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_75"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-75"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "76"
+number = "76"
+label = "Resultado - Regularizacion cuotas art 80 cinco 5a LIVA"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_76"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-76"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "64"
+number = "64"
+label = "Resultado - Suma de resultados ([46]+[58]+[76])"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_64"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-64"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "65"
+number = "65"
+label = "Resultado - Porcentaje atribuible Administracion del Estado"
+section = ["iva", "resultado"]
+data_type = "ratio"
+semantic_role = "dr303_65"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-65"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "66"
+number = "66"
+label = "Resultado - Importe atribuible Administracion del Estado"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_66"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-66"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "77"
+number = "77"
+label = "Resultado - IVA a la importacion liquidado por la Aduana pendiente de ingreso"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_77"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-77"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "68"
+number = "68"
+label = "Resultado - Tributacion conjunta resultado regularizacion anual"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_68"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-68"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "70"
+number = "70"
+label = "Resultado - Resultados a ingresar de anteriores autoliquidaciones del ejercicio y periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_70"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-70"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "109"
+number = "109"
+label = "Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones del ejercicio y periodo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_109"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-109"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "71"
+number = "71"
+label = "Resultado final ([69]-[70]+[109])"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_71"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-71"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "108"
+number = "108"
+label = "Rectificativa - Otros ajustes determinados supuestos por discrepancia criterio administrativo"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_108"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+export_refs = ["modelo-303-page-03-casilla-108"]
+
+[[revisions."2009-y-siguientes".casillas]]
+id = "111"
+number = "111"
+label = "Rectificativa - Importe de la rectificacion"
+section = ["iva", "resultado"]
+data_type = "money"
+semantic_role = "dr303_111"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+# ==============================================================================
+# Modelo 303 fichero-BOE export layout
+# Source: AEAT DR303 2024 (ejercicio 2024 a partir de periodos 09 y 3T)
+# Corpus: src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_303/
+#   files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes...xlsx
+# Encoding: latin-1 (ISO-8859-1) per ADR fichero-boe-export section 4 (2026-05-21 amendment)
+# Total: 7994 bytes for minimum envelope (1 occurrence of each page record):
+#   328 (DP30300) + 1581 (DP30301) + 1706 (DP30302) + 1017 (DP30303)
+#   + 998 (DP30304) + 1523 (DP30305) + 823 (DP303DID) + 18 (closing tag)
+# ==============================================================================
+export_refs = ["modelo-303-page-03-casilla-111"]
+
+[[revisions."2009-y-siguientes".export_layouts]]
+id = "modelo-303-fichero-boe"
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-zero"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-period"
+offset = 11
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-presenter-nif"
+offset = 101
+length = 9
+kind = "header"
+header_key = "presenter_nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-complementaria"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-tipo-declaracion"
+offset = 13
+length = 1
+kind = "header"
+header_key = "declaration_type"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-nif"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-surnames"
+offset = 23
+length = 80
+kind = "header"
+header_key = "surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-ejercicio"
+offset = 103
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-periodo"
+offset = 107
+length = 2
+kind = "draft"
+draft_attribute = "period_code"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-tributacion-foral"
+offset = 109
+length = 1
+kind = "header"
+header_key = "tributacion_foral"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-redeme"
+offset = 110
+length = 1
+kind = "header"
+header_key = "redeme"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-solo-rs"
+offset = 111
+length = 1
+kind = "header"
+header_key = "solo_rs"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-autoliq-conjunta"
+offset = 112
+length = 1
+kind = "header"
+header_key = "autoliq_conjunta"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-criterio-caja"
+offset = 113
+length = 1
+kind = "header"
+header_key = "criterio_caja"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-destinatario-caja"
+offset = 114
+length = 1
+kind = "header"
+header_key = "destinatario_caja"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-prorrata-especial"
+offset = 115
+length = 1
+kind = "header"
+header_key = "prorrata_especial"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-revocacion-prorrata"
+offset = 116
+length = 1
+kind = "header"
+header_key = "revocacion_prorrata"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-concurso-acreedores"
+offset = 117
+length = 1
+kind = "header"
+header_key = "concurso_acreedores"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-fecha-concurso"
+offset = 118
+length = 8
+kind = "header"
+header_key = "fecha_auto_concurso"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-tipo-autoliq-concurso"
+offset = 126
+length = 1
+kind = "header"
+header_key = "tipo_autoliq_concurso"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-sii-voluntario"
+offset = 127
+length = 1
+kind = "header"
+header_key = "sii_voluntario"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-exonerado-390"
+offset = 128
+length = 1
+kind = "header"
+header_key = "exonerado_390"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-volumen-ops"
+offset = 129
+length = 1
+kind = "header"
+header_key = "volumen_ops"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-150"
+offset = 130
+length = 17
+kind = "casilla"
+casilla = "150"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-151"
+offset = 147
+length = 5
+kind = "literal"
+literal = "00000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-152"
+offset = 152
+length = 17
+kind = "casilla"
+casilla = "152"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-01"
+offset = 169
+length = 17
+kind = "casilla"
+casilla = "01"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-02"
+offset = 186
+length = 5
+kind = "literal"
+literal = "00400"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-03"
+offset = 191
+length = 17
+kind = "casilla"
+casilla = "03"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-153"
+offset = 208
+length = 17
+kind = "casilla"
+casilla = "153"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-154"
+offset = 225
+length = 5
+kind = "casilla"
+casilla = "154"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-155"
+offset = 230
+length = 17
+kind = "casilla"
+casilla = "155"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-04"
+offset = 247
+length = 17
+kind = "casilla"
+casilla = "04"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-05"
+offset = 264
+length = 5
+kind = "literal"
+literal = "01000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-06"
+offset = 269
+length = 17
+kind = "casilla"
+casilla = "06"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-07"
+offset = 286
+length = 17
+kind = "casilla"
+casilla = "07"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-08"
+offset = 303
+length = 5
+kind = "literal"
+literal = "02100"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-09"
+offset = 308
+length = 17
+kind = "casilla"
+casilla = "09"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-10"
+offset = 325
+length = 17
+kind = "casilla"
+casilla = "10"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-11"
+offset = 342
+length = 17
+kind = "casilla"
+casilla = "11"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-12"
+offset = 359
+length = 17
+kind = "casilla"
+casilla = "12"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-13"
+offset = 376
+length = 17
+kind = "casilla"
+casilla = "13"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-14"
+offset = 393
+length = 17
+kind = "casilla"
+casilla = "14"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-15"
+offset = 410
+length = 17
+kind = "casilla"
+casilla = "15"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-156"
+offset = 427
+length = 17
+kind = "casilla"
+casilla = "156"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-157"
+offset = 444
+length = 5
+kind = "literal"
+literal = "00175"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-158"
+offset = 449
+length = 17
+kind = "casilla"
+casilla = "158"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-16"
+offset = 466
+length = 17
+kind = "casilla"
+casilla = "16"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-17"
+offset = 483
+length = 5
+kind = "casilla"
+casilla = "17"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-18"
+offset = 488
+length = 17
+kind = "casilla"
+casilla = "18"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-19"
+offset = 505
+length = 17
+kind = "casilla"
+casilla = "19"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-20"
+offset = 522
+length = 5
+kind = "literal"
+literal = "00140"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-21"
+offset = 527
+length = 17
+kind = "casilla"
+casilla = "21"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-22"
+offset = 544
+length = 17
+kind = "casilla"
+casilla = "22"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-23"
+offset = 561
+length = 5
+kind = "literal"
+literal = "00520"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-24"
+offset = 566
+length = 17
+kind = "casilla"
+casilla = "24"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-25"
+offset = 583
+length = 17
+kind = "casilla"
+casilla = "25"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-26"
+offset = 600
+length = 17
+kind = "casilla"
+casilla = "26"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-27"
+offset = 617
+length = 17
+kind = "casilla"
+casilla = "27"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-28"
+offset = 634
+length = 17
+kind = "casilla"
+casilla = "28"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-29"
+offset = 651
+length = 17
+kind = "casilla"
+casilla = "29"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-30"
+offset = 668
+length = 17
+kind = "casilla"
+casilla = "30"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-31"
+offset = 685
+length = 17
+kind = "casilla"
+casilla = "31"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-32"
+offset = 702
+length = 17
+kind = "casilla"
+casilla = "32"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-33"
+offset = 719
+length = 17
+kind = "casilla"
+casilla = "33"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-34"
+offset = 736
+length = 17
+kind = "casilla"
+casilla = "34"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-35"
+offset = 753
+length = 17
+kind = "casilla"
+casilla = "35"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-36"
+offset = 770
+length = 17
+kind = "casilla"
+casilla = "36"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-37"
+offset = 787
+length = 17
+kind = "casilla"
+casilla = "37"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-38"
+offset = 804
+length = 17
+kind = "casilla"
+casilla = "38"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-39"
+offset = 821
+length = 17
+kind = "casilla"
+casilla = "39"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-40"
+offset = 838
+length = 17
+kind = "casilla"
+casilla = "40"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-41"
+offset = 855
+length = 17
+kind = "casilla"
+casilla = "41"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-42"
+offset = 872
+length = 17
+kind = "casilla"
+casilla = "42"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-43"
+offset = 889
+length = 17
+kind = "casilla"
+casilla = "43"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-44"
+offset = 906
+length = 17
+kind = "casilla"
+casilla = "44"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-45"
+offset = 923
+length = 17
+kind = "casilla"
+casilla = "45"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-46"
+offset = 940
+length = 17
+kind = "casilla"
+casilla = "iva.resultado-regimen-general"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-165"
+offset = 957
+length = 17
+kind = "casilla"
+casilla = "165"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-166"
+offset = 974
+length = 5
+kind = "literal"
+literal = "00200"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-167"
+offset = 979
+length = 17
+kind = "casilla"
+casilla = "167"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-168"
+offset = 996
+length = 17
+kind = "casilla"
+casilla = "168"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-169"
+offset = 1013
+length = 5
+kind = "casilla"
+casilla = "169"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-casilla-170"
+offset = 1018
+length = 17
+kind = "casilla"
+casilla = "170"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-reserved-1"
+offset = 1035
+length = 522
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-seal"
+offset = 1557
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-01-close-tag"
+offset = 1570
+length = 12
+kind = "literal"
+literal = "</T30301000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "02000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-complementaria"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_02"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-actividades"
+offset = 13
+length = 888
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-47"
+offset = 901
+length = 17
+kind = "casilla"
+casilla = "47"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-48"
+offset = 918
+length = 17
+kind = "casilla"
+casilla = "48"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-49"
+offset = 935
+length = 17
+kind = "casilla"
+casilla = "49"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-50"
+offset = 952
+length = 17
+kind = "casilla"
+casilla = "50"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-51"
+offset = 969
+length = 17
+kind = "casilla"
+casilla = "51"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-52"
+offset = 986
+length = 17
+kind = "casilla"
+casilla = "52"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-53"
+offset = 1003
+length = 17
+kind = "casilla"
+casilla = "53"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-54"
+offset = 1020
+length = 17
+kind = "casilla"
+casilla = "54"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-55"
+offset = 1037
+length = 17
+kind = "casilla"
+casilla = "55"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-56"
+offset = 1054
+length = 17
+kind = "casilla"
+casilla = "56"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-57"
+offset = 1071
+length = 17
+kind = "casilla"
+casilla = "57"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-casilla-58"
+offset = 1088
+length = 17
+kind = "casilla"
+casilla = "58"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-reserved"
+offset = 1105
+length = 590
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-02-close-tag"
+offset = 1695
+length = 12
+kind = "literal"
+literal = "</T30302000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-03"
+record_type = "page_03"
+order = 3
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "03000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-59"
+offset = 12
+length = 17
+kind = "casilla"
+casilla = "59"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-60"
+offset = 29
+length = 17
+kind = "casilla"
+casilla = "60"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-120"
+offset = 46
+length = 17
+kind = "casilla"
+casilla = "120"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-122"
+offset = 63
+length = 17
+kind = "casilla"
+casilla = "122"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-123"
+offset = 80
+length = 17
+kind = "casilla"
+casilla = "123"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-124"
+offset = 97
+length = 17
+kind = "casilla"
+casilla = "124"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-62"
+offset = 114
+length = 17
+kind = "casilla"
+casilla = "62"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-63"
+offset = 131
+length = 17
+kind = "casilla"
+casilla = "63"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-74"
+offset = 148
+length = 17
+kind = "casilla"
+casilla = "74"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-75"
+offset = 165
+length = 17
+kind = "casilla"
+casilla = "75"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-76"
+offset = 182
+length = 17
+kind = "casilla"
+casilla = "76"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-64"
+offset = 199
+length = 17
+kind = "casilla"
+casilla = "64"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-65"
+offset = 216
+length = 5
+kind = "casilla"
+casilla = "65"
+data_type = "money"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-66"
+offset = 221
+length = 17
+kind = "casilla"
+casilla = "66"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-77"
+offset = 238
+length = 17
+kind = "casilla"
+casilla = "77"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-110"
+offset = 255
+length = 17
+kind = "casilla"
+casilla = "iva.compensacion-pendiente-periodos-anteriores"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-78"
+offset = 272
+length = 17
+kind = "casilla"
+casilla = "iva.compensacion-aplicada-periodo"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-87"
+offset = 289
+length = 17
+kind = "casilla"
+casilla = "iva.compensacion-pendiente-periodos-posteriores"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-68"
+offset = 306
+length = 17
+kind = "casilla"
+casilla = "68"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-69"
+offset = 323
+length = 17
+kind = "casilla"
+casilla = "iva.resultado"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-70"
+offset = 340
+length = 17
+kind = "casilla"
+casilla = "70"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-109"
+offset = 357
+length = 17
+kind = "casilla"
+casilla = "109"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-71"
+offset = 374
+length = 17
+kind = "casilla"
+casilla = "71"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-sin-actividad"
+offset = 391
+length = 1
+kind = "header"
+header_key = "sin_actividad"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-autoliq-rectificativa"
+offset = 392
+length = 1
+kind = "header"
+header_key = "autoliq_rectificativa"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-nro-justificante"
+offset = 393
+length = 13
+kind = "header"
+header_key = "previous_receipt"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-tipo-rectificacion"
+offset = 406
+length = 1
+kind = "header"
+header_key = "tipo_rectificacion"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-108"
+offset = 407
+length = 17
+kind = "casilla"
+casilla = "108"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-casilla-111"
+offset = 424
+length = 17
+kind = "casilla"
+casilla = "111"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-reserved-1"
+offset = 441
+length = 120
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-motivo-rect-1"
+offset = 561
+length = 1
+kind = "header"
+header_key = "motivo_rectificacion_rectificaciones"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-motivo-rect-2"
+offset = 562
+length = 1
+kind = "header"
+header_key = "motivo_rectificacion_discrepancia"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-reserved-2"
+offset = 563
+length = 443
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-03-close-tag"
+offset = 1006
+length = 12
+kind = "literal"
+literal = "</T30303000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-04"
+record_type = "page_04"
+order = 4
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "04000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-complementaria"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_04"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-actividad-codes"
+offset = 13
+length = 43
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-territorials"
+offset = 56
+length = 25
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-annual-ops"
+offset = 81
+length = 289
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-reserved"
+offset = 387
+length = 600
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-04-close-tag"
+offset = 987
+length = 12
+kind = "literal"
+literal = "</T30304000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-05"
+record_type = "page_05"
+order = 5
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "05000"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-complementaria"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_05"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-prorrata-regdeducdif"
+offset = 13
+length = 827
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-reserved"
+offset = 840
+length = 672
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-05-close-tag"
+offset = 1512
+length = 12
+kind = "literal"
+literal = "</T30305000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-page-did"
+record_type = "page_did"
+order = 6
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "303"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-page"
+offset = 6
+length = 5
+kind = "literal"
+literal = "DID00"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-close"
+offset = 11
+length = 1
+kind = "literal"
+literal = ">"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-swift-bic"
+offset = 12
+length = 11
+kind = "header"
+header_key = "swift_bic"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-iban"
+offset = 23
+length = 34
+kind = "header"
+header_key = "iban"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-bank-name"
+offset = 57
+length = 70
+kind = "header"
+header_key = "bank_name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-bank-address"
+offset = 127
+length = 35
+kind = "header"
+header_key = "bank_address"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-city"
+offset = 162
+length = 30
+kind = "header"
+header_key = "bank_city"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-country"
+offset = 192
+length = 2
+kind = "header"
+header_key = "bank_country_code"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-sepa"
+offset = 194
+length = 1
+kind = "header"
+header_key = "sepa_marca"
+data_type = "text"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-reserved"
+offset = 195
+length = 617
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-page-did-close-tag"
+offset = 812
+length = 12
+kind = "literal"
+literal = "</T303DID00>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions."2009-y-siguientes".export_layouts.records]]
+id = "modelo-303-envelope-footer"
+record_type = "envelope_footer"
+order = 99
+encoding = "latin-1"
+line_ending = "none"
+
+
+[[revisions."2009-y-siguientes".export_layouts.records.fields]]
+id = "modelo-303-envelope-closing-tag"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]

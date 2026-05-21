@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.deadlines import AutonomoProfile, autonomo_profile_from_mapping
+from ...domain.deadlines import TaxpayerProfile, taxpayer_profile_from_mapping
 from ...domain.deadlines._models import IVARegime
 from ...domain.user_profile import (
     ProfileSchemaDefinition,
@@ -32,6 +32,23 @@ def _default_schema() -> ProfileSchemaDefinition:
     if _DEFAULT_SCHEMA is None:
         _DEFAULT_SCHEMA = load_user_profile_schema()
     return _DEFAULT_SCHEMA
+
+
+def _render_fact_value(value: object) -> str:
+    """Render a profile-fact value as its canonical-token string.
+
+    A :class:`UserProfileFact` value is a typed union (``str | bool |
+    int | Decimal | date``). Downstream coercers — the wizard
+    descriptor's ``project_answers`` in particular — accept only the
+    lowercase canonical boolean tokens ``true`` / ``false``. Plain
+    ``str(True)`` yields ``"True"``, which ``project_answers`` rejects
+    as falsey, so a boolean fact must be lowercased here before the
+    projection's flat-string contract is built.
+    """
+
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
 
 
 def _selector_index(schema: ProfileSchemaDefinition) -> dict[str, tuple[str, ...]]:
@@ -52,7 +69,7 @@ def facts_to_values(
     """Project a tuple of profile facts into the flat ``selector -> str(value)`` map.
 
     The flat shape is the legacy mapping shape consumed by
-    :func:`autonomo_profile_from_mapping` and similar coercers. Each
+    :func:`taxpayer_profile_from_mapping` and similar coercers. Each
     schema field's ``model_selectors`` are honored: a fact at
     ``identity.tax_id`` whose schema declares
     ``model_selectors = ["tax.id"]`` is emitted under the key
@@ -66,7 +83,7 @@ def facts_to_values(
         if fact.value is None:
             continue
         selectors = selector_index.get(fact.path, (fact.path,))
-        rendered = str(fact.value)
+        rendered = _render_fact_value(fact.value)
         for selector in selectors or (fact.path,):
             values[selector] = rendered
     return values
@@ -103,21 +120,21 @@ def record_to_path_values(record: UserProfileRecord | UserProfileSnapshot | None
 
     if record is None:
         return {}
-    return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
+    return {fact.path: _render_fact_value(fact.value) for fact in record.facts if fact.value is not None}
 
 
-def projection_for_autonomo(
+def projection_for_taxpayer(
     facts: Mapping[str, object] | UserProfileRecord | UserProfileSnapshot,
     *,
     tax_id_default: str = "00000000T",
     iva_regime_default: IVARegime = IVARegime.GENERAL,
     schema: ProfileSchemaDefinition | None = None,
-) -> AutonomoProfile:
-    """Return the deadline-engine :class:`AutonomoProfile` for the supplied profile facts.
+) -> TaxpayerProfile:
+    """Return the deadline-engine :class:`TaxpayerProfile` for the supplied profile facts.
 
     Accepts either a live record, an immutable snapshot, or a
     pre-projected flat mapping. The single coercion path goes through
-    :func:`autonomo_profile_from_mapping` so canonical-token semantics
+    :func:`taxpayer_profile_from_mapping` so canonical-token semantics
     stay in lockstep with the wizard descriptor.
     """
 
@@ -125,12 +142,12 @@ def projection_for_autonomo(
         mapping = record_to_path_values(facts)
     else:
         mapping = {str(key): str(value) for key, value in facts.items() if value is not None}
-    return autonomo_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)
+    return taxpayer_profile_from_mapping(mapping, tax_id_default=tax_id_default, iva_regime_default=iva_regime_default)
 
 
 __all__ = [
     "facts_to_values",
-    "projection_for_autonomo",
+    "projection_for_taxpayer",
     "record_to_path_values",
     "record_to_values",
     "snapshot_to_values",

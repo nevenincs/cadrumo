@@ -24,7 +24,11 @@ from ...domain.filing._amendment import (
     make_amendment_id,
 )
 from ...domain.filing._errors import ModeloAmendmentError, ModeloBuilderError
-from ...domain.filing._protocols import CasillaSchemaProvider
+from ...domain.filing._protocols import (
+    CasillaSchemaProvider,
+    ModeloInputs,
+    ModeloInputValue,
+)
 
 _logger = get_logger(__name__)
 
@@ -131,8 +135,8 @@ def _require_original_registry_snapshot(
         raise ModeloBuilderError("original draft was not built from the active registry snapshot")
 
 
-def _merge_inputs(original_draft: ModeloDraft, updated_inputs: CasillaInputs) -> dict[str, object]:
-    merged: dict[str, object] = {
+def _merge_inputs(original_draft: ModeloDraft, updated_inputs: CasillaInputs) -> ModeloInputs:
+    merged: dict[str, ModeloInputValue] = {
         value.casilla_id: value.value
         for value in original_draft.values
         if value.value is not None and value.kind is not ModeloValueKind.COMPUTED

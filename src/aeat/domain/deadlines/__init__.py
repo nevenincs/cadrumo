@@ -1,7 +1,7 @@
 """Registry-backed filing-deadline computation engine for autónomo profiles.
 
 :class:`DeadlineEngine` is the project's first user-visible
-"answer-the-user" surface: given an :class:`AutonomoProfile` and a
+"answer-the-user" surface: given an :class:`TaxpayerProfile` and a
 year, it produces a deterministic typed :class:`Schedule` of every
 filing the autónomo is obliged to submit, with concrete opens /
 closes dates and a current :class:`ObligationStatus`.
@@ -12,12 +12,12 @@ files anything, and never mutates its inputs.
 Examples:
     >>> from datetime import date
     >>> from aeat.domain.deadlines import (
-    ...     AutonomoProfile,
+    ...     TaxpayerProfile,
     ...     DeadlineEngine,
     ...     IVARegime,
     ...     next_deadline,
     ... )
-    >>> profile = AutonomoProfile(
+    >>> profile = TaxpayerProfile(
     ...     tax_id="X1234567L",
     ...     iva_regime=IVARegime.GENERAL,
     ...     has_employees=False,
@@ -43,6 +43,7 @@ from ._engine import (
 )
 from ._errors import (
     DeadlineError,
+    NoDeadlineWindowsError,
     ProfileError,
     ScheduleComputationError,
 )
@@ -59,8 +60,11 @@ from ._festivos import (
     shift_deadline,
 )
 from ._models import (
-    AutonomoProfile,
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
     IVARegime,
+    LegalEntityForm,
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -68,8 +72,9 @@ from ._models import (
     RecargoBand,
     Recovery,
     Schedule,
+    TaxpayerProfile,
 )
-from ._profiles import autonomo_profile_from_mapping
+from ._profiles import taxpayer_profile_from_mapping
 from ._recargo import (
     build_recovery_for_overdue,
     load_recargo_bands,
@@ -78,19 +83,23 @@ from ._recargo import (
 
 __all__ = [
     "MODELOS_WITHOUT_SHIFT",
-    "AutonomoProfile",
     "CalendarCCAA",
     "DeadlineEngine",
     "DeadlineError",
     "DeadlineShift",
+    "EntityType",
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
     "IVARegime",
+    "IrpfEstimationRegime",
+    "IrpfIncomeCategory",
+    "LegalEntityForm",
     "ModeloDeadline",
     "ModeloEnrollment",
     "ModeloIVAProfile",
     "ModeloIdentifier",
+    "NoDeadlineWindowsError",
     "ObligationStatus",
     "ProfileError",
     "RecargoBand",
@@ -98,8 +107,8 @@ __all__ = [
     "Schedule",
     "ScheduleComputationError",
     "ScheduleProducer",
+    "TaxpayerProfile",
     "applies_to",
-    "autonomo_profile_from_mapping",
     "build_recovery_for_overdue",
     "compute_obligation_schedule",
     "explain",
@@ -110,4 +119,5 @@ __all__ = [
     "next_deadline",
     "resolve_recargo_band",
     "shift_deadline",
+    "taxpayer_profile_from_mapping",
 ]

@@ -498,9 +498,13 @@ class Settings(BaseSettings):
     aeat_log_dir: Path | None = Field(
         default=None,
         description=(
-            "Optional override for the diagnostic-log root directory. "
-            "When None the logging helper computes a project-relative default; "
-            "operators set this to redirect logs to an external store."
+            "Diagnostic-log root directory. The ``None`` default here is a "
+            "placeholder: when the field is not explicitly set, the model "
+            "validator roots it at ``<aeat_local_storage_root>/logs`` so the "
+            "diagnostic log lives under the one state root that "
+            "``AEAT_LOCAL_STORAGE_ROOT`` scopes, isolating each workspace's "
+            "log. An explicit ``AEAT_LOG_DIR`` override wins over the "
+            "derived default."
         ),
     )
 
@@ -966,6 +970,38 @@ class Settings(BaseSettings):
             self,
             "aeat_token_dir",
             self.aeat_local_storage_root / "tokens",
+        )
+        return self
+
+    @model_validator(mode="after")
+    def _resolve_log_dir_under_storage_root(self) -> Settings:
+        """Root ``aeat_log_dir`` under ``aeat_local_storage_root``.
+
+        When the field is not explicitly supplied (the production
+        default of ``None``), this validator computes
+        ``<aeat_local_storage_root>/logs`` so the diagnostic log lives
+        inside the one state root that ``AEAT_LOCAL_STORAGE_ROOT``
+        scopes — consistent with the token directory. A system-wide
+        ``~/.config/aeat/logs/aeat.log`` mixes every workspace's (and
+        every test run's) records into a single file; rooting the log
+        under the storage root keeps each workspace's diagnostics
+        isolated.
+
+        An explicit ``AEAT_LOG_DIR`` env var (or a value supplied via
+        an ``override_settings`` block in tests) registers the field in
+        ``model_fields_set`` and wins: the validator only computes the
+        derived path when the field was left at its ``None`` default.
+
+        ``mode="after"`` guarantees ``aeat_local_storage_root`` is
+        already populated when this runs.
+        """
+
+        if "aeat_log_dir" in self.model_fields_set:
+            return self
+        object.__setattr__(
+            self,
+            "aeat_log_dir",
+            self.aeat_local_storage_root / "logs",
         )
         return self
 

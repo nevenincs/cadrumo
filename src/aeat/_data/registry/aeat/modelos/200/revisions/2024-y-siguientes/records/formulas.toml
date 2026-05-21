@@ -19,6 +19,41 @@ required_text = [
     "casilla [01330] = [00552] + [01033] - [01034]",
 ]
 
+# Entity-type rate dispatch: the LIS art. 29 tipo de gravamen (casilla
+# 00558) is selected by the taxpayer's legal form rather than typed in
+# by hand. `lookup_parameter_by_entity_type` routes the scalar baseline
+# rate per `legal_entity_form`: sociedades de capital and sociedades
+# civiles mercantiles take the general 25 % rate, cooperativas
+# fiscalmente protegidas the 20 % rate, and entidades sin fines
+# lucrativos the 10 % rate. The period-dependent overrides (the
+# newly-created-entity 15 % rate and the micro-empresa 17/20-19/21
+# bracket scale) are a separate state axis layered on top of the
+# sub-form and are not dispatched here.
+[[revisions."2024-y-siguientes".formulas]]
+id = "modelo-200-tipo-gravamen-por-forma-juridica"
+target = "DP200014:00558"
+expression = { op = "lookup_parameter_by_entity_type", args = [
+    { literal = "0" },
+    { binding = "modelo-200-2024-profile-legal-entity-form" },
+    { dispatch_table_entries = [
+        { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
+        { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-non-profit-special-regime" },
+    ] },
+] }
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = [
+    "tipo de gravamen",
+    "cuota integra (casilla 00562)",
+]
+
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-integra"
 target = "DP200014:00562"

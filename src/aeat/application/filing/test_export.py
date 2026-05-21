@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +11,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.domain.calculations.registry import RegistryValidationError, parse_export_payload
+from aeat.domain.filing import FilingExportError
 
 from . import (
     DeclaracionExportFormat,
@@ -57,6 +59,17 @@ def _schema_provider(
         )
         _SCHEMA_PROVIDER_CACHE[key] = provider
     return provider
+
+
+def _provider_without_export_layout(provider: RegistrySchemaProvider, modelo: str) -> RegistrySchemaProvider:
+    subview = provider.get_subview(modelo)
+    return RegistrySchemaProvider(
+        collections=provider.collections,
+        subviews={
+            **provider.subviews,
+            modelo: replace(subview, export_layout_ids=(), export_layouts=()),
+        },
+    )
 
 
 def _approved_registry_draft():
@@ -499,7 +512,9 @@ def test_export_writes_modelo_130_registry_layout(tmp_path: Path) -> None:
 
     payload = output.read_bytes()
     parsed = parse_export_payload(provider.get_subview(draft.modelo).export_layouts[0], payload)
-    exported_values = {entry.casilla_id: entry.value for entry in parsed.casillas}
+    exported_values = {
+        entry.casilla_id: entry.value for entry in parsed.casillas if entry.casilla_id is not None
+    }
     draft_values = {entry.casilla_id: entry.value for entry in draft.values}
 
     assert receipt.byte_size == len(payload)
@@ -535,6 +550,36 @@ def test_export_and_verify_build_model_scoped_provider_when_omitted(tmp_path: Pa
     assert receipt.modelo == "130"
     assert receipt.byte_size == len(output.read_bytes())
     assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
+
+
+def test_export_refuses_modelo_without_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(), draft.modelo)
+    output = tmp_path / "modelo-130.txt"
+
+    with pytest.raises(FilingExportError, match="declares no export layout"):
+        export_draft(
+            draft,
+            output_path=output,
+            headers=_modelo_130_export_headers(),
+            schema_provider=provider,
+        )
+
+    assert not output.exists()
+
+
+def test_verify_reports_missing_for_modelo_without_registry_layout(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(), draft.modelo)
+    exported = tmp_path / "modelo-130.txt"
+    exported.write_bytes(b"layout-less payload")
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MISSING
+    assert verdict.narrative == "filing.export.missing_registry_layout"
+    assert verdict.file_sha256 is not None
+    assert verdict.mismatched_casillas == ()
 
 
 def test_export_writes_modelo_131_binding_derived_layout(tmp_path: Path) -> None:
@@ -708,6 +753,10 @@ def test_export_writes_modelo_111_registry_layout(tmp_path: Path) -> None:
     assert exported_values["30"] == Decimal("516.25")
     assert payload[_field_slice(layout, record_28.id, "modelo-111-casilla-28")] == b"00000000000055625"
     assert payload[_field_slice(layout, record_30.id, "modelo-111-casilla-30")] == b"00000000000051625"
+    assert (
+        payload[_field_slice(layout, "modelo-111-envelope-footer", "modelo-111-envelope-close")]
+        == b"</T111020261T0000>"
+    )
 
 
 def test_export_writes_modelo_115_registry_layout(tmp_path: Path) -> None:
@@ -818,6 +867,24 @@ def test_verify_matches_exported_modelo_130_layout(tmp_path: Path) -> None:
     assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
     assert verdict.file_sha256 is not None
     assert verdict.mismatched_casillas == ()
+
+
+def test_verify_reports_unchecked_reserved_or_derived_casillas(tmp_path: Path) -> None:
+    draft = _approved_registry_draft()
+    exported = tmp_path / "modelo-130.txt"
+    provider = _schema_provider()
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
+    assert verdict.mismatched_casillas == ()
+    assert verdict.unchecked_casillas == ("saldo-negativo-fin-periodo",)
 
 
 def test_verify_matches_exported_modelo_111_layout(tmp_path: Path) -> None:
@@ -989,3 +1056,111 @@ def _field_slice(layout, record_id: str, field_id: str) -> slice:
         elif record.line_ending == "lf":
             cursor += 1
     raise AssertionError(f"export record {record_id!r} not found")
+
+
+def _approved_modelo_303_registry_draft():
+    """An approved modelo-303 draft built from the live registry snapshot.
+
+    Modelo 303 (IVA quarterly self-assessment) is filed through the AEAT
+    web form; its registry revision declares no fichero-BOE "importar
+    datos" export layout. This makes it the real fixture for the
+    no-layout export paths.
+    """
+
+    provider = _schema_provider(modelos=("303",))
+    draft = build_draft(
+        modelo="303",
+        period="2026Q1",
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Export registry test",
+        ),
+        inputs={},
+        schema_provider=provider,
+    )
+    return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
+
+
+def test_export_rejects_modelo_without_registry_export_layout(tmp_path: Path) -> None:
+    """A modelo whose registry revision declares no export layout is refused.
+
+    ``export_draft`` reaches for ``subview.export_layouts[0]``. A modelo
+    with no layout must be refused with a typed ``FilingExportError``
+    naming the gap — never crash with an ``IndexError`` off the empty
+    layout tuple. The export layout is stripped via
+    ``_provider_without_export_layout`` to exercise this path for a
+    modelo that otherwise carries a layout.
+    """
+
+    draft = _approved_modelo_303_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(modelos=("303",)), "303")
+    with pytest.raises(FilingExportError, match="no export layout"):
+        export_draft(
+            draft,
+            output_path=tmp_path / "modelo-303.txt",
+            headers={"declaration_type": "I"},
+            schema_provider=provider,
+        )
+
+
+def test_verify_reports_missing_for_modelo_without_registry_export_layout(tmp_path: Path) -> None:
+    """``verify_export`` reports MISSING for a modelo with no export layout.
+
+    With no layout to parse the file against, the verifier cannot
+    compute a casilla diff. It must surface a closed ``MISSING`` verdict
+    carrying the ``missing_registry_layout`` narrative rather than
+    raising or fabricating a ``MATCH``. The export layout is stripped via
+    ``_provider_without_export_layout`` to exercise this path for a
+    modelo that otherwise carries a layout.
+    """
+
+    draft = _approved_modelo_303_registry_draft()
+    provider = _provider_without_export_layout(_schema_provider(modelos=("303",)), "303")
+    verdict = verify_export(
+        draft,
+        file_path=tmp_path / "modelo-303.txt",
+        schema_provider=provider,
+    )
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MISSING
+    assert verdict.narrative == "filing.export.missing_registry_layout"
+    assert verdict.mismatched_casillas == ()
+
+
+def test_verify_reports_unchecked_casillas_outside_the_parsed_set(tmp_path: Path) -> None:
+    """verify_export surfaces draft casillas the export parser never re-reads.
+
+    The modelo-130 draft carries casillas the fichero-BOE layout does not
+    expose as deserialised currency fields (``saldo-negativo-fin-periodo``
+    is a registry-named carry-forward casilla, not a numbered wire slot).
+    A ``MATCH`` verdict must not silently imply full coverage: those
+    casillas belong in ``unchecked_casillas``. This asserts the coverage
+    contract — unchecked casillas are real draft casillas, are disjoint
+    from both the parser-confirmed (``casilla_provenance``) set and the
+    ``mismatched_casillas`` set, and the known carry-forward casilla is
+    reported.
+    """
+
+    draft = _approved_registry_draft()
+    provider = _schema_provider()
+    exported = tmp_path / "modelo-130.txt"
+    export_draft(
+        draft,
+        output_path=exported,
+        headers=_modelo_130_export_headers(),
+        schema_provider=provider,
+    )
+
+    verdict = verify_export(draft, file_path=exported, schema_provider=provider)
+
+    draft_casillas = {value.casilla_id for value in draft.values}
+    confirmed = {entry.casilla_id for entry in verdict.casilla_provenance}
+    unchecked = set(verdict.unchecked_casillas)
+
+    assert verdict.verdict is DeclaracionVerifyVerdict.MATCH
+    assert unchecked, "modelo 130 has a non-currency casilla the layout never re-reads"
+    assert unchecked <= draft_casillas
+    assert unchecked.isdisjoint(confirmed)
+    assert unchecked.isdisjoint(set(verdict.mismatched_casillas))
+    # The registry carry-forward casilla is the concrete unchecked entry.
+    assert "saldo-negativo-fin-periodo" in unchecked

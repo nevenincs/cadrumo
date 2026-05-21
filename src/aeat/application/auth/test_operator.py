@@ -12,6 +12,7 @@ from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings
+from ...core.i18n import tr
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from . import AuthProviderKind
 from ._operator import configure_operator_auth, inspect_operator_auth, test_operator_auth
@@ -354,6 +355,89 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
     assert probe.provider == "clave_movil"
 
 
+def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
+    """``auth test`` must do something observable ``auth status`` does not.
+
+    ``auth test`` performs a local persisted-session probe and reports
+    ``persisted_session_present`` / ``persisted_session_expired`` /
+    ``probe_summary`` — fields ``auth status`` (``AuthStatusResult``)
+    does not carry at all (persona-fleet finding G5). On a fresh state
+    with no persisted token the probe reports no session and a concrete
+    operator-facing summary.
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+    configure_operator_auth("certificate")
+
+    status = inspect_operator_auth()
+    probe = test_operator_auth()
+
+    # The probe fields are an ``auth test`` exclusive — not on the
+    # ``auth status`` result shape.
+    status_fields = set(status.model_dump())
+    probe_fields = set(probe.model_dump())
+    assert "persisted_session_present" not in status_fields
+    assert {"persisted_session_present", "persisted_session_expired", "probe_summary"} <= probe_fields
+
+    # No login has been performed, so there is no persisted token.
+    assert probe.persisted_session_present is False
+    assert probe.persisted_session_expired is None
+    assert probe.probe_summary != ""
+
+
+def test_configure_clave_movil_mismatch_carries_an_explanatory_detail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An ``identity_alignment: mismatch`` must explain what mismatches.
+
+    A bare ``mismatch`` token tells the operator nothing (persona-fleet
+    finding G2). The result must carry an ``identity_alignment_detail``
+    that names both compared values — the Cl@ve DNI/NIE and the active
+    profile tax id — and a ``next_action`` that routes to the actual
+    fix, not a futile ``auth test``.
+    """
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "00000000T"},
+        )
+    )
+    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "00000001R")
+
+    result = configure_operator_auth("clave_movil")
+
+    assert result.identity_alignment == "mismatch"
+    assert result.identity_alignment_detail != ""
+    assert "00000000T" in result.identity_alignment_detail
+    assert "00000001R" in result.identity_alignment_detail
+    assert "auth test" not in result.next_action, (
+        "a misaligned Cl@ve identity cannot pass auth test; the next "
+        f"action must route to the fix — got {result.next_action!r}"
+    )
+
+
+def test_configure_clave_movil_match_carries_no_alignment_detail(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the Cl@ve identity matches the profile there is nothing to explain."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "12345678Z"},
+        )
+    )
+    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "12345678Z")
+
+    result = configure_operator_auth("clave_movil")
+
+    assert result.identity_alignment == "matches"
+    assert result.identity_alignment_detail == ""
+
+
 def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> None:
     """A Cl@ve live read may proceed only when the active profile owns the Cl@ve identity."""
 
@@ -384,8 +468,15 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
     )
     settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "00000001R"})
 
-    with pytest.raises(AuthProfileIdentityMismatchError, match="does not match"):
+    with pytest.raises(AuthProfileIdentityMismatchError) as raised:
         _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
+    # The refusal text is routed through the locale system so it honours
+    # the profile language (persona-fleet finding G3); assert it equals
+    # the localised string for the canonical key rather than a
+    # hard-coded English fragment.
+    assert str(raised.value) == tr(
+        "application.auth.sessions.errors.clave_identity_profile_mismatch"
+    )
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:

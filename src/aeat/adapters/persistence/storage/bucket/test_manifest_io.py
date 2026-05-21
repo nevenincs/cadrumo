@@ -57,6 +57,17 @@ def test_write_then_read_round_trip(tmp_path: Path) -> None:
     assert loaded.kdf_params.salt == manifest.kdf_params.salt
 
 
+def test_write_emits_datetime_fields_as_toml_offset_datetimes(tmp_path: Path) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    manifest = _fixture_manifest()
+
+    write_manifest(paths, manifest)
+    text = manifest_path(paths).read_text(encoding="utf-8")
+
+    assert "created_at = 2026-05-14T12:00:00+00:00\n" in text
+    assert "last_unlocked_at = 2026-05-14T13:30:00+00:00\n" in text
+
+
 def test_round_trip_preserves_absent_last_unlocked(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
     manifest = _fixture_manifest(last_unlocked=False)
@@ -143,3 +154,43 @@ def test_torn_write_does_not_corrupt_existing_manifest(tmp_path: Path) -> None:
 
     loaded = read_manifest(paths)
     assert loaded == good
+
+
+def test_manifest_datetimes_are_written_as_rfc3339_offset_datetimes(tmp_path: Path) -> None:
+    """On-disk inspection: manifest datetimes are bare RFC-3339 offset datetimes.
+
+    ``read_manifest`` round-tripping a value proves the writer and the
+    reader agree, but not that the *wire* form is the TOML-native
+    offset-datetime the manifest contract declares. A regression that
+    quoted the datetime (TOML string) or dropped the offset would still
+    round-trip through ``tomllib`` as a plain string while corrupting
+    interoperability with any other RFC-3339 consumer. This test reads
+    the raw ``manifest.toml`` bytes and asserts each datetime line
+    carries an unquoted, timezone-aware, UTC ISO-8601 value.
+    """
+
+    import tomllib
+
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    manifest = _fixture_manifest()
+    write_manifest(paths, manifest)
+
+    text = manifest_path(paths).read_text(encoding="utf-8")
+    lines = {
+        key: value.strip()
+        for key, _, value in (line.partition(" = ") for line in text.splitlines())
+        if key in {"created_at", "last_unlocked_at"}
+    }
+
+    # Bare (unquoted) TOML datetime, not a string literal.
+    assert lines["created_at"] and not lines["created_at"].startswith(('"', "'"))
+    assert lines["last_unlocked_at"] and not lines["last_unlocked_at"].startswith(('"', "'"))
+
+    for raw in (lines["created_at"], lines["last_unlocked_at"]):
+        parsed = datetime.fromisoformat(raw)
+        assert parsed.tzinfo is not None and parsed.utcoffset() == UTC.utcoffset(None)
+
+    # tomllib parses the bare value back into a real aware datetime.
+    document = tomllib.loads(text)
+    assert document["created_at"] == manifest.created_at
+    assert document["last_unlocked_at"] == manifest.last_unlocked_at

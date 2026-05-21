@@ -27,8 +27,8 @@ def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> No
     snapshot = _modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
     values = {
-        casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
     }
     pdf_path = tmp_path / "modelo-130.pdf"
     _write_declaration_pdf(pdf_path, values=values)
@@ -54,8 +54,8 @@ def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf(tmp_path: 
     snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
     profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
     values = {
-        casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
     }
     pdf_path = tmp_path / "modelo-111.pdf"
     _write_declaration_pdf(pdf_path, modelo="111", ejercicio="2025", values=values)
@@ -72,8 +72,8 @@ def test_parser_extracts_modelo_123_current_registry_profile_targets_from_pdf(tm
     snapshot = _modelo_snapshot("123", filing_year=2026, period="1T")
     profile = snapshot.extraction_profiles["modelo-123-declaracion-pdf"]
     values = {
-        casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
     }
     pdf_path = tmp_path / "modelo-123-2026.pdf"
     _write_declaration_pdf(pdf_path, modelo="123", ejercicio="2026", values=values)
@@ -90,8 +90,8 @@ def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf
     snapshot = _modelo_snapshot("123", filing_year=2023, period="4T")
     profile = snapshot.extraction_profiles["modelo-123-2019-declaracion-pdf"]
     values = {
-        casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, casilla_id in enumerate(profile.target_casillas, start=1)
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
     }
     pdf_path = tmp_path / "modelo-123-2023.pdf"
     _write_declaration_pdf(pdf_path, modelo="123", ejercicio="2023", period="4T", values=values)
@@ -108,9 +108,9 @@ def test_parser_fails_when_registry_profile_targets_are_missing(tmp_path: Path) 
     snapshot = _modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
     values = {
-        casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, casilla_id in enumerate(profile.target_casillas, start=1)
-        if casilla_id != "19"
+        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
+        for index, target in enumerate(profile.target_casillas, start=1)
+        if target.casilla_id != "19"
     }
     pdf_path = tmp_path / "modelo-130-missing.pdf"
     _write_declaration_pdf(pdf_path, values=values)

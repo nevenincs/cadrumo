@@ -17,7 +17,7 @@ from ._common import (
     _emit,
     _load_drafts,
     _parse_iso_date,
-    _profile_to_autonomo,
+    _profile_to_taxpayer,
     _state,
 )
 from ._overview_rendering import render_cli_overview_status_lines
@@ -120,11 +120,16 @@ def overview_calendar(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     cal: OverviewCalendar = build_overview_calendar(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         rng,
         today=_date.today(),
         raw_values=raw_values,
     )
+    if not cal.taxpayer_model_declared:
+        # The taxpayer model is undeclared — the engine refuses
+        # to guess. Surface the "declare your taxpayer type first"
+        # guidance instead of an empty calendar with no explanation.
+        raise _bad(cal.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if cal.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in cal.warnings)
         raise _bad(
@@ -212,11 +217,13 @@ def overview_agenda(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     agenda = build_overview_agenda(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         as_of=as_of_date,
         horizon_days=horizon_days,
         raw_values=raw_values,
     )
+    if not agenda.taxpayer_model_declared:
+        raise _bad(agenda.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if agenda.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in agenda.warnings)
         raise _bad(
@@ -300,11 +307,13 @@ def overview_backlog(
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     backlog = build_overview_backlog(
-        _profile_to_autonomo(current),
+        _profile_to_taxpayer(current),
         from_date=parsed_from,
         to_date=parsed_to,
         raw_values=raw_values,
     )
+    if not backlog.taxpayer_model_declared:
+        raise _bad(backlog.incomplete_reason or tr("cli.overview.taxpayer_model_undeclared"))
     if backlog.warnings and not allow_incomplete:
         warning_summary = ", ".join(warning.code for warning in backlog.warnings)
         raise _bad(
@@ -367,7 +376,7 @@ def overview_explain(
     current = _state()
     try:
         result = build_overview_explain(
-            _profile_to_autonomo(current),
+            _profile_to_taxpayer(current),
             modelo=modelo,
             year=year,
         )
@@ -378,8 +387,12 @@ def overview_explain(
         f"modelo\t{result.modelo}",
         f"year\t{result.year}",
         f"applicable\t{str(result.applicable).lower()}",
+        f"verdict\t{result.verdict.value}",
         f"rationale\t{result.rationale}",
+        f"legal_refs\t{', '.join(result.legal_refs)}",
     ]
+    if result.scheduling_rationale is not None:
+        lines.append(f"scheduling_rationale\t{result.scheduling_rationale}")
     for fact_name, fact_value in sorted(result.profile_facts.items()):
         lines.append(f"profile_fact\t{fact_name}\t{fact_value}")
     _emit(ctx, payload, lines)

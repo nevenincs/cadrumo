@@ -43,6 +43,15 @@ _REQUIRED_PLACEHOLDERS: Mapping[str, str] = {
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
     "provenance.source": "manual_cli",
+    # A minimal profile declares a minimal taxpayer model: an autónomo
+    # en estimación directa (a natural person with rendimientos de
+    # actividades económicas). Modelo applicability is derived from this
+    # three-axis model; without it the overview engine reports
+    # "incomplete" rather than guessing. Tests needing a different
+    # taxpayer shape (landlord, sociedad limitada, ...) pass overrides.
+    "taxpayer_type.entity_type": "natural_person",
+    "taxpayer_type.irpf_income_categories": "actividad_economica",
+    "irpf.estimation_regime": "directa_normal",
 }
 
 

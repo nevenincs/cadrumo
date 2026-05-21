@@ -24,6 +24,7 @@ from .diagnostics import (
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
     build_config_repair_report,
+    preview_quarantine_unreadable_secure_objects,
     quarantine_unreadable_secure_objects,
     render_config_repair_text,
     secure_object_unreadable_total,
@@ -477,6 +478,89 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
         archived = con.execute("SELECT COUNT(*) FROM secure_objects_quarantine").fetchone()[0]
     assert active == 1, f"expected one row left in secure_objects; got {active}"
     assert archived == 2, f"expected two rows archived; got {archived}"
+
+
+def test_preview_quarantine_reports_unreadable_rows_without_mutating(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path,
+) -> None:
+    """``preview_quarantine_*`` counts the rows the verb would move and moves none.
+
+    Seeds two rows under master key K1 plus one row under K2, runs the
+    dry-run preview under K2, and asserts the preview reports two
+    unreadable / one readable row while leaving ``secure_objects``
+    untouched and never creating the quarantine archive table — the
+    contract the ``repair quarantine --dry-run`` surface relies on
+    (persona-fleet finding H3).
+    """
+    import sqlite3
+
+    db_path = tmp_path / "preview-quar.db"
+    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
+    dispose_engine()
+
+    key_old = EphemeralMasterKeyProvider()
+    key_new = EphemeralMasterKeyProvider()
+
+    with key_old:
+        engine_old = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
+        )
+        Base.metadata.create_all(engine_old)
+        try:
+            repo_old = SecureObjectRepository(engine=engine_old)
+            for namespace, key, payload in (
+                ("aeat.test.preview.alpha", "row-old-1", b"old-1"),
+                ("aeat.test.preview.beta", "row-old-2", b"old-2"),
+            ):
+                repo_old.save(
+                    namespace=namespace,
+                    object_key=key,
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=payload,
+                )
+        finally:
+            engine_old.dispose()
+
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
+    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+    with key_new:
+        dispose_engine()
+        engine_new = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
+        )
+        try:
+            SecureObjectRepository(engine=engine_new).save(
+                namespace="aeat.test.preview.alpha",
+                object_key="row-new-1",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"new-1",
+            )
+        finally:
+            engine_new.dispose()
+
+        dispose_engine()
+        try:
+            preview = preview_quarantine_unreadable_secure_objects()
+            assert preview.unreadable_total == 2
+            assert preview.readable_total == 1
+        finally:
+            dispose_engine()
+
+    # The preview moved nothing: all three rows stay in secure_objects
+    # and the quarantine archive table was never created.
+    with sqlite3.connect(db_path) as con:
+        active = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0]
+        archive_exists = con.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='secure_objects_quarantine'"
+        ).fetchone()
+    assert active == 3, f"preview must not delete rows; got {active} left"
+    assert archive_exists is None, "preview must not create the quarantine table"
 
 
 def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:

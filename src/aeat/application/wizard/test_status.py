@@ -19,7 +19,7 @@ from aeat.application.wizard._status import (
     WizardStatusError,
     WizardStatusReport,
     build_wizard_status,
-    load_active_autonomo_profile,
+    load_active_taxpayer_profile,
 )
 from aeat.application.workflow._models import WorkflowState
 
@@ -93,20 +93,20 @@ def test_report_is_strict_frozen_pydantic_v2() -> None:
         )
 
 
-def test_load_active_autonomo_profile_raises_wizard_status_error_when_no_profile() -> None:
+def test_load_active_taxpayer_profile_raises_wizard_status_error_when_no_profile() -> None:
     state = WorkflowState()
     with pytest.raises(WizardStatusError) as exc_info:
-        load_active_autonomo_profile(state)
+        load_active_taxpayer_profile(state)
     context = exc_info.value.context
     assert context is not None
     assert context["workflow_state"] == "no_active_profile"
 
 
-def test_load_active_autonomo_profile_returns_autonomo_record_for_minimal_profile() -> None:
+def test_load_active_taxpayer_profile_returns_taxpayer_record_for_minimal_profile() -> None:
     state = register_minimal_profile(
         WorkflowState(),
         profile_id="operator",
         overrides={"activities.description": "design", "identity.tax_id": "00000000T"},
     )
-    profile = load_active_autonomo_profile(state)
+    profile = load_active_taxpayer_profile(state)
     assert profile.tax_id == "00000000T"

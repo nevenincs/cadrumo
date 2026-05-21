@@ -1,6 +1,6 @@
 [schema]
 id = "aeat.user_profile"
-version = 1
+version = 2
 title = "AEAT user profile schema"
 snapshot_policy = "immutable_secure_snapshot_hash"
 remove_policy = "live_profile_tombstone_retain_snapshots"
@@ -236,6 +236,46 @@ model_selectors = ["census.elected_withholding_pct"]
 legal_refs = ["LIRPF Art. 101.5 (BOE-A-2006-20764)", "RIRPF Art. 95.1 (BOE-A-2007-6820)", "RIRPF Art. 95.2 (BOE-A-2007-6820)", "Orden HAC/1425/2025 (BOE-A-2025-25272)"]
 
 [[sections]]
+key = "taxpayer_type"
+title = "Taxpayer entity type and income categories"
+sensitivity = "identity"
+effective_dated = true
+
+[[sections.fields]]
+key = "entity_type"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Taxpayer entity type. natural_person is an IRPF contribuyente; legal_entity is an Impuesto sobre Sociedades contribuyente; attribution_entity is an entity without legal personality under the regimen de atribucion de rentas. The entity type selects the tax and therefore the modelos, calendar, and rate schedule."
+enum_values = ["natural_person", "legal_entity", "attribution_entity"]
+model_selectors = ["taxpayer.entity_type"]
+schedule_predicates = ["taxpayer.entity_type"]
+legal_refs = ["LIRPF Ley 35/2006 (BOE-A-2006-20764)", "LIS Ley 27/2014 (BOE-A-2014-12328)", "LIRPF Titulo X Seccion 2 atribucion de rentas (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "legal_entity_form"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29."
+enum_values = ["sl", "sa", "cooperativa", "sociedad_civil_mercantil", "sin_fines_lucrativos", "other"]
+model_selectors = ["taxpayer.legal_entity_form"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
+
+[[sections.fields]]
+key = "irpf_income_categories"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated set of IRPF income categories a natural person declares: actividad_economica, trabajo, capital_inmobiliario, capital_mobiliario, ganancias_patrimoniales, pension. Only actividad_economica triggers the Modelo 130/131 pago fraccionado. The closed-set validation is enforced by the wizard checkbox widget."
+model_selectors = ["taxpayer.irpf_income_categories"]
+schedule_predicates = ["taxpayer.irpf_income_categories"]
+legal_refs = ["LIRPF Arts. 17-39 (BOE-A-2006-20764)"]
+
+[[sections]]
 key = "vivienda_office"
 title = "Vivienda habitual office afectacion"
 sensitivity = "financial"
@@ -317,9 +357,21 @@ type = "boolean"
 required = false
 sensitivity = "financial"
 effective_dated = true
-description = "Whether the profile uses objective estimation for IRPF."
+description = "Whether the profile uses objective estimation for IRPF. Derived from estimation_regime: objetiva implies true. Retained as a registry-condition predicate until the applicability engine reads estimation_regime directly."
 model_selectors = ["uses_objective_estimation_irpf"]
 schedule_predicates = ["uses_objective_estimation_irpf"]
+
+[[sections.fields]]
+key = "estimation_regime"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IRPF estimation regime for economic-activity income: directa_normal (estimacion directa normal), directa_simplificada (estimacion directa simplificada), objetiva (estimacion objetiva / modulos). The regime selects Modelo 130 vs Modelo 131 and the deductible-expense computation."
+enum_values = ["directa_normal", "directa_simplificada", "objetiva"]
+model_selectors = ["irpf.estimation_regime"]
+schedule_predicates = ["irpf.estimation_regime"]
+legal_refs = ["LIRPF Arts. 16, 28-31 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 30-31 (BOE-A-2007-6820)"]
 
 [[sections]]
 key = "withholding"
@@ -379,10 +431,11 @@ type = "enum"
 required = true
 sensitivity = "financial"
 effective_dated = true
-description = "IVA regime used by obligation and classification projections."
-enum_values = ["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"]
+description = "IVA regime used by obligation and classification projections. REAGP is the regimen especial de la agricultura, ganaderia y pesca."
+enum_values = ["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "REAGP", "EXENTO"]
 model_selectors = ["iva.regime"]
 schedule_predicates = ["iva.regime"]
+legal_refs = ["LIVA Ley 37/1992 Art. 120 (BOE-A-1992-28740)"]
 
 [[sections.fields]]
 key = "does_intracomunitario"
@@ -423,6 +476,28 @@ effective_dated = true
 description = "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field."
 model_selectors = ["iva.oss_enrolled"]
 schedule_predicates = ["iva.oss_enrolled"]
+
+[[sections.fields]]
+key = "sii_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else."
+model_selectors = ["iva.sii_enrolled"]
+schedule_predicates = ["iva.sii_enrolled"]
+legal_refs = ["RD 596/2016 (BOE-A-2016-11575)", "Orden HFP/417/2017 (BOE-A-2017-5312)"]
+
+[[sections.fields]]
+key = "redeme_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers."
+model_selectors = ["iva.redeme_enrolled"]
+schedule_predicates = ["iva.redeme_enrolled"]
+legal_refs = ["RIVA RD 1624/1992 Art. 30 (BOE-A-1992-28925)"]
 
 [[sections]]
 key = "obligations"

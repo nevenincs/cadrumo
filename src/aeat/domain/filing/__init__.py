@@ -52,6 +52,8 @@ from ._protocols import (
     DeadlineStatus,
     ModeloIdentity,
     ModeloInputs,
+    ModeloInputScalar,
+    ModeloInputValue,
     ModeloProfile,
 )
 from ._repository import (
@@ -107,6 +109,8 @@ __all__ = [
     "ModeloDraftStatus",
     "ModeloIdentity",
     "ModeloImportError",
+    "ModeloInputScalar",
+    "ModeloInputValue",
     "ModeloInputs",
     "ModeloProfile",
     "ModeloScalar",

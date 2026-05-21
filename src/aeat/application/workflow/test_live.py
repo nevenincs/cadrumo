@@ -27,7 +27,13 @@ pytestmark = [pytest.mark.live_read, pytest.mark.domain_application]
 class _NullSubmissionEngine:
     """Minimal Protocol-conforming engine for adapter wiring tests."""
 
-    def preflight(self, draft: object, *, today: date) -> None:
+    def preflight(
+        self,
+        draft: object,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
         """No-op preflight — never reached in this test."""
 
 

@@ -7,15 +7,16 @@ from datetime import date
 import pytest
 
 from . import (
-    AutonomoProfile,
     DeadlineEngine,
+    IVARegime,
+    ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
-    ModeloDeadline,
-    IVARegime,
+    NoDeadlineWindowsError,
     ObligationStatus,
     Schedule,
     ScheduleComputationError,
+    TaxpayerProfile,
     applies_to,
     explain,
     next_deadline,
@@ -24,14 +25,14 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-def _profile(**overrides: object) -> AutonomoProfile:
+def _profile(**overrides: object) -> TaxpayerProfile:
     base: dict[str, object] = {
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
         "professional_income_withholding_ge_70pct": False,
     }
     base.update(overrides)
-    return AutonomoProfile.model_validate(base)
+    return TaxpayerProfile.model_validate(base)
 
 
 def _engine() -> DeadlineEngine:
@@ -219,6 +220,62 @@ class TestCompute:
         assert closes == sorted(closes)
 
 
+class TestPreRegistrationObligationGate:
+    """The deadline engine must not invent pre-registration obligations.
+
+    Round-4 testimonial finding D1: a 2026 registrant ran the backlog
+    and was shown overdue 2025 IVA quarters — obligations from before
+    they had any economic activity. With ``activity_start_date`` set,
+    the engine suppresses every window that closes before the alta;
+    with it unset, behaviour is unchanged.
+    """
+
+    def test_2026_registrant_has_no_2025_iva_obligations(self) -> None:
+        """A profile registered in 2026 owes no 2025 quarterly return.
+
+        Computing the 2025 schedule for a taxpayer whose census alta
+        is 2026-03-01 must drop every Modelo 303 window — all four
+        2025 quarters close before the alta date."""
+
+        profile = _profile(activity_start_date=date(2026, 3, 1))
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        assert all(o.modelo != "303" for o in schedule.obligations), (
+            "2026 registrant was shown a 2025 IVA quarter that closed "
+            "before their census alta"
+        )
+        assert all(o.closes_on >= date(2026, 3, 1) for o in schedule.obligations), (
+            "an obligation window closing before the alta survived the gate"
+        )
+
+    def test_unset_activity_start_date_keeps_full_2025_schedule(self) -> None:
+        """A profile with no alta date behaves exactly as before.
+
+        The gate is opt-in: when ``activity_start_date`` is ``None`` no
+        window is suppressed, so the 2025 schedule still carries the
+        four quarterly Modelo 303 obligations."""
+
+        profile = _profile()
+        assert profile.activity_start_date is None
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
+        assert iva_quarters == ["2025-1T", "2025-2T", "2025-3T", "2025-4T"]
+
+    def test_alta_inside_2025_keeps_only_post_alta_quarters(self) -> None:
+        """A mid-2025 alta keeps only the windows closing on or after it.
+
+        A taxpayer who registered 2025-09-01 owes the Q3 return (window
+        closes 2025-10-20, after the alta) and Q4, but not Q1 / Q2 —
+        those windows closed before they had any activity."""
+
+        profile = _profile(activity_start_date=date(2025, 9, 1))
+        schedule = _engine().compute(profile, 2025, today=date(2026, 5, 21))
+
+        iva_quarters = sorted(o.period for o in schedule.obligations if o.modelo == "303")
+        assert iva_quarters == ["2025-3T", "2025-4T"]
+
+
 class TestStatusTransitions:
     def _find_q1(self, schedule: Schedule) -> ModeloDeadline:
         return next(o for o in schedule.obligations if o.period == "2026Q1")
@@ -272,8 +329,80 @@ class TestRegistryApplicability:
         assert "estimacion directa" in text
 
     def test_unknown_modelo_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for modelo"):
+        # The benign no-windows fault is the narrow NoDeadlineWindowsError
+        # subtype so callers can degrade gracefully around it.
+        with pytest.raises(
+            NoDeadlineWindowsError,
+            match=r"No registry deadline windows registered for modelo",
+        ):
             explain(_profile(), "999")
+
+
+class TestAnnualFilingWindows:
+    """The IRPF Renta and IVA/informative annual filing windows must be
+    registered so they resolve through the deadline engine.
+
+    Grounding for the IRPF dates:
+
+    * Orden HAC/277/2026, art. 7 — IRPF ejercicio 2025: plazo general
+      8 de abril a 30 de junio de 2026; domiciliacion hasta el 25 de
+      junio de 2026.
+    * Orden HAC/265/2024, art. 8 — IRPF ejercicio 2023: plazo general
+      3 de abril a 1 de julio de 2024; domiciliacion hasta el 26 de
+      junio de 2024.
+    """
+
+    def test_modelo_100_window_resolves_for_renta_2025_campaign(self) -> None:
+        windows = [
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2025)
+            if code == "100"
+        ]
+        assert len(windows) == 1
+        window = windows[0]
+        assert window.id == "modelo-100-2025-0a"
+        assert window.period_kind == "annual"
+        assert window.opens_on == date(2026, 4, 8)
+        assert window.closes_on == date(2026, 6, 30)
+        assert window.payment_cutoff_on == date(2026, 6, 25)
+        assert "orden-hac-277-2026:art-7" in window.legal_refs
+
+    def test_modelo_100_window_resolves_for_renta_2023_campaign(self) -> None:
+        windows = [
+            window
+            for code, _revision, window in _engine()._registry.deadline_windows(2023)
+            if code == "100"
+        ]
+        assert len(windows) == 1
+        window = windows[0]
+        assert window.id == "modelo-100-2023-0a"
+        assert window.opens_on == date(2024, 4, 3)
+        assert window.closes_on == date(2024, 7, 1)
+        assert window.payment_cutoff_on == date(2024, 6, 26)
+        assert "orden-hac-265-2024:art-8" in window.legal_refs
+
+    def test_modelo_100_explain_no_longer_errors(self) -> None:
+        engine = _engine()
+        assert engine.explain(_profile(), "100", year=2025)
+        assert engine.explain(_profile(), "100", year=2023)
+
+    def test_modelo_303_quarterly_windows_resolve(self) -> None:
+        for year in (2025, 2026):
+            periods = sorted(
+                window.period
+                for code, _revision, window in _engine()._registry.deadline_windows(year)
+                if code == "303"
+            )
+            assert periods == [f"{year}-1T", f"{year}-2T", f"{year}-3T", f"{year}-4T"]
+
+    def test_modelo_347_annual_window_resolves(self) -> None:
+        for year in (2025, 2026):
+            windows = [
+                window
+                for code, _revision, window in _engine()._registry.deadline_windows(year)
+                if code == "347"
+            ]
+            assert [window.period for window in windows] == [f"{year}-0A"]
 
 
 class TestEnginePurity:
@@ -295,8 +424,16 @@ class TestEnginePurity:
 
 class TestComputeFailures:
     def test_missing_registry_year_raises(self) -> None:
-        with pytest.raises(ScheduleComputationError, match=r"No registry deadline windows registered for year"):
+        # A year with no registered windows raises the narrow
+        # NoDeadlineWindowsError — the benign data gap, not a genuine
+        # registry-integrity fault. It is still a ScheduleComputationError
+        # subclass, so existing broad callers keep working.
+        with pytest.raises(
+            NoDeadlineWindowsError,
+            match=r"No registry deadline windows registered for year",
+        ) as excinfo:
             _engine().compute(_profile(), 1999, today=date(1999, 1, 1))
+        assert isinstance(excinfo.value, ScheduleComputationError)
 
     def test_negative_due_soon_days_rejected(self) -> None:
         with pytest.raises(ValueError, match=r"due_soon_days must be >= 0"):

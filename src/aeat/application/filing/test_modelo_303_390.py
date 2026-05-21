@@ -15,7 +15,7 @@ from decimal import Decimal
 
 import pytest
 
-from . import build_draft, build_runtime_schema_provider
+from . import ModeloInputs, build_draft, build_runtime_schema_provider
 from .testing import ModeloTestProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -38,7 +38,7 @@ def _profile() -> ModeloTestProfile:
 def test_modelo_build_draft_projects_registry_backed_draft(
     modelo: str,
     period: str,
-    inputs: dict[str, object],
+    inputs: ModeloInputs,
 ) -> None:
     """``build_draft`` projects a registry-backed draft for 303 / 390."""
     draft = build_draft(

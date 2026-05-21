@@ -38,10 +38,11 @@ from ._iva_wallet_reconciliation import (
     IvaCompensationReconciliationDecision,
     IvaCompensationReconciliationInputError,
     IvaCompensationReconciliationReport,
+    IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
     reconcile_modelo_303_iva_compensation,
 )
-from ._multi_year import MultiYearResolver, resolve_prior_year_observations
+from ._multi_year import MultiYearResolver, PreviousFilingSourceResolver, resolve_prior_year_observations
 from ._observations_repository import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -49,7 +50,7 @@ from ._observations_repository import (
     iva_wallet_decision_key,
     observation_key,
 )
-from ._relation_prefill import resolve_relations_from_local_store
+from ._relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
 from ._row_set_assembly import (
     AssembledObservations,
     assemble_atribucion_observations,
@@ -76,9 +77,12 @@ __all__ = [
     "IvaCompensationReconciliationInputError",
     "IvaCompensationReconciliationReport",
     "IvaWalletDecisionRepository",
+    "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
     "MultiYearResolver",
     "PrefilledBinding",
+    "PreviousFilingSourceResolver",
+    "RelationPrefillSourceResolver",
     "assemble_atribucion_observations",
     "assemble_foreign_asset_observations",
     "assemble_observations_for_grouping",

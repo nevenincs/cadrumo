@@ -10,7 +10,13 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ...domain.deadlines._models import IVARegime
+from ...domain.deadlines._models import (
+    EntityType,
+    IrpfEstimationRegime,
+    IrpfIncomeCategory,
+    IVARegime,
+    LegalEntityForm,
+)
 from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
 from ...domain.profile._ccaa import CCAA
 
@@ -24,10 +30,35 @@ class SetupAnswers(BaseModel):
     tax_id: str = Field(min_length=1)
     name: str = ""
     surnames: str = ""
-    activity: str = Field(min_length=1)
+    activity: str = ""
+    """Free-text actividad económica / epígrafe IAE description.
+
+    Optional: only a taxpayer that carries on an economic activity (a
+    legal entity, or a natural person who declared the
+    ``actividad_economica`` IRPF income category) is asked for it. A
+    pure landlord, a salaried-only taxpayer, and a pensioner have no
+    actividad económica and leave it blank."""
     address_postcode: str = ""
+    activity_start_date: str = ""
+    """Optional ISO-8601 census alta date for the economic activity.
+
+    When set, the deadline engine suppresses any filing obligation
+    whose AEAT window closes before this date — a taxpayer owes no
+    return for a period that precedes their registration. Blank for
+    every profile that has not declared an alta date; the deadline
+    behaviour is then unchanged. The typed ``date`` projection lives
+    on :class:`~aeat.domain.deadlines.TaxpayerProfile`."""
     taxation_type: RentaDeclaracionType | str = ""
     output_language: str = "es"
+
+    # ── taxpayer type (three-axis taxpayer model) ────────────────────────
+    entity_type: EntityType | str = ""
+    legal_entity_form: LegalEntityForm | str = ""
+    irpf_income_categories: str = ""
+    """Comma-separated set of :class:`IrpfIncomeCategory` tokens, e.g.
+    ``"trabajo,pension"``. The CHECKBOX widget produces and the
+    persistence layer stores this canonical string; the typed
+    ``frozenset`` projection lives on ``TaxpayerProfile``."""
 
     # ── taxpayer biographic ──────────────────────────────────────────────
     taxpayer_sex: RentaSexCode | str = ""
@@ -55,6 +86,8 @@ class SetupAnswers(BaseModel):
     iva_regime: IVARegime = IVARegime.GENERAL
     iva_roi_enrolled: bool = False
     iva_oss_enrolled: bool = False
+    iva_sii_enrolled: bool = False
+    iva_redeme_enrolled: bool = False
     iva_intracommunity_operations_exceed_50000_eur: bool = False
 
     # ── enrollment ───────────────────────────────────────────────────────
@@ -68,6 +101,7 @@ class SetupAnswers(BaseModel):
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     uses_objective_estimation_irpf: bool = False
+    irpf_estimation_regime: IrpfEstimationRegime | str = ""
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
@@ -86,6 +120,55 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return IVARegime(value)
         raise TypeError("iva_regime must be an IVARegime member or string token")
+
+    @field_validator("entity_type", mode="before")
+    @classmethod
+    def _parse_entity_type(cls, value: object) -> EntityType | str:
+        if value == "":
+            return ""
+        if isinstance(value, EntityType):
+            return value
+        if isinstance(value, str):
+            return EntityType(value)
+        raise TypeError("entity_type must be an EntityType member, string token, or blank")
+
+    @field_validator("legal_entity_form", mode="before")
+    @classmethod
+    def _parse_legal_entity_form(cls, value: object) -> LegalEntityForm | str:
+        if value == "":
+            return ""
+        if isinstance(value, LegalEntityForm):
+            return value
+        if isinstance(value, str):
+            return LegalEntityForm(value)
+        raise TypeError("legal_entity_form must be a LegalEntityForm member, string token, or blank")
+
+    @field_validator("irpf_estimation_regime", mode="before")
+    @classmethod
+    def _parse_irpf_estimation_regime(cls, value: object) -> IrpfEstimationRegime | str:
+        if value == "":
+            return ""
+        if isinstance(value, IrpfEstimationRegime):
+            return value
+        if isinstance(value, str):
+            return IrpfEstimationRegime(value)
+        raise TypeError("irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank")
+
+    @field_validator("irpf_income_categories")
+    @classmethod
+    def _validate_irpf_income_categories(cls, value: str) -> str:
+        """Reject any token outside the closed IRPF income-category set.
+
+        The CHECKBOX widget already validates against its choices; this
+        re-validates the canonical comma-separated string at the typed
+        boundary so a directly-constructed :class:`SetupAnswers` cannot
+        carry an unknown category.
+        """
+
+        tokens = [token.strip() for token in value.split(",") if token.strip()]
+        for token in tokens:
+            IrpfIncomeCategory(token)
+        return ",".join(tokens)
 
     @field_validator("taxation_type", mode="before")
     @classmethod
@@ -139,6 +222,28 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return CCAA(value)
         raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
+
+    @field_validator("activity_start_date")
+    @classmethod
+    def _validate_activity_start_date(cls, value: str) -> str:
+        """Reject a non-ISO census alta date at the typed boundary.
+
+        The field is optional: a blank string is accepted unchanged. A
+        non-blank value must be a valid ISO-8601 date so the deadline
+        engine's pre-registration gate receives a parseable date.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
 
     @field_validator("output_language")
     @classmethod

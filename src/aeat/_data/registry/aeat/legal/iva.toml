@@ -1142,3 +1142,95 @@ required_text = [
     "No obstante lo anterior, dichos empresarios o profesionales acogidos a este régimen especial tendrán derecho a la devolución de la",
     "Dos. En caso de que el Reino de España sea el Estado miembro de consumo, sin perjuicio de lo dispuesto en el artículo 119. Dos.2.º",
 ]
+[legal."ley-37-1992:art-94"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-94.html#a94"
+document_id = "BOE-A-1992-28740"
+article = "94"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a94"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podran deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
+required_text = [
+    "operaciones cuya realización origina el derecho a la deducción",
+]
+
+[legal."ley-37-1992:art-95"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-95.html#a95"
+document_id = "BOE-A-1992-28740"
+article = "95"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a95"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podran deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
+required_text = [
+    "limitaciones del derecho a deducir",
+]
+
+[legal."ley-37-1992:art-122"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-122.html#a122"
+document_id = "BOE-A-1992-28740"
+article = "122"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a122"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 122 LIVA: regimen simplificado del IVA. Seran de aplicacion a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
+required_text = [
+    "régimen simplificado",
+    "volumen de operaciones",
+]
+
+[legal."ley-37-1992:art-123"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-123.html#a123"
+document_id = "BOE-A-1992-28740"
+article = "123"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a123"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 123 LIVA: contenido del regimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al regimen simplificado mediante el metodo de indices, modulos o signos."
+required_text = [
+    "cuotas tributarias",
+    "módulos",
+]
+
+[legal."ley-37-1992:art-124"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992-art-124.html#a124"
+document_id = "BOE-A-1992-28740"
+article = "124"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a124"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Articulo 124 LIVA: obligaciones formales del regimen simplificado. Los sujetos pasivos acogidos al regimen simplificado estaran obligados a llevar un libro registro de facturas recibidas y un libro registro especifico del regimen simplificado."
+required_text = [
+    "régimen simplificado",
+    "libro registro",
+]

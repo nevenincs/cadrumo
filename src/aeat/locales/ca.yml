@@ -125,6 +125,7 @@ aggregation:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
       duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
 application:
   auth:
     acquisition_lock:
@@ -141,6 +142,21 @@ application:
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
     operator:
+      alignment:
+        both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
+          DNI/NIE abans de l'autenticació AEAT en directe.
+        clave_identity_missing_detail: La identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          no està configurada, de manera que no es pot comparar amb l'identificador
+          fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
+        mismatch_detail: El DNI/NIE de la identitat Cl@ve '%{clave_identity}' no coincideix
+          amb l'identificador fiscal del perfil actiu '%{profile_tax_id}'. L'autenticació
+          AEAT en directe vincularia la sessió d'un contribuent a un altre perfil.
+          Canvia al perfil l'identificador fiscal del qual coincideixi amb el DNI/NIE
+          de Cl@ve, o corregeix el valor que sigui erroni.
+        profile_tax_id_missing_detail: El perfil actiu no té identificador fiscal,
+          de manera que no es pot comparar amb la identitat Cl@ve. Configura l'identificador
+          fiscal del perfil amb el DNI/NIE utilitzat per a Cl@ve.
       errors:
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
@@ -158,6 +174,16 @@ application:
           de bucket però no té cap registre de perfil llegible (status=%{status}).
           Executa `aeat config repair profile --clear-active --yes` i després canvia
           a un perfil vàlid o crea'l abans de configurar l'autenticació.
+      probe:
+        no_provider: No hi ha cap proveïdor d'autenticació configurat; res a comprovar
+          localment.
+        no_session: No hi ha cap testimoni de sessió AEAT persistit al disc; executa
+          `aeat config auth login` per obtenir-ne un.
+        session_expired: Hi ha un testimoni de sessió AEAT persistit al disc però
+          ha superat el seu límit d'inactivitat; executa `aeat config auth login --fresh`
+          per renovar-lo.
+        session_live: Hi ha un testimoni de sessió AEAT persistit al disc i dins del
+          seu límit d'inactivitat.
     provider_impact:
       certificate_ready: L'autenticació amb certificat està a punt. L'operador manté
         el mateix flux de presentació a la CLI per a lectures recolzades per l'AEAT;
@@ -173,15 +199,26 @@ application:
         fins que es configuri un proveïdor d'autenticació.
     sessions:
       errors:
+        clave_identity_missing: L'autenticació Cl@ve Móvil en directe requereix un
+          DNI/NIE configurat (AEAT_CLAVE_MOVIL_DNI_NIE) abans de fer servir cap sessió
+          AEAT.
+        clave_identity_profile_mismatch: La identitat de Cl@ve Móvil no coincideix
+          amb la identitat fiscal del perfil actiu; canvia al perfil que coincideixi
+          o actualitza el perfil abans de l'autenticació AEAT en directe.
         corrupt_session: La sessió d'autenticació guardada està danyada i no es pot
           llegir. Executa `aeat config auth clear --sessions` i després `aeat config
           auth test`.
         no_session: No hi ha sessió AEAT activa; executa `aeat config auth test` abans
           de llegir dades AEAT.
+        profile_tax_id_missing: L'autenticació Cl@ve Móvil en directe requereix que
+          el perfil actiu tingui identity.tax_id.
         sede_rejected: La sessió AEAT no és acceptada per la Seu; executa `aeat config
           auth test` abans de llegir dades AEAT.
         session_expired: La sessió AEAT ha caducat; executa `aeat config auth test`
           abans de llegir dades AEAT.
+        session_identity_profile_mismatch: La identitat de la sessió AEAT no coincideix
+          amb la identitat fiscal del perfil actiu; esborra les sessions d'autenticació
+          i autentica el perfil que coincideixi abans de les lectures AEAT en directe.
         state_missing: Falta l'estat de la sessió AEAT; executa `aeat config auth
           test` abans de llegir dades AEAT.
         verify_failed: No s'ha pogut verificar la sessió AEAT; executa `aeat config
@@ -370,6 +407,8 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
+        history_details_help: Imprimeix files i imports privats detallats; el mode
+          resum només imprimeix recomptes.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -487,9 +526,9 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: La unitat de treball no té cap revisió de càlcul
-            verificada o presentada per exportar. Executa `aeat app modelo verify`
-            primer.
+          no_exportable_revision_work_verify: La unitat de treball no té cap revisió
+            de càlcul verificada ni presentada per exportar. Executa abans
+            `aeat app modelo work verify`.
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -567,6 +606,8 @@ cli:
         view_help: Mostrar un informe de verificació per id
       work:
         actor_help: Actor responsable de l'acció (etiqueta lliure de fins a 64 caràcters)
+        allow_not_applicable_help: Crea la unitat de treball encara que el model no
+          s'apliqui al tipus de contribuent del perfil actiu.
         amend_help: Construir una declaració complementària sobre una declaració presentada
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
@@ -597,6 +638,9 @@ cli:
         create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
+        create_not_applicable_refused: 'El model %{modelo} no s''aplica al tipus de
+          contribuent del perfil actiu: %{reason} Si teniu un motiu per crear la unitat
+          de treball igualment, torneu a executar l''ordre amb --allow-not-applicable.'
         create_reused: S'ha retornat la unitat de treball existent (idempotent sobre
           model/exercici/període/revisió); no s'ha creat res nou. Reanomena-la amb
           `aeat app modelo work rename`.
@@ -661,16 +705,25 @@ cli:
         relation_not_decimal: 'El valor de --relation per a {key} no és un decimal:
           {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
-        result_summary_header: 'resum del resultat  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
-          contactar amb AEAT
-        resume_workflow_run_id_help: Id d'execució de flux de 16 caràcters
+          contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
+          treball.
+        resume_invalid_target: El destí de resume ha de ser un id d'execució de flux
+          de 16 caràcters o un id d'unitat de treball de 64 caràcters; s'ha rebut
+          {target}. Executa `aeat app modelo work runs` per llistar els ids d'execució.
+        resume_target_help: Id d'execució de flux de 16 caràcters, o l'id d'unitat
+          de treball de 64 caràcters (es resol automàticament la seva darrera execució).
+          Executa `aeat app modelo work runs` per llistar els ids d'execució.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
+          de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
+          work resume`. Només local; mai contacta amb AEAT.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
@@ -757,6 +810,8 @@ cli:
       event_type_help: Filtrar l'historial per un o més tipus d'esdeveniment (repetible)
       help: Inspeccionar l'emmagatzematge per bucket i el seu historial d'esdeveniments
       history:
+        invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
+          vàlids: {valid}.'
         invalid_timestamp: '{flag} ha de ser una marca de temps ISO-8601 (p. ex. 2026-04-01T00:00:00+00:00);
           s''ha rebut {raw}.'
         since_after_until: --since ha de ser anterior o igual a --until.
@@ -993,7 +1048,13 @@ cli:
         perfil actiu; '%{profile}' no està actiu.
       profile_help: Inspeccionar i reparar el punter de perfil actiu.
       profile_name_help: Inspeccionar un bucket de perfil registrat concret.
-      profile_requires_yes: Passa --yes per netejar el punter de perfil actiu.
+      profile_one_action: Tria --clear-active o --repair-manifest-status, no tots
+        dos.
+      profile_repair_manifest_status_help: Reomplir l'estat d'un manifest legacy del
+        bucket actiu des del registre xifrat del perfil.
+      profile_requires_yes: Passa --yes per aplicar la reparació del perfil actiu.
+      quarantine_dry_run_help: Previsualitza les files que es posarien en quarantena
+        sense moure res
       quarantine_help: Mou les files no desxifrables a una taula de quarantena (destructiu;
         requereix --yes)
       quarantine_requires_yes: Aquesta operació és destructiva. Torna a executar amb
@@ -1108,7 +1169,8 @@ cli:
       amount_help: Import signat de la transacció en la moneda del bucket
       attachment_help: Id d'adjunt segur addicional; es pot repetir
       business_pct_help: Proporció d'ús professional de 0 a 1
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       classification_help: Classificació professional (BUSINESS, PERSONAL o MIXED)
       counterparty_help: Descripció de la contrapart
       currency_help: Codi de moneda ISO 4217 de tres lletres
@@ -1129,7 +1191,8 @@ cli:
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       business_pct_help: Proporció d'ús professional de 0 a 1
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       help: Registrar proporcionalitat professional/personal per a un moviment del
         llibre
       id_help: Id del moviment del llibre a assignar
@@ -1156,6 +1219,9 @@ cli:
       help: Llista els identificadors de categoria acceptats per --category-id, agrupats
         per família
       id_column: category-id (passa aquest valor exacte)
+      income_note: Només despeses deduïbles. Els moviments d'ingrés (INCOMING) es
+        classifiquen per direcció i no necessiten --category-id; `ledger check` i
+        `ledger preflight` no marquen un ingrés com a missing_category.
       usage_example: Passa l'id sense prefix, p. ex. --category-id {example} (no una
         clau composta ni amb prefix de família).
     check:
@@ -1170,7 +1236,8 @@ cli:
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
         MIXED. Una fila BUSINESS o PERSONAL és totalment professional o totalment
         privada; treu --business-pct o passa --classification MIXED.
-      category_help: Id de categoria de despesa o ingrés
+      category_help: Id de categoria de despesa deduïble (només moviments de despesa;
+        els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
       help: Classificar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a classificar
@@ -1599,6 +1666,8 @@ cli:
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
+    taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
+      el perfil o torna a executar amb l'anul·lació de perfil incomplet.
     verbose_help: Mostrar detalls i la següent acció quan existeixi
   registry:
     app_help: Gestió del registre de models fiscals
@@ -1617,6 +1686,10 @@ cli:
       view_help: Mostrar una normativa i, opcionalment, un dels seus articles
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
+    legal:
+      legal_ref_help: Identificador de referència legal, p. ex. ley-37-1992:art-99
+      view_help: Mostrar una referència legal pel seu identificador
+    legal_app_help: Inspeccionar les referències legals del registre de càlcul
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       kind_help: Filtrar per tipus de regla del manual
@@ -1726,7 +1799,7 @@ cli:
     app_help: 'Assistent per preparar declaracions tributàries espanyoles
 
 
-      Quickstart: aeat config profile create NAME --tax-id NIF --activity ACTIVITAT'
+      Quickstart: aeat config profile create NAME --tax-id NIF'
     app_help_help: Mostrar ajuda del flux d'app
     debug_help: Mostrar logs interns de depuració a stderr
     detail_help: Also show the detailed registry summary
@@ -2047,6 +2120,7 @@ errors:
     error_categories: S'ha produït un error en les categories de despesa.
     error_categories_validation: Un registre de categoria no ha superat la validació.
     error_deadlines_deadline: S'ha produït un error en el càlcul de terminis.
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: El perfil d'autònom no s'ha pogut carregar o validar
       per al càlcul de terminis.
     error_deadlines_schedule_computation: El motor no ha pogut generar un calendari
@@ -2814,7 +2888,7 @@ wizard:
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
       \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
       2. O crea'l en un sol pas indicant les dades obligatòries com a flags:\n   \
-      \  aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
+      \  aeat config profile create NAME --quiet --tax-id NIF"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\
@@ -2868,6 +2942,9 @@ wizard:
     flags:
       activity:
         help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
+      activity-start-date:
+        help: Data d'alta al cens / inici de l'activitat econòmica (AAAA-MM-DD). Opcional;
+          si s'indica, no es mostren obligacions de períodes anteriors a aquesta data.
       address-postcode:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
@@ -2878,20 +2955,33 @@ wizard:
         help: Empresa de gran volum
       enrollment-public-administration-budget-gt-6000000:
         help: Pressupost administració pública superior a 6.000.000
+      entity-type:
+        help: Persona física, persona jurídica o entitat en atribució de rendes
       family-descendants-eu-eea-deduction:
         help: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:
         help: Fills menors en unitat familiar
       has-employees:
         help: Té empleats i paga salaris amb retenció
+      irpf-estimation-regime:
+        help: Règim d'estimació IRPF per a la renda d'activitat econòmica
+      irpf-income-categories:
+        help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
+          per categoria
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         help: Alta en OSS
+      iva-redeme-enrolled:
+        help: Si el contribuent està inscrit a REDEME
       iva-regime:
         help: Règim IVA
       iva-roi-enrolled:
         help: Alta en ROI
+      iva-sii-enrolled:
+        help: Si el contribuent està inscrit al SII
+      legal-entity-form:
+        help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       name:
         help: Nom visible mostrat en revisions locals
       notes:
@@ -2968,10 +3058,14 @@ wizard:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
         prompt: Alta en OSS
+      iva-redeme-enrolled:
+        prompt: Inscrit a REDEME (Registre de Devolució Mensual de l'IVA)
       iva-regime:
         prompt: Règim IVA
       iva-roi-enrolled:
         prompt: Alta en ROI
+      iva-sii-enrolled:
+        prompt: Inscrit al SII (Subministrament Immediat d'Informació)
       title: IVA
     notes:
       notes:
@@ -2984,6 +3078,17 @@ wizard:
         prompt: Realitza operacions intracomunitàries
       has-employees:
         prompt: Té empleats i paga salaris amb retenció
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: Estimació directa normal
+          directa-simplificada:
+            label: Estimació directa simplificada
+          objetiva:
+            label: Estimació objectiva (mòduls)
+        help: Com es determina el rendiment net de l'activitat econòmica; selecciona
+          Model 130 o 131
+        prompt: Règim d'estimació IRPF
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -3000,6 +3105,11 @@ wizard:
     profile:
       activity:
         prompt: Activitat econòmica (text normal; usa l'epígraf IAE si el coneixes)
+      activity-start-date:
+        help: Si la indiques, no es mostren com a vençudes les declaracions de períodes
+          anteriors a aquesta data. Deixa-la en blanc si no la coneixes.
+        prompt: Des de quina data tens obligacions de declaració / quan et vas donar
+          d'alta? (AAAA-MM-DD, opcional)
       address-postcode:
         prompt: Codi postal del domicili fiscal
       iva-regime:
@@ -3008,6 +3118,8 @@ wizard:
             label: Exempt
           general:
             label: Règim general
+          reagp:
+            label: Règim especial de l'agricultura, ramaderia i pesca (REAGP)
           recargo-equivalencia:
             label: Recàrrec d'equivalència
           simplificado:
@@ -3119,6 +3231,51 @@ wizard:
       taxpayer-sex:
         prompt: Sexe del primer declarant
       title: Primer declarant
+    taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: Entitat en atribució de rendes
+          legal-entity:
+            label: Persona jurídica (societat)
+          natural-person:
+            label: Persona física
+        help: Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat
+          en atribució de rendes
+        prompt: Tipus d'entitat
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: Activitat econòmica
+          capital-inmobiliario:
+            label: Rendiments del capital immobiliari
+          capital-mobiliario:
+            label: Rendiments del capital mobiliari
+          ganancias-patrimoniales:
+            label: Guanys patrimonials
+          pension:
+            label: Pensió
+          trabajo:
+            label: Rendiments del treball
+        help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
+          econòmica obliga al Model 130/131
+        prompt: Categories de renda IRPF
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: Societat cooperativa
+          other:
+            label: Altra forma jurídica
+          sa:
+            label: Societat anònima (S.A.)
+          sin-fines-lucrativos:
+            label: Entitat sense fins lucratius
+          sl:
+            label: Societat de responsabilitat limitada (S.L.)
+          sociedad-civil-mercantil:
+            label: Societat civil amb objecte mercantil
+        prompt: Forma jurídica
+      title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:
       activity_present: 'Activitat econòmica: comprovació que el perfil declara una

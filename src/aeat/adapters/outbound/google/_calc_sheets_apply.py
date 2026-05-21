@@ -20,6 +20,16 @@ The adapter raises typed `OutboundStorageError` subclasses on Drive / Sheets
 failures (e.g., `OutboundStoragePermissionError` for 401/403, `OutboundStorageNotFoundError`
 for 404, `OutboundStorageConflictError` when refusing foreign Drive content),
 with concrete remediation context attached.
+
+One-way contract: this adapter is an export *mirror* only. Google
+Sheets is never an authority for tax data — the workbook is a
+human-readable projection of registry-grounded engine output, not
+an input of record. Operator edits made in the sheet are read back
+through `_calc_sheets_pull.py`, which gates every pull on the Drive
+ownership marker and a registry-SHA metadata match before the caller
+may consume them; a workbook that fails either gate is refused, never
+silently trusted. No path in this package writes Sheets content into
+the local store, the registry, or an AEAT submission.
 """
 
 from __future__ import annotations

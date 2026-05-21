@@ -19,6 +19,7 @@ from . import (
     WorkflowResumeRefusedError,
     WorkflowStage,
     WorkflowStep,
+    find_latest_run_for_period,
     resume_modelo_workflow,
     save_run,
 )
@@ -242,3 +243,60 @@ def test_resume_is_idempotent_for_a_persistently_aborted_run(tmp_path: Path) -> 
     second = resume_modelo_workflow(run_id)
     assert first == second
     assert first.resumed_from_run_id == second.resumed_from_run_id == run_id
+
+
+def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None:
+    """``find_latest_run_for_period`` resolves the newest persisted run for
+    a ``(modelo, period)`` pair, so an operator who only knows the
+    work unit's modelo and period can discover the run id without
+    holding the 16-character hash by hand."""
+
+    earlier = _aborted_result(
+        run_id="a" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
+    later = _aborted_result(
+        run_id="b" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
+    save_run(earlier)
+    save_run(later)
+
+    resolved = find_latest_run_for_period(modelo="130", period="2026Q1")
+    assert resolved.run_id == later.run_id
+
+
+def test_find_latest_run_for_period_ignores_other_periods(tmp_path: Path) -> None:
+    """Only runs whose resolved obligation matches the requested
+    ``(modelo, period)`` are considered."""
+
+    save_run(
+        _aborted_result(
+            run_id="a" * 16,
+            reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+            obligation=_obligation("303", "2026Q2"),
+        ),
+    )
+    with pytest.raises(WorkflowError, match=r"no persisted workflow run"):
+        find_latest_run_for_period(modelo="130", period="2026Q1")
+
+
+def test_find_latest_run_for_period_resolves_id_for_resume(tmp_path: Path) -> None:
+    """The run id resolved from a ``(modelo, period)`` pair feeds
+    :func:`resume_modelo_workflow` directly — the discoverability
+    path an operator holding only a work unit relies on."""
+
+    run = _aborted_result(
+        run_id="e" * 16,
+        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
+        obligation=_obligation("130", "2026Q1"),
+    )
+    save_run(run)
+
+    resolved = find_latest_run_for_period(modelo="130", period="2026Q1")
+    context = resume_modelo_workflow(resolved.run_id)
+    assert context.resumed_from_run_id == run.run_id
+    assert context.modelo == "130"
+    assert context.period == "2026Q1"

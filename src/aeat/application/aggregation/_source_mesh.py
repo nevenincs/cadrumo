@@ -18,6 +18,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 CalculationSourceDiagnosticReason = Literal[
     "duplicate_binding_owner",
     "duplicate_bound_casilla_owner",
+    "duplicate_relation_owner",
     "source_issue",
     "unhandled_binding_source",
 ]
@@ -68,6 +69,7 @@ class CalculationSourceResolution(BaseModel):
     owned_sources: tuple[str, ...] = Field(default_factory=tuple)
     binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
+    relation_values: Mapping[str, Decimal] = Field(default_factory=dict)
     bound_casilla_inputs: Mapping[str, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     diagnostics: tuple[CalculationSourceDiagnostic, ...] = Field(default_factory=tuple)
@@ -93,6 +95,11 @@ class CalculationSourceResolution(BaseModel):
     def _freeze_enum_binding_values(cls, value: Mapping[str, str]) -> Mapping[str, str]:
         return MappingProxyType(dict(sorted(value.items())))
 
+    @field_validator("relation_values")
+    @classmethod
+    def _freeze_relation_values(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
+        return MappingProxyType(dict(sorted(value.items())))
+
     @field_validator("bound_casilla_inputs")
     @classmethod
     def _freeze_bound_casilla_inputs(cls, value: Mapping[str, Decimal]) -> Mapping[str, Decimal]:
@@ -114,6 +121,10 @@ class CalculationSourceResolution(BaseModel):
 
     @field_serializer("enum_binding_values")
     def _serialize_enum_binding_values(self, value: Mapping[str, str]) -> dict[str, str]:
+        return dict(value)
+
+    @field_serializer("relation_values")
+    def _serialize_relation_values(self, value: Mapping[str, Decimal]) -> dict[str, Decimal]:
         return dict(value)
 
     @field_serializer("bound_casilla_inputs")
@@ -150,12 +161,14 @@ def merge_source_resolutions(
 
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
+    relation_values: dict[str, Decimal] = {}
     bound_casilla_inputs: dict[str, Decimal] = {}
     source_transaction_ids: set[str] = set()
     diagnostics: list[CalculationSourceDiagnostic] = []
     provenance: list[CalculationSourceProvenance] = []
     owned_sources: set[str] = set()
     binding_owners: dict[str, str] = {}
+    relation_owners: dict[str, str] = {}
     casilla_owners: dict[str, str] = {}
 
     for resolution in resolutions:
@@ -169,6 +182,9 @@ def merge_source_resolutions(
         for binding_id, value in resolution.enum_binding_values.items():
             _claim_binding(binding_owners, binding_id, resolution.resolver_id)
             enum_binding_values[binding_id] = value
+        for relation_id, value in resolution.relation_values.items():
+            _claim_relation(relation_owners, relation_id, resolution.resolver_id)
+            relation_values[relation_id] = value
         for casilla_id, value in resolution.bound_casilla_inputs.items():
             _claim_bound_casilla(casilla_owners, casilla_id, resolution.resolver_id)
             bound_casilla_inputs[casilla_id] = value
@@ -178,6 +194,7 @@ def merge_source_resolutions(
         owned_sources=tuple(sorted(owned_sources)),
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
         bound_casilla_inputs=bound_casilla_inputs,
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         diagnostics=tuple(diagnostics),
@@ -228,6 +245,17 @@ def _claim_bound_casilla(owners: dict[str, str], casilla_id: str, resolver_id: s
     raise AggregationValidationError(
         t("aggregation.source_mesh.errors.duplicate_bound_casilla_owner"),
         context={"casilla_id": casilla_id, "first_resolver": existing, "second_resolver": resolver_id},
+    )
+
+
+def _claim_relation(owners: dict[str, str], relation_id: str, resolver_id: str) -> None:
+    existing = owners.get(relation_id)
+    if existing is None:
+        owners[relation_id] = resolver_id
+        return
+    raise AggregationValidationError(
+        t("aggregation.source_mesh.errors.duplicate_relation_owner"),
+        context={"relation_id": relation_id, "first_resolver": existing, "second_resolver": resolver_id},
     )
 
 

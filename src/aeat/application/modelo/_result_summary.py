@@ -21,6 +21,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -54,7 +55,7 @@ class CalculationResultSummary(BaseModel):
     rows: tuple[ResultSummaryRow, ...] = Field(default_factory=tuple)
 
 
-def calculation_result_summary(revision: object) -> CalculationResultSummary | None:
+def calculation_result_summary(revision: CalculationRevision) -> CalculationResultSummary | None:
     """Return the headline result summary for a persisted calculation revision.
 
     Resolves the revision's work unit and registry snapshot, then picks
@@ -64,12 +65,9 @@ def calculation_result_summary(revision: object) -> CalculationResultSummary | N
     the caller then renders only the full casilla table.
     """
 
-    work_unit_id = getattr(revision, "work_unit_id", None)
-    casilla_values = getattr(revision, "casilla_values", None)
-    if work_unit_id is None or casilla_values is None:
-        return None
+    casilla_values = revision.casilla_values
     try:
-        work_unit = get_work_unit(str(work_unit_id))
+        work_unit = get_work_unit(str(revision.work_unit_id))
     except Exception:
         return None
     try:

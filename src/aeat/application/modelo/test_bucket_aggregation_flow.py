@@ -257,9 +257,9 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
     wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
     work_unit = _seed_303_work_unit(wu_repo)
     incomplete = _transaction(
-        "sale-missing-category",
-        direction=TransactionDirection.INCOMING,
-        amount=Decimal("121.00"),
+        "purchase-missing-category",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("-121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     ).model_copy(update={"category_id": None})

@@ -18,13 +18,19 @@ engine actually reads.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Mapping, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
 from ...adapters.outbound.aeat.export import ModeloDraftLike
 from ...application.auth import AuthProviderDescription
-from ...domain.deadlines import AutonomoProfile, Schedule
+from ...domain.deadlines import Schedule, TaxpayerProfile
+
+# ``ModeloInputs`` and its element aliases have a single canonical
+# definition in :mod:`aeat.domain.filing._protocols`. The workflow
+# engine re-exports them here so adapters can import the contract from
+# the workflow package without taking a second divergent definition.
+from ...domain.filing import ModeloInputs, ModeloInputScalar, ModeloInputValue
 
 
 @runtime_checkable
@@ -33,7 +39,7 @@ class DeadlineEngineProtocol(Protocol):
 
     def compute(
         self,
-        profile: AutonomoProfile,
+        profile: TaxpayerProfile,
         year: int,
         *,
         today: date | None = None,
@@ -58,8 +64,8 @@ class ModeloDraftBuilderProtocol(Protocol):
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-        inputs: Mapping[str, object],
+        profile: TaxpayerProfile,
+        inputs: ModeloInputs,
         fail_on_warning: bool = False,
     ) -> RegistryModeloDraftProtocol:
         """Build and return a registry-backed filing draft."""
@@ -70,8 +76,19 @@ class ModeloDraftBuilderProtocol(Protocol):
 class SubmissionEngineProtocol(Protocol):
     """Read-only preflight surface over :class:`aeat.adapters.outbound.aeat.export.SubmissionEngine`."""
 
-    def preflight(self, draft: RegistryModeloDraftProtocol, *, today: date) -> None:
-        """Run preflight gates against ``draft``; raise on failure."""
+    def preflight(
+        self,
+        draft: RegistryModeloDraftProtocol,
+        *,
+        today: date,
+        skip_deadline_window: bool = False,
+    ) -> None:
+        """Run preflight gates against ``draft``; raise on failure.
+
+        ``skip_deadline_window`` skips the AEAT filing-window gate so a
+        calculation can be verified independently of the filing
+        calendar; filing always runs the window gate.
+        """
         ...
 
 
@@ -104,26 +121,37 @@ class ModeloInputsProviderProtocol(Protocol):
         *,
         modelo: str,
         period: str,
-        profile: AutonomoProfile,
-    ) -> Mapping[str, object]:
+        profile: TaxpayerProfile,
+    ) -> ModeloInputs:
         """Return the filing inputs for the draft build."""
         ...
 
 
 class WorkflowExpedienteProtocol(Protocol):
-    modelo: str | None
-    ejercicio: int | None
+    @property
+    def modelo(self) -> str | None: ...
+
+    @property
+    def ejercicio(self) -> int | None: ...
 
 
 class WorkflowNotificationProtocol(Protocol):
-    tipo: str
-    leida: bool | None
-    certificado_id: str
-    concepto: str
+    @property
+    def tipo(self) -> str: ...
+
+    @property
+    def leida(self) -> bool | None: ...
+
+    @property
+    def certificado_id(self) -> str: ...
+
+    @property
+    def concepto(self) -> str: ...
 
 
 class WorkflowNotificationsSnapshotProtocol(Protocol):
-    rows: Sequence[WorkflowNotificationProtocol]
+    @property
+    def rows(self) -> Sequence[WorkflowNotificationProtocol]: ...
 
 
 ExpedientesSource = Callable[[object, str | None], Awaitable[tuple[WorkflowExpedienteProtocol, ...]]]
@@ -137,6 +165,9 @@ __all__ = [
     "DeadlineEngineProtocol",
     "ExpedientesSource",
     "ModeloDraftBuilderProtocol",
+    "ModeloInputScalar",
+    "ModeloInputValue",
+    "ModeloInputs",
     "ModeloInputsProviderProtocol",
     "NotificationsSource",
     "RegistryModeloDraftProtocol",

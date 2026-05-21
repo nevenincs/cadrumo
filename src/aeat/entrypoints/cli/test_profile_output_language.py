@@ -265,10 +265,14 @@ def test_create_error_renders_in_command_line_output_language(
     """A creation-time error renders in the ``--output-language`` given on create.
 
     Before fix: a refusal raised during ``profile create`` (e.g. a
-    missing ``--activity`` under ``--quiet``) rendered in the default
+    missing required flag under ``--quiet``) rendered in the default
     language even when ``--output-language en`` was supplied.
     After fix: the create flag drives the error language too — it is
     available at parse time, before the profile exists.
+
+    ``--tax-id`` is the one unconditionally-required flag, so omitting
+    it under ``--quiet`` raises the missing-required-flags refusal that
+    must localise to the supplied ``--output-language``.
     """
 
     _isolate(monkeypatch, tmp_path)
@@ -280,8 +284,6 @@ def test_create_error_renders_in_command_line_output_language(
             "create",
             "needslang",
             "--quiet",
-            "--tax-id",
-            "00000000T",
             "--output-language",
             "en",
         ]
@@ -293,8 +295,6 @@ def test_create_error_renders_in_command_line_output_language(
             "create",
             "needslang2",
             "--quiet",
-            "--tax-id",
-            "00000001R",
             "--output-language",
             "es",
         ]

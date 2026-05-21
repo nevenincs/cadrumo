@@ -89,9 +89,31 @@ def test_profile_key_conditional_requirement_fields_must_be_paired() -> None:
         )
 
 
-def test_spouse_profile_keys_are_conditionally_required_for_joint_taxation() -> None:
+def test_spouse_tax_id_is_conditionally_required_for_joint_taxation() -> None:
+    """A joint declaration is invalid without the spouse NIF.
+
+    ``renta_spouse.tax_id`` is the one spouse key the domain genuinely
+    requires when ``taxation_type == "2"`` (``SetupAnswers`` enforces
+    the same invariant). The conditional requirement compiles to the
+    ``required_when_*`` pair so ``validate_profile_values`` promotes the
+    key to required only while a joint declaration is declared."""
+
+    entry = get_profile_key("renta_spouse.tax_id")
+    assert entry.requirement is ProfileKeyRequirement.OPTIONAL
+    assert entry.required_when_key == "filing_export.declaration_type"
+    assert entry.required_when_value == "2"
+
+
+def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
+    """The remaining spouse identity keys are optional even for a joint
+    declaration — the domain validator requires only the spouse NIF.
+
+    A ``visible_when`` gate controls *whether the question is asked*,
+    not whether the key is required: a gated but ``required=False``
+    question carries no ``required_when_*`` pair, so it is never
+    promoted to required when its gate matches."""
+
     for key in (
-        "renta_spouse.tax_id",
         "renta_spouse.name",
         "renta_spouse.surnames",
         "renta_spouse.birth_date",
@@ -99,8 +121,8 @@ def test_spouse_profile_keys_are_conditionally_required_for_joint_taxation() -> 
     ):
         entry = get_profile_key(key)
         assert entry.requirement is ProfileKeyRequirement.OPTIONAL
-        assert entry.required_when_key == "filing_export.declaration_type"
-        assert entry.required_when_value == "2"
+        assert entry.required_when_key is None
+        assert entry.required_when_value is None
 
 
 def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
@@ -116,7 +138,10 @@ def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None
     }
 
     assert expected.issubset({entry.key for entry in optional_profile_keys()})
-    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_key == "renta_spouse.non_resident_irpf"
-    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_value == "true"
+    # `spouse.eu_eea_resident` is an optional boolean — no validator
+    # requires it — so it carries no conditional-requirement pair.
+    assert get_profile_key("renta_spouse.eu_eea_resident").required_when_key is None
+    # The residence country IS required once the spouse is declared an
+    # EU/EEA resident (SetupAnswers enforces the same invariant).
     assert get_profile_key("renta_spouse.eu_eea_country").required_when_key == "renta_spouse.eu_eea_resident"
     assert get_profile_key("renta_spouse.eu_eea_country").required_when_value == "true"

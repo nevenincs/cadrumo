@@ -1175,7 +1175,7 @@ def _compute_pull_casillas(
     result: PullResult,
     enabled: bool,
     compute_from_pull: Callable[[RegistrySnapshot, PullResult], RegistryCalculationResult],
-) -> list[dict[str, str]]:
+) -> list[dict[str, object]]:
     """Compute casillas from the pulled edits, refusing stale workbook stamps.
 
     When ``enabled`` is false (compute flag not passed), returns an
@@ -1183,6 +1183,11 @@ def _compute_pull_casillas(
     than ``"matches"`` raises :class:`CliRefusedBoundaryError` —
     computing against a stale workbook would silently apply edits
     against a different registry slice.
+
+    Each emitted entry carries the formula's ``legal_refs`` and
+    ``source_refs`` projected from :class:`RegistryCalculationEntry`,
+    so the operator-facing JSON payload preserves regulatory
+    grounding for every computed casilla.
     """
     if not enabled:
         return []
@@ -1202,6 +1207,8 @@ def _compute_pull_casillas(
             "casilla_id": entry.target,
             "value": str(entry.value),
             "formula_id": entry.formula_id,
+            "legal_refs": list(entry.legal_refs),
+            "source_refs": list(entry.source_refs),
         }
         for entry in calc.entries
     ]

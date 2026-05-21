@@ -68,7 +68,6 @@ _BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
 _LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
 _PERCENT_PLACEHOLDER_VALUE_RE = re.compile(r"^%[-#+ 0-9.]*[a-zA-Z]$")
 _PERCENT_PLACEHOLDER_RE = re.compile(r"(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>%[-#+ 0-9.]*[a-zA-Z])")
-_DEFAULT_LOG_DIR = Path.home() / ".config" / "aeat" / "logs"
 _DEFAULT_LOG_FILE_NAME = "aeat.log"
 
 
@@ -230,13 +229,22 @@ class _DropRunEventFilter(logging.Filter):
 
 
 def default_log_file_path() -> Path:
-    """Return the file path for non-interactive project logs."""
+    """Return the file path for non-interactive project logs.
+
+    The diagnostic log is rooted under ``aeat_log_dir``, which the
+    :class:`~aeat.core.config.Settings` validator derives from
+    ``<aeat_local_storage_root>/logs`` when no explicit ``AEAT_LOG_DIR``
+    override is supplied — so the log stays isolated per workspace
+    rather than mixing every session's records into a single
+    system-wide file.
+    """
 
     from .config import load_settings
 
-    configured = load_settings().aeat_log_dir
-    log_dir = configured.expanduser() if configured is not None else _DEFAULT_LOG_DIR
-    return log_dir / _DEFAULT_LOG_FILE_NAME
+    log_dir = load_settings().aeat_log_dir
+    if log_dir is None:  # pragma: no cover - validator always populates the field
+        log_dir = load_settings().aeat_local_storage_root / "logs"
+    return log_dir.expanduser() / _DEFAULT_LOG_FILE_NAME
 
 
 def configure_logging() -> None:

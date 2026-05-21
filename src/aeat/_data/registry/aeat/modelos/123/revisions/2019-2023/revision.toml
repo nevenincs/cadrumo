@@ -716,7 +716,16 @@ surface = "export_record"
 artefact_kind = "submitted_file"
 accepted_artefact_kinds = ["submitted_file"]
 parser = "aeat.domain.calculations.registry.parse_export_payload"
-target_casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
+target_casillas = [
+    {casilla_id = "01-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "02-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "03-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "04-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "05-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "06-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "07-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "08-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"
@@ -729,7 +738,16 @@ surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
-target_casillas = ["01-legacy", "02-legacy", "03-legacy", "04-legacy", "05-legacy", "06-legacy", "07-legacy", "08-legacy"]
+target_casillas = [
+    {casilla_id = "01-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "02-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "03-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "04-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "05-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "06-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "07-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "08-legacy", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
 confidence = "strict"
 min_coverage = "1"
 failure_semantics = "fail_hard"

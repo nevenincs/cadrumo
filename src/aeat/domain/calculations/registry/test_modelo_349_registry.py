@@ -450,7 +450,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
     assert pdf_profile.surface == "declaracion_pdf"
     assert pdf_profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
     assert pdf_profile.failure_semantics == "fail_hard"
-    assert set(pdf_profile.target_casillas) == {
+    assert {t.casilla_id for t in pdf_profile.target_casillas} == {
         "decl.numero-operadores",
         "decl.importe-operaciones",
         "decl.numero-rectificaciones",
@@ -462,7 +462,7 @@ def test_committed_modelo_349_extraction_profiles_target_declarant_summary_casil
     assert submitted_profile.parser == "aeat.domain.calculations.registry.parse_export_payload"
     assert submitted_profile.confidence == "strict"
     declarant_casilla_ids = {casilla.id for casilla in revision.casillas if casilla.section[0] == "declarante"}
-    assert set(submitted_profile.target_casillas) == declarant_casilla_ids
+    assert {t.casilla_id for t in submitted_profile.target_casillas} == declarant_casilla_ids
 
 
 def test_committed_modelo_349_extractor_app_link_is_registered() -> None:

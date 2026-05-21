@@ -924,7 +924,7 @@ def _filter_ledger_review_rows(
     *,
     rows: tuple[Transaction, ...],
     query: LedgerReviewQuery,
-    catalogue: Mapping[str, Transaction],
+    catalogue: TransactionCatalogue,
     bucket_event_repository: BucketEventHistoryRepository | None,
 ) -> tuple[Transaction, ...]:
     """Apply the four LedgerReviewQuery filters (period / status / import-or-issue / transaction-id).
@@ -2567,8 +2567,11 @@ def _verify_purchase_invoice_evidence(
     invoice_repository: InvoiceCatalogueRepository | None,
 ) -> None:
     """Verify the purchase-invoice evidence reference exists, matches the bucket, and is RECEIVED."""
+    evidence_id = command.purchase_invoice_evidence_id
+    if evidence_id is None:
+        return
     invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
-    invoice = invoices.get(command.purchase_invoice_evidence_id)
+    invoice = invoices.get(evidence_id)
     if invoice is None:
         raise TransactionValidationError(
             "purchase_invoice_evidence_id must reference an existing purchase invoice evidence record",

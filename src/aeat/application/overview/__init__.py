@@ -39,17 +39,26 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...core.i18n import tr
 from ...domain.deadlines import (
-    AutonomoProfile,
     DeadlineEngine,
     HolidayJurisdiction,
     ModeloDeadline,
     ObligationStatus,
     Recovery,
     Schedule,
+    ScheduleProducer,
+    TaxpayerProfile,
     shift_deadline,
 )
+from ...domain.deadlines._errors import NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError
+from ._applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    derive_modelo_applicability,
+    taxpayer_model_is_declared,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -272,7 +281,14 @@ class OverviewCalendar(BaseModel):
             to.
         entries: Tuple of :class:`OverviewCalendarEntry` rows ordered
             by ``(closes_on, modelo, period)`` — same key the engine
-            uses, so the CLI table is deterministic.
+            uses, so the CLI table is deterministic. Only modelos with a
+            positively ``APPLICABLE`` applicability verdict appear:
+            obligations the taxpayer model excludes (e.g. Modelo 130 for
+            a pure landlord) and modelos the seed rule table cannot yet
+            decide (``INCOMPLETE``) are filtered out, keeping the
+            calendar consistent with ``explain``. An undeclared
+            taxpayer model yields an empty tuple plus
+            ``taxpayer_model_declared = False``.
         generated_at: UTC timestamp of when the aggregator ran. The
             only non-deterministic field.
         warnings: Tuple of :class:`CalendarWarning` rows for every
@@ -281,6 +297,14 @@ class OverviewCalendar(BaseModel):
         completeness: Per-key / per-modelo breakdown of explicit vs
             defaulted resolution. Always present; carries empty
             tuples when no ``raw_values`` was supplied at build time.
+        taxpayer_model_declared: Whether the profile carries a usable
+            three-axis taxpayer model. When ``False`` the calendar is
+            empty and the operator must declare their taxpayer type
+            first — the engine never reports a confident wrong
+            obligation.
+        incomplete_reason: Operator-facing "declare your taxpayer type
+            first" guidance, present only when
+            ``taxpayer_model_declared`` is ``False``.
     """
 
     model_config = _STRICT_FROZEN
@@ -290,6 +314,8 @@ class OverviewCalendar(BaseModel):
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = Field(default=())
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
+    taxpayer_model_declared: bool = True
+    incomplete_reason: str | None = None
 
 
 class OverviewStatusReport(BaseModel):
@@ -408,11 +434,11 @@ def _build_completeness_and_warnings(
 
 
 def build_overview_calendar(
-    profile: AutonomoProfile,
+    profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
     *,
     today: date,
-    engine: DeadlineEngine | None = None,
+    engine: ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
@@ -423,31 +449,80 @@ def build_overview_calendar(
     mapping, and returns the typed result.
 
     Args:
-        profile: The operator's :class:`AutonomoProfile`.
+        profile: The operator's :class:`TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
-        engine: Optional :class:`DeadlineEngine` instance the caller
-            wants to share across queries. When ``None``, a default
-            engine is constructed.
+        engine: Optional :class:`ScheduleProducer` the caller wants to
+            share across queries — a concrete
+            :class:`aeat.domain.deadlines.DeadlineEngine` or any object
+            satisfying the schedule-producing protocol. When ``None``,
+            a default :class:`DeadlineEngine` is constructed.
+
+    A year inside the range with no registered deadline windows is
+    treated as a "no data yet" state: that year contributes zero
+    entries and the calendar still succeeds for every year that does
+    have window data. This is the same graceful degradation
+    ``overview explain`` applies to a modelo/year pair with no
+    registered windows.
 
     Returns:
         A :class:`OverviewCalendar` with one entry per
         ``(modelo, period)`` whose filing window intersects the range.
-
-    Raises:
-        ValueError: When the engine cannot compute a year inside the
-            range. Re-raised verbatim from
-            :class:`aeat.domain.deadlines.ScheduleComputationError`.
     """
+    if not taxpayer_model_is_declared(profile):
+        # An undeclared taxpayer model yields an explicit
+        # incomplete answer — never a confident wrong obligation. The
+        # engine does not fall back to the autónomo guess.
+        return OverviewCalendar(
+            range=calendar_range,
+            entries=(),
+            generated_at=datetime.now(UTC),
+            warnings=(),
+            completeness=CalendarCompleteness(),
+            taxpayer_model_declared=False,
+            incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+        )
+
     deadline_engine = engine if engine is not None else DeadlineEngine()
     schedules: list[Schedule] = []
     for year in calendar_range.covered_years():
-        schedules.append(deadline_engine.compute(profile, year, today=today))
+        try:
+            schedules.append(deadline_engine.compute(profile, year, today=today))
+        except NoDeadlineWindowsError:
+            # A year inside the range with no registered deadline
+            # windows is a normal "no data yet" state, not an error
+            # (registry-track gap R1). The year contributes zero
+            # entries; the calendar still answers for every year that
+            # does have window data. This catch is deliberately the
+            # narrow ``NoDeadlineWindowsError`` subtype: a genuine
+            # registry-integrity fault (validation failure,
+            # profile-condition evaluation failure) raises the bare
+            # ``ScheduleComputationError`` and must propagate — masking
+            # it here would silently hide a corrupt registry. This
+            # mirrors the graceful degradation ``overview explain``
+            # applies via the same narrow catch.
+            continue
 
     entries: list[OverviewCalendarEntry] = []
     for schedule in schedules:
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
+                continue
+            # Each modelo's applicability is DERIVED from the taxpayer
+            # model. Only a positively ``APPLICABLE`` verdict earns a
+            # calendar row. An obligation the taxpayer model excludes
+            # (``NOT_APPLICABLE`` — e.g. Modelo 130 for a pure landlord)
+            # is dropped; so is a cuota self-assessment routed to the
+            # attribution pass-through (``ATTRIBUTION_PASS_THROUGH`` — a
+            # comunidad de bienes owes no IS / IRPF cuota of its own);
+            # so is a modelo the seed table cannot yet decide
+            # (``INCOMPLETE`` — no seed rule). Surfacing any of these as
+            # a confident due row would diverge from ``explain`` and
+            # re-create the confident-wrong-obligation defect. The seed
+            # covers the core persona set; full per-modelo coverage is a
+            # deferred expansion (see ``_SEED_COVERAGE_NOTICE``).
+            applicability = derive_modelo_applicability(profile, obligation.modelo)
+            if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
                 continue
             try:
                 shift = shift_deadline(
@@ -557,8 +632,10 @@ def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...
 
 
 __all__ = [
+    "ApplicabilityVerdict",
     "CalendarCompleteness",
     "CalendarWarning",
+    "ModeloApplicability",
     "OverviewAgendaError",
     "OverviewBacklogError",
     "OverviewCalendar",
@@ -571,6 +648,7 @@ __all__ = [
     "OverviewStatusReport",
     "build_overview_calendar",
     "build_overview_status_report",
+    "derive_modelo_applicability",
     "overview_status_report_from_projection",
     "render_overview_status_lines",
     "user_state_for",

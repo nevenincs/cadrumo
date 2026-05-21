@@ -30,33 +30,35 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 def _populated_invoice(invoice_number: str = "F-2025-001") -> Invoice:
     """Build a typed Invoice with every field set to a non-default value."""
 
-    return Invoice(
-        kind=InvoiceKind.ISSUED,
-        invoice_number=invoice_number,
-        issued_at=date(2025, 3, 15),
-        counterparty_name="Test Counterparty GmbH",
-        # German VAT id; bypasses the AEAT CIF checksum since the
-        # invoice domain accepts any non-Spanish counterparty.
-        counterparty_tax_id="DE123456789",
-        counterparty_country="DE",
-        base_total=Decimal("1000.00"),
-        iva_total=Decimal("210.00"),
-        grand_total=Decimal("1210.00"),
-        currency="EUR",
-        lines=(
-            InvoiceLine(
-                description="Consultoría tecnológica",
-                quantity=Decimal("10"),
-                unit_price=Decimal("100.00"),
-                subtotal=Decimal("1000.00"),
-                iva_rate=IvaRate.RATE_21,
-                iva_amount=Decimal("210.00"),
-                category_id="consultoria",
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": invoice_number,
+            "issued_at": date(2025, 3, 15),
+            "counterparty_name": "Test Counterparty GmbH",
+            # German VAT id; bypasses the AEAT CIF checksum since the
+            # invoice domain accepts any non-Spanish counterparty.
+            "counterparty_tax_id": "DE123456789",
+            "counterparty_country": "DE",
+            "base_total": Decimal("1000.00"),
+            "iva_total": Decimal("210.00"),
+            "grand_total": Decimal("1210.00"),
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Consultoría tecnológica",
+                    quantity=Decimal("10"),
+                    unit_price=Decimal("100.00"),
+                    subtotal=Decimal("1000.00"),
+                    iva_rate=IvaRate.RATE_21,
+                    iva_amount=Decimal("210.00"),
+                    category_id="consultoria",
+                ),
             ),
-        ),
-        payment_status=PaymentStatus.PENDING,
-        linked_transaction_ids=("a" * 64,),
-        notes="Test invoice for roundtrip coverage.",
+            "payment_status": PaymentStatus.PENDING,
+            "linked_transaction_ids": ("a" * 64,),
+            "notes": "Test invoice for roundtrip coverage.",
+        }
     )
 
 

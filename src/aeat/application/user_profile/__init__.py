@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     )
     from ._lifecycle import ProfileLifecycleService
     from ._preflight import ProfilePreflightService
-    from ._projections import facts_to_values, projection_for_autonomo, record_to_values, snapshot_to_values
+    from ._projections import facts_to_values, projection_for_taxpayer, record_to_values, snapshot_to_values
     from ._repository import (
         USER_PROFILE_SNAPSHOT_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
@@ -315,7 +315,7 @@ def __getattr__(name: str):
         from . import _censo_sync
 
         return getattr(_censo_sync, name)
-    if name in ("facts_to_values", "projection_for_autonomo", "record_to_values", "snapshot_to_values"):
+    if name in ("facts_to_values", "projection_for_taxpayer", "record_to_values", "snapshot_to_values"):
         from . import _projections
 
         return getattr(_projections, name)
@@ -379,7 +379,7 @@ __all__ = [
     "UserProfilePortableExport",
     "UserProfileSnapshotRepository",
     "facts_to_values",
-    "projection_for_autonomo",
+    "projection_for_taxpayer",
     "record_to_values",
     "snapshot_to_values",
     "user_profile_snapshot_object_key",

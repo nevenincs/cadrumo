@@ -8,14 +8,18 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ...adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL
-from ...adapters.outbound.aeat.sede._schema import (
+from ...adapters.outbound.aeat.sede import (
+    IVA_COMPENSATION_WALLET_URL,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from ...core.resources import resources
+from ..aggregation import CalculationSourceContext
+from . import _iva_wallet_reconciliation as wallet_reconciliation
 from ._iva_wallet_reconciliation import (
     IvaCompensationOverride,
     IvaCompensationReconciliationInputError,
+    IvaWalletDecisionSourceResolver,
     reconcile_iva_compensation_wallet,
 )
 
@@ -23,6 +27,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _NOW = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
+
+
+def test_wallet_reconciliation_uses_public_sede_observation_export() -> None:
+    assert wallet_reconciliation.IvaCompensationWalletObservation is IvaCompensationWalletObservation
 
 
 def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensationWalletObservation:
@@ -68,6 +76,41 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
     }
     assert decision.divergence == "match"
     assert decision.blocked is False
+
+
+def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_provenance() -> None:
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period="2T",
+        wallet=_wallet(Decimal("1200")),
+        local_recurrence_amount=Decimal("1200"),
+        decided_at=_NOW,
+    )
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
+
+    resolution = IvaWalletDecisionSourceResolver(decision).resolve(
+        CalculationSourceContext(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=2026,
+            period="2T",
+            revision=snapshot.revision,
+        )
+    )
+
+    assert resolution.binding_values == {
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("1200")
+    }
+    assert resolution.owned_sources == ("iva_wallet_decision",)
+    assert {item.source_kind for item in resolution.provenance} == {
+        "aeat_wallet",
+        "local_recurrence",
+    }
+    assert {item.source_ref for item in resolution.provenance} >= {
+        str(IVA_COMPENSATION_WALLET_URL),
+        "local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+    }
 
 
 def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() -> None:

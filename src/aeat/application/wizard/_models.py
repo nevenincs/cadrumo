@@ -34,17 +34,52 @@ class WizardWidget(StrEnum):
 
 
 class WizardCondition(BaseModel):
-    """Single-clause equality predicate gating a question's visibility.
+    """Single-clause predicate naming one earlier question.
 
-    The predicate names an earlier question by id and compares the
+    The predicate names an earlier question by id and tests its
     canonical-token answer (``"true"`` / ``"false"`` for booleans,
-    raw string for everything else) against a literal ``equals`` value.
+    raw string for SELECT/TEXT, comma-joined token set for CHECKBOX).
+    Exactly one of two clause kinds is set:
+
+    * ``equals`` — the answer must equal this literal token. Used for
+      SELECT and CONFIRM gates (``entity-type == "legal_entity"``).
+    * ``contains`` — the answer, split on commas into a token set,
+      must contain this literal token. Used for CHECKBOX gates
+      (``irpf-income-categories`` includes ``actividad_economica``).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     question_id: str = Field(min_length=1)
-    equals: str
+    equals: str | None = None
+    contains: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_exactly_one_clause(self) -> WizardCondition:
+        """Exactly one of ``equals`` / ``contains`` must be declared."""
+
+        declared = [name for name, value in (("equals", self.equals), ("contains", self.contains)) if value is not None]
+        if len(declared) != 1:
+            raise ValueError(
+                f"WizardCondition on {self.question_id!r} must declare exactly one of "
+                f"'equals' / 'contains'; got {declared or ['none']}"
+            )
+        return self
+
+
+class WizardVisibility(BaseModel):
+    """Disjunction of :class:`WizardCondition` clauses.
+
+    A question is visible when *any* clause is satisfied. A single-
+    clause visibility is the common case; a multi-clause visibility
+    expresses "asked when A or B" (e.g. ``activity`` is collected for
+    a legal entity *or* for a natural person who declared an economic
+    activity).
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    any_of: tuple[WizardCondition, ...] = Field(min_length=1)
 
 
 class WizardChoice(BaseModel):
@@ -70,7 +105,7 @@ class WizardQuestion(BaseModel):
     choices: tuple[WizardChoice, ...] = ()
     default: str | None = None
     required: bool = True
-    visible_when: WizardCondition | None = None
+    visible_when: WizardCondition | WizardVisibility | None = None
     answer_type: type[str] | type[bool] | type[int] | type[Path]
 
 
@@ -128,7 +163,13 @@ class WizardFlow(BaseModel):
 
     @model_validator(mode="after")
     def _validate_visible_when_targets(self) -> WizardFlow:
-        """Every ``visible_when.question_id`` must resolve to an earlier question."""
+        """Every ``visible_when`` clause must name an earlier question.
+
+        A multi-clause :class:`WizardVisibility` is checked clause by
+        clause: every named question must precede the gated question
+        so the runtime has the parent answer in hand when it evaluates
+        visibility.
+        """
 
         seen: dict[str, int] = {}
         index = 0
@@ -141,8 +182,7 @@ class WizardFlow(BaseModel):
         bad: list[str] = []
         for section in self.sections:
             for question in section.questions:
-                condition = question.visible_when
-                if condition is not None:
+                for condition in iter_conditions(question.visible_when):
                     target_index = seen.get(condition.question_id)
                     if target_index is None or target_index >= order:
                         bad.append(f"{question.id}->{condition.question_id}")
@@ -153,6 +193,24 @@ class WizardFlow(BaseModel):
                 f"to earlier questions: {', '.join(bad)}"
             )
         return self
+
+
+def iter_conditions(
+    visible_when: WizardCondition | WizardVisibility | None,
+) -> tuple[WizardCondition, ...]:
+    """Return every :class:`WizardCondition` clause in a ``visible_when``.
+
+    Normalises the three shapes ``visible_when`` can take — ``None``
+    (no gate), a bare :class:`WizardCondition` (single clause), or a
+    :class:`WizardVisibility` (OR of clauses) — into a flat tuple so
+    consumers iterate one uniform sequence.
+    """
+
+    if visible_when is None:
+        return ()
+    if isinstance(visible_when, WizardCondition):
+        return (visible_when,)
+    return visible_when.any_of
 
 
 def _walk_translatables(flow: WizardFlow) -> list[tuple[tr, str]]:
