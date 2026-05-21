@@ -564,6 +564,8 @@ cli:
         override_help: Ideiglenes binding felülírás KEY=VALUE szintaxissal (ismételhető)
         period_help: 'Munkaegyseg idoszak token; Modelo 036 eseten alta, modificacion
           vagy baja; periodikus peldak: Q1, 4T, 0A es 01'
+        period_token_invalid: cli.app.modelo.work.period_token_invalid
+        period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
         reason_help: A megszakítás opcionális szabadszöveges indoklása (legfeljebb
           500 karakter)
         relation_help: Előző időszak relációs érték KEY=VALUE szintaxissal. A KEY

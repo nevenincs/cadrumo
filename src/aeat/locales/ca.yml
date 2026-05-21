@@ -579,6 +579,8 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: Token de periode de la unitat; per a Modelo 036 usa alta, modificacion
           o baja; exemples periodics inclouen Q1, 4T, 0A i 01
+        period_token_invalid: cli.app.modelo.work.period_token_invalid
+        period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.

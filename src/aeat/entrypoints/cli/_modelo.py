@@ -23,7 +23,6 @@ from ...application.modelo import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloRecordNotFoundError,
-    ModeloWorkflowGateError,
     VerificationReportNotFoundError,
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -109,6 +108,26 @@ def _resolve_default_actor() -> str:
         if active:
             return active
     return "operator"
+
+
+def _require_active_profile() -> None:
+    """Refuse cold-start work commands with the clean no-active-profile message.
+
+    Work commands open the active profile's encrypted bucket database.
+    Without an active profile that path raises a raw ``StorageError``
+    (``aeat_database_url is empty``) or a low-level ``no active bucket
+    session`` message — both leak internal plumbing. This guard fires
+    first so every cold-start work command produces the same clean,
+    translated ``profile create`` guidance that the ledger surface
+    already gives.
+    """
+
+    from ...application.workflow._models import resolve_active_bucket_id
+    from ...core.i18n import tr as _tr
+    from ._errors import CliRefusedBoundaryError
+
+    if resolve_active_bucket_id() is None:
+        raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
 
 
 def _run_query[T](call: Callable[[], T]) -> T:
@@ -366,13 +385,50 @@ def _parse_kv_spec[T](
     return key, transform(value)
 
 
-def _resolve_year_period(year: int, period: str) -> tuple[int, str]:
+def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
+    """Return the registry-declared period tokens for one modelo.
+
+    Pulls ``period_selector.periods`` from every revision of the modelo
+    so the CLI period-validation error can enumerate exactly the tokens
+    AEAT accepts for that form (``0A`` for an annual modelo, ``1T``..``4T``
+    for a quarterly one, etc.). Returns an empty tuple when the modelo is
+    unknown or unspecified — the caller falls back to the generic shape
+    hint.
+    """
+
+    if not modelo or not modelo.strip():
+        return ()
+    try:
+        from ...core.resources import resources
+
+        authority = resources().modelos.authority
+        definition = authority.validate_modelo(modelo.strip())
+    except Exception:
+        return ()
+    return tuple(
+        sorted(
+            {
+                token
+                for revision in definition.revisions.values()
+                for token in revision.period_selector.periods
+            }
+        )
+    )
+
+
+def _resolve_year_period(year: int, period: str, *, modelo: str | None = None) -> tuple[int, str]:
     """Normalise CLI ``--year/--period`` into ``(filing_year, registry_period)``.
 
     Operators pass user-facing tokens (``Q1``, ``annual``, ``01``); the
     registry expects ``1T``/``0A``/``01``. Bridge that by reconstructing
     the canonical ``YYYY[Qn|-MM]`` string and delegating to the
     registry parser.
+
+    ``--year`` and ``--period`` are composed internally; a token that is
+    itself a four-digit year (the common ``--period 2024`` confusion)
+    would compose to ``2024-2024`` and fail with an opaque message. When
+    ``modelo`` is supplied the error instead explains the composition
+    and enumerates the registry-declared period tokens for that modelo.
     """
 
     token = period.strip()
@@ -391,12 +447,62 @@ def _resolve_year_period(year: int, period: str) -> tuple[int, str]:
         composed = f"{year}Q4"
     elif lowered.isdigit() and len(lowered) == 2:
         composed = f"{year}-{lowered}"
+    elif lowered.isdigit() and len(lowered) == 4:
+        # A bare four-digit token is itself a year — the operator
+        # likely repeated the filing year into --period. Composing it
+        # would yield "<year>-<token>"; refuse with a clear hint.
+        raise typer.BadParameter(_period_token_error(year, token, modelo))
     else:
         composed = f"{year}{token}" if token.upper().startswith("Q") else f"{year}-{token}"
     try:
         return parse_modelo_period(composed)
     except RegistryValidationError as exc:
-        raise typer.BadParameter(str(exc)) from exc
+        raise typer.BadParameter(_period_token_error(year, token, modelo, fallback=str(exc))) from exc
+
+
+def _period_token_error(
+    year: int,
+    token: str,
+    modelo: str | None,
+    *,
+    fallback: str | None = None,
+) -> str:
+    """Build an operator-facing period-token error.
+
+    Explains that ``--year`` and ``--period`` are composed and lists the
+    registry-declared period tokens for the modelo when known. Falls
+    back to ``fallback`` (the raw registry message) only when no
+    modelo-specific token set is available.
+    """
+
+    declared = _declared_period_tokens(modelo)
+    if declared:
+        return tr(
+            "cli.app.modelo.work.period_token_invalid",
+            default=(
+                f"--period {token!r} is not a valid period token for modelo "
+                f"{modelo}. --year and --period are composed separately: pass "
+                f"--year {year} for the filing year and one of the declared "
+                f"period tokens for --period. Valid tokens: {', '.join(declared)}."
+            ),
+            token=token,
+            modelo=modelo or "",
+            year=year,
+            tokens=", ".join(declared),
+        )
+    if fallback is not None:
+        return fallback
+    return tr(
+        "cli.app.modelo.work.period_token_unrecognised",
+        default=(
+            f"--period {token!r} is not a recognised period token. --year and "
+            f"--period are composed separately: pass --year {year} for the "
+            f"filing year and a period token (0A for annual, Qn for a quarter, "
+            f"or MM for a month) for --period."
+        ),
+        token=token,
+        year=year,
+    )
 
 
 def _validate_binding_key(key: str, spec: str) -> None:
@@ -469,7 +575,7 @@ def bindings_list(
     for target in targets:
         try:
             if year is not None and period is not None:
-                resolved_year, resolved_period = _resolve_year_period(year, period)
+                resolved_year, resolved_period = _resolve_year_period(year, period, modelo=target)
                 report = _run_query(
                     lambda code=target, fy=resolved_year, rp=resolved_period: service.bindings_for_scope(
                         code,
@@ -573,7 +679,7 @@ def bindings_preview(
     assert year is not None
     assert period is not None
     overrides = dict(_parse_binding_override(spec) for spec in (binding or ()))
-    resolved_year, resolved_period = _resolve_year_period(year, period)
+    resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     report = _run_query(
         lambda: _service().bindings_for_scope(
             modelo, filing_year=resolved_year, period=resolved_period, as_of=_as_of(as_of)
@@ -924,9 +1030,15 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
+    # User-input validation (filing year, registry target, period
+    # token) runs first so an operator gets that feedback even before a
+    # profile exists. The no-active-profile guard fires only once the
+    # arguments are sound, immediately before the bucket database is
+    # opened by create_work_unit.
     _validate_filing_year(year)
     _validate_registry_target(modelo, revision)
-    resolved_year, resolved_period = _resolve_year_period(year, period)
+    resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
+    _require_active_profile()
     unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -960,6 +1072,7 @@ def work_list(
 ) -> None:
     """List modelo work units. Discarded units are excluded unless asked."""
 
+    _require_active_profile()
     units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
     payload = {
         "operation": "modelo.work.list",
@@ -1004,6 +1117,7 @@ def work_status(
     """View one work unit's metadata."""
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    _require_active_profile()
     try:
         unit = get_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
@@ -1035,6 +1149,7 @@ def work_rename(
     """Update one work unit's display name (preserves work_unit_id)."""
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    _require_active_profile()
     try:
         unit = rename_work_unit(work_unit_id, name, actor=actor or _resolve_default_actor())
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
@@ -1088,6 +1203,7 @@ def work_discard(
                 work_unit_id=work_unit_id,
             )
         )
+    _require_active_profile()
     try:
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
@@ -1311,6 +1427,7 @@ def work_calculate(
     """Persist a new draft calculation revision for the work unit."""
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    _require_active_profile()
     from ...application.modelo import (
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
@@ -1383,6 +1500,7 @@ def work_revisions(
 
     if work_unit_id is not None:
         work_unit_id = _validate_work_unit_id(work_unit_id)
+    _require_active_profile()
     revisions = list_calculation_revisions(work_unit_id=work_unit_id)
     payload = {
         "operation": "modelo.work.revisions",
@@ -1432,6 +1550,7 @@ def work_history(
     from ...application.modelo import assemble_work_unit_history
 
     work_unit_id = _validate_work_unit_id(work_unit_id)
+    _require_active_profile()
     history = assemble_work_unit_history(work_unit_id)
     payload = {
         "operation": "modelo.work.history",
@@ -1549,6 +1668,13 @@ def work_verify(
     inputs or blocking findings.
     """
 
+    _require_active_profile()
+    # ModeloWorkflowGateError is intentionally NOT wrapped in
+    # typer.BadParameter: it is a workflow-state refusal (e.g.
+    # NO_PENDING_OBLIGATION), not a user-input error. Letting it
+    # propagate to the command error boundary renders it through its
+    # registered REFUSED code rather than a Click "Invalid value:"
+    # header that misframes a workflow gate as a bad CLI argument.
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
@@ -1561,7 +1687,6 @@ def work_verify(
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
-        ModeloWorkflowGateError,
         WorkUnitNotFoundError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -1595,6 +1720,11 @@ def work_file(
 ) -> None:
     """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
 
+    _require_active_profile()
+    # ModeloWorkflowGateError is a workflow-state refusal, not a
+    # user-input error — it propagates to the command error boundary
+    # so it renders through its registered REFUSED code rather than a
+    # Click "Invalid value:" header.
     try:
         from ...application.workflow._persistence import workflow_state_repository
 
@@ -1608,7 +1738,6 @@ def work_file(
     except (
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
-        ModeloWorkflowGateError,
         WorkUnitNotFoundError,
     ) as exc:
         raise typer.BadParameter(str(exc)) from exc
@@ -1761,6 +1890,7 @@ def work_amend(
     assert kind is not None
     assert reason is not None
 
+    _require_active_profile()
     try:
         amendment_kind = CalculationRevisionAmendmentKind(kind.strip())
     except ValueError as exc:

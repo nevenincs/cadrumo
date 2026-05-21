@@ -541,6 +541,14 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: Work-unit period token; for Modelo 036 use alta, modificacion,
           or baja; periodic examples include Q1, 4T, 0A, and 01
+        period_token_invalid: '--period ''%{token}'' is not a valid period token for
+          modelo %{modelo}. --year and --period are composed separately: pass --year
+          %{year} for the filing year and one of the declared period tokens for --period.
+          Valid tokens: %{tokens}.'
+        period_token_unrecognised: '--period ''%{token}'' is not a recognised period
+          token. --year and --period are composed separately: pass --year %{year}
+          for the filing year and a period token (0A for annual, Qn for a quarter,
+          or MM for a month) for --period.'
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
