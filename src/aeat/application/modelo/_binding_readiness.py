@@ -15,7 +15,7 @@ profile) so the registry-query CLI stays a thin caller.
 
 from __future__ import annotations
 
-from ...domain.calculations.registry import RegistrySnapshotError
+from ...domain.calculations.registry import RegistrySnapshotError, ValidatedRegistryAuthority
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import resolve_profile_sourced_bindings
 
@@ -42,16 +42,14 @@ def profile_resolvable_binding_ids(
     binding as missing, which is the correct conservative answer.
     """
 
-    from ._actions import _authority_via_resources
-
-    authority = _authority_via_resources()
+    authority = _resources_authority()
     resolved_period = period if period is not None else _annual_period_for_year(
         authority, modelo=modelo, filing_year=filing_year
     )
     if resolved_period is None:
         return frozenset()
     try:
-        snapshot = authority.snapshot(  # type: ignore[attr-defined]
+        snapshot = authority.snapshot(
             modelo,
             filing_year=filing_year,
             period=resolved_period,
@@ -65,7 +63,17 @@ def profile_resolvable_binding_ids(
     return frozenset(result.bindings_sourced_from_profile)
 
 
-def _annual_period_for_year(authority: object, *, modelo: str, filing_year: int) -> str | None:
+def _resources_authority() -> ValidatedRegistryAuthority:
+    """Return the registry authority via the central resource registry."""
+
+    from ...core.resources import resources
+
+    return resources().modelos.authority
+
+
+def _annual_period_for_year(
+    authority: ValidatedRegistryAuthority, *, modelo: str, filing_year: int
+) -> str | None:
     """Return a registry period token a snapshot for ``filing_year`` accepts.
 
     With no ``--period`` the operator wants the revision covering the
@@ -76,7 +84,7 @@ def _annual_period_for_year(authority: object, *, modelo: str, filing_year: int)
     """
 
     try:
-        definition = authority.validate_modelo(modelo.strip())  # type: ignore[attr-defined]
+        definition = authority.validate_modelo(modelo.strip())
     except Exception:
         return None
     covering = [
