@@ -361,3 +361,104 @@ class TestRepoRelativePathNormalisationCoverage:
         assert settings.aeat_invoices_dir == PROJECT_ROOT / "var" / "financial" / "invoices"
         assert settings.aeat_attachments_dir == PROJECT_ROOT / "var" / "financial" / "attachments"
         assert settings.aeat_runs_dir == PROJECT_ROOT / "var" / "runs"
+
+
+class TestDatabaseUrlDerivation:
+    """``aeat_database_url`` must stay coherent with ``aeat_local_storage_root``.
+
+    Setting ``AEAT_LOCAL_STORAGE_ROOT`` alone — with no explicit
+    ``AEAT_DATABASE_URL`` and no active profile — must never leave the
+    URL empty. An empty URL made first-contact CLI commands exit-5 with
+    a raw internal ``aeat_database_url is empty`` error instead of the
+    clean no-active-profile refusal.
+    """
+
+    @staticmethod
+    def _isolated(env_file_path: Path) -> type[Settings]:
+        class IsolatedSettings(Settings):
+            """Settings variant bound to a temp env file for test isolation."""
+
+            model_config = SettingsConfigDict(
+                env_file=env_file_path,
+                env_file_encoding="utf-8",
+                env_ignore_empty=True,
+            )
+
+        return IsolatedSettings
+
+    def test_storage_root_alone_derives_root_level_fallback_url(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Storage root without an explicit URL or active profile derives the
+        ``sqlite:///<root>/aeat.db`` fallback rather than staying empty."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        storage_root = tmp_path / "aeat-state"
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            f"AEAT_LOCAL_STORAGE_ROOT={storage_root.as_posix()}\n",
+            encoding="utf-8",
+        )
+
+        settings = self._isolated(env_path)()
+
+        expected = f"sqlite:///{(storage_root / 'aeat.db').as_posix()}"
+        assert settings.aeat_database_url == expected
+        assert settings.aeat_database_url, "URL must never be empty when the storage root is set"
+
+    def test_explicit_database_url_overrides_storage_root_derivation(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """An explicit ``AEAT_DATABASE_URL`` wins over the derived fallback."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        explicit_url = f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}"
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    f"AEAT_LOCAL_STORAGE_ROOT={(tmp_path / 'aeat-state').as_posix()}",
+                    f"AEAT_DATABASE_URL={explicit_url}",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        settings = self._isolated(env_path)()
+
+        assert settings.aeat_database_url == explicit_url
+
+    def test_active_profile_derives_per_bucket_url(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """An active profile still derives the per-bucket SQLite URL; the
+        root-level fallback only applies when no bucket resolves."""
+        for name in Settings.env_var_names():
+            monkeypatch.delenv(name, raising=False)
+
+        storage_root = tmp_path / "aeat-state"
+        env_path = tmp_path / ".env"
+        env_path.write_text(
+            "\n".join(
+                (
+                    f"AEAT_LOCAL_STORAGE_ROOT={storage_root.as_posix()}",
+                    "AEAT_ACTIVE_PROFILE=acme",
+                )
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        settings = self._isolated(env_path)()
+
+        expected = f"sqlite:///{(storage_root / 'buckets' / 'acme' / 'db' / 'aeat.db').as_posix()}"
+        assert settings.aeat_database_url == expected
