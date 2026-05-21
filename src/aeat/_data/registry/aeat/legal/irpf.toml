@@ -1916,6 +1916,26 @@ required_text = [
     "tipos de gravamen autonómicos",
 ]
 
+[legal."ley-35-2006:art-76"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-76"
+document_id = "BOE-A-2006-20764"
+article = "76"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a76"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-21
+reviewed_by = "wgergely"
+notes = "Base legal para los tipos de gravamen autonomicos aplicables a la base liquidable del ahorro en Modelo 100, casillas 0537, 0539, 0541 y 0543; la escala del ahorro autonomica del art.76 es identica a la escala estatal del art.66."
+required_text = [
+    "tipos de gravamen",
+    "base liquidable del ahorro",
+    "autonómico",
+]
+
 [legal."ley-35-2006:art-77"]
 evidence_tier = "legal_authority"
 authority = "boe"

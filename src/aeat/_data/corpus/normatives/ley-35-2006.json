@@ -450,6 +450,22 @@
       }
     },
     {
+      "numero": "76",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a76",
+      "summary": {
+        "ca": "Fixa els tipus de gravamen aplicables a la base liquidable de l'estalvi en la part autonòmica de l'Impost, amb una escala progressiva pròpia idèntica a l'estatal de l'article 66.",
+        "en": "Sets the tax rates applicable to the savings taxable base in the autonomic share of the Tax, using a progressive scale specific to savings income and identical to the state scale of Article 66.",
+        "es": "Fija los tipos de gravamen aplicables a la base liquidable del ahorro en la parte autonómica del Impuesto, con una escala progresiva propia idéntica a la estatal del artículo 66.",
+        "hu": "Meghatározza a megtakarítási adóalapra alkalmazandó adókulcsokat az adó autonóm közösségi részében, a 66. cikk állami skálájával azonos, saját progresszív skála szerint."
+      },
+      "titulo": {
+        "ca": "Tipus de gravamen de l'estalvi",
+        "en": "Savings tax rate",
+        "es": "Tipo de gravamen del ahorro",
+        "hu": "A megtakarítás adókulcsa"
+      }
+    },
+    {
       "numero": "77",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a77",
       "summary": {
