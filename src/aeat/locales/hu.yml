@@ -321,6 +321,7 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshotok
         filing_year_help: Adóév (pl. 2024)
+        invalid_state: 'Az --state értékének a következők egyikének kell lennie: active, superseded, discarded, all.'
         latest_help: A legutóbbi aktív snapshot megjelenítése egy adóévre
         list_help: Rögzített Modelo 100 borrador snapshotok listázása
         modelo_100_help: Modelo 100 borrador snapshot parancsok
@@ -362,9 +363,11 @@ cli:
       portals:
         app_help: Csak olvasható helyi AEAT portálkatalógus
         category_help: Szűrés portálkategória szerint
+        category_modelo_exclusive: 'A --category és a --modelo kölcsönösen kizárják egymást.'
         list_help: Listázd a portálkatalógus bejegyzéseit
         modelo_help: Szűrés egy modelohoz kapcsolt portálokra
         portal_id_help: Portálazonosító
+        unknown_category: 'Ismeretlen portálkategória: {category}.'
         view_help: Mutass egy portálkatalógus-bejegyzést
       registry_root_help: Regiszter gyökérkönyvtára
       source_root_help: Projekt gyökérkönyvtára
@@ -372,6 +375,7 @@ cli:
       verify:
         app_help: Csak olvasható NIF-ellenőrzési auditnapló
         expected_help: Opcionális várt eredmény (valid, invalid vagy unknown)
+        expected_values_error: 'Az --expected értékének a következők egyikének kell lennie: valid, invalid, unknown.'
         latest_help: Mutasd a legfrissebb megfigyelést felület és NIF szerint
         latest_nif_help: Lekérdezendő NIF
         latest_surface_help: 'Ellenőrzési felület: nif_iva vagy tgvi'
@@ -380,10 +384,12 @@ cli:
         nif_iva_arg_help: NIF-IVA érték (pl. ESB12345678)
         nif_iva_help: Ellenőrizz egy közösségi NIF-IVA értéket AEAT IXVI-ben és mentsd
           a megfigyelést
+        no_observation_for_nif: 'Nem érkezett megfigyelés a(z) {nif} NIF-hez.'
         observation_id_help: Megfigyelésazonosító (vagy egyértelmű előtag)
         surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi'
         tgvi_arg_help: Ellenőrizendő spanyol NIF/NIE
         tgvi_help: Ellenőrizd egy NIF ROI/VIES bejegyzését GROI-ban és mentsd a megfigyelést
+        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (a várt érték nif_iva vagy tgvi).'
         view_help: Mutass egy mentett ellenőrzési megfigyelést
       year_help: Benyújtási év
     modelo:
@@ -1746,16 +1752,22 @@ errors:
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
   identity:
-    cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen ({kind} típus): várt érték {expected} vagy {alt}, kapott érték {got}.'
-    cif_check_digit_mismatch: 'A CIF ellenőrző számjegye helytelen ({kind} típus): várt érték {expected}, kapott érték {got}.'
-    cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen ({kind} típus): várt érték {expected}, kapott érték {got}.'
-    cif_invalid_shape: 'A(z) {candidate} nem érvényes CIF.'
-    document_empty: 'Az azonosító okmány üres.'
-    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: várt érték {expected}, kapott érték {got}.'
-    nie_invalid_shape: 'A(z) {candidate} nem érvényes NIE.'
-    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: várt érték {expected}, kapott érték {got}.'
-    nif_invalid_shape: 'A(z) {candidate} nem érvényes NIF.'
-    validate_expects_str: 'Az azonosító ellenőrzése szöveges értéket vár; a kapott típus {got_type}.'
+    cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen ({kind} típus):
+      várt érték {expected} vagy {alt}, kapott érték {got}.'
+    cif_check_digit_mismatch: 'A CIF ellenőrző számjegye helytelen ({kind} típus):
+      várt érték {expected}, kapott érték {got}.'
+    cif_check_letter_mismatch_kind: 'A CIF ellenőrző betűje helytelen ({kind} típus):
+      várt érték {expected}, kapott érték {got}.'
+    cif_invalid_shape: A(z) {candidate} nem érvényes CIF.
+    document_empty: Az azonosító okmány üres.
+    nie_check_letter_mismatch: 'A NIE ellenőrző betűje helytelen: várt érték {expected},
+      kapott érték {got}.'
+    nie_invalid_shape: A(z) {candidate} nem érvényes NIE.
+    nif_check_letter_mismatch: 'A NIF ellenőrző betűje helytelen: várt érték {expected},
+      kapott érték {got}.'
+    nif_invalid_shape: A(z) {candidate} nem érvényes NIF.
+    validate_expects_str: Az azonosító ellenőrzése szöveges értéket vár; a kapott
+      típus {got_type}.
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
   refused:
