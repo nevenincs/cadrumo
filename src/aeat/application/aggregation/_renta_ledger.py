@@ -11,7 +11,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.resources import resources
-from ...domain.categories import SpendingCategory
+from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.renta import (
     RENTA_100_FIRST_SLICE_EXPENSE_CASILLAS,
@@ -242,7 +242,7 @@ def _classify_renta_transaction(
     bucket_id: str,
     resolved_period: Period,
     resolved_profile_year: int,
-    profiles: Mapping[SpendingCategory, CategoryProfile],  # noqa: F821 - forward-ref doc-only
+    profiles: Mapping[SpendingCategory, CategoryProfile],
     context: RentaDeductibilityContext,
     activity_key: str,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
