@@ -64,13 +64,13 @@ Provenance on import; snapshot validation; and the persistence
 roundtrip / anti-tautology gaps.
 
 - [x] `P05.S17` - CALC-2: `import_external_filing` builds registry-sourced `CasillaObservation` rows; `src/aeat/application/filing`.
-- [ ] `P05.S18` - CALC-3: snapshot validator asserts every `input_kind="bound"` casilla has a binding definition; `src/aeat/domain/calculations/registry`.
+- [x] `P05.S18` - CALC-3: snapshot validator asserts every `input_kind="bound"` casilla has a binding definition; `src/aeat/domain/calculations/registry`.
 - [ ] `P05.S19` - PERS-4: unify `object_key` type across record/write and add identity roundtrip test; `src/aeat/adapters/persistence`.
-- [x] `P05.S20` - PERS-5: `RecoveryRecord` serialization anti-tautology proof (5850e665e) - re-verified: no file-Envelope path exists; added drop-field + mutate-field anti-tautology tests; 11 tests green; `src/aeat/adapters/persistence`.
-- [x] `P05.S21` - PERS-6: `peek_metadata` consistency test + on-disk schema-version-drift anti-tautology (50cd0b7fe); 12 secure-objects tests green; `src/aeat/adapters/persistence`.
-- [x] `P05.S22` - PERS-7: two-instance upsert-convergence test for `SecureObjectRepository` (45b383329) - two repos, one key, asserts single-row last-write-wins; 13 tests green; `src/aeat/adapters/persistence`.
+- [x] `P05.S20` - PERS-5: `RecoveryRecord` serialization anti-tautology proof (5850e665e) - re-verified: no file-Envelope path exists; `added drop-field + mutate-field anti-tautology tests; 11 tests green; `src/aeat/adapters/persistence`.
+- [x] `P05.S21` - PERS-6: `peek_metadata` consistency test + on-disk schema-version-drift anti-tautology (50cd0b7fe); `12 secure-objects tests green; `src/aeat/adapters/persistence`.
+- [x] `P05.S22` - PERS-7: two-instance upsert-convergence test for `SecureObjectRepository` (45b383329) - two repos, one key, asserts single-row last-write-wins; `13 tests green; `src/aeat/adapters/persistence`.
 - [x] `P05.S23` - EXIM-2: fichero-BOE RESERVED-field anti-tautology proof (ed4b529ac) - corrupt-the-literal test, 9 roundtrip tests green; `src/aeat/adapters/outbound/aeat/export/_formats`.
-- [ ] `P05.S24` - EXIM-3: asset-ledger delete-field anti-tautology proof; `src/aeat/application/modelo`.
+- [x] `P05.S24` - EXIM-3: asset-ledger delete-field anti-tautology proof (85ba9180b) - delete `cost_basis` from the encrypted JSON payload, assert ValidationError; 3 asset-roundtrip tests green; `src/aeat/adapters/persistence/profile`.
 
 ### Phase `P06` - HIGH: export coverage + Google Sheets guard
 
