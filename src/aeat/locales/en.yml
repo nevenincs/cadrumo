@@ -343,7 +343,7 @@ cli:
       portals:
         app_help: Read-only local AEAT portal catalogue
         category_help: Filter by portal category
-        category_modelo_exclusive: '--category and --modelo are mutually exclusive.'
+        category_modelo_exclusive: --category and --modelo are mutually exclusive.
         list_help: List portal catalogue entries
         modelo_help: Filter by portals linked to a modelo
         portal_id_help: Portal identifier
@@ -364,7 +364,7 @@ cli:
         nif_iva_arg_help: NIF-IVA value (e.g. ESB12345678)
         nif_iva_help: Verify an intra-community NIF-IVA in AEAT IXVI and save the
           observation
-        no_observation_for_nif: 'No observation was returned for NIF {nif}.'
+        no_observation_for_nif: No observation was returned for NIF {nif}.
         observation_id_help: Observation id (or unambiguous prefix)
         surface_help: 'Filter by surface: nif_iva or tgvi'
         tgvi_arg_help: Spanish NIF/NIE to check
@@ -380,6 +380,8 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
+        json_not_object: '{flag} must be a JSON object.'
+        json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: Aggregation period passed to the backend service.
@@ -415,6 +417,7 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
         preview_help: Preview bindings with temporary overrides without mutating state
+        unknown_keys: 'Unknown --binding key(s) {keys}; known bindings for {code}@{revision} ({period}): {suggestion}.'
         year_help: Tax year of the modelo (e.g. 2026)
       casillas:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
@@ -455,7 +458,9 @@ cli:
           at least one required)
         import_help: Persist an externally-filed return as a baseline filing record
           carrying imported AEAT-attested evidence
+        import_set_required: '--set is required at least once for an import.'
         include_superseded_help: Include superseded filing records (excluded by default)
+        invalid_evidence_kind: '--evidence-kind must be one of {canonical}; got {kind}.'
         list_help: List registered filing records
         view_help: Show one filing record by id
       formulas:
@@ -510,6 +515,7 @@ cli:
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
+        amend_set_required: '--set is required at least once for an amendment.'
         amendment_kind_help: Legal kind of the amendment (complementaria or sustitutiva)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
@@ -522,6 +528,7 @@ cli:
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable)
+        casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
@@ -536,12 +543,15 @@ cli:
         history_work_unit_id_help: Work unit id whose lifecycle you want to view
         include_discarded_help: Include discarded work units in the listing (excluded
           by default)
+        invalid_amendment_kind: '--kind must be one of {choices}; got {kind}.'
         invalid_binding_key: '--binding key is not a valid BindingId (lowercase alphanumeric
           plus . _ : - separators, max 128 chars)'
         invalid_casilla_key: '--casilla key is not a valid CasillaId (alphanumeric
           plus . _ : - separators, max 64 chars)'
         invalid_work_unit_id: work_unit_id must be a 64-character lowercase hex string
           (SHA-256 digest)
+        kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
+        kv_format_error: '{flag} must be {key_label}={value_label}; got {spec}.'
         list_help: List registered work units, optionally filtered by bucket
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
@@ -560,6 +570,7 @@ cli:
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
+        relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT
@@ -567,6 +578,7 @@ cli:
         revision_help: Stable id of the targeted registry modelo revision
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
+        set_not_decimal: 'The --set value must be a decimal; got {value}.'
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
         status_help: Show the metadata of one work unit
