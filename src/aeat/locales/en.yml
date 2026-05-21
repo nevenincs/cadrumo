@@ -201,7 +201,9 @@ application:
     errors:
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
         fallback).
-      quiet_missing_flags: Required flags are missing for a --quiet wizard run.
+      quiet_missing_flags: 'This --quiet run is missing required details. Add these
+        flags and run the command again: %{missing_flags}. Or run it without --quiet
+        from an interactive terminal to use the guided setup.'
     status:
       errors:
         missing_tax_id: Active profile is missing tax.id.
@@ -2610,12 +2612,12 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "The guided setup could not open an interactive prompt in\
-      \ this run.\nNothing has been saved yet.\n\nTry the guided setup again from\
-      \ an interactive terminal session:\n  aeat config profile create NAME\n\nIf\
-      \ this profile state may be stale or corrupt, inspect it first:\n  aeat config\
-      \ repair\n\nTo discard only local profile state and start over:\n  aeat config\
-      \ reset --scope profile --yes"
+    unsupported_console: "The guided setup needs an interactive terminal, and this\
+      \ run does not have one.\nNothing has been saved yet.\n\nYou can finish creating\
+      \ this profile in one of two ways:\n\n1. Run the command again from an interactive\
+      \ terminal to use the guided setup:\n     aeat config profile create NAME\n\n\
+      2. Or create it in one step by supplying the required details as flags:\n  \
+      \   aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
     unsupported_console_edit: "The guided setup could not open an interactive prompt\
       \ in this run.\nNothing has been saved yet.\n\nEdit this profile non-interactively\
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\

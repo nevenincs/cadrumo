@@ -504,7 +504,12 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_unsupported_console",
-            default_suggestion="aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY",
+            # The operator-facing message body spells out both recovery
+            # paths (interactive terminal vs. the one-step flag form) in
+            # plain language. A trailing `-> Run` suggestion would only
+            # repeat one of those two commands verbatim, so the message
+            # is the single source of recovery guidance here.
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

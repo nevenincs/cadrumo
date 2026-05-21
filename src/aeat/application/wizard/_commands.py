@@ -267,6 +267,18 @@ def _missing_required_flags(
     return tuple(missing)
 
 
+def _format_missing_flags(missing: tuple[str, ...]) -> str:
+    """Render missing question ids as the ``--flag`` form an operator types.
+
+    A wizard question id (``tax-id``, ``activity``) is the long-option
+    spelling minus the leading ``--``. The refusal an operator reads
+    must name the actual flags to add, never a raw Python identifier
+    tuple.
+    """
+
+    return " ".join(f"--{question_id}" for question_id in missing)
+
+
 def _scripted_from_canonical(flow: WizardFlow, canonical: dict[str, str]) -> ScriptedPrompter:
     """Build a ``ScriptedPrompter`` driven by the canonical-token dict."""
 
@@ -493,9 +505,17 @@ def _run_full_flow(
     if quiet:
         missing = _missing_required_flags(flow, canonical)
         if missing:
+            missing_flags = _format_missing_flags(missing)
             raise WizardMissingFlagError(
-                tr("application.wizard.errors.quiet_missing_flags"),
-                context={"flow_id": flow.id, "missing": missing},
+                tr(
+                    "application.wizard.errors.quiet_missing_flags",
+                    missing_flags=missing_flags,
+                ),
+                context={
+                    "flow_id": flow.id,
+                    "missing": missing,
+                    "missing_flags": missing_flags,
+                },
             )
         answers = run_flow(flow, _scripted_from_canonical(flow, canonical))
     elif accept_defaults:

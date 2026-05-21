@@ -222,8 +222,9 @@ application:
     errors:
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
         defecte 'default' implícit).
-      quiet_missing_flags: Falten flags obligatoris per a una execució de l'assistent
-        amb --quiet.
+      quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.
+        Afegeix aquests flags i torna a executar l''ordre: %{missing_flags}. O executa-la
+        sense --quiet des d''un terminal interactiu per fer servir l''assistent guiat.'
     status:
       errors:
         missing_tax_id: El perfil actiu no té tax.id.
@@ -2731,12 +2732,12 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "La configuració guiada no ha pogut obrir una pregunta interactiva\
-      \ en aquesta execució.\nEncara no s'ha desat res.\n\nTorna a provar-la des d'una\
-      \ sessió de terminal interactiva:\n  aeat config profile create NAME\n\nSi l'estat\
-      \ del perfil pot estar obsolet o corrupte, revisa'l primer:\n  aeat config repair\n\
-      \nPer descartar només l'estat local del perfil i començar de nou:\n  aeat config\
-      \ reset --scope profile --yes"
+    unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
+      \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
+      \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
+      \ per fer servir l'assistent guiat:\n     aeat config profile create NAME\n\n\
+      2. O crea'l en un sol pas indicant les dades obligatòries com a flags:\n   \
+      \  aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
     unsupported_console_edit: "La configuració guiada no ha pogut obrir una pregunta\
       \ interactiva en aquesta execució.\nEncara no s'ha desat res.\n\nEdita aquest\
       \ perfil de manera no interactiva indicant el camp a canviar:\n  aeat config\

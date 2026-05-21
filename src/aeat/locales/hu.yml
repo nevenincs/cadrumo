@@ -217,7 +217,9 @@ application:
     errors:
       profile_flag_required: A varázsló --profile NAME kapcsolót igényel (nincs implicit
         'default' visszaesés).
-      quiet_missing_flags: Hiányoznak a --quiet varázsló futtatáshoz szükséges kapcsolók.
+      quiet_missing_flags: 'Ebből a --quiet futtatásból hiányoznak kötelező adatok.
+        Add hozzá ezeket a kapcsolókat, és futtasd újra a parancsot: %{missing_flags}.
+        Vagy futtasd --quiet nélkül egy interaktív terminálban a vezetett beállításhoz.'
     status:
       errors:
         missing_tax_id: Az aktív profilból hiányzik a tax.id.
@@ -2662,11 +2664,12 @@ wizard:
     select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
       %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
-    unsupported_console: "A vezetett beállítás nem tudott interaktív kérdést megnyitni\
-      \ ebben a futásban.\nMég semmi nincs mentve.\n\nPróbáld újra interaktív terminálból:\n\
-      \  aeat config profile create NAME\n\nHa a profilállapot elavult vagy sérült\
-      \ lehet, először vizsgáld meg:\n  aeat config repair\n\nCsak a helyi profilállapot\
-      \ eldobásához és újrakezdéshez:\n  aeat config reset --scope profile --yes"
+    unsupported_console: "A vezetett beállításhoz interaktív terminál kell, és ennek\
+      \ a futásnak nincs ilyen.\nMég semmi nincs mentve.\n\nKét módon fejezheted be\
+      \ ennek a profilnak a létrehozását:\n\n1. Futtasd újra a parancsot interaktív\
+      \ terminálból a vezetett beállításhoz:\n     aeat config profile create NAME\n\
+      \n2. Vagy hozd létre egy lépésben a kötelező adatokat kapcsolóként megadva:\n\
+      \     aeat config profile create NAME --quiet --tax-id NIF --activity ACTIVITY"
     unsupported_console_edit: "A vezetett beállítás nem tudott interaktív kérdést\
       \ megnyitni ebben a futásban.\nMég semmi nincs mentve.\n\nSzerkeszd ezt a profilt\
       \ nem interaktívan a módosítandó mező megnevezésével:\n  aeat config profile\
