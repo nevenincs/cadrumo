@@ -142,7 +142,7 @@ listed, switchable, reported ready, and its name stayed reserved
   tombstoned status, name and tax-id uniqueness consider only live
   profiles. A plaintext `status` marker on `BucketManifest` lets the
   manifest scan filter without decryption.
-- [ ] `W06.S24` - close the denormalization drift: `verify_profile_integrity`
+- [x] `W06.S24` - close the denormalization drift: `verify_profile_integrity`
   rejects a manifest status that disagrees with the record status,
   and `delete` writes the manifest mirror before the record tombstone
   so a crashed delete fails closed.
@@ -156,7 +156,7 @@ listed, switchable, reported ready, and its name stayed reserved
 | W03 | rename collapse + name-as-id sweep | identity + aggregate | complete (S15 testimonial regression pending) |
 | W04 | canonical read-projection | read-projection | complete (engine obligation-gate rewire tracked as follow-up) |
 | W05 | one state root + full verification | identity + aggregate | complete |
-| W06 | tombstone lifecycle correctness | testimonial | in progress |
+| W06 | tombstone lifecycle correctness | testimonial | complete |
 
 ## Audit cadence
 
