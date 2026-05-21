@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
@@ -849,7 +850,7 @@ def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla
                 ),
             ),
             confidence="strict",
-            min_coverage="1",
+            min_coverage=Decimal("1"),
             failure_semantics="fail_hard",
             legal_refs=("rd-439-2007:art-110",),
             source_refs=("aeat-dr-130-2019-v12",),
