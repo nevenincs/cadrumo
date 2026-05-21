@@ -59,6 +59,13 @@ from ._validate_semantic_roles import (
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,
 )
+from ._validate_surfaces import (
+    validate_application_link_section,
+    validate_cross_reference_section,
+    validate_deadline_window_section,
+    validate_verification_expectation_section,
+    validate_workbook_parity_section,
+)
 
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
@@ -385,13 +392,43 @@ class RegistryValidator:
             casillas=casillas,
             exported_casillas=exported_casillas,
         )
-        self._validate_cross_reference_section(failures, prefix=prefix, revision=revision)
-        self._validate_workbook_parity_section(failures, prefix=prefix, revision=revision)
-        self._validate_verification_expectation_section(
-            failures, prefix=prefix, revision=revision, casillas=casillas
+        validate_cross_reference_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+            evidence=self._evidence,
         )
-        self._validate_application_link_section(failures, prefix=prefix, revision=revision)
-        self._validate_deadline_window_section(failures, prefix=prefix, revision=revision)
+        validate_workbook_parity_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+        )
+        validate_verification_expectation_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            casillas=casillas,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+        )
+        validate_application_link_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+        )
+        validate_deadline_window_section(
+            failures,
+            prefix=prefix,
+            revision=revision,
+            legal_refs=self._legal,
+            source_refs=self._sources,
+        )
 
         failures.extend(
             validate_support_removal_decisions(
@@ -876,121 +913,6 @@ class RegistryValidator:
                         f"export fields {missing_exported_casillas!r}"
                     )
             failures.extend(validate_extraction_profile_artefacts(prefix, profile))
-
-    def _validate_cross_reference_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-    ) -> None:
-        oracle_bindings: dict[str, str] = {}
-        for cross_reference in revision.live_cross_references:
-            owner = f"cross-reference {cross_reference.id}"
-            failures.extend(self._missing_refs(prefix, owner, cross_reference.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, cross_reference.source_refs, self._sources, "source"))
-            failures.extend(
-                self._evidence.require_source_tier(
-                    prefix,
-                    owner,
-                    cross_reference.source_refs,
-                    cross_reference.evidence_tier,
-                )
-            )
-            if cross_reference.oracle_id is not None:
-                prior = oracle_bindings.get(cross_reference.oracle_id)
-                if prior is not None:
-                    failures.append(
-                        f"{prefix}: cross-references {prior!r} and {cross_reference.id!r} "
-                        f"both bind oracle_id {cross_reference.oracle_id!r}; "
-                        f"each oracle id may be bound by at most one cross-reference per revision"
-                    )
-                else:
-                    oracle_bindings[cross_reference.oracle_id] = cross_reference.id
-
-    def _validate_workbook_parity_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-    ) -> None:
-        for workbook in revision.workbook_parity_refs:
-            owner = f"workbook parity {workbook.id}"
-            failures.extend(self._missing_refs(prefix, owner, workbook.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, workbook.source_refs, self._sources, "source"))
-            if workbook.workbook_source not in self._sources:
-                failures.append(
-                    f"{prefix}: workbook parity {workbook.id!r} references unknown source {workbook.workbook_source!r}"
-                )
-                continue
-            source = self._sources[workbook.workbook_source]
-            if workbook.formula_coverage == "formula_form" and source.evidence_tier != "executable_parity_evidence":
-                failures.append(
-                    f"{prefix}: workbook parity {workbook.id!r} formula workbook requires "
-                    "executable parity evidence source"
-                )
-            if workbook.formula_coverage != "formula_form" and source.evidence_tier == "executable_parity_evidence":
-                failures.append(
-                    f"{prefix}: workbook parity {workbook.id!r} non-formula workbook must not use "
-                    "executable parity evidence source"
-                )
-
-    def _validate_verification_expectation_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-        casillas: set[str],
-    ) -> None:
-        for expectation in revision.verification_expectations:
-            owner = f"verification expectation {expectation.id}"
-            failures.extend(self._missing_refs(prefix, owner, expectation.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, expectation.source_refs, self._sources, "source"))
-            for casilla_id in expectation.computed_casillas:
-                if casilla_id not in casillas:
-                    failures.append(f"{prefix}: {owner} references unknown casilla {casilla_id!r}")
-            for total_kind, casilla_id in expectation.reconciliation_totals.items():
-                if casilla_id not in casillas:
-                    failures.append(
-                        f"{prefix}: {owner} reconciliation total {total_kind!r} references unknown casilla "
-                        f"{casilla_id!r}"
-                    )
-                if casilla_id not in expectation.computed_casillas:
-                    failures.append(
-                        f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casillas"
-                    )
-
-    def _validate_application_link_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-    ) -> None:
-        for link in revision.application_links:
-            owner = f"application link {link.id}"
-            failures.extend(self._missing_refs(prefix, owner, link.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, link.source_refs, self._sources, "source"))
-
-    def _validate_deadline_window_section(
-        self,
-        failures: list[str],
-        *,
-        prefix: str,
-        revision: ModeloRevision,
-    ) -> None:
-        for window in revision.deadline_windows:
-            owner = f"deadline window {window.id}"
-            failures.extend(self._missing_refs(prefix, owner, window.legal_refs, self._legal, "legal"))
-            failures.extend(self._missing_refs(prefix, owner, window.source_refs, self._sources, "source"))
-            for condition in window.applicability_conditions:
-                condition_owner = f"deadline condition for {window.id}"
-                failures.extend(self._missing_refs(prefix, condition_owner, condition.legal_refs, self._legal, "legal"))
-                failures.extend(
-                    self._missing_refs(prefix, condition_owner, condition.source_refs, self._sources, "source")
-                )
 
     @staticmethod
     def _missing_refs(
