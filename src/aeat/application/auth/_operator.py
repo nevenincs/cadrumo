@@ -15,7 +15,11 @@ from ._acquisition_lock import clear_auth_acquisition_lock
 from ._actions import update_auth
 from ._catalogue import AuthProviderListing, get_auth_provider, list_auth_providers
 from ._models import AuthState
-from ._sessions import delete_persisted_session, ensure_authenticated_aeat_session
+from ._sessions import (
+    delete_persisted_session,
+    ensure_authenticated_aeat_session,
+    load_persisted_session,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -58,6 +62,7 @@ class AuthConfigureResult(BaseModel):
     profile_tax_id_present: bool = False
     provider_identity_present: bool = False
     identity_alignment: str = ""
+    identity_alignment_detail: str = ""
     next_action: str = ""
 
 
@@ -80,6 +85,36 @@ class AuthStatusResult(BaseModel):
     certificate_path: str = ""
     health_severity: str = ""
     health_summary: str = ""
+
+
+class AuthTestResult(AuthStatusResult):
+    """Auth readiness plus a deeper local readiness probe.
+
+    ``auth status`` is a pure read of the canonical state projection.
+    ``auth test`` carries every field ``auth status`` does — so the two
+    can never disagree on ``configured`` — and adds a local readiness
+    probe ``auth status`` does NOT perform: it inspects the persisted
+    AEAT session token on disk for the active provider and reports
+    whether one exists and whether it is still within its idle
+    deadline. This is the observable difference between the two verbs
+    (persona-fleet finding G5): ``auth status`` answers "what is
+    configured", ``auth test`` additionally answers "is the local
+    session token actually usable right now".
+
+    Attributes:
+        persisted_session_present: Whether an encrypted AEAT session
+            token is on disk for the probed provider.
+        persisted_session_expired: Whether that token has passed its
+            idle deadline; ``None`` when no token is present.
+        probe_summary: A one-line operator-facing verdict of the local
+            probe.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    persisted_session_present: bool = False
+    persisted_session_expired: bool | None = None
+    probe_summary: str = ""
 
 
 class AuthLoginResult(BaseModel):
@@ -317,6 +352,7 @@ def _auth_configure_result(
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
         provider_identity = (settings.aeat_clave_movil_dni_nie or "").strip().upper()
     alignment = "not_applicable"
+    alignment_detail = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
         if not profile_tax_id and not provider_identity:
             alignment = "profile_tax_id_missing_and_clave_identity_missing"
@@ -328,9 +364,25 @@ def _auth_configure_result(
             alignment = "matches"
         else:
             alignment = "mismatch"
+        alignment_detail = _identity_alignment_detail(
+            alignment,
+            profile_tax_id=profile_tax_id,
+            provider_identity=provider_identity,
+        )
     complete, incomplete_reason = _certificate_completeness(provider, certificate_path)
     if not complete:
         next_action = f"aeat config auth configure --provider {provider} --file PATH"
+    elif provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
+        "mismatch",
+        "clave_identity_missing",
+        "profile_tax_id_missing",
+        "profile_tax_id_missing_and_clave_identity_missing",
+    }:
+        # A Cl@ve identity that does not align with the active profile
+        # cannot pass live auth; `auth test` would only re-report the
+        # same mismatch. Route the operator to the actual fix instead
+        # (persona-fleet finding G2).
+        next_action = _identity_alignment_next_action(alignment)
     elif provider == AuthProviderKind.CLAVE_MOVIL.value:
         next_action = "aeat config auth test --provider clave_movil"
     else:
@@ -344,8 +396,61 @@ def _auth_configure_result(
         profile_tax_id_present=bool(profile_tax_id),
         provider_identity_present=bool(provider_identity) if provider == AuthProviderKind.CLAVE_MOVIL.value else True,
         identity_alignment=alignment,
+        identity_alignment_detail=alignment_detail,
         next_action=next_action,
     )
+
+
+def _identity_alignment_next_action(alignment: str) -> str:
+    """Return the concrete command that resolves a Cl@ve alignment fault.
+
+    A misaligned Cl@ve identity cannot authenticate; the operator must
+    fix the identity before any ``auth test`` is meaningful. A missing
+    Cl@ve identity routes to the env-var that supplies it; a missing or
+    mismatched profile tax id routes to the profile editor / switcher.
+    """
+
+    if alignment == "clave_identity_missing":
+        return "set AEAT_CLAVE_MOVIL_DNI_NIE to the DNI/NIE of the active profile"
+    if alignment == "profile_tax_id_missing":
+        return "aeat config profile edit NAME --tax-id <DNI/NIE>"
+    if alignment == "profile_tax_id_missing_and_clave_identity_missing":
+        return "aeat config profile edit NAME --tax-id <DNI/NIE>"
+    # mismatch: the two identities differ; switch to the matching
+    # profile or correct whichever value is wrong.
+    return "aeat config profile switch NAME (the profile whose tax id matches the Cl@ve DNI/NIE)"
+
+
+def _identity_alignment_detail(
+    alignment: str,
+    *,
+    profile_tax_id: str,
+    provider_identity: str,
+) -> str:
+    """Explain a Cl@ve identity-alignment verdict in operator language.
+
+    A bare ``identity_alignment: mismatch`` token states *that*
+    something is wrong but never *what* is compared or how to fix it
+    (persona-fleet finding G2). This returns a sentence naming the two
+    compared values — the Cl@ve identity's DNI/NIE and the active
+    profile's tax id — and the concrete step the operator must take.
+    """
+
+    if alignment == "matches" or alignment == "not_applicable":
+        return ""
+    if alignment == "mismatch":
+        return tr(
+            "application.auth.operator.alignment.mismatch_detail",
+            clave_identity=provider_identity,
+            profile_tax_id=profile_tax_id,
+        )
+    if alignment == "clave_identity_missing":
+        return tr("application.auth.operator.alignment.clave_identity_missing_detail")
+    if alignment == "profile_tax_id_missing":
+        return tr("application.auth.operator.alignment.profile_tax_id_missing_detail")
+    if alignment == "profile_tax_id_missing_and_clave_identity_missing":
+        return tr("application.auth.operator.alignment.both_missing_detail")
+    return ""
 
 
 def _certificate_completeness(
@@ -377,8 +482,8 @@ def _certificate_completeness(
     return True, ""
 
 
-def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
-    """Return auth readiness through the canonical state projection.
+def test_operator_auth(provider: str | None = None) -> AuthTestResult:
+    """Return auth readiness plus a deeper local session-token probe.
 
     ``auth test`` and ``auth status`` (:func:`inspect_operator_auth`)
     both consume :func:`build_operator_state_projection`, so they report
@@ -387,6 +492,13 @@ def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
     projection's ``probe_live_backend`` performs) and feeds only the
     separate ``available`` / ``health_*`` fields; it never recomputes
     ``configured``.
+
+    On top of the shared readiness, ``auth test`` performs a local
+    readiness probe that ``auth status`` does not: it inspects the
+    encrypted AEAT session token persisted on disk for the probed
+    provider and reports whether one is present and whether it is still
+    within its idle deadline. This gives ``auth test`` an observable
+    behaviour beyond ``auth status`` (persona-fleet finding G5).
 
     When the operator passes ``--provider`` the requested provider is
     actively probed. When no provider is requested, ``auth test`` scopes
@@ -406,7 +518,67 @@ def test_operator_auth(provider: str | None = None) -> AuthStatusResult:
         requested_provider=requested_provider,
         probe_live_backend=True,
     )
-    return _auth_status_from_projection(projection)
+    status = _auth_status_from_projection(projection)
+    probe = _probe_local_session(status.provider)
+    return AuthTestResult(
+        **status.model_dump(),
+        persisted_session_present=probe.present,
+        persisted_session_expired=probe.expired,
+        probe_summary=probe.summary,
+    )
+
+
+class _LocalSessionProbe(BaseModel):
+    """Outcome of the on-disk persisted-session probe run by ``auth test``."""
+
+    model_config = _STRICT_FROZEN
+
+    present: bool = False
+    expired: bool | None = None
+    summary: str = ""
+
+
+def _probe_local_session(provider: str) -> _LocalSessionProbe:
+    """Inspect the persisted AEAT session token for ``provider`` on disk.
+
+    A pure local read — it never opens a browser or contacts AEAT. It
+    answers the question ``auth status`` cannot: is there actually a
+    usable session token on disk for this provider right now.
+    """
+
+    if not provider:
+        return _LocalSessionProbe(
+            present=False,
+            expired=None,
+            summary=tr("application.auth.operator.probe.no_provider"),
+        )
+    try:
+        kind = AuthProviderKind(provider)
+    except ValueError:
+        return _LocalSessionProbe(
+            present=False,
+            expired=None,
+            summary=tr("application.auth.operator.probe.no_provider"),
+        )
+    from datetime import UTC, datetime
+
+    session = load_persisted_session(Settings(), kind)
+    if session is None:
+        return _LocalSessionProbe(
+            present=False,
+            expired=None,
+            summary=tr("application.auth.operator.probe.no_session"),
+        )
+    expired = session.is_expired(datetime.now(UTC))
+    if expired:
+        summary = tr("application.auth.operator.probe.session_expired")
+    else:
+        summary = tr("application.auth.operator.probe.session_live")
+    return _LocalSessionProbe(
+        present=True,
+        expired=expired,
+        summary=summary,
+    )
 
 
 async def login_operator_auth(

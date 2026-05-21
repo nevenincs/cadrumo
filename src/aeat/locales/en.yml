@@ -129,6 +129,20 @@ application:
       health:
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     operator:
+      alignment:
+        both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+          nor the active profile tax id is set. Set both to the same DNI/NIE before
+          live AEAT auth.
+        clave_identity_missing_detail: The Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+          is not set, so it cannot be compared with the active profile tax id. Set
+          it to the DNI/NIE of the active profile.
+        mismatch_detail: The Cl@ve identity DNI/NIE '%{clave_identity}' does not match
+          the active profile tax id '%{profile_tax_id}'. Live AEAT auth would bind
+          one taxpayer's session to another profile. Switch to the profile whose tax
+          id matches the Cl@ve DNI/NIE, or correct whichever value is wrong.
+        profile_tax_id_missing_detail: The active profile has no tax id, so it cannot
+          be compared with the Cl@ve identity. Set the profile tax id to the DNI/NIE
+          used for Cl@ve.
       errors:
         certificate_file_required: The certificate provider requires a certificate
           file. Run `aeat config auth configure --provider certificate --file PATH`
@@ -145,6 +159,12 @@ application:
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
+      probe:
+        no_provider: No auth provider is configured; nothing to probe locally.
+        no_session: No persisted AEAT session token on disk; run `aeat config auth
+          login` to acquire one.
+        session_expired: application.auth.operator.probe.session_expired
+        session_live: application.auth.operator.probe.session_live
     provider_impact:
       certificate_ready: Certificate auth is ready. The operator keeps the same CLI
         filing flow for AEAT-backed reads; every provider uses the same command workflow.
@@ -157,14 +177,24 @@ application:
         but AEAT-backed reads stay unavailable until an auth provider is configured.
     sessions:
       errors:
+        clave_identity_missing: Cl@ve Móvil live auth requires a configured DNI/NIE
+          (AEAT_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
+        clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
+          profile tax identity; switch to the matching profile or update the profile
+          before live AEAT auth.
         corrupt_session: Your saved auth session is damaged and cannot be read. Run
           `aeat config auth clear --sessions` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
+        profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
+          to carry identity.tax_id.
         sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
           auth test` before reading AEAT data.
         session_expired: AEAT session is expired; run `aeat config auth test` before
           reading AEAT data.
+        session_identity_profile_mismatch: AEAT session identity does not match the
+          active profile tax identity; clear auth sessions and authenticate the matching
+          profile before live AEAT reads.
         state_missing: AEAT session state is missing; run `aeat config auth test`
           before reading AEAT data.
         verify_failed: AEAT session could not be verified; run `aeat config auth test`
@@ -192,6 +222,8 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+      no_deadline_windows: No deadline window data is registered for modelo %{modelo}
+        in year %{year}; the filing calendar cannot be determined.
   user_profile:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
@@ -612,16 +644,24 @@ cli:
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
-        result_summary_header: 'result summary  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
-          contacting AEAT
-        resume_workflow_run_id_help: 16-character workflow run id
+          contacting AEAT. Accepts a workflow run id or a work-unit id.
+        resume_invalid_target: 'resume target must be a 16-character workflow run
+          id or a 64-character work-unit id; got {target}. Run `aeat app modelo work
+          runs` to list run ids.'
+        resume_target_help: 16-character workflow run id, or the 64-character work-unit
+          id (its latest run is resolved automatically). Run `aeat app modelo work
+          runs` to list run ids.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
+        runs_help: List persisted workflow runs with their run ids, newest first.
+          Use a run id with `aeat app modelo work resume`. Local-only; never contacts
+          AEAT.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -935,6 +975,8 @@ cli:
       profile_help: Inspect and repair the active-profile pointer.
       profile_name_help: Inspect a specific registered profile bucket.
       profile_requires_yes: Pass --yes to clear the active-profile pointer.
+      quarantine_dry_run_help: Preview the rows that would be quarantined without
+        moving anything
       quarantine_help: Move undecryptable rows into a quarantine table (destructive;
         requires --yes)
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
@@ -1048,7 +1090,8 @@ cli:
       attachment_help: Supplementary attachment id (repeatable)
       business_pct_help: Business-use share from 0 to 1 (only when classification
         is MIXED)
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       classification_help: Business classification (BUSINESS / PERSONAL / MIXED /
         ...)
       counterparty_help: Counterparty descriptor
@@ -1070,7 +1113,8 @@ cli:
     allocate:
       actor_help: Operator name recorded on the bucket event
       business_pct_help: Business-use share from 0 to 1
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       help: Record business/private proportionality for a ledger transaction
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for VAT workflows
@@ -1095,6 +1139,9 @@ cli:
       header: RECOGNISED LEDGER SPENDING CATEGORIES
       help: List the spending-category ids accepted by --category-id, grouped by family
       id_column: category-id (pass this exact value)
+      income_note: Deductible expenses only. Income (INCOMING) transactions are classified
+        by direction and need no --category-id; `ledger check` and `ledger preflight`
+        do not flag income as missing_category.
       usage_example: Pass the bare id, e.g. --category-id {example} (not a family-prefixed
         or compound key).
     check:
@@ -1109,7 +1156,8 @@ cli:
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
         classification. A BUSINESS or PERSONAL row is wholly business or wholly private;
         drop --business-pct, or pass --classification MIXED.
-      category_help: Spending or income category id
+      category_help: Deductible-expense category id (expense transactions only; income
+        needs no category)
       classification_help: Business classification state for the transaction
       help: Classify one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to classify

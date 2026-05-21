@@ -13,6 +13,7 @@ from ....application.auth._catalogue import known_auth_provider_ids
 from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope
 from ....application.diagnostics import (
     build_config_repair_report,
+    preview_quarantine_unreadable_secure_objects,
     probe_browser_connectivity,
     quarantine_unreadable_secure_objects,
     render_browser_connectivity_text,
@@ -112,10 +113,19 @@ def repair_logs(
 def repair_quarantine(
     ctx: typer.Context,
     yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.quarantine_yes_help")),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run/--no-dry-run",
+        help=tr("cli.config.repair.quarantine_dry_run_help"),
+    ),
 ) -> None:
-    """Move secure-object rows that fail tag verification into quarantine."""
+    """Move secure-object rows that fail tag verification into quarantine.
 
-    if not yes:
+    ``--dry-run`` previews the rows that would be quarantined without
+    moving anything, consistent with ``reset-state --dry-run``.
+    """
+
+    if not dry_run and not yes:
         raise CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
     # Cold-root guard: quarantine is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database to scan. Report
@@ -124,19 +134,39 @@ def repair_quarantine(
     if resolve_active_bucket_id() is None:
         _emit(
             ctx,
-            {"quarantined": 0, "retained": 0, "reason": "no-active-profile"},
+            {"dry_run": dry_run, "quarantined": 0, "retained": 0, "reason": "no-active-profile"},
             (
+                f"dry_run\t{str(dry_run).lower()}",
                 "quarantined\t0",
                 "retained\t0",
                 "reason\tno active profile; nothing to quarantine",
             ),
         )
         return
+    if dry_run:
+        report = preview_quarantine_unreadable_secure_objects()
+        payload = {"dry_run": True, **report.model_dump(mode="json")}
+        _emit(
+            ctx,
+            payload,
+            (
+                "dry_run\ttrue",
+                f"would_quarantine\t{report.unreadable_total}",
+                f"would_retain\t{report.readable_total}",
+                *tuple(
+                    f"{item.namespace}\t{item.unreadable}"
+                    for item in report.namespaces
+                    if item.unreadable > 0
+                ),
+            ),
+        )
+        return
     report = quarantine_unreadable_secure_objects()
     _emit(
         ctx,
-        report.model_dump(mode="json"),
+        {"dry_run": False, **report.model_dump(mode="json")},
         (
+            "dry_run\tfalse",
             f"quarantined\t{report.unreadable_total}",
             f"retained\t{report.readable_total}",
             *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
@@ -1512,6 +1542,8 @@ def auth_configure(
                 f"identity_alignment\t{result.identity_alignment}",
             )
         )
+        if result.identity_alignment_detail:
+            lines.append(f"identity_alignment_detail\t{result.identity_alignment_detail}")
     lines.append(f"next_action\t{result.next_action}")
     _emit(ctx, result.model_dump(mode="json"), lines)
 

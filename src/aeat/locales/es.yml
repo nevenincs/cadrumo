@@ -141,6 +141,21 @@ application:
         operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
           por el operador.
     operator:
+      alignment:
+        both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          ni el identificador fiscal del perfil activo. Configura ambos con el mismo
+          DNI/NIE antes de la autenticación AEAT en directo.
+        clave_identity_missing_detail: La identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+          no está configurada, por lo que no se puede comparar con el identificador
+          fiscal del perfil activo. Configúrala con el DNI/NIE del perfil activo.
+        mismatch_detail: El DNI/NIE de la identidad Cl@ve '%{clave_identity}' no coincide
+          con el identificador fiscal del perfil activo '%{profile_tax_id}'. La autenticación
+          AEAT en directo vincularía la sesión de un contribuyente a otro perfil.
+          Cambia al perfil cuyo identificador fiscal coincida con el DNI/NIE de Cl@ve,
+          o corrige el valor que sea erróneo.
+        profile_tax_id_missing_detail: El perfil activo no tiene identificador fiscal,
+          por lo que no se puede comparar con la identidad Cl@ve. Configura el identificador
+          fiscal del perfil con el DNI/NIE usado para Cl@ve.
       errors:
         certificate_file_required: El proveedor de certificado requiere un archivo
           de certificado. Ejecuta `aeat config auth configure --provider certificate
@@ -158,6 +173,16 @@ application:
           de bucket pero no tiene un registro de perfil legible (status=%{status}).
           Ejecuta `aeat config repair profile --clear-active --yes` y después cambia
           a un perfil válido o créalo antes de configurar autenticación.
+      probe:
+        no_provider: No hay ningún proveedor de autenticación configurado; nada que
+          comprobar localmente.
+        no_session: No hay ningún token de sesión AEAT persistido en disco; ejecuta
+          `aeat config auth login` para obtener uno.
+        session_expired: Hay un token de sesión AEAT persistido en disco pero ha superado
+          su límite de inactividad; ejecuta `aeat config auth login --fresh` para
+          renovarlo.
+        session_live: Hay un token de sesión AEAT persistido en disco y dentro de
+          su límite de inactividad.
     provider_impact:
       certificate_ready: La autenticación con certificado está lista. El operador
         mantiene el mismo flujo de presentación en la CLI para lecturas respaldadas
@@ -174,15 +199,26 @@ application:
         hasta que se configure un proveedor de autenticación.
     sessions:
       errors:
+        clave_identity_missing: La autenticación Cl@ve Móvil en directo requiere un
+          DNI/NIE configurado (AEAT_CLAVE_MOVIL_DNI_NIE) antes de usar cualquier sesión
+          AEAT.
+        clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
+          la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
+          el perfil antes de la autenticación AEAT en directo.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
           leer. Ejecuta `aeat config auth clear --sessions` y después `aeat config
           auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
           de leer datos AEAT.
+        profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
+          el perfil activo tenga identity.tax_id.
         sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
         session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`
           antes de leer datos AEAT.
+        session_identity_profile_mismatch: La identidad de la sesión AEAT no coincide
+          con la identidad fiscal del perfil activo; borra las sesiones de autenticación
+          y autentica el perfil que coincida antes de las lecturas AEAT en directo.
         state_missing: Falta el estado de la sesión AEAT; ejecuta `aeat config auth
           test` antes de leer datos AEAT.
         verify_failed: No se ha podido verificar la sesión AEAT; ejecuta `aeat config
@@ -213,6 +249,9 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+      no_deadline_windows: No hay datos de ventanas de plazo registrados para el modelo
+        %{modelo} en el ejercicio %{year}; no se puede determinar el calendario de
+        presentación.
   user_profile:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
@@ -673,16 +712,27 @@ cli:
         relation_not_decimal: 'El valor de --relation para {key} no es un decimal:
           {value}.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
-        result_summary_header: 'resumen del resultado  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
-          sin contactar con AEAT
-        resume_workflow_run_id_help: Id de ejecución de flujo de 16 caracteres
+          sin contactar con AEAT. Acepta un id de ejecución de flujo o un id de unidad
+          de trabajo.
+        resume_invalid_target: 'El destino de resume debe ser un id de ejecución
+          de flujo de 16 caracteres o un id de unidad de trabajo de 64 caracteres;
+          se recibió {target}. Ejecuta `aeat app modelo work runs` para listar los
+          ids de ejecución.'
+        resume_target_help: 'Id de ejecución de flujo de 16 caracteres, o el id de
+          unidad de trabajo de 64 caracteres (se resuelve automáticamente su última
+          ejecución). Ejecuta `aeat app modelo work runs` para listar los ids de
+          ejecución.'
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
+        runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
+          de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
+          modelo work resume`. Solo local; nunca contacta con AEAT.
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
@@ -1008,6 +1058,8 @@ cli:
       profile_help: Inspeccionar y reparar el puntero de perfil activo.
       profile_name_help: Inspeccionar un bucket de perfil registrado concreto.
       profile_requires_yes: Pasa --yes para limpiar el puntero de perfil activo.
+      quarantine_dry_run_help: Previsualizar las filas que se pondrían en cuarentena
+        sin mover nada
       quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
         destructiva, requiere --yes)
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
@@ -1124,7 +1176,8 @@ cli:
       amount_help: Importe firmado de la transacción en la moneda del bucket
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1
-      category_help: Id de categoría de gasto o ingreso
+      category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
+        los ingresos no necesitan categoría)
       classification_help: Clasificación profesional (BUSINESS, PERSONAL o MIXED)
       counterparty_help: Descripción de la contraparte
       currency_help: Código de moneda ISO 4217 de tres letras
@@ -1145,7 +1198,8 @@ cli:
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
       business_pct_help: Proporción de uso profesional de 0 a 1
-      category_help: Id de categoría de gasto o ingreso
+      category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
+        los ingresos no necesitan categoría)
       help: Registrar proporcionalidad profesional/personal para un movimiento del
         libro
       id_help: Id del movimiento del libro a asignar
@@ -1172,6 +1226,9 @@ cli:
       help: Lista los identificadores de categoria aceptados por --category-id, agrupados
         por familia
       id_column: category-id (pasa este valor exacto)
+      income_note: Solo gastos deducibles. Los movimientos de ingreso (INCOMING) se
+        clasifican por dirección y no necesitan --category-id; `ledger check` y `ledger
+        preflight` no marcan un ingreso como missing_category.
       usage_example: Pasa el id sin prefijo, p. ej. --category-id {example} (no una
         clave compuesta ni con prefijo de familia).
     check:
@@ -1187,7 +1244,8 @@ cli:
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
         clasificación MIXED. Una fila BUSINESS o PERSONAL es totalmente profesional
         o totalmente privada; quita --business-pct o pasa --classification MIXED.
-      category_help: Id de categoría de gasto o ingreso
+      category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
+        los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
       help: Clasificar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a clasificar

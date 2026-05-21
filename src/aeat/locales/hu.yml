@@ -135,6 +135,21 @@ application:
       health:
         operator_completion_required: Kész; kezelői Cl@ve befejezést igényel.
     operator:
+      alignment:
+        both_missing_detail: Sem a Cl@ve azonosító (AEAT_CLAVE_MOVIL_DNI_NIE), sem
+          az aktív profil adóazonosítója nincs beállítva. Állítsd be mindkettőt ugyanarra
+          a DNI/NIE értékre az élő AEAT hitelesítés előtt.
+        clave_identity_missing_detail: A Cl@ve azonosító (AEAT_CLAVE_MOVIL_DNI_NIE)
+          nincs beállítva, ezért nem hasonlítható össze az aktív profil adóazonosítójával.
+          Állítsd be az aktív profil DNI/NIE értékére.
+        mismatch_detail: A Cl@ve azonosító DNI/NIE értéke ('%{clave_identity}') nem
+          egyezik az aktív profil adóazonosítójával ('%{profile_tax_id}'). Az élő
+          AEAT hitelesítés az egyik adózó munkamenetét egy másik profilhoz kötné.
+          Válts arra a profilra, amelynek adóazonosítója megegyezik a Cl@ve DNI/NIE
+          értékével, vagy javítsd ki a hibás értéket.
+        profile_tax_id_missing_detail: Az aktív profilnak nincs adóazonosítója, ezért
+          nem hasonlítható össze a Cl@ve azonosítóval. Állítsd be a profil adóazonosítóját
+          a Cl@ve-hez használt DNI/NIE értékre.
       errors:
         certificate_file_required: A tanúsítvány-szolgáltatóhoz tanúsítványfájl szükséges.
           Futtasd az `aeat config auth configure --provider certificate --file ÚTVONAL`
@@ -152,6 +167,16 @@ application:
           rendelkezik, de nincs olvasható profilrekordja (status=%{status}). Futtasd
           az `aeat config repair profile --clear-active --yes` parancsot, majd válts
           érvényes profilra vagy hozz létre egyet a hitelesítés beállítása előtt.
+      probe:
+        no_provider: Nincs beállított hitelesítési szolgáltató; nincs mit helyben
+          ellenőrizni.
+        no_session: Nincs a lemezen tárolt AEAT munkamenet-token; futtasd a `aeat
+          config auth login` parancsot egy beszerzéséhez.
+        session_expired: Van a lemezen tárolt AEAT munkamenet-token, de túllépte a
+          tétlenségi határidejét; futtasd a `aeat config auth login --fresh` parancsot
+          a megújításához.
+        session_live: Van a lemezen tárolt AEAT munkamenet-token a tétlenségi határidőn
+          belül.
     provider_impact:
       certificate_ready: A tanúsítványos hitelesítés kész. A kezelő ugyanazt a CLI
         benyújtási folyamatot használja az AEAT által támogatott olvasásokhoz; minden
@@ -168,15 +193,26 @@ application:
         nem elérhetők, amíg a hitelesítési szolgáltató nincs beállítva.
     sessions:
       errors:
+        clave_identity_missing: A Cl@ve Móvil élő hitelesítéshez beállított DNI/NIE
+          szükséges (AEAT_CLAVE_MOVIL_DNI_NIE), mielőtt bármely AEAT munkamenet használható
+          lenne.
+        clave_identity_profile_mismatch: A Cl@ve Móvil azonosító nem egyezik az aktív
+          profil adóazonosítójával; válts az egyező profilra vagy frissítsd a profilt
+          az élő AEAT hitelesítés előtt.
         corrupt_session: A mentett hitelesítési munkamenet sérült és nem olvasható.
           Futtasd a `aeat config auth clear --sessions` majd a `aeat config auth test`
           parancsot.
         no_session: Nincs aktív AEAT munkamenet; futtasd a `aeat config auth test`
           parancsot, mielőtt AEAT adatokat olvasnál.
+        profile_tax_id_missing: A Cl@ve Móvil élő hitelesítéshez az aktív profilnak
+          rendelkeznie kell identity.tax_id értékkel.
         sede_rejected: Az AEAT Sede nem fogadja el a munkamenetet; futtasd a `aeat
           config auth test` parancsot, mielőtt AEAT adatokat olvasnál.
         session_expired: Az AEAT munkamenet lejárt; futtasd a `aeat config auth test`
           parancsot, mielőtt AEAT adatokat olvasnál.
+        session_identity_profile_mismatch: Az AEAT munkamenet azonosítója nem egyezik
+          az aktív profil adóazonosítójával; töröld a hitelesítési munkameneteket
+          és hitelesítsd az egyező profilt az élő AEAT olvasások előtt.
         state_missing: Hiányzik az AEAT munkamenet állapota; futtasd a `aeat config
           auth test` parancsot, mielőtt AEAT adatokat olvasnál.
         verify_failed: Az AEAT munkamenetet nem sikerült ellenőrizni; futtasd a `aeat
@@ -207,6 +243,8 @@ application:
     explain:
       errors:
         modelo_blank: A modelo azonosító nem lehet üres.
+      no_deadline_windows: A(z) %{modelo} modellhez nincs határidőablak-adat regisztrálva
+        a(z) %{year}. évre; a benyújtási naptár nem határozható meg.
   user_profile:
     errors:
       duplicate_tax_id: A(z) '%{tax_id}' adóazonosítót már használja a(z) '%{profile}'
@@ -358,8 +396,8 @@ cli:
       filed_app_help: Benyújtott bevallások csak olvasható megfigyelései
       from_year_help: Első benyújtási év
       iva_wallet:
-        app_help: Az AEAT áfa-kompenzációs tárcájának rögzítése (csak olvasható;
-          csak saját név módot és a védett tárcaolvasási lekérdezést engedi).
+        app_help: Az AEAT áfa-kompenzációs tárcájának rögzítése (csak olvasható; csak
+          saját név módot és a védett tárcaolvasási lekérdezést engedi).
         as_of_year_help: Az év, amely szerint az áfa-kompenzációs továbbvitt egyenlegek
           kora számítódik.
         capture_history_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
@@ -650,16 +688,25 @@ cli:
           egy registry relációazonosító; a VALUE decimális. Ismételhető.
         relation_not_decimal: 'A(z) {key} --relation értéke nem decimális szám: {value}.'
         rename_help: Munkaegység megjelenítési nevének módosítása
-        result_summary_header: 'eredmeny-osszegzes  Modelo %{modelo} %{year} %{period}'
+        result_summary_header: eredmeny-osszegzes  Modelo %{modelo} %{year} %{period}
         resume_help: Ellenőrizd, hogy újrapróbálhatsz-e megszakadt folyamatfutást
-          AEAT-kapcsolat nélkül
-        resume_workflow_run_id_help: 16 karakteres folyamatfutás-azonosító
+          AEAT-kapcsolat nélkül. Elfogad folyamatfutás-azonosítót vagy munkaegység-azonosítót.
+        resume_invalid_target: 'A resume célpontjának 16 karakteres folyamatfutás-azonosítónak
+          vagy 64 karakteres munkaegység-azonosítónak kell lennie; a kapott érték:
+          {target}. Futtasd az `aeat app modelo work runs` parancsot a futásazonosítók
+          listázásához.'
+        resume_target_help: 16 karakteres folyamatfutás-azonosító, vagy a 64 karakteres
+          munkaegység-azonosító (a legutóbbi futása automatikusan feloldódik). Futtasd
+          az `aeat app modelo work runs` parancsot a futásazonosítók listázásához.
         revision_help: A célzott regisztrációs modellrevízió stabil azonosítója; futtasd
           az `aeat app modelo describe MODELL` parancsot az elérhető revízióazonosítókért.
         revision_show_help: Egy tárolt kalkulációs revízió eltárolt cellaértékeinek
           megjelenítése (újraszámítás nélkül)
         revisions_help: Kalkulációs revíziók listázása, opcionálisan munkaegység szerint
           szűrve
+        runs_help: A megőrzött folyamatfutások listázása a futásazonosítóikkal, a
+          legújabbtól kezdve. Használj egy futásazonosítót az `aeat app modelo work
+          resume` paranccsal. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         set_not_decimal: A(z) --set értéke decimális szám kell legyen; a kapott érték
           {value}.
         set_override_help: Helyesbített cellaérték CASILLA=DECIMAL szintaxissal (ismételhető;
@@ -984,6 +1031,8 @@ cli:
       profile_help: Az aktív profilmutató vizsgálata és javítása.
       profile_name_help: Egy adott regisztrált profil-bucket vizsgálata.
       profile_requires_yes: Add meg a --yes kapcsolót az aktív profilmutató törléséhez.
+      quarantine_dry_run_help: A karanténba helyezendő sorok előnézete bármi mozgatása
+        nélkül
       quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
         --yes szükséges)
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
@@ -1096,7 +1145,8 @@ cli:
       amount_help: Előjeles tranzakcióösszeg a bucket pénznemében
       attachment_help: További biztonságos melléklet azonosítója; ismételhető
       business_pct_help: Szakmai használati arány 0 és 1 között
-      category_help: Kiadási vagy bevételi kategória azonosítója
+      category_help: Levonható kiadási kategória azonosítója (csak kiadási tételek;
+        a bevételhez nem kell kategória)
       classification_help: Szakmai besorolás (BUSINESS, PERSONAL vagy MIXED)
       counterparty_help: Partner leírása
       currency_help: Hárombetűs ISO 4217 pénznemkód
@@ -1117,7 +1167,8 @@ cli:
     allocate:
       actor_help: A bucket eseményen rögzített kezelő neve
       business_pct_help: Üzleti használati arány 0 és 1 között
-      category_help: Kiadási vagy bevételi kategória azonosítója
+      category_help: Levonható kiadási kategória azonosítója (csak kiadási tételek;
+        a bevételhez nem kell kategória)
       help: Üzleti/magán proporcionalitás rögzítése egy főkönyvi tranzakcióhoz
       id_help: Kiosztandó főkönyvi tranzakcióazonosító
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA munkafolyamatokhoz
@@ -1143,6 +1194,9 @@ cli:
       help: A --category-id által elfogadott kategóriaazonosítók listája, családonként
         csoportosítva
       id_column: category-id (pontosan ezt az erteket add at)
+      income_note: Csak levonható kiadások. A bevételi (INCOMING) tételeket az irány
+        alapján soroljuk be, nincs szükség --category-id értékre; a `ledger check`
+        és a `ledger preflight` nem jelöli a bevételt missing_category hibaként.
       usage_example: Add at a csupasz azonositot, pl. --category-id {example} (nem
         csaladnevvel vagy osszetett kulccsal).
     check:
@@ -1159,7 +1213,8 @@ cli:
         ervenyes. Egy BUSINESS vagy PERSONAL sor teljesen uzleti vagy teljesen maganjellegu;
         hagyd el a --business-pct kapcsolot, vagy add at a --classification MIXED
         erteket.
-      category_help: Kiadási vagy bevételi kategória azonosítója
+      category_help: Levonható kiadási kategória azonosítója (csak kiadási tételek;
+        a bevételhez nem kell kategória)
       classification_help: A tranzakció üzleti besorolási állapota
       help: Egy főkönyvi tranzakció besorolása az aktív profil bucketjében
       id_help: Besorolandó főkönyvi tranzakcióazonosító
@@ -1211,9 +1266,9 @@ cli:
         hagyna ki.'
       help: Bankkivonatok vagy bejegyzések importálása a könyvelési naplóba
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
-        a főkönyvben szereplő tranzakcióéval, de eltérő a leírásuk - valószínűleg ugyanannak
-        a mozgásnak egy másik fájlból vagy formátumból importált ismétlődése. Ellenőrizze
-        őket az `aeat app ledger list` paranccsal.'
+        a főkönyvben szereplő tranzakcióéval, de eltérő a leírásuk - valószínűleg
+        ugyanannak a mozgásnak egy másik fájlból vagy formátumból importált ismétlődése.
+        Ellenőrizze őket az `aeat app ledger list` paranccsal.'
       no_rows_imported: 'Nem importáltunk bejegyzést: a fájl elemezhető volt, de nem
         tartalmazott adatsorokat. Egy bank CSV-jének tartalmaznia kell egy fejlécsort
         dátum-, összeg- és leírásoszloppal, majd legalább egy adatsort.'

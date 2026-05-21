@@ -44,8 +44,7 @@ def _expected_path(*parts: str) -> Path:
 
 
 def test_override_settings_swaps_scalar_field_inside_block() -> None:
-    baseline = load_settings()
-    assert baseline.aeat_log_dir is None
+    baseline_log_dir = load_settings().aeat_log_dir
 
     target = Path(_FAKE_PATH_PREFIX, "aeat-test-logs")
     expected = _expected_path("aeat-test-logs")
@@ -54,24 +53,24 @@ def test_override_settings_swaps_scalar_field_inside_block() -> None:
         # load_settings inside the block returns the same overridden
         # instance — the ContextVar is honoured, not bypassed.
         assert load_settings().aeat_log_dir == expected
+    assert load_settings().aeat_log_dir == baseline_log_dir
 
 
 def test_override_settings_restores_prior_value_on_normal_exit() -> None:
-    baseline = load_settings()
-    assert baseline.aeat_log_dir is None
+    baseline_log_dir = load_settings().aeat_log_dir
 
     with override_settings(aeat_log_dir=Path(_FAKE_PATH_PREFIX, "scratch")):
         assert load_settings().aeat_log_dir == _expected_path("scratch")
 
     # On exit the ContextVar is reset; the baseline default is
     # observable again.
-    assert load_settings().aeat_log_dir is None
+    assert load_settings().aeat_log_dir == baseline_log_dir
 
 
 def test_override_settings_restores_prior_value_on_exception() -> None:
     """A user-raised exception inside the block must not leak the override."""
 
-    assert load_settings().aeat_log_dir is None
+    baseline_log_dir = load_settings().aeat_log_dir
 
     scratch = Path(_FAKE_PATH_PREFIX, "scratch")
     with pytest.raises(RuntimeError, match="planned-failure"), override_settings(aeat_log_dir=scratch):
@@ -80,20 +79,19 @@ def test_override_settings_restores_prior_value_on_exception() -> None:
 
     # The finally branch of the context manager restored the prior
     # ContextVar value despite the exception.
-    assert load_settings().aeat_log_dir is None
+    assert load_settings().aeat_log_dir == baseline_log_dir
 
 
 def test_override_settings_rejects_malformed_override_at_entry() -> None:
     """An override that fails Pydantic validation raises before the
     ContextVar is set, so the prior value survives unchanged."""
 
-    baseline = load_settings()
-    assert baseline.aeat_log_dir is None
+    baseline_log_dir = load_settings().aeat_log_dir
 
     with pytest.raises(ValidationError), override_settings(aeat_cert_warn_days=-1):  # gt=0 constraint
         pytest.fail("the with-block must not execute when override is invalid")
 
-    assert load_settings().aeat_log_dir is None
+    assert load_settings().aeat_log_dir == baseline_log_dir
 
 
 def test_override_settings_nested_blocks_compose_lifo() -> None:
@@ -101,7 +99,7 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
     and exiting the inner block restores the outer override (not the
     pre-outer baseline)."""
 
-    assert load_settings().aeat_log_dir is None
+    baseline_log_dir = load_settings().aeat_log_dir
 
     outer_path = Path(_FAKE_PATH_PREFIX, "outer")
     inner_path = Path(_FAKE_PATH_PREFIX, "inner")
@@ -114,7 +112,7 @@ def test_override_settings_nested_blocks_compose_lifo() -> None:
         # again, not the pre-outer baseline.
         assert load_settings().aeat_log_dir == _expected_path("outer")
 
-    assert load_settings().aeat_log_dir is None
+    assert load_settings().aeat_log_dir == baseline_log_dir
 
 
 def test_override_settings_preserves_explicit_fields_set_signal() -> None:
