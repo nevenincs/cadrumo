@@ -25,7 +25,7 @@ from aeat.core.resources import bundled_path
 
 from . import load_modelo_path
 from ._schema import CasillaAlias, CasillaConstraints, CasillaDefinition
-from ._validate import (
+from ._validate_semantic_roles import (
     _emit_semantic_role_typo_twin_warnings,
     _validate_semantic_role_cardinality,
     _validate_semantic_role_consistency,

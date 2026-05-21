@@ -16,12 +16,11 @@ from typing import Any
 import pytest
 
 from ._schema import CasillaDefinition
-from ._validate import (
+from ._validate_semantic_roles import (
     _REQUIRED_ROLE_LABEL_PATTERNS,
     _validate_required_role_declarations,
     collect_casillas_by_semantic_role,
 )
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
