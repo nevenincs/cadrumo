@@ -133,6 +133,8 @@ report.
 
 ### WCLI-6 — MED — `_ledger.py:961` `InvoiceLinkError` → `_bad(str(exc))`; error has no registry entry — document or wrap.
 
+**Resolution (2026-05-21, P07.S29, 86364440c) — fixed.** WCLI-5: `_parse_bucket_event_types` now iterates per token, catches the failing value, and raises a localized `typer.BadParameter` keyed on `cli.config.bucket.history.invalid_event_type` (scaffolded into all four locales) that names the bad value and the valid event-type set — the raw untranslated `str(exc)` is gone. WCLI-6: the `_ledger.py` invoice-link handler now renders via `resolve_error_message(exc)` rather than `str(exc)`; every `InvoiceLinkError` raise site passes a literal message today, so behaviour is unchanged, but a future message-key-based instance will no longer render empty. Consistent with the P01/P02 error-rendering standardisation.
+
 ### WCLI-7 — LOW — `_config/__init__.py:343` diagnostic excerpt first-line truncation — intentional, no action.
 
 CLEAN: CLI mounting (config + app roots only); workflow state transitions (frozen-immutable); operator prose all via `tr()`.
