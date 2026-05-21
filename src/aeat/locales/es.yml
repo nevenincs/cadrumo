@@ -592,6 +592,14 @@ cli:
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: Token de periodo de la unidad; para Modelo 036 usa alta, modificacion
           o baja; ejemplos periodicos incluyen Q1, 4T, 0A y 01
+        period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
+          para el modelo %{modelo}. --year y --period se componen por separado: pasa
+          --year %{year} para el ejercicio fiscal y uno de los tokens de periodo declarados
+          en --period. Tokens válidos: %{tokens}.'
+        period_token_unrecognised: '--period ''%{token}'' no es un token de periodo
+          reconocido. --year y --period se componen por separado: pasa --year %{year}
+          para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
+          trimestre o MM para un mes) en --period.'
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
