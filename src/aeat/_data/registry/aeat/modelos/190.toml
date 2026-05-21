@@ -668,7 +668,11 @@ surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
-target_casillas = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
+target_casillas = [
+    {casilla_id = "decl.total-percepciones", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.percepciones-total", match_strategy = "numeric_casilla", value_kind = "amount"},
+    {casilla_id = "decl.retenciones-total", match_strategy = "numeric_casilla", value_kind = "amount"},
+]
 confidence = "strict"
 min_coverage = "1.0"
 failure_semantics = "fail_hard"

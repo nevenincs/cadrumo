@@ -844,7 +844,7 @@ def test_modelo_131_submitted_file_profiles_target_exported_casillas(filing_year
         if field.kind == "casilla" and field.casilla is not None
     }
 
-    assert set(profile.target_casillas) <= exported_casillas
+    assert {t.casilla_id for t in profile.target_casillas} <= exported_casillas
 
 
 def _is_structured_input_field(description: str) -> bool:

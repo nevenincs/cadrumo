@@ -19,7 +19,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.calculations.registry._schema import RegistrySnapshotRef
 from ..pdf import ExtractedCasilla
-from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
+from ..pdf._label_regex import SPANISH_AMOUNT_GROUP, TEXT_VALUE_GROUP, parse_spanish_decimal
 from ..pdf._utils import sha256_file
 from ._detect import detect_template_revision, detect_template_revision_from_pages
 from ._errors import DeclaracionParseError, TemplateNotDetectedError
@@ -354,8 +354,9 @@ def _extract_profile_values(
     malformed: list[str] = []
     ambiguous: list[str] = []
 
-    for casilla_id in profile.target_casillas:
-        hits = _find_casilla_hits(pages, casilla_id)
+    for target in profile.target_casillas:
+        casilla_id = target.casilla_id
+        hits = _find_casilla_hits(pages, target)
         if not hits:
             missing.append(casilla_id)
             continue
@@ -363,14 +364,18 @@ def _extract_profile_values(
             ambiguous.append(casilla_id)
             continue
         page_number, raw_value = hits[0]
-        value = parse_spanish_decimal(raw_value)
-        if value is None:
-            malformed.append(casilla_id)
-            continue
+        if target.value_kind == "amount":
+            parsed: Decimal | str | None = parse_spanish_decimal(raw_value)
+            if parsed is None:
+                malformed.append(casilla_id)
+                continue
+        else:
+            # "text" and "enum" value kinds: store the raw captured token as-is.
+            parsed = raw_value
         values.append(
             ExtractedCasilla(
                 casilla_id=casilla_id,
-                printed_value=value,
+                printed_value=parsed,
                 source_page=page_number,
                 source_bbox=None,
                 extraction_confidence=1.0,
@@ -391,11 +396,40 @@ def _extract_profile_values(
     return tuple(values)
 
 
-def _find_casilla_hits(pages: tuple[str, ...], casilla_id: str) -> list[tuple[int, str]]:
-    pattern = re.compile(
-        rf"(?m)^\s*{re.escape(casilla_id)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",
-        re.IGNORECASE,
-    )
+def _find_casilla_hits(
+    pages: tuple[str, ...],
+    target: object,
+) -> list[tuple[int, str]]:
+    """Find all regex hits for ``target`` across ``pages``.
+
+    Branches on ``target.match_strategy``:
+
+    - ``"numeric_casilla"``: anchors on the casilla id printed literally at
+      line start followed by a Spanish-formatted amount.  The numeric path is
+      unchanged from the pre-named-field implementation.
+    - ``"named_label"``: anchors on the printed human-readable label specified
+      by ``target.label_pattern`` and captures the last token on the line via
+      :data:`TEXT_VALUE_GROUP`.
+
+    Returns a list of ``(1-based page number, captured raw value)`` tuples.
+    """
+    from ....domain.calculations.registry._schema import ExtractionTargetDefinition
+
+    assert isinstance(target, ExtractionTargetDefinition)
+
+    if target.match_strategy == "numeric_casilla":
+        pattern = re.compile(
+            rf"(?m)^\s*{re.escape(target.casilla_id)}\b[^\n]*?\s+{SPANISH_AMOUNT_GROUP}\s*$",
+            re.IGNORECASE,
+        )
+    else:
+        # named_label: anchor on the printed label pattern; capture the last token.
+        label = target.label_pattern or re.escape(target.casilla_id)
+        pattern = re.compile(
+            rf"(?m)^\s*{label}[^\n]*?\s+{TEXT_VALUE_GROUP}",
+            re.IGNORECASE,
+        )
+
     hits: list[tuple[int, str]] = []
     for page_index, page in enumerate(pages, start=1):
         for match in pattern.finditer(page):
