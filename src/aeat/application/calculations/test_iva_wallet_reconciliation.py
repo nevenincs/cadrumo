@@ -8,12 +8,14 @@ from decimal import Decimal
 import pytest
 from pydantic import AnyHttpUrl
 
+from ...adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL
 from ...adapters.outbound.aeat.sede._schema import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
 from ._iva_wallet_reconciliation import (
     IvaCompensationOverride,
+    IvaCompensationReconciliationInputError,
     reconcile_iva_compensation_wallet,
 )
 
@@ -40,7 +42,7 @@ def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensation
             ),
         ),
         total_pending=amount,
-        source_url=AnyHttpUrl("https://www1.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas"),
+        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
         captured_at=captured_at,
         raw_sha256="a" * 64,
     )
@@ -60,6 +62,10 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
     assert decision.selected_amount == Decimal("1200")
     assert decision.wallet_amount == Decimal("1200")
     assert decision.local_recurrence_amount == Decimal("1200")
+    assert {source.source_kind for source in decision.authority_sources} == {
+        "aeat_wallet",
+        "local_recurrence",
+    }
     assert decision.divergence == "match"
     assert decision.blocked is False
 
@@ -171,5 +177,38 @@ def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> N
     assert decision.wallet_amount == Decimal("1200")
     assert decision.local_recurrence_amount == Decimal("800")
     assert decision.override_amount == Decimal("1000")
+    assert {source.source_kind for source in decision.authority_sources} == {
+        "aeat_wallet",
+        "local_recurrence",
+        "taxpayer_override",
+    }
     assert decision.divergence == "override"
     assert decision.blocked is False
+
+
+def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None:
+    wallet = _wallet(Decimal("1200")).model_copy(update={"target_period": "1T"})
+
+    with pytest.raises(IvaCompensationReconciliationInputError, match="target"):
+        reconcile_iva_compensation_wallet(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            wallet=wallet,
+            local_recurrence_amount=Decimal("1200"),
+            decided_at=_NOW,
+        )
+
+
+def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> None:
+    wallet = _wallet(Decimal("1200")).model_copy(update={"taxpayer_nif": "99999999R"})
+
+    with pytest.raises(IvaCompensationReconciliationInputError, match="taxpayer"):
+        reconcile_iva_compensation_wallet(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            wallet=wallet,
+            local_recurrence_amount=Decimal("1200"),
+            decided_at=_NOW,
+        )

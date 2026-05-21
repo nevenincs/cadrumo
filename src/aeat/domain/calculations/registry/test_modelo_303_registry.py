@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import lru_cache
 
 import pytest
 
@@ -14,6 +15,7 @@ from . import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_sna
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
+@lru_cache(maxsize=1)
 def _load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(m for m in modelos if m.id == "303")
@@ -31,7 +33,7 @@ def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
 def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     modelo, _ = _load_modelo_303()
 
-    assert modelo.title == "IVA. Autoliquidacion (trimestral)"
+    assert modelo.title == "IVA. Autoliquidación (trimestral)"
     assert modelo.tax_domain == "iva"
     assert modelo.cadence == "quarterly"
     assert modelo.jurisdiction == "ES-AEAT"

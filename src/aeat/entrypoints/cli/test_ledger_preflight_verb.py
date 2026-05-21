@@ -71,3 +71,39 @@ def test_preflight_help_advertises_local_only(cli_runner: CliRunner) -> None:
         token in result.output.lower()
         for token in ("local-only", "local;", "nunca", "csak helyi")
     ), result.output
+
+
+def test_status_period_readiness_issues_include_tax_diagnostic_fields(cli_runner: CliRunner) -> None:
+    add = cli_runner.invoke(
+        app,
+        [
+            "app",
+            "ledger",
+            "add",
+            "--date",
+            "2026-05-02",
+            "--amount",
+            "-121.00",
+            "--direction",
+            "OUTGOING",
+            "--description",
+            "classified but tax facts missing",
+            "--classification",
+            "BUSINESS",
+            "--idempotency-key",
+            "status-tax-diagnostics",
+        ],
+    )
+    assert add.exit_code == 0, add.output
+
+    result = cli_runner.invoke(app, ["app", "ledger", "status", "--period", "2026-05"])
+
+    assert result.exit_code == 0, result.output
+    assert "Ready\tFalse" in result.output or "ready\tFalse" in result.output
+    assert "readiness_issue\t" in result.output
+    assert "classification=BUSINESS" in result.output or "classification=business" in result.output
+    assert "category_id=-" in result.output
+    assert "taxable_base=-" in result.output
+    assert "iva_rate=-" in result.output
+    assert "iva_amount=-" in result.output
+    assert "reason=missing_category" in result.output

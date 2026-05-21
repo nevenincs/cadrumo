@@ -377,6 +377,23 @@ def test_resolve_counterpart_binding_row_values_groups_by_operator_and_clave_sum
     }
 
 
+def test_resolve_counterpart_binding_row_values_does_not_treat_invoice_source_as_wildcard() -> None:
+    binding = _with_selector(
+        _binding("vat-349-operador-row-base").model_copy(update={"source": "invoice"}),
+        claves=("E",),
+        rectification_scope="exclude_rectifications",
+    )
+    revision = _revision(binding)
+    observations = (
+        _observation(party="DE111", country="DE", base="1000.00", clave="E", source_kind="collectible_invoice"),
+        _observation(party="DE111", country="DE", base="25.00", clave="E", source_kind="invoice"),
+    )
+
+    resolved = resolve_counterpart_binding_row_values(revision, observations)
+
+    assert resolved == {("vat-349-operador-row-base", 1): Decimal("25.00")}
+
+
 def test_resolve_counterpart_binding_row_values_period_grouping_carries_rectification_metadata() -> None:
     revision = _revision(
         _with_selector(

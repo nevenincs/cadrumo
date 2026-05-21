@@ -21,6 +21,7 @@ from aeat.adapters.outbound.aeat.sede._groi_check import (
     GroiNifVerdict,
     GroiResult,
     GroiSedeDriver,
+    _assert_query_browser_action,
     extract_verdict_from_response_text,
 )
 from aeat.domain.calculations.registry import AEAT_GROI_URL, GROI_ORACLE_ID, RegistryValidationError
@@ -78,6 +79,13 @@ def test_planned_operations_rejects_empty_expected() -> None:
 
     with pytest.raises(RegistryValidationError, match="at least one expected NIF"):
         driver.planned_operations(b"", expected={})
+
+
+def test_direct_driver_query_guard_rejects_unclassified_browser_action() -> None:
+    _assert_query_browser_action("open-groi-form")
+    _assert_query_browser_action("check-nif-A28015865")
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        _assert_query_browser_action("new-unreviewed-groi-action")
 
 
 def test_observation_model_round_trips_through_strict_frozen_pydantic() -> None:

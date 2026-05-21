@@ -34,7 +34,11 @@ def build_registry_filing_draft(
 
     runtime_period = _runtime_period(period, filing_year=filing_year)
     snapshot_year, registry_period_token = _snapshot_year_and_token(runtime_period)
-    schema_provider = build_runtime_schema_provider(modelos=(modelo,), filing_year=snapshot_year, period=registry_period_token)
+    schema_provider = build_runtime_schema_provider(
+        modelos=(modelo,),
+        filing_year=snapshot_year,
+        period=registry_period_token,
+    )
     draft = build_draft(
         modelo=modelo,
         period=runtime_period,

@@ -16,7 +16,13 @@ import pytest
 from ...adapters.persistence.storage.errors import ClassificationError
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...domain.filing._repository import ModeloDraftRepository
-from ...domain.filing._schema import ModeloDraft, ModeloDraftStatus, ModeloValue, ModeloValueKind, compute_modelo_draft_id
+from ...domain.filing._schema import (
+    ModeloDraft,
+    ModeloDraftStatus,
+    ModeloValue,
+    ModeloValueKind,
+    compute_modelo_draft_id,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

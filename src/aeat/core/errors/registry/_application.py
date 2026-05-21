@@ -345,6 +345,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._sessions.AuthProfileIdentityMismatchError",
+        ErrorCode(
+            code="REFUSED_AUTH_PROFILE_IDENTITY_MISMATCH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.auth_profile_identity_mismatch",
+            default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.aggregation._errors.AggregationValidationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION_VALIDATION",

@@ -7,7 +7,6 @@ records the rest of the project pins against — keep them stable.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
 import hashlib
 import json
 from datetime import date, datetime
@@ -16,6 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...core.identity import SubjectTaxId
 from ..calculations.registry._schema import RegistrySnapshotRef
@@ -78,6 +78,16 @@ class ModeloBindingValue(BaseModel):
     kind: ModeloValueKind
     source: str
     row_index: int | None = Field(default=None, ge=1)
+
+
+class ModeloCasillaProvenance(BaseModel):
+    """Regulatory grounding for one casilla carried on a filing draft."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    casilla_id: str = Field(min_length=1)
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 class ModeloValidationFinding(BaseModel):
@@ -148,6 +158,7 @@ class ModeloDraft(BaseModel):
     status: ModeloDraftStatus
     values: tuple[ModeloValue, ...]
     binding_values: tuple[ModeloBindingValue, ...] = Field(default_factory=tuple)
+    casilla_provenance: tuple[ModeloCasillaProvenance, ...] = Field(default_factory=tuple)
     findings: tuple[ModeloValidationFinding, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime

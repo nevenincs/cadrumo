@@ -13,7 +13,7 @@ from sqlalchemy.engine import Engine
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
 from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
@@ -27,6 +27,9 @@ from ...domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ..calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
+from ..user_profile import UserProfileLifecycleRepository
 from . import (
     ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
@@ -96,12 +99,14 @@ def _transaction(
     amount: Decimal,
     taxable_base: Decimal,
     iva_amount: Decimal,
+    booked_date: date = date(2026, 2, 10),
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(provider_id, amount=amount),
+            "raw": _raw_transaction(provider_id, amount=amount, booked_date=booked_date),
             "direction": direction,
             "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "test_iva_operation",
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
@@ -111,16 +116,69 @@ def _transaction(
     )
 
 
-def _seed_303_work_unit(work_unit_repository: WorkUnitCatalogueRepository):
+def _seed_303_work_unit(
+    work_unit_repository: WorkUnitCatalogueRepository,
+    *,
+    period: str = "1T",
+):
     return create_work_unit(
         bucket_id="bucket-a",
         modelo="303",
         filing_year=2026,
-        period="1T",
+        period=period,
         revision_id="2009-y-siguientes",
         repository=work_unit_repository,
         clock=_T0,
     )
+
+
+def _store_profile() -> None:
+    UserProfileLifecycleRepository(bucket_id="bucket-a").save(
+        UserProfileRecord(
+            profile_id="bucket-a",
+            display_name="Bucket aggregation taxpayer",
+            facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+            created_at=_T0,
+            updated_at=_T0,
+        )
+    )
+
+
+def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensationReconciliationDecision:
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period=period,
+        selected_authority="aeat_wallet",
+        selected_amount=selected_amount,
+        wallet_amount=selected_amount,
+        local_recurrence_amount=selected_amount,
+        override_amount=None,
+        divergence="match",
+        blocked=False,
+        stale_wallet=False,
+        reason="bucket aggregation trace fixture",
+        wallet_captured_at=_T1,
+        decided_at=_T1,
+    )
+
+
+def _assert_modelo_303_trace(revision) -> None:
+    observations = {observation.casilla_id: observation for observation in revision.observations}
+    for casilla_id in ("iva.repercutido.general", "iva.soportado.interiores"):
+        observation = observations[casilla_id]
+        assert observation.formula_id is None
+        assert observation.legal_refs
+        assert observation.source_refs
+
+    computed_result = observations["iva.resultado-regimen-general"]
+    assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
+    assert set(computed_result.operand_refs) >= {
+        "iva.cuota-devengada-total",
+        "iva.cuota-deducible-total",
+    }
+    assert computed_result.legal_refs
+    assert computed_result.source_refs
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue(
@@ -165,10 +223,200 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     assert revision.casilla_values["iva.soportado.interiores"] == outgoing.iva_amount
     assert revision.source_transaction_ids == tuple(sorted((incoming.transaction_id, outgoing.transaction_id)))
 
+    observations = {observation.casilla_id: observation for observation in revision.observations}
+    bound_output = observations["iva.repercutido.general"]
+    bound_input = observations["iva.soportado.interiores"]
+    assert bound_output.formula_id is None
+    assert bound_input.formula_id is None
+    assert bound_output.legal_refs
+    assert bound_output.source_refs
+    assert bound_input.legal_refs
+    assert bound_input.source_refs
+
+    computed_result = observations["iva.resultado-regimen-general"]
+    assert computed_result.formula_id == "modelo-303-iva-resultado-regimen-general"
+    assert set(computed_result.operand_refs) >= {
+        "iva.cuota-devengada-total",
+        "iva.cuota-deducible-total",
+    }
+    assert computed_result.legal_refs
+    assert computed_result.source_refs
+
     events = event_repo.load().for_bucket("bucket-a")
-    assert [event.event_type for event in events] == [BucketEventType.MODELO_CALCULATION_CREATED]
-    assert events[0].payload["casilla_count"] == str(len(revision.casilla_values))
-    assert events[0].payload["source_transaction_count"] == "2"
+    calculation_events = [
+        event for event in events if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED
+    ]
+    assert len(calculation_events) == 1
+    assert calculation_events[0].payload["casilla_count"] == str(len(revision.casilla_values))
+    assert calculation_events[0].payload["source_transaction_count"] == "2"
+
+
+def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
+    secure_engine: Engine,
+) -> None:
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    work_unit = _seed_303_work_unit(wu_repo)
+    incomplete = _transaction(
+        "sale-missing-category",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    ).model_copy(update={"category_id": None})
+    tx_repo.save(TransactionCatalogue.from_transactions((incomplete,)))
+
+    with pytest.raises(ModeloAggregationBindingError, match="ledger preflight blocks"):
+        calculate_modelo_revision_from_bucket_aggregation(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            clock=_T1,
+        )
+
+    assert len(cr_repo.load()) == 0
+
+
+def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compensation_periods(
+    secure_engine: Engine,
+    tmp_path: Path,
+) -> None:
+    with override_settings(aeat_local_storage_root=tmp_path):
+        _store_profile()
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    ledger_rows = (
+        _transaction(
+            "q1-sale",
+            direction=TransactionDirection.INCOMING,
+            amount=Decimal("242.00"),
+            taxable_base=Decimal("200.00"),
+            iva_amount=Decimal("42.00"),
+            booked_date=date(2026, 2, 10),
+        ),
+        _transaction(
+            "q1-purchase",
+            direction=TransactionDirection.OUTGOING,
+            amount=Decimal("-60.50"),
+            taxable_base=Decimal("50.00"),
+            iva_amount=Decimal("10.50"),
+            booked_date=date(2026, 2, 12),
+        ),
+        _transaction(
+            "q2-sale",
+            direction=TransactionDirection.INCOMING,
+            amount=Decimal("60.50"),
+            taxable_base=Decimal("50.00"),
+            iva_amount=Decimal("10.50"),
+            booked_date=date(2026, 5, 10),
+        ),
+        _transaction(
+            "q2-purchase",
+            direction=TransactionDirection.OUTGOING,
+            amount=Decimal("-121.00"),
+            taxable_base=Decimal("100.00"),
+            iva_amount=Decimal("21.00"),
+            booked_date=date(2026, 5, 12),
+        ),
+        _transaction(
+            "q3-sale",
+            direction=TransactionDirection.INCOMING,
+            amount=Decimal("121.00"),
+            taxable_base=Decimal("100.00"),
+            iva_amount=Decimal("21.00"),
+            booked_date=date(2026, 8, 10),
+        ),
+        _transaction(
+            "q3-purchase",
+            direction=TransactionDirection.OUTGOING,
+            amount=Decimal("-121.00"),
+            taxable_base=Decimal("100.00"),
+            iva_amount=Decimal("21.00"),
+            booked_date=date(2026, 8, 12),
+        ),
+        _transaction(
+            "q4-sale",
+            direction=TransactionDirection.INCOMING,
+            amount=Decimal("242.00"),
+            taxable_base=Decimal("200.00"),
+            iva_amount=Decimal("42.00"),
+            booked_date=date(2026, 11, 10),
+        ),
+        _transaction(
+            "q4-purchase",
+            direction=TransactionDirection.OUTGOING,
+            amount=Decimal("-121.00"),
+            taxable_base=Decimal("100.00"),
+            iva_amount=Decimal("21.00"),
+            booked_date=date(2026, 11, 12),
+        ),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions(ledger_rows))
+
+    q1_positive = calculate_modelo_revision_from_bucket_aggregation(
+        _seed_303_work_unit(wu_repo, period="1T").work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+    q2_negative = calculate_modelo_revision_from_bucket_aggregation(
+        _seed_303_work_unit(wu_repo, period="2T").work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+    q3_zero = calculate_modelo_revision_from_bucket_aggregation(
+        _seed_303_work_unit(wu_repo, period="3T").work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        clock=_T1,
+    )
+    wallet_decision = _wallet_decision(period="4T", selected_amount=Decimal("7.00"))
+    wallet_decision_repo = IvaWalletDecisionRepository(objects=SecureObjectRepository(engine=secure_engine))
+    wallet_decision_repo.save_decision(wallet_decision)
+    with override_settings(aeat_local_storage_root=tmp_path):
+        q4_compensated = calculate_modelo_revision_from_bucket_aggregation(
+            _seed_303_work_unit(wu_repo, period="4T").work_unit_id,
+            actor="operator-A",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=event_repo,
+            transaction_repository=tx_repo,
+            iva_compensation_decision=wallet_decision,
+            iva_compensation_decision_repository=wallet_decision_repo,
+            clock=_T1,
+        )
+
+    for revision in (q1_positive, q2_negative, q3_zero, q4_compensated):
+        _assert_modelo_303_trace(revision)
+
+    assert q1_positive.casilla_values["iva.resultado-regimen-general"] > Decimal("0")
+    assert q1_positive.casilla_values["iva.resultado"] > Decimal("0")
+    assert q1_positive.casilla_values["iva.compensacion-generada-periodo"] == Decimal("0")
+
+    assert q2_negative.casilla_values["iva.resultado-regimen-general"] < Decimal("0")
+    assert q2_negative.casilla_values["iva.resultado"] < Decimal("0")
+    assert q2_negative.casilla_values["iva.compensacion-generada-periodo"] > Decimal("0")
+
+    assert q3_zero.casilla_values["iva.resultado-regimen-general"] == Decimal("0")
+    assert q3_zero.casilla_values["iva.resultado"] == Decimal("0")
+    assert q3_zero.casilla_values["iva.compensacion-generada-periodo"] == Decimal("0")
+
+    assert q4_compensated.casilla_values["iva.compensacion-aplicada-periodo"] > Decimal("0")
+    assert (
+        q4_compensated.casilla_values["iva.resultado"]
+        < q4_compensated.casilla_values["iva.resultado-regimen-general"]
+    )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
@@ -203,7 +451,10 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         )
 
     assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert all(
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
+        for event in event_repo.load().events.values()
+    )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
@@ -225,7 +476,10 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
         )
 
     assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert all(
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
+        for event in event_repo.load().events.values()
+    )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
@@ -247,4 +501,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
         )
 
     assert cr_repo.load().revisions == {}
-    assert event_repo.load().events == {}
+    assert all(
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
+        for event in event_repo.load().events.values()
+    )

@@ -29,6 +29,7 @@ from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql import SecureObjectRepository
 from ....persistence.storage.sql._orm import Base
 from ....persistence.storage.sql.engine import dispose_engine, get_engine
+from ._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import (
     FiledDeclaracionArtefact,
@@ -237,7 +238,7 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
                     ),
                 ),
                 total_pending=Decimal("1200"),
-                source_url=AnyHttpUrl("https://www1.agenciatributaria.gob.es/wlpl/DAI3-RUTI/CarteraCuotas"),
+                source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
                 captured_at=captured_at,
                 raw_sha256="b" * 64,
             )

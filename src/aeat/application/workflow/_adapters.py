@@ -42,8 +42,10 @@ from ._errors import WorkflowError
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
+    ExpedientesSource,
     ModeloDraftBuilderProtocol,
     ModeloInputsProviderProtocol,
+    NotificationsSource,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
 )
@@ -127,6 +129,18 @@ class SubmissionEngineAdapter:
         self._engine.preflight(draft, today=today)
 
 
+async def _live_expedientes_source(session: object, modelo: str | None) -> object:
+    from ...adapters.outbound.aeat.sede import walk_expedientes_tree
+
+    return await walk_expedientes_tree(cast(AeatSession, session), modelo=modelo)
+
+
+async def _live_notifications_source(session: object) -> object:
+    from ...adapters.outbound.aeat.sede import fetch_notifications_query
+
+    return await fetch_notifications_query(cast(AeatSession, session))
+
+
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol,
@@ -180,6 +194,8 @@ def default_engine(
         certificate_bundle=certificate_bundle,
         inputs_provider=inputs_provider,
         settings=cfg,
+        expedientes_source=cast(ExpedientesSource, _live_expedientes_source) if session is not None else None,
+        notifications_source=cast(NotificationsSource, _live_notifications_source) if session is not None else None,
     )
 
 

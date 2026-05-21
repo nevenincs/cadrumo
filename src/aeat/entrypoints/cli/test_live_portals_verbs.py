@@ -7,8 +7,9 @@ import re
 import pytest
 from typer.testing import CliRunner
 
+from aeat.core.errors import resolve_error_message
 from aeat.core.i18n import tr
-from aeat.domain.portals import PORTAL_REGISTRY
+from aeat.domain.portals import PORTAL_REGISTRY, UnknownPortalError
 from aeat.entrypoints.cli._app_live import portals_app
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -92,5 +93,8 @@ def test_portals_show_emits_one_entry(cli_runner: CliRunner) -> None:
 
 
 def test_portals_show_refuses_unknown_portal(cli_runner: CliRunner) -> None:
-    result = cli_runner.invoke(portals_app, ["view", "NOT_A_PORTAL_ID"])
+    portal_id = "NOT_A_PORTAL_ID"
+    result = cli_runner.invoke(portals_app, ["view", portal_id])
     assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    assert resolve_error_message(UnknownPortalError(portal_id)) in result.output

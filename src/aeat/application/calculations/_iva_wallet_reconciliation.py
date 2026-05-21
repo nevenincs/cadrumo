@@ -19,9 +19,14 @@ from ...domain.calculations.registry._schema import RegistrySnapshot
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
-_MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
 
 type IvaCompensationAuthority = Literal["aeat_wallet", "taxpayer_override", "local_recurrence", "missing"]
+type IvaCompensationAuthoritySourceKind = Literal[
+    "aeat_wallet",
+    "local_recurrence",
+    "filed_history_observation",
+    "taxpayer_override",
+]
 type IvaCompensationDivergence = Literal[
     "match",
     "wallet_only",
@@ -43,6 +48,20 @@ class IvaCompensationOverride(BaseModel):
     reason: str = Field(min_length=1, max_length=1024)
     evidence_locator: str = Field(min_length=1, max_length=1024)
     recorded_at: datetime
+
+
+class IvaCompensationAuthoritySource(BaseModel):
+    """One evidence source considered by an IVA compensation decision."""
+
+    model_config = _STRICT_FROZEN
+
+    source_kind: IvaCompensationAuthoritySourceKind
+    amount: Decimal | None = Field(default=None, ge=Decimal("0"))
+    source_locator: str = Field(min_length=1, max_length=1024)
+    captured_at: datetime | None = None
+    source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
+    source_filing_year: int | None = Field(default=None, ge=2000, le=2099)
+    source_periods: tuple[str, ...] = ()
 
 
 class IvaCompensationReconciliationDecision(BaseModel):
@@ -68,6 +87,7 @@ class IvaCompensationReconciliationDecision(BaseModel):
     stale_wallet: bool
     reason: str = Field(min_length=1, max_length=2048)
     wallet_captured_at: datetime | None = None
+    authority_sources: tuple[IvaCompensationAuthoritySource, ...] = ()
     decided_at: datetime
 
     @model_validator(mode="after")
@@ -123,22 +143,22 @@ def reconcile_modelo_303_iva_compensation(
             target_period=snapshot.period,
         )
 
-    from ._binding_prefill import resolve_bindings_from_local_store
+    from ._binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
     from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
     repo = repository if repository is not None else CalculationObservationRepository()
-    prefill_report = resolve_bindings_from_local_store(
+    recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
         snapshot,
         repository=repo,
         captured_at=decided_at,
     )
-    local_amount = prefill_report.binding_values.get(_MODELO_303_IVA_COMPENSATION_BINDING_ID)
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=taxpayer_nif,
         target_year=snapshot.filing_year,
         target_period=snapshot.period,
         wallet=wallet,
-        local_recurrence_amount=Decimal(local_amount) if local_amount is not None else None,
+        local_recurrence_amount=recurrence.amount if recurrence is not None else None,
+        local_recurrence_source=_local_recurrence_authority_source(recurrence),
         override=override,
         decided_at=decided_at,
         max_wallet_age_days=max_wallet_age_days,
@@ -158,6 +178,7 @@ def reconcile_iva_compensation_wallet(
     target_period: str,
     wallet: IvaCompensationWalletObservation | None,
     local_recurrence_amount: Decimal | None,
+    local_recurrence_source: IvaCompensationAuthoritySource | None = None,
     override: IvaCompensationOverride | None = None,
     decided_at: datetime | None = None,
     max_wallet_age_days: int = _DEFAULT_MAX_WALLET_AGE_DAYS,
@@ -170,10 +191,23 @@ def reconcile_iva_compensation_wallet(
     recorded.
     """
 
+    if wallet is not None:
+        _validate_wallet_matches_snapshot(
+            wallet,
+            taxpayer_nif=taxpayer_nif,
+            target_year=target_year,
+            target_period=target_period,
+        )
     when = decided_at if decided_at is not None else datetime.now(UTC)
     wallet_amount = wallet.total_pending if wallet is not None else None
     wallet_captured_at = wallet.captured_at if wallet is not None else None
     stale_wallet = _is_wallet_stale(wallet_captured_at, when, max_wallet_age_days)
+    authority_sources = _authority_sources(
+        wallet=wallet,
+        local_recurrence_amount=local_recurrence_amount,
+        local_recurrence_source=local_recurrence_source,
+        override=override,
+    )
 
     if override is not None:
         return IvaCompensationReconciliationDecision(
@@ -190,6 +224,7 @@ def reconcile_iva_compensation_wallet(
             stale_wallet=stale_wallet,
             reason=override.reason,
             wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
             decided_at=when,
         )
 
@@ -209,6 +244,7 @@ def reconcile_iva_compensation_wallet(
                 stale_wallet=False,
                 reason="No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation.",
                 wallet_captured_at=None,
+                authority_sources=authority_sources,
                 decided_at=when,
             )
         return IvaCompensationReconciliationDecision(
@@ -225,6 +261,7 @@ def reconcile_iva_compensation_wallet(
             stale_wallet=False,
             reason="AEAT wallet is unavailable; using lower-confidence local recurrence.",
             wallet_captured_at=None,
+            authority_sources=authority_sources,
             decided_at=when,
         )
 
@@ -244,6 +281,7 @@ def reconcile_iva_compensation_wallet(
                 stale_wallet=True,
                 reason="AEAT wallet observation is stale and no local recurrence fallback is available.",
                 wallet_captured_at=wallet_captured_at,
+                authority_sources=authority_sources,
                 decided_at=when,
             )
         return IvaCompensationReconciliationDecision(
@@ -260,6 +298,7 @@ def reconcile_iva_compensation_wallet(
             stale_wallet=True,
             reason="AEAT wallet observation is stale; using lower-confidence local recurrence.",
             wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
             decided_at=when,
         )
 
@@ -281,6 +320,7 @@ def reconcile_iva_compensation_wallet(
             stale_wallet=False,
             reason="AEAT wallet and local recurrence diverge; review is required before automatic output.",
             wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
             decided_at=when,
         )
 
@@ -302,6 +342,7 @@ def reconcile_iva_compensation_wallet(
                 "no local prior-filing recurrence was available for cross-check."
             ),
             wallet_captured_at=wallet_captured_at,
+            authority_sources=authority_sources,
             decided_at=when,
         )
 
@@ -319,7 +360,85 @@ def reconcile_iva_compensation_wallet(
         stale_wallet=False,
         reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
         wallet_captured_at=wallet_captured_at,
+        authority_sources=authority_sources,
         decided_at=when,
+    )
+
+
+def _authority_sources(
+    *,
+    wallet: IvaCompensationWalletObservation | None,
+    local_recurrence_amount: Decimal | None,
+    local_recurrence_source: IvaCompensationAuthoritySource | None,
+    override: IvaCompensationOverride | None,
+) -> tuple[IvaCompensationAuthoritySource, ...]:
+    sources: list[IvaCompensationAuthoritySource] = []
+    if wallet is not None:
+        sources.append(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=wallet.total_pending,
+                source_locator=str(wallet.source_url),
+                captured_at=wallet.captured_at,
+            )
+        )
+    if local_recurrence_amount is not None:
+        recurrence_source = local_recurrence_source or IvaCompensationAuthoritySource(
+            source_kind="local_recurrence",
+            amount=local_recurrence_amount,
+            source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+        )
+        sources.append(recurrence_source)
+        if (
+            recurrence_source.source_kind == "local_recurrence"
+            and recurrence_source.source_modelo is not None
+            and recurrence_source.source_filing_year is not None
+            and recurrence_source.source_periods
+        ):
+            sources.append(
+                IvaCompensationAuthoritySource(
+                    source_kind="filed_history_observation",
+                    amount=local_recurrence_amount,
+                    source_locator=(
+                        f"{recurrence_source.source_modelo}:"
+                        f"{recurrence_source.source_filing_year}:"
+                        f"{','.join(recurrence_source.source_periods)}"
+                    ),
+                    captured_at=recurrence_source.captured_at,
+                    source_modelo=recurrence_source.source_modelo,
+                    source_filing_year=recurrence_source.source_filing_year,
+                    source_periods=recurrence_source.source_periods,
+                )
+            )
+    if override is not None:
+        sources.append(
+            IvaCompensationAuthoritySource(
+                source_kind="taxpayer_override",
+                amount=override.amount,
+                source_locator=override.evidence_locator,
+                captured_at=override.recorded_at,
+            )
+        )
+    return tuple(sources)
+
+
+def _local_recurrence_authority_source(recurrence: object | None) -> IvaCompensationAuthoritySource | None:
+    if recurrence is None:
+        return None
+    amount = Decimal(recurrence.amount)
+    binding_id = str(recurrence.binding_id)
+    source_modelo = str(recurrence.source_modelo)
+    source_filing_year = int(recurrence.source_filing_year)
+    source_periods = tuple(str(item) for item in recurrence.source_periods)
+    resolved_at = recurrence.resolved_at
+    return IvaCompensationAuthoritySource(
+        source_kind="local_recurrence",
+        amount=amount,
+        source_locator=f"binding:{binding_id}",
+        captured_at=resolved_at,
+        source_modelo=source_modelo,
+        source_filing_year=source_filing_year,
+        source_periods=source_periods,
     )
 
 
@@ -353,6 +472,7 @@ def _is_wallet_stale(
 
 
 __all__ = [
+    "IvaCompensationAuthoritySource",
     "IvaCompensationOverride",
     "IvaCompensationReconciliationDecision",
     "IvaCompensationReconciliationInputError",

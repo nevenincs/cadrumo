@@ -205,11 +205,11 @@ def test_withholding_selector_rejects_unknown_fact() -> None:
     assert "bad-withholding-fact" in failures[0]
 
 
-def test_invoice_selector_accepts_well_shaped_selector() -> None:
-    """An invoice binding with grouping + fact passes the gate."""
+def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
+    """A canonical invoice-shaped binding with grouping + fact passes the gate."""
 
     binding = _binding(
-        source="invoice",
+        source="collectible_invoice",
         selector={
             "fact": "base_sum",
             "grouping": "operator_clave",
@@ -474,19 +474,19 @@ def test_collectible_invoice_rejects_lowercase_clave() -> None:
     assert "bad-collectible" in failures[0]
 
 
-def test_invoice_selector_rejects_misshapen_selector() -> None:
-    """An invoice binding missing the required ``fact`` key fails the gate."""
+def test_invoice_selector_rejects_retired_source_kind() -> None:
+    """A retired bare ``invoice`` source fails before selector validation."""
 
     binding = _binding(
         source="invoice",
         selector={
-            # ``fact`` is required on _InvoiceSelector; omitting it
-            # must surface a validation diagnostic, not pass silently.
-            "grouping": "operator_clave",
+            "fact": "base_sum",
+            "claves": ("E",),
         },
         binding_id="bad-invoice",
     )
     failures = validate_binding_selector_shape(binding)
-    assert failures, "invoice selector missing required field must be flagged"
+    assert failures, "retired invoice source must be flagged"
     assert "bad-invoice" in failures[0]
-    assert "_InvoiceSelector" in failures[0]
+    assert "source 'invoice' is retired" in failures[0]
+    assert "collectible_invoice" in failures[0]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _MODELO_130_FILE = _REGISTRY_ROOT / "modelos" / "130.toml"
 
 
+@cache
 def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalogues]:
     modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
     return next(modelo for modelo in modelos if modelo.id == modelo_id), catalogues

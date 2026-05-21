@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
-from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
 
+from ...adapters.persistence.storage import EphemeralMasterKeyProvider
+from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core.config import Settings
+from ..user_profile._testing import register_minimal_profile
+from ..workflow._persistence import workflow_state_repository
 from . import AuthProvider, AuthProviderDescription, AuthProviderKind
 from ._acquisition_lock import inspect_auth_acquisition_lock
 from ._sessions import AuthSessionUnavailableError, ensure_authenticated_aeat_session
@@ -95,41 +97,41 @@ def test_provider_stub_satisfies_auth_provider_protocol() -> None:
 
 
 @pytest.fixture(autouse=True)
-def _active_profile() -> Iterator[None]:
+def _active_profile(tmp_path: Path) -> Iterator[None]:
     from aeat.core.config import override_settings
 
-    with override_settings(aeat_active_profile="operator"):
-        yield
+    with override_settings(
+        aeat_active_profile="operator",
+        aeat_clave_movil_dni_nie="12345678Z",
+        aeat_database_url=f"sqlite:///{(tmp_path / 'auth-ensure.db').as_posix()}",
+        aeat_local_storage_root=tmp_path,
+    ):
+        dispose_engine()
+        with EphemeralMasterKeyProvider():
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(
+                    state,
+                    profile_id="operator",
+                    overrides={"identity.tax_id": "12345678Z"},
+                )
+            )
+            try:
+                yield
+            finally:
+                dispose_engine()
 
 
 def _settings(tmp_path: Path) -> Settings:
     return Settings().model_copy(
-        update={"aeat_token_dir": tmp_path / "tokens"}
+        update={
+            "aeat_clave_movil_dni_nie": "12345678Z",
+            "aeat_token_dir": tmp_path / "tokens",
+        }
     )
 
 
 def _assertion(valid: bool = True) -> object:
     return SimpleNamespace(is_valid=valid, status_code=200, error_message=None)
-
-
-@contextmanager
-def _active_bucket_session() -> Iterator[None]:
-    from ...adapters.persistence.storage.master_key._active_session import activate_session
-    from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-
-    key = b"t" * 32
-    session = BucketSession.open(
-        bucket_id="operator",
-        kek=key,
-        dek=key,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-    try:
-        with activate_session(session):
-            yield
-    finally:
-        session.close()
 
 
 def _factory(providers: list[_Provider]):
@@ -197,13 +199,12 @@ async def test_ensure_fresh_skips_persisted_probe(tmp_path: Path) -> None:
     assertion = _assertion()
     auth_provider = _Provider(auth=(session, assertion))
 
-    with _active_bucket_session():
-        result = await ensure_authenticated_aeat_session(
-            settings,
-            kind=AuthProviderKind.CLAVE_MOVIL,
-            fresh=True,
-            provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
-        )
+    result = await ensure_authenticated_aeat_session(
+        settings,
+        kind=AuthProviderKind.CLAVE_MOVIL,
+        fresh=True,
+        provider_factory=_factory([auth_provider]),  # pyright: ignore[reportArgumentType]  # pyrefly: ignore[bad-argument-type]  # reason: _Provider is a duck-typed test fake; AeatSession/AeatLoginAssertion cannot be constructed without live adapters — tracked for auth-provider protocol narrowing
+    )
 
     assert result.session is session
     assert result.fresh is True
@@ -234,7 +235,7 @@ async def test_ensure_raises_when_assertion_is_invalid(tmp_path: Path) -> None:
     probe_2 = _Provider(probe=AuthSessionUnavailableError("no session"))
     auth_provider = _Provider(auth=(session, invalid_assertion))
 
-    with pytest.raises(AeatLoginAssertionError), _active_bucket_session():
+    with pytest.raises(AeatLoginAssertionError):
         await ensure_authenticated_aeat_session(
             settings,
             kind=AuthProviderKind.CLAVE_MOVIL,

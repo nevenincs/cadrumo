@@ -63,6 +63,11 @@ from ._history import (
     WorkUnitHistoryEvent,
     assemble_work_unit_history,
 )
+from ._result_summary import (
+    CalculationResultSummary,
+    ResultSummaryRow,
+    calculation_result_summary,
+)
 
 __all__ = [
     "AmendmentEvidenceMissingError",
@@ -70,6 +75,7 @@ __all__ = [
     "AmendmentTargetStateError",
     "AmendmentVerificationRefusedError",
     "CalculationRegistryUnavailableError",
+    "CalculationResultSummary",
     "CalculationRevisionNotFoundError",
     "CalculationRevisionStateError",
     "CasillaProvenanceMissingError",
@@ -81,6 +87,7 @@ __all__ = [
     "ModeloIvaWalletReconciliationBlocked",
     "ModeloRecordNotFoundError",
     "ModeloWorkflowGateError",
+    "ResultSummaryRow",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitHistory",
@@ -91,6 +98,7 @@ __all__ = [
     "assemble_work_unit_history",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
+    "calculation_result_summary",
     "create_work_unit",
     "discard_work_unit",
     "file_modelo_revision",

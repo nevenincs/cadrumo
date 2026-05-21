@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...core.i18n import Translatable as tr
 from ._errors import ProfileValidationError
-from ._normalise import _normalise_key
+from ._normalise import normalise_key
 
 if TYPE_CHECKING:
     PROFILE_KEYS: tuple[ProfileKey, ...]
@@ -94,7 +94,7 @@ class ProfileKey(BaseModel):
             KeyError: When the normalised form is not in the registry.
         """
 
-        canonical = _normalise_key(raw)
+        canonical = normalise_key(raw)
         try:
             return _by_key()[canonical]
         except KeyError as exc:

@@ -34,6 +34,7 @@ from ...domain.filing import (
     ModeloApprovalBasis,
     ModeloBindingValue,
     ModeloBuilderError,
+    ModeloCasillaProvenance,
     ModeloCode,
     ModeloComputationError,
     ModeloDraft,
@@ -186,6 +187,14 @@ def build_draft(
     created_at = utc_now()
     value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
     binding_value_tuple = tuple(sorted(filing_binding_values, key=lambda value: value.binding_id))
+    casilla_provenance = tuple(
+        ModeloCasillaProvenance(
+            casilla_id=casilla.id,
+            legal_refs=tuple(casilla.legal_refs),
+            source_refs=tuple(casilla.source_refs),
+        )
+        for casilla in sorted(snapshot.revision.casillas, key=lambda item: item.id)
+    )
     # Propagate identity from the validated profile substrate into the
     # draft. ``profile.tax_id`` is already validated against the AEAT
     # checksum via ``SubjectTaxId`` on the profile model, so the
@@ -208,6 +217,7 @@ def build_draft(
         status=ModeloDraftStatus.BORRADOR,
         values=value_tuple,
         binding_values=binding_value_tuple,
+        casilla_provenance=casilla_provenance,
         created_at=created_at,
         updated_at=created_at,
         schema_version=collection.schema_version,
@@ -478,6 +488,7 @@ __all__ = [
     "ModeloBindingValue",
     "ModeloBuilderError",
     "ModeloCalculateError",
+    "ModeloCasillaProvenance",
     "ModeloCode",
     "ModeloComputationError",
     "ModeloDraft",

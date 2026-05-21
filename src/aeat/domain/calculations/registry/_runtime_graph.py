@@ -150,6 +150,44 @@ def _casilla_reference_resolver(revision: ModeloRevision) -> dict[str, str]:
     return resolver
 
 
+def input_casilla_alias_map(revision: ModeloRevision) -> dict[str, str]:
+    """Return a token-to-canonical-id map for operator-supplied casilla input.
+
+    A casilla's canonical handle is its within-revision ``id``. Spanish
+    taxpayers, however, know a casilla by the number printed on the
+    paper AEAT form. This map sends every operator-facing token an
+    operator could reasonably type — the canonical ``id``, the registry
+    ``number``, and the BOE ``form_number`` — to the canonical ``id``.
+
+    A token is included only when it resolves unambiguously: an ``id``
+    always maps to itself; a ``number`` or ``form_number`` maps to a
+    casilla ``id`` only when exactly one casilla in the revision carries
+    that value. An ambiguous ``number`` / ``form_number`` (one shared
+    across record segments) is omitted — it must be named by the
+    canonical ``id``. The canonical ``id`` always wins a collision so
+    the canonical handle is never shadowed by an alias.
+    """
+
+    canonical_ids = {casilla.id for casilla in revision.casillas}
+    number_counts: dict[str, int] = {}
+    form_number_counts: dict[str, int] = {}
+    for casilla in revision.casillas:
+        number_counts[casilla.number] = number_counts.get(casilla.number, 0) + 1
+        if casilla.form_number is not None:
+            form_number_counts[casilla.form_number] = form_number_counts.get(casilla.form_number, 0) + 1
+    resolver: dict[str, str] = {casilla.id: casilla.id for casilla in revision.casillas}
+    for casilla in revision.casillas:
+        if casilla.number not in canonical_ids and number_counts[casilla.number] == 1:
+            resolver.setdefault(casilla.number, casilla.id)
+        if (
+            casilla.form_number is not None
+            and casilla.form_number not in canonical_ids
+            and form_number_counts[casilla.form_number] == 1
+        ):
+            resolver.setdefault(casilla.form_number, casilla.id)
+    return resolver
+
+
 def formula_evaluation_order(revision: ModeloRevision) -> tuple[str, ...]:
     """Return computed casilla ids in dependency order.
 

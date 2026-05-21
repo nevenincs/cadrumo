@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from aeat.core.config import Settings
+
 from ._aeat_nif_iva_oracle import (
     AEAT_NIF_IVA_ENTRY_URL,
     AEAT_NIF_IVA_VERIFICATION_URL,
@@ -14,7 +16,12 @@ from ._aeat_nif_iva_oracle import (
 )
 from ._errors import RegistryValidationError
 from ._live_parity import LiveParityCatalogue, LiveParityOracle
-from ._remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS, RemoteStateGuardPolicy
+from ._remote_state_guard import (
+    AEAT_WRITE_FORBIDDEN_ACTIONS,
+    RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -30,6 +37,9 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         allowed_hosts=(
             "sede.agenciatributaria.gob.es",
             "www1.agenciatributaria.gob.es",
+        ),
+        allowed_browser_action_patterns=(
+            Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
         ),
         # AEAT writes are PERMANENTLY FORBIDDEN — the canonical write-class
         # action labels MUST be rejected by the guard before any browser
@@ -115,6 +125,14 @@ def test_verify_payload_without_driver_returns_unverifiable_after_guard_prefligh
     assert result.verdict == "unverifiable"
     assert result.oracle_id == ORACLE_ID
     assert "no executable driver configured" in result.narrative
+
+
+def test_nif_iva_policy_rejects_unclassified_browser_action() -> None:
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        assert_remote_operation_allowed(
+            _aeat_policy(),
+            RemoteOperation(kind="browser_action", action="new-unreviewed-nif-iva-click"),
+        )
 
 
 def test_verify_payload_reports_guard_block_when_aeat_host_not_in_policy() -> None:

@@ -24,29 +24,29 @@ from __future__ import annotations
 
 import pytest
 
-from ._normalise import _normalise_key
+from . import normalise_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def test_normalise_key_is_idempotent_on_already_canonical_input() -> None:
-    assert _normalise_key("tax.id") == "tax.id"
-    assert _normalise_key("tax.residence.ccaa") == "tax.residence.ccaa"
+    assert normalise_key("tax.id") == "tax.id"
+    assert normalise_key("tax.residence.ccaa") == "tax.residence.ccaa"
 
 
 def test_normalise_key_strips_surrounding_whitespace() -> None:
-    assert _normalise_key("  tax.id  ") == "tax.id"
-    assert _normalise_key("\ttax.id\n") == "tax.id"
+    assert normalise_key("  tax.id  ") == "tax.id"
+    assert normalise_key("\ttax.id\n") == "tax.id"
 
 
 def test_normalise_key_lowercases_uppercase_characters() -> None:
-    assert _normalise_key("TAX.ID") == "tax.id"
-    assert _normalise_key("Tax.Id") == "tax.id"
+    assert normalise_key("TAX.ID") == "tax.id"
+    assert normalise_key("Tax.Id") == "tax.id"
 
 
 def test_normalise_key_folds_dashes_into_dots() -> None:
-    assert _normalise_key("tax-id") == "tax.id"
-    assert _normalise_key("tax-residence-ccaa") == "tax.residence.ccaa"
+    assert normalise_key("tax-id") == "tax.id"
+    assert normalise_key("tax-residence-ccaa") == "tax.residence.ccaa"
 
 
 def test_normalise_key_preserves_underscores_verbatim() -> None:
@@ -54,36 +54,36 @@ def test_normalise_key_preserves_underscores_verbatim() -> None:
     with underscores must survive the round-trip. Folding underscores
     into dots would silently break the deadline engine's exact-key
     lookups for these specific profile fields."""
-    assert _normalise_key("does_intracomunitario") == "does_intracomunitario"
-    assert _normalise_key("iva.roi_enrolled") == "iva.roi_enrolled"
+    assert normalise_key("does_intracomunitario") == "does_intracomunitario"
+    assert normalise_key("iva.roi_enrolled") == "iva.roi_enrolled"
 
 
 def test_normalise_key_combines_strip_lowercase_and_dash_fold() -> None:
     """The composite case: surrounding whitespace + mixed case + dashes.
     Output is the documented canonical form."""
-    assert _normalise_key("  TAX-ID  ") == "tax.id"
-    assert _normalise_key("  Tax-Residence-CCAA  ") == "tax.residence.ccaa"
+    assert normalise_key("  TAX-ID  ") == "tax.id"
+    assert normalise_key("  Tax-Residence-CCAA  ") == "tax.residence.ccaa"
 
 
 def test_normalise_key_empty_string_passes_through_as_empty() -> None:
-    assert _normalise_key("") == ""
+    assert normalise_key("") == ""
 
 
 def test_normalise_key_whitespace_only_string_strips_to_empty() -> None:
-    assert _normalise_key("   ") == ""
-    assert _normalise_key("\t\n") == ""
+    assert normalise_key("   ") == ""
+    assert normalise_key("\t\n") == ""
 
 
 def test_normalise_key_preserves_multiple_dashes_as_multiple_dots() -> None:
     """No collapsing: each dash becomes a separate dot in the output.
     Consecutive dashes become consecutive dots."""
-    assert _normalise_key("a-b-c-d") == "a.b.c.d"
-    assert _normalise_key("a--b") == "a..b"
+    assert normalise_key("a-b-c-d") == "a.b.c.d"
+    assert normalise_key("a--b") == "a..b"
 
 
 def test_normalise_key_mixes_underscore_and_dash_correctly() -> None:
     """The two replacement classes are independent: dashes always
     fold; underscores never fold. A key with both characters is
     handled per-character without interaction."""
-    assert _normalise_key("iva-roi_enrolled") == "iva.roi_enrolled"
-    assert _normalise_key("does_intracomunitario-flag") == "does_intracomunitario.flag"
+    assert normalise_key("iva-roi_enrolled") == "iva.roi_enrolled"
+    assert normalise_key("does_intracomunitario-flag") == "does_intracomunitario.flag"

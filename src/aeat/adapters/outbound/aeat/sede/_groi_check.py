@@ -38,6 +38,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from playwright.async_api import Locator, Page, ViewportSize
@@ -52,6 +53,8 @@ from .....domain.calculations.registry import (
     GroiObservation,
     RegistryValidationError,
     RemoteOperation,
+    RemoteStateGuardPolicy,
+    assert_remote_operation_allowed,
 )
 from .....domain.calculations.registry._groi_oracle import AEAT_GROI_URL
 from ..browser import BrowserError, default_browser_session_factory
@@ -64,6 +67,8 @@ from ._browser_stage import build_playwright_stage_runner
 from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
+_EXTERNAL = Settings.external_constants()
+_GROI_HOST = urlsplit(str(AEAT_GROI_URL)).netloc
 
 _TIMEOUT_DEFAULTS = Settings()
 DEFAULT_GROI_TIMEOUT_MS: int = _TIMEOUT_DEFAULTS.aeat_browser_navigation_timeout_ms
@@ -85,6 +90,25 @@ _SUBMIT_SELECTORS: tuple[str, ...] = (
     'input[name="enviar"]',
     'input[type="submit"][value="Enviar"]',
 )
+
+_READ_GUARD_POLICY = RemoteStateGuardPolicy(
+    id="aeat-groi-direct-driver-read",
+    evidence_tier="executable_parity_evidence",
+    classification="integration_test_service",
+    allowed_hosts=(_GROI_HOST,),
+    allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
+    synthetic_data_allowed=True,
+    requires_authentication=True,
+    requires_aeat_authorization=False,
+)
+
+
+def _assert_query_browser_action(action: str) -> None:
+    assert_remote_operation_allowed(
+        _READ_GUARD_POLICY,
+        RemoteOperation(kind="browser_action", action=action),
+    )
+
 
 def _groi_shape_suggestion() -> str:
     return tr("adapters.aeat.sede.groi.suggestions.shape_change")
@@ -307,6 +331,7 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     masquerading under the same URL), the driver refuses to submit.
     """
 
+    _assert_query_browser_action("open-groi-form")
     await _locate(
         page,
         _NIF_INPUT_SELECTORS,
@@ -366,6 +391,7 @@ async def _check_single_nif(
 ) -> Literal["valid", "invalid", "unknown"]:
     """Fill the form with one NIF, submit, scrape the rendered verdict."""
 
+    _assert_query_browser_action(f"check-nif-{nif}")
     nif_input = await _locate(
         page,
         _NIF_INPUT_SELECTORS,

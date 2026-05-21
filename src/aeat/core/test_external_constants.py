@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import tomllib
 from pathlib import Path
 
@@ -24,6 +25,15 @@ def _registry_toml_payload() -> dict[str, object]:
 
     toml_path = Path(__file__).with_name("external_constants.toml")
     return tomllib.loads(toml_path.read_text(encoding="utf-8"))
+
+
+def _is_docstring_node(node: ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef) -> bool:
+    return (
+        bool(node.body)
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+        and isinstance(node.body[0].value.value, str)
+    )
 
 
 def test_load_external_constants_returns_typed_model() -> None:
@@ -52,7 +62,15 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
     domains = load_external_constants().aeat.domains
 
     assert domains.host_suffix == "agenciatributaria.gob.es"
-    for value in (domains.sede, domains.www1, domains.www2, domains.www6, domains.clave, domains.boe):
+    for value in (
+        domains.sede,
+        domains.www1,
+        domains.www2,
+        domains.www6,
+        domains.www12,
+        domains.clave,
+        domains.boe,
+    ):
         assert value.startswith("https://")
         assert "://" in value
 
@@ -72,10 +90,12 @@ def test_aeat_sede_paths_are_absolute_paths() -> None:
         paths.notifications_query,
         paths.certificate_selector,
         paths.census_g313_launcher,
+        paths.irpf_expediente_detail_year_prefix,
         paths.notificaciones,
         paths.iva_compensation_wallet,
     ):
         assert value.startswith("/")
+    assert paths.irpf_expediente_detail_year_suffix
 
 
 def test_clave_movil_surface_constants_are_typed() -> None:
@@ -86,9 +106,14 @@ def test_clave_movil_surface_constants_are_typed() -> None:
     assert "{target}" in surface.selector_access_url_template
     assert surface.selector_access_path_marker
     assert surface.dialogo_representacion_path_marker
+    assert surface.dialogo_representacion_path.startswith("/")
     assert surface.obtener_clave_movil_path_marker
     assert surface.obtener_clave_movil_qr_path_marker
     assert surface.cancelar_clave_movil_path_marker
+    assert surface.obtener_clave_movil_qr_path.startswith("/")
+    assert surface.obtener_clave_movil_non_qr_path.startswith("/")
+    assert surface.autentica_dni_nie_contraste_path.startswith("/")
+    assert surface.cancelar_clave_movil_path.startswith("/")
     assert surface.authorize_button_selector.startswith("button")
     assert surface.non_qr_link_selector.startswith("a[")
     assert surface.verification_code_selector.startswith("#")
@@ -117,8 +142,23 @@ def test_pre303_surface_constants_are_typed() -> None:
     assert "cartera" in surface.iva_wallet_empty_page_tokens
     assert surface.wallet_form_selector.startswith("form")
     assert surface.wallet_execute_submit_selector.startswith("input")
-    assert surface.representation_own_name_selector.startswith("input")
+    assert surface.representation_own_name_selector
+    assert surface.representation_own_name_label_selector
     assert "clave PIN" in surface.official_access_auth_methods
+
+
+def test_live_safety_action_patterns_are_centralized() -> None:
+    """Audited live AEAT browser-action labels live in the external registry."""
+
+    safety = load_external_constants().aeat.live_safety
+
+    assert "clave-movil-authorize" in safety.auth_browser_action_patterns
+    assert "wallet-execute-read-query" in safety.wallet_browser_action_patterns
+    assert "buscar-declaraciones-presentadas" in safety.declarations_browser_action_patterns
+    assert "csv-verifier-query" in safety.csv_verify_browser_action_patterns
+    assert "check-nif-*" in safety.consult_oracle_browser_action_patterns
+    assert "requires-renta-web-open-driver" in safety.renta_web_open_browser_action_patterns
+    assert "accept-identification" in safety.renta_web_open_browser_action_patterns
 
 
 def test_missing_pre303_block_does_not_poison_registry_parsing() -> None:
@@ -204,6 +244,57 @@ def test_expediente_detail_template_has_id_placeholder() -> None:
     template = load_external_constants().aeat.sede_paths.expediente_detail_template
 
     assert "{expediente_id}" in template
+
+
+def test_sede_parser_route_shapes_are_centralized() -> None:
+    """Expediente and cotejo parser route fragments are TOML-backed."""
+
+    paths = load_external_constants().aeat.sede_paths
+
+    assert paths.irpf_expediente_detail_year_prefix.startswith("/wlpl/")
+    assert paths.irpf_expediente_detail_year_suffix.endswith("Vlt")
+    assert paths.cotejo_query.startswith("/wlpl/")
+    assert paths.cotejo_document.startswith("/wlpl/")
+
+
+def test_live_sede_executable_route_literals_stay_centralized() -> None:
+    """Live AEAT executable code must read volatile routes from the registry."""
+
+    repo_root = Path(__file__).parents[3]
+    checked_paths = (
+        repo_root / "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_parse.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/verify/__init__.py",
+    )
+    volatile_tokens = (
+        "agenciatributaria.gob.es",
+        "/wlpl/",
+        "/Sede/",
+        "static_files",
+        "SelectorAccesos",
+        "CarteraCuotas",
+    )
+
+    offenders: list[str] = []
+    for path in checked_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        docstring_nodes = {
+            doc_node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Module | ast.ClassDef | ast.AsyncFunctionDef | ast.FunctionDef)
+            for doc_node in ([node.body[0]] if _is_docstring_node(node) else [])
+        }
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            if any(node is getattr(doc_node, "value", None) for doc_node in docstring_nodes):
+                continue
+            if any(token in node.value for token in volatile_tokens):
+                offenders.append(f"{path.relative_to(repo_root)}:{node.lineno}: {node.value!r}")
+
+    assert offenders == []
 
 
 def test_subdomain_enum_aligns_with_aeat_domains() -> None:

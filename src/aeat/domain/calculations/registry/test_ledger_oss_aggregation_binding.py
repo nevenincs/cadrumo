@@ -26,9 +26,9 @@ from aeat.domain.calculations.registry import (
 from aeat.domain.iva import (
     EUMemberState,
     InvoiceKind,
+    IvaRateKind,
     OssIossRegime,
     TransactionKind,
-    IvaRateKind,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]

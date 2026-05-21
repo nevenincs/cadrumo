@@ -38,12 +38,14 @@ _EXPEDIENTE_LINK_HANDLERS: Final[tuple[str, ...]] = ("lanzarTewvForm",)
 # Modelo-code pattern inside a category label.
 _MODELO_IN_LABEL: Final[re.Pattern[str]] = re.compile(r"\bModelo\s+(?P<modelo>\d{2,4})\b")
 
-# Per-year IRPF endpoint: /wlpl/DASR-CORE/AccesoDR<YYYY>RVlt?exp=<id>
-_IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(r"/wlpl/DASR-CORE/AccesoDR(?P<year>\d{4})RVlt")
+_IRPF_ENDPOINT: Final[re.Pattern[str]] = re.compile(
+    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_prefix)}(?P<year>\d{{4}})"
+    rf"{re.escape(_SEDE_PATHS.irpf_expediente_detail_year_suffix)}"
+)
 
-# The CSV link pattern on an expediente detail page:
-#   /wlpl/KATA-APLI/cotejo/CotejoIdSv?CSV=<csv>
-_COTEJO_CSV: Final[re.Pattern[str]] = re.compile(r"/wlpl/KATA-APLI/cotejo/CotejoIdSv\?CSV=(?P<csv>[A-Z0-9]{8,32})")
+_COTEJO_CSV: Final[re.Pattern[str]] = re.compile(
+    rf"{re.escape(_SEDE_PATHS.cotejo_query)}\?CSV=(?P<csv>[A-Z0-9]{{8,32}})"
+)
 
 
 def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:

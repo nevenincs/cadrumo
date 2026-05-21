@@ -25,6 +25,7 @@ from aeat.application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
     IvaCompensationPeriodState,
+    extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
 from aeat.core.config import override_settings
@@ -72,12 +73,21 @@ def test_filed_observation_capture_promotes_previous_303_into_recurrence_history
 
         target_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
         prefill = resolve_bindings_from_local_store(target_snapshot, repository=repository, captured_at=_CAPTURED_AT)
+        recurrence, recurrence_prefill = extract_modelo_303_local_iva_compensation_recurrence(
+            target_snapshot,
+            repository=repository,
+            captured_at=_CAPTURED_AT,
+        )
 
         assert calculation_key == "303:2026:1T"
         assert repository.load("303", 2026, "1T") is not None
         assert prefill.binding_values == {"modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00")}
         assert prefill.prefilled[0].source_modelo == "303"
         assert prefill.prefilled[0].source_periods == ("1T",)
+        assert recurrence is not None
+        assert recurrence.amount == Decimal("1200.00")
+        assert recurrence.source_periods == ("1T",)
+        assert recurrence_prefill.binding_values == prefill.binding_values
 
 
 def test_filed_observation_capture_promotes_cross_year_303_recurrence_history(tmp_path: Path) -> None:

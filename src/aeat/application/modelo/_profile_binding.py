@@ -38,8 +38,12 @@ from ...domain.calculations.registry._runtime_graph import (
 )
 from ...domain.calculations.registry._schema import DataBindingDefinition
 from ...domain.modelos._errors import ModeloError
-from ...domain.user_profile import ProfileNotFoundError, ProfileSchemaDefinition, load_user_profile_schema
-from ...domain.user_profile._registry_contract import _profile_binding_selectors
+from ...domain.user_profile import (
+    ProfileNotFoundError,
+    ProfileSchemaDefinition,
+    load_user_profile_schema,
+    profile_binding_selectors,
+)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -193,7 +197,7 @@ def resolve_profile_sourced_bindings(
 def _resolve_one(binding: DataBindingDefinition, fact_index: Mapping[str, str]) -> str | None:
     """Return the profile fact value for one profile binding, or None if absent."""
 
-    for selector in _profile_binding_selectors(binding.selector):
+    for selector in profile_binding_selectors(binding.selector):
         value = fact_index.get(selector)
         if value is not None and value.strip():
             return value.strip()

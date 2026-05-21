@@ -12,6 +12,7 @@ import pytest
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
+from ..errors import EnvelopeVersionError
 from ._orm import Base
 from .engine import create_engine_from_settings
 from .secure_objects import (
@@ -62,6 +63,97 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
             assert natural_key.encode("utf-8") not in stored_key
             assert isinstance(stored, bytes)
             assert payload not in stored
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: Path) -> None:
+    """A decrypted record roundtrip must preserve every boundary field."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "record.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.record"
+        natural_key = "record-key-non-default"
+        written_at = datetime(2026, 5, 21, 10, 30, 0)
+        payload = b"strict-record-roundtrip-payload"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key=natural_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=3,
+                written_at=written_at,
+                payload=payload,
+            )
+            with sqlite3.connect(db_path) as con:
+                (stored_key,) = con.execute(
+                    "SELECT object_key FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            loaded = repo.load(
+                namespace,
+                natural_key,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=3,
+            )
+
+            assert loaded == SecureObjectRecord(
+                namespace=namespace,
+                object_key=stored_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=3,
+                written_at=written_at,
+                payload=payload,
+            )
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path: Path) -> None:
+    """A database-side metadata mutation must not still load as the original record."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "record-mutation.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.record.mutation"
+        natural_key = "record-key"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key=natural_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=3,
+                written_at=datetime(2026, 5, 21, 10, 35, 0, tzinfo=UTC),
+                payload=b"mutation-sentinel-payload",
+            )
+            assert repo.load(
+                namespace,
+                natural_key,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=3,
+            ) is not None
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET schema_version = ? WHERE namespace = ?",
+                    (4, namespace),
+                )
+                con.commit()
+
+            with pytest.raises(EnvelopeVersionError, match="supports up to 3"):
+                repo.load(
+                    namespace,
+                    natural_key,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=3,
+                )
         finally:
             engine.dispose()
 

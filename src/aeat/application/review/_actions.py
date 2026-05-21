@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from ...domain.profile import normalise_key
 from ..workflow._models import WorkflowEvent, WorkflowState
-from ..workflow._utils import _normalise_key, utc_now
+from ..workflow._utils import utc_now
 from ._errors import ReviewError
 from ._models import InvoiceReviewRecord, LedgerReviewRecord
 
@@ -57,7 +58,7 @@ def update_invoice_review(
     event = WorkflowEvent(action=action, reason=reason)
     reviews[invoice_id] = current.model_copy(
         update={
-            "fields": {**current.fields, **{_normalise_key(key): raw for key, raw in fields.items()}},
+            "fields": {**current.fields, **{normalise_key(key): raw for key, raw in fields.items()}},
             "history": (*current.history, event),
             "updated_at": utc_now(),
         }

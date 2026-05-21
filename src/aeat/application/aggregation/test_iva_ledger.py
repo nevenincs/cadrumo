@@ -16,6 +16,7 @@ from ...adapters.persistence.storage.sql._orm import Base
 from ...core.config import Settings
 from ...core.resources import resources
 from ...domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
+from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -27,12 +28,16 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
 from . import (
     AggregationValidationError,
     IvaLedgerAggregationIssueReason,
+    IvaLedgerCandidate,
+    IvaLedgerInputKind,
+    aggregate_iva_ledger_candidate_bindings,
+    aggregate_iva_ledger_candidates,
     aggregate_iva_ledger_observations,
     aggregate_iva_ledger_observations_from_repositories,
+    validate_iva_ledger_observation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -439,6 +444,140 @@ def test_zero_and_super_reduced_rates_project_to_canonical_vat_categories() -> N
         IvaCategory.DOMESTIC_ZERO,
         IvaCategory.DOMESTIC_SUPER_REDUCED_4,
     ]
+
+
+def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustments() -> None:
+    candidates = (
+        IvaLedgerCandidate(
+            ledger_id="exempt-consulting",
+            transaction_date=date(2026, 4, 10),
+            category=IvaCategory.DOMESTIC_EXEMPT,
+            rate_kind=IvaRateKind.EXEMPT,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("400.00"),
+            iva_amount=Decimal("0.00"),
+        ),
+        IvaLedgerCandidate(
+            ledger_id="eu-acquisition",
+            transaction_date=date(2026, 4, 11),
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=IvaRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            base_amount=Decimal("200.00"),
+            iva_amount=Decimal("42.00"),
+        ),
+        IvaLedgerCandidate(
+            ledger_id="retail-recargo",
+            transaction_date=date(2026, 4, 12),
+            category=IvaCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=IvaRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("100.00"),
+            iva_amount=Decimal("5.20"),
+        ),
+        IvaLedgerCandidate(
+            ledger_id="prior-period-adjustment",
+            transaction_date=date(2026, 4, 13),
+            category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+            rate_kind=IvaRateKind.ZERO,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            base_amount=Decimal("-50.00"),
+            iva_amount=Decimal("0.00"),
+            input_kind=IvaLedgerInputKind.ADJUSTMENT,
+        ),
+    )
+
+    result = aggregate_iva_ledger_candidates(candidates, period="2026Q2")
+
+    assert result.issues == ()
+    assert [observation.category for observation in result.observations] == [
+        IvaCategory.DOMESTIC_EXEMPT,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.RECARGO_EQUIVALENCIA,
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+    ]
+    assert result.observations[-1].base_amount == Decimal("-50.00")
+
+
+def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bindings() -> None:
+    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    candidates = (
+        IvaLedgerCandidate(
+            ledger_id="eu-acquisition",
+            transaction_date=date(2026, 4, 11),
+            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            rate_kind=IvaRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            base_amount=Decimal("200.00"),
+            iva_amount=Decimal("42.00"),
+        ),
+        IvaLedgerCandidate(
+            ledger_id="retail-recargo",
+            transaction_date=date(2026, 4, 12),
+            category=IvaCategory.RECARGO_EQUIVALENCIA,
+            rate_kind=IvaRateKind.GENERAL,
+            flow_direction=IvaFlowDirection.SOPORTADO,
+            base_amount=Decimal("100.00"),
+            iva_amount=Decimal("5.20"),
+        ),
+    )
+
+    binding_values = aggregate_iva_ledger_candidate_bindings(revision, candidates, period="2026Q2")
+
+    assert binding_values["modelo-309-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("42.00")
+    assert binding_values["modelo-309-iva-soportado-recargo-equivalencia-cuota"] == Decimal("5.20")
+
+
+def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
+    revision = next(item for item in resources().modelos.all() if item.id == "390").revisions["2010-y-siguientes"]
+    candidate = IvaLedgerCandidate(
+        ledger_id="retail-recargo",
+        transaction_date=date(2026, 4, 12),
+        category=IvaCategory.RECARGO_EQUIVALENCIA,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=IvaFlowDirection.SOPORTADO,
+        base_amount=Decimal("100.00"),
+        iva_amount=Decimal("5.20"),
+    )
+
+    with pytest.raises(AggregationValidationError, match="unsupported_iva_category") as exc_info:
+        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period="2026Q2")
+
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["ledger_id"] == "retail-recargo"
+    assert exc_info.value.context["category"] == IvaCategory.RECARGO_EQUIVALENCIA.value
+    assert exc_info.value.context["revision_id"] == "2010-y-siguientes"
+
+
+def test_preclassified_candidate_rejects_non_declarable_sentinel_category() -> None:
+    candidate = IvaLedgerCandidate(
+        ledger_id="unknown-row",
+        transaction_date=date(2026, 4, 10),
+        category=IvaCategory.UNKNOWN,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        base_amount=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    with pytest.raises(AggregationValidationError, match="unsupported_iva_category"):
+        validate_iva_ledger_observation(candidate)
+
+
+def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> None:
+    revision = next(item for item in resources().modelos.all() if item.id == "309").revisions["2004-y-siguientes"]
+    candidate = IvaLedgerCandidate(
+        ledger_id="late-row",
+        transaction_date=date(2026, 7, 1),
+        category=IvaCategory.RECARGO_EQUIVALENCIA,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=IvaFlowDirection.SOPORTADO,
+        base_amount=Decimal("100.00"),
+        iva_amount=Decimal("5.20"),
+    )
+
+    with pytest.raises(AggregationValidationError, match="candidate_outside_period"):
+        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period="2026Q2")
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:

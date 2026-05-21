@@ -190,3 +190,8 @@ def test_verify_csv_guard_rejects_non_read_method() -> None:
 def test_verify_csv_guard_rejects_mutating_action() -> None:
     with pytest.raises(RegistryValidationError, match="browser action token"):
         verify_module._assert_verify_action("Presentar declaracion")
+
+
+def test_verify_csv_guard_rejects_unclassified_action() -> None:
+    with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
+        verify_module._assert_verify_action("new-unreviewed-csv-action")

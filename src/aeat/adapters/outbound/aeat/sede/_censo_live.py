@@ -6,15 +6,15 @@ launcher, captures the page HTML, and runs the existing
 :func:`._censo.parse_g313_html` parser to lift the response into a
 typed :class:`CensoFactSet`.
 
-The launcher procedure URL is the documented G313 entry point
-(``/Sede/procedimientoini/G313.shtml``). The session's storage state
-carries the AEAT cookies acquired via certificate or Cl@ve Móvil, so
-the launcher redirects directly to the Mis Datos Censales data page
-instead of bouncing through the login surface. If the session is not
-valid for the operator's NIF (e.g. certificate not registered against
-the census), the page returns AEAT's standard 4033 / 403 error shape
-and the parser returns a :class:`CensoFactSet` with no fields
-populated — the caller decides whether that is a refusal.
+The launcher procedure URL is the documented G313 entry point from
+``external_constants.toml``. The session's storage state carries the
+AEAT cookies acquired via certificate or Cl@ve Móvil, so the launcher
+redirects directly to the Mis Datos Censales data page instead of
+bouncing through the login surface. If the session is not valid for
+the operator's NIF (e.g. certificate not registered against the census),
+the page returns AEAT's standard auth-gate error shape and the parser
+returns a :class:`CensoFactSet` with no fields populated — the caller
+decides whether that is a refusal.
 """
 
 from __future__ import annotations
@@ -38,9 +38,8 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 
-G313_LAUNCHER_URL = (
-    "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
-)
+_EXTERNAL = Settings.external_constants()
+G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.census_g313_launcher}"
 """AEAT-published entry point for *Mis Datos Censales* (the read-only
 operator-facing projection of the operator's 036 census record)."""
 
