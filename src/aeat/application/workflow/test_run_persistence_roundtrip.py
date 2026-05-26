@@ -18,11 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...tests.secure_sql import isolated_runtime_profile
 from ._models import (
     WorkflowAbortReason,
     WorkflowResult,
@@ -72,51 +68,37 @@ def _populated_run() -> WorkflowResult:
 
 def test_workflow_run_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A WorkflowResult saved via save_run loads back strictly equal."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-run-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_run()
+        save_run(original)
+        loaded = load_run(original.run_id)
 
-            original = _populated_run()
-            save_run(original)
-            loaded = load_run(original.run_id)
-
-            assert loaded == original
-            # Per-field witnesses: enum identity (final_stage,
-            # aborted_reason), tuple-of-steps surface with per-step
-            # details (which were retyped from dict[str, str] to the
-            # WorkflowStepDetails envelope earlier this campaign), and
-            # the optional resumed_from chain pointer.
-            assert loaded.final_stage is WorkflowStage.ABORTED
-            assert loaded.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
-            assert loaded.resumed_from == "p" * 16
-            assert len(loaded.steps) == 2
-            assert loaded.steps[1].success is False
-            # WorkflowStepDetails accepts arbitrary string-keyed
-            # diagnostics via extra="allow"; the round-trip must
-            # preserve all three details keys on the second step.
-            details = loaded.steps[1].details
-            assert details is not None
-            assert details.get("modelo") == "303"
-            assert details.get("period") == "2025Q1"
-            assert details.get("closes_on") == "2025-04-20"
-        finally:
-            engine.dispose()
+        assert loaded == original
+        # Per-field witnesses: enum identity (final_stage,
+        # aborted_reason), tuple-of-steps surface with per-step
+        # details (which were retyped from dict[str, str] to the
+        # WorkflowStepDetails envelope earlier this campaign), and
+        # the optional resumed_from chain pointer.
+        assert loaded.final_stage is WorkflowStage.ABORTED
+        assert loaded.aborted_reason is WorkflowAbortReason.DEADLINE_PASSED
+        assert loaded.resumed_from == "p" * 16
+        assert len(loaded.steps) == 2
+        assert loaded.steps[1].success is False
+        # WorkflowStepDetails accepts arbitrary string-keyed
+        # diagnostics via extra="allow"; the round-trip must
+        # preserve all three details keys on the second step.
+        details = loaded.steps[1].details
+        assert details is not None
+        assert details.get("modelo") == "303"
+        assert details.get("period") == "2025Q1"
+        assert details.get("closes_on") == "2025-04-20"
 
 
 def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: ABORTED ↔ aborted_reason invariant holds post-persistence.
 
@@ -142,60 +124,50 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     from ...adapters.persistence.storage import SensitivityClass
     from ._persistence import _RUN_NAMESPACE, _RUN_VERSION
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-run-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        objects = profile.repository
+        original = _populated_run()
+        save_run(original)
+
+        # Sanity: the run is loadable through the runtime repository.
+        loaded = objects.load(
+            _RUN_NAMESPACE,
+            original.run_id,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_RUN_VERSION,
         )
-        Base.metadata.create_all(engine)
+        assert loaded is not None, (
+            "save_run did not persist via the runtime repository — re-check "
+            "storage route wiring before treating the proof result as meaningful"
+        )
+
+        # Decrypt, mutate, re-encrypt — through the public API.
+        envelope = _json.loads(loaded.payload.decode("utf-8"))
+        payload = envelope["payload"]
+        assert payload.get("aborted_reason"), (
+            "fixture must persist ABORTED final_stage with a populated "
+            "aborted_reason for this proof test to be meaningful"
+        )
+        payload["aborted_reason"] = None
+        envelope["payload"] = payload
+        objects.save(
+            namespace=_RUN_NAMESPACE,
+            object_key=original.run_id,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_RUN_VERSION,
+            written_at=datetime.now(UTC),
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        # load_run must trip the ABORTED ↔ aborted_reason invariant.
+        regression_caught = False
         try:
-            objects = SecureObjectRepository(engine=engine)
-            original = _populated_run()
-            save_run(original)
-
-            # Sanity: the run is loadable through the same engine.
-            loaded = objects.load(
-                _RUN_NAMESPACE,
-                original.run_id,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=_RUN_VERSION,
-            )
-            assert loaded is not None, (
-                "save_run did not persist via the test's engine — re-check "
-                "engine cache wiring before treating the proof result as meaningful"
-            )
-
-            # Decrypt, mutate, re-encrypt — through the public API.
-            envelope = _json.loads(loaded.payload.decode("utf-8"))
-            payload = envelope["payload"]
-            assert payload.get("aborted_reason"), (
-                "fixture must persist ABORTED final_stage with a populated "
-                "aborted_reason for this proof test to be meaningful"
-            )
-            payload["aborted_reason"] = None
-            envelope["payload"] = payload
-            objects.save(
-                namespace=_RUN_NAMESPACE,
-                object_key=original.run_id,
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=_RUN_VERSION,
-                written_at=datetime.now(UTC),
-                payload=_json.dumps(envelope).encode("utf-8"),
-            )
-
-            # load_run must trip the ABORTED ↔ aborted_reason invariant.
-            regression_caught = False
-            try:
-                load_run(original.run_id)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: clearing aborted_reason on "
-                "an ABORTED run did NOT surface on load. The workflow-runs "
-                "boundary is tautological and the abort-classification "
-                "contract cannot be trusted on replay."
-            )
-        finally:
-            engine.dispose()
+            load_run(original.run_id)
+        except Exception:
+            regression_caught = True
+        assert regression_caught, (
+            "anti-tautology proof failed: clearing aborted_reason on "
+            "an ABORTED run did NOT surface on load. The workflow-runs "
+            "boundary is tautological and the abort-classification "
+            "contract cannot be trusted on replay."
+        )
