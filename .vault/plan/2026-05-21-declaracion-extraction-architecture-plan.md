@@ -339,3 +339,11 @@ Triage 50 broad-suite registry failures surfaced after the session's profile-aut
 - [x] `W07.P25.S157` - Cluster E reroute 3 private registry imports through public init API stage 2 untracked test files; `src/aeat/adapters/ src/aeat/domain/calculations/registry/`.
 - [x] `W07.P25.S158` - Cluster F flip M100 renta-web-open synthetic_data_allowed assertion True to False; `src/aeat/domain/calculations/registry/test_modelo_100_registry.py`.
 - [x] `W07.P25.S159` - Bonus M200 cross-dependency fix new-entity-flag and incn-prior-12-months binding values; `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`.
+
+### Phase `W07.P26` - Real-corpus round-trip conversion for M111 + M130
+
+Both modelos have substantial corpus collections (M111 4 PDFs 2024-1T..4T; M130 15 PDFs 2021-2T..2024-4T) but their primary round-trip tests use SYNTHETIC PDFs via _write_declaration_pdf. The corpus PDFs are exercised only for tax-id extraction. Add parametrized real-corpus round-trip tests asserting each target casilla extracts to the printed value (Decimal type-check; specific value if independently verifiable). Keep synthetic tests for full-target-coverage scaffold. Strengthens calculation-grounding verification mission.
+
+- [x] `W07.P26.S161` - Survey M111 and M130 corpus PDF text layouts via pdfplumber; `confirm numeric_casilla profile cannot match real AEAT PDF form layout; identify named_label candidates for M111 closure casillas 28 and 30; `src/aeat/tests/fixtures/justificantes/111/, src/aeat/tests/fixtures/justificantes/130/`.
+- [x] `W07.P26.S162` - Author parametrized corpus round-trip tests for M111: tax-id extraction (4 PDFs) plus named_label extraction using in-test ExtractionProfileDefinition for closure casillas 28 and 30; `assert Decimal values from printed PDF text; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W07.P26.S163` - Author parametrized corpus round-trip tests for M130: tax-id extraction (15 PDFs) plus coverage-gap documentation asserting numeric_casilla profile fails with coverage=0 for all corpus PDFs; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
