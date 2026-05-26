@@ -53,5 +53,5 @@ driver cannot regress into AEAT-hosted synthetic preview, filing, payment, or
 representation submissions while hardening the read-only acquisition backend.
 
 - [ ] `P04.S09` - Verify live IVA wallet and filed-history drivers use only configured read-only/authentication action classes and no synthetic AEAT-hosted inputs; `src/aeat/adapters/outbound/aeat/sede src/aeat/domain/calculations/registry/_remote_state_guard.py`.
-- [ ] `P04.S10` - Add a constants-centralization guard for AEAT-hosted live-surface hosts, routes, and read-action markers discovered during the live IVA work; `src/aeat/core/external_constants.toml src/aeat/tests`.
+- [ ] `P04.S10` - Add a constants-centralization guard for AEAT-hosted live-surface hosts, routes, and read-action markers discovered during the live IVA work. Partial 2026-05-26: live Sede executable-literal guard covers core settings, Cl@ve, declarations, wallet, parser, and verify paths; GROI and filed-history test constants were moved to registry-derived values; broader test fixture inventory remains open; `src/aeat/core/external_constants.toml src/aeat/tests`.
 - [ ] `P04.S11` - Re-run no-synthetic live-surface gates after live IVA auth/acquisition changes; `src/aeat/domain/calculations/registry src/aeat/adapters/outbound/aeat/sede`.
