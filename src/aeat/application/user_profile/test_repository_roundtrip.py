@@ -22,26 +22,31 @@ metadata would surface as inequality on the loaded record.
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage import SensitivityClass
 from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     UserProfileSnapshot,
     UserProfileStatus,
 )
-from ._repository import UserProfileLifecycleRepository, UserProfileSnapshotRepository
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ._repository import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE,
+    USER_PROFILE_VALUE_NAMESPACE,
+    UserProfileLifecycleRepository,
+    UserProfileSnapshotRepository,
+    user_profile_snapshot_object_key,
+    user_profile_value_object_key,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -50,6 +55,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 # profile identity, deliberately distinct in shape from the
 # operator-chosen display name.
 _PROFILE_UUID = "c7f3a1b2-9d4e-4a5f-8b6c-1e2d3f4a5b6c"
+
+
+@pytest.fixture
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="user-profile-repository-roundtrip-test",
+    ) as profile:
+        yield profile
 
 
 def _populated_record() -> UserProfileRecord:
@@ -97,65 +111,48 @@ def _populated_record() -> UserProfileRecord:
 
 
 def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    runtime_profile: TestRuntimeProfile,
 ) -> None:
     """UserProfileRecord + UserProfileSnapshot roundtrip through both repos."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "user-profile-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
+    bucket_id = runtime_profile.bucket_id
+    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
 
-            bucket_id = "profile-bucket-A"
-            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
-            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
+    original_record = _populated_record()
+    lifecycle.save(original_record)
+    loaded_record = lifecycle.load(original_record.profile_id)
 
-            original_record = _populated_record()
-            lifecycle.save(original_record)
-            loaded_record = lifecycle.load(original_record.profile_id)
+    assert loaded_record == original_record
+    # The UUID identity and the operator label survive the encrypted boundary as independent fields.
+    assert loaded_record.profile_id == _PROFILE_UUID
+    assert loaded_record.display_name == "Gergely Wootsch - 2024 IRPF"
+    assert loaded_record.profile_id != loaded_record.display_name
+    assert len(loaded_record.facts) == 5
+    assert tuple(f.path for f in loaded_record.facts) == (
+        "identity.given_name",
+        "identity.family_name",
+        "residency.municipality_code",
+        "vat.recargo_equivalencia.applied",
+        "irpf.minimum_personal_amount",
+    )
+    # The Decimal fact survives JSON round-trip strictly.
+    assert loaded_record.facts[-1].value == Decimal("5550.00")
+    assert loaded_record.facts[-1].valid_from == date(2024, 1, 1)
+    assert loaded_record.schema_version == 2
 
-            assert loaded_record == original_record
-            # The UUID identity and the operator label survive the
-            # encrypted boundary as independent fields.
-            assert loaded_record.profile_id == _PROFILE_UUID
-            assert loaded_record.display_name == "Gergely Wootsch - 2024 IRPF"
-            assert loaded_record.profile_id != loaded_record.display_name
-            assert len(loaded_record.facts) == 5
-            assert tuple(f.path for f in loaded_record.facts) == (
-                "identity.given_name",
-                "identity.family_name",
-                "residency.municipality_code",
-                "vat.recargo_equivalencia.applied",
-                "irpf.minimum_personal_amount",
-            )
-            # The Decimal fact survives JSON round-trip strictly.
-            assert loaded_record.facts[-1].value == Decimal("5550.00")
-            assert loaded_record.facts[-1].valid_from == date(2024, 1, 1)
-            assert loaded_record.schema_version == 2
+    original_snapshot = UserProfileSnapshot.from_profile(loaded_record)
+    snapshots.save(original_snapshot)
+    loaded_snapshot = snapshots.load(original_snapshot.snapshot_id)
 
-            original_snapshot = UserProfileSnapshot.from_profile(loaded_record)
-            snapshots.save(original_snapshot)
-            loaded_snapshot = snapshots.load(original_snapshot.snapshot_id)
-
-            assert loaded_snapshot == original_snapshot
-            # The canonical hash binds the snapshot identity to its facts;
-            # a silent fact drop on save would break it.
-            assert loaded_snapshot.canonical_hash == original_snapshot.canonical_hash
-            assert len(loaded_snapshot.facts) == 5
-        finally:
-            engine.dispose()
+    assert loaded_snapshot == original_snapshot
+    # The canonical hash binds the snapshot identity to its facts; a silent fact drop on save would break it.
+    assert loaded_snapshot.canonical_hash == original_snapshot.canonical_hash
+    assert len(loaded_snapshot.facts) == 5
 
 
 def test_user_profile_active_with_removed_at_surfaces_at_load(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    runtime_profile: TestRuntimeProfile,
 ) -> None:
     """Anti-tautology proof: ACTIVE + removed_at must surface on load.
 
@@ -177,71 +174,42 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     machine is not actually enforced post-persistence.
     """
 
-    import json as _json
+    bucket_id = runtime_profile.bucket_id
+    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    record = _populated_record()
+    lifecycle.save(record)
 
-    from sqlalchemy import select
+    stored = runtime_profile.repository.load(
+        USER_PROFILE_VALUE_NAMESPACE,
+        user_profile_value_object_key(record.profile_id),
+        expected_class=SensitivityClass.IDENTITY,
+        max_supported_version=1,
+    )
+    assert stored is not None
+    envelope = json.loads(stored.payload.decode("utf-8"))
+    payload = envelope["payload"]
+    assert payload["status"] == "active", (
+        "fixture must persist ACTIVE status for this proof test to be meaningful"
+    )
+    # Stamp removed_at while keeping ACTIVE status. The lifecycle invariant must trip on load.
+    payload["removed_at"] = "2024-12-15T10:00:00+00:00"
+    runtime_profile.repository.save(
+        namespace=stored.namespace,
+        object_key=user_profile_value_object_key(record.profile_id),
+        classification=stored.classification,
+        schema_version=stored.schema_version,
+        written_at=stored.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
-    from ._repository import USER_PROFILE_VALUE_NAMESPACE
-
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "user-profile-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with pytest.raises(ValidationError):
+        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(
+            record.profile_id
         )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            bucket_id = "profile-bucket-A"
-            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
-            record = _populated_record()
-            lifecycle.save(record)
-
-            with session_scope(engine) as session:
-                # Fetch all rows then filter by namespace in Python; the
-                # value namespace carries exactly one row in this fixture.
-                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                value_rows = [r for r in all_rows if r.namespace == USER_PROFILE_VALUE_NAMESPACE]
-                assert len(value_rows) == 1, (
-                    f"expected one value-namespace row, found {len(value_rows)} "
-                    f"(total rows in db: {len(all_rows)}; namespaces: "
-                    f"{sorted({r.namespace for r in all_rows})})"
-                )
-                row = value_rows[0]
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                payload = envelope["payload"]
-                assert payload["status"] == "active", (
-                    "fixture must persist ACTIVE status for this proof "
-                    "test to be meaningful"
-                )
-                # Stamp removed_at while keeping ACTIVE status. The
-                # lifecycle invariant must trip on load.
-                payload["removed_at"] = "2024-12-15T10:00:00+00:00"
-                row.payload = _json.dumps(envelope).encode("utf-8")
-
-            regression_caught = False
-            try:
-                UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects).load(
-                    record.profile_id
-                )
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: stamping removed_at on an "
-                "ACTIVE record did NOT surface on load. The user-profile "
-                "lifecycle boundary is tautological and the state machine "
-                "is not actually enforced post-persistence."
-            )
-        finally:
-            engine.dispose()
 
 
 def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
+    runtime_profile: TestRuntimeProfile,
 ) -> None:
     """Anti-tautology proof: a snapshot whose facts drift from canonical_hash must surface.
 
@@ -263,69 +231,43 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     no longer proves the persisted facts.
     """
 
-    import json as _json
+    bucket_id = runtime_profile.bucket_id
+    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    record = _populated_record()
+    lifecycle.save(record)
+    snapshot = UserProfileSnapshot.from_profile(record)
+    snapshots.save(snapshot)
 
-    from sqlalchemy import select
+    stored = runtime_profile.repository.load(
+        USER_PROFILE_SNAPSHOT_NAMESPACE,
+        user_profile_snapshot_object_key(bucket_id, snapshot.snapshot_id),
+        expected_class=SensitivityClass.IDENTITY,
+        max_supported_version=1,
+    )
+    assert stored is not None
+    envelope = json.loads(stored.payload.decode("utf-8"))
+    payload = envelope["payload"]
+    assert payload["facts"], (
+        "fixture must serialise at least one fact onto the snapshot for this proof test to be meaningful"
+    )
+    # Mutate the first fact's value while leaving canonical_hash untouched.
+    first_fact = payload["facts"][0]
+    original_value = first_fact.get("value")
+    mutated_value = (
+        "tampered-string"
+        if isinstance(original_value, str) and original_value != "tampered-string"
+        else "drift-canary"
+    )
+    first_fact["value"] = mutated_value
+    runtime_profile.repository.save(
+        namespace=stored.namespace,
+        object_key=user_profile_snapshot_object_key(bucket_id, snapshot.snapshot_id),
+        classification=stored.classification,
+        schema_version=stored.schema_version,
+        written_at=stored.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
-    from ._repository import USER_PROFILE_SNAPSHOT_NAMESPACE
-
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "user-profile-snapshot-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            bucket_id = "profile-bucket-A"
-            lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=objects)
-            snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=objects)
-            record = _populated_record()
-            lifecycle.save(record)
-            snapshot = UserProfileSnapshot.from_profile(record)
-            snapshots.save(snapshot)
-
-            with session_scope(engine) as session:
-                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                snapshot_rows = [
-                    r for r in all_rows if r.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE
-                ]
-                assert len(snapshot_rows) == 1
-                row = snapshot_rows[0]
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                payload = envelope["payload"]
-                assert payload["facts"], (
-                    "fixture must serialise at least one fact onto the "
-                    "snapshot for this proof test to be meaningful"
-                )
-                # Mutate the first fact's value while leaving canonical_hash
-                # untouched. The model_validator's derived-hash check
-                # must reject the rehydrated record.
-                first_fact = payload["facts"][0]
-                original_value = first_fact.get("value")
-                mutated_value = (
-                    "tampered-string"
-                    if isinstance(original_value, str) and original_value != "tampered-string"
-                    else "drift-canary"
-                )
-                first_fact["value"] = mutated_value
-                row.payload = _json.dumps(envelope).encode("utf-8")
-
-            regression_caught = False
-            try:
-                snapshots.load(snapshot.snapshot_id)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: mutating a fact without "
-                "recomputing canonical_hash did NOT surface on load. The "
-                "user-profile snapshot's content-addressing guarantee is "
-                "tautological — the persisted hash no longer proves the "
-                "persisted facts."
-            )
-        finally:
-            engine.dispose()
+    with pytest.raises(ValidationError):
+        snapshots.load(snapshot.snapshot_id)

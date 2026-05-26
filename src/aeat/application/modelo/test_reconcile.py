@@ -8,15 +8,17 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.config import SecretStoreBackend
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.modelos._codes import ModeloCode
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from aeat.tests import FIXTURES_DIR
+from aeat.tests.secure_sql import dev_test_database_password
 
 from ._reconcile import (
     ModeloReconciliationCommand,
@@ -37,14 +39,16 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reconcile.db').as_posix()}")
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
+    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
     dispose_engine()
-    with EphemeralMasterKeyProvider():
-        try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-            yield
-        finally:
-            dispose_engine()
+    try:
+        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+        yield
+    finally:
+        dispose_engine()
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
@@ -135,8 +139,7 @@ def test_modelo_reconcile_emits_modelo_reconciled_event() -> None:
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.MODELO_RECONCILED
-        and event.object_id == work_unit_id
+        if event.event_type is BucketEventType.MODELO_RECONCILED and event.object_id == work_unit_id
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
     assert matching[-1].payload["verdict"] == ModeloReconciliationVerdict.MATCHES.value
