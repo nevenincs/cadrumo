@@ -43,13 +43,20 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert "aeat-modelo-303-procedure" in modelo.source_refs
 
 
-def test_modelo_303_revision_period_selector_starts_at_2009() -> None:
+def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-y-siguientes"]
 
-    assert revision.valid_from == date(2009, 1, 1)
-    assert revision.period_selector.year_from == 2009
-    assert revision.period_selector.periods == ("1T", "2T", "3T", "4T")
+    rev_old = modelo.revisions["2009-y-siguientes"]
+    assert rev_old.valid_from == date(2009, 1, 1)
+    assert rev_old.period_selector.year_from == 2009
+    assert rev_old.period_selector.year_to == 2022
+    assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
+
+    rev_new = modelo.revisions["2023-y-siguientes"]
+    assert rev_new.valid_from == date(2023, 1, 1)
+    assert rev_new.period_selector.year_from == 2023
+    assert rev_new.period_selector.year_to is None
+    assert rev_new.period_selector.periods == ("1T", "2T", "3T", "4T")
 
 
 def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
@@ -61,6 +68,16 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
             catalogues,
             source_root=bundled_path(),
             filing_year=2025,
+            period=period,
+        )
+        assert snapshot.revision.id == "2023-y-siguientes"
+
+    for period in ("1T", "2T", "3T", "4T"):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2021,
             period=period,
         )
         assert snapshot.revision.id == "2009-y-siguientes"
@@ -81,7 +98,7 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:
     """1T-3T close on day 20; 4T closes on day 30 of January following."""
     modelo, _ = _load_modelo_303()
-    revision = modelo.revisions["2009-y-siguientes"]
+    revision = modelo.revisions["2023-y-siguientes"]
     windows = {w.id: w for w in revision.deadline_windows}
 
     expected = {
