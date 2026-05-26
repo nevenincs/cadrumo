@@ -1,0 +1,11 @@
+[modelo]
+id = "130"
+title = "IRPF pago fraccionado estimación directa"
+official_name = "Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en estimación directa. Pago fraccionado."
+tax_domain = "irpf"
+cadence = "quarterly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
