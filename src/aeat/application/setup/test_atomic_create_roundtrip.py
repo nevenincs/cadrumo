@@ -9,7 +9,7 @@ addresses the profile by its display name; the UUID is the stable
 internal identity that must never drift between verbs.
 
 Every CLI invocation runs against a real per-bucket SQLite engine and
-a real unsecured master-key provider — no mocks, no fakes. The
+a file-backed secret-store custody provider — no mocks, no fakes. The
 ``import`` and ``duplicate`` paths are covered in the same suite
 because both route through the same atomic provisioner.
 """
