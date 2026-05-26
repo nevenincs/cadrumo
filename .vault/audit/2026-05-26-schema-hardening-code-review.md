@@ -43,3 +43,20 @@ Residual risk:
 - The primary commit risk is staging omission for the new helper module; the
   final commit must stage `_validate_reference_sections.py` with the import
   change.
+
+REVIEW-2026-05-26-002 | MEDIUM | P06.S17 fragment inventory test missed omitted revision sources
+
+Initial review found that the committed-corpus fragment inventory assertion
+derived expectations only from already-discovered revision sources. That would
+not catch a regression where discovery omitted an entire `revisions/<id>/`
+directory or `revisions/<id>.toml` file.
+
+The test was corrected to derive the expected TOML inventory independently from
+the filesystem under each directory-mode `revisions` directory and compare it
+to the union of discovered `fragment_paths`. Re-review marked the finding
+resolved.
+
+Verification reviewed:
+
+- Ruff passed for `test_loader_directory_mode.py`.
+- `test_loader_directory_mode.py` passed with 23 tests.
