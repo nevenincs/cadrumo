@@ -271,6 +271,134 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
         assert revision.binding_overrides[_CCAA_BINDING] == "madrid"
 
 
+# ---------------------------------------------------------------------------
+# S20 regression: bool-typed profile facts preserved and routed correctly
+# ---------------------------------------------------------------------------
+
+_SYNTHETIC_BOOL_PROFILE_BINDING = "test-profile-new-entity-bool-binding"
+
+
+def _snapshot_with_bool_profile_binding(snapshot: RegistrySnapshot) -> RegistrySnapshot:
+    """Extend the M100 snapshot with a synthetic bool-channel profile binding.
+
+    The synthetic binding mirrors the LIS Art. 29 new-entity-override
+    pattern: a yes/no profile fact consumed as a numeric 1/0 operand
+    inside an ``if_then_else`` predicate on the Decimal channel.
+    """
+    binding = DataBindingDefinition(
+        id=_SYNTHETIC_BOOL_PROFILE_BINDING,
+        source="profile",
+        selector={"profile_key": "entity.new_entity_override"},
+        legal_refs=snapshot.revision.legal_refs,
+        source_refs=snapshot.revision.source_refs,
+    )
+    formula = FormulaDefinition(
+        id="test-profile-new-entity-bool-formula",
+        target=snapshot.revision.casillas[0].id,
+        expression=FormulaExpression(binding=_SYNTHETIC_BOOL_PROFILE_BINDING),
+        legal_refs=snapshot.revision.legal_refs,
+        source_refs=snapshot.revision.source_refs,
+    )
+    revision = snapshot.revision.model_copy(
+        update={
+            "bindings": (*snapshot.revision.bindings, binding),
+            "formulas": (*snapshot.revision.formulas, formula),
+        }
+    )
+    return snapshot.model_copy(update={"revision": revision})
+
+
+def _profile_with_bool_fact(value: bool) -> UserProfileRecord:
+    return UserProfileRecord(
+        profile_id=_BUCKET_ID,
+        display_name="Bool profile taxpayer",
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="entity.new_entity_override", value=value),
+        ),
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+
+class TestBoolTypedProfileBinding:
+    """Pin the typed-bool path through _profile_fact_index → _decimal_value.
+
+    S20 regression: a bool-typed profile fact must arrive at the Decimal
+    channel as Decimal("1")/Decimal("0") via the isinstance(value, bool)
+    branch in _decimal_value, never as a string "True"/"False" that would
+    require re-parsing, and never silently as Decimal("1") via the int
+    subclass path without the explicit bool check.
+    """
+
+    def test_bool_true_fact_resolves_to_decimal_one_in_binding_channel(self) -> None:
+        snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
+        result = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            profile_record=_profile_with_bool_fact(True),
+        )
+        assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("1")
+        assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
+
+    def test_bool_false_fact_resolves_to_decimal_zero_in_binding_channel(self) -> None:
+        snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
+        result = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            profile_record=_profile_with_bool_fact(False),
+        )
+        assert result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING] == Decimal("0")
+        assert _SYNTHETIC_BOOL_PROFILE_BINDING not in result.enum_binding_values
+
+    def test_bool_true_and_false_resolve_to_distinct_decimal_values(self) -> None:
+        """Anti-tautology: the two bool values produce distinct Decimal outputs."""
+        snapshot = _snapshot_with_bool_profile_binding(_modelo_100_snapshot())
+        true_result = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            profile_record=_profile_with_bool_fact(True),
+        )
+        false_result = resolve_profile_sourced_bindings(
+            snapshot,
+            bucket_id=_BUCKET_ID,
+            profile_record=_profile_with_bool_fact(False),
+        )
+        assert (
+            true_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
+            != false_result.binding_values[_SYNTHETIC_BOOL_PROFILE_BINDING]
+        )
+
+    def test_bool_fact_on_enum_channel_raises(self) -> None:
+        """A bool fact wired to an enum-dispatch binding raises ProfileBindingResolutionError.
+
+        Boolean facts are never valid enum dispatch keys; the resolver
+        must refuse rather than silently coercing True -> "True" and
+        producing a dispatch-table miss.
+        """
+        from aeat.application.modelo._profile_binding import ProfileBindingResolutionError
+
+        # Construct a snapshot whose CCAA binding (enum channel) is satisfied
+        # by a bool fact — a mis-wired scenario the guard must catch.
+        snapshot = _modelo_100_snapshot()
+        bool_profile = UserProfileRecord(
+            profile_id=_BUCKET_ID,
+            display_name="Bool-as-enum taxpayer",
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                UserProfileFact(path="tax_residence.ccaa", value=True),
+            ),
+            created_at=_CLOCK,
+            updated_at=_CLOCK,
+        )
+        with pytest.raises(ProfileBindingResolutionError, match="boolean facts are not valid enum dispatch keys"):
+            resolve_profile_sourced_bindings(
+                snapshot,
+                bucket_id=_BUCKET_ID,
+                profile_record=bool_profile,
+            )
+
+
 def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel(
     tmp_path: Path,
 ) -> None:
