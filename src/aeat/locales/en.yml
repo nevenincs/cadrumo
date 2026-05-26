@@ -2916,6 +2916,10 @@ wizard:
         help: Minor children in family unit
       has-employees:
         help: Has employees and pays salaries with retención
+      incn-prior-12-months:
+        help: Net turnover (importe neto de la cifra de negocios) over the prior
+          12 months, in euros. Above 6,000,000 EUR Modelo 202 mandates the
+          Art. 40.3 LIS modality; below it both modalities are available. Optional.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
@@ -2936,6 +2940,11 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       name:
         help: Display name shown in local reviews
+      new-entity-first-two-profit-periods:
+        help: Mark this when a newly-created legal entity is in one of its first two
+          profit-making tax periods (LIS Art. 29) to opt into the 15 percent
+          reduced rate. Optional; unset leaves the entity on its otherwise-applicable
+          rate.
       notes:
         help: Notes for your own records (optional)
       output-language:
@@ -3210,6 +3219,11 @@ wizard:
         help: Select every IRPF income category you have; only economic activity triggers
           Modelo 130/131
         prompt: IRPF income categories
+      incn-prior-12-months:
+        help: We need this to decide whether Modelo 202 forces the Art. 40.3 LIS
+          modality (above 6,000,000 EUR). Leave it blank if you do not know.
+        prompt: What was your net turnover over the past 12 months? (in euros,
+          optional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3225,6 +3239,11 @@ wizard:
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
+      new-entity-first-two-profit-periods:
+        help: Applies only to legal entities. When set, the entity is taxed at the
+          15 percent reduced rate during those two periods.
+        prompt: Is this a newly-created legal entity in one of its first two
+          profit-making tax periods?
       title: Taxpayer type
     title: Setup wizard
     verifier:

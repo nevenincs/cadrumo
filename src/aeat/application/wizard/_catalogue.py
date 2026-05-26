@@ -273,13 +273,19 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             # Optional LIS Art. 29 first-two-profit-making-periods
             # state. Gates the 15 percent new-entity rate override.
             # Only meaningful for a legal entity; gated visible_when on
-            # entity_type == legal_entity. Undeclared keeps the entity
-            # on the otherwise-applicable sub-form rate.
+            # entity_type == legal_entity. ``default="false"`` keeps the
+            # CONFIRM widget validator happy under ``--quiet`` when the
+            # operator does not pass the flag — the override is opt-in,
+            # so an unset profile equals "no override", semantically
+            # identical to the undeclared three-state ``None``. A
+            # positively-declared ``--new-entity-first-two-profit-periods``
+            # writes ``true`` and opts into the override.
             id="new-entity-first-two-profit-periods",
             profile_key="taxpayer_type.new_entity_first_two_profit_periods",
             widget=WizardWidget.CONFIRM,
             prompt=tr("wizard.setup.taxpayer-type.new-entity-first-two-profit-periods.prompt"),
             help=tr("wizard.setup.taxpayer-type.new-entity-first-two-profit-periods.help"),
+            default="false",
             required=False,
             visible_when=_ENTITY_LEGAL,
             answer_type=bool,

@@ -3062,6 +3062,10 @@ wizard:
         help: Fills menors en unitat familiar
       has-employees:
         help: Té empleats i paga salaris amb retenció
+      incn-prior-12-months:
+        help: Import net de la xifra de negocis dels darrers 12 mesos, en euros. Per
+          sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article
+          40.3 LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
@@ -3083,6 +3087,11 @@ wizard:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       name:
         help: Nom visible mostrat en revisions locals
+      new-entity-first-two-profit-periods:
+        help: Marca-ho si l'entitat de nova creació es troba en un dels dos primers
+          períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus
+          reduït del 15 per cent. Opcional; sense marcar no s'aplica el tipus
+          reduït.
       notes:
         help: Notes per al teu propi record (opcional)
       output-language:
@@ -3359,6 +3368,11 @@ wizard:
         help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
           econòmica obliga al Model 130/131
         prompt: Categories de renda IRPF
+      incn-prior-12-months:
+        help: Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article
+          40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps.
+        prompt: Quin va ser el teu import net de la xifra de negocis durant els
+          darrers 12 mesos? (en euros, opcional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3374,6 +3388,11 @@ wizard:
           sociedad-civil-mercantil:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
+      new-entity-first-two-profit-periods:
+        help: S'aplica només a persones jurídiques. Si ho marques, l'entitat
+          tributa al tipus reduït del 15 per cent durant aquests dos períodes.
+        prompt: És una entitat de nova creació en un dels seus dos primers
+          períodes impositius amb beneficis?
       title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:
