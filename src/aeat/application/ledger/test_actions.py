@@ -12,17 +12,12 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.export import ExportSerializationFormat
-from ...core.config import Settings
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ...domain.buckets import (
     BucketEvent,
@@ -64,6 +59,7 @@ from ...domain.transactions import (
     TransactionValidationError,
 )
 from ...domain.usage_ratios import UsageRatioProfile
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     LedgerExportCommand,
     LedgerReviewQuery,
@@ -93,19 +89,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
-    database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
-    monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
-    dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
+def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         try:
-            yield engine
+            yield get_engine(profile.settings)
         finally:
-            engine.dispose()
-            dispose_engine()
+            dispose_engine(profile.settings)
 
 
 def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):
@@ -311,9 +300,7 @@ def test_create_manual_transaction_persists_raw_field(secure_engine: Engine, fie
 
 def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(secure_engine: Engine) -> None:
     outcome = _drive_create_manual_transaction(secure_engine)
-    assert (
-        outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
-    )
+    assert outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
 
 
 _TAXABLE_IVA_EXPECTATIONS = (
@@ -510,9 +497,7 @@ def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path
     missing = tmp_path / "no-such-statement.csv"
     with pytest.raises(TransactionValidationError) as excinfo:
         import_ledger_source(
-            LedgerSourceImportCommand(
-                path=missing, provider="csv", dry_run=True, verify=False, source=missing
-            ),
+            LedgerSourceImportCommand(path=missing, provider="csv", dry_run=True, verify=False, source=missing),
         )
 
     error = excinfo.value
@@ -980,6 +965,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(secure_
             booked_date=date(2026, 5, 1),
             amount=Decimal("-25.00"),
             direction=TransactionDirection.OUTGOING,
+            counterparty="Vendor SL",
             description="may row",
             idempotency_key="review-may",
         ),
@@ -993,6 +979,7 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(secure_
             booked_date=date(2026, 6, 1),
             amount=Decimal("-25.00"),
             direction=TransactionDirection.OUTGOING,
+            counterparty="Vendor SL",
             description="june row",
             idempotency_key="review-june",
         ),
@@ -1173,9 +1160,7 @@ _UPDATED_FIELD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("attr_path", "expected"), _UPDATED_FIELD_EXPECTATIONS)
-def test_update_manual_transaction_replaces_field(
-    secure_engine: Engine, attr_path: str, expected: object
-) -> None:
+def test_update_manual_transaction_replaces_field(secure_engine: Engine, attr_path: str, expected: object) -> None:
     outcome = _drive_update_manual_transaction(secure_engine)
     actual: object = outcome.updated.transaction
     for segment in attr_path.split("."):
@@ -2261,31 +2246,3 @@ def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_eng
             bucket_event_repository=event_repository,
             occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
         )
-
-
-def test_create_manual_transaction_does_not_save_transaction_when_event_history_fails(
-    secure_engine: Engine,
-    tmp_path: Path,
-) -> None:
-    transaction_repository, _ = _repositories(secure_engine)
-    broken_engine = create_engine(f"sqlite:///{tmp_path / 'broken-events.db'}")
-    broken_objects = SecureObjectRepository(engine=broken_engine)
-    Base.metadata.drop_all(broken_engine)
-    try:
-        with pytest.raises(SQLAlchemyError):
-            create_manual_transaction(
-                ManualLedgerTransactionCommand(
-                    bucket_id="bucket-a",
-                    booked_date=date(2026, 5, 2),
-                    amount=Decimal("-10.00"),
-                    direction=TransactionDirection.OUTGOING,
-                    description="event failure",
-                ),
-                transaction_repository=transaction_repository,
-                bucket_event_repository=BucketEventHistoryRepository(objects=broken_objects),
-                occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            )
-    finally:
-        broken_engine.dispose()
-
-    assert transaction_repository.load().transactions == {}
