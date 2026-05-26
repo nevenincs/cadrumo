@@ -18,11 +18,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     BusinessClassification,
     RawProvenance,
@@ -35,19 +34,6 @@ from . import (
 from ._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
-
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
-        bucket_id=bucket_id,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _raw(provider_id: str, amount: Decimal, description: str) -> RawTransaction:
@@ -97,10 +83,8 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A populated transaction catalogue round-trips through the encrypted bucket store."""
 
-    bucket_id = "default-bucket"
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session(bucket_id)):
-        repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
             amount=Decimal("-100.00"),
@@ -117,7 +101,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
         )
         original = TransactionCatalogue.from_transactions([mixed_txn, personal_txn])
         repo.save(original)
-        loaded = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
 
     assert loaded == original
     assert set(loaded.transactions.keys()) == {
@@ -136,7 +120,7 @@ def test_transaction_catalogue_survives_encrypted_storage_roundtrip(
     # Provenance must survive ingest.
     assert loaded_mixed.raw.provenance.source_format is SourceFormat.CSV
     assert loaded_mixed.raw.provenance.source_row_index == 7
-    assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").is_file()
+    assert (tmp_path / "aeat-storage" / "buckets" / "default-bucket" / "db" / "aeat.db").is_file()
 
 
 def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
@@ -163,10 +147,8 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._repository import TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
-    bucket_id = "default-bucket"
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session(bucket_id)):
-        repo = TransactionCatalogueRepository(bucket_id=bucket_id)
-
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
         mixed_txn = _transaction(
             provider_id="provider-row-1",
             amount=Decimal("-100.00"),
@@ -177,42 +159,21 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         original = TransactionCatalogue.from_transactions([mixed_txn])
         repo.save(original)
 
-        engine = create_engine_from_settings(
-            Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=bucket_id),
-        )
-        try:
-            object_key = transaction_catalogue_object_key(bucket_id)
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
-                    SecureObjectRow.object_key == object_key,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
-                assert "business_pct" in txn_dict, (
-                    "fixture must serialise business_pct into the envelope "
-                    "for this proof test to be meaningful"
-                )
-                del txn_dict["business_pct"]
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        with session_scope(get_engine(profile.settings)) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
+                SecureObjectRow.object_key == object_key,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
+            assert "business_pct" in txn_dict, (
+                "fixture must serialise business_pct into the envelope "
+                "for this proof test to be meaningful"
+            )
+            del txn_dict["business_pct"]
+            row.payload = _json.dumps(envelope).encode("utf-8")
 
-            # Now reload. The model_validator enforces MIXED <-> business_pct;
-            # the mutated record must either raise or surface inequality.
-            regression_caught = False
-            try:
-                mutated = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-            except Exception:  # boundary may raise different exception types
-                regression_caught = True
-            else:
-                if mutated != original:
-                    regression_caught = True
-        finally:
-            engine.dispose()
-
-    assert regression_caught, (
-        "anti-tautology proof failed: deleting business_pct from a "
-        "MIXED transaction did NOT surface on load. The catalogue "
-        "boundary is tautological and every transaction roundtrip "
-        "in the suite is suspect."
-    )
+        with pytest.raises(ValidationError):
+            TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
