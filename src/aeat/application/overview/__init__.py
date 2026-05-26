@@ -56,9 +56,12 @@ from ...domain.deadlines._festivos import DeadlineValidationError
 from ._applicability import (
     ApplicabilityVerdict,
     ModeloApplicability,
+    PayerFact,
     derive_modelo_applicability,
+    iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
+from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime, IrpfIncomeCategory
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -273,6 +276,33 @@ class CalendarCompleteness(BaseModel):
     defaulted_modelos: tuple[str, ...] = Field(default=())
 
 
+class SuppressedCalendarEntry(BaseModel):
+    """One filtered (non-applicable) obligation when ``--show-suppressed`` is set.
+
+    Carries the minimal envelope needed for the operator to understand
+    why a modelo was dropped from the active calendar: the modelo
+    identifier, the period, the applicability verdict, and the
+    operator-facing reason prose.
+
+    Attributes:
+        modelo: Modelo identifier.
+        period: Canonical period string (e.g. ``"2026Q1"``).
+        verdict: The :class:`ApplicabilityVerdict` that caused the entry
+            to be suppressed (``NOT_APPLICABLE``, ``ATTRIBUTION_PASS_THROUGH``,
+            or ``INCOMPLETE``).
+        reason: Operator-facing prose explaining the verdict, sourced
+            from the rule's ``not_applicable_reason`` or the
+            ``INCOMPLETE`` rationale.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    period: str = Field(min_length=1, max_length=16)
+    verdict: ApplicabilityVerdict
+    reason: str = Field(min_length=1)
+
+
 class OverviewCalendar(BaseModel):
     """Result of an ``aeat app overview calendar`` query.
 
@@ -305,6 +335,12 @@ class OverviewCalendar(BaseModel):
         incomplete_reason: Operator-facing "declare your taxpayer type
             first" guidance, present only when
             ``taxpayer_model_declared`` is ``False``.
+        suppressed_entries: Tuple of :class:`SuppressedCalendarEntry`
+            rows for obligations that were filtered out due to a
+            non-``APPLICABLE`` applicability verdict. Populated only
+            when ``show_suppressed=True`` was passed to
+            :func:`build_overview_calendar`; empty otherwise. Ordered
+            by ``(modelo, period)`` for deterministic output.
     """
 
     model_config = _STRICT_FROZEN
@@ -316,6 +352,7 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+    suppressed_entries: tuple[SuppressedCalendarEntry, ...] = Field(default=())
 
 
 class OverviewStatusReport(BaseModel):
@@ -362,39 +399,120 @@ def _entry_intersects_range(
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
 
 
-_GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = MappingProxyType(
-    {
-        "iva.regime": (
-            ("303", "390"),
-            "cli.overview.warning.iva_regime_unset",
-            "aeat config profile edit",
-        ),
-        "does_intracomunitario": (
-            ("349",),
-            "cli.overview.warning.intracomunitario_unset",
-            "aeat config profile edit",
-        ),
-        "pays_professionals_with_retencion": (
-            ("111",),
-            "cli.overview.warning.retencion_profesionales_unset",
-            "aeat config profile edit",
-        ),
-        "pays_rent_with_retencion": (
-            ("115",),
-            "cli.overview.warning.retencion_arrendamientos_unset",
-            "aeat config profile edit",
-        ),
-        "uses_objective_estimation_irpf": (
-            ("131",),
-            "cli.overview.warning.estimacion_objetiva_unset",
-            "aeat config profile edit",
-        ),
-    }
-)
-"""Profile keys the deadline engine reads when classifying applicability,
-mapped to ``(affected_modelos, message_key, fix_command)``. The list is the
-audit-named subset; future engine extensions can add rows here without
-changing the warning-rendering plumbing."""
+# Codec: maps a PayerFact value to the profile key and locale warning key
+# used by the completeness surface. The profile key is the field name on the
+# operator's raw values dict; the locale key names the CalendarWarning message.
+_PAYER_FACT_PROFILE_KEY: dict[PayerFact, tuple[str, str]] = {
+    PayerFact.PAYS_WITHHELD_INCOME: (
+        "pays_professionals_with_retencion",
+        "cli.overview.warning.retencion_profesionales_unset",
+    ),
+    PayerFact.PAYS_RENT_WITH_RETENCION: (
+        "pays_rent_with_retencion",
+        "cli.overview.warning.retencion_arrendamientos_unset",
+    ),
+    PayerFact.TRADES_INTRACOMMUNITY: (
+        "does_intracomunitario",
+        "cli.overview.warning.intracomunitario_unset",
+    ),
+    PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
+        "third_party_transactions_above_347_threshold",
+        "cli.overview.warning.terceros_threshold_unset",
+    ),
+}
+
+# Codec: maps an estimation regime (when a rule gates on exactly one regime
+# that is not the default directa path) to the profile key + locale warning key.
+_ESTIMATION_REGIME_PROFILE_KEY: dict[IrpfEstimationRegime, tuple[str, str]] = {
+    IrpfEstimationRegime.OBJETIVA: (
+        "uses_objective_estimation_irpf",
+        "cli.overview.warning.estimacion_objetiva_unset",
+    ),
+}
+
+# IVA-subject modelos: those that gate on ACTIVIDAD_ECONOMICA and the IVA
+# regime being set. The IVA regime is not a PayerFact or an estimation regime
+# — it is a separate profile key. This entry is static because the IVA regime
+# concept is not yet encoded in ModeloApplicabilityRule.
+_IVA_REGIME_MODELOS: tuple[str, ...] = ("303", "390")
+
+
+def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    """Derive the profile-key → (affected_modelos, message_key, fix_command) mapping.
+
+    Iterates :data:`~aeat.domain.calculations.registry._applicability._MODELO_APPLICABILITY_RULES`
+    and builds the completeness-warning table from the rule axes rather than
+    maintaining a hardcoded dict. New rules whose gates use a known PayerFact
+    or estimation regime automatically surface their gating warning without a
+    manual update here.
+
+    Three rule axes produce gating-field entries:
+
+    * ``required_payer_fact`` — maps to a profile boolean via
+      :data:`_PAYER_FACT_PROFILE_KEY`.
+    * ``required_estimation_regimes`` — when a rule gates on a single
+      non-directa regime, maps to a profile key via
+      :data:`_ESTIMATION_REGIME_PROFILE_KEY`.
+    * IVA-subject modelos — static set :data:`_IVA_REGIME_MODELOS`
+      mapped to the ``iva.regime`` profile key (IVA regime is not yet
+      encoded in the rule schema).
+
+    The ``fix_command`` is always ``"aeat config profile edit"`` — all
+    gating fields are settable via the profile-edit surface.
+    """
+    _FIX = "aeat config profile edit"
+    # profile_key → set of affected modelo ids
+    key_to_modelos: dict[str, set[str]] = {}
+    # profile_key → (locale_message_key, fix_command)
+    key_to_meta: dict[str, tuple[str, str]] = {}
+
+    for rule in iter_modelo_applicability_rules():
+        # Payer-fact gate
+        if rule.required_payer_fact is not None:
+            profile_key, locale_key = _PAYER_FACT_PROFILE_KEY.get(
+                rule.required_payer_fact, (None, None)
+            )
+            if profile_key is not None:
+                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
+                key_to_meta[profile_key] = (locale_key, _FIX)
+
+        # Estimation-regime gate (only when exactly one regime is required
+        # and it maps to a known profile key — multi-regime rules like
+        # Modelo 130 that allow both directa variants are not gated here)
+        if len(rule.required_estimation_regimes) == 1:
+            (regime,) = rule.required_estimation_regimes
+            if regime in _ESTIMATION_REGIME_PROFILE_KEY:
+                profile_key, locale_key = _ESTIMATION_REGIME_PROFILE_KEY[regime]
+                key_to_modelos.setdefault(profile_key, set()).add(rule.modelo)
+                key_to_meta[profile_key] = (locale_key, _FIX)
+
+    # IVA regime — static because iva.regime is not yet a rule-schema axis
+    key_to_modelos["iva.regime"] = set(_IVA_REGIME_MODELOS)
+    key_to_meta["iva.regime"] = ("cli.overview.warning.iva_regime_unset", _FIX)
+
+    return MappingProxyType(
+        {
+            profile_key: (
+                tuple(sorted(key_to_modelos[profile_key])),
+                key_to_meta[profile_key][0],
+                key_to_meta[profile_key][1],
+            )
+            for profile_key in sorted(key_to_modelos)
+        }
+    )
+
+
+# Eagerly computed at import time so the result is a module-level constant
+# for the duration of the process. The rules dict is immutable; the derived
+# gating fields are therefore stable for the process lifetime.
+_GATING_FIELDS: MappingProxyType[str, tuple[tuple[str, ...], str, str]] = _gating_fields()
+"""Profile keys derived from :data:`_MODELO_APPLICABILITY_RULES` that the
+deadline engine reads when classifying applicability, mapped to
+``(affected_modelos, message_key, fix_command)``.
+
+Built by :func:`_gating_fields` at import time from the canonical rule
+table so new rules automatically surface their gating warnings without
+a manual update to this mapping."""
 
 
 def _build_completeness_and_warnings(
@@ -440,6 +558,7 @@ def build_overview_calendar(
     today: date,
     engine: ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
+    show_suppressed: bool = False,
 ) -> OverviewCalendar:
     """Build a typed calendar view for ``profile`` over ``calendar_range``.
 
@@ -457,6 +576,12 @@ def build_overview_calendar(
             :class:`aeat.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
             a default :class:`DeadlineEngine` is constructed.
+        show_suppressed: When ``True``, populate
+            :attr:`OverviewCalendar.suppressed_entries` with the
+            obligations filtered out by a non-``APPLICABLE``
+            applicability verdict. Default is ``False`` — the standard
+            calendar view excludes suppressed rows from the payload
+            entirely.
 
     A year inside the range with no registered deadline windows is
     treated as a "no data yet" state: that year contributes zero
@@ -504,6 +629,7 @@ def build_overview_calendar(
             continue
 
     entries: list[OverviewCalendarEntry] = []
+    suppressed: list[SuppressedCalendarEntry] = []
     for schedule in schedules:
         for obligation in schedule.obligations:
             if not _entry_intersects_range(obligation, calendar_range):
@@ -523,6 +649,15 @@ def build_overview_calendar(
             # deferred expansion (see ``_SEED_COVERAGE_NOTICE``).
             applicability = derive_modelo_applicability(profile, obligation.modelo)
             if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
+                if show_suppressed:
+                    suppressed.append(
+                        SuppressedCalendarEntry(
+                            modelo=obligation.modelo,
+                            period=obligation.period,
+                            verdict=applicability.verdict,
+                            reason=applicability.reason,
+                        )
+                    )
                 continue
             try:
                 shift = shift_deadline(
@@ -561,6 +696,7 @@ def build_overview_calendar(
             )
 
     entries.sort(key=lambda entry: (entry.closes_on, entry.modelo, entry.period))
+    suppressed.sort(key=lambda s: (s.modelo, s.period))
     entries_tuple = tuple(entries)
     completeness, warnings = _build_completeness_and_warnings(raw_values, entries_tuple)
     return OverviewCalendar(
@@ -569,6 +705,7 @@ def build_overview_calendar(
         generated_at=datetime.now(UTC),
         warnings=warnings,
         completeness=completeness,
+        suppressed_entries=tuple(suppressed),
     )
 
 
@@ -640,6 +777,7 @@ __all__ = [
     "OverviewBacklogError",
     "OverviewCalendar",
     "OverviewCalendarEntry",
+    "SuppressedCalendarEntry",
     "OverviewCalendarError",
     "OverviewCalendarRange",
     "OverviewError",
