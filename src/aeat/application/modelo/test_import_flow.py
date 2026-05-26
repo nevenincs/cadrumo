@@ -17,12 +17,6 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
     ExternalModeloImportError,
@@ -38,7 +32,6 @@ from aeat.application.modelo import (
     import_external_filing_evidence,
     mark_revision_verificado_completo,
 )
-from aeat.core.config import Settings
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -64,6 +57,7 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from aeat.domain.modelos._work_unit import WorkUnit
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 from .test_file_flow import _file_revision
 
@@ -82,21 +76,14 @@ _T5 = datetime(2026, 4, 17, 13, 0, 0, tzinfo=UTC)
 def repos(tmp_path):
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "modelo_import_flow.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            wu = WorkUnitCatalogueRepository(objects=objects)
-            cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = ModeloRecordCatalogueRepository(objects=objects)
-            vr = VerificationReportCatalogueRepository(objects=objects)
-            bv = BucketEventHistoryRepository(objects=objects)
-            yield wu, cr, fr, vr, bv
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        objects = profile.repository
+        wu = WorkUnitCatalogueRepository(objects=objects)
+        cr = CalculationRevisionCatalogueRepository(objects=objects)
+        fr = ModeloRecordCatalogueRepository(objects=objects)
+        vr = VerificationReportCatalogueRepository(objects=objects)
+        bv = BucketEventHistoryRepository(objects=objects)
+        yield wu, cr, fr, vr, bv
 
 
 def _seed_work_unit(wu_repo):
@@ -344,9 +331,14 @@ def test_import_then_amend_unlocks_amendment_path(repos) -> None:
     assert refreshed_baseline.status is ModeloRecordStatus.SUPERSEDIDO
     assert refreshed_baseline.superseded_by_filing_record_id == amended.filing_record_id
 
-    # Chronological event chain: import → amend.
+    # Chronological import/amend event chain. Work-unit creation is
+    # also persisted in this catalogue by the shared runtime path.
     catalogue = bv_repo.load()
-    chain = tuple(e.event_type for e in catalogue.for_bucket(work_unit.bucket_id))
+    chain = tuple(
+        e.event_type
+        for e in catalogue.for_bucket(work_unit.bucket_id)
+        if e.event_type in {BucketEventType.MODELO_FILING_IMPORTED, BucketEventType.MODELO_AMENDED}
+    )
     assert chain == (
         BucketEventType.MODELO_FILING_IMPORTED,
         BucketEventType.MODELO_AMENDED,

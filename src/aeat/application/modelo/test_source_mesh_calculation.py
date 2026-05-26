@@ -8,16 +8,13 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.transactions import TransactionCatalogueRepository
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     ModeloAggregationBindingError,
     calculate_modelo_revision_from_bucket_aggregation,
@@ -31,21 +28,12 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield engine
-        finally:
-            engine.dispose()
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+        yield profile.repository
 
 
-def _repositories(engine: Engine):
-    objects = SecureObjectRepository(engine=engine)
+def _repositories(objects: SecureObjectRepository):
     return (
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
@@ -81,14 +69,14 @@ def _seed_work_unit(
     ],
 )
 def test_bucket_calculation_rejects_source_owned_binding_overrides(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
     modelo: str,
     filing_year: int,
     period: str,
     revision_id: str,
     binding_id: str,
 ) -> None:
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo=modelo,
@@ -120,14 +108,14 @@ def test_bucket_calculation_rejects_source_owned_binding_overrides(
     ],
 )
 def test_bucket_calculation_rejects_source_owned_bound_casilla_overrides(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
     modelo: str,
     filing_year: int,
     period: str,
     revision_id: str,
     casilla_id: str,
 ) -> None:
-    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, tx_repo, invoice_repo = _repositories(secure_objects)
     work_unit = _seed_work_unit(
         wu_repo,
         modelo=modelo,
