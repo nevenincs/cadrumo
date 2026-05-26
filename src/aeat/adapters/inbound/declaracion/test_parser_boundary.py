@@ -181,6 +181,48 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
 
 
 @pytest.mark.parametrize(
+    "pdf_stem",
+    [
+        "2021-2T",
+        "2021-3T",
+        "2021-4T",
+        "2022-1T",
+        "2022-2T",
+        "2022-3T",
+        "2022-4T",
+        "2023-1T",
+        "2023-2T",
+        "2023-3T",
+        "2023-4T",
+        "2024-1T",
+        "2024-2T",
+        "2024-3T",
+        "2024-4T",
+    ],
+)
+def test_parser_extracts_tax_id_from_all_m303_corpus_pdfs(pdf_stem: str) -> None:
+    """Tax-id extraction must succeed for all 15 M303 corpus PDFs.
+
+    2021-2022 specimens use an inverted layout (tax ID on the line before the
+    "NIF Presentador:" label). 2023+ specimens carry label and ID on a single
+    line. Both layouts must yield Y0000001S.
+    """
+    from ._parser import _extract_tax_id
+    from ._parsers import extract_pages_text
+
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+    pages = extract_pages_text(pdf_path)
+    text = "\n".join(pages)
+
+    tax_id = _extract_tax_id(text)
+
+    assert tax_id == "Y0000001S", (
+        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r} — "
+        "check _TAX_ID_RE and _TAX_ID_BEFORE_LABEL_RE in _parser.py"
+    )
+
+
+@pytest.mark.parametrize(
     "pdf_stem,year,period",
     [
         ("2023-1T", 2023, "1T"),
