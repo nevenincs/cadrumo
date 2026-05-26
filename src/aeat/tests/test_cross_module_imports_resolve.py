@@ -262,3 +262,159 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
         f"the source-tree walk probably broke. Expected hundreds of "
         f"``from aeat.X import Y`` statements across the package."
     )
+
+
+# Per-file count cap for the __init__.py public-import-without-__all__ gate.
+# Mirrors the singleton-warning regression cap idiom (W06.P16.S115):
+# each entry pins the maximum number of public sibling imports an
+# ``__init__.py`` may carry without listing them in ``__all__``. The
+# gate fails when a file's count grows (regression — public surface
+# drifted further off ``__all__``) OR when a file's count shrinks
+# (silent fix — trim the cap so the gain is locked in) OR when a
+# new file enters the set (regression — new ``__init__.py`` skipped
+# the discipline). Trim caps as packages clean up; the W09.P20 close
+# state is an empty mapping.
+_INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
+    "aeat/adapters/inbound/borrador/_extractors/__init__.py": 2,
+    "aeat/adapters/outbound/aeat/auth/__init__.py": 2,
+    "aeat/adapters/outbound/aeat/verify/__init__.py": 10,
+    "aeat/application/auth/__init__.py": 1,
+    "aeat/application/filing/__init__.py": 11,
+    "aeat/application/live/__init__.py": 39,
+    "aeat/application/overview/__init__.py": 14,
+    "aeat/application/registry/__init__.py": 27,
+    "aeat/application/topics/__init__.py": 2,
+    "aeat/application/user_profile/__init__.py": 5,
+    "aeat/core/corpus_manifest/__init__.py": 2,
+    "aeat/core/redaction/__init__.py": 5,
+    "aeat/domain/profile/__init__.py": 1,
+    "aeat/domain/profile/assets/__init__.py": 1,
+    "aeat/domain/profile/inventory/__init__.py": 3,
+    "aeat/entrypoints/cli/__init__.py": 33,
+    "aeat/entrypoints/cli/_config/__init__.py": 101,
+}
+
+
+def _collect_init_missing_from_all() -> list[tuple[str, str]]:
+    """For each ``__init__.py`` under src/aeat/, return public-import names absent from ``__all__``.
+
+    The contract: any name (a) imported into the package's
+    ``__init__.py`` from a sibling module via ``from .X import Y``,
+    AND (b) public (no leading underscore), must also appear in
+    ``__all__`` if the file declares one. Leading-underscore names
+    are private and intentionally not re-exported. ``__init__.py``
+    files without ``__all__`` are exempt (nothing to drift against).
+    """
+    findings: list[tuple[str, str]] = []
+    for source in _python_sources():
+        if source.name != "__init__.py":
+            continue
+        try:
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        except SyntaxError:
+            continue
+        all_names = _extract_all_assignment(tree)
+        if all_names is None:
+            continue
+        rel = source.relative_to(SRC_AEAT.parent).as_posix()
+        for node in _walk_import_from(tree):
+            # Only the package's OWN siblings count — absolute imports
+            # from elsewhere in aeat or stdlib re-exports are caller's
+            # choice, not a package-public-surface promise.
+            if node.level == 0:
+                continue
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                exposed = alias.asname or alias.name
+                if exposed.startswith("_"):
+                    continue
+                if exposed not in all_names:
+                    findings.append((rel, exposed))
+    return findings
+
+
+def _extract_all_assignment(tree: ast.AST) -> set[str] | None:
+    """Return the literal names listed in ``__all__``, or ``None`` if not declared."""
+    for node in ast.iter_child_nodes(tree):
+        target_name: str | None = None
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            tgt = node.targets[0]
+            if isinstance(tgt, ast.Name) and tgt.id == "__all__":
+                target_name = tgt.id
+                value = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__":
+            target_name = node.target.id
+            value = node.value
+        if target_name is None or value is None:
+            continue
+        if not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+            return None
+        names: set[str] = set()
+        for element in value.elts:
+            if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                names.add(element.value)
+        return names
+    return None
+
+
+def test_init_public_imports_appear_in_all_against_baseline() -> None:
+    """Every public name imported into an ``__init__.py`` from a sibling must be in ``__all__``.
+
+    Catches the half-export pattern: a package imports a public name
+    into its ``__init__.py`` (binding it as an attribute on the
+    package) but forgets to add it to ``__all__``. The wildcard
+    consumer ``from pkg import *`` then misses the name, and the
+    public-surface contract drifts off the ``__all__`` source of truth.
+
+    Closes ``W09.P20.S140``. Sibling check to ``S139`` — together
+    they pin every ``__init__.py`` re-export at both ends:
+    ``S139`` proves consumer imports resolve; ``S140`` proves the
+    package's own re-exports are coherent.
+
+    Uses the per-file count-cap idiom established by
+    ``W06.P16.S115`` so 225 historical findings stay tracked without
+    a 225-line inline tuple list. Each cap is a regression boundary:
+    a file's count cannot grow without the gate failing, and any
+    shrink must be locked in by trimming the cap.
+    """
+    live_findings = _collect_init_missing_from_all()
+    live_counts: dict[str, int] = {}
+    for path, _name in live_findings:
+        live_counts[path] = live_counts.get(path, 0) + 1
+
+    failure_lines: list[str] = []
+    for path, live_count in sorted(live_counts.items()):
+        cap = _INIT_MISSING_FROM_ALL_BASELINE.get(path)
+        if cap is None:
+            failure_lines.append(
+                f"  + {path!r}: new __init__.py with {live_count} public "
+                f"sibling import(s) missing from __all__"
+            )
+        elif live_count > cap:
+            failure_lines.append(
+                f"  + {path!r}: grew from {cap} to {live_count} "
+                f"public-import-without-__all__ findings"
+            )
+        elif live_count < cap:
+            failure_lines.append(
+                f"  - {path!r}: cap is {cap} but only {live_count} "
+                f"finding(s) remain — trim _INIT_MISSING_FROM_ALL_BASELINE"
+            )
+
+    # Files in the baseline but absent from live findings are silent
+    # fixes too — the entire cap should be removed.
+    for path, cap in sorted(_INIT_MISSING_FROM_ALL_BASELINE.items()):
+        if path not in live_counts and cap > 0:
+            failure_lines.append(
+                f"  - {path!r}: all {cap} finding(s) resolved — "
+                f"remove the entry from _INIT_MISSING_FROM_ALL_BASELINE"
+            )
+
+    if failure_lines:
+        header = (
+            "Public names imported into __init__.py but missing from __all__ "
+            "(regression caps drifted — fix the underlying drift or update the cap):"
+        )
+        assert False, "\n" + header + "\n" + "\n".join(failure_lines)
