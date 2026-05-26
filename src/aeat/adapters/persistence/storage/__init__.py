@@ -166,6 +166,14 @@ from .master_key._recovery import (
     unwrap_master_key,
     wrap_master_key,
 )
+from .runtime import (
+    StorageRuntime,
+    StorageRuntimeReadiness,
+    StorageRuntimeReadinessCode,
+    StorageRuntimeReadinessIssue,
+    StorageRuntimeSession,
+    inspect_storage_runtime,
+)
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
 from .sql.records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
@@ -243,6 +251,11 @@ __all__ = [
     "SensitivityClass",
     "SqlRecordRepository",
     "StorageError",
+    "StorageRuntime",
+    "StorageRuntimeReadiness",
+    "StorageRuntimeReadinessCode",
+    "StorageRuntimeReadinessIssue",
+    "StorageRuntimeSession",
     "StorageValidationError",
     "UnsecuredMasterKeyProvider",
     "UnsecuredModeRefusedError",
@@ -275,6 +288,7 @@ __all__ = [
     "get_secret_store",
     "get_sessionmaker",
     "has_active_bucket_session",
+    "inspect_storage_runtime",
     "load_corpus_manifest",
     "load_encrypted_envelope",
     "load_envelope",
