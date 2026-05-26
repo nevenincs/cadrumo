@@ -18,14 +18,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._amendment import (
     AmendmentKind,
@@ -42,6 +40,26 @@ from ._schema import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "filing-runtime"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _runtime_engine(tmp_path: Path):
+    return create_engine_from_settings(
+        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+    )
 
 
 def _populated_amended_draft() -> ModeloDraft:
@@ -119,48 +137,34 @@ def _populated_amendment() -> ModeloComplementaria:
 
 def test_filing_amendment_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A ModeloComplementaria with delta + amended draft roundtrips strictly."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "amendment-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        original = _populated_amendment()
+        repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+        loaded = ModeloAmendmentRepository(bucket_id=_BUCKET_ID).load(original.amendment_id)
 
-            original = _populated_amendment()
-            repo = ModeloAmendmentRepository()
-            repo.save(original)
-            loaded = repo.load(original.amendment_id)
-
-            assert loaded is not None
-            assert loaded == original
-            # Per-field witnesses for the delta tuple (the most fragile
-            # part — a save-drops-old_value regression would surface
-            # here as None on load).
-            assert len(loaded.delta) == 2
-            assert loaded.delta[0].casilla_code == "iva.devengado"
-            assert loaded.delta[0].old_value == Decimal("20000.00")
-            assert loaded.delta[0].new_value == Decimal("20500.00")
-            assert loaded.delta[1].casilla_code == "iva.resultado"
-            # AmendmentKind enum identity + the nested amended_draft
-            # carries its own typed substructure.
-            assert loaded.amendment_kind is AmendmentKind.COMPLEMENTARIA
-            assert loaded.amended_draft.snapshot_ref is not None
-            assert loaded.amended_draft.snapshot_ref.revision_id == "2025-y-siguientes"
-        finally:
-            engine.dispose()
+    assert loaded is not None
+    assert loaded == original
+    # Per-field witnesses for the delta tuple (the most fragile
+    # part - a save-drops-old_value regression would surface here as
+    # None on load).
+    assert len(loaded.delta) == 2
+    assert loaded.delta[0].casilla_code == "iva.devengado"
+    assert loaded.delta[0].old_value == Decimal("20000.00")
+    assert loaded.delta[0].new_value == Decimal("20500.00")
+    assert loaded.delta[1].casilla_code == "iva.resultado"
+    # AmendmentKind enum identity + the nested amended_draft
+    # carries its own typed substructure.
+    assert loaded.amendment_kind is AmendmentKind.COMPLEMENTARIA
+    assert loaded.amended_draft.snapshot_ref is not None
+    assert loaded.amended_draft.snapshot_ref.revision_id == "2025-y-siguientes"
 
 
 def test_filing_amendment_emptied_delta_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: emptying the delta tuple must surface on load.
 
@@ -189,18 +193,11 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._complementaria_repository import _AMENDMENT_NAMESPACE
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "amendment-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        engine = _runtime_engine(tmp_path)
         try:
-            SecureObjectRepository(engine=engine)
             original = _populated_amendment()
-            repo = ModeloAmendmentRepository()
+            repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
             repo.save(original)
 
             with session_scope(engine) as session:
@@ -220,16 +217,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
                 payload["delta"] = []
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
-            regression_caught = False
-            try:
-                repo.load(original.amendment_id)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: emptying the delta tuple "
-                "did NOT surface on load. The amendment catalogue "
-                "boundary is tautological and the audit-trail contract "
-                "is not actually enforced post-persistence."
-            )
+            with pytest.raises(ValidationError, match="delta"):
+                ModeloAmendmentRepository(bucket_id=_BUCKET_ID).load(original.amendment_id)
         finally:
             engine.dispose()

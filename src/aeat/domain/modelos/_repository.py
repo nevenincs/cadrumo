@@ -20,6 +20,7 @@ from ...adapters.persistence.storage.errors import (
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import ModeloError
+from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 from ._work_unit import WorkUnit, WorkUnitCatalogue
 
 _LOGGER = get_logger(__name__)
@@ -40,8 +41,19 @@ class WorkUnitCatalogueRepository:
     persisted yet (no separate "fresh install" path is needed).
     """
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if objects is not None:
+            self._objects = objects
+            return
+        self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=WorkUnitPersistenceError)
+        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+
+        return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether a work-unit catalogue object has been persisted."""

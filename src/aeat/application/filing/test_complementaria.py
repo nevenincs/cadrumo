@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -24,45 +23,16 @@ from .testing import ModeloTestProfile
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path):
-    """Install an ephemeral master key provider for encrypted test stores."""
-    from ...adapters.persistence.storage import (
-        EncryptedBlobStore,
-        EphemeralMasterKeyProvider,
-        SecretStore,
-        override_secret_store,
-    )
-
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(
-        root_dir=tmp_path / "blobs",
-        master_key_provider=provider,
-    )
-    secret_store = SecretStore(
-        store_dir=tmp_path / "secrets",
-        blob_store=blob_store,
-        master_key_provider=provider,
-    )
-    with provider:
-        override_secret_store(secret_store)
-        try:
-            yield
-        finally:
-            override_secret_store(None)
-
-
-def _persist_original_draft(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, draft: ModeloDraft) -> None:
+def _persist_original_draft(draft: ModeloDraft) -> None:
     from ...domain.filing import ModeloDraftRepository
 
-    drafts_dir = tmp_path / "drafts"
-    submissions_dir = tmp_path / "submissions"
-    drafts_dir.mkdir()
-    submissions_dir.mkdir()
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(drafts_dir))
-    monkeypatch.setenv("AEAT_SUBMISSIONS_DIR", str(submissions_dir))
-    del drafts_dir
     ModeloDraftRepository().save(draft)
+
+
+def _persisted_amendment_ids() -> tuple[str, ...]:
+    from ...domain.filing import ModeloAmendmentRepository
+
+    return ModeloAmendmentRepository().list_amendment_ids()
 
 
 def _submitted_filing(
@@ -132,9 +102,7 @@ def _registry_draft(*, casillas: dict[str, Decimal]) -> ModeloDraft:
 
 
 class TestBuildComplementaria:
-    def test_modelo_130_builds_and_persists_complementaria(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_modelo_130_builds_and_persists_complementaria(self) -> None:
         original_draft = _registry_draft(
             casillas={
                 "01": Decimal("10000"),
@@ -149,7 +117,7 @@ class TestBuildComplementaria:
                 "18": Decimal("0"),
             }
         )
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
 
         amendment = build_complementaria(
@@ -174,9 +142,7 @@ class TestBuildComplementaria:
         with pytest.raises(ModeloAmendmentError, match="path separators"):
             load_amendment("../escape")
 
-    def test_complementaria_requires_official_justificante_csv(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_complementaria_requires_official_justificante_csv(self) -> None:
         original_draft = _registry_draft(
             casillas={
                 "01": Decimal("10000"),
@@ -184,7 +150,7 @@ class TestBuildComplementaria:
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             }
         )
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, justificante_csv="")
 
         with pytest.raises(ModeloBuilderError, match="official justificante CSV"):
@@ -193,11 +159,9 @@ class TestBuildComplementaria:
                 {"01": Decimal("11000")},
                 schema_provider=build_runtime_schema_provider(),
             )
-        assert not (tmp_path / "submissions" / "amendments").exists()
+        assert _persisted_amendment_ids() == ()
 
-    def test_complementaria_requires_original_registry_snapshot(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_complementaria_requires_original_registry_snapshot(self) -> None:
         original_draft = _registry_draft(
             casillas={
                 "01": Decimal("10000"),
@@ -205,7 +169,7 @@ class TestBuildComplementaria:
                 "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             }
         ).model_copy(update={"schema_version": "registry:130:wrong-revision"})
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
 
         with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
@@ -214,11 +178,11 @@ class TestBuildComplementaria:
                 {"01": Decimal("11000")},
                 schema_provider=build_runtime_schema_provider(),
             )
-        assert not (tmp_path / "submissions" / "amendments").exists()
+        assert _persisted_amendment_ids() == ()
 
-    def test_unknown_modelo_requires_registry_definition(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_unknown_modelo_requires_registry_definition(self) -> None:
         original_draft = _draft("999", "2024Q2", {"69": Decimal("1900.00")})
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-999")
 
         with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
@@ -227,13 +191,11 @@ class TestBuildComplementaria:
                 {"07": Decimal("11000.00"), "29": Decimal("200.00")},
                 schema_provider=build_runtime_schema_provider(),
             )
-        assert not (tmp_path / "submissions" / "amendments").exists()
+        assert _persisted_amendment_ids() == ()
 
-    def test_unknown_annual_modelo_requires_registry_definition(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_unknown_annual_modelo_requires_registry_definition(self) -> None:
         original_draft = _draft("998", "2024A", {"109": Decimal("8400.00")})
-        _persist_original_draft(monkeypatch, tmp_path, original_draft)
+        _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-998")
 
         with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
@@ -242,4 +204,4 @@ class TestBuildComplementaria:
                 {"01": 2024},
                 schema_provider=build_runtime_schema_provider(),
             )
-        assert not (tmp_path / "submissions" / "amendments").exists()
+        assert _persisted_amendment_ids() == ()

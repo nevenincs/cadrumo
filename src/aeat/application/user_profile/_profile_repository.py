@@ -33,13 +33,16 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import (
+    BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
@@ -108,15 +111,7 @@ def _default_kdf_params() -> ManifestKdfParams:
     non-breaking. The salt is freshly minted per bucket.
     """
 
-    return ManifestKdfParams(
-        algorithm="argon2id",
-        version=0x13,
-        memory_cost=19_456,
-        time_cost=2,
-        parallelism=1,
-        salt=secrets.token_bytes(16),
-        output_length=32,
-    )
+    return KdfParams.default().to_manifest_params()
 
 
 class ProfileSummary(BaseModel):
@@ -247,7 +242,11 @@ class ProfileRepository:
 
         kdf_params = _default_kdf_params()
         created_at = datetime.now(UTC)
-        manifest_schema_version = 1
+        bucket_dek_path = keystore_path(self._root, resolved_id) / "bucket.dek.json"
+        key_schedule = (
+            BucketKeySchedule.BUCKET_DEK_V1 if bucket_dek_path.is_file() else BucketKeySchedule.LEGACY_MASTER_KEY
+        )
+        manifest_schema_version = 2 if key_schedule is BucketKeySchedule.BUCKET_DEK_V1 else 1
 
         # Step 1: stage the bucket directory tree + the plaintext
         # manifest — the point at which the bucket becomes a registered
@@ -267,6 +266,7 @@ class ProfileRepository:
                     last_unlocked_at=None,
                     kdf_params=kdf_params,
                     recovery_enrolled=False,
+                    key_schedule=key_schedule,
                     schema_version=manifest_schema_version,
                     status=BucketLifecycleStatus.ACTIVE,
                 ),
@@ -373,15 +373,18 @@ class ProfileRepository:
         """
 
         paths = bucket_paths(self._root, aggregate.profile_id)
+        current_manifest = read_manifest(paths)
         write_manifest(
             paths,
             BucketManifest(
                 bucket_id=aggregate.profile_id,
                 label=aggregate.label,
                 created_at=aggregate.created_at,
-                last_unlocked_at=None,
+                last_unlocked_at=current_manifest.last_unlocked_at,
                 kdf_params=aggregate.kdf_params,
                 recovery_enrolled=aggregate.recovery_enrolled,
+                idle_lock_minutes=current_manifest.idle_lock_minutes,
+                key_schedule=current_manifest.key_schedule,
                 schema_version=aggregate.manifest_schema_version,
                 status=_manifest_status_for(aggregate.status),
             ),
@@ -505,9 +508,7 @@ class ProfileRepository:
         # Step 3: tombstone the encrypted record.
         result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
         tombstoned_record = result.profile
-        return aggregate.model_copy(
-            update={"record": tombstoned_record, "status": tombstoned_record.status}
-        )
+        return aggregate.model_copy(update={"record": tombstoned_record, "status": tombstoned_record.status})
 
     # ── select ─────────────────────────────────────────────────────
 
@@ -534,9 +535,7 @@ class ProfileRepository:
 
         aggregate = self.load(profile_id)
         if aggregate.status is UserProfileStatus.TOMBSTONED:
-            raise ProfileNotFoundError(
-                f"profile {profile_id!r} is tombstoned and cannot be selected"
-            )
+            raise ProfileNotFoundError(f"profile {profile_id!r} is tombstoned and cannot be selected")
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
 

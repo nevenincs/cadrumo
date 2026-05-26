@@ -106,10 +106,13 @@ class TestMaterialiseSecret:
         with materialise_secret("aeat:test:alt", store=alt_store) as path:
             assert path.read_bytes() == b"alternate-payload"
 
-    @pytest.mark.skipif(os.name != "posix", reason="POSIX-only file mode bits")
     def test_tempfile_is_mode_0o600(self, secret_store: SecretStore) -> None:
         _put_secret(secret_store, "aeat:test:perm", b"mode-check")
         with materialise_secret("aeat:test:perm") as path:
+            assert path.read_bytes() == b"mode-check"
+            if os.name != "posix":
+                assert path.exists()
+                return
             mode = path.stat().st_mode & 0o777
             assert mode == 0o600
 

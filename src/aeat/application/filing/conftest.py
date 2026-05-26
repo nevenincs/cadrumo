@@ -10,37 +10,39 @@ fixture.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import override_settings
+
+_BUCKET_ID = "filing-test"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _active_bucket_runtime(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+        activate_session(_session()),
+    ):
         try:
             yield
         finally:
-            override_secret_store(None)
             dispose_engine()

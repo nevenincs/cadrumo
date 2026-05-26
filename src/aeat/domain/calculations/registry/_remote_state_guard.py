@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 from pydantic import AnyUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ._aeat_hosts import first_aeat_host, is_aeat_host
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
@@ -24,10 +25,6 @@ RemoteGuardDecision = Literal["allowed", "blocked"]
 RemoteEvidenceTier = Literal["official_source_guidance", "executable_parity_evidence", "layout_authority"]
 
 _READ_ONLY_HTTP_METHODS = {"GET", "HEAD", "OPTIONS"}
-_AEAT_HOST_SUFFIXES = (
-    "agenciatributaria.gob.es",
-    "aeat.es",
-)
 # Canonical AEAT write-class action labels that EVERY guard policy
 # attached to a live cross-reference / oracle MUST include. This is the
 # read-only mandate enforced as code: AEAT writes are PERMANENTLY
@@ -171,6 +168,13 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             raise RegistryValidationError("static official documentation cannot accept synthetic remote data")
         if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
             raise RegistryValidationError("forbidden stateful surface cannot accept synthetic remote data")
+        if self.synthetic_data_allowed:
+            aeat_host = first_aeat_host(self.allowed_hosts)
+            if aeat_host is not None:
+                raise RegistryValidationError(
+                    f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
+                    f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces"
+                )
         return self
 
     @field_validator("allowed_hosts")
@@ -360,5 +364,4 @@ def _browser_action_patterns_for_decision(decision: LiveCrossReferenceDecision) 
 
 
 def _is_aeat_host(host: str) -> bool:
-    normalized = host.lower()
-    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in _AEAT_HOST_SUFFIXES)
+    return is_aeat_host(host)

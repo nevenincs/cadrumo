@@ -21,11 +21,13 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
+from .....core.logging import get_logger
 from ..bucket._errors import BucketLockedError
 from ._zeroise import zeroise as _zeroise
 
 _KEK_BYTES = 32
 _DEK_BYTES = 32
+_log = get_logger(__name__)
 
 
 class BucketSession:
@@ -43,6 +45,7 @@ class BucketSession:
         "_idle_window",
         "_kek_buffer",
         "_sealed",
+        "_unsecured_backend",
     )
 
     def __init__(
@@ -53,12 +56,14 @@ class BucketSession:
         dek_buffer: bytearray,
         idle_window: timedelta,
         idle_deadline: datetime,
+        unsecured_backend: bool,
     ) -> None:
         self._bucket_id = bucket_id
         self._kek_buffer = kek_buffer
         self._dek_buffer = dek_buffer
         self._idle_window = idle_window
         self._idle_deadline = idle_deadline
+        self._unsecured_backend = unsecured_backend
         self._sealed = False
 
     @classmethod
@@ -70,6 +75,7 @@ class BucketSession:
         dek: bytes,
         idle_minutes: int,
         opened_at: datetime,
+        unsecured_backend: bool = False,
     ) -> BucketSession:
         """Open a session for one bucket.
 
@@ -103,6 +109,7 @@ class BucketSession:
             dek_buffer=bytearray(dek),
             idle_window=idle_window,
             idle_deadline=opened_at + idle_window,
+            unsecured_backend=unsecured_backend,
         )
 
     @property
@@ -112,6 +119,10 @@ class BucketSession:
     @property
     def sealed(self) -> bool:
         return self._sealed
+
+    @property
+    def unsecured_backend(self) -> bool:
+        return self._unsecured_backend
 
     @property
     def idle_deadline(self) -> datetime:
@@ -182,25 +193,16 @@ class BucketSession:
     def _evict_engine(self) -> None:
         """Dispose the SQLAlchemy engine bound to this bucket's database."""
 
-        try:
-            from .....core.config import Settings, load_settings
-            from ..sql.engine import dispose_engine
-        except Exception:  # pragma: no cover - defensive
-            return
+        from .....core.config import Settings, load_settings
+        from ..sql.engine import dispose_engine
 
         try:
             settings = load_settings()
-            bucket_db_path = (
-                settings.aeat_local_storage_root
-                / "buckets"
-                / self._bucket_id
-                / "db"
-                / "aeat.db"
-            )
+            bucket_db_path = settings.aeat_local_storage_root / "buckets" / self._bucket_id / "db" / "aeat.db"
             target_url = f"sqlite:///{bucket_db_path.as_posix()}"
             dispose_engine(Settings(aeat_database_url=target_url))
-        except Exception:  # noqa: S110 — never raise from close(); engine eviction is best-effort cleanup  # pragma: no cover
-            pass
+        except Exception as exc:
+            _log.debug("bucket session engine eviction failed: %s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]

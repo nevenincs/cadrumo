@@ -76,6 +76,29 @@ adapters:
       testing_project_cap_warning: The Google OAuth refresh token is approaching the
         7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat
         config google login` to extend the credential lifetime.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Declaration extraction failed for profile {profile}: {details}'
+        modelo_conflict: --modelo {modelo!r} conflicts with detected {detected!r}.
+        period_unresolved: Declaration period could not be resolved from the PDF text.
+        profile_count_invalid: 'Expected exactly one declaration PDF extraction profile
+          for modelo={modelo}; available: {available}.'
+        profile_unavailable: Declaration extraction profile {profile!r} is not available
+          for modelo={modelo}.
+        registry_snapshot_required: 'Declaration extraction requires a validated registry
+          snapshot for modelo={modelo} year={year} period={period}: {error}'
+        snapshot_modelo_conflict: Registry snapshot modelo {snapshot_modelo!r} conflicts
+          with detected {detected!r}.
+        tax_id_unresolved: Declaration tax id could not be resolved from the PDF text.
+        template_not_detected: Could not auto-detect template for {path}; pass --modelo
+          and --año to override.
+        year_conflict: --año {year} conflicts with detected {detected}.
+    pdf:
+      errors:
+        no_text: No text extracted from {source}; {label} may be scan-only or XFA.
+        not_found: '{label}: {path}'
+        open_failed: 'pdfplumber could not open {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -491,7 +514,8 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           no_exportable_revision_work_verify: Work unit has no verified-complete or
-            filed calculation revision to export. Run `aeat app modelo work verify` first.
+            filed calculation revision to export. Run `aeat app modelo work verify`
+            first.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -961,6 +985,8 @@ cli:
       connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
+      integrity_attribution_details_help: Include per-row safe metadata details
+      integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       integrity_objects_help: Probe AES-256-GCM tag verification across one namespace
@@ -975,6 +1001,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
+      plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
+        rows.
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
       profile_clear_active_mismatch: --clear-active can only clear the active profile
@@ -988,8 +1016,10 @@ cli:
       profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
-      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
-        requires --yes)
+      quarantine_help: Preview undecryptable rows; active quarantine is disabled by
+        preserve-first repair policy
+      quarantine_preserve_first_refused: Preserve-first repair policy refuses active
+        quarantine. Run the dry-run preview and integrity attribution instead.
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
@@ -1693,6 +1723,10 @@ cli:
     parity_tape_help: Path to a stored parity tape JSON file
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
+    sources:
+      source_ref_help: Source reference id to show
+      view_help: Show one source reference by id
+    sources_app_help: Registry source references
     verify_filed_state_help: Compare local registry calculation output against captured
       filed AEAT state
     verify_help: Verify the integrity of the local registry
@@ -2031,6 +2065,11 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_bucket_browse: The bucket catalogue could not be browsed.
+    error_bucket_maintenance: A bucket maintenance operation failed.
+    error_buckets: A bucket-event history error occurred.
+    error_calc_sheets_translation: A registry formula could not be translated to Google
+      Sheets.
     error_calculations_registry: An error occurred loading, resolving or validating
       the calculation registry.
     error_calculations_registry_load: The calculation registry files could not be
@@ -2198,6 +2237,10 @@ errors:
     fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
+    fail_bucket_event_history_persistence: The bucket-event history could not be saved
+      or loaded.
+    fail_bucket_export: The bucket archive could not be exported.
+    fail_bucket_import: The bucket archive could not be imported.
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
     fail_export: An error occurred while exporting to the AEAT.
     fail_export_format: The filing draft could not be serialized to the BOE format
@@ -2241,6 +2284,7 @@ errors:
       Wait a few minutes and try again.
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
+    fail_secure_storage: A secure-storage error occurred.
     fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
@@ -2439,6 +2483,14 @@ errors:
       with the input provided.
     refused_application_registry_input: The modelo registry request cannot be executed
       with the input provided.
+    refused_auth_configure_dangling_active_profile: The active-profile pointer does
+      not resolve to a registered bucket.
+    refused_auth_provider_reserved: The selected authentication provider is reserved
+      but not implemented.
+    refused_bucket_delete: Bucket deletion was refused by the destructive-action gate.
+    refused_bucket_event_validation: A bucket event failed validation.
+    refused_bucket_rename: The bucket rename request violates uniqueness or addressing
+      rules.
     refused_calculations_casilla_constraint: A computed casilla value falls outside
       the limits declared for that casilla. Review the calculation inputs.
     refused_cli_boundary: The command refused the request.
@@ -2485,6 +2537,10 @@ errors:
       year provided.
     refused_inventory_service_input: An input provided violates the inventory contract.
       Correct the input and try again.
+    refused_iva_compensation_carry_forward_policy: The IVA compensation carry-forward
+      lots violate the active policy.
+    refused_iva_compensation_reconciliation_input: The IVA compensation wallet evidence
+      does not match the target Modelo 303 work unit.
     refused_ledger_business_operation_invoice_input: An input provided violates the
       business-operation invoice contract. Correct the input and try again.
     refused_ledger_business_operation_invoice_not_found: No business-operation invoice
@@ -2581,6 +2637,29 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+  storage:
+    engine:
+      create_failed: The storage database engine could not be created. Check the
+        configured storage route and try again.
+      empty_database_url: The configured database URL is empty. Select a profile
+        or configure storage before trying again.
+    runtime:
+      no_active_session: No active bucket session is open. Run `aeat config profile
+        switch NAME` to unlock a profile.
+      no_detail: No detailed readiness issue was reported.
+      not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
+      route_bucket_mismatch: The database route does not match the active bucket
+        session.
+      route_not_active_bucket: The database route is not attached to an active profile
+        bucket.
+      session_changed: The active bucket session changed. Unlock the target profile
+        again.
+      session_expired: The active bucket session has expired. Run `aeat config profile
+        switch NAME` to re-activate the profile.
+      session_sealed: The active bucket session is sealed. Run `aeat config profile
+        switch NAME` to re-activate the profile.
+      unsecured_backend: The active bucket session uses the unsecured backend. Production
+        profile-bound storage requires file or keyring custody.
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
@@ -2807,8 +2886,8 @@ wizard:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
       activity-start-date:
-        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional; when
-          set, obligations for periods before this date are not shown.
+        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional;
+          when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
       bienes-extranjero-above-threshold:

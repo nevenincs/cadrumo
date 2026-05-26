@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from ...core.logging import get_logger
+from ._errors import InvoicePersistenceError
 from ._models import InvoiceCatalogue
 
 if TYPE_CHECKING:
@@ -24,13 +25,48 @@ _INVOICE_NAMESPACE = "aeat.domain.invoices"
 _INVOICE_OBJECT_KEY = "catalogue"
 
 
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return the runtime-created secure-object repository for ``bucket_id``."""
+
+    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...core.config import load_settings
+
+    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+
+
+def _resolve_invoice_bucket_id(bucket_id: str | None) -> str:
+    trimmed = (bucket_id or "").strip()
+    if trimmed:
+        return trimmed
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core.i18n import tr
+
+    active = resolve_active_bucket_id()
+    if active is None:
+        raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+    return active
+
+
 class InvoiceCatalogueRepository:
     """Repository over the encrypted SQL-backed invoice catalogue."""
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        from ...adapters.persistence.storage.sql import SecureObjectRepository
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if bucket_id is not None and not self._bucket_id:
+            from ...core.i18n import tr
 
-        self._objects = objects or SecureObjectRepository()
+            raise InvoicePersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+        if objects is not None:
+            self._objects = objects
+            return
+        self._bucket_id = _resolve_invoice_bucket_id(bucket_id)
+        self._objects = _secure_objects_for_bucket(self._bucket_id)
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+
+        return self._bucket_id
 
     def exists(self) -> bool:
         """Return whether an invoice catalogue has been persisted."""

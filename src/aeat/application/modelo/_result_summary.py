@@ -21,10 +21,12 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.logging import get_logger
 from ...domain.modelos._calculation_revision import CalculationRevision
 from ._actions import _resolve_registry_snapshot_for_work_unit, get_work_unit
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_log = get_logger(__name__)
 
 
 class ResultSummaryRow(BaseModel):
@@ -68,11 +70,21 @@ def calculation_result_summary(revision: CalculationRevision) -> CalculationResu
     casilla_values = revision.casilla_values
     try:
         work_unit = get_work_unit(str(revision.work_unit_id))
-    except Exception:
+    except Exception as exc:
+        _log.debug(
+            "modelo result summary: unable to resolve work unit for revision=%s",
+            revision.revision_id,
+            exc_info=exc,
+        )
         return None
     try:
         snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
-    except Exception:
+    except Exception as exc:
+        _log.debug(
+            "modelo result summary: unable to resolve registry snapshot for work_unit=%s",
+            work_unit.work_unit_id,
+            exc_info=exc,
+        )
         return None
 
     casilla_labels = {str(casilla.id): casilla.label for casilla in snapshot.revision.casillas}

@@ -78,7 +78,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+    return (tmp_path / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
 
 
 class TestEmptyState:

@@ -20,9 +20,12 @@ from __future__ import annotations
 
 import base64
 import secrets
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+if TYPE_CHECKING:
+    from ..bucket._manifest import ManifestKdfParams
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -91,6 +94,13 @@ class KdfParams(BaseModel):
             salt=secrets.token_bytes(_SALT_BYTES),
             output_length=_OUTPUT_BYTES,
         )
+
+    def to_manifest_params(self) -> ManifestKdfParams:
+        """Return this canonical parameter set in the bucket-manifest shape."""
+
+        from ..bucket._manifest import ManifestKdfParams
+
+        return ManifestKdfParams.model_validate(self.model_dump())
 
 
 __all__ = ["KdfParams"]

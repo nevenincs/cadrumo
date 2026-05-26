@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 
 from aeat.core.resources import bundled_path
 
@@ -39,12 +39,14 @@ def test_url_method_guard_includes_canonical_write_verb_tokens() -> None:
 
 
 def _open_policy() -> RemoteStateGuardPolicy:
+    # AEAT-hosted policies must not advertise synthetic input per the
+    # no-synthetic-sede-live-surfaces ADR.
     return RemoteStateGuardPolicy(
         id="m303-open",
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("sede.agenciatributaria.gob.es",),
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )
@@ -111,6 +113,8 @@ def test_remote_state_guard_supports_allowed_browser_action_wildcards() -> None:
 
 
 def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() -> None:
+    # GROI is an authenticated_simulator on an AEAT host; per the
+    # no-synthetic-sede-live-surfaces ADR synthetic_data_allowed must be false.
     decision = LiveCrossReferenceDecision(
         id="modelo-349-groi-spanish-counterparty-check",
         evidence_tier="executable_parity_evidence",
@@ -128,7 +132,7 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
             "document-submission",
             "declaration-submission",
         ),
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=False,
         oracle_id="aeat-groi-spanish-roi-checker",
@@ -141,6 +145,167 @@ def test_oracle_bound_cross_reference_policy_gets_consult_action_allow_list() ->
     assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="check-nif-A28015865"))
     with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
         assert_remote_operation_allowed(policy, RemoteOperation(kind="browser_action", action="unreviewed-click"))
+
+
+# --- AEAT-host synthetic-data invariant tests (no-synthetic-sede-live-surfaces ADR) ---
+
+
+def test_schema_rejects_aeat_hosted_live_cross_reference_with_synthetic_data_allowed() -> None:
+    """AEAT-hosted live cross-references must not declare synthetic_data_allowed = true."""
+    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+        LiveCrossReferenceDecision(
+            id="test-aeat-hosted-synthetic-reject",
+            evidence_tier="executable_parity_evidence",
+            surface="open_simulator",
+            guard_policy_id="test-aeat-hosted-synthetic-reject-policy",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            allowed_methods=("GET",),
+            forbidden_actions=(
+                "server-side-save",
+                "signing",
+                "presentation",
+                "payment",
+                "amendment",
+                "cancellation",
+                "document-submission",
+                "declaration-submission",
+            ),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+            legal_refs=("ley-58-2003:art-93",),
+            source_refs=("test-source",),
+        )
+
+
+def test_schema_accepts_non_aeat_host_with_synthetic_data_allowed() -> None:
+    """A non-AEAT host may still declare synthetic_data_allowed = true (local simulator)."""
+    decision = LiveCrossReferenceDecision(
+        id="test-local-simulator-synthetic-ok",
+        evidence_tier="executable_parity_evidence",
+        surface="open_simulator",
+        guard_policy_id="test-local-simulator-policy",
+        allowed_hosts=("localhost",),
+        allowed_methods=("GET",),
+        forbidden_actions=(
+            "server-side-save",
+            "signing",
+            "presentation",
+            "payment",
+            "amendment",
+            "cancellation",
+            "document-submission",
+            "declaration-submission",
+        ),
+        synthetic_data_allowed=True,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+        legal_refs=("ley-58-2003:art-93",),
+        source_refs=("test-source",),
+    )
+    assert decision.synthetic_data_allowed is True
+
+
+def test_schema_accepts_aeat_host_with_synthetic_data_not_allowed() -> None:
+    """An AEAT-hosted cross-reference is valid when synthetic_data_allowed = false."""
+    decision = LiveCrossReferenceDecision(
+        id="test-aeat-hosted-no-synthetic",
+        evidence_tier="executable_parity_evidence",
+        surface="open_simulator",
+        guard_policy_id="test-aeat-hosted-no-synthetic-policy",
+        allowed_hosts=("sede.agenciatributaria.gob.es",),
+        allowed_methods=("GET",),
+        forbidden_actions=(
+            "server-side-save",
+            "signing",
+            "presentation",
+            "payment",
+            "amendment",
+            "cancellation",
+            "document-submission",
+            "declaration-submission",
+        ),
+        synthetic_data_allowed=False,
+        requires_authentication=False,
+        requires_aeat_authorization=False,
+        legal_refs=("ley-58-2003:art-93",),
+        source_refs=("test-source",),
+    )
+    assert decision.synthetic_data_allowed is False
+
+
+def test_guard_rejects_aeat_hosted_policy_with_synthetic_data_allowed() -> None:
+    """RemoteStateGuardPolicy must reject AEAT-hosted policies with synthetic_data_allowed = true."""
+    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+        RemoteStateGuardPolicy(
+            id="test-aeat-guard-synthetic-reject",
+            evidence_tier="executable_parity_evidence",
+            classification="open_simulator",
+            allowed_hosts=("sede.agenciatributaria.gob.es",),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
+
+
+@pytest.mark.parametrize(
+    "aeat_host",
+    [
+        "agenciatributaria.gob.es",
+        "sede.agenciatributaria.gob.es",
+        "www2.agenciatributaria.gob.es",
+        "aeat.es",
+        "sede.aeat.es",
+    ],
+)
+def test_schema_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
+    """Every AEAT-suffix form (apex and subdomain, both apex domains) is rejected."""
+    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+        LiveCrossReferenceDecision(
+            id="test-aeat-suffix-form-reject",
+            evidence_tier="executable_parity_evidence",
+            surface="open_simulator",
+            guard_policy_id="test-aeat-suffix-form-policy",
+            allowed_hosts=(aeat_host,),
+            allowed_methods=("GET",),
+            forbidden_actions=(
+                "server-side-save",
+                "signing",
+                "presentation",
+                "payment",
+                "amendment",
+                "cancellation",
+                "document-submission",
+                "declaration-submission",
+            ),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+            legal_refs=("ley-58-2003:art-93",),
+            source_refs=("test-source",),
+        )
+
+
+@pytest.mark.parametrize(
+    "aeat_host",
+    [
+        "agenciatributaria.gob.es",
+        "aeat.es",
+        "sede.aeat.es",
+    ],
+)
+def test_guard_rejects_each_aeat_suffix_form_with_synthetic_data(aeat_host: str) -> None:
+    """Guard layer mirrors the schema rejection for every AEAT-suffix form."""
+    with pytest.raises(ValidationError, match="synthetic data is prohibited on AEAT-hosted"):
+        RemoteStateGuardPolicy(
+            id="test-guard-suffix-form-reject",
+            evidence_tier="executable_parity_evidence",
+            classification="open_simulator",
+            allowed_hosts=(aeat_host,),
+            synthetic_data_allowed=True,
+            requires_authentication=False,
+            requires_aeat_authorization=False,
+        )
 
 
 def test_remote_state_guard_blocks_unknown_aeat_host() -> None:

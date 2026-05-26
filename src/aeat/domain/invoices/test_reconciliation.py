@@ -9,13 +9,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.invoices import link_invoice_transaction_repositories
+from aeat.core.config import override_settings
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
 from aeat.domain.invoices._repository import InvoiceCatalogueRepository
@@ -35,25 +33,31 @@ from aeat.domain.transactions._repository import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session(bucket_id: str) -> BucketSession:
+    return BucketSession.open(
+        bucket_id=bucket_id,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
+def _active_bucket_runtime(tmp_path: Path) -> Iterator[None]:
+    dispose_engine()
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="test"),
+        activate_session(_session("test")),
+    ):
         try:
             yield
         finally:
-            override_secret_store(None)
+            dispose_engine()
 
 
 def _invoice(

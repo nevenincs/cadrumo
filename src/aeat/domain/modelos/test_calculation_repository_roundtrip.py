@@ -29,12 +29,12 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base, SecureObjectRow
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.sql._orm import SecureObjectRow
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ..calculations.registry._bindings import CasillaObservation
 from ._calculation_repository import (
     _CALCULATION_NAMESPACE,
@@ -49,6 +49,26 @@ from ._calculation_revision import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "modelo-runtime"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _runtime_engine(tmp_path: Path):
+    return create_engine_from_settings(
+        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+    )
 
 
 def _hex(seed: str) -> str:
@@ -125,45 +145,32 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
 
 def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A fully-populated calculation revision round-trips through encrypted SQL."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "calculation-revisions-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        original = _populated_catalogue()
+        repo.save(original)
+        loaded = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
-            repo = CalculationRevisionCatalogueRepository()
-            original = _populated_catalogue()
-            repo.save(original)
-            loaded = repo.load()
-
-            assert loaded == original
-            assert len(loaded.revisions) == 1
-            (revision,) = loaded.values()
-            assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-            # The typed observations envelope must survive the boundary
-            # with its full formula provenance intact.
-            assert len(revision.observations) == 2
-            computed = next(o for o in revision.observations if o.formula_id is not None)
-            assert computed.formula_id == "iva-cuota-devengada-general"
-            assert computed.operand_refs == ("casilla-01",)
-            assert computed.legal_refs == ("Ley 37/1992 art. 90",)
-            assert computed.source_refs == ("aeat-modelo-303-instrucciones-2024",)
-        finally:
-            engine.dispose()
+    assert loaded == original
+    assert len(loaded.revisions) == 1
+    (revision,) = loaded.values()
+    assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
+    # The typed observations envelope must survive the boundary
+    # with its full formula provenance intact.
+    assert len(revision.observations) == 2
+    computed = next(o for o in revision.observations if o.formula_id is not None)
+    assert computed.formula_id == "iva-cuota-devengada-general"
+    assert computed.operand_refs == ("casilla-01",)
+    assert computed.legal_refs == ("Ley 37/1992 art. 90",)
+    assert computed.source_refs == ("aeat-modelo-303-instrucciones-2024",)
+    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
 
 
 def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: dropping ``observations`` on disk must surface.
 
@@ -180,21 +187,13 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
     in the suite is suspect.
     """
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "calculation-revisions-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        original = _populated_catalogue()
+        repo.save(original)
+
+        engine = _runtime_engine(tmp_path)
         try:
-            SecureObjectRepository(engine=engine)
-
-            repo = CalculationRevisionCatalogueRepository()
-            original = _populated_catalogue()
-            repo.save(original)
-
             with session_scope(engine) as session:
                 stmt = select(SecureObjectRow).where(
                     SecureObjectRow.namespace == _CALCULATION_NAMESPACE,
@@ -215,17 +214,18 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
 
             regression_caught = False
             try:
-                mutated = repo.load()
+                mutated = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
             except Exception:  # boundary may raise different exception types
                 regression_caught = True
             else:
                 if mutated != original:
                     regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: dropping the observations "
-                "envelope did NOT surface on load. The calculation-revision "
-                "boundary is tautological and every roundtrip in the suite "
-                "is suspect."
-            )
         finally:
             engine.dispose()
+
+    assert regression_caught, (
+        "anti-tautology proof failed: dropping the observations "
+        "envelope did NOT surface on load. The calculation-revision "
+        "boundary is tautological and every roundtrip in the suite "
+        "is suspect."
+    )

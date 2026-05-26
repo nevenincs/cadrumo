@@ -27,6 +27,7 @@ import pytest
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
+from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
@@ -112,7 +113,11 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     assert loaded.status is UserProfileStatus.ACTIVE
     assert loaded.record.facts == _VALID_FACTS
     assert loaded.recovery_enrolled is False
-    assert loaded.kdf_params.algorithm == "argon2id"
+    canonical = KdfParams.default()
+    assert loaded.kdf_params.model_dump(exclude={"salt"}) == canonical.to_manifest_params().model_dump(
+        exclude={"salt"}
+    )
+    assert KdfParams.model_validate(loaded.kdf_params.model_dump())
 
 
 def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:

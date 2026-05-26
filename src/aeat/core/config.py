@@ -17,8 +17,9 @@ from datetime import date
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
-from pydantic import Field, SecretStr, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
@@ -86,6 +87,25 @@ class AuthProviderKindSetting(StrEnum):
 
     CERTIFICATE = "certificate"
     CLAVE_MOVIL = "clave_movil"
+
+
+class StorageRouteKind(StrEnum):
+    """Resolved primary database route classification."""
+
+    EXPLICIT_DATABASE_URL = "explicit_database_url"
+    ACTIVE_BUCKET_DATABASE = "active_bucket_database"
+    ROOT_FALLBACK_DATABASE = "root_fallback_database"
+
+
+class StorageRouteClassification(BaseModel):
+    """Strict classification of the effective primary database route."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: StorageRouteKind
+    database_url: str = Field(min_length=1)
+    database_path: Path | None = None
+    bucket_id: str = ""
 
 
 def _default_clave_sede_access_url_template() -> str:
@@ -1148,6 +1168,66 @@ _settings_override: contextvars.ContextVar[Settings | None] = contextvars.Contex
 )
 
 
+def classify_storage_route(settings: Settings | None = None) -> StorageRouteClassification:
+    """Classify the effective primary SQL route for write guards."""
+
+    resolved = settings or load_settings()
+    database_url = resolved.aeat_database_url
+    database_path = _sqlite_database_path(database_url)
+    if "aeat_database_url" in resolved.model_fields_set:
+        return StorageRouteClassification(
+            kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
+            database_url=database_url,
+            database_path=database_path,
+        )
+    root_fallback = _normalized_path(resolved.aeat_local_storage_root / "aeat.db")
+    if database_path is not None and _normalized_path(database_path) == root_fallback:
+        return StorageRouteClassification(
+            kind=StorageRouteKind.ROOT_FALLBACK_DATABASE,
+            database_url=database_url,
+            database_path=database_path,
+        )
+    bucket_id = _bucket_id_for_route(
+        database_path=database_path,
+        storage_root=resolved.aeat_local_storage_root,
+    )
+    if bucket_id:
+        return StorageRouteClassification(
+            kind=StorageRouteKind.ACTIVE_BUCKET_DATABASE,
+            database_url=database_url,
+            database_path=database_path,
+            bucket_id=bucket_id,
+        )
+    return StorageRouteClassification(
+        kind=StorageRouteKind.EXPLICIT_DATABASE_URL,
+        database_url=database_url,
+        database_path=database_path,
+    )
+
+
+def _sqlite_database_path(database_url: str) -> Path | None:
+    if not database_url.startswith("sqlite:///"):
+        return None
+    return Path(unquote(database_url.removeprefix("sqlite:///")))
+
+
+def _normalized_path(path: Path) -> Path:
+    return path.expanduser().resolve()
+
+
+def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> str:
+    if database_path is None:
+        return ""
+    try:
+        relative = _normalized_path(database_path).relative_to(_normalized_path(storage_root))
+    except ValueError:
+        return ""
+    parts = relative.parts
+    if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", "aeat.db"):
+        return parts[1]
+    return ""
+
+
 def load_settings() -> Settings:
     """Return the effective :class:`Settings` instance.
 
@@ -1188,7 +1268,15 @@ def override_settings(**overrides: object) -> Iterator[Settings]:
     # ``model_copy(update=)`` skips validators in Pydantic v2; route the
     # merged dict through ``model_validate`` so a malformed override
     # fails fast at entry, before the ContextVar is set.
-    merged = {**current.model_dump(), **overrides}
+    merged = current.model_dump()
+    route_overrides = {"aeat_active_profile", "aeat_local_storage_root"}
+    if (
+        "aeat_database_url" not in overrides
+        and "aeat_database_url" not in current.model_fields_set
+        and route_overrides.intersection(overrides)
+    ):
+        merged.pop("aeat_database_url", None)
+    merged.update(overrides)
     new_settings = Settings.model_validate(merged)
     # ``model_validate`` marks every key in the merged dict as set,
     # losing the distinction between "operator set this explicitly"

@@ -25,14 +25,29 @@ profile (``show``, diagnostics) address it by UUID.
 
 from __future__ import annotations
 
+import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 
-from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from pydantic import ValidationError
+
+from ...adapters.persistence.storage.bucket._layout import BucketPaths, bucket_paths
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ...adapters.persistence.storage.errors import StorageValidationError
+from ...core.logging import get_logger
 from ._models import ProfileBucketPointer
 
 _BUCKETS_DIRNAME = "buckets"
+_log = get_logger(__name__)
+
+
+@dataclass(frozen=True, slots=True)
+class ProfileBucketScanIssue:
+    """One bucket manifest skipped by the live profile scanner."""
+
+    bucket_id: str
+    reason: str
 
 
 def read_profile_bucket(
@@ -152,11 +167,18 @@ def list_profile_buckets(
             continue
         try:
             paths = bucket_paths(resolved_root, entry.name)
-        except ValueError:
+        except ValueError as exc:
+            _log.debug(
+                "profile bucket scan: skipping invalid bucket directory name bucket_id=%s",
+                entry.name,
+                exc_info=exc,
+            )
             continue
         if not manifest_path(paths).is_file():
             continue
-        manifest: BucketManifest = read_manifest(paths)
+        manifest = _read_manifest_or_none(paths)
+        if manifest is None:
+            continue
         if not include_tombstoned and manifest.status is BucketLifecycleStatus.TOMBSTONED:
             continue
         result[manifest.bucket_id] = ProfileBucketPointer(
@@ -167,6 +189,65 @@ def list_profile_buckets(
     return result
 
 
+def list_profile_bucket_scan_issues(*, root: Path | None = None) -> tuple[ProfileBucketScanIssue, ...]:
+    """Return non-sensitive manifest-scan issues found under the profile root."""
+
+    resolved_root = _resolve_root(root)
+    buckets_root = resolved_root / _BUCKETS_DIRNAME
+    if not buckets_root.is_dir():
+        return ()
+    issues: list[ProfileBucketScanIssue] = []
+    for entry in sorted(buckets_root.iterdir()):
+        if not entry.is_dir():
+            continue
+        try:
+            paths = bucket_paths(resolved_root, entry.name)
+        except ValueError as exc:
+            issues.append(ProfileBucketScanIssue(bucket_id=entry.name, reason=_compact_manifest_error(exc)))
+            continue
+        if not manifest_path(paths).is_file():
+            continue
+        issue = _profile_bucket_scan_issue(entry.name, paths)
+        if issue is not None:
+            issues.append(issue)
+    return tuple(issues)
+
+
+def _read_manifest_or_none(paths: BucketPaths) -> BucketManifest | None:
+    try:
+        return read_manifest(paths)
+    except _MANIFEST_SCAN_EXCEPTIONS as exc:
+        _log.debug(
+            "profile bucket scan: skipping unreadable bucket manifest bucket_id=%s",
+            paths.bucket_id,
+            exc_info=exc,
+        )
+        return None
+
+
+def _profile_bucket_scan_issue(bucket_id: str, paths: BucketPaths) -> ProfileBucketScanIssue | None:
+    try:
+        read_manifest(paths)
+    except _MANIFEST_SCAN_EXCEPTIONS as exc:
+        return ProfileBucketScanIssue(bucket_id=bucket_id, reason=_compact_manifest_error(exc))
+    return None
+
+
+_MANIFEST_SCAN_EXCEPTIONS = (
+    OSError,
+    StorageValidationError,
+    ValidationError,
+    tomllib.TOMLDecodeError,
+    TypeError,
+    ValueError,
+)
+
+
+def _compact_manifest_error(exc: BaseException) -> str:
+    message = str(exc).splitlines()[0] if str(exc) else type(exc).__name__
+    return f"{type(exc).__name__}: {message}"
+
+
 def _resolve_root(root: Path | None) -> Path:
     if root is not None:
         return root
@@ -175,4 +256,10 @@ def _resolve_root(root: Path | None) -> Path:
     return load_settings().aeat_local_storage_root
 
 
-__all__ = ["list_profile_buckets", "read_profile_bucket", "read_profile_bucket_by_id"]
+__all__ = [
+    "ProfileBucketScanIssue",
+    "list_profile_bucket_scan_issues",
+    "list_profile_buckets",
+    "read_profile_bucket",
+    "read_profile_bucket_by_id",
+]

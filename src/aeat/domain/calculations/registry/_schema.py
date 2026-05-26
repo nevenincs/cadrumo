@@ -14,6 +14,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 from ....core.classification import SensitivityClass
 from ....core.identity._documents import IdentityError
 from ....core.identity._tax_id import validate_spanish_tax_id
+from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
@@ -923,13 +924,30 @@ class LiveCrossReferenceDecision(RegistryModel):
             )
 
     def _validate_synthetic_data_constraints(self) -> None:
-        """Read surfaces and static docs must not accept synthetic data."""
+        """Read surfaces and static docs must not accept synthetic data.
+
+        Additionally, no cross-reference whose ``allowed_hosts`` include an
+        AEAT-owned host (suffix match against ``agenciatributaria.gob.es``
+        or ``aeat.es``) may declare ``synthetic_data_allowed = true``.
+        Synthetic taxpayer, counterparty, declaration, profile, or form
+        data is prohibited on AEAT-hosted live surfaces; the surface
+        shape (``open_simulator`` / ``authenticated_simulator``) does not
+        license synthetic input against AEAT infrastructure.
+        """
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
             raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
             )
+        if self.synthetic_data_allowed:
+            aeat_host = first_aeat_host(self.allowed_hosts)
+            if aeat_host is not None:
+                raise RegistryValidationError(
+                    f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
+                    f"on AEAT-hosted allowed host {aeat_host!r}; synthetic data is prohibited "
+                    f"on AEAT-hosted live surfaces"
+                )
 
     def _validate_allowed_method(self, method: str) -> None:
         """Per-surface HTTP method allowlist + uppercase shape requirement."""

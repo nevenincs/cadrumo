@@ -10,10 +10,10 @@ from :class:`aeat.core.errors.AeatError`; the project error registry's
 
 from __future__ import annotations
 
-from .....core.errors import AeatError
+from ..errors import SecureStorageError
 
 
-class BucketError(AeatError):
+class BucketError(SecureStorageError):
     """Base class for every per-bucket lifecycle error."""
 
 
@@ -25,6 +25,10 @@ class NoActiveBucketError(BucketError):
     refuses to proceed.
     """
 
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(translated_message="errors.refused.refused_storage_bucket_no_active")
+        self._detail = detail
+
 
 class BucketBusyError(BucketError):
     """Raised when a second process attempts to unlock a held bucket.
@@ -34,8 +38,10 @@ class BucketBusyError(BucketError):
     """
 
     def __init__(self, *, bucket_id: str, holding_pid: int) -> None:
-        message = f"bucket {bucket_id!r} is held by pid {holding_pid}"
-        super().__init__(message, context={"bucket_id": bucket_id, "holding_pid": holding_pid})
+        super().__init__(
+            context={"bucket_id": bucket_id, "holding_pid": holding_pid},
+            translated_message="errors.locked.locked_storage_bucket_busy",
+        )
         self.bucket_id = bucket_id
         self.holding_pid = holding_pid
 
@@ -47,8 +53,10 @@ class BucketAlreadyPresentError(BucketError):
     """
 
     def __init__(self, *, bucket_id: str) -> None:
-        message = f"bucket {bucket_id!r} already exists"
-        super().__init__(message, context={"bucket_id": bucket_id})
+        super().__init__(
+            context={"bucket_id": bucket_id},
+            translated_message="errors.refused.refused_storage_bucket_already_present",
+        )
         self.bucket_id = bucket_id
 
 
@@ -56,12 +64,14 @@ class BucketLockedError(BucketError):
     """Raised when an operation requires an unlocked :class:`BucketSession`.
 
     Carries the locked bucket id so the diagnostic can point the
-    operator at ``aeat config unlock``.
+    operator at ``aeat config profile switch NAME``.
     """
 
     def __init__(self, *, bucket_id: str) -> None:
-        message = f"bucket {bucket_id!r} is locked"
-        super().__init__(message, context={"bucket_id": bucket_id})
+        super().__init__(
+            context={"bucket_id": bucket_id},
+            translated_message="errors.locked.locked_storage_bucket_session",
+        )
         self.bucket_id = bucket_id
 
 
@@ -74,17 +84,23 @@ class RecoveryUnavailableError(BucketError):
     """
 
     def __init__(self, *, bucket_id: str) -> None:
-        message = f"recovery wrap unavailable for bucket {bucket_id!r}"
-        super().__init__(message, context={"bucket_id": bucket_id})
+        super().__init__(
+            context={"bucket_id": bucket_id},
+            translated_message="errors.fail.fail_storage_bucket_recovery_unavailable",
+        )
         self.bucket_id = bucket_id
 
 
 class RecoveryVerificationError(BucketError):
     """Raised when the operator-typed recovery code does not decode.
 
-    Fired by ``aeat config verify-recovery`` when the 24-word entry
-    does not unwrap the bucket's recovery envelope.
+    Fired by the profile recovery flow when the 24-word entry does not
+    unwrap the bucket's recovery envelope.
     """
+
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(translated_message="errors.auth.auth_storage_bucket_recovery_verification")
+        self._detail = detail
 
 
 __all__ = [

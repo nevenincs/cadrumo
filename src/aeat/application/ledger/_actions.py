@@ -88,6 +88,7 @@ from ._models import (
     LedgerSourceValidationReport,
     LedgerSourceVerificationReport,
     LedgerStatusReport,
+    LedgerTransactionPayload,
     LedgerTransactionRemovalReport,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
@@ -595,7 +596,6 @@ def remove_manual_transaction(
     trimmed_source_command = _require_source_command(source_command, operation="ledger removal")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
-    invoices = invoice_repository or InvoiceCatalogueRepository()
     catalogue = repository.load()
     current = _require_transaction(catalogue, transaction_id)
     blockers = _blocking_modelo_references(
@@ -604,11 +604,16 @@ def remove_manual_transaction(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    purchase_evidence_ids, updated_invoice_catalogue = _detach_transaction_from_purchase_evidence(
-        invoices.load(),
-        bucket_id=bucket_id,
-        transaction_id=current.transaction_id,
-    )
+    invoices: InvoiceCatalogueRepository | None = None
+    purchase_evidence_ids: tuple[str, ...] = ()
+    updated_invoice_catalogue: InvoiceCatalogue | None = None
+    if invoice_repository is not None or current.purchase_invoice_evidence_id is not None:
+        invoices = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        purchase_evidence_ids, updated_invoice_catalogue = _detach_transaction_from_purchase_evidence(
+            invoices.load(),
+            bucket_id=bucket_id,
+            transaction_id=current.transaction_id,
+        )
     attachment_ids = tuple(sorted(current.attachment_ids))
     if blockers:
         if not dry_run:
@@ -648,14 +653,23 @@ def remove_manual_transaction(
         attachment_ids=attachment_ids,
         occurred_at=now,
     )
-    _save_transaction_catalogue_invoices_and_events(
-        transaction_repository=repository,
-        invoice_repository=invoices,
-        event_repository=event_repository,
-        transaction_catalogue=_remove_transaction(catalogue, transaction_id=current.transaction_id),
-        invoice_catalogue=updated_invoice_catalogue,
-        events=events,
-    )
+    updated_transaction_catalogue = _remove_transaction(catalogue, transaction_id=current.transaction_id)
+    if invoices is None or updated_invoice_catalogue is None:
+        _save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repository,
+            catalogue=updated_transaction_catalogue,
+            events=events,
+        )
+    else:
+        _save_transaction_catalogue_invoices_and_events(
+            transaction_repository=repository,
+            invoice_repository=invoices,
+            event_repository=event_repository,
+            transaction_catalogue=updated_transaction_catalogue,
+            invoice_catalogue=updated_invoice_catalogue,
+            events=events,
+        )
     return LedgerTransactionRemovalReport(
         bucket_id=bucket_id,
         transaction_id=current.transaction_id,
@@ -689,7 +703,6 @@ def reset_ledger_catalogue(
     trimmed_source_command = _require_source_command(source_command, operation="ledger reset")
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = bucket_event_repository or BucketEventHistoryRepository()
-    invoices = invoice_repository or InvoiceCatalogueRepository()
     catalogue = repository.load()
     removed_ids = tuple(sorted(catalogue.transactions))
     guard_ids = _catalogue_modelo_source_ids(catalogue)
@@ -699,12 +712,20 @@ def reset_ledger_catalogue(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    invoice_catalogue = invoices.load()
-    purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
-        invoice_catalogue,
-        bucket_id=bucket_id,
-        transaction_ids=removed_ids,
-    )
+    invoices: InvoiceCatalogueRepository | None = None
+    invoice_catalogue = InvoiceCatalogue()
+    purchase_evidence_ids: tuple[str, ...] = ()
+    updated_invoice_catalogue: InvoiceCatalogue | None = None
+    if invoice_repository is not None or any(
+        transaction.purchase_invoice_evidence_id is not None for transaction in catalogue.values()
+    ):
+        invoices = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        invoice_catalogue = invoices.load()
+        purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
+            invoice_catalogue,
+            bucket_id=bucket_id,
+            transaction_ids=removed_ids,
+        )
     attachment_ids = tuple(
         sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids})
     )
@@ -767,14 +788,22 @@ def reset_ledger_catalogue(
             "removed_transaction_ids": ",".join(removed_ids),
         },
     )
-    _save_transaction_catalogue_invoices_and_events(
-        transaction_repository=repository,
-        invoice_repository=invoices,
-        event_repository=event_repository,
-        transaction_catalogue=TransactionCatalogue(),
-        invoice_catalogue=updated_invoice_catalogue,
-        events=(*removal_events, reset_event),
-    )
+    if invoices is None or updated_invoice_catalogue is None:
+        _save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repository,
+            catalogue=TransactionCatalogue(),
+            events=(*removal_events, reset_event),
+        )
+    else:
+        _save_transaction_catalogue_invoices_and_events(
+            transaction_repository=repository,
+            invoice_repository=invoices,
+            event_repository=event_repository,
+            transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=updated_invoice_catalogue,
+            events=(*removal_events, reset_event),
+        )
     return LedgerCatalogueResetReport(
         bucket_id=bucket_id,
         removed_transaction_ids=removed_ids,
@@ -996,30 +1025,31 @@ def ledger_transaction_payload(transaction: Transaction) -> dict[str, object]:
     """Return the canonical CLI/API projection for one ledger transaction."""
 
     raw = transaction.raw
-    return {
-        "transaction_id": transaction.transaction_id,
-        "date": (raw.value_date or raw.booked_date).isoformat(),
-        "booked_date": raw.booked_date.isoformat(),
-        "value_date": raw.value_date.isoformat() if raw.value_date else None,
-        "amount": _display_decimal(raw.amount),
-        "currency": raw.currency,
-        "direction": transaction.direction.value,
-        "counterparty": raw.counterparty,
-        "description": raw.description,
-        "business_classification": transaction.business_classification.value,
-        "business_pct": _display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
-        "category_id": transaction.category_id,
-        "taxable_base": _display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
-        "iva_rate": _display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
-        "iva_amount": _display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
-        "irpf_category": transaction.irpf_category,
-        "usage_ratio_id": transaction.usage_ratio_id,
-        "prorrata_reference": transaction.prorrata_reference,
-        "purchase_invoice_evidence_id": transaction.purchase_invoice_evidence_id,
-        "attachment_ids": list(transaction.attachment_ids),
-        "notes": transaction.notes,
-        "lifecycle_state": transaction.lifecycle_state.value,
-    }
+    payload = LedgerTransactionPayload(
+        transaction_id=transaction.transaction_id,
+        date=(raw.value_date or raw.booked_date).isoformat(),
+        booked_date=raw.booked_date.isoformat(),
+        value_date=raw.value_date.isoformat() if raw.value_date else None,
+        amount=_display_decimal(raw.amount),
+        currency=raw.currency,
+        direction=transaction.direction.value,
+        counterparty=raw.counterparty,
+        description=raw.description,
+        business_classification=transaction.business_classification.value,
+        business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
+        category_id=transaction.category_id,
+        taxable_base=_display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
+        iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
+        iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
+        irpf_category=transaction.irpf_category,
+        usage_ratio_id=transaction.usage_ratio_id,
+        prorrata_reference=transaction.prorrata_reference,
+        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        attachment_ids=transaction.attachment_ids,
+        notes=transaction.notes,
+        lifecycle_state=transaction.lifecycle_state.value,
+    )
+    return payload.model_dump(mode="python")
 
 
 def ledger_transaction_review_payload(transaction: Transaction) -> dict[str, object]:
@@ -1909,6 +1939,21 @@ def _transaction_repository(
     return repository
 
 
+def _invoice_repository(
+    *,
+    bucket_id: str,
+    repository: InvoiceCatalogueRepository | None,
+) -> InvoiceCatalogueRepository:
+    if repository is None:
+        return InvoiceCatalogueRepository(bucket_id=bucket_id)
+    if repository.bucket_id is not None and repository.bucket_id != bucket_id:
+        raise TransactionValidationError(
+            "invoice repository bucket_id does not match the manual ledger command bucket",
+            context={"command_bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    return repository
+
+
 def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
     return TransactionDirection.OUTGOING if raw.amount < 0 else TransactionDirection.INCOMING
 
@@ -2570,7 +2615,7 @@ def _verify_purchase_invoice_evidence(
     evidence_id = command.purchase_invoice_evidence_id
     if evidence_id is None:
         return
-    invoices = (invoice_repository or InvoiceCatalogueRepository()).load()
+    invoices = _invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load()
     invoice = invoices.get(evidence_id)
     if invoice is None:
         raise TransactionValidationError(
