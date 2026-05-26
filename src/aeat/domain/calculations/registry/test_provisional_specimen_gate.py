@@ -101,8 +101,13 @@ def test_no_fixture_with_flag_validates(tmp_path: Path) -> None:
 # --- Gate: fixture present, flag unset → validates ----------------------------
 
 
-def test_fixture_present_no_flag_validates(tmp_path: Path) -> None:
-    """Profile with a corpus fixture PDF and default provisional_pending_specimen=False must pass."""
+def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
+    """Profile with a corpus fixture PDF and corpus_round_trip_verified=True must pass.
+
+    Having a fixture alone is no longer sufficient — the round-trip gate also
+    requires corpus_round_trip_verified=True (or provisional_pending_specimen=True).
+    This test confirms the correct happy-path: fixture present AND round-trip verified.
+    """
     modelo, catalogues = _committed_130()
     corpus_root = tmp_path / "justificantes"
     modelo_fixture_dir = corpus_root / "130"
@@ -111,7 +116,9 @@ def test_fixture_present_no_flag_validates(tmp_path: Path) -> None:
     (modelo_fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
 
     revision = modelo.revisions["2019-y-siguientes"]
-    profile = _committed_profile(provisional=False)
+    profile = _committed_profile(provisional=False).model_copy(
+        update={"corpus_round_trip_verified": True}
+    )
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
@@ -120,7 +127,7 @@ def test_fixture_present_no_flag_validates(tmp_path: Path) -> None:
         source_root=bundled_path(),
         justificante_corpus_root=corpus_root,
     )
-    # No exception raised: fixture present satisfies the gate
+    # No exception raised: fixture present + corpus_round_trip_verified satisfies both gates
     validator.validate_modelo(mutated_modelo)
 
 
