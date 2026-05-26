@@ -12,10 +12,9 @@ from io import StringIO
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.export import ExportSerializationFormat
 from ...domain.attachments import Attachment, AttachmentKind, AttachmentSource
@@ -89,16 +88,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         try:
-            yield get_engine(profile.settings)
+            yield profile.repository
         finally:
             dispose_engine(profile.settings)
 
 
-def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):
-    objects = SecureObjectRepository(engine=engine)
+def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
@@ -159,8 +157,9 @@ def _raw_import_transaction(
     )
 
 
-def _persist_verified_revision_citing_transaction(engine: Engine, *, transaction_id: str, bucket_id: str = "bucket-a"):
-    objects = SecureObjectRepository(engine=engine)
+def _persist_verified_revision_citing_transaction(
+    objects: SecureObjectRepository, *, transaction_id: str, bucket_id: str = "bucket-a"
+) -> None:
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
@@ -222,18 +221,18 @@ class _CreateManualOutcome:
     purchase_invoice_evidence_id: str
 
 
-def _drive_create_manual_transaction(secure_engine: Engine) -> _CreateManualOutcome:
+def _drive_create_manual_transaction(secure_objects: SecureObjectRepository) -> _CreateManualOutcome:
     """Build + execute the canonical create_manual_transaction scenario.
 
     Shared by every test_create_manual_transaction_* in this
     section so each focused test runs against an identical state
     bundle without duplicating the 25-line command/evidence
-    plumbing. Engine setup is paid per test (function-scoped
-    ``secure_engine`` fixture) — the trade-off favours diagnosability
+    plumbing. Storage setup is paid per test (function-scoped
+    ``secure_objects`` fixture); the trade-off favours diagnosability
     over throughput.
     """
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     command = ManualLedgerTransactionCommand(
@@ -275,8 +274,8 @@ def _drive_create_manual_transaction(secure_engine: Engine) -> _CreateManualOutc
     )
 
 
-def test_create_manual_transaction_returns_bucket_ref(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_returns_bucket_ref(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.result.ref.bucket_id == "bucket-a"
 
 
@@ -286,20 +285,24 @@ _PROVENANCE_RAW_FIELD_EXPECTATIONS = (
 )
 
 
-def test_create_manual_transaction_persists_source_provenance(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_persists_source_provenance(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.provenance.source_format is SourceFormat.MANUAL
     assert outcome.persisted.raw.provenance.provider_name == "manual-ledger"
 
 
 @pytest.mark.parametrize(("field", "expected"), _PROVENANCE_RAW_FIELD_EXPECTATIONS)
-def test_create_manual_transaction_persists_raw_field(secure_engine: Engine, field: str, expected: str) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_persists_raw_field(
+    secure_objects: SecureObjectRepository, field: str, expected: str
+) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields[field] == expected
 
 
-def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_persists_purchase_invoice_evidence_in_raw_fields(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.raw.raw_fields["purchase_invoice_evidence_id"] == outcome.purchase_invoice_evidence_id
 
 
@@ -312,26 +315,26 @@ _TAXABLE_IVA_EXPECTATIONS = (
 
 @pytest.mark.parametrize(("attribute", "expected"), _TAXABLE_IVA_EXPECTATIONS)
 def test_create_manual_transaction_persists_taxable_iva(
-    secure_engine: Engine, attribute: str, expected: Decimal
+    secure_objects: SecureObjectRepository, attribute: str, expected: Decimal
 ) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert getattr(outcome.persisted, attribute) == expected
 
 
-def test_create_manual_transaction_links_purchase_invoice_evidence(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_links_purchase_invoice_evidence(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.purchase_invoice_evidence_id == outcome.purchase_invoice_evidence_id
 
 
-def test_create_manual_transaction_records_audit_actor_and_command(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_records_audit_actor_and_command(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.created_by == "operator-A"
     assert outcome.persisted.source_command == "aeat app ledger add"
     assert outcome.persisted.created_event_id == outcome.result.bucket_event_ids[0]
 
 
-def test_create_manual_transaction_persists_evidence_provenance(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_persists_evidence_provenance(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     provenance = outcome.persisted.evidence_provenance[0]
     assert provenance.evidence_id == outcome.purchase_invoice_evidence_id
     assert provenance.evidence_kind == "purchase_invoice_evidence"
@@ -339,14 +342,14 @@ def test_create_manual_transaction_persists_evidence_provenance(secure_engine: E
     assert provenance.bucket_event_id == outcome.result.bucket_event_ids[0]
 
 
-def test_create_manual_transaction_classifies_as_business(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_classifies_as_business(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert outcome.persisted.business_classification is BusinessClassification.BUSINESS
     assert outcome.persisted.classified_by == "manual"
 
 
-def test_create_manual_transaction_emits_bucket_event_chain(secure_engine: Engine) -> None:
-    outcome = _drive_create_manual_transaction(secure_engine)
+def test_create_manual_transaction_emits_bucket_event_chain(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_create_manual_transaction(secure_objects)
     assert [event.event_id for event in outcome.events] == list(outcome.result.bucket_event_ids)
     first = outcome.events[0]
     assert first.event_type is BucketEventType.LEDGER_TRANSACTION_CREATED
@@ -356,9 +359,9 @@ def test_create_manual_transaction_emits_bucket_event_chain(secure_engine: Engin
 
 
 def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory.TELEFONIA_MOVIL
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
@@ -391,8 +394,10 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     assert events[0].payload["business_pct"] == "0.60"
 
 
-def test_import_ledger_transactions_persists_rows_and_emits_import_events(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_import_ledger_transactions_persists_rows_and_emits_import_events(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     first_raw = _raw_import_transaction()
     # A genuinely distinct movement: import dedup keys on the movement
     # identity (date + amount + normalised narrative), so the second
@@ -446,10 +451,10 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(secure
 
 
 def test_import_ledger_source_owns_provider_validation_ingest_and_persistence(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     statement = tmp_path / "bank.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -508,8 +513,10 @@ def test_import_ledger_source_missing_file_raises_localised_error(tmp_path: Path
     assert str(missing) in rendered
 
 
-def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_event(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -574,8 +581,8 @@ def test_export_ledger_transactions_serializes_active_bucket_rows_and_emits_even
     assert len(events[-1].payload["transaction_ids_sha256"]) == 64
 
 
-def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     active = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -632,8 +639,10 @@ def test_export_ledger_transactions_excludes_inactive_rows_by_default(secure_eng
     assert with_inactive.rows[1].lifecycle_state == "STASHED"
 
 
-def test_export_ledger_transactions_event_payload_stays_bounded_for_large_exports(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_export_ledger_transactions_event_payload_stays_bounded_for_large_exports(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     for index in range(12):
         create_manual_transaction(
             ManualLedgerTransactionCommand(
@@ -665,9 +674,9 @@ def test_export_ledger_transactions_event_payload_stays_bounded_for_large_export
     assert all(len(value) <= 500 for value in event.payload.values())
 
 
-def test_export_ledger_transactions_reads_requested_bucket_only(secure_engine: Engine) -> None:
-    repo_a, event_repo_a = _repositories(secure_engine, bucket_id="bucket-a")
-    repo_b, event_repo_b = _repositories(secure_engine, bucket_id="bucket-b")
+def test_export_ledger_transactions_reads_requested_bucket_only(secure_objects: SecureObjectRepository) -> None:
+    repo_a, event_repo_a = _repositories(secure_objects, bucket_id="bucket-a")
+    repo_b, event_repo_b = _repositories(secure_objects, bucket_id="bucket-b")
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -712,10 +721,10 @@ def test_export_ledger_transactions_reads_requested_bucket_only(secure_engine: E
 
 
 def test_export_ledger_transactions_writes_output_before_export_event(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -744,9 +753,9 @@ def test_export_ledger_transactions_writes_output_before_export_event(
 
 
 def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_profile(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory.TELEFONIA_MOVIL
 
     with pytest.raises(TransactionValidationError, match="not configured"):
@@ -773,9 +782,9 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
 
 
 def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismatch(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory.TELEFONIA_MOVIL
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
@@ -822,9 +831,9 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
 
 
 def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory.TELEFONIA_MOVIL
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
@@ -851,9 +860,11 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
     assert event_repository.load().events == {}
 
 
-def test_list_and_get_manual_transactions_read_the_requested_bucket_only(secure_engine: Engine) -> None:
-    repo_a, event_repo = _repositories(secure_engine, bucket_id="bucket-a")
-    repo_b, event_repo_b = _repositories(secure_engine, bucket_id="bucket-b")
+def test_list_and_get_manual_transactions_read_the_requested_bucket_only(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    repo_a, event_repo = _repositories(secure_objects, bucket_id="bucket-a")
+    repo_b, event_repo_b = _repositories(secure_objects, bucket_id="bucket-b")
     first = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -898,8 +909,10 @@ def test_list_and_get_manual_transactions_read_the_requested_bucket_only(secure_
         )
 
 
-def test_summarize_manual_transactions_reports_bucket_status_and_readiness(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine, bucket_id="bucket-a")
+def test_summarize_manual_transactions_reports_bucket_status_and_readiness(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-a")
     ready = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -957,8 +970,10 @@ def test_summarize_manual_transactions_reports_bucket_status_and_readiness(secur
     assert report.ready is True
 
 
-def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine, bucket_id="bucket-a")
+def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-a")
     may = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1009,10 +1024,10 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(secure_
 
 
 def test_query_ledger_review_rows_filters_quarter_import_and_issue_events(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine, bucket_id="bucket-a")
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-a")
     statement = tmp_path / "bank.csv"
     statement.write_text(
         "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
@@ -1100,9 +1115,9 @@ class _UpdateManualOutcome:
     events: tuple[BucketEvent, ...]
 
 
-def _drive_update_manual_transaction(secure_engine: Engine) -> _UpdateManualOutcome:
+def _drive_update_manual_transaction(secure_objects: SecureObjectRepository) -> _UpdateManualOutcome:
     """Run the canonical create -> update scenario and bundle the observable state."""
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1140,14 +1155,14 @@ def _drive_update_manual_transaction(secure_engine: Engine) -> _UpdateManualOutc
 
 
 def test_update_manual_transaction_retires_previous_transaction_id_from_catalogue(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.created.ref.transaction_id not in outcome.reloaded.transactions
 
 
-def test_update_manual_transaction_persists_replacement_transaction_id(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_persists_replacement_transaction_id(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.updated.ref.transaction_id in outcome.reloaded.transactions
 
 
@@ -1160,8 +1175,10 @@ _UPDATED_FIELD_EXPECTATIONS = (
 
 
 @pytest.mark.parametrize(("attr_path", "expected"), _UPDATED_FIELD_EXPECTATIONS)
-def test_update_manual_transaction_replaces_field(secure_engine: Engine, attr_path: str, expected: object) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_replaces_field(
+    secure_objects: SecureObjectRepository, attr_path: str, expected: object
+) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     actual: object = outcome.updated.transaction
     for segment in attr_path.split("."):
         actual = getattr(actual, segment)
@@ -1172,13 +1189,15 @@ _PRESERVED_CREATE_AUDIT_FIELDS = ("created_by", "source_command", "created_event
 
 
 @pytest.mark.parametrize("attr", _PRESERVED_CREATE_AUDIT_FIELDS)
-def test_update_manual_transaction_preserves_original_audit_field(secure_engine: Engine, attr: str) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_preserves_original_audit_field(
+    secure_objects: SecureObjectRepository, attr: str
+) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert getattr(outcome.updated.transaction, attr) == getattr(outcome.created.transaction, attr)
 
 
-def test_update_manual_transaction_records_edit_lineage_entry(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_records_edit_lineage_entry(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     entry = outcome.updated.transaction.edit_lineage[-1]
     assert entry.previous_transaction_id == outcome.created.ref.transaction_id
     assert entry.actor == "operator-B"
@@ -1186,8 +1205,8 @@ def test_update_manual_transaction_records_edit_lineage_entry(secure_engine: Eng
     assert entry.bucket_event_id == outcome.updated.bucket_event_ids[0]
 
 
-def test_update_manual_transaction_emits_expected_event_chain(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_emits_expected_event_chain(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert [event.event_type for event in outcome.events] == [
         BucketEventType.LEDGER_TRANSACTION_CREATED,
         BucketEventType.LEDGER_TRANSACTION_UPDATED,
@@ -1196,8 +1215,8 @@ def test_update_manual_transaction_emits_expected_event_chain(secure_engine: Eng
     ]
 
 
-def test_update_manual_transaction_links_update_events_to_result(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_links_update_events_to_result(secure_objects: SecureObjectRepository) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert [event.event_id for event in outcome.events[1:]] == list(outcome.updated.bucket_event_ids)
 
 
@@ -1210,24 +1229,30 @@ _POST_UPDATE_EVENT_PAYLOADS = (
 
 @pytest.mark.parametrize(("event_index", "payload_key", "expected"), _POST_UPDATE_EVENT_PAYLOADS)
 def test_update_manual_transaction_event_payload_marks_mutation_kind(
-    secure_engine: Engine, event_index: int, payload_key: str, expected: str
+    secure_objects: SecureObjectRepository, event_index: int, payload_key: str, expected: str
 ) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.events[event_index].payload[payload_key] == expected
 
 
-def test_update_manual_transaction_edit_event_references_previous_transaction(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_edit_event_references_previous_transaction(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert outcome.events[1].payload["previous_transaction_id"] == outcome.created.ref.transaction_id
 
 
-def test_update_manual_transaction_post_update_events_target_new_transaction_id(secure_engine: Engine) -> None:
-    outcome = _drive_update_manual_transaction(secure_engine)
+def test_update_manual_transaction_post_update_events_target_new_transaction_id(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    outcome = _drive_update_manual_transaction(secure_objects)
     assert {event.object_id for event in outcome.events[1:]} == {outcome.updated.ref.transaction_id}
 
 
-def test_update_manual_transaction_fields_applies_typed_patch_through_backend(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_update_manual_transaction_fields_applies_typed_patch_through_backend(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1274,9 +1299,9 @@ def test_update_manual_transaction_fields_applies_typed_patch_through_backend(se
 
 
 def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassification(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1326,9 +1351,11 @@ def test_update_manual_transaction_fields_clears_tax_facts_for_personal_reclassi
     ]
 
 
-def test_update_manual_transaction_emits_purchase_evidence_attachment_event(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_update_manual_transaction_emits_purchase_evidence_attachment_event(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
@@ -1378,9 +1405,11 @@ def test_update_manual_transaction_emits_purchase_evidence_attachment_event(secu
     assert events[-1].payload["mutation_kind"] == "purchase_invoice_evidence_attached"
 
 
-def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
@@ -1418,10 +1447,10 @@ def test_attach_manual_transaction_evidence_delegates_to_validated_backend_patch
 
 
 def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence_event(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
@@ -1467,8 +1496,8 @@ def test_update_manual_transaction_mixed_edit_and_evidence_lineage_uses_evidence
     assert updated.transaction.evidence_provenance[-1].bucket_event_id == attach_event.event_id
 
 
-def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1510,8 +1539,10 @@ def test_archive_manual_transaction_records_lifecycle_lineage_and_event(secure_e
     assert events[-1].payload["reason"] == "wrong account import"
 
 
-def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1562,8 +1593,8 @@ def test_update_manual_transaction_rejects_archived_row_without_reactivating_it(
     ]
 
 
-def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1601,8 +1632,8 @@ def test_stash_manual_transaction_records_lifecycle_lineage_and_event(secure_eng
     assert events[-1].payload["lifecycle_state"] == "STASHED"
 
 
-def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1651,10 +1682,10 @@ def test_archive_and_stash_refuse_invalid_lifecycle_transitions(secure_engine: E
 
 
 def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_emits_events(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     created = create_manual_transaction(
@@ -1707,8 +1738,8 @@ def test_remove_manual_transaction_deletes_row_detaches_purchase_evidence_and_em
     assert events[-1].payload["reason"] == "wrong account import"
 
 
-def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1741,8 +1772,8 @@ def test_remove_manual_transaction_dry_run_reports_without_mutation(secure_engin
     ]
 
 
-def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1756,7 +1787,7 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_eng
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_engine, transaction_id=created.ref.transaction_id)
+    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     dry_run = remove_manual_transaction(
         bucket_id="bucket-a",
@@ -1765,10 +1796,8 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_eng
         dry_run=True,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(
-            objects=SecureObjectRepository(engine=secure_engine)
-        ),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"
@@ -1779,16 +1808,14 @@ def test_remove_manual_transaction_refuses_finalized_modelo_reference(secure_eng
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(
-                objects=SecureObjectRepository(engine=secure_engine)
-            ),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         )
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
 
 
-def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1802,7 +1829,7 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_eng
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_engine, transaction_id=created.ref.transaction_id)
+    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         update_manual_transaction(
@@ -1817,10 +1844,8 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_eng
             ),
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(
-                objects=SecureObjectRepository(engine=secure_engine)
-            ),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1830,8 +1855,8 @@ def test_update_manual_transaction_refuses_finalized_modelo_reference(secure_eng
     ]
 
 
-def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_lifecycle_change_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1845,7 +1870,7 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engi
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_engine, transaction_id=created.ref.transaction_id)
+    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         archive_manual_transaction(
@@ -1854,10 +1879,8 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engi
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(
-                objects=SecureObjectRepository(engine=secure_engine)
-            ),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
             occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
         )
 
@@ -1869,8 +1892,10 @@ def test_lifecycle_change_refuses_finalized_modelo_reference(secure_engine: Engi
     ]
 
 
-def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -1898,7 +1923,7 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 5, 10, 0, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_engine, transaction_id=created.ref.transaction_id)
+    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     with pytest.raises(TransactionValidationError, match="finalized modelo"):
         remove_manual_transaction(
@@ -1907,18 +1932,18 @@ def test_remove_manual_transaction_refuses_finalized_reference_to_prior_edit_id(
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(
-                objects=SecureObjectRepository(engine=secure_engine)
-            ),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         )
 
     assert transaction_repository.load().get(updated.ref.transaction_id) is not None
 
 
-def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     purchase_evidence = _purchase_invoice()
     invoice_repository.save(InvoiceCatalogue.from_invoices((purchase_evidence,)))
     first = create_manual_transaction(
@@ -1986,8 +2011,8 @@ def test_reset_ledger_catalogue_clears_bucket_when_unblocked_and_emits_event(sec
     assert events[-1].payload["reason"] == "contaminated import batch"
 
 
-def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -2001,7 +2026,7 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
         bucket_event_repository=event_repository,
         occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
     )
-    _persist_verified_revision_citing_transaction(secure_engine, transaction_id=created.ref.transaction_id)
+    _persist_verified_revision_citing_transaction(secure_objects, transaction_id=created.ref.transaction_id)
 
     dry_run = reset_ledger_catalogue(
         bucket_id="bucket-a",
@@ -2009,10 +2034,8 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
         dry_run=True,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
-        work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-        calculation_repository=CalculationRevisionCatalogueRepository(
-            objects=SecureObjectRepository(engine=secure_engine)
-        ),
+        work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+        calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
     )
 
     assert dry_run.blocking_modelo_references[0].modelo == "303"
@@ -2022,10 +2045,8 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
             actor="operator-A",
             transaction_repository=transaction_repository,
             bucket_event_repository=event_repository,
-            work_unit_repository=WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
-            calculation_repository=CalculationRevisionCatalogueRepository(
-                objects=SecureObjectRepository(engine=secure_engine)
-            ),
+            work_unit_repository=WorkUnitCatalogueRepository(objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
         )
 
     assert transaction_repository.load().get(created.ref.transaction_id) is not None
@@ -2035,9 +2056,9 @@ def test_reset_ledger_catalogue_refuses_finalized_modelo_reference(secure_engine
 
 
 def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_save(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     category = SpendingCategory.TELEFONIA_MOVIL
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
@@ -2080,8 +2101,8 @@ def test_update_manual_transaction_rejects_usage_ratio_drift_without_event_or_sa
     assert [event.event_type for event in events] == [BucketEventType.LEDGER_TRANSACTION_CREATED]
 
 
-def test_update_manual_transaction_rejects_provenance_only_correction(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_update_manual_transaction_rejects_provenance_only_correction(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     created = create_manual_transaction(
         ManualLedgerTransactionCommand(
             bucket_id="bucket-a",
@@ -2113,9 +2134,9 @@ def test_update_manual_transaction_rejects_provenance_only_correction(secure_eng
         )
 
 
-def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     invoice_repository.save(InvoiceCatalogue())
 
     with pytest.raises(TransactionValidationError, match="purchase_invoice_evidence_id"):
@@ -2138,9 +2159,9 @@ def test_create_manual_transaction_rejects_missing_purchase_evidence(secure_engi
     assert event_repository.load().events == {}
 
 
-def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    objects = SecureObjectRepository(engine=secure_engine)
+def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    objects = secure_objects
 
     with pytest.raises(TransactionValidationError, match="attachment_ids"):
         create_manual_transaction(
@@ -2162,9 +2183,11 @@ def test_create_manual_transaction_rejects_missing_attachment_manifest(secure_en
     assert event_repository.load().events == {}
 
 
-def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    invoice_repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    invoice_repository = InvoiceCatalogueRepository(objects=secure_objects)
     other_bucket_invoice = _purchase_invoice().model_copy(update={"bucket_id": "bucket-b"})
     invoice_repository.save(InvoiceCatalogue.from_invoices((other_bucket_invoice,)))
 
@@ -2188,9 +2211,9 @@ def test_create_manual_transaction_rejects_purchase_evidence_from_other_bucket(s
     assert event_repository.load().events == {}
 
 
-def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
-    objects = SecureObjectRepository(engine=secure_engine)
+def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
+    objects = secure_objects
     store = AttachmentStore(objects=objects)
     body = b"%PDF-1.4\nother bucket evidence\n%%EOF"
     attachment_id = store.put_bytes(body)
@@ -2230,8 +2253,8 @@ def test_create_manual_transaction_rejects_attachment_from_other_bucket(secure_e
     assert event_repository.load().events == {}
 
 
-def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine, bucket_id="bucket-b")
+def test_create_manual_transaction_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects, bucket_id="bucket-b")
 
     with pytest.raises(TransactionValidationError, match="bucket_id"):
         create_manual_transaction(
