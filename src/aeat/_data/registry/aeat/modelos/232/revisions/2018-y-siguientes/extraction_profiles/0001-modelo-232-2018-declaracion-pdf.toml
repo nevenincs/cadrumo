@@ -9,6 +9,15 @@ target_casillas = [
     {casilla_id = "decl.tipo-ejercicio", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+ejercicio'},
     {casilla_id = "decl.cnae", match_strategy = "named_label", value_kind = "text", label_pattern = 'C\.N\.A\.E\.?\s+de\s+la\s+actividad\s+principal'},
 ]
+# AMBIGUOUS — grounding attempted against AEAT-published instructions PDF
+# (Instrucciones_Modelo_232.pdf, 10 pages, retrieved from
+# https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/GI43/Instrucciones_Modelo_232.pdf).
+# M232 is filed electronically only via AEAT Sede; the instructions document describes
+# fields using section headers ("EJERCICIO Y TIPO EJERCICIO", "CODIGO CNAE (2009) ACTIVIDAD PRINCIPAL")
+# and prose references ("La casilla Ejercicio", "La casilla Tipo ejercicio") that do NOT match
+# the label_pattern values used in this profile. The justificante PDF field labels generated
+# by the AEAT Sede system are not reproducible from this instructions document.
+# Verdict: AMBIGUOUS pending acquisition of a real or synthetic AEAT Sede justificante specimen.
 confidence = "strict"
 provisional_pending_specimen = true
 min_coverage = "1.0"
