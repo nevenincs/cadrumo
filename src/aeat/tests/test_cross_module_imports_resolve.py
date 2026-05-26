@@ -282,7 +282,6 @@ _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
     "aeat/application/registry/__init__.py": 27,
     "aeat/application/user_profile/__init__.py": 5,
     "aeat/core/redaction/__init__.py": 5,
-    "aeat/domain/profile/inventory/__init__.py": 3,
     "aeat/entrypoints/cli/__init__.py": 10,
     "aeat/entrypoints/cli/_config/__init__.py": 21,
 }
