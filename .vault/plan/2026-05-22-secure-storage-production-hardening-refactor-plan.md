@@ -580,7 +580,7 @@ Turn the audit inventory into a repeatable rollout register so implementation ag
 
 Move production repositories away from direct physical-store construction while preserving explicit constructor injection for real-behavior tests and controlled bootstrap paths.
 
-- [ ] `W12.P21.S83` - Migrate workflow state and bucket-event repositories to runtime-owned secure-object factories; `src/aeat/application/workflow`, `src/aeat/domain/buckets`.
+- [ ] `W12.P21.S83` - Migrate workflow state and bucket-event repositories to runtime-owned secure-object factories; `src/aeat`.
 - [ ] `W12.P21.S84` - Migrate transaction, invoice, filing, submission, justificante, and modelo repositories to runtime-owned secure-bound or secure-object factories; `src/aeat/domain`.
 - [ ] `W12.P21.S85` - Migrate ledger, filing history, modelo reconciliation, calculation observation, usage-ratio, and calc-sheet repositories to runtime-owned defaults; `src/aeat/application`.
 - [ ] `W12.P21.S86` - Migrate auth, AEAT observation, Google OAuth/session, LLM cache/usage, and outbound adapter repositories to runtime-owned defaults or classified remote-mirror paths; `src/aeat/adapters`.
@@ -590,10 +590,10 @@ Move production repositories away from direct physical-store construction while 
 
 Keep the CLI as the operator-command surface while moving storage readiness and write-policy decisions into runtime/backend services.
 
-- [ ] `W12.P22.S88` - Replace CLI guarded write-verb route policy with a runtime readiness/write-policy query while preserving bootstrap exemptions; `src/aeat/entrypoints/cli`.
-- [ ] `W12.P22.S89` - Move profile create, switch, delete, and logout storage spans behind named runtime or profile-lifecycle operations without bypassing `ProfileRepository`; `src/aeat/entrypoints/cli/_config`, `src/aeat/application/user_profile`.
-- [ ] `W12.P22.S90` - Preserve manifest scanning as a read-only profile discovery adapter separate from encrypted runtime attachment; `src/aeat/application/user_profile`, `src/aeat/application/workflow`.
-- [ ] `W12.P22.S91` - Add CLI regression tests for bootstrap, explicit profile selection, environment selection, pointer selection, root fallback refusal, and explicit route refusal through backend runtime policy; `src/aeat/entrypoints/cli`.
+- [x] `W12.P22.S88` - Replace CLI guarded write-verb route policy with a runtime readiness/write-policy query while preserving bootstrap exemptions; `src/aeat/entrypoints/cli`.
+- [x] `W12.P22.S89` - Move profile create, switch, delete, and logout storage spans behind named runtime or profile-lifecycle operations without bypassing `ProfileRepository`; `src/aeat`.
+- [x] `W12.P22.S90` - Preserve manifest scanning as a read-only profile discovery adapter separate from encrypted runtime attachment; `src/aeat/application`.
+- [x] `W12.P22.S91` - Add CLI regression tests for bootstrap, explicit profile selection, environment selection, pointer selection, root fallback refusal, and explicit route refusal through backend runtime policy; `src/aeat/entrypoints/cli`.
 
 ### Phase `W12.P23` - first-class test profile runtime
 
