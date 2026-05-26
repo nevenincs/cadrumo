@@ -41,7 +41,7 @@ The generic command_error_boundary catches every pydantic ValidationError and em
 - [ ] `W01.P01.S02` - add a typed StoredDataValidationBoundaryError class with distinct locale key and remediation suggestion; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W01.P01.S03` - register the new error class in the error code catalogue; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W01.P01.S04` - add four locale keys es en ca hu for the stored-data boundary via the locale CLI; `src/aeat/locales/`.
-- [ ] `W01.P01.S05` - wire _state to wrap UserProfileRecord.model_validate_json failures in the stored-data variant; `src/aeat/entrypoints/cli/_common.py`.
+- [ ] `W01.P01.S05` - wrap UserProfileRecord model_validate_json at the profile repository load boundary in a typed StoredProfileDriftError so drift surfaces as a domain error before reaching command_error_boundary; `src/aeat/application/user_profile/_repository.py`.
 - [ ] `W01.P01.S06` - narrow command_error_boundary to discriminate input-time versus load-time ValidationError; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W01.P01.S07` - real-CLI tests proving drifted stored profile gets stored-data message and malformed flag gets input message; `src/aeat/entrypoints/cli/test_errors_boundary.py`.
 
@@ -60,7 +60,7 @@ Two ledger verbs have local _ledger_validation_bad catches; five rely on the gen
 
 _command_from_patch zeroes classification-adjacent fields when classification is BUSINESS; if the stored record is already BUSINESS the patch is field-identical and the mutation guard fires. Provide a confirmable path.
 
-- [ ] `W01.P04.S14` - change _command_from_patch to only zero fields the operator explicitly cleared not unsupplied ones; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W01.P04.S14` - guard the no-op mutation-signature so re-affirming the same business_classification on an already-classified transaction does not raise; `treat field-for-field-identical commands as a confirmed no-op instead of an error; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W01.P04.S15` - add --reaffirm flag on ledger classify bypassing the no-op guard for explicit re-application; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P04.S16` - unit tests covering patch-without-zeroing reaffirm semantics and field-by-field no-op surfacing; `src/aeat/application/ledger/test_actions.py`.
 
@@ -428,6 +428,9 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S162` - replace dual CCAA.MADRID defaults with single shared constant; `src/aeat/application/wizard/`.
 - [ ] `W09.P41.S163` - delete ghost ProfileExportBundle comment; `src/aeat/application/user_profile/__init__.py`.
 - [ ] `W09.P41.S164` - delete dead alias _profile_binding_selectors; `src/aeat/domain/user_profile/_registry_contract.py`.
+- [ ] `W09.P41.S198` - delete duplicate AuthProviderReservedError registration; `the class is registered twice at lines 62-65 and 106-109; `src/aeat/core/errors/registry/_application.py`.
+- [ ] `W09.P41.S199` - delete duplicate AuthConfigureDanglingActiveProfileError registration; `the class is registered twice at lines 84-92 and 95-103; `src/aeat/core/errors/registry/_application.py`.
+- [ ] `W09.P41.S200` - consolidate the two divergent _decimal_value helpers; the modelo binding variant has bool-sentinel handling the borrador variant does not; extract one canonical helper and import; `src/aeat/application/modelo/`.
 
 ### Phase `W09.P42` - twin function merge
 
