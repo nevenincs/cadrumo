@@ -68,11 +68,6 @@ adapters:
         tax_id_unresolved: adapters.inbound.declaracion.errors.tax_id_unresolved
         template_not_detected: adapters.inbound.declaracion.errors.template_not_detected
         year_conflict: adapters.inbound.declaracion.errors.year_conflict
-    pdf:
-      errors:
-        no_text: adapters.inbound.pdf.errors.no_text
-        not_found: adapters.inbound.pdf.errors.not_found
-        open_failed: adapters.inbound.pdf.errors.open_failed
 aggregation:
   iva_ledger:
     errors:
@@ -309,7 +304,6 @@ cli:
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        history_details_help: cli.app.live.iva_wallet.history_details_help
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
@@ -401,7 +395,7 @@ cli:
       export:
         actor_help: cli.app.modelo.export.actor_help
         errors:
-          no_exportable_revision_work_verify: cli.app.modelo.export.errors.no_exportable_revision_work_verify
+          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
         help: cli.app.modelo.export.help
         output_help: cli.app.modelo.export.output_help
         revision_help: cli.app.modelo.export.revision_help
@@ -1024,18 +1018,7 @@ cli:
       transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: cli.locales.app_help
-    audit:
-      extra: cli.locales.audit.extra
-      missing: cli.locales.audit.missing
-      ok: cli.locales.audit.ok
-      parity_extra: cli.locales.audit.parity_extra
-      parity_missing: cli.locales.audit.parity_missing
-      parity_summary: cli.locales.audit.parity_summary
-      summary: cli.locales.audit.summary
-    scaffold:
-      updated: cli.locales.scaffold.updated
     scaffold_check_help: cli.locales.scaffold_check_help
-    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: cli.log_levels.errors.flags_mutually_exclusive
@@ -1232,10 +1215,6 @@ cli:
       view_help: cli.registry.citations.view_help
     inspect_help: cli.registry.inspect_help
     inspect_registry_root_help: cli.registry.inspect_registry_root_help
-    legal:
-      legal_ref_help: cli.registry.legal.legal_ref_help
-      view_help: cli.registry.legal.view_help
-    legal_app_help: cli.registry.legal_app_help
     manuals:
       app_help: cli.registry.manuals.app_help
       kind_help: cli.registry.manuals.kind_help
@@ -1256,10 +1235,6 @@ cli:
     parity_store_root_help: cli.registry.parity_store_root_help
     parity_tape_help: cli.registry.parity_tape_help
     source_observation_help: cli.registry.source_observation_help
-    sources:
-      source_ref_help: cli.registry.sources.source_ref_help
-      view_help: cli.registry.sources.view_help
-    sources_app_help: cli.registry.sources_app_help
     verify_filed_state_help: cli.registry.verify_filed_state_help
     verify_help: cli.registry.verify_help
     verify_source_root_help: cli.registry.verify_source_root_help
@@ -1324,6 +1299,7 @@ cli:
       welcome_no_profile: cli.root.landing.welcome_no_profile
       welcome_profile: cli.root.landing.welcome_profile
     language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
     quiet_help: cli.root.quiet_help
     startup_import_error: cli.root.startup_import_error
     unavailable_app_help: cli.root.unavailable_app_help
@@ -1529,11 +1505,6 @@ errors:
     error_application_live: errors.error.error_application_live
     error_application_registry: errors.error.error_application_registry
     error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
-    error_bucket_browse: A tárolóegység-katalógust nem sikerült böngészni.
-    error_bucket_maintenance: Egy tárolóegység-karbantartási művelet sikertelen volt.
-    error_buckets: Tárolóegység-eseménytörténeti hiba történt.
-    error_calc_sheets_translation: Egy nyilvántartási képletet nem sikerült Google
-      Sheets képletté fordítani.
     error_calculations_registry: errors.error.error_calculations_registry
     error_calculations_registry_load: errors.error.error_calculations_registry_load
     error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
@@ -1662,10 +1633,6 @@ errors:
     fail_browser_evasion: errors.fail.fail_browser_evasion
     fail_browser_session_browser: errors.fail.fail_browser_session_browser
     fail_browser_validation: errors.fail.fail_browser_validation
-    fail_bucket_event_history_persistence: A tárolóegység eseménytörténetét nem sikerült
-      menteni vagy betölteni.
-    fail_bucket_export: A tárolóegység-archívumot nem sikerült exportálni.
-    fail_bucket_import: A tárolóegység-archívumot nem sikerült importálni.
     fail_declaracion_parse: errors.fail.fail_declaracion_parse
     fail_export: errors.fail.fail_export
     fail_export_format: errors.fail.fail_export_format
@@ -1814,11 +1781,6 @@ errors:
       fel regisztrált tárolóegységre.
     refused_auth_provider_reserved: A kiválasztott hitelesítési szolgáltató fenntartott,
       de nincs megvalósítva.
-    refused_bucket_delete: A romboló műveletek kapuja elutasította a tárolóegység
-      törlését.
-    refused_bucket_event_validation: Egy tárolóegység-esemény nem felelt meg az ellenőrzésnek.
-    refused_bucket_rename: A tárolóegység átnevezési kérése egyediségi vagy címzési
-      szabályt sért.
     refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
     refused_cli_boundary: errors.refused.refused_cli_boundary
     refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
@@ -1843,10 +1805,6 @@ errors:
     refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
     refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
     refused_inventory_service_input: errors.refused.refused_inventory_service_input
-    refused_iva_compensation_carry_forward_policy: Az átvitt IVA-kompenzációs tételek
-      megsértik az aktív szabályt.
-    refused_iva_compensation_reconciliation_input: Az IVA-kompenzációs pénztárca bizonyítéka
-      nem illeszkedik a cél 303-as modell munkaegységére.
     refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
     refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
     refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
@@ -2002,16 +1960,16 @@ wizard:
       activity:
         help: wizard.setup.flags.activity.help
       incn-prior-12-months:
-        help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR
-          küszöb felett a 202-es modell a LIS 40.3 cikk szerinti módozatot
-          írja elő; alatta mindkét módozat választható. Opcionális.
+        help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR küszöb
+          felett a 202-es modell a LIS 40.3 cikk szerinti módozatot írja elő; alatta
+          mindkét módozat választható. Opcionális.
       name:
         help: wizard.setup.flags.name.help
       new-entity-first-two-profit-periods:
-        help: Jelölje be, ha az újonnan alapított jogi személy a nyereséges
-          első két adóévének valamelyikében van (LIS 29. cikk), a 15
-          százalékos kedvezményes adókulcs alkalmazásához. Opcionális;
-          jelölés hiányában a kedvezményes kulcs nem érvényesül.
+        help: Jelölje be, ha az újonnan alapított jogi személy a nyereséges első két
+          adóévének valamelyikében van (LIS 29. cikk), a 15 százalékos kedvezményes
+          adókulcs alkalmazásához. Opcionális; jelölés hiányában a kedvezményes kulcs
+          nem érvényesül.
       notes:
         help: wizard.setup.flags.notes.help
       surnames:
@@ -2042,18 +2000,16 @@ wizard:
       title: wizard.setup.taxpayer.title
     taxpayer-type:
       incn-prior-12-months:
-        help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e
-          Önt a 202-es modell a LIS 40. cikk 3. bekezdése szerinti
-          módozatra (6 000 000 EUR felett). Hagyja üresen, ha nem
-          ismeri az adatot.
-        prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban?
-          (euróban, opcionális)
+        help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e Önt a 202-es
+          modell a LIS 40. cikk 3. bekezdése szerinti módozatra (6 000 000 EUR felett).
+          Hagyja üresen, ha nem ismeri az adatot.
+        prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban? (euróban,
+          opcionális)
       new-entity-first-two-profit-periods:
-        help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás
-          a 15 százalékos kedvezményes adókulccsal adózik az említett
-          két adóévben.
-        prompt: Újonnan alapított jogi személyként az első két nyereséges
-          adóévének valamelyikében van?
+        help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás a 15 százalékos
+          kedvezményes adókulccsal adózik az említett két adóévben.
+        prompt: Újonnan alapított jogi személyként az első két nyereséges adóévének
+          valamelyikében van?
     title: wizard.setup.title
     verifier:
       activity_present: wizard.setup.verifier.activity_present
