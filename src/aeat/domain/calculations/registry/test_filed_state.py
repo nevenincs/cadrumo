@@ -20,6 +20,7 @@ from ._snapshot import build_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
+_PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
 _MODELO_130_COMPUTED_CASILLAS = ("03", "04", "07", "09", "11", "12", "13", "14", "17", "19")
 
 
@@ -45,12 +46,14 @@ def _modelo_130_calculation() -> RegistryCalculationResult:
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
-        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+        binding_values={
+            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        },
     )
 
 

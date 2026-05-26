@@ -121,11 +121,11 @@ def test_for_computed_supplied_as_input_sorts_and_joins() -> None:
     assert err.context == {"casilla_ids": "0511,0719"}
 
 
-def test_for_bracket_no_window_pins_parameter_and_filing_date() -> None:
+def test_for_bracket_no_window_pins_parameter_and_as_of() -> None:
     err = RegistryValidationError.for_bracket_no_window(
-        parameter_id="irpf-2024-estatal", filing_date="2026-03-31"
+        parameter_id="irpf-2024-estatal", as_of="2026-03-31"
     )
-    assert err.context == {"parameter_id": "irpf-2024-estatal", "filing_date": "2026-03-31"}
+    assert err.context == {"parameter_id": "irpf-2024-estatal", "as_of": "2026-03-31"}
 
 
 def test_for_bracket_no_coverage_pins_parameter_and_base() -> None:

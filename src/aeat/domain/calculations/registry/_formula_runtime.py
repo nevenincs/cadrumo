@@ -855,7 +855,7 @@ def _resolve_bracket(
         raise RegistryValidationError(
             f"parameter {parameter.id!r} has no bracket valid for {selected.isoformat()}",
             translated_message="errors.calc.bracket_no_window",
-            context={"parameter_id": parameter.id, "filing_date": selected.isoformat()},
+            context={"parameter_id": parameter.id, "as_of": selected.isoformat()},
         )
     base = Decimal(base)
     if base < Decimal("0"):
