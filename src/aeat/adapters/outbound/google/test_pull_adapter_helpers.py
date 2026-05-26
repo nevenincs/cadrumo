@@ -104,7 +104,7 @@ def test_classify_metadata_returns_matches_for_aligned_pairs() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "2025",
         "aeat_period": "1T",
         "aeat_engine_version": "calc-sheets/0.1.0",
@@ -122,7 +122,7 @@ def test_classify_metadata_returns_stale_for_mismatched_modelo() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "131",  # different modelo
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "2025",
         "aeat_period": "1T",
     }
@@ -134,7 +134,7 @@ def test_classify_metadata_returns_stale_for_mismatched_period() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "2025",
         "aeat_period": "2T",  # different period
     }
@@ -146,7 +146,7 @@ def test_classify_metadata_returns_stale_for_mismatched_year() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "2024",  # different year
         "aeat_period": "1T",
     }
@@ -159,7 +159,7 @@ def test_classify_metadata_returns_stale_when_filing_year_is_garbage() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "not-a-year",
         "aeat_period": "1T",
     }
@@ -188,7 +188,7 @@ def test_classify_metadata_returns_stale_for_drifted_registry_sha() -> None:
     snapshot = _modelo_130_snapshot()
     pairs = {
         "aeat_modelo_id": "130",
-        "aeat_revision_id": "2019-y-siguientes",
+        "aeat_revision_id": snapshot.revision.id,
         "aeat_filing_year": "2025",
         "aeat_period": "1T",
         "aeat_engine_version": "calc-sheets/0.1.0",
