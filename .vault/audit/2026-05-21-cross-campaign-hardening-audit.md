@@ -86,6 +86,8 @@ report.
 
 ### CALC-7 — LOW — `ModeloInputsProviderProtocol.load_inputs` returns `Mapping[str, object]`; tighten to `Mapping[str, str | Decimal]`.
 
+**Resolution (P08.S33) — verified already-satisfied.** `ModeloInputsProviderProtocol.load_inputs` already returns the typed `ModeloInputs` alias defined in `application/workflow/_protocols.py:31` as `Mapping[str, ModeloInputValue]` where `ModeloInputValue = str | Decimal` — exactly the tightening the finding asked for. The audit's `Mapping[str, object]` premise was stale.
+
 ## Axis B — persistence-boundary identity
 
 ### PERS-1 — CRITICAL — `SecureObjectRecord` roundtrip test is payload-only
@@ -117,7 +119,11 @@ report.
 
 ### PERS-10 — LOW — KDF cost params (`time_cost`/`parallelism`/`output_length`) under-witnessed in the manifest roundtrip.
 
+**Resolution (P08.S34, peer-committed) — fixed.** Per the plan-row annotation: explicit roundtrip witnesses for `time_cost`, `parallelism`, and `output_length` added to the manifest roundtrip tests, alongside the salt witness that was already present. Per-field assertions catch a save-drops-field / load-re-defaults regression that the bare `loaded == manifest` equality alone would miss when the fixture happens to use defaults.
+
 ### PERS-11 — LOW — `SecureObjectNamespaceIntegrity` diagnostic model unvalidated.
+
+**Resolution (P08.S34, peer-committed) — fixed.** Per the plan-row annotation: `SecureObjectNamespaceIntegrity` now validated to reject empty namespaces and negative readable/unreadable counts, closing the typed-diagnostic boundary.
 
 ## Axis C — workflow + CLI surface
 
@@ -191,7 +197,11 @@ Re-exported onward to `application.review` — the private import spreads across
 
 ### XDOM-11 — LOW — widespread application imports of registry types via private `_schema`/`_bindings`/`_runtime_graph` sub-modules; `RegistrySnapshotRef` (used by `application/filing/__init__.py:19`) is unexported. **Remediation:** re-point to the public `domain.calculations.registry`; export `RegistrySnapshotRef`.
 
+**Resolution (P08.S35, peer-committed) — fixed.** Per the plan-row annotation: `RegistrySnapshotRef` and the registry runtime helpers consumed by Modelo are exported from the public `domain.calculations.registry` surface, and Modelo/filing imports were re-pointed away from the private `_schema`/`_bindings`/`_runtime_graph` modules to the public API. The structural guard `test_source_tree_does_not_use_absolute_registry_private_imports` exists to keep new violations from creeping back in.
+
 ### XDOM-12 — LOW — `_resolve_declaration_period_inputs` (`application/modelo/_actions.py:1469`) maps work-unit `filing_year`/`period` onto semantic-role casillas — covered only for Modelo 303. **Remediation:** parametrised tests for a monthly modelo (111) and an annual modelo (100). NOTE: task #517's core implementation already exists; only test breadth is missing.
+
+**Resolution (P08.S35, peer-committed) — fixed.** Per the plan-row annotation: declaration-period resolver coverage added for Modelo 111 (monthly) and Modelo 100 (annual) alongside the existing 303 (quarterly) coverage, closing the test-breadth gap the audit named.
 
 CONTESTED: this axis reports `_config/__init__.py:1498` (`AuthConfigureDanglingActiveProfileError`) as a plain `ValueError` where `str(exc)` is correct — contradicting WCLI-1, which flagged it CRITICAL as a registered AeatError. The executor MUST verify the actual class hierarchy before acting.
 
@@ -219,7 +229,11 @@ CONTESTED: this axis reports `_config/__init__.py:1498` (`AuthConfigureDanglingA
 
 ### BIND-8 — LOW — `test_invoice_bindings.py:43` `_other_source_binding` fixture filters `item.source != "invoice"` — a stale post-W84.S2309 remnant. **Remediation:** filter by a known canonical source kind or named binding id.
 
+**Resolution (P08.S36) — verified already-satisfied.** Inspection of `test_invoice_bindings.py:43-46` shows the fixture filters by named binding id (`item.id == "modelo-130-resultados-negativos-anteriores"`), not `item.source != "invoice"`. The stale-filter premise is fixed in-tree; no further code change required.
+
 ### BIND-9 — LOW — `DataBindingDefinition.source` Literal includes `atribucion_member` / `refund_operation` (typed selectors exist, no TOML usage). **Remediation:** confirm planned adoption or document intent.
+
+**Resolution (P08.S36) — kept; intent confirmed.** Both source kinds carry full typed-selector machinery in `_bindings.py`: `_AtributionSelector` (line 2344) and `_RefundSelector` (line 2452) with `_validated_refund_selector`, `RefundOperationObservation`, and per-source dispatch entries in the source-kind map. This contrasts with BIND-4's removed kinds (`ledger`/`rental`/`vat`/`category`), which had no selectors. The presence of full selector + observation + dispatch infrastructure evidences planned adoption (per the plan annotation: committed Modelo 184 `atribucion_member` and Modelo 360 `refund_operation` row-set tests cover the runtime). No removal — the kinds are intentionally retained.
 
 ## Axis G — carried-over coordinator-tracked items
 
