@@ -305,6 +305,7 @@ M100 IRPF Renta annual was ABSENT — Kent's headline annual filing. Author mult
 - [x] `W07.P22.S139` - Export TemplateNotDetectedError from declaracion init module pre-existing broken import; `src/aeat/adapters/inbound/declaracion/__init__.py`.
 - [x] `W07.P22.S140` - Author Modelo 100 round-trip test parametrized over 2021 2022 2023 corpus PDFs; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W07.P22.S141` - Expand Modelo 100 profile second chunk 4 apartado-summary casillas across all 3 revisions; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
+- [x] `W07.P22.S160` - Expand Modelo 100 profile third chunk 6 actividades-economicas ED detail casillas 0180 0218 0223 0224 0226 0231 across all 3 revisions; `src/aeat/_data/registry/aeat/modelos/100/revisions/, src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 
 ### Phase `W07.P23` - Parser fixes + canonical type alignment
 
