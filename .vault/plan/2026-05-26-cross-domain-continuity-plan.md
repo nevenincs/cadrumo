@@ -60,7 +60,7 @@ Two ledger verbs have local _ledger_validation_bad catches; five rely on the gen
 
 _command_from_patch zeroes classification-adjacent fields when classification is BUSINESS; if the stored record is already BUSINESS the patch is field-identical and the mutation guard fires. Provide a confirmable path.
 
-- [ ] `W01.P04.S14` - guard the no-op mutation-signature so re-affirming the same business_classification on an already-classified transaction does not raise; `treat field-for-field-identical commands as a confirmed no-op instead of an error; `src/aeat/application/ledger/_actions.py`.
+- [x] `W01.P04.S14` - guard the no-op mutation-signature so re-affirming the same business_classification on an already-classified transaction does not raise; `treat field-for-field-identical commands as a confirmed no-op instead of an error; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W01.P04.S15` - add --reaffirm flag on ledger classify bypassing the no-op guard for explicit re-application; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P04.S16` - unit tests covering patch-without-zeroing reaffirm semantics and field-by-field no-op surfacing; `src/aeat/application/ledger/test_actions.py`.
 
