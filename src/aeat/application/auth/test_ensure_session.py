@@ -8,10 +8,12 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import SecretStr
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import Settings
+from ...core.config import SecretStoreBackend, Settings, override_settings
+from ...tests.secure_sql import dev_test_database_password
+from ..user_profile._orchestration import profile_create_storage_span
 from ..user_profile._testing import register_minimal_profile
 from ..workflow._persistence import workflow_state_repository
 from . import AuthProvider, AuthProviderDescription, AuthProviderKind
@@ -98,16 +100,14 @@ def test_provider_stub_satisfies_auth_provider_protocol() -> None:
 
 @pytest.fixture(autouse=True)
 def _active_profile(tmp_path: Path) -> Iterator[None]:
-    from aeat.core.config import override_settings
-
     with override_settings(
-        aeat_active_profile="operator",
         aeat_clave_movil_dni_nie="12345678Z",
-        aeat_database_url=f"sqlite:///{(tmp_path / 'auth-ensure.db').as_posix()}",
         aeat_local_storage_root=tmp_path,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
     ):
         dispose_engine()
-        with EphemeralMasterKeyProvider():
+        with profile_create_storage_span("operator"):
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(
                     state,
