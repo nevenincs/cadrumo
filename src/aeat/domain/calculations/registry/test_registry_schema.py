@@ -35,7 +35,7 @@ from ._validate import RegistryValidator
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
-_MODELO_130_FILE = _REGISTRY_ROOT / "modelos" / "130.toml"
+_MODELO_130_DIR = _REGISTRY_ROOT / "modelos" / "130"
 
 
 @cache
@@ -140,7 +140,12 @@ def _as_communication_revision(revision: ModeloRevision) -> ModeloRevision:
 
 
 def _copy_committed_modelo(path: Path) -> None:
-    path.write_text(_MODELO_130_FILE.read_text(encoding="utf-8"), encoding="utf-8")
+    revision_dir = _MODELO_130_DIR / "revisions" / "2019-y-siguientes"
+    fragments = [revision_dir / "revision.toml"]
+    fragments.extend(sorted(item for item in revision_dir.rglob("*.toml") if item.name != "revision.toml"))
+    text = _MODELO_130_DIR.joinpath("manifest.toml").read_text(encoding="utf-8")
+    text += "".join(fragment.read_text(encoding="utf-8") for fragment in fragments)
+    path.write_text(text, encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
