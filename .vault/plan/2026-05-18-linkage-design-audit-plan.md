@@ -119,7 +119,7 @@ fallback returns.
 - [x] `P10.S35` - tighten _export_field_from_row_binding to raise on missing instead of returning None; `src/aeat/domain/calculations/registry/_export.py`.
 - [x] `P10.S36` - replace WorkbookParityReference.output_cells str-keyed mapping with typed shape; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `P10.S37` - replace fields_by_casilla str key with CasillaId-typed mapping; `src/aeat/domain/calculations/registry/_export.py`.
-- [ ] `P10.S38` - declare ParityScenario as registry-driven shape; `src/aeat/application/storage/calc_sheets/_parity_tapes.py`.
+- [x] `P10.S38` - declare ParityScenario as registry-driven shape - tightened `ParityScenario.registry_outputs` value type from free-form `str` to the typed `CasillaId` (annotated pattern, length bounds); pydantic now rejects malformed casilla identifiers at scenario construction rather than at downstream consumption. File path on disk is `src/aeat/domain/calculations/registry/_parity_tapes.py` (the plan's `application/storage/calc_sheets/` location is stale — the parity-tape model lives in the registry domain). 16 parity-tape tests green.
 
 ### Phase `P11` - close-out
 
