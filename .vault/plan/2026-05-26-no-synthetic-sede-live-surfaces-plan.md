@@ -42,5 +42,5 @@ Rewrite the committed Modelo 100 and Modelo 349 live-surface declarations and te
 
 Run the focused validation gates, record execution evidence, and close the declaration-extraction S124 handoff only after implementation is verified.
 
-- [x] `P03.S07` - Run focused registry and Sede test gates for the no-synthetic policy: 39 tests green across `test_remote_state_guard.py` (29) + `test_authenticated_simulator_surface.py` (10); modelo 100 + modelo 349 snapshots load with zero `synthetic_data_allowed=true` live cross-refs remaining. Six unrelated Sede failures (303 submitted-file extraction, encrypted-store roundtrip, no-write-surface `save`) are concurrent-campaign WIP and out of scope for this ADR; `src/aeat/domain/calculations/registry/`.
-- [ ] `P03.S08` - Record execution evidence and close the declaration-extraction S124 handoff; `.vault/exec/`.
+- [x] `P03.S07` - Run focused registry and Sede test gates for the no-synthetic policy: registry invariant, Modelo 100/349, registry oracle/applicability/parity, committed registry, GROI, NIF-IVA, and Renta WEB Open offline Sede gates passed; broader Sede declarations batch still has three unrelated Modelo 303 export-layout failures on `modelo-303-envelope-marker`; `validation residual tracked out of scope`.
+- [x] `P03.S08` - Record execution evidence and close the declaration-extraction S124 handoff; `.vault/exec/`.
