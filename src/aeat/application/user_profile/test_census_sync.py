@@ -1,8 +1,8 @@
 """Real-behavior tests for the operator-facing CensoSyncService.
 
 Exercises each of the four verbs (refresh / show / compare / apply)
-against a real encrypted SQLite backend with a real
-CensoSnapshotService and UserProfileLifecycleRepository — no mocks.
+against a real runtime profile backend with a real
+CensoSnapshotService and UserProfileLifecycleRepository.
 """
 
 from __future__ import annotations
@@ -12,12 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.application.live._censo import CensoSnapshotService, SnapshotLifecycleState
 from aeat.application.user_profile import (
     CENSUS_SOURCE_TAG,
@@ -27,8 +22,8 @@ from aeat.application.user_profile import (
     CensoSyncService,
     UserProfileLifecycleRepository,
 )
-from aeat.core.config import Settings
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -37,21 +32,9 @@ _G313 = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/G313.shtml"
 
 
 @pytest.fixture
-def secure_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "census-sync.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        dispose_engine()
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
-            dispose_engine()
+def secure_store(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b1") as profile:
+        yield profile.repository
 
 
 def _facts() -> dict[str, str]:
