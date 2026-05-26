@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.errors import BaseSeverity
+from ...core.errors import BaseSeverity as _BaseSeverity
 from ...domain.user_profile import (
     ProfileFactValue,
     UserProfileFact,
@@ -182,7 +182,7 @@ class ProfileValidationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    severity: BaseSeverity
+    severity: _BaseSeverity
     code: str = Field(min_length=1, max_length=64)
     path: str | None = None
     message: str = Field(min_length=1, max_length=512)
@@ -358,6 +358,7 @@ __all__ = [
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
+    "ProfileFactValue",
     "ProfileImportResult",
     "ProfileLifecycleResult",
     "ProfileLifecycleService",
@@ -375,9 +376,12 @@ __all__ = [
     "RegisterProfileCommand",
     "RemoveProfileCommand",
     "RenameProfileCommand",
+    "UserProfileFact",
     "UserProfileLifecycleRepository",
     "UserProfilePortableExport",
+    "UserProfileRecord",
     "UserProfileSnapshotRepository",
+    "UserProfileStatus",
     "facts_to_values",
     "projection_for_taxpayer",
     "record_to_values",
