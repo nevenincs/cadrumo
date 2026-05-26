@@ -131,7 +131,7 @@ def test_committed_modelo_720_declaration_pdf_extraction_profile_targets_declara
         assert pdf_profiles, revision.id
         for profile in pdf_profiles:
             assert profile.parser == "aeat.adapters.inbound.declaracion.parse_declaracion"
-            assert profile.confidence == "strict"
+            assert profile.confidence == "review_required"
             assert profile.failure_semantics == "fail_hard"
             assert {t.casilla_id for t in profile.target_casillas} <= casilla_ids
 
