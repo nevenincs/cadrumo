@@ -72,7 +72,11 @@ def _collect_binding_refs(expression: FormulaExpression, refs: list[str]) -> Non
 #: ``enum_binding_values`` (string channel); every other binding leaf is
 #: resolved from ``binding_values`` (Decimal channel).
 _ENUM_DISPATCH_OPS: frozenset[str] = frozenset(
-    {"lookup_bracket_by_ccaa", "lookup_parameter_by_entity_type"}
+    {
+        "lookup_bracket_by_ccaa",
+        "lookup_parameter_by_entity_type",
+        "lookup_bracket_by_entity_type",
+    }
 )
 
 

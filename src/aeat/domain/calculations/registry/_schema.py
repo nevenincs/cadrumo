@@ -500,6 +500,7 @@ FormulaOperator = Literal[
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
     "lookup_parameter_by_entity_type",
+    "lookup_bracket_by_entity_type",
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
