@@ -134,6 +134,101 @@ def _draw(c: canvas.Canvas, fixture: _Fixture) -> None:
 
 
 @dataclass(frozen=True)
+class _Modelo349Fixture:
+    """Sanitized M349 declaracion-resumen fixture.
+
+    Labels are taken verbatim from the AEAT-published instructions PDF at
+    src/aeat/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
+    pages 8-9 (CUMPLIMENTACIÓN DE LA HOJA-RESUMEN).
+
+    AEAT text (verbatim):
+      "Casilla 01 Número total de operadores intracomunitarios."
+      "Casilla 02 Importe de las operaciones intracomunitarias."
+      "Casilla 03 Número total de operadores intracomunitarios con rectificaciones."
+      "Casilla 04 Importe de las rectificaciones."
+
+    The fixture renders the Spanish label text directly so the named_label parser
+    can locate and extract each casilla value.
+    """
+
+    filename: str
+    ejercicio: str
+    periodo: str
+    tax_id: str
+    full_name: str
+    numero_operadores: str
+    importe_operaciones: str
+    numero_rectificaciones: str
+    importe_rectificaciones: str
+
+
+_MODELO_349_FIXTURES: tuple[_Modelo349Fixture, ...] = (
+    _Modelo349Fixture(
+        filename="349/2024-1T.pdf",
+        ejercicio="2024",
+        periodo="1T",
+        tax_id="Y0000001S",
+        full_name="DEMO EMPRESA SL",
+        numero_operadores="5",
+        importe_operaciones="1.234,56",
+        numero_rectificaciones="0",
+        importe_rectificaciones="0,00",
+    ),
+)
+
+
+def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
+    """Render a sanitized M349 hoja-resumen page onto ``c``.
+
+    The layout reproduces the hoja-resumen section from the AEAT-published
+    instructions PDF (instr_mod_349.pdf pages 8-9).  Label text is verbatim
+    from the AEAT document so the named_label parser can locate and extract
+    each casilla value from the printed line.
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(20 * mm, y, "Agencia Tributaria")
+    y -= 8 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(20 * mm, y, "Declaracion Recapitulativa de Operaciones  Modelo 349")
+    y -= 12 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Razon social: {fixture.full_name}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}   Periodo: {fixture.periodo}")
+    y -= 10 * mm
+    # Hoja-resumen casillas — label text verbatim from instr_mod_349.pdf pages 8-9
+    c.drawString(
+        20 * mm,
+        y,
+        f"Numero total de operadores intracomunitarios {fixture.numero_operadores}",
+    )
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        f"Importe de las operaciones intracomunitarias {fixture.importe_operaciones}",
+    )
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        f"Numero total de operadores intracomunitarios con rectificaciones {fixture.numero_rectificaciones}",
+    )
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        f"Importe de las rectificaciones {fixture.importe_rectificaciones}",
+    )
+    y -= 10 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+
+
+@dataclass(frozen=True)
 class _Modelo840Fixture:
     """Sanitized M840 declaracion fixture.
 
@@ -212,6 +307,20 @@ def main() -> None:
         c.setCreator("aeat fixture generator")
         c.setProducer("reportlab")
         _draw(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+
+    for fixture in _MODELO_349_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4)
+        c.setTitle(f"Declaracion Modelo 349 {fixture.ejercicio} {fixture.periodo}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m349")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("reportlab")
+        _draw_modelo_349(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")
