@@ -32,9 +32,8 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...adapters.persistence.storage.sql.session import session_scope
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
@@ -49,10 +48,6 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-
-
-def _runtime_engine(profile: TestRuntimeProfile):
-    return get_engine(profile.settings)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -133,7 +128,6 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        engine = _runtime_engine(profile)
         try:
             original = _populated_draft()
             repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
@@ -148,7 +142,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             # Reach into the encrypted row and surgically delete the
             # snapshot_ref field from the JSON envelope payload. The
             # column accessor handles encrypt/decrypt automatically.
-            with session_scope(engine) as session:
+            with session_scope(profile.repository._engine) as session:
                 stmt = select(SecureObjectRow).limit(1)
                 row = session.execute(stmt).scalar_one()
                 decoded = json.loads(row.payload.decode("utf-8"))
@@ -184,7 +178,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
                 "roundtrip test in the suite is suspect and must be re-audited"
             )
         finally:
-            engine.dispose()
+            profile.repository._engine.dispose()
 
 
 # ---------------------------------------------------------------------------
@@ -230,13 +224,12 @@ def test_boundary_catches_optional_field_drop(
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        engine = _runtime_engine(profile)
         try:
             original = _populated_draft()
             repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
             repo.save(original)
 
-            with session_scope(engine) as session:
+            with session_scope(profile.repository._engine) as session:
                 stmt = select(SecureObjectRow).limit(1)
                 row = session.execute(stmt).scalar_one()
                 decoded = json.loads(row.payload.decode("utf-8"))
@@ -266,4 +259,4 @@ def test_boundary_catches_optional_field_drop(
                 "re-audit every roundtrip test in the suite"
             )
         finally:
-            engine.dispose()
+            profile.repository._engine.dispose()
