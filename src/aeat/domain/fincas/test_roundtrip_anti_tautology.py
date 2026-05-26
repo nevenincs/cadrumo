@@ -3,9 +3,9 @@
 Persists a populated Finca (every defaultable optional field set to a
 non-default value) through the real SQL repository, mutates the
 on-disk row to violate a strict pydantic invariant, reloads, and
-asserts the corruption surfaces either as ValidationError or as
-strict inequality. If this test ever passes silently with a corrupted
-row, every fincas-register roundtrip in the suite is tautological.
+asserts the corruption surfaces as ValidationError. If this test ever
+passes silently with a corrupted row, every fincas-register roundtrip
+in the suite is tautological.
 """
 
 from __future__ import annotations
@@ -16,6 +16,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import (
@@ -92,8 +93,7 @@ def test_finca_invariant_violation_surfaces_on_reload(engine: Engine) -> None:
     ``valor_catastral_construccion <= valor_catastral_total``. We save
     a row with construccion=120k / total=180k, surgically flip the
     on-disk row so construccion exceeds total, reload, and assert the
-    invariant trip surfaces either as ValidationError or as the loaded
-    record diverging from the original.
+    invariant trips as ValidationError.
 
     If this test passes silently with corrupted state, every
     fincas-register roundtrip in the suite is suspect.
@@ -110,16 +110,5 @@ def test_finca_invariant_violation_surfaces_on_reload(engine: Engine) -> None:
         assert row is not None
         row.valor_catastral_construccion = Decimal("999999.99")
 
-    regression_caught = False
-    try:
-        with session_scope(engine) as session:
-            FincaRepository(session).get(saved.id)
-    except Exception:
-        regression_caught = True
-
-    assert regression_caught, (
-        "anti-tautology proof failed: corrupting valor_catastral_construccion "
-        "to exceed valor_catastral_total did NOT surface on reload. The "
-        "fincas-register boundary is tautological and every roundtrip in "
-        "the suite is suspect."
-    )
+    with pytest.raises(ValidationError), session_scope(engine) as session:
+        FincaRepository(session).get(saved.id)

@@ -33,6 +33,10 @@ Moved another S93 domain persistence slice from explicit SQL route setup onto th
 - Replaced usage-ratio corruption seeding with `profile.repository` writes and tightened the malformed JSON proof to assert the `ValidationError` root cause and message.
 - Replaced modelo anti-tautology direct engine/ORM mutation with runtime-owned `profile.repository.load/save` mutation for calculation revisions, filing records, work units, and verification reports.
 - Removed broad exception sentinels from the modelo anti-tautology proofs; invariant failures now assert explicit `ValidationError` where the model boundary must reject, or strict inequality where a dropped defaultable field must surface.
+- Replaced work-unit action tests' explicit `aeat_database_url`, injected engine, and direct `SecureObjectRepository` setup with `isolated_runtime_profile`.
+- Replaced the work-unit rename bucket-event test's in-memory explicit engine with real `WorkUnitCatalogueRepository` and `BucketEventHistoryRepository` instances sharing the runtime profile repository.
+- Tightened the finca register anti-tautology test to assert `ValidationError` directly instead of broad exception capture.
+- Removed a reviewed `noqa` suppression from the work-unit frozen-model mutation proof.
 
 ## Validation
 
@@ -42,9 +46,11 @@ Moved another S93 domain persistence slice from explicit SQL route setup onto th
 - `uv run --no-sync ruff check src/aeat/domain/submission/test_repository.py src/aeat/domain/transactions/test_repository.py src/aeat/domain/transactions/test_repository_roundtrip.py src/aeat/domain/attachments/test_repository.py src/aeat/domain/justificante/test_repository.py` - passed.
 - `uv run --no-sync pytest src/aeat/domain/modelos/test_calculation_repository_roundtrip.py src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/test_secure_storage_roundtrip.py src/aeat/domain/modelos/test_verification_report_roundtrip.py src/aeat/domain/usage_ratios/test_service.py src/aeat/tests/test_secure_sql.py -q` - 22 passed.
 - `uv run --no-sync ruff check src/aeat/domain/modelos/test_calculation_repository_roundtrip.py src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py src/aeat/domain/modelos/test_secure_storage_roundtrip.py src/aeat/domain/modelos/test_verification_report_roundtrip.py src/aeat/domain/usage_ratios/test_service.py` - passed.
+- `uv run --no-sync pytest src/aeat/domain/modelos/test_work_unit.py src/aeat/domain/fincas/test_roundtrip_anti_tautology.py src/aeat/tests/test_secure_sql.py -q` - 36 passed.
+- `uv run --no-sync ruff check src/aeat/domain/modelos/test_work_unit.py src/aeat/domain/fincas/test_roundtrip_anti_tautology.py` - passed.
 - `rg -n "AEAT_DATABASE_URL|aeat_database_url|create_engine_from_settings|SecureObjectRepository\(|monkeypatch|except Exception|pragma: no cover|noqa|type: ignore\[no-untyped-def\]" ...domain slice...` - no matches.
 - `rg -n "get_engine|session_scope|SecureObjectRow|AEAT_DATABASE_URL|aeat_database_url|create_engine_from_settings|SecureObjectRepository\(|EphemeralMasterKeyProvider|monkeypatch|except Exception|pragma: no cover|noqa|type: ignore\[no-untyped-def\]" ...combined migrated slice...` - no matches.
-- `uv run vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` - passed.
+- `uv run vaultspec-core vault plan check .vault/plan/2026-05-22-secure-storage-production-hardening-refactor-plan.md` - currently blocked by duplicate W07/W08 canonical identifiers around `S56` through `S61`, unrelated to the touched source slice.
 
 ## Review
 
