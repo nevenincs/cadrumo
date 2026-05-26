@@ -12,8 +12,8 @@ related:
 
 # `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
 
-This ADR records two related architectural decisions for the
-`linkage-design-audit` plan, both ratifying the "contract typed
+This ADR records three related architectural decisions for the
+`linkage-design-audit` plan, all ratifying the "contract typed
 at the boundary" theme:
 
 1. `casilla-values-collapse-projection-strategy` — collapse
@@ -25,6 +25,12 @@ at the boundary" theme:
    via classmethod factories so locales and CLI emit consume one
    named contract per error scenario (authorises plan rows
    `P05.S25`, `P05.S26`).
+3. `json-envelope-migration-sequencing` — migrate the modelo
+   work-lifecycle command JSON output from bare payload to the
+   `SchemaEnvelope`-wrapped shape per-command incrementally,
+   with the conformance test accepting both shapes during
+   migration (authorises plan rows `P09.S40`, `P09.S41`,
+   `P09.S42`, `P09.S43`, `P09.S44`).
 
 ## Decision 1: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
 
@@ -304,3 +310,135 @@ This decision authorises plan steps:
 (legal_refs on review-queue findings) inherit the existing
 `2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr`
 authority — no new architectural decision required at those rows.
+
+## Decision 3: `json-envelope-migration-sequencing` (**status:** `accepted`)
+
+### Problem Statement
+
+Today's `aeat` CLI work-lifecycle commands emit bare JSON
+payloads via `_emit(ctx, payload, lines)` (`_common.py:46`).
+The canonical contract per `aeat.core.json_contract.emit_json_success`
+wraps the payload in a `SchemaEnvelope` (`schema_version`,
+`command`, `result`, `warnings`). The `2026-04-25-json-output-contract`
+audit documents the gap: "newly registered emitters do not use
+[the envelope]: they write raw objects or arrays directly from
+command code".
+
+The typed `OutputSchema` subclasses and `@register_schema(...)`
+decorators are already in place at `_modelo_payloads.py` for the
+11 work-lifecycle commands. The missing piece is the emit-site
+routing — a contract-breaking change to the CLI JSON output
+shape that re-baselines every downstream JSON-shape test pinned
+by `test_json_schema_conformance.py:167-169` plus the per-command
+surface tests.
+
+The companion research note's third-topic section catalogues the
+sequencing options (whole-surface flip / per-command incremental
+/ dual-emit compatibility window).
+
+### Decision
+
+Adopt **Strategy B — per-command incremental migration** with a
+**short-lived dual-shape conformance mode** as the bridge:
+
+1. Update `test_json_schema_conformance` to accept BOTH the
+   envelope shape and the bare-payload shape during the migration
+   window, gated by a per-command `MIGRATED_COMMANDS` set
+   declared in the conformance test itself.
+2. Migrate one work-lifecycle command per commit, adding the
+   command's canonical path string (e.g. `"modelo.work.calculate"`)
+   to `MIGRATED_COMMANDS` in the same commit. Update every
+   per-command surface test that probes the JSON output to expect
+   the envelope shape for the migrated command.
+3. The 11-command surface migrates over 11 commits; each commit
+   is internally consistent and bisect-friendly.
+4. Once every work-lifecycle command is migrated, remove the
+   `MIGRATED_COMMANDS` gate from the conformance test and tighten
+   the assertion to envelope-only for the work-lifecycle surface.
+   Other CLI surfaces (`registry`, `audit`, `overview`, etc.)
+   remain bare-payload until their own per-surface migration
+   ADRs.
+
+Strategy B chosen over:
+
+- **Strategy A (whole-surface flip in one commit)** — concentrates
+  risk and review burden; a single commit touches 11 commands
+  plus 30+ test files. The bisect cost when a regression sneaks
+  through is high.
+- **Strategy C (dual-emit compatibility window in `_emit` itself)**
+  — bakes a permanent dual-shape into the emit helper, eroding
+  the "envelope is the contract" intent the json-output-contract
+  audit established. Convenient short-term, but the dual shape
+  outlives the migration and weakens the contract.
+
+### Consequences
+
+- **First commit lands the infrastructure**: extend
+  `test_json_schema_conformance` with the `MIGRATED_COMMANDS` set
+  + dual-shape acceptance helper. Empty set; no command migrated
+  yet. The conformance test stays green against the existing
+  bare-payload shape.
+- **Per-command commits** then add one entry to `MIGRATED_COMMANDS`
+  AND migrate the corresponding command's emit site AND
+  re-baseline its surface tests. The proof-of-pattern landing is
+  `aeat app modelo work calculate` (the canonical work-lifecycle
+  command, recently touched by P02.S08).
+- **Conformance test surface** stays green at every commit
+  boundary — that's the contract the per-command incremental
+  approach buys.
+- **Locales unaffected** — the JSON envelope keys (`schema_version`,
+  `command`, `result`, `warnings`) are not user-facing translatable
+  strings; the locale layer continues to render the wrapped
+  `result` payload as before.
+- **`emit_json_success`'s `warnings=` arg** — work-lifecycle
+  commands today don't emit non-fatal warnings; the migration
+  passes `warnings=None` for now. Per-command warning-emission
+  scopes belong to future ADRs.
+
+### Compliance with established mandates
+
+- **AEAT calculation grounding rule**: legal_refs / source_refs
+  surfaced via the `--explain` ADR convention continue to render
+  inside the envelope's `result` key — unchanged shape from the
+  consumer perspective beyond the wrapper.
+- **No tautological tests** rule: the conformance test's dual-shape
+  mode asserts against external authorities — the actual command
+  output bytes and the registered schema's JSON Schema — not
+  against the migration's own state.
+- **Hexagonal direction**: change is confined to
+  `aeat.entrypoints.cli` (per-command emit sites) and the
+  conformance test surface; no domain or adapter import edges
+  shift.
+- **Anti-tautology**: each per-command commit's surface test
+  must assert against the actual rendered JSON bytes including
+  the envelope shape, not against the per-command payload model
+  in isolation.
+
+### Risks accepted
+
+- **Dual-shape conformance window**: during the 11-commit
+  migration the conformance test accepts both shapes. A
+  regression in an unmigrated command that accidentally emits an
+  envelope (or vice versa) would pass the conformance test until
+  surface tests catch it. Acceptable for a bounded window;
+  mitigated by per-command surface tests asserting the exact
+  expected shape.
+- **Per-command commit cost**: 11 commits is non-trivial review
+  load. The benefit is bisect-friendly migration history.
+
+### Plan linkage
+
+This decision authorises plan steps:
+
+- `linkage-design-audit P09.S40` (research note extension —
+  already landed at the `2026-05-26-linkage-design-audit-research`
+  third-topic section)
+- `linkage-design-audit P09.S41` (this ADR section)
+- `linkage-design-audit P09.S42` (proof-of-pattern: migrate
+  `aeat app modelo work calculate` + conformance dual-shape
+  infrastructure)
+- `linkage-design-audit P09.S43` (migrate remaining 10
+  work-lifecycle commands per the per-command sequencing)
+- `linkage-design-audit P09.S44` (close the dual-shape window —
+  remove `MIGRATED_COMMANDS` gate, tighten conformance to
+  envelope-only for the work-lifecycle surface)
