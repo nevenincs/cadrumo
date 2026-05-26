@@ -34,8 +34,11 @@ class AeatDomains(_Frozen):
     sede: str = Field(min_length=1)
     www1: str = Field(min_length=1)
     www2: str = Field(min_length=1)
+    www3: str = Field(min_length=1)
     www6: str = Field(min_length=1)
     www12: str = Field(min_length=1)
+    aeat_gob: str = Field(min_length=1)
+    legacy_www: str = Field(min_length=1)
     clave: str = Field(min_length=1)
     boe: str = Field(min_length=1)
 
