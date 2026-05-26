@@ -86,11 +86,11 @@ Two parallel CIF validators disagree on whether K is a valid leading letter. Uni
 
 Four separate period-resolution sites: parse_canonical_period period_start_date period_end_date in domain; workflow_period_for_work_unit in application modelo; _registry_period_token in workflow engine. The 1P 2P 3P addition reached only two of three siblings; verify breaks.
 
-- [ ] `W01.P07.S25` - add 1P 2P 3P arms to parse_canonical_period; `src/aeat/domain/period.py`.
-- [ ] `W01.P07.S26` - consolidate workflow_period_for_work_unit to call parse_canonical_period; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P07.S27` - consolidate _registry_period_token to share a normaliser with the calculate path; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W01.P07.S28` - property test that for every supported period token all three sibling functions agree; `src/aeat/domain/test_period_property.py`.
-- [ ] `W01.P07.S29` - regression test that modelo work verify succeeds on the same 1P token create and calculate accepted; `src/aeat/entrypoints/cli/test_modelo_period_consistency.py`.
+- [x] `W01.P07.S25` - add 1P 2P 3P arms to parse_canonical_period; `src/aeat/domain/period.py`.
+- [x] `W01.P07.S26` - consolidate workflow_period_for_work_unit to call parse_canonical_period; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P07.S27` - consolidate _registry_period_token to share a normaliser with the calculate path; `src/aeat/application/workflow/_engine.py`.
+- [x] `W01.P07.S28` - property test that for every supported period token all three sibling functions agree; `src/aeat/domain/test_period_property.py`.
+- [x] `W01.P07.S29` - regression test that modelo work verify succeeds on the same 1P token create and calculate accepted; `src/aeat/entrypoints/cli/test_modelo_period_consistency.py`.
 
 ### Phase `W01.P08` - i18n placeholder validator silent-swallow elimination
 
