@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings, override_settings
@@ -18,8 +17,10 @@ from ...core.i18n import tr
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.filing import ModeloDraft, ModeloDraftRepository
 from ...domain.submission import ModeloDraftStatus
+from ...tests.secure_sql import isolated_profile_storage_root
 from . import AuthProviderKind
-from ._operator import configure_operator_auth, inspect_operator_auth, test_operator_auth
+from ._operator import configure_operator_auth, inspect_operator_auth
+from ._operator import test_operator_auth as run_operator_auth_test
 from ._sessions import (
     AuthProfileIdentityMismatchError,
     _assert_active_profile_identity_matches_provider,
@@ -29,26 +30,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _BUCKET_ID = "operator"
 
 
-def _session(*, dek: bytes = b"d" * 32) -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=dek,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
 def test_test_operator_auth_reports_the_active_profile() -> None:
     """`test_operator_auth` is the operator's auth-readiness check. It must
     resolve the active profile so the report tells the user whether auth is
     ready *for their profile* - not return empty profile fields."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator")
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
 
-    result = test_operator_auth("certificate")
+    result = run_operator_auth_test("certificate")
 
     assert result.active_profile == "operator"
     assert result.active_profile_registered is True
@@ -59,31 +48,38 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
 def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
     """Auth readiness is local-auth state, not a workspace-wide integrity scan.
 
-    A rotated-key filing draft must be reported by `config repair`, but it
+    A malformed filing draft must be reported by `config repair`, but it
     must not prevent `config auth status` from telling the operator what
     auth provider is configured for the active profile.
     """
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator")
-    )
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     configure_operator_auth("certificate")
     now = datetime.now(UTC)
 
-    with activate_session(_session(dek=b"x" * 32)):
-        ModeloDraftRepository().save(
-            ModeloDraft(
-                draft_id="unreadable-workspace-draft",
-                modelo="303",
-                period="2026Q1",
-                profile_tax_id="00000000T",
-                status=ModeloDraftStatus.BORRADOR,
-                values=(),
-                created_at=now,
-                updated_at=now,
-                schema_version="test",
-            )
+    draft_id = "unreadable-workspace-draft"
+    repository = ModeloDraftRepository()
+    repository.save(
+        ModeloDraft(
+            draft_id=draft_id,
+            modelo="303",
+            period="2026Q1",
+            profile_tax_id="00000000T",
+            status=ModeloDraftStatus.BORRADOR,
+            values=(),
+            created_at=now,
+            updated_at=now,
+            schema_version="test",
         )
+    )
+    secure_object_repository_for_active_bucket().save(
+        namespace=ModeloDraftRepository.namespace,
+        object_key=draft_id,
+        classification=ModeloDraftRepository.sensitivity,
+        schema_version=ModeloDraftRepository.schema_version,
+        written_at=now,
+        payload=b"{not-json",
+    )
 
     result = inspect_operator_auth("certificate")
 
@@ -95,14 +91,10 @@ def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span(_BUCKET_ID),
     ):
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+        yield
 
 
 def test_configure_operator_auth_emits_auth_provider_configured_event() -> None:
@@ -145,16 +137,14 @@ def test_configure_operator_auth_event_payload_records_certificate_path(tmp_path
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert matching
     payload = matching[-1].payload
     assert payload["certificate_path"] == str(cert_path)
 
 
-def test_configure_operator_auth_refuses_when_no_active_profile_bucket() -> None:
+def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path: Path) -> None:
     """``configure_operator_auth`` refuses with
     :class:`AuthConfigureNoActiveBucketError` when no active profile
     bucket exists. The bucket-event-history ADR requires every event
@@ -166,17 +156,18 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket() -> None
 
     from ._operator import AuthConfigureNoActiveBucketError
 
-    with override_settings(aeat_active_profile=None), pytest.raises(
-        AuthConfigureNoActiveBucketError,
-        match=r"aeat config profile create NAME",
+    with (
+        override_settings(aeat_local_storage_root=tmp_path / "no-active", aeat_active_profile=None),
+        pytest.raises(
+            AuthConfigureNoActiveBucketError,
+            match=r"aeat config profile create NAME",
+        ),
     ):
         configure_operator_auth("certificate")
 
     catalogue = BucketEventHistoryRepository().load()
     typed_auth_events = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert typed_auth_events == []
 
@@ -203,9 +194,7 @@ def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
 
     catalogue = BucketEventHistoryRepository().load()
     typed_auth_events = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert typed_auth_events == []
 
@@ -327,9 +316,7 @@ def test_inspect_operator_auth_distinguishes_no_path_set_from_file_missing(
     configure_operator_auth("certificate")  # no --file
     no_path = inspect_operator_auth()
     assert no_path.configured is False
-    assert no_path.health_severity == "info", (
-        f"no-path-set must be info, not error — got {no_path.health_severity!r}"
-    )
+    assert no_path.health_severity == "info", f"no-path-set must be info, not error — got {no_path.health_severity!r}"
     no_path_summary = no_path.health_summary
 
     # 2) path set + file missing
@@ -419,7 +406,7 @@ def test_auth_status_and_test_agree_when_no_provider_configured() -> None:
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
 
     status = inspect_operator_auth()
-    probe = test_operator_auth()
+    probe = run_operator_auth_test()
 
     assert status.provider == ""
     assert status.provider == probe.provider, (
@@ -440,7 +427,7 @@ def test_auth_test_probes_the_provider_when_one_is_configured() -> None:
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     configure_operator_auth("certificate")
 
-    probe = test_operator_auth()
+    probe = run_operator_auth_test()
 
     assert probe.provider == "certificate"
 
@@ -451,7 +438,7 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
 
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
 
-    probe = test_operator_auth("clave_movil")
+    probe = run_operator_auth_test("clave_movil")
 
     assert probe.provider == "clave_movil"
 
@@ -471,7 +458,7 @@ def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
     configure_operator_auth("certificate")
 
     status = inspect_operator_auth()
-    probe = test_operator_auth()
+    probe = run_operator_auth_test()
 
     # The probe fields are an ``auth test`` exclusive — not on the
     # ``auth status`` result shape.
@@ -551,10 +538,7 @@ def test_clave_live_auth_guard_accepts_matching_active_profile_identity() -> Non
     )
     settings = Settings().model_copy(update={"aeat_clave_movil_dni_nie": "12345678Z"})
 
-    assert (
-        _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL)
-        == "12345678Z"
-    )
+    assert _assert_active_profile_identity_matches_provider(settings, AuthProviderKind.CLAVE_MOVIL) == "12345678Z"
 
 
 def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> None:
@@ -575,9 +559,7 @@ def test_clave_live_auth_guard_rejects_mismatched_active_profile_identity() -> N
     # the profile language (persona-fleet finding G3); assert it equals
     # the localised string for the canonical key rather than a
     # hard-coded English fragment.
-    assert str(raised.value) == tr(
-        "application.auth.sessions.errors.clave_identity_profile_mismatch"
-    )
+    assert str(raised.value) == tr("application.auth.sessions.errors.clave_identity_profile_mismatch")
 
 
 def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None:
@@ -595,9 +577,7 @@ def test_configure_operator_auth_repeated_calls_append_distinct_events() -> None
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [
-        event
-        for event in catalogue.events.values()
-        if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
+        event for event in catalogue.events.values() if event.event_type is BucketEventType.AUTH_PROVIDER_CONFIGURED
     ]
     assert len(matching) >= 2
     ids = {event.event_id for event in matching}
