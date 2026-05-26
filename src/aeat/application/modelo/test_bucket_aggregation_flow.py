@@ -8,12 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
@@ -28,6 +24,7 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
 from ..user_profile import UserProfileLifecycleRepository
 from . import (
@@ -43,21 +40,12 @@ _T1 = datetime(2026, 1, 10, 11, 0, tzinfo=UTC)
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield engine
-        finally:
-            engine.dispose()
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+        yield profile.repository
 
 
-def _repositories(engine: Engine):
-    objects = SecureObjectRepository(engine=engine)
+def _repositories(objects: SecureObjectRepository):
     return (
         WorkUnitCatalogueRepository(objects=objects),
         CalculationRevisionCatalogueRepository(objects=objects),
@@ -132,8 +120,8 @@ def _seed_303_work_unit(
     )
 
 
-def _store_profile() -> None:
-    UserProfileLifecycleRepository(bucket_id="bucket-a").save(
+def _store_profile(objects: SecureObjectRepository) -> None:
+    UserProfileLifecycleRepository(bucket_id="bucket-a", objects=objects).save(
         UserProfileRecord(
             profile_id="bucket-a",
             display_name="Bucket aggregation taxpayer",
@@ -182,9 +170,9 @@ def _assert_modelo_303_trace(revision) -> None:
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transaction_catalogue(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     incoming = _transaction(
         "sale-general",
@@ -210,7 +198,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
         bucket_event_repository=event_repo,
         transaction_repository=TransactionCatalogueRepository(
             bucket_id="bucket-a",
-            objects=SecureObjectRepository(engine=secure_engine),
+            objects=secure_objects,
         ),
         clock=_T1,
     )
@@ -243,18 +231,16 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     assert computed_result.source_refs
 
     events = event_repo.load().for_bucket("bucket-a")
-    calculation_events = [
-        event for event in events if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED
-    ]
+    calculation_events = [event for event in events if event.event_type == BucketEventType.MODELO_CALCULATION_CREATED]
     assert len(calculation_events) == 1
     assert calculation_events[0].payload["casilla_count"] == str(len(revision.casilla_values))
     assert calculation_events[0].payload["source_transaction_count"] == "2"
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_preflight_blocks(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     incomplete = _transaction(
         "purchase-missing-category",
@@ -280,12 +266,10 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
 
 
 def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compensation_periods(
-    secure_engine: Engine,
-    tmp_path: Path,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    with override_settings(aeat_local_storage_root=tmp_path):
-        _store_profile()
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    _store_profile(secure_objects)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     ledger_rows = (
         _transaction(
             "q1-sale",
@@ -382,20 +366,19 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
         clock=_T1,
     )
     wallet_decision = _wallet_decision(period="4T", selected_amount=Decimal("7.00"))
-    wallet_decision_repo = IvaWalletDecisionRepository(objects=SecureObjectRepository(engine=secure_engine))
+    wallet_decision_repo = IvaWalletDecisionRepository(objects=secure_objects)
     wallet_decision_repo.save_decision(wallet_decision)
-    with override_settings(aeat_local_storage_root=tmp_path):
-        q4_compensated = calculate_modelo_revision_from_bucket_aggregation(
-            _seed_303_work_unit(wu_repo, period="4T").work_unit_id,
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=event_repo,
-            transaction_repository=tx_repo,
-            iva_compensation_decision=wallet_decision,
-            iva_compensation_decision_repository=wallet_decision_repo,
-            clock=_T1,
-        )
+    q4_compensated = calculate_modelo_revision_from_bucket_aggregation(
+        _seed_303_work_unit(wu_repo, period="4T").work_unit_id,
+        actor="operator-A",
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=event_repo,
+        transaction_repository=tx_repo,
+        iva_compensation_decision=wallet_decision,
+        iva_compensation_decision_repository=wallet_decision_repo,
+        clock=_T1,
+    )
 
     for revision in (q1_positive, q2_negative, q3_zero, q4_compensated):
         _assert_modelo_303_trace(revision)
@@ -414,15 +397,14 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
 
     assert q4_compensated.casilla_values["iva.compensacion-aplicada-periodo"] > Decimal("0")
     assert (
-        q4_compensated.casilla_values["iva.resultado"]
-        < q4_compensated.casilla_values["iva.resultado-regimen-general"]
+        q4_compensated.casilla_values["iva.resultado"] < q4_compensated.casilla_values["iva.resultado-regimen-general"]
     )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_binding_input(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
     tx_repo.save(
         TransactionCatalogue.from_transactions(
@@ -452,15 +434,14 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
 
     assert cr_repo.load().revisions == {}
     assert all(
-        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
-        for event in event_repo.load().events.values()
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED for event in event_repo.load().events.values()
     )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_ledger_binding_injection(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
     with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
@@ -477,15 +458,14 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
 
     assert cr_repo.load().revisions == {}
     assert all(
-        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
-        for event in event_repo.load().events.values()
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED for event in event_repo.load().events.values()
     )
 
 
 def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_casilla_injection(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_engine)
+    wu_repo, cr_repo, event_repo, tx_repo = _repositories(secure_objects)
     work_unit = _seed_303_work_unit(wu_repo)
 
     with pytest.raises(ModeloAggregationBindingError, match="cannot override"):
@@ -502,6 +482,5 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
 
     assert cr_repo.load().revisions == {}
     assert all(
-        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED
-        for event in event_repo.load().events.values()
+        event.event_type != BucketEventType.MODELO_CALCULATION_CREATED for event in event_repo.load().events.values()
     )
