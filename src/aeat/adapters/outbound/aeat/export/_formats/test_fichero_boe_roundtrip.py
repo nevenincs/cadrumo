@@ -369,9 +369,9 @@ def test_reserved_field_corruption_rejected_at_decode() -> None:
 # The golden SHA below was obtained by running export_draft against the
 # fixed inputs below, then verifying every asserted byte position against
 # the DR offset table before recording the hash. Changing any registry
-# field offset, length, or encoding in 130.toml will change the SHA and
-# fail this test; changes must be re-grounded against the DR before
-# updating the constant.
+# field offset, length, or encoding in the Modelo 130 registry fragments
+# will change the SHA and fail this test; changes must be re-grounded
+# against the DR before updating the constant.
 #
 # Per-offset assertions are non-tautological: each one names the DR row
 # it corresponds to so a reviewer can verify the expected value
@@ -427,7 +427,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
             "08": Decimal("0"),
             "10": Decimal("0"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
@@ -522,7 +522,7 @@ def test_modelo_130_golden_sha_fichero_boe(tmp_path: Path) -> None:
         f"Modelo 130 fichero-BOE SHA mismatch.\n"
         f"  Expected: {_M130_GOLDEN_SHA256}\n"
         f"  Got:      {digest}\n"
-        "Any change to the 130.toml export layout that alters byte output\n"
+        "Any change to the Modelo 130 export layout that alters byte output\n"
         "must be re-grounded against the AEAT Diseño de Registros (DR 13001,\n"
         "Orden HAP/258/2015 v1.2) before updating this constant."
     )
