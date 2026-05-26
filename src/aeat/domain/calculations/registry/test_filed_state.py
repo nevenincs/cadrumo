@@ -153,8 +153,10 @@ def test_filed_state_comparison_reports_missing_local_casilla() -> None:
     a separate failure axis from ``missing_filed_casillas`` and drift."""
     calculation = _modelo_130_calculation()
     observation = _filed_observation(calculation)
-    pruned_values = {casilla_id: value for casilla_id, value in calculation.values.items() if casilla_id != "19"}
-    calculation = calculation.model_copy(update={"values": pruned_values})
+    # `values` is a derived @property over the typed observations envelope;
+    # drop casilla "19" by filtering the canonical observations tuple instead.
+    pruned_observations = tuple(obs for obs in calculation.observations if obs.casilla_id != "19")
+    calculation = calculation.model_copy(update={"observations": pruned_observations})
 
     comparison = compare_calculation_to_filed_observation(
         calculation,
@@ -175,8 +177,8 @@ def test_filed_state_comparison_reports_composite_missing_and_drift() -> None:
     numeric drift, all in the same comparison."""
     calculation = _modelo_130_calculation()
     observation = _filed_observation(calculation)
-    pruned_local = {casilla_id: value for casilla_id, value in calculation.values.items() if casilla_id != "03"}
-    calculation = calculation.model_copy(update={"values": pruned_local})
+    pruned_local_observations = tuple(obs for obs in calculation.observations if obs.casilla_id != "03")
+    calculation = calculation.model_copy(update={"observations": pruned_local_observations})
     # casilla_values is a derived @property; mutate the typed
     # `observations` tuple to drop "04" and drift "19".
     mutated_observations = tuple(

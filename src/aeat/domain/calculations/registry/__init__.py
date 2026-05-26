@@ -182,7 +182,12 @@ from ._renta_web_open_oracle import (
     equivalent_renta_web_open_value,
     parse_renta_web_open_live_payload,
 )
-from ._runtime_graph import expression_casilla_refs
+from ._runtime_graph import (
+    enum_consumed_binding_ids,
+    expression_binding_refs,
+    expression_casilla_refs,
+    input_casilla_alias_map,
+)
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
@@ -213,6 +218,7 @@ from ._schema import (
     ProfilePredicateDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
+    RegistrySnapshotRef,
     SourceReference,
     SupportRemovalDecisionDefinition,
     VerificationExpectationDefinition,
@@ -351,6 +357,7 @@ __all__ = [
     "RegistryQueryService",
     "RegistrySnapshot",
     "RegistrySnapshotError",
+    "RegistrySnapshotRef",
     "RegistryValidationError",
     "RegistryValidator",
     "RemoteOperation",
@@ -413,8 +420,11 @@ __all__ = [
     "evaluate_cross_reference_applicability",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
+    "enum_consumed_binding_ids",
     "export_fields_for_casilla",
+    "expression_binding_refs",
     "expression_casilla_refs",
+    "input_casilla_alias_map",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

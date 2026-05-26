@@ -8,11 +8,19 @@ from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
+from ._bindings import CasillaObservation
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._runtime_graph import formula_evaluation_order
-from ._schema import DatedValue, FormulaExpression, ModeloRevision, ParameterDefinition, RegistrySnapshot
+from ._schema import (
+    CasillaDefinition,
+    DatedValue,
+    FormulaExpression,
+    ModeloRevision,
+    ParameterDefinition,
+    RegistrySnapshot,
+)
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
@@ -44,33 +52,77 @@ class RegistryCalculationEntry(BaseModel):
 
 
 class RegistryCalculationResult(BaseModel):
-    """Calculated outputs and trace entries for one registry snapshot.
+    """Calculated outputs for one registry snapshot.
 
-    Coverage asymmetry between ``values`` and ``entries``:
+    Canonical storage is :attr:`observations` — a typed tuple of
+    :class:`CasillaObservation` covering EVERY casilla on the revision
+    (inputs, bound, and formula-computed). Each observation carries
+    its final Decimal ``value`` plus the legal / source provenance for
+    that casilla pulled from the registry. Formula-computed
+    observations additionally carry ``formula_id``, ``op``,
+    ``operand_refs``, and ``operand_values`` so the full evaluation
+    lineage survives the engine boundary.
 
-    * :attr:`values` covers every casilla on the revision — inputs,
-      bound, and formula-computed — with the final Decimal value the
-      engine resolved for each. Iterate this when assembling a
-      complete casilla map (e.g. for filing draft construction).
-    * :attr:`entries` covers ONLY the formula-computed casillas. Each
-      entry carries the formula's legal_refs / source_refs / operand
-      lineage. ``len(entries) <= len(values)`` always; equality holds
-      only when every casilla on the revision is formula-computed
-      (rare in practice).
+    The legacy :attr:`values` and :attr:`entries` views are derived
+    properties for backward compatibility with downstream readers that
+    iterate the flat ``{casilla_id: Decimal}`` map or the
+    formula-only entry tuple. The typed envelope is the contract; the
+    flat views never grow new fields.
 
-    Consumers that assume ``len(entries) == len(values)`` will silently
-    drop provenance on input and bound casillas — see
-    :func:`aeat.application.modelo._actions.calculate_modelo_revision`
-    for the canonical pattern that pulls input / bound provenance from
-    the registry casilla definitions instead.
+    Coverage asymmetry preserved by the derivation:
+
+    * :attr:`values` covers every observation (inputs, bound, computed)
+      — keyed by ``casilla_id`` → ``value``.
+    * :attr:`entries` covers ONLY observations where ``formula_id`` is
+      set. ``len(entries) <= len(observations)`` always; equality holds
+      only when every casilla is formula-computed (rare in practice).
+
+    Consumers that need provenance for non-computed casillas must iterate
+    :attr:`observations` directly — the entries view drops them by design.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     modelo: str
     revision: str
-    values: Mapping[str, Decimal]
-    entries: tuple[RegistryCalculationEntry, ...]
+    observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+
+    @property
+    def values(self) -> Mapping[str, Decimal]:
+        """Read-only view: casilla_id → final Decimal value.
+
+        Deliberately a plain ``@property``, not a pydantic
+        ``computed_field``: the typed ``observations`` envelope is
+        canonical storage; exposing this in JSON would round-trip
+        self-incompatibly under ``extra='forbid'`` because the loader
+        would refuse the duplicate field on the way back in.
+        """
+        return {obs.casilla_id: obs.value for obs in self.observations}
+
+    @property
+    def entries(self) -> tuple[RegistryCalculationEntry, ...]:
+        """Read-only view: formula-computed observations as :class:`RegistryCalculationEntry` rows.
+
+        Preserves the historical entry shape (with ``target`` and
+        ``op`` fields) for the application-layer indexers that build
+        ``{target: entry}`` dictionaries. Insertion order from
+        ``observations`` is preserved — the engine emits in formula
+        evaluation order, which matches the original ``entries`` shape.
+        """
+        return tuple(
+            RegistryCalculationEntry(
+                formula_id=obs.formula_id,
+                target=obs.casilla_id,
+                op=obs.op or "value",
+                operand_refs=obs.operand_refs,
+                operand_values=obs.operand_values,
+                value=obs.value,
+                legal_refs=obs.legal_refs,
+                source_refs=obs.source_refs,
+            )
+            for obs in self.observations
+            if obs.formula_id is not None
+        )
 
 
 def calculate_registry_snapshot(
@@ -116,7 +168,10 @@ def calculate_registry_snapshot(
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-    entries: list[RegistryCalculationEntry] = []
+    # Per-casilla provenance accumulator. Formula-computed casillas overwrite
+    # the input/bound placeholder with the full operand lineage; non-computed
+    # casillas keep the registry-sourced legal_refs/source_refs.
+    computed_provenance: dict[str, CasillaObservation] = {}
 
     with localcontext() as ctx:
         ctx.prec = 28
@@ -154,25 +209,63 @@ def calculate_registry_snapshot(
                         },
                     )
             values[target] = value
-            entries.append(
-                RegistryCalculationEntry(
-                    formula_id=formula.id,
-                    target=target,
-                    op=formula.expression.op or "value",
-                    operand_refs=tuple(operand_refs),
-                    operand_values=tuple(operand_values),
-                    value=value,
-                    legal_refs=tuple(formula.legal_refs),
-                    source_refs=tuple(formula.source_refs),
-                )
+            computed_provenance[target] = CasillaObservation(
+                casilla_id=target,
+                value=value,
+                formula_id=formula.id,
+                op=formula.expression.op or "value",
+                operand_refs=tuple(operand_refs),
+                operand_values=tuple(operand_values),
+                legal_refs=tuple(formula.legal_refs),
+                source_refs=tuple(formula.source_refs),
             )
+
+    observations = _materialise_observations(
+        values=values,
+        computed_provenance=computed_provenance,
+        casillas_by_id=casillas_by_id,
+    )
 
     return RegistryCalculationResult(
         modelo=snapshot.modelo.id,
         revision=revision.id,
-        values=values,
-        entries=tuple(entries),
+        observations=observations,
     )
+
+
+def _materialise_observations(
+    *,
+    values: Mapping[str, Decimal],
+    computed_provenance: Mapping[str, CasillaObservation],
+    casillas_by_id: Mapping[str, CasillaDefinition],
+) -> tuple[CasillaObservation, ...]:
+    """Project the engine's per-casilla state into the canonical observation tuple.
+
+    Every casilla in ``values`` lands as a :class:`CasillaObservation`:
+    computed casillas pull formula lineage from ``computed_provenance``;
+    input / bound casillas pull legal_refs and source_refs from the
+    registry casilla definition so provenance survives the boundary
+    even when no formula ran. Stable ordering by ``casilla_id`` makes
+    downstream snapshots and audit diffs deterministic.
+    """
+    materialised: list[CasillaObservation] = []
+    for casilla_id in sorted(values):
+        computed = computed_provenance.get(casilla_id)
+        if computed is not None:
+            materialised.append(computed)
+            continue
+        registry_casilla = casillas_by_id.get(casilla_id)
+        legal_refs = tuple(registry_casilla.legal_refs) if registry_casilla is not None else ()
+        source_refs = tuple(registry_casilla.source_refs) if registry_casilla is not None else ()
+        materialised.append(
+            CasillaObservation(
+                casilla_id=casilla_id,
+                value=values[casilla_id],
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            )
+        )
+    return tuple(materialised)
 
 
 def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> dict[str, Decimal]:
