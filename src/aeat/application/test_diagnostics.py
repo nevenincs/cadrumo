@@ -16,6 +16,7 @@ from aeat.adapters.persistence.storage.sql.engine import create_engine_from_sett
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings
+from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 from .diagnostics import (
     ConfigRepairReport,
@@ -100,17 +101,10 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
 
 
 def test_config_repair_report_contains_registry_and_setup_checks(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-
-    report = build_config_repair_report()
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        report = build_config_repair_report()
 
     assert report.package_name == "aeat"
     assert report.registry.available is True
@@ -128,15 +122,10 @@ def test_config_repair_report_contains_registry_and_setup_checks(
 
 
 def test_render_config_repair_text_is_operator_readable(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-
-    rendered = render_config_repair_text(build_config_repair_report())
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        rendered = render_config_repair_text(build_config_repair_report())
 
     from aeat.core.i18n import tr
 
@@ -267,17 +256,12 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
 
 def test_secure_objects_integrity_check_reports_ok_on_clean_database(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """An empty or fully-decryptable secure-objects table renders ``ok``."""
-    db_path = tmp_path / "clean.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
 
-    report = build_config_repair_report()
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        report = build_config_repair_report()
     integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
     assert integrity_check.status == "ok"
     assert report.secure_objects.unreadable_total == 0
@@ -334,23 +318,15 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
 
 
 def test_secure_object_unreadable_total_is_zero_on_clean_database(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """Aggregate returns zero when no namespace has unreadable rows."""
-    db_path = tmp_path / "agg-clean.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
 
-    assert secure_object_unreadable_total() == 0
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        assert secure_object_unreadable_total() == 0
 
 
-def test_repair_auth_session_predicate_agrees_with_wizard_status(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
+def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> None:
     """``aeat config repair`` and ``aeat config status`` must read auth readiness from one source.
 
     Repair and the wizard status surface share one projection: both
@@ -360,15 +336,14 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
     authenticated) and asserting the report shape across each.
     """
     from aeat.application.auth import update_auth
+    from aeat.application.user_profile._orchestration import profile_create_storage_span
     from aeat.application.user_profile._testing import register_minimal_profile
     from aeat.application.workflow import WorkflowState
 
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("operator"),
+    ):
         base = register_minimal_profile(
             WorkflowState(),
             profile_id="operator",
@@ -503,9 +478,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     key_new = EphemeralMasterKeyProvider()
 
     with key_old:
-        engine_old = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-        )
+        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         Base.metadata.create_all(engine_old)
         try:
             repo_old = SecureObjectRepository(engine=engine_old)
@@ -528,9 +501,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     with key_new:
         dispose_engine()
-        engine_new = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-        )
+        engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         try:
             SecureObjectRepository(engine=engine_new).save(
                 namespace="aeat.test.preview.alpha",
@@ -556,8 +527,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     with sqlite3.connect(db_path) as con:
         active = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0]
         archive_exists = con.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' "
-            "AND name='secure_objects_quarantine'"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='secure_objects_quarantine'"
         ).fetchone()
     assert active == 3, f"preview must not delete rows; got {active} left"
     assert archive_exists is None, "preview must not create the quarantine table"
