@@ -159,10 +159,10 @@ The corporate-tax-runtime plan 8 of 8 Steps complete claim was premature: Cluste
 
 is.modelo-200.tipo-gravamen-pyme brackets cover 2025+ only inside a revision named 2024-y-siguientes. Resolve.
 
-- [ ] `W03.P14.S55` - decide and document either backfill 2024 pyme brackets at LIS Art. 29 2024 rate OR revise the revision identity so 2024 routes elsewhere; `.vault/exec/`.
-- [ ] `W03.P14.S56` - apply the chosen fix to the parameter; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`.
-- [ ] `W03.P14.S57` - add registry-validation check that every bracket_table parameter brackets cover the revision declared date range; `src/aeat/domain/calculations/registry/_validate_revision_rules.py`.
-- [ ] `W03.P14.S58` - regression test: Modelo 200 work unit with 2024 filing_period and micro-empresa profile calculates without bracket_no_window; `src/aeat/domain/calculations/registry/test_modelo_200_temporal_coverage.py`.
+- [x] `W03.P14.S55` - decide and document either backfill 2024 pyme brackets at LIS Art. 29 2024 rate OR revise the revision identity so 2024 routes elsewhere; `.vault/exec/`.
+- [x] `W03.P14.S56` - apply the chosen fix to the parameter; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`.
+- [x] `W03.P14.S57` - add registry-validation check that every bracket_table parameter brackets cover the revision declared date range; `src/aeat/domain/calculations/registry/_validate_revision_rules.py`.
+- [x] `W03.P14.S58` - regression test: Modelo 200 work unit with 2024 filing_period and micro-empresa profile calculates without bracket_no_window; `src/aeat/domain/calculations/registry/test_modelo_200_temporal_coverage.py`.
 
 ### Phase `W03.P15` - Modelo 200 base imponible input casilla resolution Cluster D.3
 
