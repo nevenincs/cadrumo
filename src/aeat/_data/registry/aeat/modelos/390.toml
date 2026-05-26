@@ -662,6 +662,7 @@ target_casillas = [
     {casilla_id = "iva.anual.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(47\s*-\s*64\)'},
     {casilla_id = "iva.anual.compensacion-ultimo-periodo-97", match_strategy = "named_label", value_kind = "amount", label_pattern = '\{?\s*A\s+compensar'},
     {casilla_id = "iva.anual.compensacion-generada-ejercicio-no-97", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+pendientes\s+de\s+compensaci[oó]n\s+generadas\s+en\s+el\s+ejercicio'},
+    {casilla_id = "iva.anual.soportado.interiores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+bases\s+imponibles\s+y\s+cuotas\s+deducibles\s+en\s+operaciones\s+interiores\s+de\s+bienes\s+y\s+servicios\s+corrientes'},
 ]
 confidence = "strict"
 min_coverage = "1"
