@@ -29,6 +29,9 @@ _ALLOWED_ENV_KEYS_BY_SURFACE = {
         "PASSPHRASE_ENV_VAR",
     },
 }
+_ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
+    "src/aeat/adapters/persistence/storage/runtime.py",
+}
 
 
 def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
@@ -71,6 +74,35 @@ def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() 
     )
 
 
+def test_production_secure_object_repository_construction_stays_runtime_owned() -> None:
+    offences: list[str] = []
+    for path in _iter_aeat_python_sources():
+        relative = path.relative_to(PROJECT_ROOT).as_posix()
+        if _is_test_surface(relative):
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        constructors = _secure_object_repository_constructor_names(tree)
+        module_aliases = _secure_object_repository_module_aliases(tree)
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call) or not _is_secure_object_repository_constructor_call(
+                node,
+                constructors,
+                module_aliases,
+            ):
+                continue
+            if relative not in _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS:
+                offences.append(f"{relative}:{node.lineno}: direct SecureObjectRepository construction")
+                continue
+            engine_keyword = next((keyword for keyword in node.keywords if keyword.arg == "engine"), None)
+            if engine_keyword is None:
+                offences.append(f"{relative}:{node.lineno}: runtime construction must bind an engine explicitly")
+                continue
+            if isinstance(engine_keyword.value, ast.Constant) and engine_keyword.value.value is None:
+                offences.append(f"{relative}:{node.lineno}: runtime construction must not bind engine=None")
+
+    assert offences == []
+
+
 def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
     offences: list[str] = []
     for relative in _HARDENING_TEST_SURFACES:
@@ -97,6 +129,75 @@ def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
             if _is_mock_import(node):
                 offences.append(f"{relative}:{node.lineno}: mock import")
     assert offences == []
+
+
+def _iter_aeat_python_sources() -> tuple[Path, ...]:
+    return tuple(sorted((PROJECT_ROOT / "src/aeat").rglob("*.py")))
+
+
+def _is_test_surface(relative: str) -> bool:
+    path = Path(relative)
+    return path.name.startswith("test_") or path.name == "conftest.py" or "/test_" in relative
+
+
+def _secure_object_repository_constructor_names(tree: ast.AST) -> set[str]:
+    names = {"SecureObjectRepository"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            names.update(alias.asname or alias.name for alias in node.names if alias.name == "SecureObjectRepository")
+
+    discovered = True
+    while discovered:
+        discovered = False
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Name):
+                continue
+            if node.value.id not in names:
+                continue
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id not in names:
+                    names.add(target.id)
+                    discovered = True
+    return names
+
+
+def _secure_object_repository_module_aliases(tree: ast.AST) -> set[str]:
+    aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            aliases.update(
+                alias.asname or alias.name
+                for alias in node.names
+                if alias.name.endswith(
+                    (
+                        "adapters.persistence.storage.sql",
+                        "adapters.persistence.storage.sql.secure_objects",
+                    )
+                )
+            )
+        if isinstance(node, ast.ImportFrom) and node.module in {
+            "aeat.adapters.persistence.storage",
+            "aeat.adapters.persistence.storage.sql",
+            "aeat.adapters.persistence.storage.sql.secure_objects",
+        }:
+            aliases.update(
+                alias.asname or alias.name
+                for alias in node.names
+                if alias.name in {"sql", "secure_objects"}
+            )
+    return aliases
+
+
+def _is_secure_object_repository_constructor_call(
+    node: ast.Call,
+    constructors: set[str],
+    module_aliases: set[str],
+) -> bool:
+    if isinstance(node.func, ast.Name):
+        return node.func.id in constructors
+    if not isinstance(node.func, ast.Attribute) or node.func.attr != "SecureObjectRepository":
+        return False
+    return _qualified_name(node.func.value) in module_aliases
 
 
 def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
@@ -231,45 +332,6 @@ def _collect_environ_aliases(tree: ast.AST) -> set[str]:
         if isinstance(node, ast.ImportFrom) and node.module == "os":
             aliases.update(alias.asname or "environ" for alias in node.names if alias.name == "environ")
     return aliases
-
-
-def _is_aeat_database_env_mutation_call(node: ast.Call, constants: dict[str, str]) -> bool:
-    qualified = _qualified_name(node.func)
-    if qualified in {"os.putenv", "os.unsetenv"}:
-        return bool(node.args) and _is_aeat_database_key(node.args[0], constants)
-    if _call_name(node.func) not in {"setenv", "delenv", "putenv", "unsetenv"}:
-        return False
-    if not node.args:
-        return False
-    return _is_aeat_database_key(node.args[0], constants)
-
-
-def _mutates_aeat_database_env(
-    node: ast.Assign | ast.AnnAssign | ast.AugAssign | ast.Delete,
-    constants: dict[str, str],
-) -> bool:
-    targets: list[ast.expr] = []
-    if isinstance(node, ast.Assign):
-        targets.extend(node.targets)
-    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
-        targets.append(node.target)
-    elif isinstance(node, ast.Delete):
-        targets.extend(node.targets)
-    return any(_is_aeat_database_environ_subscript(target, constants) for target in targets)
-
-
-def _is_aeat_database_environ_subscript(node: ast.expr, constants: dict[str, str]) -> bool:
-    return isinstance(node, ast.Subscript) and _qualified_name(node.value) == "os.environ" and _is_aeat_database_key(
-        node.slice, constants
-    )
-
-
-def _is_aeat_database_key(node: ast.expr, constants: dict[str, str]) -> bool:
-    if isinstance(node, ast.Constant):
-        return node.value == "AEAT_DATABASE_URL"
-    if isinstance(node, ast.Name):
-        return constants.get(node.id) == "AEAT_DATABASE_URL"
-    return False
 
 
 def _is_environment_call(

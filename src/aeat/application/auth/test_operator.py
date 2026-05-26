@@ -3,17 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ...core.i18n import tr
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
+from ...domain.filing import ModeloDraft, ModeloDraftRepository
+from ...domain.submission import ModeloDraftStatus
 from . import AuthProviderKind
 from ._operator import configure_operator_auth, inspect_operator_auth, test_operator_auth
 from ._sessions import (
@@ -22,6 +26,17 @@ from ._sessions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+_BUCKET_ID = "operator"
+
+
+def _session(*, dek: bytes = b"d" * 32) -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=dek,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 def test_test_operator_auth_reports_the_active_profile() -> None:
@@ -41,15 +56,53 @@ def test_test_operator_auth_reports_the_active_profile() -> None:
     assert result.active_profile_status
 
 
+def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
+    """Auth readiness is local-auth state, not a workspace-wide integrity scan.
+
+    A rotated-key filing draft must be reported by `config repair`, but it
+    must not prevent `config auth status` from telling the operator what
+    auth provider is configured for the active profile.
+    """
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(state, profile_id="operator")
+    )
+    configure_operator_auth("certificate")
+    now = datetime.now(UTC)
+
+    with activate_session(_session(dek=b"x" * 32)):
+        ModeloDraftRepository().save(
+            ModeloDraft(
+                draft_id="unreadable-workspace-draft",
+                modelo="303",
+                period="2026Q1",
+                profile_tax_id="00000000T",
+                status=ModeloDraftStatus.BORRADOR,
+                values=(),
+                created_at=now,
+                updated_at=now,
+                schema_version="test",
+            )
+        )
+
+    result = inspect_operator_auth("certificate")
+
+    assert result.provider == "certificate"
+    assert result.active_profile == "operator"
+    assert result.active_profile_registered is True
+
+
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth-operator.db').as_posix()}")
-    dispose_engine()
-    with EphemeralMasterKeyProvider():
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
+        dispose_engine(settings)
         try:
             yield
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def test_configure_operator_auth_emits_auth_provider_configured_event() -> None:
@@ -113,7 +166,10 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket() -> None
 
     from ._operator import AuthConfigureNoActiveBucketError
 
-    with pytest.raises(AuthConfigureNoActiveBucketError, match=r"aeat config profile create NAME"):
+    with override_settings(aeat_active_profile=None), pytest.raises(
+        AuthConfigureNoActiveBucketError,
+        match=r"aeat config profile create NAME",
+    ):
         configure_operator_auth("certificate")
 
     catalogue = BucketEventHistoryRepository().load()
