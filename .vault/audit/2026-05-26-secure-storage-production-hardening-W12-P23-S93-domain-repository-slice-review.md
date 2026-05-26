@@ -30,3 +30,19 @@ The reviewer noted that the existing S93 execution artifact documented the earli
 S93-DOMAIN-003 | INFO | Submission repository migration reviewed with no findings
 
 After the first reviewer completed, the same S93 migration pattern was applied to the submission domain repository tests. A second `vaultspec-code-reviewer` review found no issues. The file now uses `isolated_runtime_profile`, keeps the classification gate as a real secure-object write, and the combined focused gate covering submission, transactions, attachments, justificantes, and the shared secure SQL helper passes. No `AEAT_DATABASE_URL`, explicit database URL, injected engine, monkeypatch, broad exception, `noqa`, or coverage pragma remains in the combined migrated slice.
+
+S93-DOMAIN-004 | MEDIUM | Modelo anti-tautology tests still used direct ORM mutation
+
+Initial reviewer finding: the modelo anti-tautology tests created a runtime profile but still used direct `get_engine`, `session_scope`, and private ORM row mutation to alter persisted payloads. Resolution: calculation revision, filing record, work-unit, and verification-report tests now mutate encrypted payloads through the runtime-owned `profile.repository.load/save` surface.
+
+S93-DOMAIN-005 | LOW | Usage-ratio corrupt payload test did not assert root cause
+
+Initial reviewer finding: the malformed JSON test asserted only `UsageRatioPersistenceError`, which would not prove the validation cause surfaced. Resolution: the test now asserts the chained cause is `ValidationError` and that the surfaced message contains `Invalid JSON`.
+
+S93-DOMAIN-006 | INFO | Modelo and usage-ratio review findings resolved
+
+The corrected modelo/usage-ratio slice was re-reviewed by `vaultspec-code-reviewer` with no findings. The reviewer confirmed there are no direct engine/session/ORM mutations, mocks, monkeypatches, fakes, stubs, skips, xfails, `noqa`, broad exceptions, or obvious tautological calculation assertions in the reviewed files.
+
+S93-DOMAIN-007 | INFO | Transaction anti-tautology mutation normalized to runtime repository
+
+The combined hygiene scan found the earlier transaction anti-tautology proof still used direct engine/session/ORM access. The test now mutates the persisted encrypted payload through `profile.repository.load/save`, matching the corrected modelo pattern. The combined migrated slice hygiene scan now has no direct engine/session/ORM mutation, deprecated database-route setup, monkeypatching, broad exception swallowing, or masking pragmas.
