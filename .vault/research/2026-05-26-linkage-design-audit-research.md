@@ -415,4 +415,164 @@ ADR follows in the same `2026-05-26-linkage-design-audit-adr`
 extension — third decision under the boundary-typed-contracts
 theme.
 
+## Fourth topic: repair_integrity backend cross-campaign coordination
+
+Pre-flight research for `linkage-design-audit` plan step `P10.S45`
+(extend research with `repair-integrity-backend-shape`). The
+intent is to formalise the coordination path for the four
+`RepairRemediationDecision`-family symbols that the linkage
+W09.P20 cross-module-import gate currently carries as known
+baseline (`#534` in the task list).
+
+### Current state — symbols missing in this branch
+
+The `chore/eliminate-shims` working tree carries
+`src/aeat/application/repair_integrity.py` at 215 lines today
+without `RepairRemediationDecision`, `RepairRemediationDecisionRepository`,
+`repair_remediation_decision_id`, or `build_repair_policy_command_surface_catalog`.
+Two test files in this branch import these names:
+
+- `src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py`
+  uses `RepairRemediationDecision`, `RepairRemediationDecisionRepository`,
+  `repair_remediation_decision_id` heavily (lines 52-54, 651-1102) for
+  encrypted secure-object roundtrip coverage of the decision payload.
+- `src/aeat/entrypoints/cli/test_repair_policy_coverage.py` imports
+  `build_repair_policy_command_surface_catalog` (line 10) to assert
+  the catalogued repair-policy command-surfaces match the CLI
+  registry.
+
+Both test files were committed in commit
+`82c87a2f9 Cluster E: reroute 3 private registry imports to public API`
+explicitly marked "stage two previously untracked test files" —
+i.e., the linkage / persistence campaigns landed the tests
+expecting the backend to follow.
+
+### In-flight design from the other campaign
+
+The live-iva-compensation-wallet exec record at
+`.vault/exec/2026-05-19-live-iva-compensation-wallet/2026-05-22-live-iva-compensation-wallet-w05-p02-s01.md`
+documents the design that campaign landed (in its own working
+tree) on 2026-05-22:
+
+> `RepairRemediationDecision` now records preserve, quarantine,
+> rebuild, and export-required planning outcomes without
+> authorizing mutation. The model records the target namespace,
+> optional row digest, decided time, reason, likely origin,
+> replacement-evidence requirements, and verified evidence
+> references. The `mutation_authorized` field is hard-typed to
+> `False`. Decision ids are content-bound to the decision fields
+> so callers cannot persist an arbitrary sha-shaped key for a
+> different remediation target or evidence requirement set.
+>
+> `RepairRemediationDecisionRepository` persists those decisions
+> as encrypted AUDIT-class secure-object rows in a profile-local
+> namespace. Object keys are opaque SHA-256 decision ids and the
+> repository supports save, load, and decision-time ordered
+> listing. The repair namespace classifier also treats the
+> decision namespace as preserve-first remediation context.
+
+That campaign's exec record references its own test surface
+(`src/aeat/application/test_repair_integrity.py`) — not the
+linkage / persistence campaign's tests that depend on the same
+symbols. So the in-flight backend exists in their working tree
+but hasn't propagated to `chore/eliminate-shims`.
+
+### Symbol-shape inventory recovered from the test surface
+
+The two test files in this branch effectively pin the public
+contract of the missing symbols:
+
+- `RepairRemediationDecision(BaseModel)` — pydantic model with
+  fields: `decision_id` (str, SHA-256), `namespace` (str),
+  `row_digest_hex` (str | None), `decided_at` (datetime),
+  `reason` (str), `likely_origin` (str/enum), `replacement_evidence`
+  (tuple/list), `verified_evidence_refs` (tuple/list),
+  `mutation_authorized` (literal False).
+- `RepairRemediationDecisionRepository` — class with `save_decision`,
+  `load_decision`, `list_decisions` methods. List ordering is
+  decision-time descending per the exec record.
+- `repair_remediation_decision_id(...)` — pure function returning
+  the content-addressed SHA-256 id. Inputs are exactly the
+  fields excluded from the id (decided_at), so the id is stable
+  across re-runs of the same logical decision.
+- `build_repair_policy_command_surface_catalog()` — returns a
+  tuple of repair-policy command surfaces, each carrying a
+  `command_path` string and (per the test) catalogue coverage
+  matching the CLI registry.
+
+### Strategy options
+
+**Strategy P — wait for upstream merge.** Leave the W09.P20
+baseline entries in place; close them automatically once the
+live-iva-compensation-wallet campaign lands its production code
+into the shared branch. Zero coordination work today; the
+in-flight backend is the canonical implementation; this branch
+inherits it cleanly. Risk: timing is opaque — the campaign may
+or may not land before this branch needs the symbols for other
+work.
+
+**Strategy Q — scaffold compatible stubs here.** Land minimal
+implementations of the four symbols that match the test
+contract (and the exec record's documented semantics) inside
+`chore/eliminate-shims`. The in-flight campaign's full
+implementation eventually supersedes these stubs via the shared
+working tree's normal cross-commit-absorption flow; stubs and
+real implementation are merge-compatible if their public shape
+matches. Closes the W09.P20 baseline entries in this branch
+immediately. Risk: scaffold drift if the campaign's design
+moves between today and merge.
+
+**Strategy R — pull the in-flight production code wholesale.**
+Copy the campaign's working-tree production code (the
+`repair_integrity.py` body the exec record describes) directly
+into this branch. Identical to Strategy Q from this branch's
+perspective, but the source of truth is the other campaign's
+working tree rather than the exec-record-derived stub. Requires
+access to the other campaign's worktree; the shared parallel-
+worktree setup means it's available, but treating another
+campaign's WIP as canon before they've landed it is a
+discipline violation against the "do not stomp WIP" memory.
+
+### Cross-campaign collision check
+
+The live-iva-compensation-wallet campaign explicitly owns
+`repair_integrity.py` per its W05.P02 exec records. Strategy R
+would cross-contaminate this branch with that campaign's
+in-flight design. Strategy Q is the lightest-touch path: the
+linkage campaign owns the test surface that needs the symbols,
+so scaffolding compatible stubs here satisfies the linkage
+test surface without claiming authority over the other
+campaign's design.
+
+The shared `repair_integrity.py` module is a single file with
+no overlapping edit conflict if the linkage scaffold sits next
+to (rather than replacing) the live-iva-compensation-wallet
+campaign's production code. Strategy Q lands additive symbols;
+the campaign's full implementation supersedes once its own
+landing is committed.
+
+### Recommendation surface
+
+Strategy Q (scaffold compatible stubs) is the right path given:
+
+- The user mandate explicitly designates this branch as in-scope
+  for the previously-deferred items (mono-worktree, everything
+  in scope).
+- The in-flight campaign's documented public contract is
+  recoverable from the exec record + the linkage test surface.
+- The W09.P20 gate's silent-fix detector will naturally demand
+  the baseline trim once the symbols land, regardless of which
+  campaign provides them.
+- A scaffold landing inside `linkage-design-audit P10.S47` is
+  reviewable as a standalone artifact; the live-iva-compensation-
+  wallet campaign's eventual landing supersedes via standard
+  merge resolution.
+
+Strategy P preserves cross-campaign hygiene but risks indefinite
+deferral. Strategy R violates the WIP-non-stomp discipline.
+
+ADR follows in the same `2026-05-26-linkage-design-audit-adr`
+extension — fourth decision under the boundary-typed-contracts
+theme.
+
 

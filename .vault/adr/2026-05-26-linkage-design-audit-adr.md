@@ -12,7 +12,7 @@ related:
 
 # `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
 
-This ADR records three related architectural decisions for the
+This ADR records four related architectural decisions for the
 `linkage-design-audit` plan, all ratifying the "contract typed
 at the boundary" theme:
 
@@ -31,6 +31,13 @@ at the boundary" theme:
    with the conformance test accepting both shapes during
    migration (authorises plan rows `P09.S40`, `P09.S41`,
    `P09.S42`, `P09.S43`, `P09.S44`).
+4. `repair-integrity-cross-campaign-coordination` — scaffold
+   compatible stubs of the `RepairRemediationDecision` family
+   in `chore/eliminate-shims` to satisfy the linkage test
+   surface today, while preserving the live-iva-compensation-
+   wallet campaign's authority over the canonical implementation
+   (authorises plan rows `P10.S45`, `P10.S46`, `P10.S47`,
+   `P10.S48`, `P10.S49`).
 
 ## Decision 1: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
 
@@ -442,3 +449,137 @@ This decision authorises plan steps:
 - `linkage-design-audit P09.S44` (close the dual-shape window —
   remove `MIGRATED_COMMANDS` gate, tighten conformance to
   envelope-only for the work-lifecycle surface)
+
+## Decision 4: `repair-integrity-cross-campaign-coordination` (**status:** `accepted`)
+
+### Problem Statement
+
+The W09.P20 cross-module-import gate carries 4 baseline entries
+for `RepairRemediationDecision`, `RepairRemediationDecisionRepository`,
+`repair_remediation_decision_id`, and `build_repair_policy_command_surface_catalog` —
+all imported by two test files in `chore/eliminate-shims`
+(`test_runtime_migrated_repositories.py` and `test_repair_policy_coverage.py`)
+but not defined in `src/aeat/application/repair_integrity.py` on
+this branch.
+
+The live-iva-compensation-wallet campaign's exec record
+`2026-05-22-live-iva-compensation-wallet-w05-p02-s01.md`
+documents that those symbols ARE landed in that campaign's
+working tree with full preserve / quarantine / rebuild /
+export-required semantics, encrypted AUDIT-class secure-object
+persistence, and content-addressed decision ids. The work
+hasn't propagated to `chore/eliminate-shims` yet.
+
+The mono-worktree mandate from the user pulls this previously-
+deferred coordination work back into scope; the companion
+research note's fourth-topic section catalogues the three
+options (wait for upstream / scaffold compatible stubs / pull
+production code wholesale).
+
+### Decision
+
+Adopt **Strategy Q — scaffold compatible stubs** matching the
+exec-record-documented public contract and the test surface's
+imports. The four symbols land in `src/aeat/application/repair_integrity.py`
+as additive code; the live-iva-compensation-wallet campaign's
+full implementation supersedes via standard merge resolution
+once their work lands.
+
+Stub shape (recovered from the test surface and the exec record):
+
+- `RepairRemediationDecision` — pydantic `BaseModel` with
+  fields: `decision_id`, `namespace`, `row_digest_hex`,
+  `decided_at`, `reason`, `likely_origin`, `replacement_evidence`,
+  `verified_evidence_refs`, `mutation_authorized` (literal
+  `False`).
+- `RepairRemediationDecisionRepository` — class exposing
+  `save_decision(decision)`, `load_decision(decision_id)`,
+  `list_decisions()` (decision-time descending). Persists to
+  encrypted AUDIT-class secure-object rows in a profile-local
+  namespace.
+- `repair_remediation_decision_id(*, ...)` — pure function
+  returning the content-addressed SHA-256 id from the same
+  field set the model carries, with `decided_at` deliberately
+  excluded so re-runs of the same logical decision produce
+  the same id.
+- `build_repair_policy_command_surface_catalog()` — returns a
+  tuple of repair-policy surfaces whose `command_path` strings
+  match the CLI command registry.
+
+Strategy Q chosen over:
+
+- **Strategy P (wait for upstream)** — preserves cross-campaign
+  hygiene but defers indefinitely; the W09.P20 baseline carries
+  the 4 entries until then; the linkage test surface stays
+  broken at collection time when those tests are exercised.
+- **Strategy R (pull production code wholesale)** — copies the
+  other campaign's WIP design into this branch before they've
+  committed it, violating the "do not stomp WIP" discipline
+  from the parallel-worktree memory. Even though the
+  mono-worktree mandate authorises cross-campaign work, the
+  WIP-stomp ban is a separate discipline preserved for
+  authorship attribution.
+
+### Consequences
+
+- Stubs land as a single commit at `repair_integrity.py`. The
+  module's existing functions (`build_repair_integrity_report`,
+  `build_repair_list_report`) stay untouched.
+- W09.P20 gate's silent-fix detector demands the baseline trim
+  immediately; the 4 entries leave `_BASELINE_BROKEN_IMPORTS`.
+- The two consumer test files (`test_runtime_migrated_repositories.py`
+  and `test_repair_policy_coverage.py`) now collect and exercise
+  the stubs.
+- `test_runtime_migrated_repositories.py` was deferred under
+  P08.S39 because it couldn't collect; this ADR re-opens that
+  verification.
+- When the live-iva-compensation-wallet campaign's full
+  implementation merges, the stubs become a no-op detour; the
+  campaign's richer semantics (statutory_multiplier, evidence
+  verification flows, etc.) win on merge if the public shape
+  diverges; if the shapes match, the merge is a no-op.
+
+### Compliance with established mandates
+
+- **AEAT calculation grounding rule**: not directly impacted —
+  repair_integrity is about secure-object persistence policy,
+  not calculation provenance.
+- **Roundtrip discipline rule**: the stub `RepairRemediationDecisionRepository`
+  must satisfy strict pydantic equality across save/load (the
+  test_runtime_migrated_repositories suite asserts this). Stubs
+  use the same `SecureObjectRepository` infrastructure the
+  existing `repair_integrity.py` functions use.
+- **Hexagonal direction**: change confined to
+  `aeat.application.repair_integrity`; no application or
+  adapter import edges shift.
+- **No live AEAT submission**: stubs are read-only planning
+  records; `mutation_authorized` is hard-typed to `False`.
+
+### Risks accepted
+
+- **Scaffold drift**: the live-iva-compensation-wallet campaign
+  may evolve the field shape between this commit and their
+  eventual landing. If their landing keeps the names but
+  changes the field set, the merge resolves naturally — the
+  test files that consume the symbols are in this branch and
+  will fail loudly under any incompatible shape change.
+- **Duplicate authorship surface**: two campaigns now write to
+  `repair_integrity.py`. Mitigated by the additive nature of
+  the stubs (no overlap with existing functions) and by the
+  exec record providing a documented design to align against.
+
+### Plan linkage
+
+This decision authorises plan steps:
+
+- `linkage-design-audit P10.S45` (research note extension —
+  already landed at the `2026-05-26-linkage-design-audit-research`
+  fourth-topic section)
+- `linkage-design-audit P10.S46` (this ADR section)
+- `linkage-design-audit P10.S47` (land the four stub symbols
+  in `repair_integrity.py`)
+- `linkage-design-audit P10.S48` (trim `_BASELINE_BROKEN_IMPORTS`
+  entries; gate's silent-fix detector demands it)
+- `linkage-design-audit P10.S49` (re-verify the previously-
+  deferred `test_runtime_migrated_repositories.py` roundtrip
+  suite; closes the P08.S39 deferral)
