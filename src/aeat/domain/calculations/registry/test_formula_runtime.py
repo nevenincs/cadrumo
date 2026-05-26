@@ -378,6 +378,88 @@ def test_previous_modelo_selector_max_year_delta_rejects_negative_values() -> No
         )
 
 
+def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    capped_binding = base_binding.model_copy(
+        update={
+            "id": "test-cap-suppressed-binding",
+            "selector": {
+                "source": "previous_filing",
+                "source_modelo": "130",
+                "source_output": "saldo-negativo-fin-periodo",
+                "source_period_offset_from_target": -1,
+                "max_year_delta": 0,
+            },
+            "aggregation": {"op": "copy"},
+        }
+    )
+    extended_revision = committed_modelo_130_snapshot.revision.model_copy(
+        update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
+    )
+
+    requirements_first_period = previous_filing_observation_requirements(
+        extended_revision, filing_year=2026, period="1T"
+    )
+    assert all(
+        "test-cap-suppressed-binding" not in requirement.binding_ids
+        for requirement in requirements_first_period
+    )
+
+    requirements_second_period = previous_filing_observation_requirements(
+        extended_revision, filing_year=2026, period="2T"
+    )
+    matching = [
+        requirement
+        for requirement in requirements_second_period
+        if "test-cap-suppressed-binding" in requirement.binding_ids
+    ]
+    assert len(matching) == 1
+    assert matching[0].modelo == "130"
+    assert matching[0].filing_year == 2026
+    assert matching[0].period == "1T"
+
+
+def test_previous_filing_resolver_skips_cap_suppressed_binding(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    capped_binding = base_binding.model_copy(
+        update={
+            "id": "test-cap-suppressed-binding-resolve",
+            "selector": {
+                "source": "previous_filing",
+                "source_modelo": "130",
+                "source_output": "saldo-negativo-fin-periodo",
+                "source_period_offset_from_target": -1,
+                "max_year_delta": 0,
+            },
+            "aggregation": {"op": "copy"},
+        }
+    )
+    extended_revision = committed_modelo_130_snapshot.revision.model_copy(
+        update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
+    )
+
+    m100_observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=Decimal("1"))
+            for cid in ("0224", "1479", "1553", "1577")
+        ),
+    )
+
+    resolved = resolve_previous_filing_binding_values(
+        extended_revision, observations=(m100_observation,), filing_year=2026, period="1T"
+    )
+
+    assert "test-cap-suppressed-binding-resolve" not in resolved
+    assert _PREVIOUS_YEAR_NET_INCOME_BINDING in resolved
+
+
 def test_registry_formula_runtime_rejects_non_decimal_input(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
