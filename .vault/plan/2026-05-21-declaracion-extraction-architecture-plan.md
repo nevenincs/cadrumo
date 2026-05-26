@@ -212,8 +212,8 @@ Keep every newly identified declaration-extraction surface explicit until it is 
 
 - [x] `W05.P16.S99` - Decide whether to open a historical pre-2025 Modelo 037 registry/profile slice after BOE-A-2025-410 suppression; `.vault/adr .vault/plan src/aeat/_data/registry/aeat/modelos/037/`.
 - [x] `W05.P16.S100` - Decide whether Modelo 303 printed boxes 46, 69, 87, and 110 should become registered casillas before any extraction profile expands beyond the currently registered result casillas; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W05.P16.S101` - Acquire legally authorised declaration PDF fixtures or official printed-form layouts for the blocked current slices 180, 190, 036, 369, 720, and 840; `src/aeat/tests/fixtures/justificantes/`.
-- [ ] `W05.P16.S102` - Re-run declaration parser boundary tests and committed-registry validation after each fixture-backed profile/test expansion; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/domain/calculations/registry/test_committed_registry.py`.
+- [ ] `W05.P16.S101` - Acquire legally authorised declaration PDF fixtures or official printed-form layouts for the blocked current slices 180, 036, 369, 720, and 840 (M190 resolved via session 2026-05-26 corpus + grounded profile); `src/aeat/tests/fixtures/justificantes/`.
+- [x] `W05.P16.S102` - Re-run declaration parser boundary tests and committed-registry validation after each fixture-backed profile/test expansion; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/domain/calculations/registry/test_committed_registry.py`.
 
 ### Phase `W05.P17` - progress ledger and remaining-work queue
 
