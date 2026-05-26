@@ -124,6 +124,18 @@ def _default_sede_expedientes_path() -> str:
     return load_external_constants().aeat.sede_paths.expedientes_resumen
 
 
+def _default_status_detail_url_template() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.sede_paths.expediente_detail_template
+
+
+def _default_status_notificaciones_path() -> str:
+    from .external_constants import load_external_constants
+
+    return load_external_constants().aeat.sede_paths.notificaciones
+
+
 def _default_aeat_sede_origin() -> str:
     from .external_constants import load_external_constants
 
@@ -741,8 +753,8 @@ class Settings(BaseSettings):
         default_factory=_default_clave_sede_access_url_template,
         description=(
             "URL template for AEAT's auth-method selector page. `{target}` "
-            "is replaced with the URL-encoded target path (e.g. "
-            "`/wlpl/TEWV-CORE/ResumenVlt` for Mis expedientes)."
+            "is replaced with the URL-encoded target path. The default "
+            "template is sourced from the external constants registry."
         ),
     )
     aeat_sede_expedientes_path: str = Field(
@@ -857,14 +869,14 @@ class Settings(BaseSettings):
         description="Directory where the status reader drops Playwright trace files",
     )
     aeat_status_detail_url_template: str = Field(
-        default="/wlpl/TC-UTIL/Expediente/Detalle?EXP={expediente_id}",
+        default_factory=_default_status_detail_url_template,
         description=(
             "URL path template for an expediente detail page. "
             "Must contain '{expediente_id}'. Overrideable per campaign."
         ),
     )
     aeat_status_notificaciones_path: str = Field(
-        default="/wlpl/TC-UTIL/NOT-L/Notificacion",
+        default_factory=_default_status_notificaciones_path,
         description=(
             "URL path for the 'Mis notificaciones' listing page. "
             "Joined against aeat_base_url. Overrideable for campaign drift."
