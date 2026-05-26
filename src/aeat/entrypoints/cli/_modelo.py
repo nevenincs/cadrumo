@@ -1201,7 +1201,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     bypassed deliberately.
     """
 
-    from ...application.overview._applicability import (
+    from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
     )
