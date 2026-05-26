@@ -2,27 +2,19 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
-from ...adapters.persistence.storage.bucket._manifest import (
-    BucketLifecycleStatus,
-    BucketManifest,
-    ManifestKdfParams,
-)
-from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...application.user_profile._testing import register_minimal_profile
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
+from ...application.user_profile import UserProfileLifecycleRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
 from ...core.config import override_settings
-from ._persistence import workflow_state_repository
+from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 from ._profile_health import (
     assess_active_profile_health,
     repair_active_profile_manifest_status,
@@ -31,151 +23,99 @@ from ._profile_health import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_KEK = b"k" * 32
-_DEK = b"d" * 32
+
+_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test Operator"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="provenance.source", value="manual_cli"),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
 
 
-def _session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
-        bucket_id=bucket_id,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _stage_bucket_manifest(root: Path, bucket_id: str, *, label: str) -> None:
-    """Stage a bucket directory + manifest with no secure record.
-
-    A bucket directory and plaintext manifest with no encrypted
-    profile-value row is exactly the ``missing_profile_record`` torn
-    state the health probe must detect; this helper materialises that
-    state directly through the bucket-layout primitives.
-    """
-
-    paths = provision_bucket_directory(root, bucket_id)
-    write_manifest(
-        paths,
-        BucketManifest(
-            bucket_id=bucket_id,
-            label=label,
-            created_at=datetime.now(UTC),
-            last_unlocked_at=None,
-            kdf_params=ManifestKdfParams(
-                algorithm="argon2id",
-                version=0x13,
-                memory_cost=19_456,
-                time_cost=2,
-                parallelism=1,
-                salt=b"0123456789abcdef",
-                output_length=32,
-            ),
-            recovery_enrolled=False,
-            schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
-        ),
+def _seed_ready_profile_record(bucket_id: str, repository) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id, objects=repository).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name=bucket_id,
+            facts=_READY_PROFILE_FACTS,
+        )
     )
 
 
 def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) -> None:
-    dispose_engine()
-    _stage_bucket_manifest(tmp_path, "operator", label="Operator")
-    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
-    with (
-        EphemeralMasterKeyProvider(),
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
-        ),
-        activate_session(_session("operator")),
-    ):
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="operator",
+        label="Operator",
+    ) as profile:
+        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
+        with override_settings(aeat_active_profile=None):
+            health = assess_active_profile_health()
 
-        health = assess_active_profile_health()
-
-        assert health.active_profile == "operator"
-        assert health.source == "pointer"
-        assert health.registered_bucket is True
-        assert health.profile_record_present is False
-        assert health.status == "missing_profile_record"
-        assert health.repairable_by_clearing_pointer is True
-        assert health.next_action == "aeat config repair profile --clear-active --yes"
-    dispose_engine()
+    assert health.active_profile == "operator"
+    assert health.source == "pointer"
+    assert health.registered_bucket is True
+    assert health.profile_record_present is False
+    assert health.status == "missing_profile_record"
+    assert health.repairable_by_clearing_pointer is True
+    assert health.next_action == "aeat config repair profile --clear-active --yes"
 
 
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
-    dispose_engine()
-    _stage_bucket_manifest(tmp_path, "operator", label="Operator")
-    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
-    with (
-        EphemeralMasterKeyProvider(),
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
-        ),
-        activate_session(_session("operator")),
-    ):
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="operator",
+        label="Operator",
+    ) as profile:
+        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
+        with override_settings(aeat_active_profile=None):
+            dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
+            assert dry_run.dry_run is True
+            assert dry_run.cleared_pointer is False
+            assert read_pointer(profile.storage_root) is not None
 
-        dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
-        assert dry_run.dry_run is True
-        assert dry_run.cleared_pointer is False
-        assert read_pointer(tmp_path) is not None
+            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
-        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
         assert repaired.dry_run is False
         assert repaired.cleared_pointer is True
         assert repaired.after is not None
         assert repaired.after.status == "none"
-        assert read_pointer(tmp_path) is None
-    dispose_engine()
+        assert read_pointer(profile.storage_root) is None
 
 
 def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
-    dispose_engine()
-    with (
-        EphemeralMasterKeyProvider(),
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile="operator",
-        ),
-        activate_session(_session("operator")),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="operator",
-                overrides={"activities.description": "software"},
-            )
-        )
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="operator",
+        label="Operator",
+    ) as profile:
+        _seed_ready_profile_record("operator", profile.repository)
+        write_pointer(profile.storage_root, BucketPointer(bucket_id="operator", schema_version=1))
 
-        health = assess_active_profile_health()
-        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+        with override_settings(aeat_active_profile=None):
+            health = assess_active_profile_health()
+            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
         assert health.status == "ready"
+        assert health.source == "pointer"
         assert repaired.dry_run is True
         assert repaired.cleared_pointer is False
-        assert read_pointer(tmp_path) is not None
-    dispose_engine()
+        assert read_pointer(profile.storage_root) is not None
 
 
 def test_manifest_status_repair_backfills_from_profile_record(tmp_path: Path) -> None:
-    dispose_engine()
-    with (
-        EphemeralMasterKeyProvider(),
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile="operator",
-        ),
-        activate_session(_session("operator")),
-    ):
-        workflow_state_repository().update(
-            lambda state: register_minimal_profile(
-                state,
-                profile_id="operator",
-                overrides={"activities.description": "software"},
-            )
-        )
-        target = manifest_path(bucket_paths(tmp_path, "operator"))
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="operator",
+        label="Operator",
+    ) as profile:
+        _seed_ready_profile_record("operator", profile.repository)
+        target = manifest_path(bucket_paths(profile.storage_root, "operator"))
         legacy_text = "\n".join(
             line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
         )
@@ -191,5 +131,4 @@ def test_manifest_status_repair_backfills_from_profile_record(tmp_path: Path) ->
         assert repaired.status == BucketLifecycleStatus.ACTIVE.value
         assert repaired.after is not None
         assert repaired.after.status == "ready"
-        assert read_manifest(bucket_paths(tmp_path, "operator")).status is BucketLifecycleStatus.ACTIVE
-    dispose_engine()
+        assert read_manifest(bucket_paths(profile.storage_root, "operator")).status is BucketLifecycleStatus.ACTIVE
