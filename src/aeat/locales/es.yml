@@ -721,6 +721,12 @@ cli:
           a consultar esta con `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
+        casilla_bare_numeric_ambiguous: '--casilla {key} coincide con varias casillas
+          en esta revisión: {candidates}. Usa la forma cualificada PREFIJO:NNNNN para
+          desambiguar.'
+        casilla_bare_numeric_unknown: '--casilla {key} no coincide con ningún número
+          de casilla en esta revisión.{prefix_hint} Usa `aeat app modelo casillas <MODELO>`
+          para listar los identificadores de casilla válidos.'
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
@@ -1718,6 +1724,7 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
       ''aeat config profile edit NAME'' o usa --allow-incomplete para ver el calendario
@@ -2181,7 +2188,6 @@ errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
