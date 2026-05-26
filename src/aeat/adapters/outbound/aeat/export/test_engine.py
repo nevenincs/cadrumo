@@ -14,19 +14,18 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....adapters.persistence.storage import EphemeralMasterKeyProvider
-from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth import AuthProviderDescription, AuthProviderKind
-from .....core.config import Settings, override_settings
+from .....core.config import Settings
 from .....domain.submission import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
     SubmissionRepository,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
+from .....tests.secure_sql import isolated_runtime_profile
 from . import (
     ModeloDraftStatus,
     ModeloFinding,
@@ -37,20 +36,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_
 
 @pytest.fixture(autouse=True)
 def _secure_database(tmp_path: Path) -> Iterator[None]:
-    """Run historical-record tests against a per-test secure-object database.
+    """Run historical-record tests against a real active profile runtime."""
 
-    Opens a real :class:`EphemeralMasterKeyProvider` so the column-level
-    encrypt path resolves an active bucket session, mirroring the
-    canonical roundtrip-test fixture pattern.
-    """
-
-    dispose_engine()
-    db_path = tmp_path / "aeat.db"
-    with EphemeralMasterKeyProvider(), override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"):
-        try:
-            yield
-        finally:
-            dispose_engine()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-export-test"):
+        yield
 
 
 class _Draft(BaseModel):
