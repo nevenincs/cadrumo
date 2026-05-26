@@ -8,9 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import (
@@ -32,10 +31,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         try:
-            yield get_engine(profile.settings)
+            yield profile.repository
         finally:
             dispose_engine(profile.settings)
 
@@ -313,8 +312,8 @@ def test_preflight_reports_unsupported_currency_before_modelo_aggregation() -> N
     assert [issue.reason for issue in report.issues] == [LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY]
 
 
-def test_preflight_repository_path_loads_bucket_catalogue(secure_engine: Engine) -> None:
-    objects = SecureObjectRepository(engine=secure_engine)
+def test_preflight_repository_path_loads_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
+    objects = secure_objects
     repository = TransactionCatalogueRepository(bucket_id="bucket-a", objects=objects)
     repository.save(TransactionCatalogue.from_transactions((_transaction("row-ready"),)))
 
@@ -329,8 +328,8 @@ def test_preflight_repository_path_loads_bucket_catalogue(secure_engine: Engine)
     assert report.issues == ()
 
 
-def test_preflight_rejects_repository_bucket_mismatch(secure_engine: Engine) -> None:
-    objects = SecureObjectRepository(engine=secure_engine)
+def test_preflight_rejects_repository_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
+    objects = secure_objects
     with pytest.raises(TransactionValidationError, match="bucket_id"):
         preflight_ledger_tax_readiness(
             bucket_id="bucket-a",

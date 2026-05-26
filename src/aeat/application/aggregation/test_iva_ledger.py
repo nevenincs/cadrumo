@@ -8,9 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.resources import resources
 from ...domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
@@ -42,9 +41,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield get_engine(profile.settings)
+        yield profile.repository
 
 
 def _raw_transaction(
@@ -334,23 +333,25 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     ]
 
 
-def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(secure_engine: Engine) -> None:
+def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
+    secure_objects: SecureObjectRepository,
+) -> None:
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id="bucket-a",
             period="2026Q2",
             transaction_repository=TransactionCatalogueRepository(
                 bucket_id="bucket-b",
-                objects=SecureObjectRepository(engine=secure_engine),
+                objects=secure_objects,
             ),
         )
 
 
-def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_engine: Engine) -> None:
+def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
     transaction = _transaction("row-repository")
     repository = TransactionCatalogueRepository(
         bucket_id="bucket-a",
-        objects=SecureObjectRepository(engine=secure_engine),
+        objects=secure_objects,
     )
     repository.save(TransactionCatalogue.from_transactions((transaction,)))
 
@@ -359,7 +360,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_en
         period="2026Q2",
         transaction_repository=TransactionCatalogueRepository(
             bucket_id="bucket-a",
-            objects=SecureObjectRepository(engine=secure_engine),
+            objects=secure_objects,
         ),
     )
 
