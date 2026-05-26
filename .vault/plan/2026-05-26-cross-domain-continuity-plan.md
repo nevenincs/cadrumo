@@ -168,9 +168,9 @@ is.modelo-200.tipo-gravamen-pyme brackets cover 2025+ only inside a revision nam
 
 Casilla 552 IS manually inputable; the CLI accepts bare numeric 552 but the registry needs DP200014:00552. Normalise.
 
-- [ ] `W03.P15.S59` - add CLI normalisation step on --casilla values that resolves bare numeric tokens to qualified PREFIX:NNNNN keys; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P15.S60` - improve the unknown casilla error message to suggest the qualified form when bare numeric provided; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W03.P15.S61` - regression test asserting --casilla 552=85000 is accepted and routes to DP200014:00552; `src/aeat/entrypoints/cli/test_modelo_casilla_normalisation.py`.
+- [x] `W03.P15.S59` - add CLI normalisation step on --casilla values that resolves bare numeric tokens to qualified PREFIX:NNNNN keys; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P15.S60` - improve the unknown casilla error message to suggest the qualified form when bare numeric provided; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W03.P15.S61` - regression test asserting --casilla 552=85000 is accepted and routes to DP200014:00552; `src/aeat/entrypoints/cli/test_modelo_casilla_normalisation.py`.
 
 ### Phase `W03.P16` - profile-fact resolution audit Cluster T
 
@@ -436,7 +436,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory; `Wave-1 drift sweep DUPLICATE finding; `src/aeat/application/user_profile/_repository.py`.
 - [ ] `W09.P41.S206` - remove _I18N_STRICT_PLACEHOLDERS from __all__ in core i18n _render.py; `private names must not be exported; Wave-1 audit FU-C; `src/aeat/core/i18n/_render.py`.
 - [ ] `W09.P41.S207` - add inline comment in _command_matches_current confirming attachment_ids equality is value-equal not identity-equal; `pydantic-frozen collection safety note; Wave-1 audit FU-E; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W09.P41.S208` - investigate and fix pre-existing storage regression breaking aeat config profile create CLI test fixture across multiple test files including test_modelo_202_modality test_profile_incn_new_entity_paths and test_modelo_work_applicability_guard; unsecured backend error originates outside Wave-1 surface; `src/aeat/adapters/persistence/storage/`.
+- [ ] `W09.P41.S208` - investigate and fix pre-existing storage regression breaking aeat config profile create CLI test fixture across multiple test files including test_modelo_202_modality test_profile_incn_new_entity_paths and test_modelo_work_applicability_guard; `unsecured backend error originates outside Wave-1 surface; `src/aeat/adapters/persistence/storage/`.
 
 ### Phase `W09.P42` - twin function merge
 
