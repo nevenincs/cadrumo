@@ -8,22 +8,42 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import (
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
-from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...application.user_profile._testing import register_minimal_profile
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
 from ...core.config import override_settings
 from ._persistence import workflow_state_repository
-from ._profile_health import assess_active_profile_health, repair_active_profile_pointer
+from ._profile_health import (
+    assess_active_profile_health,
+    repair_active_profile_manifest_status,
+    repair_active_profile_pointer,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session(bucket_id: str) -> BucketSession:
+    return BucketSession.open(
+        bucket_id=bucket_id,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=_NOW,
+    )
 
 
 def _stage_bucket_manifest(root: Path, bucket_id: str, *, label: str) -> None:
@@ -60,89 +80,117 @@ def _stage_bucket_manifest(root: Path, bucket_id: str, *, label: str) -> None:
 
 
 def test_active_profile_health_reports_missing_profile_record(tmp_path: Path) -> None:
-    db_path = tmp_path / "profile-health.db"
     dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    provider.__enter__()
-    try:
-        with override_settings(
-            aeat_database_url=f"sqlite:///{db_path.as_posix()}",
+    _stage_bucket_manifest(tmp_path, "operator", label="Operator")
+    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
-        ):
-            _stage_bucket_manifest(tmp_path, "operator", label="Operator")
-            write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+        ),
+        activate_session(_session("operator")),
+    ):
 
-            health = assess_active_profile_health()
+        health = assess_active_profile_health()
 
-            assert health.active_profile == "operator"
-            assert health.source == "pointer"
-            assert health.registered_bucket is True
-            assert health.profile_record_present is False
-            assert health.status == "missing_profile_record"
-            assert health.repairable_by_clearing_pointer is True
-            assert health.next_action == "aeat config repair profile --clear-active --yes"
-    finally:
-        provider.__exit__(None, None, None)
-        dispose_engine()
+        assert health.active_profile == "operator"
+        assert health.source == "pointer"
+        assert health.registered_bucket is True
+        assert health.profile_record_present is False
+        assert health.status == "missing_profile_record"
+        assert health.repairable_by_clearing_pointer is True
+        assert health.next_action == "aeat config repair profile --clear-active --yes"
+    dispose_engine()
 
 
 def test_profile_repair_clears_only_degraded_pointer(tmp_path: Path) -> None:
-    db_path = tmp_path / "profile-repair.db"
     dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    provider.__enter__()
-    try:
-        with override_settings(
-            aeat_database_url=f"sqlite:///{db_path.as_posix()}",
+    _stage_bucket_manifest(tmp_path, "operator", label="Operator")
+    write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
             aeat_local_storage_root=tmp_path,
             aeat_active_profile=None,
-        ):
-            _stage_bucket_manifest(tmp_path, "operator", label="Operator")
-            write_pointer(tmp_path, BucketPointer(bucket_id="operator", schema_version=1))
+        ),
+        activate_session(_session("operator")),
+    ):
 
-            dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
-            assert dry_run.dry_run is True
-            assert dry_run.cleared_pointer is False
-            assert read_pointer(tmp_path) is not None
+        dry_run = repair_active_profile_pointer(clear_active=True, confirmed=False)
+        assert dry_run.dry_run is True
+        assert dry_run.cleared_pointer is False
+        assert read_pointer(tmp_path) is not None
 
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
-            assert repaired.dry_run is False
-            assert repaired.cleared_pointer is True
-            assert repaired.after is not None
-            assert repaired.after.status == "none"
-            assert read_pointer(tmp_path) is None
-    finally:
-        provider.__exit__(None, None, None)
-        dispose_engine()
+        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+        assert repaired.dry_run is False
+        assert repaired.cleared_pointer is True
+        assert repaired.after is not None
+        assert repaired.after.status == "none"
+        assert read_pointer(tmp_path) is None
+    dispose_engine()
 
 
 def test_profile_repair_does_not_clear_healthy_pointer(tmp_path: Path) -> None:
-    db_path = tmp_path / "profile-healthy.db"
     dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    provider.__enter__()
-    try:
-        with override_settings(
-            aeat_database_url=f"sqlite:///{db_path.as_posix()}",
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
             aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
-        ):
-            workflow_state_repository().update(
-                lambda state: register_minimal_profile(
-                    state,
-                    profile_id="operator",
-                    overrides={"activities.description": "software"},
-                )
+            aeat_active_profile="operator",
+        ),
+        activate_session(_session("operator")),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"activities.description": "software"},
             )
+        )
 
-            health = assess_active_profile_health()
-            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+        health = assess_active_profile_health()
+        repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
 
-            assert health.status == "ready"
-            assert repaired.dry_run is True
-            assert repaired.cleared_pointer is False
-            assert read_pointer(tmp_path) is not None
-    finally:
-        provider.__exit__(None, None, None)
-        dispose_engine()
+        assert health.status == "ready"
+        assert repaired.dry_run is True
+        assert repaired.cleared_pointer is False
+        assert read_pointer(tmp_path) is not None
+    dispose_engine()
+
+
+def test_manifest_status_repair_backfills_from_profile_record(tmp_path: Path) -> None:
+    dispose_engine()
+    with (
+        EphemeralMasterKeyProvider(),
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile="operator",
+        ),
+        activate_session(_session("operator")),
+    ):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="operator",
+                overrides={"activities.description": "software"},
+            )
+        )
+        target = manifest_path(bucket_paths(tmp_path, "operator"))
+        legacy_text = "\n".join(
+            line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
+        )
+        target.write_text(f"{legacy_text}\n", encoding="utf-8")
+
+        broken = assess_active_profile_health()
+        repaired = repair_active_profile_manifest_status(confirmed=True)
+
+        assert broken.status == "manifest_unreadable"
+        assert broken.next_action == "aeat config repair profile --repair-manifest-status --yes"
+        assert repaired.dry_run is False
+        assert repaired.repaired is True
+        assert repaired.status == BucketLifecycleStatus.ACTIVE.value
+        assert repaired.after is not None
+        assert repaired.after.status == "ready"
+        assert read_manifest(bucket_paths(tmp_path, "operator")).status is BucketLifecycleStatus.ACTIVE
+    dispose_engine()
