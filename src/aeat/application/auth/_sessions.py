@@ -356,8 +356,8 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
         )
 
     try:
-        session = PersistedAuthSession.model_validate(raw)
-    except ValidationError as exc:
+        session = _provider_neutral_session_metadata(raw)
+    except (KeyError, TypeError, ValueError, ValidationError) as exc:
         raise CorruptAuthSessionError(
             tr("application.auth.sessions.errors.corrupt_session")
         ) from exc
@@ -372,6 +372,40 @@ def _parse_single(storage_state_path: Path, kind_hint: AuthProviderKind) -> Pers
             tr("application.auth.sessions.errors.corrupt_session")
         )
     return session
+
+
+def _provider_neutral_session_metadata(raw: dict[str, object]) -> PersistedAuthSession:
+    """Return the common session metadata view from provider-specific metadata.
+
+    Provider metadata is persisted by the concrete auth adapters and may
+    include version, storage hash, landing URL, verification-code, or
+    provider-specific diagnostics. Application callers only need the
+    common reuse contract, so this function validates and narrows that
+    metadata instead of treating adapter-owned fields as corruption.
+    """
+
+    return PersistedAuthSession.model_validate(
+        {
+            "provider_kind": AuthProviderKind(str(raw["provider_kind"])),
+            "identity_nif": str(raw["identity_nif"]),
+            "authenticated_at": _session_metadata_datetime(raw["authenticated_at"], field="authenticated_at"),
+            "idle_deadline": _session_metadata_datetime(raw["idle_deadline"], field="idle_deadline"),
+        }
+    )
+
+
+def _session_metadata_datetime(value: object, *, field: str) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if text.endswith("Z"):
+            text = f"{text[:-1]}+00:00"
+        parsed = datetime.fromisoformat(text)
+        if parsed.tzinfo is None:
+            raise ValueError(f"persisted session {field} must be timezone-aware")
+        return parsed
+    raise TypeError(f"persisted session {field} must be a datetime or ISO-8601 string")
 
 
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:

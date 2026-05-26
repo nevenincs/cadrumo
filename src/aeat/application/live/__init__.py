@@ -755,8 +755,12 @@ def _with_derived_303_compensation_available(
     target_id = "iva.compensacion-disponible-fin-periodo"
     if target_id in observation.casilla_values:
         return observation
-    posterior = observation.casilla_values.get("87")
-    resultado = observation.casilla_values.get("69")
+    posterior = _casilla_decimal(
+        observation.casilla_values,
+        "87",
+        "iva.compensacion-pendiente-periodos-posteriores",
+    )
+    resultado = _casilla_decimal(observation.casilla_values, "69", "iva.resultado")
     if posterior is None or resultado is None:
         return observation
 
@@ -779,6 +783,14 @@ def _with_derived_303_compensation_available(
         source_refs=tuple(casilla.source_refs),
     )
     return observation.model_copy(update={"observations": (*observation.observations, derived)})
+
+
+def _casilla_decimal(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
+    for casilla_id in casilla_ids:
+        value = values.get(casilla_id)
+        if value is not None:
+            return value
+    return None
 
 
 def persist_and_reconcile_iva_compensation_wallet(
