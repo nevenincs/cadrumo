@@ -81,3 +81,31 @@ src/aeat/adapters/inbound/declaracion/ + test_modelo_{036,184,193,347,349,720,84
 No surprise findings. The gate correctly skips when corpus_root is None
 (no source_root available), ensuring backward compatibility with existing
 tests that construct `RegistryValidator(catalogues)` without source_root.
+
+## Bug-Fix Addendum — 2026-05-26 code-review Gate 9 FAIL
+
+**Bug**: The corpus-root derivation in Unit 1 used `parents[2]`, but every
+production call site passes `source_root=bundled_path()` which resolves to
+`src/aeat/_data` (not `src/aeat/_data/registry/aeat` as the original comment
+assumed).  `parents[2]` of `src/aeat/_data` = `<worktree_root>`, so the
+candidate path `<worktree_root>/tests/fixtures/justificantes` never existed and
+`_justificante_corpus_root` was silently set to `None`.  The gate was entirely
+disabled in production; the 5 existing unit tests all inject
+`justificante_corpus_root` directly and therefore bypassed the broken derivation.
+
+**Fix**: Changed `parents[2]` → `parents[0]` in `_validate.py` line 122.
+`parents[0]` of `src/aeat/_data` = `src/aeat`, and the corpus is correctly
+found at `src/aeat/tests/fixtures/justificantes`.
+
+**New tests added** to `test_provisional_specimen_gate.py`:
+- `test_corpus_root_derived_from_bundled_path`: constructs `RegistryValidator`
+  with `source_root=bundled_path()` (no injection), asserts
+  `_justificante_corpus_root` is a real existing directory named `justificantes`.
+- `test_gate_fires_via_production_path`: uses M036 (declaracion_pdf profile, no
+  `justificantes/036/` fixture) with `provisional_pending_specimen` overridden
+  to False via production `source_root=bundled_path()` — confirms
+  `RegistryValidationError` is raised.
+
+commit `8c8865d90`
+
+Pass count: 7/7 gate tests; ruff clean.
