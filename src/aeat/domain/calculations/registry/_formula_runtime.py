@@ -176,6 +176,10 @@ def calculate_registry_snapshot(
 
 
 def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> dict[str, Decimal]:
+    # The public runtime entry point validates Decimal-only inputs via
+    # `_reject_non_decimal` before this private helper runs. Keep that
+    # boundary centralised so unknown/computed-casilla diagnostics below
+    # stay focused on registry identity rather than value typing.
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     unknown = sorted(set(inputs).difference(casillas))
     if unknown:
@@ -245,6 +249,8 @@ def _evaluate_expression(
         return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
         return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
+    if op == "lookup_bracket_by_entity_type":
+        return _evaluate_lookup_bracket_by_entity_type(expression, ctx)
     if op == "if_then_else":
         return _evaluate_if_then_else(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
@@ -414,6 +420,84 @@ def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx
     result = _resolve_parameter(scalar_param, ctx.date_context)
     ctx.operand_refs.append(binding_arg.binding)
     ctx.operand_refs.append(scalar_param_id)
+    ctx.operand_values.append(result)
+    return result
+
+
+def _evaluate_lookup_bracket_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Dispatch a bracket-table lookup by an entity-type enum binding.
+
+    Mirrors :func:`_evaluate_lookup_parameter_by_entity_type` but routes
+    against a ``bracket_table`` parameter (e.g. the LIS Art. 29.1
+    micro-empresa two-tranche scale on Modelo 200): args[0] is the base
+    value resolved against the bracket; args[1] is the binding leaf
+    carrying the enum value (typically ``legal_entity_form``); args[2]
+    is the dispatch_table mapping enum keys to bracket-table parameter
+    ids. A scalar parameter resolved by the dispatch is rejected — the
+    op exists precisely because the per-sub-form rate is a tranche
+    scale, not a flat scalar.
+    """
+    op = "lookup_bracket_by_entity_type"
+    if len(expression.args) != 3:
+        raise RegistryValidationError(
+            "formula op 'lookup_bracket_by_entity_type' expects 3 args",
+            translated_message="errors.calc.lookup_dispatch_arg_count",
+            context={"op": op, "expected": "3"},
+        )
+    binding_arg = expression.args[1]
+    dispatch_arg = expression.args[2]
+    if binding_arg.binding is None:
+        raise RegistryValidationError(
+            "formula op 'lookup_bracket_by_entity_type' requires args[1] to be a binding leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[1]", "expected_kind": "binding"},
+        )
+    if dispatch_arg.dispatch_table is None:
+        raise RegistryValidationError(
+            "formula op 'lookup_bracket_by_entity_type' requires args[2] to be a dispatch_table leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": "args[2]", "expected_kind": "dispatch_table"},
+        )
+    if binding_arg.binding not in ctx.enum_binding_values:
+        raise RegistryValidationError(
+            f"enum binding {binding_arg.binding!r} has no supplied value;"
+            " required by lookup_bracket_by_entity_type",
+            translated_message="errors.calc.enum_binding_value_missing",
+            context={"binding_id": binding_arg.binding, "op": op},
+        )
+    dispatch_key = ctx.enum_binding_values[binding_arg.binding]
+    dispatch_table = dispatch_arg.dispatch_table
+    if dispatch_key not in dispatch_table:
+        raise RegistryValidationError(
+            f"lookup_bracket_by_entity_type dispatch_table is missing key {dispatch_key!r} "
+            f"(declared keys: {sorted(dispatch_table)})",
+            translated_message="errors.calc.dispatch_key_unknown",
+            context={
+                "op": op,
+                "binding_id": binding_arg.binding,
+                "dispatch_key": dispatch_key,
+                "available_keys": ",".join(sorted(dispatch_table)),
+            },
+        )
+    bracket_param_id = dispatch_table[dispatch_key]
+    bracket_param = ctx.parameters.get(bracket_param_id)
+    if bracket_param is None:
+        raise RegistryValidationError(
+            f"parameter {bracket_param_id!r} not registered",
+            translated_message="errors.calc.parameter_unknown",
+            context={"parameter_id": bracket_param_id},
+        )
+    if bracket_param.data_type != "bracket_table":
+        raise RegistryValidationError(
+            f"parameter {bracket_param_id!r} must declare data_type='bracket_table' "
+            f"to be used by lookup_bracket_by_entity_type",
+            translated_message="errors.calc.dispatch_parameter_kind",
+            context={"parameter_id": bracket_param_id, "op": op},
+        )
+    base = _evaluate_with_ctx(expression.args[0], ctx)
+    ctx.operand_refs.append(binding_arg.binding)
+    ctx.operand_refs.append(bracket_param_id)
+    result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
 
