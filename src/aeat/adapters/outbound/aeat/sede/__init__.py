@@ -66,6 +66,11 @@ Navigation flow:
 
 from __future__ import annotations
 
+from ._censo_live import (
+    G313_LAUNCHER_URL,
+    census_fact_set_to_mapping,
+    fetch_g313_census,
+)
 from ._declarations import (
     Declaracion,
     DeclaracionesRegisterSession,
@@ -84,13 +89,9 @@ from ._errors import (
     ExpedienteNotFoundError,
     JustificanteFetchError,
     SedeError,
+    SedeFailureMode,
     SedeNavigationError,
     SedeParseError,
-)
-from ._censo_live import (
-    G313_LAUNCHER_URL,
-    census_fact_set_to_mapping,
-    fetch_g313_census,
 )
 from ._iva_compensation_wallet import (
     IVA_COMPENSATION_WALLET_URL,
@@ -151,6 +152,7 @@ __all__ = [
     "RentaWebOpenSedeDriver",
     "SedeCapture",
     "SedeError",
+    "SedeFailureMode",
     "SedeNavigationError",
     "SedeParseError",
     "capture_declaration",

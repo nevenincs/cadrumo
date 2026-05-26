@@ -37,13 +37,15 @@ def _resolve_host(subdomain: Subdomain) -> str:
         return domains.www1
     if subdomain is Subdomain.WWW2:
         return domains.www2
+    if subdomain is Subdomain.WWW3:
+        return domains.www3
+    if subdomain is Subdomain.AGENCIATRIBUTARIA_GOB:
+        return domains.aeat_gob
+    if subdomain is Subdomain.AGENCIATRIBUTARIA_ES:
+        return domains.legacy_www
     if subdomain is Subdomain.CLAVE_GOB:
         return domains.clave
-    # Subdomain.WWW3 / AGENCIATRIBUTARIA_GOB / AGENCIATRIBUTARIA_ES are
-    # not represented as host fields in external_constants.toml; fall
-    # back to the enum value so callers can still build entries against
-    # those subdomains until the registry catches up.
-    return f"https://{subdomain.value}"
+    raise ValueError(f"unsupported AEAT portal subdomain {subdomain!r}")
 
 
 def build_entry(

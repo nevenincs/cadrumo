@@ -440,6 +440,10 @@ target_casillas = [
     {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+informaci[oó]n'},
     {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+declaraci[oó]n'},
 ]
+# No AEAT instructions PDF is available for M720. The procedure page
+# (aeat-modelo-720-procedure) links only to preguntas frecuentes, diseños de
+# registro, plazos, and consultas — no field-level instructions PDF. Patterns
+# remain unconfirmed pending a real M720 justificante PDF specimen.
 confidence = "review_required"
 provisional_pending_specimen = true
 min_coverage = "1.0"

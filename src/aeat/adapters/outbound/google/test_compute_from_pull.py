@@ -158,7 +158,7 @@ def test_compute_from_pull_runs_against_matching_snapshot() -> None:
     # diferencia, resultado final). With zero inputs the chain evaluates
     # consistently to zero.
     assert result.modelo == "130"
-    assert result.revision == "2019-y-siguientes"
+    assert result.revision == snapshot.revision.id
 
 
 def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:

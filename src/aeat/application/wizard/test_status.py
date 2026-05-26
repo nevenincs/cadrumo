@@ -8,12 +8,14 @@ exercised: the report is the structural contract that doctor and
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span, profile_storage_session
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.wizard._status import (
     WizardStatusError,
@@ -22,25 +24,39 @@ from aeat.application.wizard._status import (
     load_active_taxpayer_profile,
 )
 from aeat.application.workflow._models import WorkflowState
+from aeat.core.config import SecretStoreBackend, override_settings
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_bucket_store(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'wizard-status.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-
-    from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-    from ...adapters.persistence.storage.sql.engine import dispose_engine
-
-    dispose_engine()
-    with EphemeralMasterKeyProvider():
+def _file_backed_profile_store(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
         try:
             yield
         finally:
-            dispose_engine()
+            dispose_engine(settings)
+
+
+def _register_profile_state(
+    state: WorkflowState,
+    *,
+    profile_id: str,
+    overrides: Mapping[str, str] | None = None,
+) -> WorkflowState:
+    with profile_create_storage_span(profile_id):
+        return register_minimal_profile(
+            state,
+            profile_id=profile_id,
+            overrides=overrides,
+        )
 
 
 def test_empty_state_yields_no_active_profile_report() -> None:
@@ -54,12 +70,13 @@ def test_empty_state_yields_no_active_profile_report() -> None:
 
 
 def test_active_profile_with_identity_and_iva_regime_is_profile_ready() -> None:
-    state = register_minimal_profile(
+    state = _register_profile_state(
         WorkflowState(),
         profile_id="operator",
         overrides={"activities.description": "design"},
     )
-    report = build_wizard_status(state)
+    with profile_storage_session("operator"):
+        report = build_wizard_status(state)
     assert report.active_profile == "operator"
     assert report.identity_ready is True
     assert report.enrolment_ready is True
@@ -103,10 +120,11 @@ def test_load_active_taxpayer_profile_raises_wizard_status_error_when_no_profile
 
 
 def test_load_active_taxpayer_profile_returns_taxpayer_record_for_minimal_profile() -> None:
-    state = register_minimal_profile(
+    state = _register_profile_state(
         WorkflowState(),
         profile_id="operator",
         overrides={"activities.description": "design", "identity.tax_id": "00000000T"},
     )
-    profile = load_active_taxpayer_profile(state)
+    with profile_storage_session("operator"):
+        profile = load_active_taxpayer_profile(state)
     assert profile.tax_id == "00000000T"

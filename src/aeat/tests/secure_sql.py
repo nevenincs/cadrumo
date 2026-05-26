@@ -69,6 +69,27 @@ def isolated_ephemeral_secure_sql(
 
 
 @contextmanager
+def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
+    """Run profile-bootstrap tests against an empty real storage root.
+
+    Unlike :func:`isolated_runtime_profile`, this helper does not
+    provision a bucket or activate an ``aeat_active_profile`` route.
+    It is for tests that exercise the profile creation path itself,
+    where the system under test must create the bucket directory,
+    manifest, pointer, and per-bucket database.
+    """
+
+    storage_root = tmp_path / "aeat-storage"
+    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield storage_root
+            finally:
+                dispose_engine(settings)
+
+
+@contextmanager
 def isolated_runtime_profile(
     *,
     tmp_path: Path,
@@ -128,5 +149,6 @@ __all__ = [
     "TestRuntimeProfile",
     "dev_test_database_password",
     "isolated_ephemeral_secure_sql",
+    "isolated_profile_storage_root",
     "isolated_runtime_profile",
 ]

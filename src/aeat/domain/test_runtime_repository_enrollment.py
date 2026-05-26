@@ -8,9 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.core.config import override_settings
 from aeat.domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -29,22 +26,11 @@ from aeat.domain.transactions import (
     TransactionCatalogueRepository,
     TransactionDirection,
 )
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session(bucket_id: str) -> BucketSession:
-    return BucketSession.open(
-        bucket_id=bucket_id,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _transaction(source_path: Path) -> Transaction:
@@ -101,20 +87,20 @@ def _invoice(bucket_id: str) -> Invoice:
 def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
     bucket_id = "runtime-ledger"
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session(bucket_id)):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         original = TransactionCatalogue.from_transactions((_transaction(Path(__file__)),))
         TransactionCatalogueRepository(bucket_id=bucket_id).save(original)
 
         loaded = TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
     assert loaded == original
-    assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").is_file()
+    assert (tmp_path / "aeat-storage" / "buckets" / bucket_id / "db" / "aeat.db").is_file()
 
 
 def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
     bucket_id = "runtime-invoices"
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session(bucket_id)):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         invoice = _invoice(bucket_id)
         original = InvoiceCatalogue.from_invoices((invoice,))
         InvoiceCatalogueRepository(bucket_id=bucket_id).save(original)
@@ -123,4 +109,4 @@ def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: 
 
     assert loaded == original
     assert loaded.get(invoice.invoice_id) is not None
-    assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").is_file()
+    assert (tmp_path / "aeat-storage" / "buckets" / bucket_id / "db" / "aeat.db").is_file()

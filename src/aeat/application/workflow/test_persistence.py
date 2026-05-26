@@ -14,8 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     WorkflowResult,
     WorkflowStage,
@@ -30,18 +29,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+    return (tmp_path / "aeat-storage" / "buckets" / "test-runtime-profile" / "db" / "aeat.db").read_bytes()
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:

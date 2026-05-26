@@ -7,10 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider, StorageValidationError
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage import StorageValidationError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.config import override_settings
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
@@ -19,6 +18,7 @@ from ...domain.user_profile import (
     UserProfileSnapshot,
     new_profile_snapshot_id,
 )
+from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from . import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
@@ -33,16 +33,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="user-profile-repository-test",
+    ) as profile:
+        yield profile.repository
 
 
 def test_object_key_helpers_reject_blank_inputs() -> None:
@@ -93,13 +88,7 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    with (
-        EphemeralMasterKeyProvider(),
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
-        ),
-    ):
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
         bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
 
@@ -107,17 +96,17 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
 
         assert bucket_a.exists(profile_a) is True
         assert bucket_b.exists(profile_a) is False
-        assert (tmp_path / "buckets" / profile_a / "db" / "aeat.db").is_file()
+        assert (storage_root / "buckets" / profile_a / "db" / "aeat.db").is_file()
 
 
 def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Path) -> None:
     profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
 
     with (
-        EphemeralMasterKeyProvider(),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
         override_settings(
             aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
-            aeat_local_storage_root=tmp_path,
+            aeat_local_storage_root=storage_root,
             aeat_active_profile=None,
         ),
         pytest.raises(StorageValidationError, match="not attached to an active profile bucket"),
@@ -125,7 +114,7 @@ def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Pa
         UserProfileLifecycleRepository(bucket_id=profile_id)
 
     assert not (tmp_path / "explicit.db").exists()
-    assert not (tmp_path / "buckets" / profile_id / "db" / "aeat.db").exists()
+    assert not (storage_root / "buckets" / profile_id / "db" / "aeat.db").exists()
 
 
 def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> None:

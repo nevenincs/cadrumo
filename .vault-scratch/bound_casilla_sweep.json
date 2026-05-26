@@ -1,0 +1,1008 @@
+{
+  "by_classification": {
+    "direct_dead": 1,
+    "direct_resolvable": 11,
+    "non_previous_filing": 71,
+    "relation_driven": 3,
+    "relation_orphaned": 1
+  },
+  "entries": [
+    {
+      "binding_id": "modelo-036-profile-census-status",
+      "binding_source": "profile",
+      "casilla_id": "decl.event-kind",
+      "casilla_label": "Tipo de declaracion censal",
+      "classification": "non_previous_filing",
+      "modelo": "036",
+      "revision": "2025-02-03-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-130-resultados-negativos-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "15",
+      "casilla_label": "Resultados negativos de trimestres anteriores",
+      "classification": "direct_dead",
+      "modelo": "130",
+      "raw_selector": {
+        "source_modelo": "130",
+        "source_output": "saldo-negativo-fin-periodo"
+      },
+      "revision": "2019-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-309-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias (medios de transporte nuevos, etc.)",
+      "classification": "non_previous_filing",
+      "modelo": "309",
+      "revision": "2004-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-309-iva-soportado-recargo-equivalencia-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.recargo-equivalencia",
+      "casilla_label": "Cuota IVA soportado por minoristas en recargo de equivalencia (devolución a viajeros)",
+      "classification": "non_previous_filing",
+      "modelo": "309",
+      "revision": "2004-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-prev-303-cuota-devengada-total",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.devengada-303",
+      "casilla_label": "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.cuota-devengada-total"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-cuota-deducible-total",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.deducible-303",
+      "casilla_label": "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.cuota-deducible-total"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-resultado-regimen-general",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.resultado-303",
+      "casilla_label": "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.resultado-regimen-general"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-compensacion-ultimo-periodo",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.compensacion-ultimo-periodo-97",
+      "casilla_label": "Resultado declaracion-liquidacion ultimo periodo - A compensar",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "period": "4T",
+        "source_casillas": [
+          "iva.compensacion-disponible-fin-periodo"
+        ],
+        "source_modelo": "303"
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.compensacion-generada-ejercicio-no-97",
+      "casilla_label": "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.compensacion-generada-periodo"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "renta-2025-profile-tax-id",
+      "binding_source": "profile",
+      "casilla_id": "DPNIF_D",
+      "casilla_label": "Primer declarante NIF",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-display-name",
+      "binding_source": "profile",
+      "casilla_id": "DP_APENOM_D",
+      "casilla_label": "Primer declarante apellidos y nombre",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-tax-residence-ccaa",
+      "binding_source": "profile",
+      "casilla_id": "ZCCAD",
+      "casilla_label": "Comunidad autonoma de la declaracion",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-declaration-type",
+      "binding_source": "profile",
+      "casilla_id": "TIPOTRIBUTACION",
+      "casilla_label": "Opcion de tributacion elegida",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-taxpayer-sex",
+      "binding_source": "profile",
+      "casilla_id": "SEXO_D",
+      "casilla_label": "Primer declarante sexo",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-marital-status",
+      "binding_source": "profile",
+      "casilla_id": "ECIVIL",
+      "casilla_label": "Primer declarante estado civil a 31/12/2025",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-taxpayer-birth-date",
+      "binding_source": "profile",
+      "casilla_id": "DPFNAC_D",
+      "casilla_label": "Primer declarante fecha de nacimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-tax-id",
+      "binding_source": "profile",
+      "casilla_id": "DPNIF_C",
+      "casilla_label": "Conyuge NIF",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-display-name",
+      "binding_source": "profile",
+      "casilla_id": "DP_APENOM_C",
+      "casilla_label": "Conyuge apellidos y nombre",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-birth-date",
+      "binding_source": "profile",
+      "casilla_id": "DPFNAC_C",
+      "casilla_label": "Conyuge fecha de nacimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-sex",
+      "binding_source": "profile",
+      "casilla_id": "SEXO_C",
+      "casilla_label": "Conyuge sexo",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-taxpayer-disability-grade",
+      "binding_source": "profile",
+      "casilla_id": "DPGMIN_D",
+      "casilla_label": "Primer declarante grado de discapacidad",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-taxpayer-death-date",
+      "binding_source": "profile",
+      "casilla_id": "DECFAL",
+      "casilla_label": "Primer declarante fecha de fallecimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-disability-grade",
+      "binding_source": "profile",
+      "casilla_id": "DPGMIN_C",
+      "casilla_label": "Conyuge grado de discapacidad",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-non-resident-irpf",
+      "binding_source": "profile",
+      "casilla_id": "NORESIDENTE",
+      "casilla_label": "Conyuge no residente y no contribuyente IRPF",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-eu-eea-resident",
+      "binding_source": "profile",
+      "casilla_id": "RESIDENTEUE",
+      "casilla_label": "Conyuge residente UE o EEE",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-spouse-eu-eea-country",
+      "binding_source": "profile",
+      "casilla_id": "ZRUE2",
+      "casilla_label": "Conyuge pais de residencia UE o EEE",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-family-descendants-eu-eea-deduction",
+      "binding_source": "profile",
+      "casilla_id": "HIJOSUE",
+      "casilla_label": "Hijos o descendientes UE o EEE",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-profile-family-minor-children-in-unit",
+      "binding_source": "profile",
+      "casilla_id": "PH18",
+      "casilla_label": "Hijos menores en unidad familiar",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-descendant-tax-id",
+      "binding_source": "profile",
+      "casilla_id": "NIFDLG",
+      "casilla_label": "Hijo o descendiente NIF",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-descendant-display-name",
+      "binding_source": "profile",
+      "casilla_id": "APENOMDLG",
+      "casilla_label": "Hijo o descendiente apellidos y nombre",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-descendant-birth-date",
+      "binding_source": "profile",
+      "casilla_id": "FNACDLG",
+      "casilla_label": "Hijo o descendiente fecha de nacimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-descendant-disability-grade",
+      "binding_source": "profile",
+      "casilla_id": "MINUSDLG",
+      "casilla_label": "Hijo o descendiente clave discapacidad",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-descendant-death-date",
+      "binding_source": "profile",
+      "casilla_id": "FALLDLG",
+      "casilla_label": "Hijo o descendiente fecha de fallecimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-tax-id",
+      "binding_source": "profile",
+      "casilla_id": "DNIASDLG",
+      "casilla_label": "Ascendiente NIF",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-display-name",
+      "binding_source": "profile",
+      "casilla_id": "APENOMDLG_ASC",
+      "casilla_label": "Ascendiente apellidos y nombre",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-birth-date",
+      "binding_source": "profile",
+      "casilla_id": "ANOASDLG",
+      "casilla_label": "Ascendiente fecha de nacimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-disability-grade",
+      "binding_source": "profile",
+      "casilla_id": "PCTMINASDLG",
+      "casilla_label": "Ascendiente clave discapacidad",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-cohabiting-descendant-count",
+      "binding_source": "profile",
+      "casilla_id": "CONVASDLG",
+      "casilla_label": "Ascendiente descendientes convivientes",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-family-ascendant-death-date",
+      "binding_source": "profile",
+      "casilla_id": "FALLASDLG",
+      "casilla_label": "Ascendiente fecha de fallecimiento",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-ledger-expense-0186-deductible",
+      "binding_source": "ledger_renta_expense_aggregation",
+      "casilla_id": "0186",
+      "casilla_label": "Seguridad Social del titular de la actividad",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-ledger-expense-0192-deductible",
+      "binding_source": "ledger_renta_expense_aggregation",
+      "casilla_id": "0192",
+      "casilla_label": "Arrendamientos y canones",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-ledger-expense-0199-deductible",
+      "binding_source": "ledger_renta_expense_aggregation",
+      "casilla_id": "0199",
+      "casilla_label": "Servicios de profesionales independientes",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-ledger-expense-0203-deductible",
+      "binding_source": "ledger_renta_expense_aggregation",
+      "casilla_id": "0203",
+      "casilla_label": "Gastos financieros",
+      "classification": "non_previous_filing",
+      "modelo": "100",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "renta-2025-modelo-184-atribucion-actividades-economicas",
+      "binding_source": "previous_filing",
+      "casilla_id": "1577",
+      "casilla_label": "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas",
+      "classification": "relation_orphaned",
+      "modelo": "100",
+      "raw_selector": {
+        "relation": "atribucion-actividades-economicas",
+        "source_modelo": "184",
+        "source_output": "tipo2.renta-atribuible-importe"
+      },
+      "relation_id": "atribucion-actividades-economicas",
+      "revision": "2025"
+    },
+    {
+      "binding_id": "modelo-131-2019-2023-resultados-negativos-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "11",
+      "casilla_label": "Resultados negativos de trimestres anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": 0,
+      "modelo": "131",
+      "raw_selector": {
+        "max_year_delta": 0,
+        "source_modelo": "131",
+        "source_output": "saldo-negativo-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2019-2023",
+      "suppresses_for_target_periods": [
+        "1T"
+      ]
+    },
+    {
+      "binding_id": "modelo-131-2024-resultados-negativos-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "11",
+      "casilla_label": "Resultados negativos de trimestres anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": 0,
+      "modelo": "131",
+      "raw_selector": {
+        "max_year_delta": 0,
+        "source_modelo": "131",
+        "source_output": "saldo-negativo-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2024",
+      "suppresses_for_target_periods": [
+        "1T"
+      ]
+    },
+    {
+      "binding_id": "modelo-131-2025-resultados-negativos-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "11",
+      "casilla_label": "Resultados negativos de trimestres anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": 0,
+      "modelo": "131",
+      "raw_selector": {
+        "max_year_delta": 0,
+        "source_modelo": "131",
+        "source_output": "saldo-negativo-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2025",
+      "suppresses_for_target_periods": [
+        "1T"
+      ]
+    },
+    {
+      "binding_id": "modelo-131-2026-resultados-negativos-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "11",
+      "casilla_label": "Resultados negativos de trimestres anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": 0,
+      "modelo": "131",
+      "raw_selector": {
+        "max_year_delta": 0,
+        "source_modelo": "131",
+        "source_output": "saldo-negativo-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2026",
+      "suppresses_for_target_periods": [
+        "1T"
+      ]
+    },
+    {
+      "binding_id": "modelo-202-2019-2022-pagos-fraccionados-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "30",
+      "casilla_label": "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio Comun",
+      "classification": "relation_driven",
+      "modelo": "202",
+      "raw_selector": {
+        "source_modelo": "202",
+        "source_output": "34"
+      },
+      "relation_ids": [
+        "modelo-202-2019-2022-rel-self-pagos-2p",
+        "modelo-202-2019-2022-rel-self-pagos-3p"
+      ],
+      "relation_kinds": [
+        "previous_period"
+      ],
+      "revision": "2019-2022"
+    },
+    {
+      "binding_id": "modelo-202-2023-2024-pagos-fraccionados-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "30",
+      "casilla_label": "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio Comun",
+      "classification": "relation_driven",
+      "modelo": "202",
+      "raw_selector": {
+        "source_modelo": "202",
+        "source_output": "34"
+      },
+      "relation_ids": [
+        "modelo-202-2023-2024-rel-self-pagos-2p",
+        "modelo-202-2023-2024-rel-self-pagos-3p"
+      ],
+      "relation_kinds": [
+        "previous_period"
+      ],
+      "revision": "2023-2024"
+    },
+    {
+      "binding_id": "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "30",
+      "casilla_label": "Mod. 40.3 LIS — Pagos fraccionados de periodos anteriores en Territorio Comun",
+      "classification": "relation_driven",
+      "modelo": "202",
+      "raw_selector": {
+        "source_modelo": "202",
+        "source_output": "34"
+      },
+      "relation_ids": [
+        "modelo-202-2025-y-siguientes-rel-self-pagos-2p",
+        "modelo-202-2025-y-siguientes-rel-self-pagos-3p"
+      ],
+      "relation_kinds": [
+        "previous_period"
+      ],
+      "revision": "2025-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2009-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2009-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2009-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2009-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA art 84.Uno.2)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2009-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-compensacion-pendiente-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
+      "casilla_label": "Cuotas a compensar pendientes de periodos anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "303",
+      "raw_selector": {
+        "source_modelo": "303",
+        "source_output": "iva.compensacion-disponible-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "1T",
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2009-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2023-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2023-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2023-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2023-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA art 84.Uno.2)",
+      "classification": "non_previous_filing",
+      "modelo": "303",
+      "revision": "2023-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-303-compensacion-pendiente-anteriores",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
+      "casilla_label": "Cuotas a compensar pendientes de periodos anteriores",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "303",
+      "raw_selector": {
+        "source_modelo": "303",
+        "source_output": "iva.compensacion-disponible-fin-periodo",
+        "source_period_offset_from_target": -1
+      },
+      "resolves_for_target_periods": [
+        "1T",
+        "2T",
+        "3T",
+        "4T"
+      ],
+      "revision": "2023-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "vat-349-declarante-numero-operadores",
+      "binding_source": "collectible_invoice",
+      "casilla_id": "decl.numero-operadores",
+      "casilla_label": "Numero total de operadores intracomunitarios",
+      "classification": "non_previous_filing",
+      "modelo": "349",
+      "revision": "2020-y-siguientes"
+    },
+    {
+      "binding_id": "vat-349-declarante-importe-operaciones",
+      "binding_source": "collectible_invoice",
+      "casilla_id": "decl.importe-operaciones",
+      "casilla_label": "Importe de las operaciones intracomunitarias",
+      "classification": "non_previous_filing",
+      "modelo": "349",
+      "revision": "2020-y-siguientes"
+    },
+    {
+      "binding_id": "vat-349-declarante-numero-rectificaciones",
+      "binding_source": "collectible_invoice",
+      "casilla_id": "decl.numero-rectificaciones",
+      "casilla_label": "Numero total de operadores intracomunitarios con rectificaciones",
+      "classification": "non_previous_filing",
+      "modelo": "349",
+      "revision": "2020-y-siguientes"
+    },
+    {
+      "binding_id": "vat-349-declarante-importe-rectificaciones",
+      "binding_source": "collectible_invoice",
+      "casilla_id": "decl.importe-rectificaciones",
+      "casilla_label": "Importe de las rectificaciones",
+      "classification": "non_previous_filing",
+      "modelo": "349",
+      "revision": "2020-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-369-exterior-de-external-services-21pct",
+      "binding_source": "ledger_oss_aggregation",
+      "casilla_id": "iva.exterior.de.services-cuota",
+      "casilla_label": "Cuota IVA repercutido al destino DE — servicios prestados (Esquema Exterior)",
+      "classification": "non_previous_filing",
+      "modelo": "369",
+      "revision": "esquema-exterior"
+    },
+    {
+      "binding_id": "modelo-369-importacion-de-low-value-21pct",
+      "binding_source": "ledger_oss_aggregation",
+      "casilla_id": "iva.importacion.de.low-value-cuota",
+      "casilla_label": "Cuota IVA IOSS al destino DE — ventas a distancia de bienes importados ≤ 150 EUR (LIVA art 163 quinvicies)",
+      "classification": "non_previous_filing",
+      "modelo": "369",
+      "revision": "esquema-importacion"
+    },
+    {
+      "binding_id": "modelo-369-union-de-services-21pct",
+      "binding_source": "ledger_oss_aggregation",
+      "casilla_id": "iva.union.de.services-cuota",
+      "casilla_label": "Cuota IVA OSS Unión al destino DE — servicios prestados (LIVA art 163 unvicies)",
+      "classification": "non_previous_filing",
+      "modelo": "369",
+      "revision": "esquema-union"
+    },
+    {
+      "binding_id": "modelo-369-union-fr-services-21pct",
+      "binding_source": "ledger_oss_aggregation",
+      "casilla_id": "iva.union.fr.services-cuota",
+      "casilla_label": "Cuota IVA OSS Unión al destino FR — servicios prestados (LIVA art 163 unvicies)",
+      "classification": "non_previous_filing",
+      "modelo": "369",
+      "revision": "esquema-union"
+    },
+    {
+      "binding_id": "modelo-369-union-de-goods-distance-21pct",
+      "binding_source": "ledger_oss_aggregation",
+      "casilla_id": "iva.union.de.goods-distance-cuota",
+      "casilla_label": "Cuota IVA OSS Unión al destino DE — ventas a distancia + interfaces electrónicas",
+      "classification": "non_previous_filing",
+      "modelo": "369",
+      "revision": "esquema-union"
+    }
+  ],
+  "total_bound_casillas": 87
+}

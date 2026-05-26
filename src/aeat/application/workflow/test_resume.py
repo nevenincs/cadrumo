@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     WorkflowAbortReason,
     WorkflowError,
@@ -28,14 +27,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)

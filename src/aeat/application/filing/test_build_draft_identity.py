@@ -14,10 +14,12 @@ roundtrip fixtures build drafts directly, not via ``build_draft``).
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from ...core.resources import resources
 from . import build_draft, build_runtime_schema_provider
 from .testing import ModeloTestProfile
 
@@ -63,8 +65,10 @@ def test_build_draft_populates_subject_tax_id_and_snapshot_ref() -> None:
     assert draft.subject_tax_id == "12345678Z"
     assert draft.subject_tax_id == draft.profile_tax_id
 
+    snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T", on=date(2026, 4, 1))
+
     assert draft.snapshot_ref is not None
     assert draft.snapshot_ref.modelo == "130"
-    assert draft.snapshot_ref.revision_id == "2019-y-siguientes"
+    assert draft.snapshot_ref.revision_id == snapshot.revision.id
     assert draft.snapshot_ref.modelo_year == 2026
     assert draft.snapshot_ref.period == "1T"

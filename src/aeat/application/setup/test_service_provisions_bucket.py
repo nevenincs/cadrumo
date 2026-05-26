@@ -17,15 +17,15 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.setup._contracts import InitializeWorkspaceCommand
 from aeat.application.setup._service import initialize_workspace
 from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
-from aeat.core.config import SecretStoreBackend, load_settings
+from aeat.core.config import SecretStoreBackend, load_settings, override_settings
 from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -34,16 +34,18 @@ _UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12
 
 
 @pytest.fixture
-def profile_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
-    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+def profile_storage_root(tmp_path: Path) -> Iterator[Path]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine(settings)
 
 
 def test_initialize_workspace_provisions_bucket_directory_and_manifest(

@@ -41,6 +41,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_pull_adapter_helpers.py",
         "test_pull_result_roundtrip.py",
         "test_records.py",
+        "test_session_store_roundtrip.py",
         "test_verify_pull_coverage.py",
         "test_worksheet_export_pull_roundtrip.py",
     }

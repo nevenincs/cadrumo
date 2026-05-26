@@ -14,7 +14,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...tests.secure_sql import isolated_runtime_profile
 from ._enums import InvoiceKind, IvaRate, PaymentStatus
 from ._models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -123,13 +122,12 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
     from ...adapters.persistence.storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        engine = get_engine(profile.settings)
         invoice = _populated_invoice(invoice_number="F-2025-001")
         catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
         repo = InvoiceCatalogueRepository()
         repo.save(catalogue)
 
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == _INVOICE_NAMESPACE,
             )
@@ -138,8 +136,7 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
             invoices = envelope["payload"]["invoices"]
             invoice_dict = invoices[invoice.invoice_id]
             assert invoice_dict["invoice_number"] == "F-2025-001", (
-                "fixture must serialise the invoice_number for this "
-                "proof test to be meaningful"
+                "fixture must serialise the invoice_number for this proof test to be meaningful"
             )
             invoice_dict["invoice_number"] = "F-2025-999"
             row.payload = _json.dumps(envelope).encode("utf-8")

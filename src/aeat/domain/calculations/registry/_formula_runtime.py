@@ -10,11 +10,12 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._bindings import CasillaObservation
+from ._bindings import CasillaObservation, _PreviousModeloSelector
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
     CasillaDefinition,
+    DataBindingDefinition,
     DatedValue,
     FormulaExpression,
     ModeloRevision,
@@ -164,7 +165,12 @@ def calculate_registry_snapshot(
         },
         "relation",
     )
-    values = _initial_values(revision, inputs)
+    values, absent_by_design_casillas = _initial_values(
+        revision,
+        inputs,
+        binding_values=resolved_bindings,
+        target_period=snapshot.period,
+    )
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
@@ -224,6 +230,7 @@ def calculate_registry_snapshot(
         values=values,
         computed_provenance=computed_provenance,
         casillas_by_id=casillas_by_id,
+        absent_by_design_casillas=absent_by_design_casillas,
     )
 
     return RegistryCalculationResult(
@@ -238,6 +245,7 @@ def _materialise_observations(
     values: Mapping[str, Decimal],
     computed_provenance: Mapping[str, CasillaObservation],
     casillas_by_id: Mapping[str, CasillaDefinition],
+    absent_by_design_casillas: frozenset[str] = frozenset(),
 ) -> tuple[CasillaObservation, ...]:
     """Project the engine's per-casilla state into the canonical observation tuple.
 
@@ -263,12 +271,19 @@ def _materialise_observations(
                 value=values[casilla_id],
                 legal_refs=legal_refs,
                 source_refs=source_refs,
+                absent_by_design=casilla_id in absent_by_design_casillas,
             )
         )
     return tuple(materialised)
 
 
-def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> dict[str, Decimal]:
+def _initial_values(
+    revision: ModeloRevision,
+    inputs: Mapping[str, Decimal],
+    *,
+    binding_values: Mapping[str, Decimal],
+    target_period: str,
+) -> tuple[dict[str, Decimal], frozenset[str]]:
     # The public runtime entry point validates Decimal-only inputs via
     # `_reject_non_decimal` before this private helper runs. Keep that
     # boundary centralised so unknown/computed-casilla diagnostics below
@@ -293,12 +308,90 @@ def _initial_values(revision: ModeloRevision, inputs: Mapping[str, Decimal]) -> 
             translated_message="errors.calc.computed_supplied_as_input",
             context={"casilla_ids": ",".join(computed)},
         )
+    bound = sorted(
+        casilla_id
+        for casilla_id in inputs
+        if casillas[casilla_id].input_kind == "bound"
+    )
+    if bound:
+        raise RegistryValidationError(
+            f"bound registry casillas cannot be supplied as inputs: {bound!r}",
+            translated_message="errors.calc.bound_supplied_as_input",
+            context={"casilla_ids": ",".join(bound)},
+        )
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
     values: dict[str, Decimal] = {}
+    absent_by_design: set[str] = set()
     for casilla in revision.casillas:
         if casilla.input_kind == "computed":
             continue
+        if casilla.input_kind == "bound":
+            binding_id = casilla.binding
+            if binding_id is None:
+                raise RegistryValidationError(
+                    f"bound casilla {casilla.id!r} has no binding reference",
+                    translated_message="errors.calc.bound_casilla_missing_binding",
+                    context={"casilla_id": casilla.id},
+                )
+            if binding_id in binding_values:
+                values[casilla.id] = binding_values[binding_id]
+                continue
+            binding = bindings_by_id.get(binding_id)
+            if binding is not None and _binding_is_absent_by_design(binding, target_period=target_period):
+                values[casilla.id] = _ZERO
+                absent_by_design.add(casilla.id)
+                continue
+            raise RegistryValidationError(
+                f"bound casilla {casilla.id!r} requires resolved binding {binding_id!r} value",
+                translated_message="errors.calc.bound_casilla_binding_value_missing",
+                context={"casilla_id": casilla.id, "binding_id": binding_id},
+            )
+        # input_kind == "manual" — operator field, may legitimately be blank.
         values[casilla.id] = inputs.get(casilla.id, _ZERO)
-    return values
+    return values, frozenset(absent_by_design)
+
+
+def _binding_is_absent_by_design(binding: DataBindingDefinition, *, target_period: str) -> bool:
+    """Return True when a previous-filing binding declares no anchors for the target period.
+
+    The empty-anchor return from the selector is the structural signal
+    that the binding's contract intentionally suppresses a value for
+    this target period (e.g. Modelo 130 casilla 15 at 1T under
+    `source_period_offset_from_target = -1, max_year_delta = 0` — no
+    prior quarter exists within the same ejercicio).
+
+    Bindings with sources other than `previous_filing` (profile,
+    invoice, ledger, etc.) do not carry the period-anchor concept and
+    are never absent-by-design from this helper's perspective; a
+    missing binding value for those sources is a caller-supply
+    failure, not an authored suppression.
+    """
+
+    if binding.source != "previous_filing":
+        return False
+    try:
+        selector = _PreviousModeloSelector.model_validate(_binding_selector_as_dict(binding))
+    except ValueError:
+        return False
+    if not _previous_filing_selector_has_period_anchor(selector):
+        return False
+    return selector.required_period_anchors_for_target(target_period) == ()
+
+
+def _previous_filing_selector_has_period_anchor(selector: _PreviousModeloSelector) -> bool:
+    return (
+        selector.period is not None
+        or bool(selector.source_periods)
+        or selector.source_period_offset_from_target is not None
+    )
+
+
+def _binding_selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
+    """Return the binding selector as a plain dict, stripping the injected ``source`` key."""
+    selector = binding.selector
+    if isinstance(selector, BaseModel):
+        return selector.model_dump(exclude={"source"}, exclude_none=True)
+    return {k: v for k, v in selector.items() if k != "source"}
 
 
 def _evaluate_expression(

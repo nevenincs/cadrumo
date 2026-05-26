@@ -24,6 +24,7 @@ from aeat.application.calculations import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
+from aeat.core.external_constants import load_external_constants
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
 from aeat.tests.secure_sql import isolated_runtime_profile
@@ -291,6 +292,8 @@ def _prior_303_observation(
     presented_at: datetime = _CAPTURED_AT,
 ) -> FiledDeclaracionObservation:
     body = f"303-{year}-{period}-submitted-file".encode("ascii")
+    external = load_external_constants().aeat
+    declarations_url = f"{external.domains.www6}{external.sede_paths.declarations_listing}"
     return FiledDeclaracionObservation(
         modelo="303",
         ejercicio=year,
@@ -302,7 +305,7 @@ def _prior_303_observation(
         artefacts=(
             FiledDeclaracionArtefact(
                 kind="submitted_file",
-                source_url=AnyHttpUrl("https://www6.agenciatributaria.gob.es/wlpl/SCEJ-MANT/CONSUL/index.zul"),
+                source_url=AnyHttpUrl(declarations_url),
                 content_type="application/octet-stream",
                 byte_count=len(body),
                 sha256=hashlib.sha256(body).hexdigest(),

@@ -17,7 +17,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...tests.secure_sql import isolated_runtime_profile
 from ._event import (
     BucketEvent,
@@ -135,7 +134,6 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
     from ...adapters.persistence.storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        engine = get_engine(profile.settings)
         bucket_id = "b" * 32
         now = datetime.now(UTC).replace(microsecond=0)
         event = _build_event(
@@ -151,7 +149,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
         repo = BucketEventHistoryRepository()
         repo.save(catalogue)
 
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == _NAMESPACE,
             )
@@ -160,8 +158,7 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
             events = envelope["payload"]["events"]
             event_dict = events[event.event_id]
             assert event_dict["payload"]["modelo"] == "303", (
-                "fixture must serialise the modelo payload key as '303' "
-                "for this proof test to be meaningful"
+                "fixture must serialise the modelo payload key as '303' for this proof test to be meaningful"
             )
             event_dict["payload"]["modelo"] = "100"
             row.payload = _json.dumps(envelope).encode("utf-8")

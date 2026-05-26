@@ -24,8 +24,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from .....core.config import Settings
-from ....persistence.storage import EphemeralMasterKeyProvider
-from ....persistence.storage.sql.engine import dispose_engine
+from .....tests.secure_sql import isolated_runtime_profile
 from . import _session_store
 from ._clave_movil import (
     ClaveMovilApprovalTimeoutError,
@@ -54,14 +53,9 @@ def _aeat_url(origin: str, path: str) -> str:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _isolated_secure_session_backend(tmp_path: Path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="clave-movil-test"):
+        yield
 
 
 # ── Browser-session stand-ins ────────────────────────────────────────────────
@@ -300,7 +294,7 @@ def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     for key, value in env.items():
         monkeypatch.setenv(key, value)
 
@@ -402,9 +396,7 @@ class TestAuthenticateFresh:
             # Page observed the expected click sequence.
             assert browser_session.contexts, "a context must have been created"
             page = browser_session.contexts[0].pages[0]
-            assert page.gotos[0].startswith(
-                _CLAVE_SURFACE.selector_access_url_template.split("{target}", 1)[0]
-            )
+            assert page.gotos[0].startswith(_CLAVE_SURFACE.selector_access_url_template.split("{target}", 1)[0])
             assert _CLAVE_SURFACE.authorize_button_selector in page.clicks
             # No form fill (QR flow skips the non-QR form entirely)
             assert page.fills == []

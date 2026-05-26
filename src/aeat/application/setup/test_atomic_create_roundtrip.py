@@ -21,9 +21,12 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.core.config import SecretStoreBackend, override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -31,24 +34,27 @@ _UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12
 
 
 @pytest.fixture
-def _cli_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Per-bucket storage root with the unsecured backend.
+def _cli_storage(tmp_path: Path) -> Iterator[Path]:
+    """Per-bucket storage root with file-backed custody.
 
-    No ``AEAT_DATABASE_URL`` is set: each profile bucket resolves its
-    own SQLite file from the active-profile pointer chain, which is
-    the production cold-start path the disaster recovery wires.
+    The primary database URL is not supplied explicitly: each profile
+    bucket resolves its own SQLite file from the active-profile pointer
+    chain, which is the production cold-start path the disaster
+    recovery wires.
     """
 
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+        aeat_output_language="en",
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine(settings)
 
 
 def _invoke(args: list[str]):
@@ -185,9 +191,7 @@ def test_atomic_create_roundtrip_duplicate_lands_through_provisioner(_cli_storag
     assert copy_facts["activities.description"] == "design"
 
 
-def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(
-    _cli_storage: Path, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(_cli_storage: Path, tmp_path: Path) -> None:
     """A profile exported then imported into a fresh root keeps its label and facts.
 
     The import path routes through the atomic provisioner and mints a
@@ -212,20 +216,19 @@ def test_atomic_create_roundtrip_export_import_preserves_label_and_facts(
     # Re-point the storage root so the imported profile lands in a
     # clean workspace — the recovery-from-backup scenario.
     fresh_root = tmp_path / "fresh-root"
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(fresh_root))
+    with override_settings(aeat_local_storage_root=fresh_root, aeat_active_profile=None):
+        importer = _invoke(["--format", "json", "config", "profile", "import", str(bundle)])
+        assert importer.exit_code == 0, importer.output
+        # A fresh local identity is minted for the imported profile.
+        imported_uuid = _json(importer)["profile_id"]
+        assert re.fullmatch(_UUID_RE, imported_uuid)
+        assert _json(importer)["display_name"] == "alice"
 
-    importer = _invoke(["--format", "json", "config", "profile", "import", str(bundle)])
-    assert importer.exit_code == 0, importer.output
-    # A fresh local identity is minted for the imported profile.
-    imported_uuid = _json(importer)["profile_id"]
-    assert re.fullmatch(_UUID_RE, imported_uuid)
-    assert _json(importer)["display_name"] == "alice"
+        imported_list = _invoke(["--format", "json", "config", "profile", "list"])
+        assert [row["name"] for row in _json(imported_list)["profiles"]] == ["alice"]
 
-    imported_list = _invoke(["--format", "json", "config", "profile", "list"])
-    assert [row["name"] for row in _json(imported_list)["profiles"]] == ["alice"]
-
-    imported_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
-    assert imported_show.exit_code == 0, imported_show.output
-    assert _json(imported_show)["profile_id"] == imported_uuid
-    imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
-    assert imported_facts == source_facts
+        imported_show = _invoke(["--format", "json", "config", "profile", "show", "alice"])
+        assert imported_show.exit_code == 0, imported_show.output
+        assert _json(imported_show)["profile_id"] == imported_uuid
+        imported_facts = {row["path"]: row["value"] for row in _json(imported_show)["facts"]}
+        assert imported_facts == source_facts

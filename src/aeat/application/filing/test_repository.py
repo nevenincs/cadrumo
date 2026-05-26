@@ -58,7 +58,7 @@ def _make_draft(*, period: str = "2026Q1", ingresos: int = 12500) -> ModeloDraft
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
+    return (tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
 
 
 class TestEmptyState:

@@ -1,0 +1,142 @@
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-saldo-negativo-fin-periodo"
+target = "saldo-negativo-fin-periodo"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "negate", args = [{ casilla = "17" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Resultados negativos"]
+
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-rendimiento-neto"
+target = "03"
+expression = { op = "subtract", args = [{ casilla = "01" }, { casilla = "02" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 03.", "restar el importe de la casilla 02 al importe de la casilla 01"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-pago-fraccionado-directa"
+target = "04"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "percent", args = [
+        { casilla = "03" },
+        { parameter = "irpf.direct_estimation_fractional_payment_rate" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 04.", "20 por 100", "casilla 03 sea negativo", "cero"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-apartado-i"
+target = "07"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "04" }, { casilla = "05" }] },
+    { casilla = "06" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 07.", "restar el importe de la casilla 05 y 06 al importe de la casilla 04"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-pago-fraccionado-agrario"
+target = "09"
+expression = { op = "percent", args = [
+    { casilla = "08" },
+    { parameter = "irpf.agriculture_fractional_payment_rate" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 09.", "2 por 100", "casilla 08"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-apartado-ii"
+target = "11"
+expression = { op = "subtract", args = [{ casilla = "09" }, { casilla = "10" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 11.", "restar el importe de la casilla 10 al importe de la casilla 09"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-suma-parciales"
+target = "12"
+expression = { op = "max", args = [
+    { literal = "0" },
+    { op = "add", args = [{ casilla = "07" }, { casilla = "11" }] },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 12.", "sumar, teniendo en cuenta sus respectivos signos", "casillas 07 y 11"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-neto-tras-minoracion"
+target = "14"
+expression = { op = "subtract", args = [{ casilla = "12" }, { casilla = "13" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["casilla 14", "Casilla 12", "Casilla 13"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-diferencia"
+target = "17"
+expression = { op = "subtract", args = [
+    { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
+    { casilla = "16" },
+] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 17.", "restar el importe de las casillas 15 y 16 del importe de la casilla 14"]
+
+[[revisions."2019-y-siguientes".formulas]]
+id = "modelo-130-resultado-final"
+target = "19"
+expression = { op = "subtract", args = [{ casilla = "17" }, { casilla = "18" }] }
+rounding = "money-2"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".formulas.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["Casilla 19.", "casilla 19 es positiva", "apartado \"Ingreso\""]
+

@@ -76,8 +76,11 @@ def test_aeat_domains_are_absolute_https_urls() -> None:
         domains.sede,
         domains.www1,
         domains.www2,
+        domains.www3,
         domains.www6,
         domains.www12,
+        domains.aeat_gob,
+        domains.legacy_www,
         domains.clave,
         domains.boe,
     ):
@@ -273,6 +276,7 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
 
     repo_root = Path(__file__).parents[3]
     checked_paths = (
+        repo_root / "src/aeat/core/config.py",
         repo_root / "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
         repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
         repo_root / "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
@@ -314,11 +318,24 @@ def test_subdomain_enum_aligns_with_aeat_domains() -> None:
     from aeat.domain.portals._categories import Subdomain
 
     domains = load_external_constants().aeat.domains
+    configured_hosts = {
+        domains.sede.removeprefix("https://"),
+        domains.www1.removeprefix("https://"),
+        domains.www2.removeprefix("https://"),
+        domains.www3.removeprefix("https://"),
+        domains.aeat_gob.removeprefix("https://"),
+        domains.legacy_www.removeprefix("https://"),
+        domains.clave.removeprefix("https://"),
+    }
 
     assert Subdomain.SEDE.value == domains.sede.removeprefix("https://")
     assert Subdomain.WWW1.value == domains.www1.removeprefix("https://")
     assert Subdomain.WWW2.value == domains.www2.removeprefix("https://")
+    assert Subdomain.WWW3.value == domains.www3.removeprefix("https://")
+    assert Subdomain.AGENCIATRIBUTARIA_GOB.value == domains.aeat_gob.removeprefix("https://")
+    assert Subdomain.AGENCIATRIBUTARIA_ES.value == domains.legacy_www.removeprefix("https://")
     assert Subdomain.CLAVE_GOB.value == domains.clave.removeprefix("https://")
+    assert {subdomain.value for subdomain in Subdomain} <= configured_hosts
 
 
 def test_browser_timeouts_belong_to_settings_not_registry() -> None:

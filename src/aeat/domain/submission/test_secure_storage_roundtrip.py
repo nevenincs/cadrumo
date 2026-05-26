@@ -20,7 +20,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...tests.secure_sql import isolated_runtime_profile
 from ._models import (
     ModeloPresentado,
@@ -126,12 +125,11 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
     submission_namespace = SubmissionRepository.namespace
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        engine = get_engine(profile.settings)
         original = _populated_filing()
         repo = SubmissionRepository()
         repo.save(original)
 
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == submission_namespace,
                 SecureObjectRow.object_key == original.submission_id,
@@ -140,8 +138,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
             envelope = _json.loads(row.payload.decode("utf-8"))
             payload = envelope["payload"]
             assert payload.get("justificante_csv"), (
-                "fixture must serialise justificante_csv onto the "
-                "ACEPTADA record for this proof test to be meaningful"
+                "fixture must serialise justificante_csv onto the ACEPTADA record for this proof test to be meaningful"
             )
             payload["justificante_csv"] = None
             row.payload = _json.dumps(envelope).encode("utf-8")

@@ -19,6 +19,7 @@ import pytest
 from pydantic_settings import SettingsConfigDict
 
 from aeat.core.config import PROJECT_ROOT, CertificateBackend, Settings
+from aeat.core.external_constants import load_external_constants
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -78,7 +79,7 @@ class TestEnvExampleAlignment:
             model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8")
 
         settings = IsolatedSettings()
-        assert settings.aeat_base_url == "https://sede.agenciatributaria.gob.es"
+        assert settings.aeat_base_url == load_external_constants().aeat.domains.sede
         assert settings.aeat_output_language == "es"
 
 
@@ -160,6 +161,10 @@ class TestStatusDetailUrlTemplate:
 
     def test_default_is_well_formed(self) -> None:
         settings = Settings()
+        constants = load_external_constants()
+
+        assert settings.aeat_status_detail_url_template == constants.aeat.sede_paths.expediente_detail_template
+        assert settings.aeat_status_notificaciones_path == constants.aeat.sede_paths.notificaciones
         assert "{expediente_id}" in settings.aeat_status_detail_url_template
 
     def test_rejects_template_without_placeholder(self) -> None:

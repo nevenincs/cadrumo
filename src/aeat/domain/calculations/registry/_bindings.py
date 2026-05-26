@@ -96,6 +96,16 @@ class CasillaObservation(BaseModel):
     operand_values: tuple[Decimal, ...] = ()
     legal_refs: tuple[str, ...] = ()
     source_refs: tuple[str, ...] = ()
+    # Set ``True`` when the casilla's declared binding produced no
+    # source anchor for the target period (e.g. Modelo 130 casilla 15
+    # at 1T — the prior-quarter carry-forward selector with
+    # ``max_year_delta = 0`` suppresses the cross-ejercicio anchor).
+    # The value is ``Decimal("0")`` materialised through an explicit
+    # constructor, not the silent ``inputs.get(..., _ZERO)`` fallback
+    # that the runtime previously used for missing bound values.
+    # Downstream audit and review surfaces should distinguish
+    # absent-by-design zeros from value-bearing observations.
+    absent_by_design: bool = False
 
     @field_validator("value")
     @classmethod

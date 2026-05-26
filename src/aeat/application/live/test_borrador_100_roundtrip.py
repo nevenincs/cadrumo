@@ -20,7 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...tests.secure_sql import isolated_runtime_profile
 from ._borrador_100 import (
     Borrador100Snapshot,
@@ -166,7 +165,6 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
 
     bucket_id = "renta-2024-bucket"
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
-        engine = get_engine(profile.settings)
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
 
         successor = _populated_snapshot(bucket_id=bucket_id)
@@ -208,7 +206,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         )
 
         object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
                 SecureObjectRow.object_key == object_key,

@@ -221,6 +221,10 @@ target_casillas = [
     {casilla_id = "decl.event-kind", match_strategy = "named_label", value_kind = "enum", label_pattern = 'Tipo\s+de\s+declaraci[oó]n\s+censal'},
     {casilla_id = "decl.vigencia-2025", match_strategy = "named_label", value_kind = "text", label_pattern = 'Vigencia\s+normativa\s+desde'},
 ]
+# No AEAT instructions PDF is available for M036. The procedure page
+# (aeat-modelo-036-procedure) does not link to field-level instructions; only
+# a generic Censos WEB brochure (Folleto_Censos.pdf, 240 KB, 1 page) is
+# available, which contains no form field labels. Patterns remain unconfirmed.
 confidence = "strict"
 provisional_pending_specimen = true
 min_coverage = "1.0"

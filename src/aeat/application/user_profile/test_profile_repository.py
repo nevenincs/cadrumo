@@ -1,9 +1,9 @@
 """Cross-store roundtrip and unit-of-work tests for :class:`ProfileRepository`.
 
 The repository is the single, sole writer of a logical profile's
-physical stores. These tests exercise it against real adapters — a real
-:class:`EphemeralMasterKeyProvider`, a real per-bucket SQLite engine,
-and the real filesystem — never a mock.
+physical stores. These tests exercise it against the shared secure-SQL
+test helper: a real master-key session, a real per-bucket SQLite
+engine, and the real filesystem — never a mock.
 
 Three contracts are pinned:
 
@@ -24,20 +24,18 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
 from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
-from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
-from ...core.config import override_settings
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaValidationError,
     UserProfileFact,
     UserProfileStatus,
 )
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..workflow._profile_bucket_scan import (
     list_profile_buckets,
     read_profile_bucket,
@@ -81,17 +79,10 @@ _INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
 
 @pytest.fixture(autouse=True)
 def _backend(tmp_path: Path) -> Iterator[Path]:
-    """A real per-bucket storage root with an active master-key session."""
+    """An empty real storage root with an active test key session."""
 
-    dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    provider.__enter__()
-    try:
-        with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None):
-            yield tmp_path
-    finally:
-        provider.__exit__(None, None, None)
-        dispose_engine()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:

@@ -22,32 +22,35 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
 from aeat.application.wizard._catalogue import SETUP_FLOW
 from aeat.application.wizard._commands import _run_full_flow
 from aeat.core._bucket_pointer_io import read_pointer
-from aeat.core.config import load_settings
+from aeat.core.config import SecretStoreBackend, load_settings, override_settings
 from aeat.domain.user_profile import new_profile_id
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def _backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Per-bucket storage root on the unsecured backend."""
+def _backend(tmp_path: Path) -> Iterator[Path]:
+    """Per-bucket storage root with file-backed custody."""
 
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_ACTIVE_PROFILE", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine(settings)
 
 
 _QUIET_CREATE_FLAGS = {"tax-id": "00000000T", "activity": "Servicios"}
@@ -111,9 +114,7 @@ def test_failed_create_restores_the_prior_active_profile_pointer(_backend: Path)
 
     after = read_pointer(root)
     assert after is not None, "the failed create cleared the prior active-profile pointer"
-    assert after.bucket_id == surviving_id, (
-        "the failed create stranded the pointer at the never-persisted profile"
-    )
+    assert after.bucket_id == surviving_id, "the failed create stranded the pointer at the never-persisted profile"
 
     # The surviving pointer still resolves to a registered, readable
     # profile — no `missing_profile_record` torn state.

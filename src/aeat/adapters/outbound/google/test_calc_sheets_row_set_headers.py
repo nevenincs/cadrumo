@@ -2,7 +2,7 @@
 
 Guards `_build_row_set_header_data` — the helper that turns each
 row-set's column declarations into a Sheets `values.batchUpdate`
-data entry. Engine-side row-set positioning + column allocation
+data entry. Registry-side row-set positioning + column allocation
 are tested separately; this test asserts the apply-side handoff
 shape (range + label) matches the engine's positions exactly.
 """

@@ -33,6 +33,7 @@ from ._clave_movil import (
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
+    ClaveMovilFailureMode,
 )
 from ._errors import (
     AeatLoginAssertionError,
@@ -91,6 +92,8 @@ __all__ = [
     "AeatSessionExpiredError",
     "AuthConfigurationError",
     "AuthError",
+    "AuthProvider",
+    "AuthProviderKind",
     "AuthLoginAssertionDetail",
     "AuthSessionDetail",
     "BrowserContextLike",
@@ -116,6 +119,7 @@ __all__ = [
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilAuthProvider",
     "ClaveMovilConfigurationError",
+    "ClaveMovilFailureMode",
     "ClaveMovilLoginAssertionDetail",
     "ClaveMovilSessionDetail",
     "HandshakeResult",

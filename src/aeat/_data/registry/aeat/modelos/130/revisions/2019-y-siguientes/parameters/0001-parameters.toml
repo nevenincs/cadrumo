@@ -1,0 +1,35 @@
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.direct_estimation_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["20 por 100", "art. 110.4 Reglamento del IRPF"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "20"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.agriculture_fractional_payment_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = ["2 por 100", "art. 110.4 Reglamento del IRPF"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "2"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+# Casilla IDs in this modelo are the same as the printed form numbers.
+# form_number is not declared individually because id == form_number for all casillas.
+

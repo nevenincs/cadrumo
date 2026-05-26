@@ -14,6 +14,7 @@ from urllib.parse import quote
 import pytest
 
 from .....core.config import Settings
+from ....persistence.storage import get_master_key_provider
 from ..browser import default_browser_session_factory
 from . import (
     AeatLoginAssertion,
@@ -72,21 +73,22 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     from aeat.application.workflow._models import require_active_bucket_id
 
     storage_state_path = settings.aeat_token_dir / f"{require_active_bucket_id()}-clave-movil-storage.json"
-    if not _session_store.exists(storage_state_path):
-        pytest.skip("No persisted encrypted Cl@ve Móvil session is available to probe")
+    with get_master_key_provider():
+        if not _session_store.exists(storage_state_path):
+            pytest.skip("No persisted encrypted Cl@ve Móvil session is available to probe")
 
-    provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
-    try:
-        session, assertion = await provider.probe_persisted_session()
-        assert isinstance(session, AeatSession)
-        assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
-        assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
-        assert isinstance(assertion, AeatLoginAssertion)
-        assert assertion.is_valid is True, (
-            f"persisted Cl@ve session probe failed: status={assertion.status_code} error={assertion.error_message}"
-        )
-    finally:
-        await provider.close()
+        provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
+        try:
+            session, assertion = await provider.probe_persisted_session()
+            assert isinstance(session, AeatSession)
+            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
+            assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
+            assert isinstance(assertion, AeatLoginAssertion)
+            assert assertion.is_valid is True, (
+                f"persisted Cl@ve session probe failed: status={assertion.status_code} error={assertion.error_message}"
+            )
+        finally:
+            await provider.close()
 
 
 @pytest.mark.asyncio
@@ -99,15 +101,16 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     if not settings.aeat_clave_movil_dni_nie:
         pytest.skip("AEAT_CLAVE_MOVIL_DNI_NIE is not configured")
 
-    provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
-    try:
-        session = await provider.authenticate()
-        assert isinstance(session, AeatSession)
-        assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
-        assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
-        assertion = await provider.verify(session)
-        assert assertion.is_valid is True, (
-            f"fresh Cl@ve login assertion failed: status={assertion.status_code} error={assertion.error_message}"
-        )
-    finally:
-        await provider.close()
+    with get_master_key_provider():
+        provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
+        try:
+            session = await provider.authenticate()
+            assert isinstance(session, AeatSession)
+            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.strip().upper()
+            assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
+            assertion = await provider.verify(session)
+            assert assertion.is_valid is True, (
+                f"fresh Cl@ve login assertion failed: status={assertion.status_code} error={assertion.error_message}"
+            )
+        finally:
+            await provider.close()

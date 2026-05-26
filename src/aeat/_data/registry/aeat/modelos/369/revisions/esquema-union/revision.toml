@@ -377,6 +377,10 @@ target_casillas = [
     {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+autoliquidaci[oó]n'},
     {casilla_id = "decl.periodo", match_strategy = "named_label", value_kind = "text", label_pattern = 'Per[ií]odo\s+de\s+la\s+declaraci[oó]n'},
 ]
+# No AEAT instructions PDF is available for M369. The procedure page
+# (aeat-modelo-369-procedure) links only to consultas informáticas — no
+# field-level instructions PDF. Patterns remain unconfirmed pending a real
+# M369 justificante PDF specimen.
 confidence = "strict"
 provisional_pending_specimen = true
 min_coverage = "1.0"
