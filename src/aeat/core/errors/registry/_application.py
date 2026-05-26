@@ -499,6 +499,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
+        ErrorCode(
+            code="INTEGRITY_STORED_DATA_VALIDATION_BOUNDARY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.storage.stored_data_validation_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",
