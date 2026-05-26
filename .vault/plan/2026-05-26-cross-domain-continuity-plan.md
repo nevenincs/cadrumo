@@ -40,7 +40,7 @@ The generic command_error_boundary catches every pydantic ValidationError and em
 
 - [x] `W01.P01.S02` - add a typed StoredDataValidationBoundaryError class with distinct locale key and remediation suggestion; `src/aeat/entrypoints/cli/_errors.py`.
 - [x] `W01.P01.S03` - register the new error class in the error code catalogue; `src/aeat/core/errors/registry/_application.py`.
-- [ ] `W01.P01.S04` - add four locale keys es en ca hu for the stored-data boundary via the locale CLI; `src/aeat/locales/`.
+- [x] `W01.P01.S04` - add four locale keys es en ca hu for the stored-data boundary via the locale CLI; `src/aeat/locales/`.
 - [ ] `W01.P01.S05` - wrap UserProfileRecord model_validate_json at the profile repository load boundary in a typed StoredProfileDriftError so drift surfaces as a domain error before reaching command_error_boundary; `src/aeat/application/user_profile/_repository.py`.
 - [ ] `W01.P01.S06` - narrow command_error_boundary to discriminate input-time versus load-time ValidationError; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W01.P01.S07` - real-CLI tests proving drifted stored profile gets stored-data message and malformed flag gets input message; `src/aeat/entrypoints/cli/test_errors_boundary.py`.
