@@ -14,6 +14,8 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....domain.calculations.registry._ids import CasillaId
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -22,6 +24,8 @@ class ExtractedCasilla(BaseModel):
 
     Attributes:
         casilla_id: Stable casilla identifier (e.g. ``"01"``, ``"071"``).
+            Aligned to the canonical :data:`CasillaId` constraint
+            (max_length=64, pattern ``[A-Za-z0-9][A-Za-z0-9._:-]*``).
         printed_value: Typed value as printed on the PDF. ``None`` when
             the casilla was located but blank on the page.
         source_page: 1-based page number the value was read from.
@@ -37,10 +41,7 @@ class ExtractedCasilla(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    # max_length is 32 to allow named-field identifiers
-    # (e.g. ``total_operadores``) for modelos 036/037/232/369/720
-    # whose summary blocks have no numeric casilla IDs.
-    casilla_id: str = Field(min_length=1, max_length=32)
+    casilla_id: CasillaId
     printed_value: Decimal | int | str | bool | date | None
     source_page: int = Field(ge=1)
     source_bbox: tuple[float, float, float, float] | None = None
