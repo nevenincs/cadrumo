@@ -68,7 +68,7 @@ _command_from_patch zeroes classification-adjacent fields when classification is
 
 Wizard persistence emits lowercase true and false; binding-side Decimal coercion expects Python-style True and False. Adopt wizard canonical as project single boolean string form.
 
-- [ ] `W01.P05.S17` - update _decimal_value to accept lowercase canonical strings in addition to the Python form; `src/aeat/application/modelo/_profile_binding.py`.
+- [x] `W01.P05.S17` - update _decimal_value to accept lowercase canonical strings in addition to the Python form; `src/aeat/application/modelo/_profile_binding.py`.
 - [ ] `W01.P05.S18` - promote lowercase boolean tokens to Python bool in _coerce_profile_fact_value so union resolves before coercion; `src/aeat/domain/user_profile/_values.py`.
 - [ ] `W01.P05.S19` - add a typed-boolean channel on profile bindings so the runtime never reads bool as Decimal; `src/aeat/domain/calculations/registry/_runtime_graph.py`.
 - [ ] `W01.P05.S20` - regression test exercising full wizard to persistence to binding to decimal_value path for boolean profile fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
