@@ -24,11 +24,11 @@ source_refs = [
     "boe-modelo-190-2025-amendment",
 ]
 
-[revisions."2024"]
-id = "2024"
-label = "Modelo 190 ejercicio 2024"
+[revisions."2024-y-siguientes"]
+id = "2024-y-siguientes"
+label = "Modelo 190 ejercicio 2024 y siguientes"
 valid_from = 2024-01-01
-period_selector = { years = [2024], periods = ["0A"] }
+period_selector = { year_from = 2024, periods = ["0A"] }
 legal_refs = [
     "ley-35-2006:art-99",
     "rd-439-2007:art-109",
@@ -47,7 +47,7 @@ source_refs = [
     "boe-modelo-190-2025-amendment",
 ]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-dinerario-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["01"] }
@@ -55,11 +55,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-especie-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["04"] }
@@ -67,11 +67,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-dinerario-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["07"] }
@@ -79,11 +79,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-especie-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["10"] }
@@ -91,11 +91,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-dinerario-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["13"] }
@@ -103,11 +103,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-especie-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["16"] }
@@ -115,11 +115,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-dinerario-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["19"] }
@@ -127,11 +127,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-especie-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["22"] }
@@ -139,11 +139,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-derechos-imagen-percepciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["25"] }
@@ -151,11 +151,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-dinerario-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["02"] }
@@ -163,11 +163,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-trabajo-especie-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["05"] }
@@ -175,11 +175,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-dinerario-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["08"] }
@@ -187,11 +187,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-actividades-especie-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["11"] }
@@ -199,11 +199,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-dinerario-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["14"] }
@@ -211,11 +211,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-premios-especie-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["17"] }
@@ -223,11 +223,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-dinerario-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["20"] }
@@ -235,11 +235,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-ganancias-especie-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["23"] }
@@ -247,11 +247,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "109-121 VALORACIÓN"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-derechos-imagen-importe-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["26"] }
@@ -259,11 +259,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-111-retenciones-anual"
 source = "previous_filing"
 selector = { source_modelo = "111", source_periods = ["1T", "2T", "3T", "4T"], source_casillas = ["28"] }
@@ -271,11 +271,11 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS RETENCIONES E INGRESOS A CUENTA", "posiciones 95 a 107"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-trabajo-dinerario-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -290,7 +290,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-trabajo-especie-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -305,7 +305,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-actividades-dinerario-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -320,7 +320,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-actividades-especie-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -335,7 +335,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-premios-dinerario-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -350,7 +350,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-premios-especie-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -365,7 +365,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-ganancias-dinerario-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -380,7 +380,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-ganancias-especie-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -395,7 +395,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-derechos-imagen-percepciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -410,7 +410,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-trabajo-dinerario-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -425,7 +425,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-trabajo-especie-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -440,7 +440,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-actividades-dinerario-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -455,7 +455,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-actividades-especie-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -470,7 +470,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-premios-dinerario-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -485,7 +485,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-premios-especie-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -500,7 +500,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-ganancias-dinerario-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -515,7 +515,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-ganancias-especie-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -530,7 +530,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-derechos-imagen-importe-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -545,7 +545,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".relations]]
+[[revisions."2024-y-siguientes".relations]]
 id = "modelo-190-rel-111-retenciones-anual"
 kind = "annual_summary"
 dependency_role = "periodic_to_annual_summary"
@@ -560,7 +560,7 @@ aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".casillas]]
+[[revisions."2024-y-siguientes".casillas]]
 id = "decl.total-percepciones"
 number = "136-144"
 label = "Numero total de percepciones"
@@ -575,7 +575,7 @@ formula = "modelo-190-total-percepciones"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".casillas]]
+[[revisions."2024-y-siguientes".casillas]]
 id = "decl.percepciones-total"
 number = "145-160"
 label = "Importe total de las percepciones"
@@ -590,7 +590,7 @@ formula = "modelo-190-percepciones-total"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".casillas]]
+[[revisions."2024-y-siguientes".casillas]]
 id = "decl.retenciones-total"
 number = "161-175"
 label = "Importe total de retenciones e ingresos a cuenta"
@@ -604,7 +604,7 @@ formula = "modelo-190-retenciones-total"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".formulas]]
+[[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-total-percepciones"
 target = "decl.total-percepciones"
 expression.op = "add"
@@ -623,11 +623,11 @@ rounding = "integer"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".formulas.source_citations]]
+[[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["NÚMERO TOTAL DE PERCEPCIONES", "Número de registros de tipo 2"]
 
-[[revisions."2024".formulas]]
+[[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-percepciones-total"
 target = "decl.percepciones-total"
 expression.op = "add"
@@ -646,11 +646,11 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".formulas.source_citations]]
+[[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS PERCEPCIONES", "posiciones 82 a 94"]
 
-[[revisions."2024".formulas]]
+[[revisions."2024-y-siguientes".formulas]]
 id = "modelo-190-retenciones-total"
 target = "decl.retenciones-total"
 expression = { op = "copy", args = [{ relation = "modelo-190-rel-111-retenciones-anual" }] }
@@ -658,11 +658,11 @@ rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".formulas.source_citations]]
+[[revisions."2024-y-siguientes".formulas.source_citations]]
 source_ref = "boe-modelo-190-2025-form"
 required_text = ["IMPORTE TOTAL DE LAS RETENCIONES E INGRESOS A CUENTA", "posiciones 95 a 107"]
 
-[[revisions."2024".extraction_profiles]]
+[[revisions."2024-y-siguientes".extraction_profiles]]
 id = "modelo-190-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaration_pdf"
@@ -679,7 +679,7 @@ failure_semantics = "fail_hard"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".live_cross_references]]
+[[revisions."2024-y-siguientes".live_cross_references]]
 id = "modelo-190-filed-declarations-read"
 evidence_tier = "official_source_guidance"
 surface = "authenticated_read_surface"
@@ -702,7 +702,7 @@ requires_aeat_authorization = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-procedure"]
 
-[[revisions."2024".workbook_parity_refs]]
+[[revisions."2024-y-siguientes".workbook_parity_refs]]
 id = "modelo-190-dr-pdf-2025"
 workbook_source = "aeat-dr-190-2025"
 fixture_id = "modelo-190-2025-record-design-layout"
@@ -712,7 +712,7 @@ tolerance = "0.01"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025"]
 
-[[revisions."2024".verification_expectations]]
+[[revisions."2024-y-siguientes".verification_expectations]]
 id = "modelo-190-annual-summary-verification"
 computed_casillas = ["decl.total-percepciones", "decl.percepciones-total", "decl.retenciones-total"]
 tolerance = "0.00"
@@ -722,7 +722,7 @@ discrepancy_causes = ["correctness_divergence"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-portal"
 surface = "portal"
 consumer = "aeat.domain.portals.Portal.PORTAL_M190_RESUMEN_TRABAJO"
@@ -730,7 +730,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-190-procedure"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-calculation"
 surface = "calculation"
 consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
@@ -738,7 +738,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-filing"
 surface = "filing"
 consumer = "aeat.application.filing"
@@ -746,7 +746,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-verification"
 surface = "verification"
 consumer = "aeat.application.verification"
@@ -754,7 +754,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-extractor"
 surface = "extractor"
 consumer = "aeat.adapters.outbound.aeat.sede.registry_observation_from_filed_declaration"
@@ -762,7 +762,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-review"
 surface = "review"
 consumer = "aeat.application.review"
@@ -770,7 +770,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-approval"
 surface = "approval"
 consumer = "aeat.application.workflow.approval"
@@ -778,7 +778,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-reconciliation"
 surface = "reconciliation"
 consumer = "aeat.application.reconciliation"
@@ -786,7 +786,7 @@ requires_snapshot = true
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
 source_refs = ["boe-modelo-190-2025-form"]
 
-[[revisions."2024".application_links]]
+[[revisions."2024-y-siguientes".application_links]]
 id = "modelo-190-workflow"
 surface = "workflow"
 consumer = "aeat.application.workflow"
@@ -802,7 +802,7 @@ source_refs = ["boe-modelo-190-2025-form", "aeat-modelo-190-procedure"]
 # from the operator's payroll / accounts-payable ledger.
 # -----------------------------------------------------------------------------
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-nif"
 source = "withholding"
 selector = { fact = "row_field", row_field = "perceptor_tax_id", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -810,11 +810,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-name"
 source = "withholding"
 selector = { fact = "row_field", row_field = "perceptor_legal_name", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -822,11 +822,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-clave"
 source = "withholding"
 selector = { fact = "row_field", row_field = "clave", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -834,11 +834,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-subclave"
 source = "withholding"
 selector = { fact = "row_field", row_field = "subclave", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -846,11 +846,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-percibido-dinerario"
 source = "withholding"
 selector = { fact = "row_field", row_field = "percibido_dinerario", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -858,11 +858,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-percibido-especie"
 source = "withholding"
 selector = { fact = "row_field", row_field = "percibido_especie", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -870,11 +870,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-retencion-practicada"
 source = "withholding"
 selector = { fact = "row_field", row_field = "retencion_practicada", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -882,11 +882,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".bindings]]
+[[revisions."2024-y-siguientes".bindings]]
 id = "modelo-190-perceptor-row-ingreso-a-cuenta"
 source = "withholding"
 selector = { fact = "row_field", row_field = "ingreso_a_cuenta", grouping = "per_perceptor_clave", record = "perceptor" }
@@ -894,11 +894,11 @@ aggregation = { op = "rows" }
 legal_refs = ["orden-eha-3127-2009:art-1", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-190-2025", "aeat-modelo-190-procedure"]
 
-[[revisions."2024".bindings.source_citations]]
+[[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-190-procedure"
 required_text = ["modelo 190"]
 
-[[revisions."2024".constructs]]
+[[revisions."2024-y-siguientes".constructs]]
 id = "modelo-190-annual-summary"
 title = "Modelo 190 annual summary from Modelo 111 quarterly filings"
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-109", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86", "ley-58-2003:art-93"]
@@ -972,7 +972,7 @@ application_links = [
 ]
 dependency_classifications = ["modelo-190-dep-111"]
 
-[[revisions."2024".dependency_classifications]]
+[[revisions."2024-y-siguientes".dependency_classifications]]
 id = "modelo-190-dep-111"
 source_modelo = "111"
 treatment = "direct_annual_settlement"
@@ -1007,16 +1007,16 @@ source_refs = ["boe-modelo-190-2025-form", "boe-modelo-190-2025-amendment"]
 # operands), keyed on each casilla's own registry (segmento, number)
 # identity. Derived off-load-path from the registry calculation
 # surface; the drift re-verification test re-derives it.
-[revisions."2024".completeness_manifest]
+[revisions."2024-y-siguientes".completeness_manifest]
 source_ref = "aeat-dr-190-2025"
 legal_refs = ["ley-35-2006:art-101", "ley-35-2006:art-99", "ley-58-2003:art-93", "orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "rd-439-2007:art-109", "rd-439-2007:art-80", "rd-439-2007:art-86"]
 source_refs = ["aeat-dr-190-2025", "boe-modelo-190-2025-form"]
 
-[[revisions."2024".completeness_manifest.casillas]]
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "136-144"
 
-[[revisions."2024".completeness_manifest.casillas]]
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "145-160"
 
-[[revisions."2024".completeness_manifest.casillas]]
+[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 number = "161-175"

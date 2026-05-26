@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 # revision-id below).
 _DETAIL_RECORD_MODELOS: tuple[tuple[str, str, str, int], ...] = (
     # (modelo, revision_id, source_kind, expected_cohort_count)
-    ("190", "2025-y-siguientes", "withholding", 1),
+    ("190", "2024-y-siguientes", "withholding", 1),
     ("193", "2024-y-siguientes", "withholding", 1),
     ("232", "2018-y-siguientes", "related_party_operation", 1),
     ("720", "2013-y-siguientes", "foreign_asset", 1),
