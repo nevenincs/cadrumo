@@ -26,9 +26,27 @@ target_casillas = [
     {casilla_id = "0610", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+diferencial\s*\['},
     # 0670 — resultado de la declaración (ley-35-2006:art-103)
     {casilla_id = "0670", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+de\s+la\s+declaraci[oó]n(?!\s+complementaria)'},
-    # Apartado-summary casillas — second chunk.
+    # Apartado-summary casillas (second chunk) and actividades-económicas ED detail (third chunk).
     # Printed labels confirmed in 2022-0A.pdf corpus; patterns stable across 2021/2022/2023.
+    # pdfplumber merges value and box-number into one token; values are valid Decimals only.
     #
+    # Actividades económicas — estimación directa detail (third chunk).
+    # All label_patterns confirmed unambiguous (appear exactly once) in 2022-0A.pdf corpus.
+    #
+    # 0180 — total ingresos computables (ley-35-2006:art-27)
+    {casilla_id = "0180", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+ingresos\s+computables\s*\['},
+    # 0218 — suma de gastos fiscalmente deducibles (previo a simplificada; ley-35-2006:art-30)
+    {casilla_id = "0218", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+gastos\s+fiscalmente\s+deducibles'},
+    # 0223 — total gastos deducibles modalidad simplificada (ley-35-2006:art-30)
+    {casilla_id = "0223", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+gastos\s+deducibles,\s+modalidad\s+simplificada'},
+    # 0224 — rendimiento neto (ley-35-2006:art-28)
+    # Pattern anchors on opening bracket after "neto" to exclude "neto reducido" line (0226).
+    {casilla_id = "0224", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+\['},
+    # 0226 — rendimiento neto reducido (ley-35-2006:art-32)
+    {casilla_id = "0226", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Rendimiento\s+neto\s+reducido\s*\['},
+    # 0231 — suma de rendimientos netos reducidos (pre-0235 subtotal; ley-35-2006:art-32)
+    # Pattern is distinct from 0235 "Suma del rendimiento neto reducido total de las actividades".
+    {casilla_id = "0231", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+rendimientos\s+netos\s+reducidos'},
     # 0235 — rendimiento neto reducido total actividades económicas estimación directa
     {casilla_id = "0235", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+del\s+rendimiento\s+neto\s+reducido\s+total\s+de\s+las\s+actividades'},
     # 0432 — saldo neto rendimientos a integrar en base imponible general
@@ -45,6 +63,9 @@ min_coverage = "1"
 failure_semantics = "fail_hard"
 legal_refs = [
     "ley-35-2006:art-27",
+    "ley-35-2006:art-28",
+    "ley-35-2006:art-30",
+    "ley-35-2006:art-32",
     "ley-35-2006:art-50",
     "ley-35-2006:art-62",
     "ley-35-2006:art-66",

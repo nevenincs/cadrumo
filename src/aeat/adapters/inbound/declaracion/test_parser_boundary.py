@@ -509,18 +509,23 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
     ],
 )
 def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse M100 IRPF annual corpus PDFs and verify cuota-chain closure casillas.
+    """Round-trip: parse M100 IRPF annual corpus PDFs and verify all 19 covered casillas.
+
+    Three delivery chunks:
+    - Chunk 1 (9 casillas): cuota-chain closure — 0545/0546/0505/0585/0586/0587/0595/0610/0670.
+    - Chunk 2 (4 casillas): apartado-summary bases — 0235/0432/0500/0510.
+    - Chunk 3 (6 casillas): actividades-económicas ED detail — 0180/0218/0223/0224/0226/0231.
 
     Ground truth is derived from reading the printed declaracion PDF text directly.
     The sanitised corpus replaces real monetary values with 1.000,00 synthetic values.
     pdfplumber merges the adjacent box number onto the value token (e.g.
     ``1.001.000,005045``) so the extracted Decimal is a valid instance but does not
-    equal 1000.00. All 9 casillas are asserted as isinstance(..., Decimal) only;
+    equal 1000.00. All casillas are asserted as isinstance(..., Decimal) only;
     exact-value assertions would be tautological against the corpus artefact.
 
-    Casillas deferred to a follow-up chunk (0570/0571 cuota líquida estatal/autonómica
-    pre-incrementada) because both the body and summary sections carry identical short
-    labels in 2023 with no formula-bracket anchor available.
+    Casillas deferred (0570/0571 cuota líquida estatal/autonómica pre-incrementada):
+    both body and summary sections carry identical short labels in 2023 with no
+    formula-bracket anchor available.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "100" / f"{pdf_stem}.pdf"
 
@@ -541,8 +546,8 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 13 covered casillas must be present: 9 cuota-chain closure casillas (first chunk)
-    # plus 4 apartado-summary casillas (second chunk).
+    # All 19 covered casillas must be present: 9 cuota-chain closure casillas (first chunk),
+    # 4 apartado-summary casillas (second chunk), 6 actividades-económicas ED detail (third chunk).
     # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
     # (body section + base liquidable section), both identical, so the parser rejects it as
     # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
@@ -562,6 +567,13 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         "0432",  # saldo neto rendimientos a integrar en base imponible general
         "0500",  # base liquidable general
         "0510",  # base liquidable del ahorro
+        # Third chunk: actividades económicas ED detail
+        "0180",  # total ingresos computables
+        "0218",  # suma de gastos fiscalmente deducibles
+        "0223",  # total gastos deducibles modalidad simplificada
+        "0224",  # rendimiento neto
+        "0226",  # rendimiento neto reducido
+        "0231",  # suma de rendimientos netos reducidos (pre-0235 subtotal)
     }
 
     # pdfplumber merges the adjacent box number onto the value token in all corpus
