@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import get_engine
+from ...adapters.persistence.storage import SensitivityClass
 from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     BusinessClassification,
@@ -141,11 +141,7 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
 
     import json as _json
 
-    from sqlalchemy import select
-
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
-    from ._repository import TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
         repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
@@ -160,20 +156,28 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         repo.save(original)
 
         object_key = transaction_catalogue_object_key(profile.bucket_id)
-        with session_scope(get_engine(profile.settings)) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == TX_BUCKET_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            envelope = _json.loads(row.payload.decode("utf-8"))
-            txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
-            assert "business_pct" in txn_dict, (
-                "fixture must serialise business_pct into the envelope "
-                "for this proof test to be meaningful"
-            )
-            del txn_dict["business_pct"]
-            row.payload = _json.dumps(envelope).encode("utf-8")
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        txn_dict = envelope["payload"]["transactions"][mixed_txn.transaction_id]
+        assert "business_pct" in txn_dict, (
+            "fixture must serialise business_pct into the envelope "
+            "for this proof test to be meaningful"
+        )
+        del txn_dict["business_pct"]
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
 
         with pytest.raises(ValidationError):
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
