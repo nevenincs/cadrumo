@@ -42,9 +42,12 @@ registry. Classification distribution:
 - `relation_driven` — 3. Selector lacks a period anchor but a
   `RelationDefinition` in the revision carries the source contract.
   Safe.
-- `relation_orphaned` — 1. Selector declares `relation = "..."`
-  but the referenced relation does not exist in the revision. Same
-  hazard class as `direct_dead`; must be repaired or annotated.
+- `relation_orphaned` — 1. INVESTIGATION RECLASSIFIED THIS AS A
+  FALSE POSITIVE. See "Pattern B" below. The sweep classifier
+  matched `selector.relation` against `RelationDefinition.id`; the
+  runtime actually matches via `RelationDefinition.target_binding`.
+  The binding is correctly relation-driven and is NOT a hazard
+  under the P03 runtime flip.
 - `non_previous_filing` — 71. Binding's source is not
   `previous_filing` (profile, invoice, ledger, etc.); resolution
   goes through a different pipeline. Not affected by this campaign.
@@ -89,19 +92,41 @@ amended to include the four M131 revisions; the same selector
 shape applies because the AEAT rule and the saldo-negativo
 mechanism are identical.
 
-### Pattern B — orphan relation reference (1 entry)
+### Pattern B — orphan relation reference (1 entry, reclassified as false positive)
 
 | Modelo | Revision | Casilla | Binding id                                                | Detail                                     |
 | :----- | :------- | :------ | :-------------------------------------------------------- | :----------------------------------------- |
-| 100    | 2025     | 1577    | `renta-2025-modelo-184-atribucion-actividades-economicas` | Selector declares `relation = "..."` but no `RelationDefinition` in the 2025 revision matches the referenced relation id. |
+| 100    | 2025     | 1577    | `renta-2025-modelo-184-atribucion-actividades-economicas` | Selector declares `relation = "atribucion-actividades-economicas"`. The matching `RelationDefinition` exists at id `renta-2025-rel-184-atribucion-actividades-economicas` with `target_binding` pointing at this binding's id. |
 
-**Remediation**: this is not the M130 carry-forward pattern.
-Possible answers: declare the missing relation in the modelo-100
-2025 revision, revise the selector to remove the relation
-reference and add explicit period anchors, or annotate the binding
-as absent-by-design if the binding is not yet wired. Requires its
-own investigation; the M130 plan's `P02.S08` must defer to a
-follow-up audit unless one of these answers is clearly correct.
+**Resolution**: NOT a runtime hazard. Investigation surfaced that
+the relation→binding runtime linkage uses
+`RelationDefinition.target_binding`, not the binding's
+`selector.relation` field. The matching relation exists with
+`target_binding = "renta-2025-modelo-184-atribucion-actividades-economicas"`
+at `.../revisions/2025/relations/0008-renta-2025-rel-184-atribucion-actividades-economicas.toml`,
+so the runtime resolves the binding correctly.
+
+The defect is the sweep classifier: it treated `selector.relation`
+as the canonical lookup key and reported a false orphan when the
+shorthand did not match the prefixed relation id. Every M100 2025
+binding uses an unprefixed `selector.relation` shorthand
+(`atribucion-actividades-economicas`,
+`retenciones-trabajo-actividades-premios`, etc.) while the actual
+relation ids carry the `renta-2025-rel-XXX-` prefix — that is a
+consistent convention in the registry, not a defect in the
+binding.
+
+**P03 is NOT blocked by this finding.** The runtime flip will not
+surface this binding as a calculation error: relation-driven
+bindings resolve through the relation pipeline, not through the
+direct previous-filing resolver, and the relation→binding linkage
+is intact.
+
+Optional follow-up (low priority, not blocking): either reconcile
+the unprefixed `selector.relation` shorthand convention with the
+relation id, or remove the field entirely from the selector schema
+since the runtime does not consult it. Address in a separate
+campaign — out of scope for the silent-zero elimination work.
 
 ## Provenance
 
