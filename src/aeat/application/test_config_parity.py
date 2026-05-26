@@ -8,25 +8,35 @@ profile bucket selected by ``WorkflowState``.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
-from aeat.core.config import SecretStoreBackend
+from aeat.core.config import SecretStoreBackend, override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+@contextmanager
+def _isolate(tmp_path: Path) -> Iterator[None]:
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
-    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
+    with override_settings(
+        aeat_local_storage_root=tmp_path / "storage",
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
 
 
 def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") -> None:
@@ -57,84 +67,80 @@ def _seed_active_profile(tax_id: str = "00000000T", activity: str = "design") ->
 
 
 def test_config_create_then_config_show_round_trips_iva_regime(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """A value written during profile create is readable via profile show."""
 
-    _isolate(monkeypatch, tmp_path)
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "default",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "GENERAL",
-        ]
-    )
-    assert created.exit_code == 0, created.output
+    with _isolate(tmp_path):
+        created = invoke_cached_cli(
+            [
+                "config",
+                "profile",
+                "create",
+                "default",
+                "--quiet",
+                "--tax-id",
+                "00000000T",
+                "--activity",
+                "design",
+                "--iva-regime",
+                "GENERAL",
+            ]
+        )
+        assert created.exit_code == 0, created.output
 
-    show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "show", "default"])
-    assert show_via_config.exit_code == 0, show_via_config.output
-    facts = {row["path"]: row["value"] for row in json.loads(show_via_config.output)["facts"]}
-    assert facts["iva.regime"] == "GENERAL"
+        show_via_config = invoke_cached_cli(["--format", "json", "config", "profile", "show", "default"])
+        assert show_via_config.exit_code == 0, show_via_config.output
+        facts = {row["path"]: row["value"] for row in json.loads(show_via_config.output)["facts"]}
+        assert facts["iva.regime"] == "GENERAL"
 
-    from aeat.application.user_profile import UserProfileLifecycleRepository
-    from aeat.application.user_profile._orchestration import fact_value, profile_storage_session
-    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
+        from aeat.application.user_profile import UserProfileLifecycleRepository
+        from aeat.application.user_profile._orchestration import fact_value, profile_storage_session
+        from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
 
-    # The bucket directory is named by the minted UUID; resolve it
-    # from the operator label "default" carried in the manifest.
-    pointer = read_profile_bucket("default")
-    assert pointer is not None
-    with profile_storage_session(pointer.bucket_id):
-        record = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
-        assert fact_value(record, "iva.regime") == "GENERAL"
+        # The bucket directory is named by the minted UUID; resolve it
+        # from the operator label "default" carried in the manifest.
+        pointer = read_profile_bucket("default")
+        assert pointer is not None
+        with profile_storage_session(pointer.bucket_id):
+            record = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
+            assert fact_value(record, "iva.regime") == "GENERAL"
 
 
 def test_config_create_then_config_status_surfaces_assigned_value(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """A value written during profile create surfaces in profile status."""
 
-    _isolate(monkeypatch, tmp_path)
-    created = invoke_cached_cli(
-        [
-            "config",
-            "profile",
-            "create",
-            "default",
-            "--quiet",
-            "--tax-id",
-            "00000000T",
-            "--activity",
-            "design",
-            "--iva-regime",
-            "SIMPLIFICADO",
-        ]
-    )
-    assert created.exit_code == 0, created.output
+    with _isolate(tmp_path):
+        created = invoke_cached_cli(
+            [
+                "config",
+                "profile",
+                "create",
+                "default",
+                "--quiet",
+                "--tax-id",
+                "00000000T",
+                "--activity",
+                "design",
+                "--iva-regime",
+                "SIMPLIFICADO",
+            ]
+        )
+        assert created.exit_code == 0, created.output
 
-    status_result = invoke_cached_cli(["config", "profile", "status"])
-    assert status_result.exit_code == 0, status_result.output
-    assert "SIMPLIFICADO" in status_result.output
+        status_result = invoke_cached_cli(["config", "profile", "status"])
+        assert status_result.exit_code == 0, status_result.output
+        assert "SIMPLIFICADO" in status_result.output
 
 
 def test_retired_config_profile_set_is_not_registered(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
     """The retired point-mutation command must not re-enter the CLI tree."""
 
-    _isolate(monkeypatch, tmp_path)
-
-    result = invoke_cached_cli(["config", "profile", "set", "not.a.real.key", "value"])
-    assert result.exit_code != 0
-    assert "No such command" in result.output
+    with _isolate(tmp_path):
+        result = invoke_cached_cli(["config", "profile", "set", "not.a.real.key", "value"])
+        assert result.exit_code != 0
+        assert "No such command" in result.output
