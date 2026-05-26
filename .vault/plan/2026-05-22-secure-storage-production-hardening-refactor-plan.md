@@ -223,7 +223,7 @@ Reground secure-storage hardening against existing codebase conventions before f
 
 Inspect existing implementation patterns and current secure-storage changes before assigning repairs; each audit row must cite code evidence and either open implementation rows or record a deferred disposition.
 
-- [ ] `W10.P17.S65` - Audit user-facing secure-storage error messages for tr-backed locale rendering before further repairs; `src/aeat`.
+- [x] `W10.P17.S65` - Audit user-facing secure-storage error messages for tr-backed locale rendering before further repairs; `src/aeat`.
 - [ ] `W10.P17.S66` - Audit secure-storage exceptions for AEAT core error base-class derivation and registry coverage; `src/aeat/adapters/persistence/storage`.
 - [ ] `W10.P17.S67` - Audit exception swallowing and require at-least-debug logging or explicit typed degradation records; `src/aeat`.
 - [ ] `W10.P17.S68` - Audit secure-storage tests for tautological assertions, fake helpers, stubs, patches, skips, xfails, and mirrored business logic; `src/aeat`.
