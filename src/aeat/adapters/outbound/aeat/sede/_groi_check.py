@@ -349,11 +349,11 @@ async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:
     await _assert_form_action_is_consult_endpoint(page, timeout_ms=timeout_ms)
 
 
-# The form's ``action`` attribute is captured live as the relative path
-# ``ConsultaOperadorSedeGroiServlet`` (relative to the page's www2 host).
-# Any deviation indicates AEAT changed the form's submission target and
-# the driver must refuse to submit until the change is investigated.
-_EXPECTED_FORM_ACTION = "ConsultaOperadorSedeGroiServlet"
+# The form's ``action`` attribute is captured live as the final relative path
+# segment of the centralized GROI oracle URL. Any deviation indicates AEAT
+# changed the submission target and the driver must refuse to submit until the
+# change is investigated.
+_EXPECTED_FORM_ACTION = urlsplit(str(AEAT_GROI_URL)).path.rsplit("/", 1)[-1]
 
 
 async def _assert_form_action_is_consult_endpoint(page: Page, *, timeout_ms: int) -> None:
