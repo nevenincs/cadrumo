@@ -1,0 +1,9 @@
+[[revisions."2024".workbook_parity_refs]]
+id = "modelo-131-dr-xlsx-2024"
+workbook_source = "aeat-dr-131-2024"
+fixture_id = "modelo-131-2024-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "orden-hfp-1359-2023:art-4", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2024"]

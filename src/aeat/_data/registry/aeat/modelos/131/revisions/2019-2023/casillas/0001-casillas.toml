@@ -1,0 +1,190 @@
+[[revisions."2019-2023".casillas]]
+id = "01"
+number = "01"
+label = "Suma de rendimientos netos"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_suma_rendimientos"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-01"]
+[[revisions."2019-2023".casillas]]
+id = "02"
+number = "02"
+label = "Pago fraccionado previo por datos-base"
+section = ["actividades_economicas_estimacion_objetiva"]
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_datos_base"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-02"]
+[[revisions."2019-2023".casillas]]
+id = "03"
+number = "03"
+label = "Volumen de ventas o ingresos sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_volumen_sin_datos_base"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-03"]
+[[revisions."2019-2023".casillas]]
+id = "04"
+number = "04"
+label = "Pago fraccionado previo sin datos-base"
+section = ["actividades_sin_datos_base"]
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_sin_datos_base"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-pago-fraccionado-sin-datos-base"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-04"]
+[[revisions."2019-2023".casillas]]
+id = "05"
+number = "05"
+label = "Volumen de ingresos agrarios del trimestre"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_volumen_agrario"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-05"]
+[[revisions."2019-2023".casillas]]
+id = "06"
+number = "06"
+label = "Pago fraccionado previo agrario"
+section = ["actividades_agricolas_ganaderas_forestales"]
+data_type = "money"
+semantic_role = "pago_fraccionado_previo_agrario"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-pago-fraccionado-agrario"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-06"]
+[[revisions."2019-2023".casillas]]
+id = "07"
+number = "07"
+label = "Suma de pagos fraccionados previos"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "pago_fraccionado_previo"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"] }
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-suma-pagos-previos"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-07"]
+[[revisions."2019-2023".casillas]]
+id = "08"
+number = "08"
+label = "Retenciones e ingresos a cuenta"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "retenciones_ingresos_a_cuenta"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"], source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"] }
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-08"]
+[[revisions."2019-2023".casillas]]
+id = "09"
+number = "09"
+label = "Minoracion por rendimientos netos de actividades economicas"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "minoracion_rendimientos_actividades_economicas"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-09"]
+[[revisions."2019-2023".casillas]]
+id = "10"
+number = "10"
+label = "Diferencia"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_diferencia"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-diferencia"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-10"]
+[[revisions."2019-2023".casillas]]
+id = "11"
+number = "11"
+label = "Resultados negativos de trimestres anteriores"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_resultados_negativos_anteriores"
+required = false
+input_kind = "bound"
+binding = "modelo-131-2019-2023-resultados-negativos-anteriores"
+constraints = { sign = "non_negative", legal_refs = ["rd-439-2007:art-110"], source_refs = ["aeat-modelo-131-instructions"] }
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-11"]
+[[revisions."2019-2023".casillas]]
+id = "12"
+number = "12"
+label = "Pago de prestamos para vivienda habitual"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "prestamo_vivienda_habitual"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-12"]
+[[revisions."2019-2023".casillas]]
+id = "13"
+number = "13"
+label = "Total"
+section = ["total_liquidacion"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_total"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-total"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-13"]
+[[revisions."2019-2023".casillas]]
+id = "14"
+number = "14"
+label = "Resultado a ingresar de autoliquidaciones anteriores"
+section = ["complementaria"]
+data_type = "money"
+semantic_role = "resultado_anteriores_autoliquidaciones"
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-14"]
+[[revisions."2019-2023".casillas]]
+id = "15"
+number = "15"
+label = "Resultado de la declaracion"
+section = ["resultado"]
+data_type = "money"
+semantic_role = "irpf_pf_modulos_resultado_declaracion"
+required = false
+input_kind = "computed"
+formula = "modelo-131-2019-2023-resultado"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-modelo-131-instructions", "aeat-dr-131-2019-2023-v101"]
+export_refs = ["modelo-131-2019-2023-casilla-15"]
