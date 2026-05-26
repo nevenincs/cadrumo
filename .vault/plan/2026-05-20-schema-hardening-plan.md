@@ -376,10 +376,10 @@ deterministically.
 ### Phase `W09.P21` - plan-document format hygiene
 
 `vaultspec-core vault plan step add` fails on this very plan
-because `W08.P15.S102` is missing the canonical `;` separator
+because `W06.P15.S102` is missing the canonical `;` separator
 between action and scope clause. Pre-existing convention
 violation that blocks all future programmatic step-add against
 the schema-hardening plan.
 
-- [ ] `W09.P21.S141` - fix `W08.P15.S102` action text by inserting the canonical `;` separator between the action clause and the scope clause; verify by running `uv run vaultspec-core vault plan step add` against the plan; `.vault/plan/2026-05-20-schema-hardening-plan.md`.
+- [x] `W09.P21.S141` - fix `W06.P15.S102` action text by inserting the canonical `;` separator between the action clause and the scope clause; landed broader than the original ask — 11 historical rows fixed in one pass (W06.P15.S102, W06.P15.S105, W06.P16.S115, W07.P17.S119/S120/S121/S123/S134, W08.P18.S127/S128/S129/S130); verified by `uv run vaultspec-core vault check all` (no `PlanParseError` reported); commit `1f3ffd064`; `.vault/plan/2026-05-20-schema-hardening-plan.md`.
 - [ ] `W09.P21.S142` - extend the vault-doctor gate (or add a new plan-format check) so future missing-`;` rows fail at `vault check all` rather than only at the next mutating CLI call; `.vault/plan/`.
