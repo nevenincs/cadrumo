@@ -26,6 +26,6 @@ related:
 Normalize Modelo 115 from the largest remaining single-file modelo into the generic directory/fragments substrate without changing schema semantics, loader behavior, or per-modelo definitions.
 
 - [x] `P01.S01` - Inventory M115 single-file section boundaries and record the mechanical directory split strategy before editing registry data; `.vault/audit`.
-- [ ] `P01.S02` - Mechanically split M115 into `manifest.toml` and `revisions/2019-y-siguientes` fragments using the existing generic loader layout; `src/aeat/_data/registry/aeat/modelos/115`.
+- [x] `P01.S02` - Mechanically split M115 into `manifest.toml` and `revisions/2019-y-siguientes` fragments using the existing generic loader layout; `src/aeat/_data/registry/aeat/modelos/115`.
 - [ ] `P01.S03` - Verify M115 directory loading, registry integrity, export layout behavior, and TOML reviewability gates; `src/aeat/domain/calculations/registry tests`.
 - [ ] `P01.S04` - Record review outcome, standardization baseline, and the next single-file normalization edge; `.vault/exec`.
