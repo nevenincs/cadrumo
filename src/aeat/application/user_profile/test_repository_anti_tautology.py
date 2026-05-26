@@ -7,15 +7,13 @@ save-drops-X / load-re-defaults-X regression silently passes the
 equality check (because the fixture used the default for X) is
 real; this file exercises the negative case explicitly.
 
-The test persists a populated :class:`UserProfileRecord`, decrypts
-the SQL row's payload, mutates the JSON envelope to delete the
-required ``display_name`` field, re-encrypts the mutated bytes, and
-confirms the load side either raises
-:class:`pydantic.ValidationError` (strict mode + extra='forbid')
-or surfaces the mutation as inequality on the loaded record. If
-neither outcome holds, every roundtrip test against the
-user-profile boundary is tautological and the suite must be
-re-audited.
+The test persists a populated :class:`UserProfileRecord`, loads the
+encrypted boundary payload through the runtime repository, mutates the
+JSON envelope to delete the required ``display_name`` field, writes
+the mutated bytes back, and confirms the load side raises
+:class:`pydantic.ValidationError`. If the mutation loads cleanly, every
+roundtrip test against the user-profile boundary is tautological and
+the suite must be re-audited.
 """
 
 from __future__ import annotations
@@ -88,7 +86,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     """Drop the required ``display_name`` field from the on-disk JSON
-    envelope; the load path must refuse or surface inequality.
+    envelope; the load path must refuse.
 
     The test:
 
@@ -99,18 +97,9 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
          envelope, and writes the mutated bytes back.
       3. Loads the record via the repository.
 
-    Two outcomes prove the boundary is honest:
-
-      * The load raises :class:`pydantic.ValidationError` (strict
-        mode + ``extra='forbid'`` refuses the mutated shape).
-      * The load returns a :class:`UserProfileRecord` that is
-        strictly unequal to the original (the missing required
-        field surfaces as a mismatch).
-
-    If neither outcome holds (i.e. the load somehow returns the
-    original-equal record despite the mutation), every roundtrip
-    test against this boundary is tautological and must be
-    re-audited.
+    The load must raise :class:`pydantic.ValidationError`; if it
+    returns despite the mutation, every roundtrip test against this
+    boundary is tautological and must be re-audited.
     """
 
     original = _populated_record()

@@ -115,9 +115,9 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
 ) -> None:
     """UserProfileRecord + UserProfileSnapshot roundtrip through both repos."""
 
-    bucket_id = runtime_profile.bucket_id
-    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
-    snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    profile_id = _PROFILE_UUID
+    lifecycle = UserProfileLifecycleRepository(bucket_id=profile_id, objects=runtime_profile.repository)
+    snapshots = UserProfileSnapshotRepository(bucket_id=profile_id, objects=runtime_profile.repository)
 
     original_record = _populated_record()
     lifecycle.save(original_record)
@@ -163,11 +163,11 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
     state machine (the record would appear "soft-deleted" while
     still being reachable through the active-profile path).
 
-    Persists an ACTIVE record, reaches into ``SecureObjectRow`` via
-    ``session_scope``, surgically stamps ``removed_at`` into the
-    encrypted JSON envelope (without flipping ``status`` to
-    TOMBSTONED), and asserts the load path catches the drift via
-    the model_validator's lifecycle check.
+    Persists an ACTIVE record, loads the encrypted boundary payload
+    through the runtime repository, surgically stamps ``removed_at``
+    into the JSON envelope without flipping ``status`` to TOMBSTONED,
+    and asserts the load path catches the drift via the
+    model_validator's lifecycle check.
 
     If this test passes silently with the rogue removed_at, the
     user-profile lifecycle boundary is tautological and the state
@@ -220,20 +220,20 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     stale hash would invalidate the audit trail for downstream
     filings.
 
-    Persists a snapshot via the snapshots repository, reaches into
-    SecureObjectRow via session_scope, surgically mutates one fact's
-    value WITHOUT recomputing canonical_hash, and asserts the load
-    path catches the drift via the model_validator's derived-hash
-    check.
+    Persists a snapshot via the snapshots repository, loads the
+    encrypted boundary payload through the runtime repository,
+    surgically mutates one fact's value WITHOUT recomputing
+    canonical_hash, and asserts the load path catches the drift via
+    the model_validator's derived-hash check.
 
     If this test passes silently with the tampered fact, the
     canonical-hash guarantee is tautological — the persisted hash
     no longer proves the persisted facts.
     """
 
-    bucket_id = runtime_profile.bucket_id
-    lifecycle = UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
-    snapshots = UserProfileSnapshotRepository(bucket_id=bucket_id, objects=runtime_profile.repository)
+    profile_id = _PROFILE_UUID
+    lifecycle = UserProfileLifecycleRepository(bucket_id=profile_id, objects=runtime_profile.repository)
+    snapshots = UserProfileSnapshotRepository(bucket_id=profile_id, objects=runtime_profile.repository)
     record = _populated_record()
     lifecycle.save(record)
     snapshot = UserProfileSnapshot.from_profile(record)
@@ -241,7 +241,7 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
 
     stored = runtime_profile.repository.load(
         USER_PROFILE_SNAPSHOT_NAMESPACE,
-        user_profile_snapshot_object_key(bucket_id, snapshot.snapshot_id),
+        user_profile_snapshot_object_key(profile_id, snapshot.snapshot_id),
         expected_class=SensitivityClass.IDENTITY,
         max_supported_version=1,
     )
@@ -262,7 +262,7 @@ def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
     first_fact["value"] = mutated_value
     runtime_profile.repository.save(
         namespace=stored.namespace,
-        object_key=user_profile_snapshot_object_key(bucket_id, snapshot.snapshot_id),
+        object_key=user_profile_snapshot_object_key(profile_id, snapshot.snapshot_id),
         classification=stored.classification,
         schema_version=stored.schema_version,
         written_at=stored.written_at,
