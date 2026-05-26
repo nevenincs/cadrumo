@@ -353,11 +353,15 @@ class _PreviousModeloSelector(BaseModel):
 
     def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
         if self.source_period_offset_from_target is None:
-            return tuple((0, period) for period in self.required_periods)
-        derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
-        if derived is None:
-            return ()
-        return (derived,)
+            anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
+        else:
+            derived = _derive_offset_source_anchor(
+                self.source_period_offset_from_target, target_period=target_period
+            )
+            anchors = () if derived is None else (derived,)
+        if self.max_year_delta is None:
+            return anchors
+        return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
 
     @field_validator("period")
     @classmethod
