@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -15,9 +14,6 @@ from aeat.adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     parse_iva_compensation_wallet_html,
 )
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.calculations import (
     CalculationObservationRepository,
     IvaCompensationAuthoritySource,
@@ -27,9 +23,9 @@ from aeat.application.calculations import (
     IvaWalletDecisionRepository,
     iva_wallet_decision_key,
 )
-from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 from . import list_iva_compensation_history, persist_and_reconcile_iva_compensation_wallet
 
@@ -39,32 +35,12 @@ _TAXPAYER_NIF = "12345678Z"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
 _BUCKET_ID = "operator"
 _SESSION_BUCKET_ID = "ephemeral"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_SESSION_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[Path]:
-    db_path = tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db"
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-        activate_session(_session()),
-    ):
-        dispose_engine()
-        try:
-            yield db_path
-        finally:
-            dispose_engine()
+def _secure_backend(tmp_path: Path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
+        yield profile.paths.db_dir / "aeat.db"
 
 
 def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_identity(tmp_path: Path) -> None:
@@ -209,9 +185,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
 
 def _store_prior_compensation(repository: CalculationObservationRepository, *, amount: Decimal) -> None:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
-    casilla = next(
-        item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo"
-    )
+    casilla = next(item for item in snapshot.revision.casillas if item.id == "iva.compensacion-disponible-fin-periodo")
     formula = next(item for item in snapshot.revision.formulas if item.target == casilla.id)
     repository.save_observation(
         RegistryModeloObservation(

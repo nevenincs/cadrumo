@@ -27,16 +27,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage import SensitivityClass
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._bindings import CasillaObservation
 from ._calculation_repository import (
+    _CALCULATION_CATALOGUE_VERSION,
     _CALCULATION_NAMESPACE,
     _CALCULATION_OBJECT_KEY,
     CalculationRevisionCatalogueRepository,
@@ -51,24 +47,6 @@ from ._calculation_revision import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "modelo-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _runtime_engine(tmp_path: Path):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-    )
 
 
 def _hex(seed: str) -> str:
@@ -148,7 +126,7 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A fully-populated calculation revision round-trips through encrypted SQL."""
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
@@ -166,7 +144,7 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert computed.operand_refs == ("casilla-01",)
     assert computed.legal_refs == ("Ley 37/1992 art. 90",)
     assert computed.source_refs == ("aeat-modelo-303-instrucciones-2024",)
-    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
+    assert (profile.paths.db_dir / "aeat.db").is_file()
 
 
 def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
@@ -187,43 +165,38 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
     in the suite is suspect.
     """
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
 
-        engine = _runtime_engine(tmp_path)
-        try:
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _CALCULATION_NAMESPACE,
-                    SecureObjectRow.object_key == _CALCULATION_OBJECT_KEY,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                revisions = envelope["payload"]["revisions"]
-                ((_revision_id, record),) = revisions.items()
-                # Drop the typed provenance envelope from the on-disk
-                # payload. A save-drops-field regression looks exactly
-                # like this: the key is simply absent on reload.
-                assert "observations" in record, (
-                    "fixture must persist observations for the proof to be meaningful"
-                )
-                del record["observations"]
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        record = profile.repository.load(
+            _CALCULATION_NAMESPACE,
+            _CALCULATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        revisions = envelope["payload"]["revisions"]
+        ((_revision_id, persisted_revision),) = revisions.items()
+        # Drop the typed provenance envelope from the on-disk
+        # payload. A save-drops-field regression looks exactly
+        # like this: the key is simply absent on reload.
+        assert "observations" in persisted_revision, "fixture must persist observations for the proof to be meaningful"
+        del persisted_revision["observations"]
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
 
-            regression_caught = False
-            try:
-                mutated = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
-            except Exception:  # boundary may raise different exception types
-                regression_caught = True
-            else:
-                if mutated != original:
-                    regression_caught = True
-        finally:
-            engine.dispose()
+        mutated = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
-    assert regression_caught, (
+    assert mutated != original, (
         "anti-tautology proof failed: dropping the observations "
         "envelope did NOT surface on load. The calculation-revision "
         "boundary is tautological and every roundtrip in the suite "

@@ -23,7 +23,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....core.config import Settings
 from ....domain.profile.assets import (
     AmortizacionEntry,
     AmortizacionLedger,
@@ -32,10 +31,8 @@ from ....domain.profile.assets import (
     AssetsLedgerDocument,
     LibertadAmortizacionElection,
 )
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ....tests.secure_sql import isolated_runtime_profile
+from ...persistence.storage.sql.engine import get_engine
 from .assets import (
     AmortizacionLedgerRepository,
     AssetsLedgerRepository,
@@ -72,59 +69,45 @@ def _populated_asset() -> AssetRecord:
 
 def test_assets_ledger_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """AssetsLedgerDocument + AmortizacionLedger roundtrip through encrypted SQL."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        assets_repo = AssetsLedgerRepository()
+        amortizacion_repo = AmortizacionLedgerRepository()
+
+        asset = _populated_asset()
+        original_doc = AssetsLedgerDocument(assets=(asset,))
+        assets_repo.save(original_doc)
+        loaded_doc = assets_repo.load()
+
+        assert loaded_doc == original_doc
+        loaded_asset = loaded_doc.assets[0]
+        # Per-field witnesses on the optional VAT / allocation axes.
+        assert loaded_asset.taxable_base == Decimal("10000.00")
+        assert loaded_asset.deductible_vat_ratio == Decimal("0.50")
+        assert loaded_asset.allocation_ratio == Decimal("0.75")
+        assert loaded_asset.useful_life_years == 4
+        assert loaded_asset.actividad_id == "iae.844"
+        assert loaded_asset.libertad_amortizacion.enabled is True
+        assert loaded_asset.libertad_amortizacion.amount_limit == Decimal("5000.00")
+
+        original_ledger = AmortizacionLedger(
+            entries=(
+                AmortizacionEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
+                AmortizacionEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
+            ),
         )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+        amortizacion_repo.save(original_ledger)
+        loaded_ledger = amortizacion_repo.load()
 
-            assets_repo = AssetsLedgerRepository()
-            amortizacion_repo = AmortizacionLedgerRepository()
-
-            asset = _populated_asset()
-            original_doc = AssetsLedgerDocument(assets=(asset,))
-            assets_repo.save(original_doc)
-            loaded_doc = assets_repo.load()
-
-            assert loaded_doc == original_doc
-            loaded_asset = loaded_doc.assets[0]
-            # Per-field witnesses on the optional VAT / allocation axes.
-            assert loaded_asset.taxable_base == Decimal("10000.00")
-            assert loaded_asset.deductible_vat_ratio == Decimal("0.50")
-            assert loaded_asset.allocation_ratio == Decimal("0.75")
-            assert loaded_asset.useful_life_years == 4
-            assert loaded_asset.actividad_id == "iae.844"
-            assert loaded_asset.libertad_amortizacion.enabled is True
-            assert loaded_asset.libertad_amortizacion.amount_limit == Decimal("5000.00")
-
-            original_ledger = AmortizacionLedger(
-                entries=(
-                    AmortizacionEntry(asset_id=asset.identifier, year=2024, amount=Decimal("2762.50")),
-                    AmortizacionEntry(asset_id=asset.identifier, year=2025, amount=Decimal("2762.50")),
-                ),
-            )
-            amortizacion_repo.save(original_ledger)
-            loaded_ledger = amortizacion_repo.load()
-
-            assert loaded_ledger == original_ledger
-            assert len(loaded_ledger.entries) == 2
-            assert loaded_ledger.entries[0].amount == Decimal("2762.50")
-        finally:
-            engine.dispose()
+        assert loaded_ledger == original_ledger
+        assert len(loaded_ledger.entries) == 2
+        assert loaded_ledger.entries[0].amount == Decimal("2762.50")
 
 
 def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: corrupting the VAT decomposition must surface.
 
@@ -152,50 +135,38 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            assets_repo = AssetsLedgerRepository()
-            asset = _populated_asset()
-            assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        assets_repo = AssetsLedgerRepository()
+        asset = _populated_asset()
+        assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
-                )
-                row = session.execute(stmt).scalar_one()
-                document = _json.loads(row.payload.decode("utf-8"))
-                asset_dict = document["assets"][0]
-                assert asset_dict.get("cost_basis"), (
-                    "fixture must serialise cost_basis onto the asset "
-                    "for this proof test to be meaningful"
-                )
-                # Halve the cost_basis so the VAT decomposition cross-
-                # check fails ("cost_basis must equal taxable_base plus
-                # non-deductible VAT").
-                asset_dict["cost_basis"] = "5525.00"
-                row.payload = _json.dumps(document).encode("utf-8")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
+                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            document = _json.loads(row.payload.decode("utf-8"))
+            asset_dict = document["assets"][0]
+            assert asset_dict.get("cost_basis"), (
+                "fixture must serialise cost_basis onto the asset for this proof test to be meaningful"
+            )
+            # Halve the cost_basis so the VAT decomposition cross-
+            # check fails ("cost_basis must equal taxable_base plus
+            # non-deductible VAT").
+            asset_dict["cost_basis"] = "5525.00"
+            row.payload = _json.dumps(document).encode("utf-8")
 
-            with pytest.raises(
-                pydantic.ValidationError,
-                match="cost_basis must equal taxable_base plus non-deductible VAT",
-            ):
-                assets_repo.load()
-        finally:
-            engine.dispose()
+        with pytest.raises(
+            pydantic.ValidationError,
+            match="cost_basis must equal taxable_base plus non-deductible VAT",
+        ):
+            assets_repo.load()
 
 
 def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: a *deleted* cost_basis must surface at load.
 
@@ -216,32 +187,22 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-missing-cost-basis.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            assets_repo = AssetsLedgerRepository()
-            assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        assets_repo = AssetsLedgerRepository()
+        assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _ASSETS_NAMESPACE,
-                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
-                )
-                row = session.execute(stmt).scalar_one()
-                document = _json.loads(row.payload.decode("utf-8"))
-                asset_dict = document["assets"][0]
-                assert "cost_basis" in asset_dict
-                del asset_dict["cost_basis"]
-                row.payload = _json.dumps(document).encode("utf-8")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ASSETS_NAMESPACE,
+                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            document = _json.loads(row.payload.decode("utf-8"))
+            asset_dict = document["assets"][0]
+            assert "cost_basis" in asset_dict
+            del asset_dict["cost_basis"]
+            row.payload = _json.dumps(document).encode("utf-8")
 
-            with pytest.raises(pydantic.ValidationError, match="cost_basis"):
-                assets_repo.load()
-        finally:
-            engine.dispose()
+        with pytest.raises(pydantic.ValidationError, match="cost_basis"):
+            assets_repo.load()

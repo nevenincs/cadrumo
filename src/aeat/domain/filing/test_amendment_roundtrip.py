@@ -20,10 +20,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._amendment import (
     AmendmentKind,
@@ -42,24 +40,10 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
 
 
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _runtime_engine(tmp_path: Path):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-    )
+def _runtime_engine(profile: TestRuntimeProfile):
+    return get_engine(profile.settings)
 
 
 def _populated_amended_draft() -> ModeloDraft:
@@ -140,7 +124,7 @@ def test_filing_amendment_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A ModeloComplementaria with delta + amended draft roundtrips strictly."""
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         original = _populated_amendment()
         repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
         repo.save(original)
@@ -193,8 +177,8 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._complementaria_repository import _AMENDMENT_NAMESPACE
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
-        engine = _runtime_engine(tmp_path)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        engine = _runtime_engine(profile)
         try:
             original = _populated_amendment()
             repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
@@ -211,8 +195,7 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
                 envelope = _json.loads(row.payload.decode("utf-8"))
                 payload = envelope["payload"]
                 assert payload.get("delta"), (
-                    "fixture must serialise a non-empty delta tuple for "
-                    "this proof test to be meaningful"
+                    "fixture must serialise a non-empty delta tuple for this proof test to be meaningful"
                 )
                 payload["delta"] = []
                 row.payload = _json.dumps(envelope).encode("utf-8")

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -18,9 +17,6 @@ from aeat.adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -28,9 +24,9 @@ from aeat.application.calculations import (
     extract_modelo_303_local_iva_compensation_recurrence,
     resolve_bindings_from_local_store,
 )
-from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation, RegistryValidationError
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 from . import (
     _latest_declarations_by_period,
@@ -47,32 +43,12 @@ _SYNTHETIC_PROFILE_ID = "SYNTHETIC_PROFILE"
 _SYNTHETIC_EXPEDIENTE_ID = "200030300000000Z"
 _BUCKET_ID = "operator"
 _SESSION_BUCKET_ID = "ephemeral"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_SESSION_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[Path]:
-    db_path = tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db"
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-        activate_session(_session()),
-    ):
-        dispose_engine()
-        try:
-            yield db_path
-        finally:
-            dispose_engine()
+def _secure_backend(tmp_path: Path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
+        yield profile.paths.db_dir / "aeat.db"
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:

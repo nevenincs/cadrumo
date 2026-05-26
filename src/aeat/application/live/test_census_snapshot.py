@@ -18,11 +18,6 @@ from typing import TypedDict
 
 import pytest
 
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import (
-    dispose_engine,
-)
 from aeat.application.live._censo import (
     CENSUS_SNAPSHOT_NAMESPACE,
     CensoSnapshot,
@@ -33,13 +28,11 @@ from aeat.application.live._censo import (
     derive_census_snapshot_id,
 )
 from aeat.application.live._errors import LiveApplicationInputError
-from aeat.core.config import override_settings
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _SESSION_BUCKET_ID = "ephemeral"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
 
 
 class _DeriveKwargs(TypedDict):
@@ -62,20 +55,9 @@ def _populated_facts() -> dict[str, str]:
 
 
 @pytest.fixture
-def isolated_secure_store(tmp_path: Path) -> Iterator[None]:
-    session = BucketSession.open(
-        bucket_id=_SESSION_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-    dispose_engine()
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(session):
-        try:
-            yield
-        finally:
-            dispose_engine()
+def isolated_secure_store(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
+        yield profile
 
 
 def test_derive_census_snapshot_id_is_deterministic_over_canonical_inputs() -> None:
@@ -165,7 +147,7 @@ def test_superseded_snapshot_requires_successor_pointer() -> None:
 
 
 def test_census_snapshot_survives_encrypted_storage_roundtrip(
-    isolated_secure_store: None,
+    isolated_secure_store: TestRuntimeProfile,
     tmp_path: Path,
 ) -> None:
     """The populated snapshot round-trips through the encrypted store
@@ -193,7 +175,7 @@ def test_census_snapshot_survives_encrypted_storage_roundtrip(
     repo.save(original)
     loaded = repo.load(original.snapshot_id)
 
-    assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").is_file()
+    assert (isolated_secure_store.storage_root / "buckets" / bucket_id / "db" / "aeat.db").is_file()
     # Compare via model_dump so datetime tzinfo identity (UTC singleton
     # vs pydantic-core TzInfo(0)) doesn't sabotage the round-trip
     # equality check; the values are semantically identical.

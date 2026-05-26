@@ -10,35 +10,33 @@ row, every fincas-register roundtrip in the suite is tautological.
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-    create_engine_from_settings,
     session_scope,
 )
-from aeat.adapters.persistence.storage.crypto._crypto import KEY_SIZE
-from aeat.adapters.persistence.storage.sql._orm import Base, FincaRow
-from aeat.core.config import Settings
+from aeat.adapters.persistence.storage.sql._orm import FincaRow
+from aeat.adapters.persistence.storage.sql.engine import get_engine
 from aeat.domain.fincas import (
     Finca,
     FincaRepository,
     UseType,
 )
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key() -> Iterator[None]:
-    with EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)):
-        yield
+def engine(tmp_path: Path) -> Iterator[Engine]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield get_engine(profile.settings)
 
 
 def _populated_finca() -> Finca:
@@ -59,42 +57,35 @@ def _populated_finca() -> Finca:
     )
 
 
-def test_finca_roundtrip_strict_equality(tmp_path: Path) -> None:
+def test_finca_roundtrip_strict_equality(engine: Engine) -> None:
     """A populated Finca round-trips through real SQLite with strict equality."""
 
-    db_path = tmp_path / "fincas-roundtrip.db"
-    settings = Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
-    try:
-        original = _populated_finca()
-        with session_scope(engine) as session:
-            repo = FincaRepository(session)
-            saved = repo.upsert(original)
-            assert saved.id is not None
+    original = _populated_finca()
+    with session_scope(engine) as session:
+        repo = FincaRepository(session)
+        saved = repo.upsert(original)
+        assert saved.id is not None
 
-        with session_scope(engine) as session:
-            repo = FincaRepository(session)
-            loaded = repo.get(saved.id)
+    with session_scope(engine) as session:
+        repo = FincaRepository(session)
+        loaded = repo.get(saved.id)
 
-        # Strict equality across the boundary; populated-field comparison.
-        assert loaded.identifier == original.identifier
-        assert loaded.address == original.address
-        assert loaded.valor_catastral_total == original.valor_catastral_total
-        assert loaded.valor_catastral_construccion == original.valor_catastral_construccion
-        assert loaded.valor_catastral_revision_year == original.valor_catastral_revision_year
-        assert loaded.coste_adquisicion == original.coste_adquisicion
-        assert loaded.coste_adquisicion_construccion == original.coste_adquisicion_construccion
-        assert loaded.acquisition_date == original.acquisition_date
-        assert loaded.disposal_date == original.disposal_date
-        assert loaded.use_type is original.use_type
-        assert loaded.is_stressed_area == original.is_stressed_area
-        assert loaded.schema_version == original.schema_version
-    finally:
-        engine.dispose()
+    # Strict equality across the boundary; populated-field comparison.
+    assert loaded.identifier == original.identifier
+    assert loaded.address == original.address
+    assert loaded.valor_catastral_total == original.valor_catastral_total
+    assert loaded.valor_catastral_construccion == original.valor_catastral_construccion
+    assert loaded.valor_catastral_revision_year == original.valor_catastral_revision_year
+    assert loaded.coste_adquisicion == original.coste_adquisicion
+    assert loaded.coste_adquisicion_construccion == original.coste_adquisicion_construccion
+    assert loaded.acquisition_date == original.acquisition_date
+    assert loaded.disposal_date == original.disposal_date
+    assert loaded.use_type is original.use_type
+    assert loaded.is_stressed_area == original.is_stressed_area
+    assert loaded.schema_version == original.schema_version
 
 
-def test_finca_invariant_violation_surfaces_on_reload(tmp_path: Path) -> None:
+def test_finca_invariant_violation_surfaces_on_reload(engine: Engine) -> None:
     """Anti-tautology: mutating the on-disk row to violate an invariant must surface.
 
     The Finca model_validator enforces
@@ -108,34 +99,27 @@ def test_finca_invariant_violation_surfaces_on_reload(tmp_path: Path) -> None:
     fincas-register roundtrip in the suite is suspect.
     """
 
-    db_path = tmp_path / "fincas-anti-tautology.db"
-    settings = Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
+    original = _populated_finca()
+    with session_scope(engine) as session:
+        saved = FincaRepository(session).upsert(original)
+        assert saved.id is not None
+
+    # Surgical mutation: set construccion > total to violate the invariant.
+    with session_scope(engine) as session:
+        row = session.get(FincaRow, saved.id)
+        assert row is not None
+        row.valor_catastral_construccion = Decimal("999999.99")
+
+    regression_caught = False
     try:
-        original = _populated_finca()
         with session_scope(engine) as session:
-            saved = FincaRepository(session).upsert(original)
-            assert saved.id is not None
+            FincaRepository(session).get(saved.id)
+    except Exception:
+        regression_caught = True
 
-        # Surgical mutation: set construccion > total to violate the invariant.
-        with session_scope(engine) as session:
-            row = session.get(FincaRow, saved.id)
-            assert row is not None
-            row.valor_catastral_construccion = Decimal("999999.99")
-
-        regression_caught = False
-        try:
-            with session_scope(engine) as session:
-                FincaRepository(session).get(saved.id)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
-            regression_caught = True
-
-        assert regression_caught, (
-            "anti-tautology proof failed: corrupting valor_catastral_construccion "
-            "to exceed valor_catastral_total did NOT surface on reload. The "
-            "fincas-register boundary is tautological and every roundtrip in "
-            "the suite is suspect."
-        )
-    finally:
-        engine.dispose()
+    assert regression_caught, (
+        "anti-tautology proof failed: corrupting valor_catastral_construccion "
+        "to exceed valor_catastral_total did NOT surface on reload. The "
+        "fincas-register boundary is tautological and every roundtrip in "
+        "the suite is suspect."
+    )

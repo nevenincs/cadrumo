@@ -7,16 +7,18 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
+from aeat.core.config import SecretStoreBackend
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _env(tmp_path: Path) -> dict[str, str]:
     return {
-        "AEAT_SECRET_STORE_BACKEND": "unsecured",
-        "AEAT_ALLOW_UNENCRYPTED": "1",
-        "AEAT_DATABASE_URL": f"sqlite:///{(tmp_path / 'setup.db').as_posix()}",
+        "AEAT_SECRET_STORE_BACKEND": SecretStoreBackend.FILE.value,
+        PASSPHRASE_ENV_VAR: dev_test_database_password(),
         "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
         "AEAT_RUNS_DIR": str(tmp_path / "runs"),
         "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),

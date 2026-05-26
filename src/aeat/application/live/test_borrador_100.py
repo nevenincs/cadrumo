@@ -11,23 +11,20 @@ import pytest
 
 from aeat.adapters.persistence.storage import (
     Envelope,
-    EphemeralMasterKeyProvider,
     SensitivityClass,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.live import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
-    SnapshotLifecycleState,
     LiveApplicationInputError,
+    SnapshotLifecycleState,
     borrador_100_snapshot_object_key,
     derive_borrador_100_snapshot_id,
 )
-from aeat.core.config import Settings
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -38,15 +35,8 @@ _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "borrador_100_live.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield profile.repository
 
 
 def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
