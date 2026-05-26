@@ -289,3 +289,130 @@ extension — the architectural decision is recorded alongside the
 casilla-values-collapse decision because they share the same
 "contract typed at the boundary" theme.
 
+## Third topic: JSON envelope migration for modelo work-lifecycle commands
+
+Pre-flight research for `linkage-design-audit` plan step `P09.S40`
+(extend the linkage research with a json-envelope-migration
+section). The intent is to formalise the migration sequencing for
+`emit_json_success`/`SchemaEnvelope` adoption across the modelo
+work-lifecycle command surface — a contract-breaking change to
+the JSON output shape that the cross-campaign CLI work has so far
+deferred.
+
+### Current state — bare-payload emit
+
+Today's CLI work-lifecycle commands (`work create`, `work list`,
+`work status`, `work rename`, `work discard`, `work calculate`,
+`work verify`, `work file`, `work amend`, `work revisions`,
+`work revision`) call `_emit(ctx, payload, lines)` from
+`src/aeat/entrypoints/cli/_common.py`. `_emit` routes the
+`payload` argument straight to `render_command_output` which
+either echoes the text lines or `json.dumps`-es the raw payload.
+No envelope wrapping; no `schema_version`, `command`, or
+`warnings` keys on the way out.
+
+The April 2026 `json-output-contract` audit documented this
+explicitly: "newly registered emitters do not use it: they write
+raw objects or arrays directly from command code… `aeat --json
+modelos show 303` returns a bare metadata object with no
+`schema_version` or `result`, and `test_json_schema_conformance.py`
+then locks that raw shape into the registry tests."
+
+### Target shape — `emit_json_success` + `SchemaEnvelope`
+
+`aeat.core.json_contract.emit_json_success(command, result, *,
+warnings=None, indent=2, sort_keys=False, stream=None)` wraps the
+payload in:
+
+```
+{
+  "schema_version": "1",
+  "command": "<stable command path>",
+  "result": <payload>,
+  "warnings": [...],
+}
+```
+
+The typed `OutputSchema` subclasses + `@register_schema("...")`
+decorators are already landed at
+`src/aeat/entrypoints/cli/_modelo_payloads.py` for the
+work-lifecycle commands — `WorkCreateResult`, `WorkListResult`,
+`WorkStatusResult`, `WorkRenameResult`, `WorkDiscardResult`, plus
+`@register_schema("modelo.work.calculate")` and others. The
+infrastructure is ready; what's missing is the routing.
+
+### Constraint surface — downstream consumers
+
+Three classes of consumer depend on today's bare-payload shape:
+
+- **`test_json_schema_conformance.py`** at
+  `src/aeat/entrypoints/cli/test_json_schema_conformance.py`
+  asserts bare-payload shape for every registered command
+  (lines 167-169 cited in the audit). Acts as the regression
+  cap: changing the wire shape requires re-baselining this test.
+- **Per-command CLI surface tests** (~30+ files under
+  `src/aeat/entrypoints/cli/test_*.py`) that probe JSON output
+  via `runner.invoke(app, [..., "--json"])` and assert on the
+  bare payload keys.
+- **Downstream tooling** — none in-tree today; the JSON-output
+  contract audit notes the envelope-vs-bare question is the
+  compatibility boundary for future external consumers.
+
+### Sequencing strategies
+
+**Strategy A — whole-surface flip in one commit.** Migrate every
+work-lifecycle command to `emit_json_success` in a single commit;
+re-baseline the conformance test + every probing test to expect
+the envelope. Largest single commit; smallest window of
+inconsistency; downstream consumers all hit the new shape
+simultaneously.
+
+**Strategy B — per-command incremental.** Migrate one command at
+a time, re-baselining its tests in the same commit. Smaller
+commits; the suite is briefly inconsistent (some commands return
+envelope, others return bare) but each command is internally
+consistent at every commit boundary. Requires the conformance
+test to accept BOTH shapes during migration, then tightens back
+to envelope-only when every command is migrated.
+
+**Strategy C — dual-emit compatibility window.** Update `_emit`
+itself to accept an optional `command_path` argument; when
+present, wrap in envelope; when absent, fall back to bare
+payload. Each command opts in by passing `command_path`. The
+conformance test asserts envelope shape for opted-in commands
+and bare for the rest. Migration shape per-command; opt-out
+shape preserved permanently for commands that don't need it.
+
+### Cross-campaign collision check
+
+The cli-workflow-redesign campaign owns the JSON contract space
+per the `2026-04-25-json-output-contract-audit` document. Its
+epic plan does not currently carry a JSON-envelope-migration step
+explicitly; that work logically lives under the linkage-design-audit
+P05.S24 row, now pulled into P09.S42-S44. No direct overlap; the
+cli-workflow-redesign campaign's authority documents are the
+input to this decision, not a competing path.
+
+### Recommendation surface
+
+Strategy B (per-command incremental) gives the smallest commit
+risk + the clearest migration progress signal. The work-lifecycle
+surface is 11 commands; one commit per command makes review and
+revert mechanically simple. The conformance test gains a
+short-lived "accepts both shapes" mode for the migration window;
+each per-command commit tightens the per-command expectation.
+Once every work-lifecycle command is migrated, the conformance
+test tightens to envelope-only for the work-lifecycle surface
+(other CLI surfaces remain bare until their own migration ADRs).
+
+Strategy A creates a single bisect-friendly cutover but
+concentrates risk and review burden. Strategy C bakes a
+permanent dual-shape into the emit helper, eroding the "envelope
+is the contract" intent the json-output-contract audit
+established.
+
+ADR follows in the same `2026-05-26-linkage-design-audit-adr`
+extension — third decision under the boundary-typed-contracts
+theme.
+
+
