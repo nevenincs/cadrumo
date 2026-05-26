@@ -36,7 +36,10 @@ from ._validate_revision_identity import (
     _emit_completeness_gate_failures,
     _emit_per_kind_duplicate_failures,
 )
-from ._validate_revision_rules import validate_reconciliation_total_closure
+from ._validate_revision_rules import (
+    validate_bracket_table_temporal_coverage,
+    validate_reconciliation_total_closure,
+)
 from ._validate_surfaces import (
     validate_application_link_section,
     validate_cross_reference_section,
@@ -229,6 +232,7 @@ def validate_revision_definition(
     )
     failures.extend(validate_application_link_closure(prefix, revision, modelo_id=modelo.id))
     failures.extend(validate_reconciliation_total_closure(prefix, revision))
+    failures.extend(validate_bracket_table_temporal_coverage(prefix, revision))
     failures.extend(
         validate_construct_closure(
             prefix,

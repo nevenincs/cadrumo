@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date, timedelta
 
-from ._schema import DatedValue, ModeloDefinition, ModeloRevision
+from ._schema import DatedValue, ModeloDefinition, ModeloRevision, ParameterDefinition
 from ._validate_relation_sources import period_selectors_overlap
+
+_FAR_FUTURE = date(9999, 12, 31)
 
 
 def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
@@ -62,6 +65,102 @@ def validate_dated_values(scope: str, parameter_id: str, values: Iterable[DatedV
             previous_to = previous.valid_to
             if previous_to is None or previous_to >= current.valid_from:
                 failures.append(f"{scope}: parameter {parameter_id!r} has overlapping {axis} values")
+    return failures
+
+
+def _bracket_windows_for_parameter(parameter: ParameterDefinition) -> list[tuple[date, date]]:
+    """Return the sorted list of ``(effective_from, effective_to)`` windows.
+
+    Each distinct ``valid_from`` date across all brackets defines one window.
+    The window ends at the latest ``valid_to`` among the brackets that share
+    that ``valid_from``; an open-ended bracket (``valid_to = None``) makes the
+    entire window open-ended, represented here as ``_FAR_FUTURE``.
+    """
+    window_to: dict[date, date] = {}
+    for bracket in parameter.brackets:
+        wf = bracket.valid_from
+        effective_wt = bracket.valid_to if bracket.valid_to is not None else _FAR_FUTURE
+        window_to[wf] = max(window_to.get(wf, date.min), effective_wt)
+    return sorted(window_to.items())
+
+
+def _bracket_coverage_gaps(
+    parameter: ParameterDefinition,
+    revision_from: date,
+    revision_to: date | None,
+) -> list[tuple[date, date]]:
+    """Return date gaps in ``parameter``'s bracket windows relative to the revision range.
+
+    Only ``bracket_table`` parameters with ``bracket_axis = "filing_period"`` are
+    examined; all others return an empty list immediately.
+
+    A gap is a contiguous date interval within ``[revision_from, effective_revision_to]``
+    not covered by any bracket window (where ``effective_revision_to = _FAR_FUTURE``
+    when ``revision_to`` is ``None``).  Open-ended revisions are not validated for
+    completeness beyond their last bracket window — gaps are only reported when
+    ``revision_to`` is set or when there are windows with explicit ``valid_to``
+    dates that leave holes before another window begins.
+    """
+    if parameter.data_type != "bracket_table" or parameter.bracket_axis != "filing_period":
+        return []
+
+    windows = _bracket_windows_for_parameter(parameter)
+    if not windows:
+        return []
+
+    effective_revision_to = revision_to if revision_to is not None else _FAR_FUTURE
+    gaps: list[tuple[date, date]] = []
+
+    # Walk from revision_from through the sorted windows, tracking coverage frontier.
+    frontier = revision_from
+
+    for wf, wt in windows:
+        # Clamp window to revision range.
+        clamp_wf = max(wf, revision_from)
+        clamp_wt = min(wt, effective_revision_to)
+        if clamp_wf > effective_revision_to or clamp_wt < revision_from:
+            continue  # window entirely outside revision range
+        if frontier < clamp_wf:
+            # Gap between frontier and this window's start.
+            gaps.append((frontier, clamp_wf - timedelta(days=1)))
+        if clamp_wt >= frontier:
+            if clamp_wt == _FAR_FUTURE:
+                # Open-ended window covers everything forward; no further gaps.
+                return gaps
+            frontier = clamp_wt + timedelta(days=1)
+
+    # Tail gap: after all windows but before revision_to (only when bounded).
+    if revision_to is not None and frontier <= effective_revision_to:
+        gaps.append((frontier, effective_revision_to))
+
+    return gaps
+
+
+def validate_bracket_table_temporal_coverage(
+    scope: str, revision: ModeloRevision
+) -> list[str]:
+    """Surface bracket_table parameters whose windows gap the revision date range.
+
+    Every ``bracket_table`` parameter with ``bracket_axis = "filing_period"``
+    must have at least one bracket window covering every date in the revision's
+    ``[valid_from, valid_to]`` range (or from ``valid_from`` to the first
+    bracket window's ``valid_to`` when the revision is open-ended).
+
+    A gap detected here would otherwise surface at runtime as a
+    ``bracket_no_window`` error when an operator files for a period in the
+    uncovered range — this validator promotes that to a registry-load failure.
+    """
+    failures: list[str] = []
+    for parameter in revision.parameters:
+        if parameter.data_type != "bracket_table" or parameter.bracket_axis != "filing_period":
+            continue
+        gaps = _bracket_coverage_gaps(parameter, revision.valid_from, revision.valid_to)
+        for gap_start, gap_end in gaps:
+            failures.append(
+                f"{scope}: bracket_table parameter {parameter.id!r} has no bracket "
+                f"covering [{gap_start.isoformat()}, {gap_end.isoformat()}] "
+                f"within revision date range starting {revision.valid_from.isoformat()}"
+            )
     return failures
 
 
