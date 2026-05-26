@@ -237,7 +237,12 @@ def _resolve_active_profile_label(bucket_id: str | None) -> str | None:
 
     try:
         pointer = read_profile_bucket_by_id(bucket_id)
-    except (OSError, ValueError):
+    except (OSError, ValueError) as exc:
+        _log.debug(
+            "state projection: unable to resolve active-profile label for bucket_id=%s",
+            bucket_id,
+            exc_info=exc,
+        )
         return None
     return pointer.label if pointer is not None else None
 
