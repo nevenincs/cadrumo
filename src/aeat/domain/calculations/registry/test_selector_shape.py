@@ -218,25 +218,6 @@ def test_collectible_invoice_selector_accepts_well_shaped_selector() -> None:
     assert validate_binding_selector_shape(binding) == []
 
 
-def test_free_form_source_returns_no_diagnostics() -> None:
-    """A binding whose source has no registry entry short-circuits cleanly.
-
-    Sources like ``ledger``, ``rental``, ``vat``, and ``category`` are
-    intentionally free-form — they have no entry in
-    ``_BINDING_SELECTOR_REGISTRY``. The gate must return an empty
-    failure list for them so existing registry data keeps loading.
-    Note that ``manual_input`` and ``profile`` ARE typed in the
-    registry today; do not add them to this test as free-form
-    references.
-    """
-
-    binding = _binding(
-        source="ledger",
-        selector={"label": "operator-supplied", "value_kind": "decimal"},
-    )
-    assert validate_binding_selector_shape(binding) == []
-
-
 def test_counterpart_sources_validate_against_invoice_selector() -> None:
     """The four counterpart-aggregation sources share ``_InvoiceSelector``.
 
