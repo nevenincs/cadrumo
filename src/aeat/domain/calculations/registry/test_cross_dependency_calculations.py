@@ -533,6 +533,10 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
             "DP200014B:00592": Decimal("12000"),
         },
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+        },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,
     )

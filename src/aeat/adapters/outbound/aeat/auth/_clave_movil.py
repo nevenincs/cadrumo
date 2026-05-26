@@ -554,7 +554,15 @@ class ClaveMovilAuthProvider:
         )
 
     def describe(self) -> AuthProviderDescription:
-        """Return an operator-readable description of the Cl@ve Móvil provider state."""
+        """Return an operator-readable description of the Cl@ve Móvil provider state.
+
+        Severity is set explicitly here so a normal pending state — Cl@ve
+        Móvil completion requires an operator-mediated tap on the phone —
+        is paired with ``info``, never the loudest ``error`` token
+        (round-5 M5). A malformed identity is a real configuration
+        fault and surfaces as ``warning``; the no-identity case is an
+        undeclared state and surfaces as ``info``.
+        """
         dni_nie = (self._settings.aeat_clave_movil_dni_nie or "").strip()
         if not dni_nie:
             return AuthProviderDescription(
@@ -562,7 +570,8 @@ class ClaveMovilAuthProvider:
                 label="Cl@ve Móvil",
                 configured=False,
                 available=False,
-                health_summary="AEAT_CLAVE_MOVIL_DNI_NIE not set",
+                health_severity="info",
+                health_summary=tr("application.auth.clave_movil.health.identity_unset"),
             )
         try:
             _classify_identity(dni_nie)
@@ -573,6 +582,7 @@ class ClaveMovilAuthProvider:
                 configured=True,
                 available=False,
                 identity_nif=dni_nie.upper(),
+                health_severity="warning",
                 health_summary=str(exc),
             )
         # Cl@ve Móvil requires operator-mediated live auth, so availability
@@ -583,6 +593,7 @@ class ClaveMovilAuthProvider:
             configured=True,
             available=True,
             identity_nif=dni_nie.upper(),
+            health_severity="info",
             health_summary=tr("application.auth.clave_movil.health.operator_completion_required"),
         )
 

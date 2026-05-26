@@ -1,4 +1,4 @@
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.general"
 number = "iva.repercutido.general"
 label = "Cuota IVA repercutido al tipo general (21%)"
@@ -11,7 +11,7 @@ binding = "modelo-303-iva-repercutido-general-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.reducido"
 number = "iva.repercutido.reducido"
 label = "Cuota IVA repercutido al tipo reducido (10%)"
@@ -24,7 +24,7 @@ binding = "modelo-303-iva-repercutido-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.repercutido.super-reducido"
 number = "iva.repercutido.super-reducido"
 label = "Cuota IVA repercutido al tipo super-reducido (4%)"
@@ -37,7 +37,7 @@ binding = "modelo-303-iva-repercutido-super-reducido-cuota"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.soportado.interiores"
 number = "iva.soportado.interiores"
 label = "Cuota IVA soportado en operaciones interiores corrientes"
@@ -50,7 +50,7 @@ binding = "modelo-303-iva-soportado-interiores-cuota"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.autorepercutido.intracomunitaria"
 number = "iva.autorepercutido.intracomunitaria"
 label = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (LIVA art 84.Uno.2)"
@@ -63,7 +63,7 @@ binding = "modelo-303-iva-autorepercutido-intracomunitaria-cuota"
 legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 label = "Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido en adquisiciones intracomunitarias)"
@@ -76,7 +76,7 @@ formula = "modelo-303-iva-cuota-devengada-total"
 legal_refs = ["ley-37-1992:art-88", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.cuota-deducible-total"
 number = "iva.cuota-deducible-total"
 label = "Total cuota IVA deducible (soportado en operaciones interiores + autorepercutido deducible)"
@@ -89,7 +89,7 @@ formula = "modelo-303-iva-cuota-deducible-total"
 legal_refs = ["ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.resultado-regimen-general"
 number = "iva.resultado-regimen-general"
 label = "Resultado del regimen general (cuota devengada - cuota deducible)"
@@ -104,7 +104,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-46"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-volumen-con-derecho"
 number = "prorrata-volumen-con-derecho"
 label = "Volumen anual de operaciones que originan derecho a deducción"
@@ -116,12 +116,12 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-104"]
 source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-volumen-total"
 number = "prorrata-volumen-total"
 label = "Volumen anual total de operaciones"
@@ -133,12 +133,12 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-104"]
 source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.prorrata-porcentaje"
 number = "prorrata-porcentaje"
 label = "Prorrata general — porcentaje (volumen con derecho / volumen total × 100)"
@@ -151,14 +151,14 @@ formula = "modelo-303-iva-prorrata-porcentaje"
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-102", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 min_value = "0"
 max_value = "100"
 legal_refs = ["ley-37-1992:art-104"]
 source_refs = ["aeat-modelo-303-procedure"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.regularizacion-inversiones"
 number = "regularizacion-inversiones"
 label = "Regularización por bienes de inversión (LIVA arts. 107-110)"
@@ -170,7 +170,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-pendiente-periodos-anteriores"
 number = "110"
 label = "Cuotas a compensar pendientes de periodos anteriores"
@@ -185,12 +185,12 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-110"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-aplicada-periodo"
 number = "78"
 label = "Cuotas a compensar de periodos anteriores aplicadas en este periodo"
@@ -204,12 +204,12 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-78"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-pendiente-periodos-posteriores"
 number = "87"
 label = "Cuotas a compensar de periodos previos pendientes para periodos posteriores"
@@ -224,12 +224,12 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-87"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.resultado"
 number = "69"
 label = "Resultado de la autoliquidacion"
@@ -243,7 +243,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 export_refs = ["modelo-303-page-03-casilla-69"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-disponible-fin-periodo"
 number = "compensacion-disponible-fin-periodo"
 label = "Saldo de compensacion disponible para periodos posteriores"
@@ -256,12 +256,12 @@ formula = "modelo-303-compensacion-disponible-fin-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.compensacion-generada-periodo"
 number = "compensacion-generada-periodo"
 label = "Saldo a compensar generado en este periodo"
@@ -274,12 +274,12 @@ formula = "modelo-303-compensacion-generada-periodo"
 legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-71", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
 
-[revisions.2009-y-siguientes.casillas.constraints]
+[revisions.2023-y-siguientes.casillas.constraints]
 sign = "non_negative"
 legal_refs = ["ley-37-1992:art-99"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
 label = "Ejercicio al que se refiere la autoliquidacion"
@@ -291,7 +291,7 @@ input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["boe-modelo-303-2008-form"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "decl.periodo"
 number = "periodo"
 label = "Periodo trimestral (1T / 2T / 3T / 4T)"
@@ -303,7 +303,7 @@ input_kind = "informational"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["boe-modelo-303-2008-form"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "150"
 number = "150"
 label = "IVA devengado regimen general nuevo tipo tier 1 - Base imponible"
@@ -316,7 +316,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-150"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "151"
 number = "151"
 label = "IVA devengado regimen general nuevo tipo tier 1 - Tipo porcentaje"
@@ -328,7 +328,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "152"
 number = "152"
 label = "IVA devengado regimen general nuevo tipo tier 1 - Cuota"
@@ -341,7 +341,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-152"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "153"
 number = "153"
 label = "IVA devengado regimen general nuevo tipo tier 2 - Base imponible"
@@ -354,7 +354,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-153"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "154"
 number = "154"
 label = "IVA devengado regimen general nuevo tipo tier 2 - Tipo porcentaje"
@@ -367,7 +367,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-154"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "155"
 number = "155"
 label = "IVA devengado regimen general nuevo tipo tier 2 - Cuota"
@@ -380,7 +380,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-155"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "156"
 number = "156"
 label = "Recargo equivalencia tipo 0.5pct - Base imponible"
@@ -393,7 +393,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-156"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "157"
 number = "157"
 label = "Recargo equivalencia tipo 0.5pct - Tipo porcentaje"
@@ -405,7 +405,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "158"
 number = "158"
 label = "Recargo equivalencia tipo 0.5pct - Cuota"
@@ -418,7 +418,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-158"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "165"
 number = "165"
 label = "IVA devengado regimen general tipo 2pct desde 2024 - Base imponible"
@@ -431,7 +431,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-165"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "166"
 number = "166"
 label = "IVA devengado regimen general tipo 2pct desde 2024 - Tipo porcentaje"
@@ -443,7 +443,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "167"
 number = "167"
 label = "IVA devengado regimen general tipo 2pct desde 2024 - Cuota"
@@ -456,7 +456,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-167"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "168"
 number = "168"
 label = "Recargo equivalencia nuevo tipo desde 2024 - Base imponible"
@@ -469,7 +469,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-168"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "169"
 number = "169"
 label = "Recargo equivalencia nuevo tipo desde 2024 - Tipo porcentaje"
@@ -482,7 +482,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-169"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "170"
 number = "170"
 label = "Recargo equivalencia nuevo tipo desde 2024 - Cuota"
@@ -495,7 +495,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-170"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "01"
 number = "01"
 label = "IVA devengado RG tipo super-reducido 4pct - Base imponible"
@@ -508,7 +508,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-01"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "02"
 number = "02"
 label = "IVA devengado RG tipo super-reducido 4pct - Tipo porcentaje"
@@ -520,7 +520,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "03"
 number = "03"
 label = "IVA devengado RG tipo super-reducido 4pct - Cuota"
@@ -533,7 +533,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-03"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "04"
 number = "04"
 label = "IVA devengado RG tipo reducido 10pct - Base imponible"
@@ -546,7 +546,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-04"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "05"
 number = "05"
 label = "IVA devengado RG tipo reducido 10pct - Tipo porcentaje"
@@ -558,7 +558,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "06"
 number = "06"
 label = "IVA devengado RG tipo reducido 10pct - Cuota"
@@ -571,7 +571,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-06"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "07"
 number = "07"
 label = "IVA devengado RG tipo general 21pct - Base imponible"
@@ -584,7 +584,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-07"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "08"
 number = "08"
 label = "IVA devengado RG tipo general 21pct - Tipo porcentaje"
@@ -596,7 +596,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "09"
 number = "09"
 label = "IVA devengado RG tipo general 21pct - Cuota"
@@ -609,7 +609,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-09"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "10"
 number = "10"
 label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Base"
@@ -622,7 +622,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-10"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "11"
 number = "11"
 label = "IVA devengado adquisiciones intracomunitarias bienes y servicios - Cuota"
@@ -635,7 +635,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-11"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "12"
 number = "12"
 label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Base"
@@ -648,7 +648,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-12"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "13"
 number = "13"
 label = "IVA devengado otras ops inversion sujeto pasivo excl intracom - Cuota"
@@ -661,7 +661,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-13"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "14"
 number = "14"
 label = "Modificacion bases y cuotas IVA devengado - Base imponible"
@@ -674,7 +674,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-14"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "15"
 number = "15"
 label = "Modificacion bases y cuotas IVA devengado - Cuota"
@@ -687,7 +687,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-15"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "16"
 number = "16"
 label = "Recargo equivalencia tipo 1.0pct - Base imponible"
@@ -700,7 +700,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-16"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "17"
 number = "17"
 label = "Recargo equivalencia tipo 1.0pct - Tipo porcentaje"
@@ -713,7 +713,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-17"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "18"
 number = "18"
 label = "Recargo equivalencia tipo 1.0pct - Cuota"
@@ -726,7 +726,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-18"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "19"
 number = "19"
 label = "Recargo equivalencia tipo 1.4pct - Base imponible"
@@ -739,7 +739,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-19"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "20"
 number = "20"
 label = "Recargo equivalencia tipo 1.4pct - Tipo porcentaje"
@@ -751,7 +751,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "21"
 number = "21"
 label = "Recargo equivalencia tipo 1.4pct - Cuota"
@@ -764,7 +764,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-21"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "22"
 number = "22"
 label = "Recargo equivalencia tipo 5.2pct - Base imponible"
@@ -777,7 +777,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-22"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "23"
 number = "23"
 label = "Recargo equivalencia tipo 5.2pct - Tipo porcentaje"
@@ -789,7 +789,7 @@ input_kind = "manual"
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "24"
 number = "24"
 label = "Recargo equivalencia tipo 5.2pct - Cuota"
@@ -802,7 +802,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-24"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "25"
 number = "25"
 label = "Modificacion bases y cuotas recargo equivalencia - Base imponible"
@@ -815,7 +815,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-25"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "26"
 number = "26"
 label = "Modificacion bases y cuotas recargo equivalencia - Cuota"
@@ -828,7 +828,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-26"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "27"
 number = "27"
 label = "Total cuota devengada"
@@ -841,7 +841,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-27"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "28"
 number = "28"
 label = "IVA deducible ops interiores corrientes - Base"
@@ -854,7 +854,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-28"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "29"
 number = "29"
 label = "IVA deducible ops interiores corrientes - Cuota"
@@ -867,7 +867,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-29"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "30"
 number = "30"
 label = "IVA deducible ops interiores bienes inversion - Base"
@@ -880,7 +880,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-30"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "31"
 number = "31"
 label = "IVA deducible ops interiores bienes inversion - Cuota"
@@ -893,7 +893,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-31"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "32"
 number = "32"
 label = "IVA deducible importaciones bienes corrientes - Base"
@@ -906,7 +906,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-32"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "33"
 number = "33"
 label = "IVA deducible importaciones bienes corrientes - Cuota"
@@ -919,7 +919,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-33"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "34"
 number = "34"
 label = "IVA deducible importaciones bienes inversion - Base"
@@ -932,7 +932,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-34"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "35"
 number = "35"
 label = "IVA deducible importaciones bienes inversion - Cuota"
@@ -945,7 +945,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-35"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "36"
 number = "36"
 label = "IVA deducible adquisiciones intracomunitarias corrientes - Base"
@@ -958,7 +958,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-36"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "37"
 number = "37"
 label = "IVA deducible adquisiciones intracomunitarias corrientes - Cuota"
@@ -971,7 +971,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-37"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "38"
 number = "38"
 label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Base"
@@ -984,7 +984,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-38"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "39"
 number = "39"
 label = "IVA deducible adquisiciones intracomunitarias bienes inversion - Cuota"
@@ -997,7 +997,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-39"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "40"
 number = "40"
 label = "Rectificacion deducciones - Base"
@@ -1010,7 +1010,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-40"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "41"
 number = "41"
 label = "Rectificacion deducciones - Cuota"
@@ -1023,7 +1023,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-41"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "42"
 number = "42"
 label = "Compensaciones regimen especial agricultura ganaderia y pesca - Cuota"
@@ -1036,7 +1036,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-42"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "43"
 number = "43"
 label = "Regularizacion bienes de inversion - Cuota"
@@ -1049,7 +1049,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-43"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "44"
 number = "44"
 label = "Regularizacion prorrata por porcentaje definitivo - Cuota"
@@ -1062,7 +1062,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-44"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "45"
 number = "45"
 label = "Total a deducir - Cuota"
@@ -1075,7 +1075,7 @@ legal_refs = ["ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", 
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-01-casilla-45"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "47"
 number = "47"
 label = "RS - 1T-2T-3T - Suma ingresos a cuenta conjunto actividades"
@@ -1088,7 +1088,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-47"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "48"
 number = "48"
 label = "RS - 4T - Suma cuotas derivadas regimen simplificado conjunto actividades"
@@ -1101,7 +1101,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-48"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "49"
 number = "49"
 label = "RS - 4T - Suma ingresos a cuenta realizados en el ejercicio"
@@ -1114,7 +1114,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-49"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "50"
 number = "50"
 label = "RS - 4T - Resultado ([48]-[49])"
@@ -1127,7 +1127,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-50"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "51"
 number = "51"
 label = "RS - Cuotas devengadas adquisiciones intracomunitarias bienes"
@@ -1140,7 +1140,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-51"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "52"
 number = "52"
 label = "RS - Cuotas devengadas entregas activos fijos"
@@ -1153,7 +1153,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-52"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "53"
 number = "53"
 label = "RS - Cuotas devengadas IVA devengado inversion sujeto pasivo"
@@ -1166,7 +1166,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-53"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "54"
 number = "54"
 label = "RS - Total cuota resultante"
@@ -1179,7 +1179,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-54"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "55"
 number = "55"
 label = "RS - IVA deducible adquisicion o importacion activos fijos"
@@ -1192,7 +1192,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-55"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "56"
 number = "56"
 label = "RS - IVA deducible regularizacion bienes inversion"
@@ -1205,7 +1205,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-56"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "57"
 number = "57"
 label = "RS - Total IVA deducible regimen simplificado ([55]+[56])"
@@ -1218,7 +1218,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-57"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "58"
 number = "58"
 label = "RS - Resultado regimen simplificado ([54]-[57])"
@@ -1231,7 +1231,7 @@ legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-02-casilla-58"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "59"
 number = "59"
 label = "Informacion adicional - Entregas intracomunitarias bienes y servicios"
@@ -1244,7 +1244,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-59"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "60"
 number = "60"
 label = "Informacion adicional - Exportaciones y operaciones asimiladas"
@@ -1257,7 +1257,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-60"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "120"
 number = "120"
 label = "Informacion adicional - Ops no sujetas reglas localizacion (excl casilla 123)"
@@ -1270,7 +1270,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-120"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "122"
 number = "122"
 label = "Informacion adicional - Ops sujetas inversion sujeto pasivo"
@@ -1283,7 +1283,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-122"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "123"
 number = "123"
 label = "Informacion adicional - Ops no sujetas localizacion regimenes especiales ventanilla unica"
@@ -1296,7 +1296,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-123"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "124"
 number = "124"
 label = "Informacion adicional - Ops sujetas regimenes especiales ventanilla unica"
@@ -1309,7 +1309,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-124"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "62"
 number = "62"
 label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Base imponible"
@@ -1322,7 +1322,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-62"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "63"
 number = "63"
 label = "Informacion adicional - Entregas criterio caja devengado art 75 LIVA - Cuota"
@@ -1335,7 +1335,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-63"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "74"
 number = "74"
 label = "Informacion adicional - Adquisiciones criterio caja - Base imponible"
@@ -1348,7 +1348,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-74"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "75"
 number = "75"
 label = "Informacion adicional - Adquisiciones criterio caja - Cuota"
@@ -1361,7 +1361,7 @@ legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71",
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-75"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "76"
 number = "76"
 label = "Resultado - Regularizacion cuotas art 80 cinco 5a LIVA"
@@ -1374,7 +1374,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-76"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "64"
 number = "64"
 label = "Resultado - Suma de resultados ([46]+[58]+[76])"
@@ -1387,7 +1387,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-64"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "65"
 number = "65"
 label = "Resultado - Porcentaje atribuible Administracion del Estado"
@@ -1400,7 +1400,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-65"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "66"
 number = "66"
 label = "Resultado - Importe atribuible Administracion del Estado"
@@ -1413,7 +1413,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-66"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "77"
 number = "77"
 label = "Resultado - IVA a la importacion liquidado por la Aduana pendiente de ingreso"
@@ -1426,7 +1426,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-77"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "68"
 number = "68"
 label = "Resultado - Tributacion conjunta resultado regularizacion anual"
@@ -1439,7 +1439,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-68"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "70"
 number = "70"
 label = "Resultado - Resultados a ingresar de anteriores autoliquidaciones del ejercicio y periodo"
@@ -1452,7 +1452,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-70"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "109"
 number = "109"
 label = "Resultado - Devoluciones acordadas AEAT anteriores autoliquidaciones del ejercicio y periodo"
@@ -1465,7 +1465,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-109"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "71"
 number = "71"
 label = "Resultado final ([69]-[70]+[109])"
@@ -1478,7 +1478,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-71"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "108"
 number = "108"
 label = "Rectificativa - Otros ajustes determinados supuestos por discrepancia criterio administrativo"
@@ -1491,7 +1491,7 @@ legal_refs = ["ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116"
 source_refs = ["aeat-dr-303-2025"]
 export_refs = ["modelo-303-page-03-casilla-108"]
 
-[[revisions.2009-y-siguientes.casillas]]
+[[revisions.2023-y-siguientes.casillas]]
 id = "111"
 number = "111"
 label = "Rectificativa - Importe de la rectificacion"

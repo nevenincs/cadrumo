@@ -57,6 +57,10 @@ class SecretStoreBackend(StrEnum):
 # Project root: four levels up from src/aeat/core/config.py
 # (file → core/ → aeat/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"  # noqa: S105 - published dev/test-only value.
+"""Shared development/test password for database-backed secure-storage tests."""
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: S105 - env var name, not a secret.
+"""Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 
 class LLMProviderSetting(StrEnum):
@@ -429,6 +433,10 @@ class Settings(BaseSettings):
     aeat_secret_store_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "secrets",
         description="Directory for the encrypted secret-store master-key file and ciphertext records",
+    )
+    aeat_dev_test_database_password: SecretStr = Field(
+        default=SecretStr(DEV_TEST_DATABASE_PASSWORD),
+        description="Development/test-only password used by secure-storage subprocess tests.",
     )
     aeat_blob_store_dir: Path = Field(
         default=PROJECT_ROOT / "var" / "blobs",
@@ -1203,6 +1211,30 @@ def classify_storage_route(settings: Settings | None = None) -> StorageRouteClas
         database_url=database_url,
         database_path=database_path,
     )
+
+
+def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None = None) -> Settings:
+    """Return settings routed to ``bucket_id``'s active-profile database.
+
+    The helper is the central route-derivation boundary for callers
+    that need a named bucket route. Explicit primary database URLs stay
+    fail-closed: a caller cannot convert an operator-supplied SQL URL
+    into a bucket route by passing a bucket id.
+    """
+
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise ValueError("bucket_id must not be blank")
+    base = source or load_settings()
+    if "aeat_database_url" in base.model_fields_set:
+        raise ValueError("cannot derive an active profile bucket route from an explicit database URL")
+    values = base.model_dump()
+    values.pop("aeat_database_url", None)
+    values["aeat_active_profile"] = trimmed
+    derived = Settings.model_validate(values)
+    explicit_fields = (base.model_fields_set - {"aeat_database_url"}) | {"aeat_active_profile"}
+    object.__setattr__(derived, "__pydantic_fields_set__", explicit_fields)
+    return derived
 
 
 def _sqlite_database_path(database_url: str) -> Path | None:

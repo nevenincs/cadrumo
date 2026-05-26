@@ -30,7 +30,7 @@ import pytest
 
 from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import build_snapshot, load_registry_tree
-from aeat.domain.calculations.registry._formula_runtime import calculate_registry_snapshot
+from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.domain.calculations.registry.applicability import (
     Modelo202Modality,
     derive_modelo_202_modality,

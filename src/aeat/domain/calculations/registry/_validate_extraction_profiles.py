@@ -3,8 +3,45 @@
 from __future__ import annotations
 
 from importlib import import_module
+from pathlib import Path
 
 from ._schema import ExtractionProfileDefinition
+
+
+def validate_declaracion_pdf_specimen_gate(
+    scope: str,
+    modelo_id: str,
+    profile: ExtractionProfileDefinition,
+    corpus_root: Path,
+) -> list[str]:
+    """Enforce that a declaracion_pdf profile without a corpus specimen is explicitly acknowledged.
+
+    A ``declaracion_pdf`` profile whose ``label_pattern`` values were derived from
+    the registry's own casilla ``label_es`` fields — rather than verified against a
+    real printed PDF — is a silently-provisional profile.  Any such profile that is
+    NOT marked ``provisional_pending_specimen = True`` must fail the snapshot-build
+    gate, because the patterns have not been round-trip verified against a corpus
+    PDF and silent extraction failure is the probable result.
+
+    If a corpus fixture directory exists at ``corpus_root / <modelo_id>`` containing
+    at least one ``.pdf`` file, the profile is considered grounded and the field
+    default (``False``) is correct.  If no fixture exists, the author MUST either
+    acquire a specimen or explicitly mark the profile ``provisional_pending_specimen =
+    true`` to acknowledge the open risk.
+    """
+    if profile.surface != "declaracion_pdf":
+        return []
+    if profile.provisional_pending_specimen:
+        return []
+    fixture_dir = corpus_root / modelo_id
+    if fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf")):
+        return []
+    return [
+        f"{scope}: extraction profile {profile.id!r} is surface='declaracion_pdf' but no corpus "
+        f"fixture PDF exists at '{fixture_dir}' and provisional_pending_specimen is not set; "
+        f"either add a specimen PDF or set provisional_pending_specimen = true to acknowledge "
+        f"that label_patterns are unverified against a real printed form"
+    ]
 
 
 def validate_extraction_profile_artefacts(

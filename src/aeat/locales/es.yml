@@ -160,8 +160,13 @@ application:
           proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
         lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
           inspeccionar el bloqueo de autenticación activo.
+    certificate:
+      health:
+        file_missing: "El archivo de certificado configurado (%{path}) no existe. Recupera el archivo o ejecuta 'aeat config auth configure --provider certificate --file RUTA' con una ruta válida."
+        path_unset: "No se ha seleccionado un archivo de certificado. Ejecuta 'aeat config auth configure --provider certificate --file RUTA' para indicarlo."
     clave_movil:
       health:
+        identity_unset: "No se ha configurado un DNI/NIE para Cl@ve Móvil. Configúralo antes de continuar."
         operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
           por el operador.
     operator:
@@ -169,17 +174,21 @@ application:
         both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           ni el identificador fiscal del perfil activo. Configura ambos con el mismo
           DNI/NIE antes de la autenticación AEAT en directo.
+        both_missing_next_action: "Edita el perfil activo con 'aeat config profile edit NOMBRE --tax-id DNI/NIE' y configura el mismo DNI/NIE para Cl@ve Móvil."
         clave_identity_missing_detail: La identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           no está configurada, por lo que no se puede comparar con el identificador
           fiscal del perfil activo. Configúrala con el DNI/NIE del perfil activo.
+        clave_identity_missing_next_action: "Configura el DNI/NIE de Cl@ve Móvil con el mismo identificador fiscal que el perfil activo."
         mismatch_detail: El DNI/NIE de la identidad Cl@ve '%{clave_identity}' no coincide
           con el identificador fiscal del perfil activo '%{profile_tax_id}'. La autenticación
           AEAT en directo vincularía la sesión de un contribuyente a otro perfil.
           Cambia al perfil cuyo identificador fiscal coincida con el DNI/NIE de Cl@ve,
           o corrige el valor que sea erróneo.
+        mismatch_next_action: "Cambia al perfil cuyo identificador fiscal coincida con el DNI/NIE de Cl@ve Móvil, o corrige el valor que sea erróneo."
         profile_tax_id_missing_detail: El perfil activo no tiene identificador fiscal,
           por lo que no se puede comparar con la identidad Cl@ve. Configura el identificador
           fiscal del perfil con el DNI/NIE usado para Cl@ve.
+        profile_tax_id_missing_next_action: "Edita el perfil activo con 'aeat config profile edit NOMBRE --tax-id DNI/NIE' antes de la autenticación."
       errors:
         certificate_file_required: El proveedor de certificado requiere un archivo
           de certificado. Ejecuta `aeat config auth configure --provider certificate
@@ -197,7 +206,23 @@ application:
           de bucket pero no tiene un registro de perfil legible (status=%{status}).
           Ejecuta `aeat config repair profile --clear-active --yes` y después cambia
           a un perfil válido o créalo antes de configurar autenticación.
+      login:
+        refused_certificate_file_missing: "No se puede iniciar sesión: el archivo de certificado configurado (%{path}) no existe. Recupera el archivo o vuelve a configurar la ruta antes de continuar."
+        refused_certificate_path_unset: "No se puede iniciar sesión: aún no se ha seleccionado un archivo de certificado. Ejecuta 'aeat config auth configure --provider certificate --file RUTA' antes de continuar."
+        refused_clave_movil_identity_unset: "No se puede iniciar sesión con Cl@ve Móvil: aún no se ha configurado un DNI/NIE. Configúralo antes de continuar."
+        refused_live_tests_disabled: "El inicio de sesión en directo está deshabilitado por seguridad: la herramienta sólo construye y verifica localmente. Habilita la opción de pruebas en directo si realmente quieres conectarte a la AEAT, y vuelve a ejecutar este comando. Proveedor solicitado: %{provider}."
       probe:
+        certificate_corrupt: "El archivo de certificado no es un PKCS#12 válido o falta la contraseña; no se puede analizar."
+        certificate_corrupt_detail: "El certificado no se puede interpretar: %{error}."
+        certificate_expired: "El certificado ha caducado hace %{days} días. Renuévalo antes de la autenticación."
+        certificate_expiring: "El certificado caduca dentro de %{days} días. Programa la renovación."
+        certificate_file_missing: "El archivo de certificado configurado (%{path}) no existe."
+        certificate_ok: "Certificado válido; caduca dentro de %{days} días."
+        certificate_path_unset: "No se ha seleccionado un archivo de certificado."
+        certificate_unreadable: "El archivo de certificado no se puede leer (%{error})."
+        clave_movil_identity_invalid: "El DNI/NIE configurado para Cl@ve Móvil no es válido: %{error}."
+        clave_movil_identity_ok: "El DNI/NIE configurado para Cl@ve Móvil tiene una forma válida."
+        clave_movil_identity_unset: "No se ha configurado un DNI/NIE para Cl@ve Móvil."
         no_provider: No hay ningún proveedor de autenticación configurado; nada que
           comprobar localmente.
         no_session: No hay ningún token de sesión AEAT persistido en disco; ejecuta
@@ -826,7 +851,12 @@ cli:
         antes de empezar.
       no_active_bucket: No hay un bucket de perfil activo. Ejecuta 'aeat config profile
         create NAME' antes de configurar la autenticación.
+      output_language_help: "Idioma del texto de salida (es, en, ca, hu)."
       provider_help: Identificador del proveedor (p.ej. certificado-electronico)
+      providers:
+        status_implemented: "disponible"
+        status_reserved: "reservado"
+        status_unavailable_gloss: "no disponible aún"
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'

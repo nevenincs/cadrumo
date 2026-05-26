@@ -7,16 +7,8 @@ parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     {casilla_id = "27", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuota\s+devengada'},
     {casilla_id = "29", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Por\s+cuotas\s+soportadas\s+en\s+operaciones\s+interiores\s+corrientes'},
-    {casilla_id = "37", match_strategy = "named_label", value_kind = "amount", label_pattern = 'En\s+adquisiciones\s+intracomunitarias\s+de\s+bienes\s+y\s+servicios\s+corrientes'},
     {casilla_id = "45", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+a\s+deducir'},
-    {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(27\s*-\s*45\)'},
-    {casilla_id = "64", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+resultados'},
-    {casilla_id = "66", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Atribuible\s+a\s+la\s+Administraci[oó]n\s+del\s+Estado'},
-    {casilla_id = "iva.compensacion-pendiente-periodos-anteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+pendientes\s+de\s+periodos\s+anteriores'},
-    {casilla_id = "iva.compensacion-aplicada-periodo", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+anteriores\s+aplicadas\s+en\s+este\s+periodo'},
-    {casilla_id = "iva.compensacion-pendiente-periodos-posteriores", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+previos\s+pendientes\s+para\s+periodos\s+posteriores\s+\(110\s*-\s*78\)'},
-    {casilla_id = "iva.resultado", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+de\s+la\s+autoliquidaci[oó]n\s+\(66[^\)]*\)'},
-    {casilla_id = "71", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+\(69\s*-\s*70\s*\+\s*109\)'},
+    {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\([\[\s]*27[\]\s]*-[\[\s]*45[\]\s]*\)'},
 ]
 confidence = "strict"
 min_coverage = "1"

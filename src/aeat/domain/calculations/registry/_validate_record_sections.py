@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from pathlib import Path
 
 from ._bindings import (
     is_layout_binding_selector,
@@ -15,7 +16,11 @@ from ._bindings import (
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
-from ._validate_extraction_profiles import validate_dotted_callable, validate_extraction_profile_artefacts
+from ._validate_extraction_profiles import (
+    validate_declaracion_pdf_specimen_gate,
+    validate_dotted_callable,
+    validate_extraction_profile_artefacts,
+)
 from ._validate_formulas import validate_formula_expression
 from ._validate_revision_identity import _duplicates
 from ._validate_revision_rules import validate_dated_values
@@ -194,11 +199,13 @@ def validate_extraction_profile_section(
     failures: list[str],
     *,
     prefix: str,
+    modelo_id: str,
     revision: ModeloRevision,
     casillas: set[str],
     exported_casillas: set[str],
     legal_refs: Mapping[str, LegalReference],
     source_refs: Mapping[str, SourceReference],
+    corpus_root: Path | None = None,
 ) -> None:
     for profile in revision.extraction_profiles:
         owner = f"extraction profile {profile.id}"
@@ -217,6 +224,8 @@ def validate_extraction_profile_section(
                     f"export fields {missing_exported_casillas!r}"
                 )
         failures.extend(validate_extraction_profile_artefacts(prefix, profile))
+        if corpus_root is not None:
+            failures.extend(validate_declaracion_pdf_specimen_gate(prefix, modelo_id, profile, corpus_root))
 
 
 def _missing_refs(

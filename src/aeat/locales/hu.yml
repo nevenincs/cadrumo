@@ -110,22 +110,47 @@ application:
         acquire_failed: application.auth.acquisition_lock.errors.acquire_failed
         lock_held: application.auth.acquisition_lock.errors.lock_held
         lock_held_suggestion: application.auth.acquisition_lock.errors.lock_held_suggestion
+    certificate:
+      health:
+        file_missing: "A beállított tanúsítványfájl (%{path}) nem létezik. Állítsd vissza, vagy futtasd az 'aeat config auth configure --provider certificate --file UTVONAL' parancsot érvényes elérési úttal."
+        path_unset: "Nincs kiválasztott tanúsítványfájl. Futtasd az 'aeat config auth configure --provider certificate --file UTVONAL' parancsot a megadásához."
     clave_movil:
       health:
+        identity_unset: "Nincs DNI/NIE megadva a Cl@ve Móvilhoz. Add meg, mielőtt folytatnád."
         operator_completion_required: application.auth.clave_movil.health.operator_completion_required
     operator:
       alignment:
         both_missing_detail: application.auth.operator.alignment.both_missing_detail
+        both_missing_next_action: "Szerkeszd az aktív profilt az 'aeat config profile edit NEV --tax-id DNI/NIE' paranccsal, és állítsd be ugyanazt a DNI/NIE-t a Cl@ve Móvilhoz."
         clave_identity_missing_detail: application.auth.operator.alignment.clave_identity_missing_detail
+        clave_identity_missing_next_action: "Állítsd be a Cl@ve Móvil DNI/NIE-t úgy, hogy egyezzen az aktív profil adóazonosítójával."
         mismatch_detail: application.auth.operator.alignment.mismatch_detail
+        mismatch_next_action: "Válts arra a profilra, amelynek adóazonosítója megegyezik a Cl@ve Móvil DNI/NIE-jével, vagy javítsd ki a hibás értéket."
         profile_tax_id_missing_detail: application.auth.operator.alignment.profile_tax_id_missing_detail
+        profile_tax_id_missing_next_action: "Szerkeszd az aktív profilt az 'aeat config profile edit NEV --tax-id DNI/NIE' paranccsal a hitelesítés előtt."
       errors:
         certificate_file_required: application.auth.operator.errors.certificate_file_required
         certificate_file_unresolved: application.auth.operator.errors.certificate_file_unresolved
         dangling_active_profile: application.auth.operator.errors.dangling_active_profile
         no_active_bucket: application.auth.operator.errors.no_active_bucket
         unreadable_active_profile: application.auth.operator.errors.unreadable_active_profile
+      login:
+        refused_certificate_file_missing: "A bejelentkezés nem indítható: a beállított tanúsítványfájl (%{path}) nem létezik. Állítsd vissza, vagy állítsd be újra az elérési utat a folytatás előtt."
+        refused_certificate_path_unset: "A bejelentkezés nem indítható: még nincs kiválasztott tanúsítványfájl. Futtasd az 'aeat config auth configure --provider certificate --file UTVONAL' parancsot a folytatás előtt."
+        refused_clave_movil_identity_unset: "A Cl@ve Móvil-bejelentkezés nem indítható: még nincs megadva DNI/NIE. Add meg a folytatás előtt."
+        refused_live_tests_disabled: "Az élő bejelentkezés biztonsági okból kikapcsolva: az eszköz csak helyben épít és ellenőriz. Kapcsold be az élő teszteket, ha tényleg csatlakozni szeretnél az AEAT-hoz, majd futtasd újra ezt a parancsot. Kért szolgáltató: %{provider}."
       probe:
+        certificate_corrupt: "A tanúsítványfájl nem érvényes PKCS#12 csomag, vagy hiányzik a jelszó; nem értelmezhető."
+        certificate_corrupt_detail: "A tanúsítvány nem értelmezhető: %{error}."
+        certificate_expired: "A tanúsítvány %{days} napja lejárt. Újítsd meg a hitelesítés előtt."
+        certificate_expiring: "A tanúsítvány %{days} napon belül lejár. Tervezd a megújítást."
+        certificate_file_missing: "A beállított tanúsítványfájl (%{path}) nem létezik."
+        certificate_ok: "A tanúsítvány érvényes; %{days} nap múlva jár le."
+        certificate_path_unset: "Nincs kiválasztott tanúsítványfájl."
+        certificate_unreadable: "A tanúsítványfájl nem olvasható (%{error})."
+        clave_movil_identity_invalid: "A Cl@ve Móvilhoz beállított DNI/NIE érvénytelen: %{error}."
+        clave_movil_identity_ok: "A Cl@ve Móvilhoz beállított DNI/NIE megfelelő formátumú."
+        clave_movil_identity_unset: "Nincs DNI/NIE beállítva a Cl@ve Móvilhoz."
         no_provider: application.auth.operator.probe.no_provider
         no_session: application.auth.operator.probe.no_session
         session_expired: application.auth.operator.probe.session_expired
@@ -555,7 +580,12 @@ cli:
       login_help: cli.config.auth.login_help
       login_reset_lock_help: cli.config.auth.login_reset_lock_help
       no_active_bucket: cli.config.auth.no_active_bucket
+      output_language_help: "A válasz szövegének nyelve (es, en, ca, hu)."
       provider_help: cli.config.auth.provider_help
+      providers:
+        status_implemented: "elérhető"
+        status_reserved: "fenntartva"
+        status_unavailable_gloss: "még nem elérhető"
       providers_help: cli.config.auth.providers_help
       reserved_provider: cli.config.auth.reserved_provider
       status_help: cli.config.auth.status_help

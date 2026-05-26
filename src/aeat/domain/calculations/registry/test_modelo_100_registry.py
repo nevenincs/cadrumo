@@ -942,7 +942,7 @@ def test_modelo_100_renta_web_open_cross_reference_is_read_only_simulator_eviden
     source_text = (bundled_path() / source.corpus_path).read_text(encoding="utf-8")
 
     assert cross_reference.surface == "open_simulator"
-    assert cross_reference.synthetic_data_allowed is True
+    assert cross_reference.synthetic_data_allowed is False
     assert cross_reference.requires_authentication is False
     assert "presentation" in cross_reference.forbidden_actions
     assert "payment" in cross_reference.forbidden_actions

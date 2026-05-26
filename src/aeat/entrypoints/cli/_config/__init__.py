@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import typing
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -24,11 +25,14 @@ from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket
-from ....core.i18n import tr
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....core.logging import default_log_file_path
 from .._command_suggestions import AeatTyperGroup
 from .._common import _emit
 from .._errors import CliRefusedBoundaryError
+
+if typing.TYPE_CHECKING:
+    from ....domain.buckets import BucketEvent, BucketEventType
 
 _wizard_create_command = build_wizard_command(SETUP_FLOW, mode="create")
 _wizard_edit_command = build_wizard_command(SETUP_FLOW, mode="edit")
@@ -703,37 +707,28 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     repository's own rollback cannot see.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.user_profile._orchestration import (
-        _write_active_profile_pointer,
-        capture_active_profile_pointer,
+        profile_create_storage_span,
         register_active_profile,
-        restore_active_profile_pointer,
     )
     from ....domain.user_profile import new_profile_id
 
     profile_id = new_profile_id()
-    prior_pointer = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
-    try:
-        provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-            repository = _profile_state()
-            repository.update(
-                lambda current: register_active_profile(
-                    current,
-                    profile_id=profile_id,
-                    display_name=display_name,
-                    facts=facts,
-                    # `duplicate` and `import` legitimately reproduce an
-                    # existing profile's tax id; the duplicate-tax-id
-                    # refusal applies to a fresh `profile create` only.
-                    enforce_unique_tax_id=False,
-                )
+    with profile_create_storage_span(profile_id) as routing_profile_id:
+        repository = _profile_state()
+        repository.update(
+            lambda current: register_active_profile(
+                current,
+                profile_id=profile_id,
+                display_name=display_name,
+                facts=facts,
+                # `duplicate` and `import` legitimately reproduce an
+                # existing profile's tax id; the duplicate-tax-id
+                # refusal applies to a fresh `profile create` only.
+                enforce_unique_tax_id=False,
+                routing_profile_id=routing_profile_id,
             )
-    except Exception:
-        restore_active_profile_pointer(prior_pointer)
-        raise
+        )
     return profile_id
 
 
@@ -783,9 +778,7 @@ def config_profile_switch(
 ) -> None:
     """Select an existing profile as the active profile."""
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import select_profile
-    from ....core.config import override_settings
+    from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     pointer = read_profile_bucket(name)
@@ -795,29 +788,7 @@ def config_profile_switch(
         ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
     )
     try:
-        # ``switch`` is the verb that *establishes* a bucket session; it
-        # must not depend on one already being open. The root callback
-        # only opens a session when an active profile already resolves,
-        # so a switch from a no-active-profile state (the first switch,
-        # or a switch after the active profile was deleted) reaches the
-        # decrypting selection write with no session. Open a session
-        # scoped to the target bucket here, mirroring the bootstrap-
-        # create path, so both the workflow-state selection write and
-        # the PROFILE_ACTIVATED event append can decrypt their buckets.
-        with (
-            override_settings(aeat_active_profile=pointer.bucket_id),
-            activate_master_key_provider(
-                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
-            ),
-        ):
-            repository = _profile_state()
-            repository.update(
-                lambda current: select_profile(current, profile_id=pointer.bucket_id)
-            )
-            _emit_profile_activated_event(
-                profile_id=pointer.bucket_id,
-                active_profile=resolve_active_bucket_id(),
-            )
+        select_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
@@ -913,77 +884,15 @@ def _emit_profile_record_unreadable(
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
 
-    from ....adapters.persistence.storage import (
-        activate_master_key_provider,
-        get_master_key_provider,
-        has_active_bucket_session,
-    )
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....adapters.persistence.storage import has_active_bucket_session
+    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
     from ....application.workflow._models import resolve_active_bucket_id
-    from ....core.config import override_settings
 
     if bucket_id == resolve_active_bucket_id() and has_active_bucket_session():
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
-    with override_settings(aeat_active_profile=bucket_id):
+    with profile_storage_session(bucket_id):
         service = build_lifecycle_service(bucket_id=bucket_id)
-        with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
-            return service.read(profile_id)
-
-
-def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
-    """Append a PROFILE_ACTIVATED event to the bucket-event-history catalogue.
-
-    Records the operator-visible profile-activation transition so
-    downstream auditors can replay the activation timeline without
-    re-deriving it from secure-object snapshots. Distinct from
-    PROFILE_SELECTED (which records selection at workflow-state level)
-    so the catalogue carries the explicit activation event.
-    """
-
-    from datetime import UTC, datetime
-
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
-
-    if active_profile is None:
-        return
-
-    occurred_at = datetime.now(UTC)
-    payload = {"profile_id": profile_id, "active_profile": active_profile}
-    actor = "operator"
-    bucket_id = active_profile
-    event_id = derive_bucket_event_id(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.PROFILE_ACTIVATED,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=profile_id,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository()
-    repo.save(
-        append_bucket_event(
-            repo.load(),
-            BucketEvent(
-                event_id=event_id,
-                bucket_id=bucket_id,
-                event_type=BucketEventType.PROFILE_ACTIVATED,
-                occurred_at=occurred_at,
-                actor=actor,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=profile_id,
-                payload_version=1,
-                payload=payload,
-            ),
-        )
-    )
+        return service.read(profile_id)
 
 
 @profile_app.command("show", help=tr("cli.config.profile.show_help"))
@@ -999,9 +908,9 @@ def config_profile_show(
     discover the failure on stdout and via the shell exit status.
     """
 
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....application.user_profile import ProfileValidationService
     from ....application.user_profile._projections import record_to_path_values
-    from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
 
     if name is not None:
         # ``show`` is the inspect surface: a tombstoned profile is still
@@ -1018,7 +927,6 @@ def config_profile_show(
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -1033,7 +941,7 @@ def config_profile_show(
         raise typer.Exit(code=2) from exc
     from ....domain.user_profile import UserProfileStatus
 
-    report = service._validator.validate_record(record)
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     is_tombstoned = record.status is UserProfileStatus.TOMBSTONED
     values = record_to_path_values(record)
@@ -1075,9 +983,7 @@ def config_profile_delete(
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._profile_repository import ProfileRepository
-    from ....core.config import override_settings
+    from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
@@ -1090,21 +996,10 @@ def config_profile_delete(
     # session: like ``switch``, it opens its own scoped to the target.
     pointer = _resolve_profile_by_label(name)
     deleting_active_profile = pointer.bucket_id == resolve_active_bucket_id()
-    # The cross-store tombstone (encrypted-record tombstone +
-    # active-profile pointer clear) lives solely in ProfileRepository.
-    # Its load + remove decrypt the target bucket, so a session scoped
-    # to that bucket must be open even when the profile is not active.
     try:
-        with (
-            override_settings(aeat_active_profile=pointer.bucket_id),
-            activate_master_key_provider(
-                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
-            ),
-        ):
-            aggregate = ProfileRepository().delete(pointer.bucket_id)
+        record = delete_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    record = aggregate.record
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
@@ -1146,10 +1041,7 @@ def config_profile_duplicate(
     a crash; the atomic provisioner rolls every write back instead.
     """
 
-    from ....application.user_profile._orchestration import (
-        ProfileAlreadyRegisteredError,
-        build_lifecycle_service,
-    )
+    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
     from ....application.workflow._profile_bucket_scan import read_profile_bucket
     from ....domain.user_profile import ProfileNotFoundError
 
@@ -1157,9 +1049,11 @@ def config_profile_duplicate(
     if read_profile_bucket(target) is not None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
 
-    source_service = build_lifecycle_service(bucket_id=source_pointer.bucket_id)
     try:
-        source_record = source_service.read(source_pointer.bucket_id)
+        source_record = _read_profile_record(
+            profile_id=source_pointer.bucket_id,
+            bucket_id=source_pointer.bucket_id,
+        )
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
@@ -1290,7 +1184,6 @@ def config_profile_export(
     via the atomic-create provisioner.
     """
 
-    from ....application.user_profile._orchestration import build_lifecycle_service
     from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
 
     _profile_state().load()
@@ -1300,9 +1193,8 @@ def config_profile_export(
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
-        record = service.read(pointer.bucket_id)
+        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
     bundle = UserProfilePortableExport(profile=record)
@@ -1414,10 +1306,9 @@ def config_profile_import(
 def config_profile_logout(ctx: typer.Context) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
 
-    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+    from ....application.user_profile._orchestration import logout_active_profile
 
-    before = resolve_active_bucket_id()
-    _clear_active_profile_pointer()
+    before = logout_active_profile()
     _emit(
         ctx,
         {"logged_out_profile": before or "", "active_profile": None},
@@ -1591,6 +1482,28 @@ def config_reset(
     )
 
 
+def _activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
+    """Apply a subcommand-supplied ``--output-language`` to the render path.
+
+    ``--output-language`` on a subcommand short-circuits the root
+    callback's ``--language`` flow; rather than re-parsing, override the
+    Settings field directly and drop the cached language so any ``tr()``
+    fired during the verb body resolves to the requested locale
+    (round-5 B3).
+    """
+
+    if language is None:
+        return
+    from ....core.config import override_settings
+    from ....core.i18n._render import clear_output_language_cache
+
+    ctx.with_resource(override_settings(aeat_output_language=language))
+    clear_output_language_cache()
+
+
+_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
+
+
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
 def auth_providers(ctx: typer.Context) -> None:
     """List supported authentication providers from the backend catalogue."""
@@ -1599,14 +1512,20 @@ def auth_providers(ctx: typer.Context) -> None:
 
     report = list_operator_auth_providers()
     payload = report.model_dump(mode="json")
-    _emit(
-        ctx,
-        payload,
-        tuple(
-            f"{provider.id}\t{'implemented' if provider.implemented else 'reserved'}\t{tr(str(provider.label))}"
-            for provider in report.providers
-        ),
-    )
+    rows: list[str] = []
+    for provider in report.providers:
+        if provider.implemented:
+            status_token = tr("cli.config.auth.providers.status_implemented")
+        else:
+            # Render "no disponible aún" alongside ``reserved`` so a
+            # layperson does not read "reserved" as "reserved for me"
+            # (round-5 minor).
+            status_token = (
+                f"{tr('cli.config.auth.providers.status_reserved')}"
+                f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
+            )
+        rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
+    _emit(ctx, payload, tuple(rows))
 
 
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
@@ -1664,9 +1583,17 @@ def auth_configure(
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Show the configured local authentication state."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import inspect_operator_auth
 
     try:
@@ -1681,9 +1608,17 @@ def auth_status(
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, test_operator_auth
 
     try:
@@ -1702,10 +1637,22 @@ def auth_login(
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
     fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
     reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, login_operator_auth
+    from ....application.auth._operator import (
+        AuthLoginNotEnabledError,
+        AuthLoginPreconditionError,
+    )
 
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
@@ -1713,6 +1660,8 @@ def auth_login(
         raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     except AuthProviderReservedError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+    except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
@@ -2117,7 +2066,7 @@ def bucket_history(
     _emit(ctx, payload, lines)
 
 
-def _parse_bucket_event_types(event_type: list[str] | None):  # type: ignore[no-untyped-def]
+def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEventType, ...] | None:
     """Parse the ``--event-type`` flag tuple, raising :class:`typer.BadParameter` on unknown values.
 
     Returns ``None`` when no filter was supplied so the catalogue
@@ -2147,11 +2096,10 @@ def _parse_bucket_event_types(event_type: list[str] | None):  # type: ignore[no-
     return tuple(parsed)
 
 
-def _parse_bucket_history_instant(raw: str | None, *, flag: str):  # type: ignore[no-untyped-def]
+def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | None:
     """Parse one ``--since`` / ``--until`` value into a :class:`datetime`, or ``None`` when absent."""
     if not raw:
         return None
-    from datetime import datetime
 
     try:
         return datetime.fromisoformat(raw.strip())
@@ -2162,13 +2110,13 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str):  # type: ignor
 
 
 def _bucket_history_event_matches(
-    event,
+    event: BucketEvent,
     *,
-    since_dt,
-    until_dt,
+    since_dt: datetime | None,
+    until_dt: datetime | None,
     object_id_token: str | None,
     actor_token: str | None,
-) -> bool:  # type: ignore[no-untyped-def]
+) -> bool:
     """Return True when ``event`` passes every active history filter.
 
     Filters checked, in order: --since (lower bound), --until
@@ -2184,7 +2132,7 @@ def _bucket_history_event_matches(
     return not (actor_token is not None and event.actor != actor_token)
 
 
-def _bucket_history_event_payload(event):  # type: ignore[no-untyped-def]
+def _bucket_history_event_payload(event: BucketEvent) -> dict[str, object]:
     """Project one bucket event onto its JSON payload row."""
     return {
         "event_id": event.event_id,
