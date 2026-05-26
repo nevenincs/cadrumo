@@ -7,10 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.resources import resources
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.user_profile import (
@@ -20,6 +17,7 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileStatus,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     DuplicateProfileCommand,
     EditProfileFieldCommand,
@@ -36,16 +34,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="user-profile-lifecycle-test",
+    ) as profile:
+        yield profile.repository
 
 
 @pytest.fixture(scope="module")

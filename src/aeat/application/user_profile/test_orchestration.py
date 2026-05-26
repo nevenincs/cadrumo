@@ -7,17 +7,16 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...application.workflow._models import resolve_active_bucket_id
-from ...core.config import Settings
+from ...core.config import override_settings
 from ...core.resources import resources
 from ...domain.user_profile import (
     ProfileNotFoundError,
     UserProfileFact,
     UserProfileStatus,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from ..workflow._models import WorkflowState
 from ..workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 from ._orchestration import (
@@ -40,16 +39,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with (
+        isolated_runtime_profile(
+            tmp_path=tmp_path,
+            bucket_id="user-profile-orchestration-test",
+        ) as profile,
+        override_settings(aeat_active_profile=None),
+    ):
+        yield profile.repository
 
 
 @pytest.fixture(scope="module")
