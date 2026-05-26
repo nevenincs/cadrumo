@@ -17,10 +17,8 @@ encrypted store with strict pydantic equality.
 
 This file pairs a populated roundtrip (both facts at non-default
 values) with an anti-tautology proof (a surgical on-disk mutation
-that drops a persisted fact and reloads). Real adapters only — real
-:class:`EphemeralMasterKeyProvider`, real SQLite engine, real
-:class:`SecureObjectRepository`. No mocks, fakes, or monkeypatched
-persistence.
+that drops a persisted fact and reloads). Real adapters only — a real
+runtime profile and a real :class:`SecureObjectRepository`.
 
 The test exercises :class:`UserProfileLifecycleRepository` directly
 because it is the canonical user-profile boundary (the higher-level
@@ -40,25 +38,19 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import select
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import (
-    SecureObjectRepository,
-    create_engine_from_settings,
-)
-from ...adapters.persistence.storage.sql._orm import Base, SecureObjectRow
-from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import override_settings
+from ...adapters.persistence.storage import SensitivityClass
 from ...domain.user_profile import (
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
 )
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._projections import projection_for_taxpayer
 from ._repository import (
     USER_PROFILE_VALUE_NAMESPACE,
     UserProfileLifecycleRepository,
+    user_profile_value_object_key,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -128,26 +120,23 @@ def _populated_record() -> UserProfileRecord:
 
 
 @pytest.fixture
-def lifecycle(tmp_path: Path) -> Iterator[UserProfileLifecycleRepository]:
-    """A real lifecycle repository over a real SQLite + real master key."""
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_BUCKET_ID,
+        label="Corporate tax roundtrip",
+    ) as profile:
+        yield profile
 
-    bucket_db = tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db"
-    bucket_db.parent.mkdir(parents=True, exist_ok=True)
-    with (
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile=_BUCKET_ID,
-            aeat_database_url=f"sqlite:///{bucket_db.as_posix()}",
-        ) as settings,
-        EphemeralMasterKeyProvider(),
-    ):
-        engine = create_engine_from_settings(settings)
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            yield UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects)
-        finally:
-            engine.dispose()
+
+@pytest.fixture
+def lifecycle(runtime_profile: TestRuntimeProfile) -> UserProfileLifecycleRepository:
+    """A real lifecycle repository over a real runtime profile."""
+
+    return UserProfileLifecycleRepository(
+        bucket_id=_BUCKET_ID,
+        objects=runtime_profile.repository,
+    )
 
 
 def _fact_value(record: UserProfileRecord, path: str) -> object:
@@ -240,7 +229,7 @@ def test_undeclared_corporate_tax_facts_project_to_none(
 
 
 def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
-    tmp_path: Path,
+    runtime_profile: TestRuntimeProfile,
 ) -> None:
     """Anti-tautology proof: stripping the persisted INCN fact must surface.
 
@@ -254,88 +243,69 @@ def test_dropping_a_persisted_corporate_tax_fact_surfaces_on_reload(
     side would be carrying the value through a path the load side does
     not actually depend on.
 
-    The mutation reaches into the real :class:`SecureObjectRow` row
-    via ``session_scope``, drops the INCN fact from the persisted
-    ``facts`` list, and re-encodes the envelope payload. The load
-    side then runs the full real decrypt/parse pipeline; the absence
-    of the INCN fact must propagate to the typed projection.
+    The mutation loads the encrypted boundary payload through the
+    runtime repository, drops the INCN fact from the persisted
+    ``facts`` list, and writes the mutated envelope back. The load side
+    then runs the full real decrypt/parse pipeline; the absence of the
+    INCN fact must propagate to the typed projection.
     """
 
-    bucket_db = tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db"
-    bucket_db.parent.mkdir(parents=True, exist_ok=True)
-    with (
-        override_settings(
-            aeat_local_storage_root=tmp_path,
-            aeat_active_profile=_BUCKET_ID,
-            aeat_database_url=f"sqlite:///{bucket_db.as_posix()}",
-        ) as settings,
-        EphemeralMasterKeyProvider(),
-    ):
-        engine = create_engine_from_settings(settings)
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            lifecycle = UserProfileLifecycleRepository(
-                bucket_id=_BUCKET_ID, objects=objects
-            )
+    lifecycle = UserProfileLifecycleRepository(
+        bucket_id=_BUCKET_ID,
+        objects=runtime_profile.repository,
+    )
 
-            original = _populated_record()
-            lifecycle.save(original)
+    original = _populated_record()
+    lifecycle.save(original)
 
-            # Sanity: the populated record carries the INCN fact before
-            # the on-disk mutation. A reload that fails this assertion
-            # means the save path is the regression, not the load path.
-            pre_mutation = lifecycle.load(original.profile_id)
-            assert any(
-                fact.path == "taxpayer_type.incn_prior_12_months"
-                for fact in pre_mutation.facts
-            )
+    # Sanity: the populated record carries the INCN fact before the
+    # persisted mutation. A reload that fails this assertion means the
+    # save path is the regression, not the load path.
+    pre_mutation = lifecycle.load(original.profile_id)
+    assert any(
+        fact.path == "taxpayer_type.incn_prior_12_months"
+        for fact in pre_mutation.facts
+    )
 
-            # Mutate the encrypted envelope on disk: drop the INCN fact
-            # entry from the persisted ``facts`` list, leaving every
-            # other fact untouched.
-            with session_scope(engine) as session:
-                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                value_rows = [
-                    r for r in all_rows if r.namespace == USER_PROFILE_VALUE_NAMESPACE
-                ]
-                assert len(value_rows) == 1, (
-                    f"expected one value-namespace row, found {len(value_rows)} "
-                    f"(total rows in db: {len(all_rows)}; namespaces: "
-                    f"{sorted({r.namespace for r in all_rows})})"
-                )
-                row = value_rows[0]
-                envelope = json.loads(row.payload.decode("utf-8"))
-                payload = envelope["payload"]
-                original_fact_count = len(payload["facts"])
-                payload["facts"] = [
-                    fact
-                    for fact in payload["facts"]
-                    if fact.get("path") != "taxpayer_type.incn_prior_12_months"
-                ]
-                assert len(payload["facts"]) == original_fact_count - 1, (
-                    "fixture must persist exactly one INCN fact for this "
-                    "anti-tautology proof to be meaningful"
-                )
-                row.payload = json.dumps(envelope).encode("utf-8")
+    stored = runtime_profile.repository.load(
+        USER_PROFILE_VALUE_NAMESPACE,
+        user_profile_value_object_key(original.profile_id),
+        expected_class=SensitivityClass.IDENTITY,
+        max_supported_version=1,
+    )
+    assert stored is not None
+    envelope = json.loads(stored.payload.decode("utf-8"))
+    payload = envelope["payload"]
+    original_fact_count = len(payload["facts"])
+    payload["facts"] = [
+        fact
+        for fact in payload["facts"]
+        if fact.get("path") != "taxpayer_type.incn_prior_12_months"
+    ]
+    assert len(payload["facts"]) == original_fact_count - 1, (
+        "fixture must persist exactly one INCN fact for this anti-tautology proof to be meaningful"
+    )
+    runtime_profile.repository.save(
+        namespace=stored.namespace,
+        object_key=user_profile_value_object_key(original.profile_id),
+        classification=stored.classification,
+        schema_version=stored.schema_version,
+        written_at=stored.written_at,
+        payload=json.dumps(envelope).encode("utf-8"),
+    )
 
-            reloaded = lifecycle.load(original.profile_id)
-            persisted_paths = {fact.path for fact in reloaded.facts}
-            assert "taxpayer_type.incn_prior_12_months" not in persisted_paths
+    reloaded = lifecycle.load(original.profile_id)
+    persisted_paths = {fact.path for fact in reloaded.facts}
+    assert "taxpayer_type.incn_prior_12_months" not in persisted_paths
 
-            # Strict inequality on the typed projection: the
-            # undeclared-after-drop state projects to ``None`` and is
-            # therefore != the originally-persisted Decimal. Without
-            # this proof, a save-only path carrying the value through
-            # an unread channel would silently pass every positive
-            # equality test in the suite.
-            profile = projection_for_taxpayer(reloaded)
-            assert profile.incn_prior_12_months is None
-            assert profile.incn_prior_12_months != _INCN_VALUE
+    # Strict inequality on the typed projection: the
+    # undeclared-after-drop state projects to ``None`` and is therefore
+    # != the originally-persisted Decimal.
+    profile = projection_for_taxpayer(reloaded)
+    assert profile.incn_prior_12_months is None
+    assert profile.incn_prior_12_months != _INCN_VALUE
 
-            # The full-record equality also breaks — the reloaded
-            # record is not equal to the in-memory original because
-            # the on-disk facts list lost an entry.
-            assert reloaded != original
-        finally:
-            engine.dispose()
+    # The full-record equality also breaks — the reloaded record is not
+    # equal to the in-memory original because the persisted facts list
+    # lost an entry.
+    assert reloaded != original
