@@ -106,11 +106,6 @@ adapters:
         template_not_detected: No s'ha pogut detectar automàticament la plantilla
           de {path}; indica --modelo i --año per forçar-la.
         year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
-    pdf:
-      errors:
-        no_text: No s'ha extret text de {source}; {label} pot ser un escaneig o XFA.
-        not_found: '{label}: {path}'
-        open_failed: 'pdfplumber no ha pogut obrir {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -435,8 +430,6 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
-        history_details_help: Imprimeix files i imports privats detallats; el mode
-          resum només imprimeix recomptes.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -554,9 +547,7 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision_work_verify: La unitat de treball no té cap revisió
-            de càlcul verificada ni presentada per exportar. Executa abans `aeat app
-            modelo work verify`.
+          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -1485,18 +1476,7 @@ cli:
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
-    audit:
-      extra: cli.locales.audit.extra
-      missing: cli.locales.audit.missing
-      ok: cli.locales.audit.ok
-      parity_extra: cli.locales.audit.parity_extra
-      parity_missing: cli.locales.audit.parity_missing
-      parity_summary: cli.locales.audit.parity_summary
-      summary: cli.locales.audit.summary
-    scaffold:
-      updated: cli.locales.scaffold.updated
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
-    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -1733,10 +1713,6 @@ cli:
       view_help: Mostrar una normativa i, opcionalment, un dels seus articles
     inspect_help: Inspeccionar l'estat del registre i les referències
     inspect_registry_root_help: Ruta al directori arrel del registre
-    legal:
-      legal_ref_help: Identificador de referència legal, p. ex. ley-37-1992:art-99
-      view_help: Mostrar una referència legal pel seu identificador
-    legal_app_help: Inspeccionar les referències legals del registre de càlcul
     manuals:
       app_help: Inspeccionar els Manuals pràctics AEAT (Renda, IVA, Societats)
       kind_help: Filtrar per tipus de regla del manual
@@ -1806,10 +1782,6 @@ cli:
     parity_tape_help: Ruta a un fitxer JSON de cinta de paritat desada
     source_observation_help: Manifest xifrat d'observació font requerit per vinculacions
       de declaracions prèvies o relacions
-    sources:
-      source_ref_help: Id de referència de font que cal mostrar
-      view_help: Mostra una referència de font per id
-    sources_app_help: Referències de fonts del registre
     verify_filed_state_help: Comparar el càlcul local del registre amb l'estat presentat
       capturat de l'AEAT
     verify_help: Verificar la integritat del registre local
@@ -1887,6 +1859,7 @@ cli:
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
     language_help: Idioma de sortida per a aquesta ordre (substitueix el perfil actiu)
+    profile_help: cli.root.profile_help
     quiet_help: Mostrar només errors a stderr
     startup_import_error: 'No es pot iniciar la interfície d''ordres d''AEAT: falta
       la dependència {dependency}. Executa `aeat config repair`.'
@@ -2160,11 +2133,6 @@ errors:
       ha estat rebutjada.
     error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
       del Model 100 conegut.
-    error_bucket_browse: No s'ha pogut consultar el catàleg de buckets.
-    error_bucket_maintenance: Ha fallat una operació de manteniment de bucket.
-    error_buckets: S'ha produït un error en l'historial d'esdeveniments de buckets.
-    error_calc_sheets_translation: No s'ha pogut traduir una fórmula del registre
-      a Google Sheets.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
       el registre de càlcul.
     error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
@@ -2353,10 +2321,6 @@ errors:
     fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
     fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
-    fail_bucket_event_history_persistence: No s'ha pogut desar o carregar l'historial
-      d'esdeveniments de buckets.
-    fail_bucket_export: No s'ha pogut exportar l'arxiu del bucket.
-    fail_bucket_import: No s'ha pogut importar l'arxiu del bucket.
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
     fail_export: S'ha produït un error en exportar cap a l'AEAT.
     fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
@@ -2626,11 +2590,6 @@ errors:
       a un bucket registrat.
     refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
       però no implementat.
-    refused_bucket_delete: La porta d'accions destructives ha rebutjat l'esborrat
-      del bucket.
-    refused_bucket_event_validation: Un esdeveniment de bucket no ha superat la validació.
-    refused_bucket_rename: La sol·licitud de canvi de nom del bucket infringeix regles
-      d'unicitat o adreçament.
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
       dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
       càlcul.
@@ -2681,10 +2640,6 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
-    refused_iva_compensation_carry_forward_policy: Els lots de compensació d'IVA pendent
-      infringeixen la política activa.
-    refused_iva_compensation_reconciliation_input: L'evidència de la cartera de compensació
-      d'IVA no coincideix amb la unitat de treball del Model 303 objectiu.
     refused_ledger_business_operation_invoice_input: Una dada indicada infringeix
       el contracte de la factura d'operació. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_business_operation_invoice_not_found: No existeix cap factura d'operació
@@ -3064,8 +3019,8 @@ wizard:
         help: Té empleats i paga salaris amb retenció
       incn-prior-12-months:
         help: Import net de la xifra de negocis dels darrers 12 mesos, en euros. Per
-          sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article
-          40.3 LIS; per sota, totes dues modalitats són possibles. Opcional.
+          sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article 40.3
+          LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
@@ -3089,9 +3044,8 @@ wizard:
         help: Nom visible mostrat en revisions locals
       new-entity-first-two-profit-periods:
         help: Marca-ho si l'entitat de nova creació es troba en un dels dos primers
-          períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus
-          reduït del 15 per cent. Opcional; sense marcar no s'aplica el tipus
-          reduït.
+          períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus reduït
+          del 15 per cent. Opcional; sense marcar no s'aplica el tipus reduït.
       notes:
         help: Notes per al teu propi record (opcional)
       output-language:
@@ -3351,6 +3305,11 @@ wizard:
         help: Persona física (IRPF), persona jurídica (Impost sobre Societats) o entitat
           en atribució de rendes
         prompt: Tipus d'entitat
+      incn-prior-12-months:
+        help: Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article
+          40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps.
+        prompt: Quin va ser el teu import net de la xifra de negocis durant els darrers
+          12 mesos? (en euros, opcional)
       irpf-income-categories:
         choices:
           actividad-economica:
@@ -3368,11 +3327,6 @@ wizard:
         help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
           econòmica obliga al Model 130/131
         prompt: Categories de renda IRPF
-      incn-prior-12-months:
-        help: Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article
-          40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps.
-        prompt: Quin va ser el teu import net de la xifra de negocis durant els
-          darrers 12 mesos? (en euros, opcional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3389,10 +3343,10 @@ wizard:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
       new-entity-first-two-profit-periods:
-        help: S'aplica només a persones jurídiques. Si ho marques, l'entitat
-          tributa al tipus reduït del 15 per cent durant aquests dos períodes.
-        prompt: És una entitat de nova creació en un dels seus dos primers
-          períodes impositius amb beneficis?
+        help: S'aplica només a persones jurídiques. Si ho marques, l'entitat tributa
+          al tipus reduït del 15 per cent durant aquests dos períodes.
+        prompt: És una entitat de nova creació en un dels seus dos primers períodes
+          impositius amb beneficis?
       title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:

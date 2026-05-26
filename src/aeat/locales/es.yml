@@ -106,11 +106,6 @@ adapters:
         template_not_detected: No se pudo detectar automáticamente la plantilla de
           {path}; indica --modelo y --año para forzarla.
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
-    pdf:
-      errors:
-        no_text: No se extrajo texto de {source}; {label} puede ser un escaneo o XFA.
-        not_found: '{label}: {path}'
-        open_failed: 'pdfplumber no pudo abrir {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -435,8 +430,6 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
-        history_details_help: Imprime filas e importes privados detallados; el modo
-          resumen solo imprime recuentos.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -566,9 +559,7 @@ cli:
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision_work_verify: La unidad de trabajo no tiene ninguna
-            revisión de cálculo verificada ni presentada que exportar. Ejecuta antes
-            `aeat app modelo work verify`.
+          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -1504,18 +1495,7 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
-    audit:
-      extra: cli.locales.audit.extra
-      missing: cli.locales.audit.missing
-      ok: cli.locales.audit.ok
-      parity_extra: cli.locales.audit.parity_extra
-      parity_missing: cli.locales.audit.parity_missing
-      parity_summary: cli.locales.audit.parity_summary
-      summary: cli.locales.audit.summary
-    scaffold:
-      updated: cli.locales.scaffold.updated
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
-    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -1754,10 +1734,6 @@ cli:
       view_help: Mostrar una normativa y, opcionalmente, uno de sus artículos
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
-    legal:
-      legal_ref_help: Identificador de referencia legal, p. ej. ley-37-1992:art-99
-      view_help: Mostrar una referencia legal por su identificador
-    legal_app_help: Inspeccionar las referencias legales del registro de cálculo
     manuals:
       app_help: Inspeccionar los Manuales prácticos AEAT (Renta, IVA, Sociedades)
       kind_help: Filtrar por tipo de regla del manual
@@ -1830,10 +1806,6 @@ cli:
     parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
-    sources:
-      source_ref_help: Id de referencia de fuente que se va a mostrar
-      view_help: Mostrar una referencia de fuente por id
-    sources_app_help: Referencias de fuentes del registro
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
     verify_help: Verificar la integridad del registro local
@@ -1912,6 +1884,7 @@ cli:
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
+    profile_help: cli.root.profile_help
     quiet_help: Mostrar solo errores en stderr
     startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta
       la dependencia {dependency}. Ejecuta `aeat config repair`.'
@@ -2186,11 +2159,6 @@ errors:
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
-    error_bucket_browse: No se pudo consultar el catálogo de buckets.
-    error_bucket_maintenance: Falló una operación de mantenimiento de bucket.
-    error_buckets: Se produjo un error en el historial de eventos de buckets.
-    error_calc_sheets_translation: No se pudo traducir una fórmula del registro a
-      Google Sheets.
     error_calculations_registry: Se produjo un error al cargar, resolver o validar
       el registro de cálculo.
     error_calculations_registry_load: Los archivos del registro de cálculo no se pudieron
@@ -2375,10 +2343,6 @@ errors:
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
-    fail_bucket_event_history_persistence: No se pudo guardar o cargar el historial
-      de eventos de buckets.
-    fail_bucket_export: No se pudo exportar el archivo del bucket.
-    fail_bucket_import: No se pudo importar el archivo del bucket.
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
     fail_export: Se produjo un error al exportar hacia la AEAT.
     fail_export_format: El borrador de la declaración no se pudo serializar al formato
@@ -2643,11 +2607,6 @@ errors:
       resuelve a un bucket registrado.
     refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
       reservado pero no implementado.
-    refused_bucket_delete: La puerta de acciones destructivas rechazó el borrado del
-      bucket.
-    refused_bucket_event_validation: Un evento de bucket no superó la validación.
-    refused_bucket_rename: La solicitud de renombrado del bucket viola reglas de unicidad
-      o direccionamiento.
     refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
       de los límites declarados para esa casilla. Revisa los datos de entrada del
       cálculo.
@@ -2698,10 +2657,6 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
-    refused_iva_compensation_carry_forward_policy: Los lotes de compensación de IVA
-      a compensar violan la política activa.
-    refused_iva_compensation_reconciliation_input: La evidencia de la cartera de compensación
-      de IVA no coincide con la unidad de trabajo del Modelo 303 objetivo.
     refused_ledger_business_operation_invoice_input: Un dato indicado infringe el
       contrato de la factura de operación. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_business_operation_invoice_not_found: No existe ninguna factura
@@ -3079,6 +3034,10 @@ wizard:
         help: Hijos menores en unidad familiar
       has-employees:
         help: Tiene empleados y paga salarios con retención
+      incn-prior-12-months:
+        help: Importe neto de la cifra de negocios de los últimos 12 meses, en euros.
+          Por encima de 6.000.000 EUR el Modelo 202 obliga a la modalidad del art.
+          40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
       irpf-estimation-regime:
         help: Régimen de estimación IRPF para la renta de actividad económica
       irpf-income-categories:
@@ -3092,10 +3051,6 @@ wizard:
         help: Si el contribuyente está inscrito en REDEME
       iva-regime:
         help: Régimen IVA
-      incn-prior-12-months:
-        help: Importe neto de la cifra de negocios de los últimos 12 meses, en euros.
-          Por encima de 6.000.000 EUR el Modelo 202 obliga a la modalidad del art.
-          40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
       iva-roi-enrolled:
         help: Alta en ROI
       iva-sii-enrolled:
@@ -3368,6 +3323,12 @@ wizard:
         help: Persona física (IRPF), persona jurídica (Impuesto sobre Sociedades)
           o entidad en atribución de rentas
         prompt: Tipo de entidad
+      incn-prior-12-months:
+        help: Lo necesitamos para saber si el Modelo 202 te obliga a la modalidad
+          del artículo 40.3 LIS (a partir de 6.000.000 EUR). Déjalo en blanco si no
+          lo conoces.
+        prompt: ¿Cuál fue su importe neto de la cifra de negocios en los últimos 12
+          meses? (en euros, opcional)
       irpf-income-categories:
         choices:
           actividad-economica:
@@ -3385,12 +3346,6 @@ wizard:
         help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
           económica obliga al Modelo 130/131
         prompt: Categorías de renta IRPF
-      incn-prior-12-months:
-        help: Lo necesitamos para saber si el Modelo 202 te obliga a la modalidad
-          del artículo 40.3 LIS (a partir de 6.000.000 EUR). Déjalo en blanco si
-          no lo conoces.
-        prompt: ¿Cuál fue su importe neto de la cifra de negocios en los últimos
-          12 meses? (en euros, opcional)
       legal-entity-form:
         choices:
           cooperativa:
