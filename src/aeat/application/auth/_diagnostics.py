@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.external_constants import load_external_constants
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = (
@@ -42,6 +43,9 @@ class AuthDiagnosticSummary(BaseModel):
     auth_mode: str = ""
     identity_kind: str = ""
     headless: bool | None = None
+    prefer_non_qr: bool | None = None
+    timeout_ms: int | None = None
+    route_label: str = ""
     active_profile_id: str = ""
     active_profile_label: str = ""
     active_profile_registered: bool | None = None
@@ -209,6 +213,9 @@ def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
         identity_kind=str(auth_attempt.get("identity_kind") or ""),
         headless=raw_headless if isinstance(raw_headless, bool) else None,
+        prefer_non_qr=_optional_bool(auth_attempt.get("prefer_non_qr")),
+        timeout_ms=_optional_int(auth_attempt.get("timeout_ms")),
+        route_label=_diagnostic_route_label(str(payload.get("url") or "")),
         active_profile_id=str(auth_attempt.get("active_profile_id") or ""),
         active_profile_label=str(auth_attempt.get("active_profile_label") or ""),
         active_profile_registered=_optional_bool(auth_attempt.get("active_profile_registered")),
@@ -230,6 +237,10 @@ def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
 
 def _optional_bool(value: object) -> bool | None:
     return value if isinstance(value, bool) else None
+
+
+def _optional_int(value: object) -> int | None:
+    return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
 def _detail_fingerprints_from_payload(payload: dict[str, object]) -> dict[str, str]:
@@ -257,6 +268,40 @@ def _redacted_url_summary(value: str) -> str:
     query_keys = ",".join(part.split("=", 1)[0] for part in parsed.query.split("&") if part)
     suffix = f"?keys={query_keys}" if query_keys else ""
     return f"{parsed.netloc}{parsed.path}{suffix}"
+
+
+def _diagnostic_route_label(value: str) -> str:
+    if not value:
+        return ""
+    try:
+        path = urlsplit(value).path
+    except ValueError:
+        return "invalid_url"
+    constants = load_external_constants().aeat
+    clave = constants.clave_movil
+    routes = (
+        ("sede_auth_gate_4033", constants.sede_paths.auth_gate_4033),
+        ("dialogo_representacion", clave.dialogo_representacion_path),
+        ("clave_movil_qr_request", clave.obtener_clave_movil_qr_path),
+        ("clave_movil_non_qr_request", clave.obtener_clave_movil_non_qr_path.split("?", 1)[0]),
+        ("clave_movil_contrast", clave.autentica_dni_nie_contraste_path),
+        ("clave_movil_cancel", clave.cancelar_clave_movil_path),
+    )
+    for label, route_path in routes:
+        if route_path and path.casefold() == route_path.casefold():
+            return label
+    marker_routes = (
+        ("selector_access", clave.selector_access_path_marker),
+        ("dialogo_representacion", clave.dialogo_representacion_path_marker),
+        ("clave_movil_qr_request", clave.obtener_clave_movil_qr_path_marker),
+        ("clave_movil_request", clave.obtener_clave_movil_path_marker),
+        ("clave_movil_cancel", clave.cancelar_clave_movil_path_marker),
+    )
+    folded_path = path.casefold()
+    for label, marker in marker_routes:
+        if marker.casefold() in folded_path:
+            return label
+    return "unknown"
 
 
 __all__ = [

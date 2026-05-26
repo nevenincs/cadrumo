@@ -54,7 +54,12 @@ from ._borrador_100 import (
     derive_borrador_100_snapshot_id,
 )
 from ._censo import CensoSnapshotNotFoundError
-from ._errors import LiveApplicationError, LiveApplicationInputError
+from ._errors import (
+    LiveApplicationError,
+    LiveApplicationInputError,
+    LiveIvaAcquisitionFailureMode,
+    classify_live_iva_acquisition_failure,
+)
 from ._snapshot_base import SnapshotLifecycleState
 
 
@@ -958,6 +963,7 @@ __all__ = [
     "IvaWalletCaptureReport",
     "LiveApplicationError",
     "LiveApplicationInputError",
+    "LiveIvaAcquisitionFailureMode",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
     "borrador_100_snapshot_object_key",
@@ -966,6 +972,7 @@ __all__ = [
     "capture_iva_compensation_wallet",
     "capture_notifications",
     "capture_source_filed_data",
+    "classify_live_iva_acquisition_failure",
     "derive_borrador_100_snapshot_id",
     "filed_data_listing_row",
     "list_filed_data",
