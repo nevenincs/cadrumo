@@ -70,7 +70,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     classification="open_simulator",
     allowed_hosts=(_NIF_IVA_ENTRY_HOST, _NIF_IVA_VERIFICATION_HOST),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
-    synthetic_data_allowed=True,
+    synthetic_data_allowed=False,
     requires_authentication=False,
     requires_aeat_authorization=False,
 )

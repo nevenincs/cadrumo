@@ -79,7 +79,7 @@ from ....adapters.outbound.storage._factory import (
     _build_google_credentials,
     _resolve_drive_root_folder_id,
 )
-from ....adapters.persistence.storage.sql import SecureObjectRepository
+from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.storage.calc_sheets import (
     OperatorInputs,
     RelationValues,
@@ -622,7 +622,7 @@ def google_sync_push(
 
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
 
-    repository = SecureObjectRepository()
+    repository = secure_object_repository_for_active_bucket()
     pushed_by_ns: dict[str, int] = {}
     skipped_by_ns: dict[str, int] = {}
     failed: list[tuple[str, str, str]] = []

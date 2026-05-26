@@ -27,6 +27,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
+    # AEAT-hosted policies must not advertise synthetic input per the
+    # no-synthetic-sede-live-surfaces ADR.
     return RemoteStateGuardPolicy(
         id="aeat-nif-iva-public",
         evidence_tier="executable_parity_evidence",
@@ -45,7 +47,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
         # action labels MUST be rejected by the guard before any browser
         # action can run, regardless of how the driver labels its operations.
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )
@@ -58,7 +60,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         classification="open_simulator",
         allowed_hosts=("www6.agenciatributaria.gob.es",),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )

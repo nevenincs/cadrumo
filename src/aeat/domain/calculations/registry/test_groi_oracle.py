@@ -38,6 +38,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _aeat_policy() -> RemoteStateGuardPolicy:
+    # AEAT-hosted policies must not advertise synthetic input per the
+    # no-synthetic-sede-live-surfaces ADR.
     return RemoteStateGuardPolicy(
         id="modelo-349-groi-spanish-roi-check",
         evidence_tier="executable_parity_evidence",
@@ -47,7 +49,7 @@ def _aeat_policy() -> RemoteStateGuardPolicy:
             Settings.external_constants().aeat.live_safety.consult_oracle_browser_action_patterns
         ),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )
@@ -60,7 +62,7 @@ def _wrong_host_policy() -> RemoteStateGuardPolicy:
         classification="open_simulator",
         allowed_hosts=("sede.agenciatributaria.gob.es",),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )
@@ -326,7 +328,7 @@ def test_groi_oracle_verify_payload_returns_blocked_on_fabricated_write_intent()
         classification="open_simulator",
         allowed_hosts=("www2.agenciatributaria.gob.es",),
         forbidden_actions=(*AEAT_WRITE_FORBIDDEN_ACTIONS, "check-nif"),
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
     )

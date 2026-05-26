@@ -89,7 +89,7 @@ def _read_only_policy() -> RemoteStateGuardPolicy:
         evidence_tier="executable_parity_evidence",
         classification="open_simulator",
         allowed_hosts=("www6.agenciatributaria.gob.es",),
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
         forbidden_actions=("presentation", "signing"),
