@@ -61,7 +61,7 @@ Two ledger verbs have local _ledger_validation_bad catches; five rely on the gen
 _command_from_patch zeroes classification-adjacent fields when classification is BUSINESS; if the stored record is already BUSINESS the patch is field-identical and the mutation guard fires. Provide a confirmable path.
 
 - [x] `W01.P04.S14` - guard the no-op mutation-signature so re-affirming the same business_classification on an already-classified transaction does not raise; `treat field-for-field-identical commands as a confirmed no-op instead of an error; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W01.P04.S15` - add --reaffirm flag on ledger classify bypassing the no-op guard for explicit re-application; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W01.P04.S15` - add --reaffirm flag on ledger classify bypassing the no-op guard for explicit re-application; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P04.S16` - unit tests covering patch-without-zeroing reaffirm semantics and field-by-field no-op surfacing; `src/aeat/application/ledger/test_actions.py`.
 
 ### Phase `W01.P05` - boolean canonical contract unification
@@ -432,7 +432,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S199` - delete duplicate AuthConfigureDanglingActiveProfileError registration; `the class is registered twice at lines 84-92 and 95-103; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W09.P41.S200` - consolidate the two divergent _decimal_value helpers; `the modelo binding variant has bool-sentinel handling the borrador variant does not; extract one canonical helper and import; `src/aeat/application/modelo/`.
 - [ ] `W09.P41.S201` - delete dead __all__ re-exports of build_error_envelope and json_output_requested from _errors.py; `cb0c684f8 follow-up after architecture-specialist surfaced the source-hygiene gap; `src/aeat/entrypoints/cli/_errors.py`.
-- [ ] `W09.P41.S202` - audit stored-data drift taxonomy semantic gap; class lives under errors.refused.* REFUSED category but stored-data drift is semantically an integrity failure not a safety refusal; decide whether to rename and re-emit telemetry or document the semantic exception; `src/aeat/core/errors/registry/_entrypoints.py`.
+- [ ] `W09.P41.S202` - audit stored-data drift taxonomy semantic gap; `class lives under errors.refused.* REFUSED category but stored-data drift is semantically an integrity failure not a safety refusal; decide whether to rename and re-emit telemetry or document the semantic exception; `src/aeat/core/errors/registry/_entrypoints.py`.
 
 ### Phase `W09.P42` - twin function merge
 
