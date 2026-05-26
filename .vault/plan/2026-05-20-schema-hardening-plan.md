@@ -336,3 +336,50 @@ are accepting, and unexpected exceptions must keep propagating.
 - [x] `W08.P18.S130` - extend the registry exception hygiene gate so broad `Exception`/`BaseException` handlers must either re-raise or log the failure.
 - [x] `W08.P18.S132` - update the M100 registry test composition point to import `aeat.domain.renta`, proving the fail-fast first-slice cross-domain snapshot gate is registered in the focused M100 surface; the broader registry hardening pass over exception hygiene, directory layout, drift validation, and M100/M190/M200 passed with 81 tests.
 - [x] `W08.P18.S135` - migrate M303 from flat `303.toml` to canonical directory layout (`manifest.toml` + `revisions/2009-y-siguientes/{revision.toml, casillas/0001-casillas.toml, export/0001..0003-export-layout.toml, extraction_profiles/0001-modelo-303-declaracion-pdf.toml}`) per the W07.P17.S120 multi-revision directory regression; resolves the dual-layout `RegistryLoadError` collision that surfaced during the linkage P02.S08 typed-observation collapse and brings M303 in line with the 10 other directory-mode modelos (100, 111, 123, 131, 180, 200, 202, 232, 349, 369); functional equivalence proved by `test_modelo_303_registry.py` (16/16), `test_formula_runtime.py` (15/15), `test_loader_directory_mode.py` (21/21); commit `7091d867d`; `src/aeat/_data/registry/aeat/modelos/303/`.
+
+## Wave `W09` - cross-campaign hygiene gates surfaced by linkage P02.S08 + M303 migration
+
+This Wave incorporates three new edges discovered while landing
+the typed-observation collapse on `RegistryCalculationResult` and
+the M303 directory-layout migration. Each edge is a hygiene gap
+that today depends on a single agent noticing it before tests
+collect; each Phase turns the gap into a permanent gate.
+
+### Phase `W09.P19` - synthetic-data-on-AEAT-host fixture audit
+
+The no-synthetic-sede ADR validator now rejects
+`LiveCrossReferenceDecision(synthetic_data_allowed=true, host=<AEAT>)`
+at registry build time. One test fixture
+(`test_authenticated_simulator_surface.py::test_authenticated_simulator_with_canonical_groi_shape_validates`)
+still constructs this shape and fails registry collection. The
+defect class matches the three obsolete `*_live.py` test files
+already deleted; a single grep-based sweep closes the remaining
+surface.
+
+- [ ] `W09.P19.S136` - inventory every test fixture that constructs `LiveCrossReferenceDecision` (or equivalent oracle policy) with `synthetic_data_allowed=true`; cross-reference against the canonical AEAT host suffixes declared in `_remote_state_guard._AEAT_HOST_SUFFIXES` and produce a per-fixture verdict (`migrate-host` / `flip-flag` / `delete-test`); `src/aeat/`.
+- [ ] `W09.P19.S137` - migrate `test_authenticated_simulator_surface.py::test_authenticated_simulator_with_canonical_groi_shape_validates` per the verdict from `S136` (likely `flip-flag` to match the canonical GROI shape after the no-synthetic-sede rollout); `src/aeat/domain/calculations/registry/test_authenticated_simulator_surface.py`.
+- [ ] `W09.P19.S138` - process every other fixture flagged by `S136` per its verdict; the audit is closed only when the full registry suite collects without a `synthetic_data_allowed` validator rejection; `src/aeat/`.
+
+### Phase `W09.P20` - registry package export-hygiene gate
+
+Pattern observed three times this session: foreign WIP added
+`from aeat.domain.calculations.registry import {name}` to a
+caller without adding `{name}` to the registry package's
+`__init__.py` imports and `__all__`. Each instance broke every
+import in the test suite at collection time. A loader test
+making every cross-package import resolvable would catch this
+deterministically.
+
+- [ ] `W09.P20.S139` - write a loader regression test that walks every `from aeat.<pkg> import {name}` site under `src/aeat/` and asserts `{name}` is present in `aeat.<pkg>.__all__`; package boundaries are at `application/`, `domain/`, `adapters/`, `entrypoints/`, `core/`; `src/aeat/`.
+- [ ] `W09.P20.S140` - extend the gate so adding an import to `__init__.py` without the corresponding `__all__` entry fails the suite; close the loophole the foreign WIP exploited during P02.S08; `src/aeat/`.
+
+### Phase `W09.P21` - plan-document format hygiene
+
+`vaultspec-core vault plan step add` fails on this very plan
+because `W08.P15.S102` is missing the canonical `;` separator
+between action and scope clause. Pre-existing convention
+violation that blocks all future programmatic step-add against
+the schema-hardening plan.
+
+- [ ] `W09.P21.S141` - fix `W08.P15.S102` action text by inserting the canonical `;` separator between the action clause and the scope clause; verify by running `uv run vaultspec-core vault plan step add` against the plan; `.vault/plan/2026-05-20-schema-hardening-plan.md`.
+- [ ] `W09.P21.S142` - extend the vault-doctor gate (or add a new plan-format check) so future missing-`;` rows fail at `vault check all` rather than only at the next mutating CLI call; `.vault/plan/`.

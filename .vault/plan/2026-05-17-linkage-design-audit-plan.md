@@ -112,3 +112,20 @@ TODO: Phase intent paragraph required by the convention ADR.
 - [ ] `P07.S32` - re-run linkage health dashboard and capture final state; `scratch/out/linkage_health.json`.
 - [ ] `P07.S33` - regenerate feature index; `.vault/index/linkage-design-audit.index.md`.
 - [ ] `P07.S34` - write Wave 3 close-out audit; `.vault/audit/`.
+
+### Phase `P08` - CalculationRevision typed-envelope close-out (hash-stability pre-flight)
+
+Surfaced during P02.S08 (RegistryCalculationResult collapse, commit
+`6963600c0`). P02.S09 and P02.S10 remain the highest-risk rows of
+the linkage epic because `derive_calculation_revision_id` is
+SHA-256 content-addressed and currently feeds on
+`casilla_values: Mapping[str, Decimal]`. Collapsing the field
+without preserving the hash function's domain breaks every
+already-persisted CalculationRevision. This Phase stages the
+pre-flight so S09 lands cleanly.
+
+- [ ] `P08.S35` - write the hash-stability anti-tautology proof BEFORE touching the field: load a fully populated `CalculationRevision` fixture from a frozen JSON envelope, derive its id via `derive_calculation_revision_id`, and pin the result. Any change to the hash domain must keep this id stable; `src/aeat/domain/modelos/test_calculation_revision.py`.
+- [ ] `P08.S36` - decide the hash-domain projection: either (a) keep the flat `{casilla_id: Decimal}` shape but build it from `observations` at hash time, or (b) define a new canonical projection over `observations` and bump the revision-id derivation contract with a documented migration; `.vault/adr/`.
+- [ ] `P08.S37` - execute P02.S09 against the pre-flight pin: make `casilla_values` a derived `@property` over `observations`, route hash derivation through the chosen projection, and confirm the S35 pin still resolves identically; `src/aeat/domain/modelos/_calculation_revision.py`.
+- [ ] `P08.S38` - execute P02.S10 codemod against the 27 construction sites only after S37 lands; the codemod is mechanical once the storage shape stabilises; `src/aeat/`.
+- [ ] `P08.S39` - run the four persistence roundtrip suites (`test_calculation_repository_roundtrip.py`, `test_secure_storage_roundtrip.py`, `test_cross_boundary_roundtrip.py`, `test_runtime_migrated_repositories.py`) and confirm every fully-populated fixture survives strict pydantic equality across the boundary; `src/aeat/`.
