@@ -141,6 +141,7 @@ derive_modelo_202_modality is orphaned in the domain. Casillas 03 and 32 compute
 - [x] `W02.P12.S48` - add the modality gate as a registry-level applicability condition on casillas 03 and 32; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/`.
 - [x] `W02.P12.S49` - wire derive_modelo_202_modality into registry formula composition as a guard predicate OR remove the orphan function; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [x] `W02.P12.S50` - end-to-end CLI test: SL with INCN above 6.000.000 EUR gets only Art. 40.3; `below threshold both modalities reachable; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
+- [ ] `W02.P12.S220` - R7-003 reject invalid period token at modelo work create time not at calculate time; `M202 currently accepts --period 1T at create then fails calculate with no-revision-for-period; period validation must fire at create using the modelo revision's declared period catalogue; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W02.P13` - Wave-2 review and persona re-run and plan expansion BREAKPOINT
 
@@ -163,6 +164,7 @@ is.modelo-200.tipo-gravamen-pyme brackets cover 2025+ only inside a revision nam
 - [x] `W03.P14.S56` - apply the chosen fix to the parameter; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`.
 - [x] `W03.P14.S57` - add registry-validation check that every bracket_table parameter brackets cover the revision declared date range; `src/aeat/domain/calculations/registry/_validate_revision_rules.py`.
 - [x] `W03.P14.S58` - regression test: Modelo 200 work unit with 2024 filing_period and micro-empresa profile calculates without bracket_no_window; `src/aeat/domain/calculations/registry/test_modelo_200_temporal_coverage.py`.
+- [ ] `W03.P14.S218` - CRITICAL BLOCKER R7-001 fix M200 verify path ModeloBuilderError: legal_entity_form binding is a string enum sl/sa but _decimal_inputs_for_ids tries to convert to Decimal; `M200 verify completely broken for corporate profiles; investigate _decimal_inputs_for_ids in application filing to type-discriminate enum bindings from decimal bindings; verify path must support all binding kinds not only Decimal; `src/aeat/application/filing/__init__.py`.
 
 ### Phase `W03.P15` - Modelo 200 base imponible input casilla resolution Cluster D.3
 
@@ -472,6 +474,9 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S168` - extract _covered_by_namespace to one location and import from the other; `src/aeat/locales/`.
 - [ ] `W09.P45.S203` - fix 5 i18n ORPHAN placeholders surfaced by S32 parity validator; `either supply missing kwargs at tr call sites or remove orphan placeholders from locale; keys: cli.app.ledger.inventory.unknown_movement_kind kind; cli.app.ledger.ratios.no_override_error bucket_id and category; cli.app.ledger.ratios.unknown_category raw; cli.app.modelo.work.resume_invalid_target target; `src/aeat/`.
 - [ ] `W09.P45.S204` - fix 27 i18n SURPLUS kwargs surfaced by S32 parity validator; `either add placeholders to locale text or remove dead kwargs from tr call sites; affected keys include application.auth.operator.errors.unreadable_active_profile cli.common.errors.invalid_iso_date cli.common.errors.period_unrecognised cli.diagnostics.summary.* cli.diagnostics.version.* cli.ledger.errors.filter_parse_error cli.operator_surface.errors.contract_not_accepted cli.operator_surface.landing.*; `src/aeat/`.
+- [ ] `W09.P45.S219` - R7-002 localise 'No pending filing obligation for this profile' refusal on aeat app modelo work file to es ca hu per profile output_language; `currently English only; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S221` - R7-001 / W01.P01 follow-up surface critical storage errors in profile language when the active-profile pointer is readable even if the DEK is malformed; `today DEK-decryption failure surfaces in English regardless of profile output_language; `src/aeat/`.
+- [ ] `W09.P45.S222` - R7-001 / W01.P03 follow-up localise ledger CSV date-parse error inner reason; today wrapper text is es/ca/hu but the inner 'unsupported date format' string is English raw; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
