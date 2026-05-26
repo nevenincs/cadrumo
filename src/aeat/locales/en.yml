@@ -1415,7 +1415,18 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: Report drift without writing locale files
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -2639,17 +2650,16 @@ errors:
     unsupported_currency: The currency code provided is not supported.
   storage:
     engine:
-      create_failed: The storage database engine could not be created. Check the
-        configured storage route and try again.
-      empty_database_url: The configured database URL is empty. Select a profile
-        or configure storage before trying again.
+      create_failed: The storage database engine could not be created. Check the configured
+        storage route and try again.
+      empty_database_url: The configured database URL is empty. Select a profile or
+        configure storage before trying again.
     runtime:
       no_active_session: No active bucket session is open. Run `aeat config profile
         switch NAME` to unlock a profile.
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
-      route_bucket_mismatch: The database route does not match the active bucket
-        session.
+      route_bucket_mismatch: The database route does not match the active bucket session.
       route_not_active_bucket: The database route is not attached to an active profile
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile

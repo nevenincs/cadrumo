@@ -254,6 +254,36 @@ _TAXPAYER_TYPE_SECTION = WizardSection(
             visible_when=_NATURAL_PERSON,
             answer_type=str,
         ),
+        WizardQuestion(
+            # Optional INCN (importe neto de la cifra de negocios) of
+            # the prior 12 months. Gates the Modelo 202 modality split
+            # at the 6.000.000 EUR threshold (LIS Art. 40.3): above it
+            # Art. 40.3 is mandatory, below it both modalities are
+            # reachable. An undeclared value yields an INCOMPLETE
+            # downstream verdict, never a guessed modality.
+            id="incn-prior-12-months",
+            profile_key="taxpayer_type.incn_prior_12_months",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer-type.incn-prior-12-months.prompt"),
+            help=tr("wizard.setup.taxpayer-type.incn-prior-12-months.help"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # Optional LIS Art. 29 first-two-profit-making-periods
+            # state. Gates the 15 percent new-entity rate override.
+            # Only meaningful for a legal entity; gated visible_when on
+            # entity_type == legal_entity. Undeclared keeps the entity
+            # on the otherwise-applicable sub-form rate.
+            id="new-entity-first-two-profit-periods",
+            profile_key="taxpayer_type.new_entity_first_two_profit_periods",
+            widget=WizardWidget.CONFIRM,
+            prompt=tr("wizard.setup.taxpayer-type.new-entity-first-two-profit-periods.prompt"),
+            help=tr("wizard.setup.taxpayer-type.new-entity-first-two-profit-periods.help"),
+            required=False,
+            visible_when=_ENTITY_LEGAL,
+            answer_type=bool,
+        ),
     ),
 )
 
