@@ -10,19 +10,21 @@ build through a typer invocation.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from aeat.adapters.persistence.storage.runtime import inspect_bucket_storage_runtime
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import Settings, override_settings
+from aeat.core.config import SecretStoreBackend, Settings, override_settings
 from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 from aeat.domain.filing import ModeloCasillaProvenance
@@ -40,6 +42,7 @@ from aeat.domain.modelos._filing_repository import ModeloRecordCatalogueReposito
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
 from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
 from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
+from aeat.tests.secure_sql import dev_test_database_password
 
 from ._actions import (
     CalculationRevisionNotFoundError,
@@ -58,6 +61,9 @@ from ._export import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+_ACTIVE_STORAGE_STACK: ExitStack | None = None
+_PROFILE_SPAN_OPEN = False
+
 
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
@@ -67,20 +73,41 @@ def _profile() -> TaxpayerProfile:
 
 
 @pytest.fixture(autouse=True)
-def isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def isolated_backend(tmp_path: Path) -> Iterator[None]:
+    global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
+
     dispose_engine()
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="operator"):
-        provider = EphemeralMasterKeyProvider()
-        provider.__enter__()
+    with ExitStack() as stack:
+        stack.enter_context(
+            override_settings(
+                aeat_local_storage_root=tmp_path,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+            )
+        )
+        _ACTIVE_STORAGE_STACK = stack
+        _PROFILE_SPAN_OPEN = False
         try:
             yield
         finally:
-            provider.__exit__(None, None, None)
             dispose_engine()
+            _PROFILE_SPAN_OPEN = False
+            _ACTIVE_STORAGE_STACK = None
+
+
+def _ensure_operator_storage_span() -> None:
+    global _PROFILE_SPAN_OPEN
+
+    if _PROFILE_SPAN_OPEN:
+        return
+    if _ACTIVE_STORAGE_STACK is None:
+        raise RuntimeError("modelo export test storage span is not active")
+    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
+    _PROFILE_SPAN_OPEN = True
 
 
 def _seed_profile(*, tax_id: str | None = None) -> str:
+    _ensure_operator_storage_span()
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
     workflow_state_repository().update(
         lambda state: register_minimal_profile(state, profile_id="operator", overrides=overrides),
@@ -163,9 +190,9 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     )
 
 
-def _wallet_decision_repository_at(database_path: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
-    settings = Settings(aeat_database_url=f"sqlite:///{database_path.as_posix()}")
-    objects = SecureObjectRepository(engine=get_engine(settings))
+def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
+    settings = Settings(aeat_local_storage_root=sidecar_root, aeat_active_profile="operator")
+    objects = inspect_bucket_storage_runtime("operator", settings).secure_object_repository()
     return IvaWalletDecisionRepository(objects=objects), settings
 
 
