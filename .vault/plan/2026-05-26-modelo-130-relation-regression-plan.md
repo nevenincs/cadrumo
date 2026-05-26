@@ -1,0 +1,158 @@
+---
+# REQUIRED TAGS (minimum 2): one directory tag + one feature tag
+# DIRECTORY TAGS: #adr #audit #exec #index #plan #reference #research
+tags:
+  - '#plan'
+  - '#modelo-130-relation-regression'
+date: '2026-05-26'
+tier: L2
+related:
+  - "[[2026-05-26-modelo-130-relation-regression-adr]]"
+  - "[[2026-05-26-modelo-130-relation-regression-audit]]"
+  - "[[2026-05-19-modelo-130-relation-regression-research]]"
+  - "[[2026-05-19-modelo-130-relation-regression-plan]]"
+---
+
+# `modelo-130-relation-regression` `selector-max-year-delta-and-bound-casilla-zero-default-remediation` plan
+
+Land the structural remediation authorised by the 2026-05-26 ADR. The
+silent `Decimal("0")` fallback for bound casillas with dead bindings is
+eliminated. The selector model gains a `max_year_delta` cap so the
+Modelo 130 prior-quarter carry-forward declares same-ejercicio scope.
+The Modelo 130 binding is revised against the new selector capability.
+Three real-behaviour regression tests gate the fix. A pre-flip sweep
+audit enumerates every bound casilla across the registry to prevent
+the runtime flip from surfacing unannotated dead bindings as
+calculation errors.
+
+## Proposed Changes
+
+The work lands as five sequential Phases. No parallelism between
+Phases: each Phase depends on every earlier Phase landing first, per
+ADR section "Acceptance criteria" and the explicit "Single Wave; no
+parallel chains" mandate. Within a Phase, Steps may proceed in the
+order declared.
+
+Phase `P01` adds the `_PreviousModeloSelector.max_year_delta` field
+and its anchor-drop semantics in `required_period_anchors_for_target`,
+without flipping the runtime and without revising any binding. The
+capability lands first so that subsequent Phases can use it.
+
+Phase `P02` performs the pre-flip cross-modelo sweep. It enumerates
+every `input_kind = "bound"` casilla in every revision of every
+modelo, resolves each one through its current binding, and produces a
+written audit catalogue: resolved-correctly, dead-but-tolerated,
+or absent-by-design. Dead bindings discovered must be repaired or
+annotated before Phase `P03` lands.
+
+Phase `P03` flips the runtime. `_initial_values` rejects inputs
+targeting bound casillas; bound casillas resolve exclusively through
+the binding pipeline; absent-by-design bindings materialise zero
+through an explicit constructor that stamps a provenance marker on the
+`CasillaObservation`. The silent zero is gone.
+
+Phase `P04` revises the Modelo 130 carry-forward binding to declare
+`source_period_offset_from_target = -1` and `max_year_delta = 0`, and
+extends `[legal."rd-439-2007:art-110"].required_text` with the
+art. 110.5 BOE-verbatim carry-forward fragment. If the corpus source
+does not carry the fragment, the corpus is re-fetched before the
+revision lands.
+
+Phase `P05` writes the three real-behaviour regression tests against
+the new runtime: first-period suppression with provenance assertion,
+second-period carry-forward with source-pointing provenance, and
+bound-input-rejection.
+
+## Steps
+
+### Phase `P01` - same-ejercicio selector capability
+
+Add the `max_year_delta` field to `_PreviousModeloSelector` and its
+anchor-drop semantics, without flipping runtime defaults or revising
+any binding.
+
+- [ ] `P01.S01` - add the `max_year_delta: int | None = None` field to `_PreviousModeloSelector` with pydantic validation rejecting negative values; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `P01.S02` - extend `_PreviousModeloSelector.required_period_anchors_for_target` to drop anchors whose `period_year_delta` is strictly greater than `max_year_delta` when the cap is set; the empty-anchor return path is preserved; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `P01.S03` - add unit tests for the cap: cap unset preserves prior behaviour, cap = 0 admits same-year anchors only, cap = 0 with offset = -1 against target = "1T" returns empty anchors, negative cap is rejected by the field validator; `src/aeat/domain/calculations/registry/test_formula_runtime.py`.
+- [ ] `P01.S04` - extend `previous_filing_observation_requirements` and `resolve_previous_filing_binding_values` so the empty-anchor return path produces no requirement and no resolved value for the affected binding; assert by a new test that requirements walk for a cap-suppressed binding returns an empty tuple; `src/aeat/domain/calculations/registry/_bindings.py` and `src/aeat/domain/calculations/registry/test_formula_runtime.py`.
+- [ ] `P01.S05` - run the cross-dependency contract and calculation suites and the formula-runtime suite to confirm no regression; `src/aeat/domain/calculations/registry/test_cross_dependency_contract.py`, `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`, `src/aeat/domain/calculations/registry/test_formula_runtime.py`.
+
+### Phase `P02` - pre-flip bound-casilla sweep audit
+
+Enumerate every bound casilla across the registry, resolve each through its current binding, and write the audit catalogue. This Phase produces no code change.
+
+- [ ] `P02.S06` - implement a one-off audit script that loads every modelo revision via `load_registry_tree`, enumerates every casilla with `input_kind = "bound"`, resolves the named binding from the same revision, classifies the result as one of {resolves_with_anchors, declared_anchors_no_observation_path, no_anchors_no_relation_dead, relation_driven_with_relation, relation_driven_orphaned}, and writes a JSON inventory; the script lives under `.vault-scratch/` as a one-off; the resulting JSON is checked into the vault as an audit artefact and the script is discarded.
+- [ ] `P02.S07` - persist the audit catalogue at `.vault/audit/2026-05-26-bound-casilla-binding-resolution-sweep-audit.md` via `vault add audit`; the body lists every (modelo, revision, casilla_id, binding_id, classification) tuple in a markdown table with provenance to the source TOML.
+- [ ] `P02.S08` - for every binding classified as `no_anchors_no_relation_dead` or `relation_driven_orphaned`, either repair the binding using the Phase `P01` `max_year_delta` capability if the binding declares same-ejercicio quarterly carry-forward semantics, or revise the binding/casilla declaration so the runtime flip in Phase `P03` will not surface it as a calculation error; each repair lands as its own commit against the affected modelo TOML.
+
+### Phase `P03` - runtime flip and provenance
+
+Eliminate the silent zero default. Bound casillas resolve exclusively through the binding pipeline; absent-by-design bindings materialise zero through an explicit constructor.
+
+- [ ] `P03.S09` - extend `_initial_values` to reject `inputs` targeting any casilla with `input_kind = "bound"`, raising `RegistryValidationError` ("bound registry casillas cannot be supplied as inputs: {ids!r}") parallel to the existing computed-casilla rejection; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `P03.S10` - extend `_initial_values` to source bound casilla values from the resolved `binding_values` mapping rather than from `inputs`; a bound casilla whose binding declared no anchors for the target period is materialised via an explicit `Decimal("0")` constructor that carries an absent-by-design provenance marker on the resulting `CasillaObservation`; a bound casilla whose binding declared anchors but did not deliver a value raises `RegistryValidationError`; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `P03.S11` - add an `absent_by_design: bool = False` field (or equivalent provenance marker — name finalised at implementation against the existing `CasillaObservation` model) to `CasillaObservation` with strict pydantic config; the materialiser in `_materialise_observations` sets the flag for absent-by-design zeros, leaves it `False` for resolved values; `src/aeat/domain/calculations/registry/_bindings.py`.
+- [ ] `P03.S12` - sweep all calculation-runtime tests and fixtures that pass bound casillas through `inputs` (e.g. the `"15": Decimal("0")` shape in the M130 formula-runtime tests); rewrite each to route the bound value through the `binding_values` pipeline or remove the input entry if the binding's anchors are absent-by-design for that target period; tests across `src/aeat/domain/calculations/registry/test_formula_runtime.py` and any sibling suites surfaced by the run.
+- [ ] `P03.S13` - run the calculation, formula-runtime, cross-dependency, and modelo-suite tests to confirm the runtime flip is clean; the run is expected to surface any bound-casilla input fixtures missed in S12 — fix each surfaced fixture in this Step rather than deferring.
+
+### Phase `P04` - Modelo 130 binding revision and legal grounding
+
+Revise the carry-forward binding against the new selector capability and strengthen the legal grounding.
+
+- [ ] `P04.S14` - revise the `modelo-130-resultados-negativos-anteriores` binding selector to declare `source_period_offset_from_target = -1` and `max_year_delta = 0`; the binding's TOML comment is updated to document the same-ejercicio first-period-suppression contract; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [ ] `P04.S15` - extend `[legal."rd-439-2007:art-110"].required_text` in `src/aeat/_data/registry/aeat/legal/irpf.toml` with the art. 110.5 BOE-verbatim carry-forward sentence fragment; if the corpus normative source at `corpus/normatives/rd-439-2007.json#art-110` does not carry the fragment, re-fetch the corpus document and update its content before extending `required_text`.
+- [ ] `P04.S16` - run the registry validation suite to confirm the legal-text-fragment check passes against the revised `required_text` and the binding selector validates against the new `_PreviousModeloSelector` shape; `src/aeat/domain/calculations/registry/test_registry_schema.py`, `src/aeat/domain/calculations/registry/test_referential_integrity.py`, and the cross-dependency contract suite.
+
+### Phase `P05` - regression test suite
+
+Three real-behaviour tests gate the regression against future revival.
+
+- [ ] `P05.S17` - add `test_modelo_130_first_period_carry_forward_is_absent_by_design`: build a 1T M130 snapshot, calculate with no previous-filing observations, assert C15 = `Decimal("0")` AND assert the materialised `CasillaObservation` for C15 carries the absent-by-design provenance marker; the test must fail today against the pre-flip runtime (silent-zero indistinguishable from absent-by-design) and pass against the post-flip runtime; `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`.
+- [ ] `P05.S18` - add `test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo`: construct a 1T `RegistryModeloObservation` with casilla 17 negative so the seed `saldo-negativo-fin-periodo` is positive, resolve previous-filing bindings against a 2T snapshot via `resolve_previous_filing_binding_values`, pass the resolved value into `calculate_registry_snapshot`'s `binding_values` for the 2T calculation, assert C15 equals the 1T saldo seed, assert C17 reflects the subtraction, assert the C15 `CasillaObservation` carries provenance pointing at the 1T source (modelo, year, period); `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`.
+- [ ] `P05.S19` - add `test_modelo_130_bound_casilla_rejects_input_override`: call `calculate_registry_snapshot` against a 2T snapshot with `inputs={"15": Decimal("100")}`; assert `RegistryValidationError` is raised, the message names casilla 15, and the error references the `input_kind = "bound"` rejection reason; `src/aeat/domain/calculations/registry/test_modelo_130_registry.py`.
+- [ ] `P05.S20` - run the M130 registry suite, the formula-runtime suite, the cross-dependency contract and calculation suites, and the full registry test directory to confirm no regression across the campaign; `src/aeat/domain/calculations/registry/`.
+
+## Parallelization
+
+Phases are strictly sequential: `P01 -> P02 -> P03 -> P04 -> P05`.
+Each Phase depends on the prior Phase landing completely. The ADR's
+"Single Wave; no parallel chains" constraint is the authority for the
+sequencing.
+
+Within `P01`, Steps `S01` and `S02` must land before `S03` and `S04`;
+`S05` runs last in the Phase.
+
+Within `P02`, `S06` produces the inventory consumed by `S07` and
+`S08`; `S07` and `S08` may proceed in parallel after `S06` returns
+because they touch disjoint surfaces (the audit document under
+`.vault/audit/` and the modelo TOMLs).
+
+Within `P03`, `S09` and `S10` are coupled (both edit `_initial_values`
+and the materialisation pipeline) and should land as one commit or as
+two tightly-sequenced commits; `S11` adds the `CasillaObservation`
+provenance field and must land before `S10` can stamp the marker;
+`S12` is a sweep that depends on `S09` + `S10` failing the existing
+fixtures; `S13` is the closing verification run.
+
+Within `P04`, `S14` and `S15` may land in parallel (disjoint TOMLs);
+`S16` is the closing verification run.
+
+Within `P05`, the three new tests (`S17`, `S18`, `S19`) may be
+authored in parallel because they are independent test functions;
+`S20` is the closing verification run.
+
+## Verification
+
+The plan is complete when:
+
+1. `_PreviousModeloSelector.max_year_delta` field is present, validated, and the resolver drops cross-year anchors when honouring the cap.
+2. `_initial_values` rejects `inputs` targeting any bound casilla with `RegistryValidationError`.
+3. Bound casillas resolve exclusively through the binding pipeline; absent-by-design bindings materialise `Decimal("0")` via the explicit constructor path; the materialised `CasillaObservation` carries a distinguishing provenance marker.
+4. The pre-flip sweep audit catalogue exists at `.vault/audit/2026-05-26-bound-casilla-binding-resolution-sweep-audit.md` and every dead binding it surfaced has been either repaired or annotated as absent-by-design.
+5. Modelo 130's `modelo-130-resultados-negativos-anteriores` binding declares `source_period_offset_from_target = -1` and `max_year_delta = 0`.
+6. `[legal."rd-439-2007:art-110"].required_text` includes the art. 110.5 carry-forward sentence fragment, BOE-verbatim.
+7. Three real-behaviour M130 tests (first-period suppression with provenance assertion, second-period carry-forward with source-pointing provenance, bound-input rejection) pass against the post-flip runtime.
+8. The full registry test directory passes: `pytest src/aeat/domain/calculations/registry/`.
+
+The plan is structurally complete when every Step is closed (`- [x]`)
+via `vault plan step check`.
