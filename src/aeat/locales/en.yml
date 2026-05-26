@@ -76,6 +76,29 @@ adapters:
       testing_project_cap_warning: The Google OAuth refresh token is approaching the
         7-day Testing-project cap (about {hours_remaining}h remaining); re-run `aeat
         config google login` to extend the credential lifetime.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Declaration extraction failed for profile {profile}: {details}'
+        modelo_conflict: --modelo {modelo!r} conflicts with detected {detected!r}.
+        period_unresolved: Declaration period could not be resolved from the PDF text.
+        profile_count_invalid: 'Expected exactly one declaration PDF extraction profile
+          for modelo={modelo}; available: {available}.'
+        profile_unavailable: Declaration extraction profile {profile!r} is not available
+          for modelo={modelo}.
+        registry_snapshot_required: 'Declaration extraction requires a validated registry
+          snapshot for modelo={modelo} year={year} period={period}: {error}'
+        snapshot_modelo_conflict: Registry snapshot modelo {snapshot_modelo!r} conflicts
+          with detected {detected!r}.
+        tax_id_unresolved: Declaration tax id could not be resolved from the PDF text.
+        template_not_detected: Could not auto-detect template for {path}; pass --modelo
+          and --año to override.
+        year_conflict: --año {year} conflicts with detected {detected}.
+    pdf:
+      errors:
+        no_text: No text extracted from {source}; {label} may be scan-only or XFA.
+        not_found: '{label}: {path}'
+        open_failed: 'pdfplumber could not open {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -2042,6 +2065,11 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_bucket_browse: The bucket catalogue could not be browsed.
+    error_bucket_maintenance: A bucket maintenance operation failed.
+    error_buckets: A bucket-event history error occurred.
+    error_calc_sheets_translation: A registry formula could not be translated to Google
+      Sheets.
     error_calculations_registry: An error occurred loading, resolving or validating
       the calculation registry.
     error_calculations_registry_load: The calculation registry files could not be
@@ -2209,6 +2237,10 @@ errors:
     fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
+    fail_bucket_event_history_persistence: The bucket-event history could not be saved
+      or loaded.
+    fail_bucket_export: The bucket archive could not be exported.
+    fail_bucket_import: The bucket archive could not be imported.
     fail_declaracion_parse: The PDF could not be parsed into a declaration.
     fail_export: An error occurred while exporting to the AEAT.
     fail_export_format: The filing draft could not be serialized to the BOE format
@@ -2451,6 +2483,14 @@ errors:
       with the input provided.
     refused_application_registry_input: The modelo registry request cannot be executed
       with the input provided.
+    refused_auth_configure_dangling_active_profile: The active-profile pointer does
+      not resolve to a registered bucket.
+    refused_auth_provider_reserved: The selected authentication provider is reserved
+      but not implemented.
+    refused_bucket_delete: Bucket deletion was refused by the destructive-action gate.
+    refused_bucket_event_validation: A bucket event failed validation.
+    refused_bucket_rename: The bucket rename request violates uniqueness or addressing
+      rules.
     refused_calculations_casilla_constraint: A computed casilla value falls outside
       the limits declared for that casilla. Review the calculation inputs.
     refused_cli_boundary: The command refused the request.
@@ -2497,6 +2537,10 @@ errors:
       year provided.
     refused_inventory_service_input: An input provided violates the inventory contract.
       Correct the input and try again.
+    refused_iva_compensation_carry_forward_policy: The IVA compensation carry-forward
+      lots violate the active policy.
+    refused_iva_compensation_reconciliation_input: The IVA compensation wallet evidence
+      does not match the target Modelo 303 work unit.
     refused_ledger_business_operation_invoice_input: An input provided violates the
       business-operation invoice contract. Correct the input and try again.
     refused_ledger_business_operation_invoice_not_found: No business-operation invoice
@@ -2593,6 +2637,29 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+  storage:
+    engine:
+      create_failed: The storage database engine could not be created. Check the
+        configured storage route and try again.
+      empty_database_url: The configured database URL is empty. Select a profile
+        or configure storage before trying again.
+    runtime:
+      no_active_session: No active bucket session is open. Run `aeat config profile
+        switch NAME` to unlock a profile.
+      no_detail: No detailed readiness issue was reported.
+      not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
+      route_bucket_mismatch: The database route does not match the active bucket
+        session.
+      route_not_active_bucket: The database route is not attached to an active profile
+        bucket.
+      session_changed: The active bucket session changed. Unlock the target profile
+        again.
+      session_expired: The active bucket session has expired. Run `aeat config profile
+        switch NAME` to re-activate the profile.
+      session_sealed: The active bucket session is sealed. Run `aeat config profile
+        switch NAME` to re-activate the profile.
+      unsecured_backend: The active bucket session uses the unsecured backend. Production
+        profile-bound storage requires file or keyring custody.
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'

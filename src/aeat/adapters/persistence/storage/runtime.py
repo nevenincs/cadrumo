@@ -22,6 +22,7 @@ from ....core.config import (
     classify_storage_route,
     load_settings,
 )
+from .errors import StorageValidationError
 from .master_key._active_session import _active_session
 
 if TYPE_CHECKING:
@@ -49,6 +50,7 @@ class StorageRuntimeReadinessIssue(BaseModel):
     model_config = _STRICT_FROZEN
 
     code: StorageRuntimeReadinessCode
+    message_key: str = Field(min_length=1)
     message: str = Field(min_length=1)
 
 
@@ -97,13 +99,14 @@ class StorageRuntime(BaseModel):
 
         if self.readiness.ready:
             return
-        from .errors import StorageValidationError
 
         details = "; ".join(issue.message for issue in self.readiness.issues)
         if not details:
             details = "storage runtime reported no detailed readiness issue."
         raise StorageValidationError(
             f"storage runtime is not ready for profile-bound storage: {details}",
+            context={"details": _render_readiness_details(self.readiness.issues)},
+            translated_message="errors.storage.runtime.not_ready",
         )
 
     def secure_object_repository(self) -> SecureObjectRepository:
@@ -124,30 +127,61 @@ class StorageRuntime(BaseModel):
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""
 
-        from .errors import StorageValidationError
-
         active = _active_session.get()
         if active is None:
-            raise StorageValidationError(
+            raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: no active bucket session.",
+                message_key="errors.storage.runtime.no_active_session",
             )
         now = datetime.now(UTC)
         if active.sealed:
-            raise StorageValidationError(
+            raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session is sealed.",
+                message_key="errors.storage.runtime.session_sealed",
             )
         if active.is_expired(now):
-            raise StorageValidationError(
+            raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session has expired.",
+                message_key="errors.storage.runtime.session_expired",
             )
         if active.unsecured_backend:
-            raise StorageValidationError(
+            raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
+                message_key="errors.storage.runtime.unsecured_backend",
             )
         if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and active.bucket_id != self.bucket_id:
-            raise StorageValidationError(
+            raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session changed.",
+                message_key="errors.storage.runtime.session_changed",
             )
+
+
+def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValidationError:
+    from ....core.i18n import tr
+
+    return StorageValidationError(
+        message,
+        context={"details": tr(message_key)},
+        translated_message="errors.storage.runtime.not_ready",
+    )
+
+
+def _readiness_issue(
+    *,
+    code: StorageRuntimeReadinessCode,
+    message: str,
+    message_key: str,
+) -> StorageRuntimeReadinessIssue:
+    return StorageRuntimeReadinessIssue(code=code, message=message, message_key=message_key)
+
+
+def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
+    from ....core.i18n import tr
+
+    rendered = tuple(tr(issue.message_key) for issue in issues)
+    if not rendered:
+        return tr("errors.storage.runtime.no_detail")
+    return "; ".join(rendered)
 
 
 def inspect_storage_runtime(
@@ -166,8 +200,9 @@ def inspect_storage_runtime(
 
     if active is None:
         issues.append(
-            StorageRuntimeReadinessIssue(
+            _readiness_issue(
                 code=StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,
+                message_key="errors.storage.runtime.no_active_session",
                 message=(
                     "no active bucket session; run `aeat config profile switch NAME` "
                     "to unlock a profile before invoking profile-bound storage."
@@ -185,8 +220,9 @@ def inspect_storage_runtime(
         )
         if active.sealed:
             issues.append(
-                StorageRuntimeReadinessIssue(
+                _readiness_issue(
                     code=StorageRuntimeReadinessCode.SESSION_SEALED,
+                    message_key="errors.storage.runtime.session_sealed",
                     message=(
                         "the active bucket session is sealed; run `aeat config profile switch NAME` "
                         "to re-activate the profile."
@@ -195,8 +231,9 @@ def inspect_storage_runtime(
             )
         elif expired:
             issues.append(
-                StorageRuntimeReadinessIssue(
+                _readiness_issue(
                     code=StorageRuntimeReadinessCode.SESSION_EXPIRED,
+                    message_key="errors.storage.runtime.session_expired",
                     message=(
                         "the active bucket session has expired; run `aeat config profile switch NAME` "
                         "to re-activate the profile."
@@ -205,8 +242,9 @@ def inspect_storage_runtime(
             )
         elif active.unsecured_backend:
             issues.append(
-                StorageRuntimeReadinessIssue(
+                _readiness_issue(
                     code=StorageRuntimeReadinessCode.UNSECURED_BACKEND,
+                    message_key="errors.storage.runtime.unsecured_backend",
                     message=(
                         "the active bucket session uses the unsecured backend; "
                         "production profile-bound storage requires file or keyring custody."
@@ -216,8 +254,9 @@ def inspect_storage_runtime(
 
     if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
         issues.append(
-            StorageRuntimeReadinessIssue(
+            _readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
+                message_key="errors.storage.runtime.route_not_active_bucket",
                 message="the primary database route is not attached to an active profile bucket.",
             )
         )
@@ -227,8 +266,9 @@ def inspect_storage_runtime(
         and route.bucket_id != active.bucket_id
     ):
         issues.append(
-            StorageRuntimeReadinessIssue(
+            _readiness_issue(
                 code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
+                message_key="errors.storage.runtime.route_bucket_mismatch",
                 message="the primary database route does not match the active bucket session.",
             )
         )

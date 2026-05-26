@@ -83,6 +83,34 @@ adapters:
       testing_project_cap_warning: El refresh token de Google OAuth s'apropa al límit
         de 7 dies del projecte en mode Testing (queden unes {hours_remaining}h); torna
         a executar `aeat config google login` per allargar la vida útil de la credencial.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Ha fallat l''extracció de la declaració amb el perfil
+          {profile}: {details}'
+        modelo_conflict: --modelo {modelo!r} entra en conflicte amb el model detectat
+          {detected!r}.
+        period_unresolved: No s'ha pogut resoldre el període de la declaració a partir
+          del text del PDF.
+        profile_count_invalid: 'S''esperava exactament un perfil d''extracció de PDF
+          de declaració per a modelo={modelo}; disponibles: {available}.'
+        profile_unavailable: El perfil d'extracció de declaració {profile!r} no està
+          disponible per a modelo={modelo}.
+        registry_snapshot_required: 'L''extracció de declaració requereix un snapshot
+          validat del registre per a modelo={modelo} any={year} període={period}:
+          {error}'
+        snapshot_modelo_conflict: El model del snapshot del registre {snapshot_modelo!r}
+          entra en conflicte amb el detectat {detected!r}.
+        tax_id_unresolved: No s'ha pogut resoldre l'identificador fiscal de la declaració
+          a partir del text del PDF.
+        template_not_detected: No s'ha pogut detectar automàticament la plantilla
+          de {path}; indica --modelo i --año per forçar-la.
+        year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
+    pdf:
+      errors:
+        no_text: No s'ha extret text de {source}; {label} pot ser un escaneig o XFA.
+        not_found: '{label}: {path}'
+        open_failed: 'pdfplumber no ha pogut obrir {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -1046,8 +1074,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
-      plan_help: Planificació de reparació en sec i amb preservació primer per
-        a files d'objectes segurs no llegibles.
+      plan_help: Planificació de reparació en sec i amb preservació primer per a files
+        d'objectes segurs no llegibles.
       profile_clear_active_help: Netejar un perfil actiu de fitxer-punter només quan
         apunta a estat de perfil il·legible.
       profile_clear_active_mismatch: --clear-active només pot esborrar el punter del
@@ -2121,6 +2149,11 @@ errors:
       ha estat rebutjada.
     error_borrador_artefact_not_recognised: El PDF no coincideix amb cap format d'esborrany
       del Model 100 conegut.
+    error_bucket_browse: No s'ha pogut consultar el catàleg de buckets.
+    error_bucket_maintenance: Ha fallat una operació de manteniment de bucket.
+    error_buckets: S'ha produït un error en l'historial d'esdeveniments de buckets.
+    error_calc_sheets_translation: No s'ha pogut traduir una fórmula del registre
+      a Google Sheets.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
       el registre de càlcul.
     error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
@@ -2309,6 +2342,10 @@ errors:
     fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
     fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
+    fail_bucket_event_history_persistence: No s'ha pogut desar o carregar l'historial
+      d'esdeveniments de buckets.
+    fail_bucket_export: No s'ha pogut exportar l'arxiu del bucket.
+    fail_bucket_import: No s'ha pogut importar l'arxiu del bucket.
     fail_declaracion_parse: No s'ha pogut interpretar el PDF com una declaració.
     fail_export: S'ha produït un error en exportar cap a l'AEAT.
     fail_export_format: L'esborrany de la declaració no s'ha pogut serialitzar al
@@ -2574,6 +2611,15 @@ errors:
       pot executar amb les dades indicades.
     refused_application_registry_input: La sol·licitud al registre de models no es
       pot executar amb les dades indicades.
+    refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
+      a un bucket registrat.
+    refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
+      però no implementat.
+    refused_bucket_delete: La porta d'accions destructives ha rebutjat l'esborrat
+      del bucket.
+    refused_bucket_event_validation: Un esdeveniment de bucket no ha superat la validació.
+    refused_bucket_rename: La sol·licitud de canvi de nom del bucket infringeix regles
+      d'unicitat o adreçament.
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
       dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
       càlcul.
@@ -2624,6 +2670,10 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_iva_compensation_carry_forward_policy: Els lots de compensació d'IVA pendent
+      infringeixen la política activa.
+    refused_iva_compensation_reconciliation_input: L'evidència de la cartera de compensació
+      d'IVA no coincideix amb la unitat de treball del Model 303 objectiu.
     refused_ledger_business_operation_invoice_input: Una dada indicada infringeix
       el contracte de la factura d'operació. Corregeix l'entrada i torna-ho a provar.
     refused_ledger_business_operation_invoice_not_found: No existeix cap factura d'operació
@@ -2728,6 +2778,31 @@ errors:
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+  storage:
+    engine:
+      create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.
+        Comprova la ruta d'emmagatzematge configurada i torna-ho a provar.
+      empty_database_url: L'URL de base de dades configurada és buida. Selecciona
+        un perfil o configura l'emmagatzematge abans de tornar-ho a provar.
+    runtime:
+      no_active_session: No hi ha cap sessió de bucket activa. Executa `aeat config
+        profile switch NAME` per desbloquejar un perfil.
+      no_detail: No s'ha informat cap detall de preparació.
+      not_ready: "El runtime d'emmagatzematge no està preparat per a emmagatzematge
+        vinculat al perfil: %{details}"
+      route_bucket_mismatch: La ruta de base de dades no coincideix amb la sessió
+        de bucket activa.
+      route_not_active_bucket: La ruta de base de dades no està associada a un bucket
+        de perfil actiu.
+      session_changed: La sessió de bucket activa ha canviat. Torna a desbloquejar
+        el perfil de destinació.
+      session_expired: La sessió de bucket activa ha caducat. Executa `aeat config
+        profile switch NAME` per reactivar el perfil.
+      session_sealed: La sessió de bucket activa està segellada. Executa `aeat config
+        profile switch NAME` per reactivar el perfil.
+      unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
+        L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
+        o anell de claus.
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'
