@@ -25,11 +25,12 @@ Repaired secure-storage test shortcut coverage by removing platform skip gates f
 ## Changes
 
 - Replaced the blob materialisation `skipif` with a real behavior assertion that runs on every platform and checks POSIX mode bits only where POSIX mode semantics exist.
-- Replaced the master-key file-mode `skipif` with the same platform-neutral pattern, staged as a narrow hunk to avoid folding unrelated in-flight master-key work into this step.
-- Confirmed no `skipif` or `xfail` markers remain under secure-storage tests.
+- Replaced the master-key file-mode `skipif` with the same platform-neutral pattern.
+- Follow-up review repaired the committed master-key test surface so it is self-contained against the production bucket-DEK and explicit-provisioning implementation.
+- Confirmed no `pytest.skip`, `importorskip`, `skipif`, or `xfail` markers remain in the repaired S75 test files.
 
 ## Validation
 
 - `uv run ruff check src\aeat\adapters\persistence\storage\blob_store\test_materialisation.py src\aeat\adapters\persistence\storage\master_key\test_master_key.py`
 - `uv run pytest src\aeat\adapters\persistence\storage\master_key\test_master_key.py src\aeat\adapters\persistence\storage\blob_store\test_materialisation.py -q`
-- `rg -n "skipif|xfail" src\aeat\adapters\persistence\storage -g "test_*.py"`
+- `rg -n "pytest\.skip|importorskip|skipif|xfail" src\aeat\adapters\persistence\storage\master_key\test_master_key.py src\aeat\adapters\persistence\storage\blob_store\test_materialisation.py`
