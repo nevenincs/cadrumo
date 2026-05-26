@@ -14,6 +14,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 from ....core.classification import SensitivityClass
 from ....core.identity._documents import IdentityError
 from ....core.identity._tax_id import validate_spanish_tax_id
+from ._aeat_hosts import first_aeat_host
 from ._errors import RegistryValidationError
 from ._ids import (
     ApplicationLinkId,
@@ -785,32 +786,6 @@ class ProfilePredicateDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
-# Suffix match for AEAT-owned infrastructure. Synthetic taxpayer,
-# counterparty, declaration, profile, or form data must not be sent to
-# any host under these suffixes; see the no-synthetic-sede-live-surfaces
-# ADR. The companion guard layer (``_remote_state_guard``) keeps an
-# identical suffix tuple as a runtime defence-in-depth check.
-_AEAT_HOST_SUFFIXES_FOR_SYNTHETIC_BAN: tuple[str, ...] = (
-    "agenciatributaria.gob.es",
-    "aeat.es",
-)
-
-
-def _first_aeat_allowed_host(hosts: tuple[str, ...]) -> str | None:
-    """Return the first AEAT-owned host in ``hosts`` or ``None``.
-
-    A host is AEAT-owned if its normalised lowercase form equals one of
-    the canonical AEAT suffixes or ends with ``f".{suffix}"``.
-    """
-
-    for host in hosts:
-        normalised = host.lower()
-        for suffix in _AEAT_HOST_SUFFIXES_FOR_SYNTHETIC_BAN:
-            if normalised == suffix or normalised.endswith(f".{suffix}"):
-                return host
-    return None
-
-
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
     evidence_tier: EvidenceTier
@@ -966,7 +941,7 @@ class LiveCrossReferenceDecision(RegistryModel):
                 f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
             )
         if self.synthetic_data_allowed:
-            aeat_host = _first_aeat_allowed_host(self.allowed_hosts)
+            aeat_host = first_aeat_host(self.allowed_hosts)
             if aeat_host is not None:
                 raise RegistryValidationError(
                     f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
