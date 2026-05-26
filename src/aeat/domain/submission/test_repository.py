@@ -9,23 +9,20 @@ from pathlib import Path
 import pytest
 
 from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
+    Envelope,
+    SensitivityClass,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.domain.submission import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
 from aeat.domain.submission._repository import (
     SubmissionRepository,
 )
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
 
@@ -57,30 +54,13 @@ def _make_filing(
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        try:
-            yield
-        finally:
-            override_secret_store(None)
-            dispose_engine()
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="submission-test") as profile:
+        yield profile
 
 
-def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+def _database_bytes(runtime_profile: TestRuntimeProfile) -> bytes:
+    return (runtime_profile.paths.db_dir / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -151,19 +131,23 @@ class TestDelete:
 
 
 class TestClassificationGate:
-    def test_database_payload_is_encrypted_audit_data(self, tmp_path: Path) -> None:
+    def test_database_payload_is_encrypted_audit_data(
+        self,
+        runtime_profile: TestRuntimeProfile,
+    ) -> None:
         repo = SubmissionRepository()
         filing = _make_filing()
         repo.save(filing)
-        raw = _database_bytes(tmp_path)
+        raw = _database_bytes(runtime_profile)
         assert b"secure_objects" in raw
         assert b"00000000T" not in raw
         assert filing.submission_id.encode("utf-8") not in raw
         assert repo.load(filing.submission_id) == filing
 
-    def test_foreign_class_object_refused(self) -> None:
-        from aeat.adapters.persistence.storage import Envelope, SensitivityClass
-
+    def test_foreign_class_object_refused(
+        self,
+        runtime_profile: TestRuntimeProfile,
+    ) -> None:
         filing = _make_filing()
         bad = Envelope[ModeloPresentado](
             schema_version=1,
@@ -172,7 +156,7 @@ class TestClassificationGate:
             payload=filing,
         )
         repo = SubmissionRepository()
-        SecureObjectRepository().save(
+        runtime_profile.repository.save(
             namespace="aeat.domain.submission.records",
             object_key=filing.submission_id,
             classification=SensitivityClass.OPERATIONAL,

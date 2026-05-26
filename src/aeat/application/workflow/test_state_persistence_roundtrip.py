@@ -12,11 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
-from ...core.config import Settings
+from ...tests.secure_sql import isolated_runtime_profile
 from ..auth._models import AuthState
 from ..review._models import InvoiceReviewRecord, LedgerReviewRecord
 from ._models import (
@@ -87,7 +83,6 @@ def _populated_workflow_state() -> WorkflowState:
 
 def test_workflow_state_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated WorkflowState saved through the repository loads back equal.
 
@@ -108,53 +103,34 @@ def test_workflow_state_survives_encrypted_storage_roundtrip(
     not exercise it.
     """
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-state-roundtrip.db"
-        database_url = f"sqlite:///{db_path.as_posix()}"
-        monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
-        dispose_engine()
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_workflow_state()
+        repo = WorkflowStateRepository()
+        repo.save(original)
+        loaded = repo.load()
 
-            original = _populated_workflow_state()
-            repo = WorkflowStateRepository()
-            repo.save(original)
-            loaded = repo.load()
-
-            # The repository stamps a fresh ``updated_at`` on every save
-            # (see ``WorkflowStateRepository.to_secure_object_write``).
-            # Compare every field EXCEPT updated_at by re-projecting the
-            # loaded state onto the original's timestamp; assert separately
-            # that the stamped timestamp is >= the original.
-            loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
-            assert loaded_normalised == original
-            assert loaded.updated_at >= original.updated_at
-            assert "303:2025Q1" in loaded.declarations
-            loaded_decl = loaded.declarations["303:2025Q1"]
-            assert loaded_decl.draft_id == "d" * 64
-            assert loaded_decl.exported_path == "exports/303-2025Q1.txt"
-            assert len(loaded.bucket_events) == 1
-            assert loaded.bucket_events[0].action == "profile.bucket.created"
-            assert loaded.bucket_events[0].bucket_id == "b" * 32
-            assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
-            loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
-            assert isinstance(loaded_invoice, InvoiceReviewRecord)
-            assert loaded_invoice.fields == {"note": "follow up VAT split"}
-            assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
-            loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
-            assert isinstance(loaded_ledger, LedgerReviewRecord)
-            assert loaded_ledger.transaction_id == "transaction-2024-abc"
-        finally:
-            engine.dispose()
-            dispose_engine()
+        loaded_normalised = loaded.model_copy(update={"updated_at": original.updated_at})
+        assert loaded_normalised == original
+        assert loaded.updated_at >= original.updated_at
+        assert "303:2025Q1" in loaded.declarations
+        loaded_decl = loaded.declarations["303:2025Q1"]
+        assert loaded_decl.draft_id == "d" * 64
+        assert loaded_decl.exported_path == "exports/303-2025Q1.txt"
+        assert len(loaded.bucket_events) == 1
+        assert loaded.bucket_events[0].action == "profile.bucket.created"
+        assert loaded.bucket_events[0].bucket_id == "b" * 32
+        assert set(loaded.invoice_reviews) == {"invoice-2024-001"}
+        loaded_invoice = loaded.invoice_reviews["invoice-2024-001"]
+        assert isinstance(loaded_invoice, InvoiceReviewRecord)
+        assert loaded_invoice.fields == {"note": "follow up VAT split"}
+        assert set(loaded.ledger_reviews) == {"transaction-2024-abc"}
+        loaded_ledger = loaded.ledger_reviews["transaction-2024-abc"]
+        assert isinstance(loaded_ledger, LedgerReviewRecord)
+        assert loaded_ledger.transaction_id == "transaction-2024-abc"
 
 
 def test_workflow_state_absent_load_returns_empty_state(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The repository's empty-state fallback survives the boundary.
 
@@ -163,26 +139,10 @@ def test_workflow_state_absent_load_returns_empty_state(
     contract not exercised by the round-trip test above.
     """
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-state-empty.db"
-        database_url = f"sqlite:///{db_path.as_posix()}"
-        monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
-        dispose_engine()
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repo = WorkflowStateRepository()
+        loaded = repo.load()
 
-            repo = WorkflowStateRepository()
-            loaded = repo.load()
-
-            # Empty-default identity: no declarations, empty event tuple.
-            # Registered profiles are a filesystem-manifest scan, not a
-            # persisted field; no buckets are provisioned in this test.
-            assert list_profile_buckets(root=tmp_path) == {}
-            assert loaded.declarations == {}
-            assert loaded.bucket_events == ()
-        finally:
-            engine.dispose()
-            dispose_engine()
+        assert set(list_profile_buckets(root=profile.storage_root)) == {profile.bucket_id}
+        assert loaded.declarations == {}
+        assert loaded.bucket_events == ()

@@ -66,7 +66,7 @@ def _profile() -> TaxpayerProfile:
     )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     dispose_engine()
     monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)

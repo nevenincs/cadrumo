@@ -79,7 +79,7 @@ _INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
 )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def _backend(tmp_path: Path) -> Iterator[Path]:
     """A real per-bucket storage root with an active master-key session."""
 

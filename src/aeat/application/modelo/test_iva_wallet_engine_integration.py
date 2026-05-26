@@ -11,9 +11,6 @@ from pathlib import Path
 import pytest
 
 from aeat.adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.application.calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -25,13 +22,13 @@ from aeat.application.modelo import (
     create_work_unit,
 )
 from aeat.application.user_profile import UserProfileLifecycleRepository
-from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -43,17 +40,8 @@ _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    with provider, override_settings(
-        aeat_database_url=f"sqlite:///{(tmp_path / 'iva-wallet-engine.db').as_posix()}",
-        aeat_active_profile="operator",
-    ) as settings:
-        engine = get_engine(settings)
-        SecureObjectRepository(engine=engine)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="operator"):
+        yield
 
 
 def _wallet_observation(
