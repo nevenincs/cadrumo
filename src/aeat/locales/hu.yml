@@ -98,6 +98,7 @@ aggregation:
       bucket_mismatch: aggregation.renta_ledger.errors.bucket_mismatch
       modelo_mismatch: aggregation.renta_ledger.errors.modelo_mismatch
       period_mismatch: aggregation.renta_ledger.errors.period_mismatch
+      quarterly_period_required: aggregation.renta_ledger.errors.quarterly_period_required
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -515,9 +516,9 @@ cli:
         casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
           ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
           minősített formát.'
-        casilla_bare_numeric_unknown: 'A --casilla {key} nem illeszkedik egyetlen casilla-számra
+        casilla_bare_numeric_unknown: A --casilla {key} nem illeszkedik egyetlen casilla-számra
           sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
-          használd az `aeat app modelo casillas <MODELO>` parancsot.'
+          használd az `aeat app modelo casillas <MODELO>` parancsot.
         casilla_help: cli.app.modelo.work.casilla_help
         casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
         create_created: cli.app.modelo.work.create_created

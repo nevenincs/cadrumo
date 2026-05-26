@@ -117,9 +117,7 @@ field as ``ModeloYear``.
 """
 
 
-_PERIOD_CODE_RE = re.compile(
-    r"^(?:[1-4]T|[1-4]P|0A|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$"
-)
+_PERIOD_CODE_RE = re.compile(r"^(?:[1-4]T|[1-4]P|0A|0[1-9]|1[0-2]|EXT-[1-4]T|AD-HOC|EVENT-\d+)$")
 
 
 def _validate_period_code(value: object) -> object:
@@ -139,13 +137,9 @@ def _validate_period_code(value: object) -> object:
     """
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"period_code value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"period_code value must be a string, got {type(value).__name__}")
     if not _PERIOD_CODE_RE.match(value):
-        raise RegistryValidationError(
-            f"period_code value {value!r} does not match a supported filing-period form"
-        )
+        raise RegistryValidationError(f"period_code value {value!r} does not match a supported filing-period form")
     return value
 
 
@@ -176,9 +170,7 @@ def _validate_country_code(value: object) -> object:
     """
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"country_code value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"country_code value must be a string, got {type(value).__name__}")
     if not _COUNTRY_CODE_RE.match(value):
         raise RegistryValidationError(
             f"country_code value {value!r} must be a two-character uppercase ISO alpha-2 code"
@@ -203,9 +195,7 @@ _IBAN_SHAPE_RE = re.compile(r"^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$")
 def _iban_mod_97(canonical: str) -> int:
     """Compute the IBAN mod-97 check residue for an already-canonical IBAN."""
     rearranged = canonical[4:] + canonical[:4]
-    numeric = "".join(
-        ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged
-    )
+    numeric = "".join(ch if ch.isdigit() else str(ord(ch) - ord("A") + 10) for ch in rearranged)
     return int(numeric) % 97
 
 
@@ -220,20 +210,14 @@ def _validate_iban_string(value: object) -> object:
     """
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"iban value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"iban value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").replace("-", "").upper()
     if not canonical:
         raise RegistryValidationError("iban value must not be blank")
     if not _IBAN_SHAPE_RE.match(canonical):
-        raise RegistryValidationError(
-            f"iban value {value!r} does not match the ISO 13616 shape"
-        )
+        raise RegistryValidationError(f"iban value {value!r} does not match the ISO 13616 shape")
     if _iban_mod_97(canonical) != 1:
-        raise RegistryValidationError(
-            f"iban value {value!r} fails the mod-97 check"
-        )
+        raise RegistryValidationError(f"iban value {value!r} fails the mod-97 check")
     return canonical
 
 
@@ -270,9 +254,7 @@ def _validate_nif_iva_string(value: object) -> object:
     """Validate an intracomunitario NIF-IVA: ISO country prefix plus identifier body."""
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"nif_iva value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"nif_iva value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").replace("-", "").upper()
     if not _NIF_IVA_RE.match(canonical):
         raise RegistryValidationError(
@@ -286,10 +268,29 @@ NifIvaString = Annotated[str, BeforeValidator(_validate_nif_iva_string)]
 """Intracomunitario NIF-IVA string for the registry boundary."""
 
 
-_CCAA_CODES = frozenset({
-    "01", "02", "03", "04", "05", "06", "07", "08", "09", "10",
-    "11", "12", "13", "14", "15", "16", "17", "18", "19",
-})
+_CCAA_CODES = frozenset(
+    {
+        "01",
+        "02",
+        "03",
+        "04",
+        "05",
+        "06",
+        "07",
+        "08",
+        "09",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+    }
+)
 
 
 def _validate_ccaa_code(value: object) -> object:
@@ -315,9 +316,7 @@ def _validate_province_code(value: object) -> object:
     """Validate a Spanish province code (01-52)."""
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"province_code value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"province_code value must be a string, got {type(value).__name__}")
     if not _PROVINCE_CODE_RE.match(value):
         raise RegistryValidationError(
             f"province_code value {value!r} must be a two-digit Spanish province code (01-52)"
@@ -336,13 +335,9 @@ def _validate_postal_code(value: object) -> object:
     """Validate a Spanish postal code (five digits)."""
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"postal_code value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"postal_code value must be a string, got {type(value).__name__}")
     if not _POSTAL_CODE_RE.match(value):
-        raise RegistryValidationError(
-            f"postal_code value {value!r} must be a five-digit Spanish postal code"
-        )
+        raise RegistryValidationError(f"postal_code value {value!r} must be a five-digit Spanish postal code")
     return value
 
 
@@ -357,13 +352,9 @@ def _validate_municipality_code(value: object) -> object:
     """Validate a five-digit INE municipality code."""
 
     if not isinstance(value, str):
-        raise RegistryValidationError(
-            f"municipality_code value must be a string, got {type(value).__name__}"
-        )
+        raise RegistryValidationError(f"municipality_code value must be a string, got {type(value).__name__}")
     if not _MUNICIPALITY_CODE_RE.match(value):
-        raise RegistryValidationError(
-            f"municipality_code value {value!r} must be a five-digit INE municipality code"
-        )
+        raise RegistryValidationError(f"municipality_code value {value!r} must be a five-digit INE municipality code")
     return value
 
 
@@ -381,9 +372,7 @@ def _validate_bic_string(value: object) -> object:
         raise RegistryValidationError(f"bic value must be a string, got {type(value).__name__}")
     canonical = value.replace(" ", "").upper()
     if not _BIC_RE.match(canonical):
-        raise RegistryValidationError(
-            f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362"
-        )
+        raise RegistryValidationError(f"bic value {value!r} must be 8 or 11 alphanumeric characters per ISO 9362")
     return canonical
 
 
@@ -401,9 +390,7 @@ def _validate_calendar_date(value: object) -> object:
     if not isinstance(value, str):
         raise RegistryValidationError(f"date value must be a string, got {type(value).__name__}")
     if not (_DATE_ISO_RE.match(value) or _DATE_DDMMAAAA_RE.match(value)):
-        raise RegistryValidationError(
-            f"date value {value!r} must be ISO 8601 (yyyy-mm-dd) or AEAT ddmmaaaa"
-        )
+        raise RegistryValidationError(f"date value {value!r} must be ISO 8601 (yyyy-mm-dd) or AEAT ddmmaaaa")
     return value
 
 
@@ -906,9 +893,7 @@ class LiveCrossReferenceDecision(RegistryModel):
         authorization; authenticated simulators must require auth.
         """
         if self.surface == "open_simulator" and self.requires_authentication:
-            raise RegistryValidationError(
-                f"cross-reference {self.id!r} open simulator must not require authentication"
-            )
+            raise RegistryValidationError(f"cross-reference {self.id!r} open simulator must not require authentication")
         if self.surface == "public_read_surface" and self.requires_authentication:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} public read surface must not require authentication"
@@ -1427,6 +1412,7 @@ class DataBindingDefinition(RegistryModel):
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
+        "ledger_renta_income_aggregation",
         "payable_invoice",
         "collectible_invoice",
         "ledger_transaction",
@@ -1597,10 +1583,25 @@ class CasillaDefinition(RegistryModel):
     label: str
     section: tuple[str, ...]
     data_type: Literal[
-        "decimal", "money", "integer", "ratio", "text", "boolean",
-        "nif", "year", "period_code", "country_code", "iban",
-        "name", "nif_iva", "ccaa_code", "province_code",
-        "postal_code", "municipality_code", "bic", "date",
+        "decimal",
+        "money",
+        "integer",
+        "ratio",
+        "text",
+        "boolean",
+        "nif",
+        "year",
+        "period_code",
+        "country_code",
+        "iban",
+        "name",
+        "nif_iva",
+        "ccaa_code",
+        "province_code",
+        "postal_code",
+        "municipality_code",
+        "bic",
+        "date",
     ] = "money"
     required: bool = False
     input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
@@ -1723,9 +1724,7 @@ class CalculationCompletenessManifest(RegistryModel):
     @model_validator(mode="after")
     def _validate_manifest(self) -> CalculationCompletenessManifest:
         if not self.casillas:
-            raise RegistryValidationError(
-                "calculation-completeness manifest must enumerate at least one casilla"
-            )
+            raise RegistryValidationError("calculation-completeness manifest must enumerate at least one casilla")
         identities = [casilla.identity() for casilla in self.casillas]
         duplicates = sorted({pair for pair in identities if identities.count(pair) > 1})
         if duplicates:
@@ -1742,13 +1741,11 @@ class CalculationCompletenessManifest(RegistryModel):
             )
         if self.manual_extraction and self.manual_extraction_reason is None:
             raise RegistryValidationError(
-                "calculation-completeness manifest with manual_extraction must declare "
-                "manual_extraction_reason"
+                "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason"
             )
         if not self.manual_extraction and self.manual_extraction_reason is not None:
             raise RegistryValidationError(
-                "calculation-completeness manifest declares manual_extraction_reason "
-                "without manual_extraction"
+                "calculation-completeness manifest declares manual_extraction_reason without manual_extraction"
             )
         return self
 
@@ -1950,9 +1947,7 @@ class ExportLayoutDefinition(RegistryModel):
             normalised[record.id] = _normalise_fichero_boe_encoding(record.encoding)
         unique_encodings = set(normalised.values())
         if len(unique_encodings) > 1:
-            per_record = ", ".join(
-                f"{record_id}={encoding!r}" for record_id, encoding in sorted(normalised.items())
-            )
+            per_record = ", ".join(f"{record_id}={encoding!r}" for record_id, encoding in sorted(normalised.items()))
             raise RegistryValidationError(
                 f"export layout {self.id!r} declares inconsistent encodings "
                 f"across its records: {per_record}. A single fichero-BOE "

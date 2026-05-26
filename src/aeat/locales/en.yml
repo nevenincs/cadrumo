@@ -129,6 +129,7 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+      quarterly_period_required: Quarterly period is required for M130 income aggregation (e.g. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -657,11 +658,12 @@ cli:
           with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
-        casilla_bare_numeric_ambiguous: '--casilla {key} matches multiple casillas in
-          this revision: {candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
-        casilla_bare_numeric_unknown: '--casilla {key} does not match any casilla number
+        casilla_bare_numeric_ambiguous: '--casilla {key} matches multiple casillas
+          in this revision: {candidates}. Supply the qualified PREFIX:NNNNN form to
+          disambiguate.'
+        casilla_bare_numeric_unknown: --casilla {key} does not match any casilla number
           in this revision.{prefix_hint} Use `aeat app modelo casillas <MODELO>` to
-          list valid casilla IDs.'
+          list valid casilla IDs.
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.

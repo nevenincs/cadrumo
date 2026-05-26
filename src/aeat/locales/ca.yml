@@ -144,6 +144,7 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
+      quarterly_period_required: Es requereix un període trimestral per a l'agregació d'ingressos del Model 130 (p.ex. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -712,9 +713,9 @@ cli:
         casilla_bare_numeric_ambiguous: '--casilla {key} coincideix amb diverses caselles
           en aquesta revisió: {candidates}. Utilitza la forma qualificada PREFIX:NNNNN
           per desambiguar.'
-        casilla_bare_numeric_unknown: '--casilla {key} no coincideix amb cap número
+        casilla_bare_numeric_unknown: --casilla {key} no coincideix amb cap número
           de casella en aquesta revisió.{prefix_hint} Utilitza `aeat app modelo casillas
-          <MODELO>` per llistar els identificadors de casella vàlids.'
+          <MODELO>` per llistar els identificadors de casella vàlids.
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
           admet l'id de casella, el número del registre o el número de casella imprès
           al BOE mostrats per `aeat app modelo casillas`.
