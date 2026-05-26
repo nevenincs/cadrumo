@@ -3157,6 +3157,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.usage_ratio_id == current.usage_ratio_id
         and command.prorrata_reference == current.prorrata_reference
         and command.purchase_invoice_evidence_id == current.purchase_invoice_evidence_id
+        # tuple[str, ...] on both sides — Python tuple equality is value-equal, not identity-equal.
         and command.attachment_ids == current.attachment_ids
         and command.notes == current.notes
     )
