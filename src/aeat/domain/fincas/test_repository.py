@@ -2,53 +2,44 @@
 
 from __future__ import annotations
 
-import secrets
 from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
     RepositoryError,
-    create_engine_from_settings,
     session_scope,
 )
-from aeat.adapters.persistence.storage.crypto._crypto import KEY_SIZE
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.core.config import Settings
+from aeat.adapters.persistence.storage.sql.engine import get_engine
 from aeat.domain.fincas import (
-    ExpenseCategory,
-    FincaAmortizacionLedgerEntry,
-    FincaAmortizacionLedgerRepository,
     Arrendamiento,
     ArrendamientoRepository,
+    ExpenseCategory,
+    Finca,
+    FincaAmortizacionLedgerEntry,
+    FincaAmortizacionLedgerRepository,
     FincaGasto,
     FincaGastoRepository,
-    Finca,
-    FincaRepository,
     FincaRendimientoRecord,
     FincaRendimientoRepository,
+    FincaRepository,
     UseType,
 )
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key() -> Iterator[None]:
-    """Inject a deterministic master key for the encrypted address column."""
-    with EphemeralMasterKeyProvider(key=secrets.token_bytes(KEY_SIZE)):
-        yield
+def engine(tmp_path: Path) -> Iterator[Engine]:
+    """Provide a real encrypted SQL engine through the profile runtime."""
 
-
-def _engine(tmp_path: Path):
-    settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'rental.db').as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
-    return engine
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield get_engine(profile.settings)
 
 
 def _sample_finca(identifier: str = "calle-mayor-12-3a") -> Finca:
@@ -66,43 +57,39 @@ def _sample_finca(identifier: str = "calle-mayor-12-3a") -> Finca:
     )
 
 
-def test_finca_repository_round_trip(tmp_path: Path) -> None:
-    engine = _engine(tmp_path)
-    try:
-        with session_scope(engine) as session:
-            repo = FincaRepository(session)
-            created = repo.upsert(_sample_finca())
-            assert created.id is not None
-            assert created.address.startswith("Calle Mayor")
-            assert created.use_type is UseType.VIVIENDA_ARRENDADA
-            assert created.is_stressed_area is True
+def test_finca_repository_round_trip(engine: Engine) -> None:
+    with session_scope(engine) as session:
+        repo = FincaRepository(session)
+        created = repo.upsert(_sample_finca())
+        assert created.id is not None
+        assert created.address.startswith("Calle Mayor")
+        assert created.use_type is UseType.VIVIENDA_ARRENDADA
+        assert created.is_stressed_area is True
 
-            assert repo.list_all() == [created]
-            assert repo.get_by_identifier("calle-mayor-12-3a") == created
+        assert repo.list_all() == [created]
+        assert repo.get_by_identifier("calle-mayor-12-3a") == created
 
-            updated = repo.upsert(
-                Finca(
-                    id=created.id,
-                    identifier=created.identifier,
-                    address="Calle Mayor 12, 3.º A, 28013 Madrid (renovado)",
-                    valor_catastral_total=created.valor_catastral_total,
-                    valor_catastral_construccion=created.valor_catastral_construccion,
-                    valor_catastral_revision_year=created.valor_catastral_revision_year,
-                    coste_adquisicion=created.coste_adquisicion,
-                    coste_adquisicion_construccion=created.coste_adquisicion_construccion,
-                    acquisition_date=created.acquisition_date,
-                    use_type=created.use_type,
-                    is_stressed_area=False,
-                ),
-            )
-            assert updated.address.endswith("(renovado)")
-            assert updated.is_stressed_area is False
+        updated = repo.upsert(
+            Finca(
+                id=created.id,
+                identifier=created.identifier,
+                address="Calle Mayor 12, 3.º A, 28013 Madrid (renovado)",
+                valor_catastral_total=created.valor_catastral_total,
+                valor_catastral_construccion=created.valor_catastral_construccion,
+                valor_catastral_revision_year=created.valor_catastral_revision_year,
+                coste_adquisicion=created.coste_adquisicion,
+                coste_adquisicion_construccion=created.coste_adquisicion_construccion,
+                acquisition_date=created.acquisition_date,
+                use_type=created.use_type,
+                is_stressed_area=False,
+            ),
+        )
+        assert updated.address.endswith("(renovado)")
+        assert updated.is_stressed_area is False
 
-            repo.delete(created.id)
-            with pytest.raises(RepositoryError):
-                repo.get(created.id)
-    finally:
-        engine.dispose()
+        repo.delete(created.id)
+        with pytest.raises(RepositoryError):
+            repo.get(created.id)
 
 
 def test_finca_construction_basis_validation_rejects_inverted_split(tmp_path: Path) -> None:
@@ -120,49 +107,45 @@ def test_finca_construction_basis_validation_rejects_inverted_split(tmp_path: Pa
         )
 
 
-def test_contract_repository_round_trip(tmp_path: Path) -> None:
-    engine = _engine(tmp_path)
-    try:
-        with session_scope(engine) as session:
-            finca_repo = FincaRepository(session)
-            finca = finca_repo.upsert(_sample_finca())
-            contract_repo = ArrendamientoRepository(session)
-            assert finca.id is not None
-            contract = contract_repo.upsert(
-                Arrendamiento(
-                    finca_id=finca.id,
-                    contract_celebration_date=date(2024, 6, 1),
-                    tenant_count=2,
-                    qualifying_co_tenant_count=1,
-                    tenant_min_age=30,
-                    tenant_max_age=42,
-                    initial_rent=Decimal("950.00"),
-                    is_first_rental=True,
-                ),
-            )
-            assert contract.id is not None
-            assert contract.qualifying_co_tenant_count == 1
+def test_contract_repository_round_trip(engine: Engine) -> None:
+    with session_scope(engine) as session:
+        finca_repo = FincaRepository(session)
+        finca = finca_repo.upsert(_sample_finca())
+        contract_repo = ArrendamientoRepository(session)
+        assert finca.id is not None
+        contract = contract_repo.upsert(
+            Arrendamiento(
+                finca_id=finca.id,
+                contract_celebration_date=date(2024, 6, 1),
+                tenant_count=2,
+                qualifying_co_tenant_count=1,
+                tenant_min_age=30,
+                tenant_max_age=42,
+                initial_rent=Decimal("950.00"),
+                is_first_rental=True,
+            ),
+        )
+        assert contract.id is not None
+        assert contract.qualifying_co_tenant_count == 1
 
-            listed = contract_repo.list_for_finca(finca.id)
-            assert listed == [contract]
+        listed = contract_repo.list_for_finca(finca.id)
+        assert listed == [contract]
 
-            terminated = contract_repo.upsert(
-                Arrendamiento(
-                    id=contract.id,
-                    finca_id=finca.id,
-                    contract_celebration_date=contract.contract_celebration_date,
-                    contract_termination_date=date(2025, 12, 31),
-                    tenant_count=contract.tenant_count,
-                    qualifying_co_tenant_count=contract.qualifying_co_tenant_count,
-                    tenant_min_age=contract.tenant_min_age,
-                    tenant_max_age=contract.tenant_max_age,
-                    initial_rent=contract.initial_rent,
-                    is_first_rental=contract.is_first_rental,
-                ),
-            )
-            assert terminated.contract_termination_date == date(2025, 12, 31)
-    finally:
-        engine.dispose()
+        terminated = contract_repo.upsert(
+            Arrendamiento(
+                id=contract.id,
+                finca_id=finca.id,
+                contract_celebration_date=contract.contract_celebration_date,
+                contract_termination_date=date(2025, 12, 31),
+                tenant_count=contract.tenant_count,
+                qualifying_co_tenant_count=contract.qualifying_co_tenant_count,
+                tenant_min_age=contract.tenant_min_age,
+                tenant_max_age=contract.tenant_max_age,
+                initial_rent=contract.initial_rent,
+                is_first_rental=contract.is_first_rental,
+            ),
+        )
+        assert terminated.contract_termination_date == date(2025, 12, 31)
 
 
 def test_contract_validation_rejects_termination_before_celebration() -> None:
@@ -187,125 +170,113 @@ def test_contract_validation_rejects_qualifying_share_overflow() -> None:
         )
 
 
-def test_income_repository_unique_per_period(tmp_path: Path) -> None:
-    engine = _engine(tmp_path)
-    try:
-        with session_scope(engine) as session:
-            finca_repo = FincaRepository(session)
-            contract_repo = ArrendamientoRepository(session)
-            income_repo = FincaRendimientoRepository(session)
-            finca = finca_repo.upsert(_sample_finca())
-            assert finca.id is not None
-            contract = contract_repo.upsert(
-                Arrendamiento(
-                    finca_id=finca.id,
-                    contract_celebration_date=date(2024, 1, 1),
-                    tenant_count=1,
-                    initial_rent=Decimal("1000.00"),
-                ),
-            )
-            assert contract.id is not None
-            first = income_repo.upsert(
-                FincaRendimientoRecord(
-                    contract_id=contract.id,
-                    period_year=2025,
-                    gross_rent_received=Decimal("12000.00"),
-                    dias_alquilados=365,
-                ),
-            )
-            assert first.id is not None
+def test_income_repository_unique_per_period(engine: Engine) -> None:
+    with session_scope(engine) as session:
+        finca_repo = FincaRepository(session)
+        contract_repo = ArrendamientoRepository(session)
+        income_repo = FincaRendimientoRepository(session)
+        finca = finca_repo.upsert(_sample_finca())
+        assert finca.id is not None
+        contract = contract_repo.upsert(
+            Arrendamiento(
+                finca_id=finca.id,
+                contract_celebration_date=date(2024, 1, 1),
+                tenant_count=1,
+                initial_rent=Decimal("1000.00"),
+            ),
+        )
+        assert contract.id is not None
+        first = income_repo.upsert(
+            FincaRendimientoRecord(
+                contract_id=contract.id,
+                period_year=2025,
+                gross_rent_received=Decimal("12000.00"),
+                dias_alquilados=365,
+            ),
+        )
+        assert first.id is not None
 
-            updated = income_repo.upsert(
-                FincaRendimientoRecord(
-                    contract_id=contract.id,
-                    period_year=2025,
-                    gross_rent_received=Decimal("13200.00"),
-                    dias_alquilados=365,
-                ),
-            )
-            assert updated.id == first.id
-            assert updated.gross_rent_received == Decimal("13200.00")
-            assert income_repo.list_for_period(2025) == [updated]
-    finally:
-        engine.dispose()
+        updated = income_repo.upsert(
+            FincaRendimientoRecord(
+                contract_id=contract.id,
+                period_year=2025,
+                gross_rent_received=Decimal("13200.00"),
+                dias_alquilados=365,
+            ),
+        )
+        assert updated.id == first.id
+        assert updated.gross_rent_received == Decimal("13200.00")
+        assert income_repo.list_for_period(2025) == [updated]
 
 
-def test_expense_repository_multiple_categories(tmp_path: Path) -> None:
-    engine = _engine(tmp_path)
-    try:
-        with session_scope(engine) as session:
-            finca_repo = FincaRepository(session)
-            expense_repo = FincaGastoRepository(session)
-            finca = finca_repo.upsert(_sample_finca())
-            assert finca.id is not None
-            expense_repo.add(
-                FincaGasto(
-                    finca_id=finca.id,
-                    period_year=2025,
-                    category=ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
-                    amount=Decimal("420.00"),
-                ),
-            )
-            expense_repo.add(
-                FincaGasto(
-                    finca_id=finca.id,
-                    period_year=2025,
-                    category=ExpenseCategory.COMUNIDAD,
-                    amount=Decimal("780.00"),
-                ),
-            )
-            listed = expense_repo.list_for_finca_period(finca.id, 2025)
-            assert {e.category for e in listed} == {
-                ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
-                ExpenseCategory.COMUNIDAD,
-            }
-    finally:
-        engine.dispose()
+def test_expense_repository_multiple_categories(engine: Engine) -> None:
+    with session_scope(engine) as session:
+        finca_repo = FincaRepository(session)
+        expense_repo = FincaGastoRepository(session)
+        finca = finca_repo.upsert(_sample_finca())
+        assert finca.id is not None
+        expense_repo.add(
+            FincaGasto(
+                finca_id=finca.id,
+                period_year=2025,
+                category=ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
+                amount=Decimal("420.00"),
+            ),
+        )
+        expense_repo.add(
+            FincaGasto(
+                finca_id=finca.id,
+                period_year=2025,
+                category=ExpenseCategory.COMUNIDAD,
+                amount=Decimal("780.00"),
+            ),
+        )
+        listed = expense_repo.list_for_finca_period(finca.id, 2025)
+        assert {e.category for e in listed} == {
+            ExpenseCategory.IBI_TRIBUTOS_NO_ESTATALES,
+            ExpenseCategory.COMUNIDAD,
+        }
 
 
-def test_amortization_ledger_repository_unique_per_finca_period(tmp_path: Path) -> None:
-    engine = _engine(tmp_path)
-    try:
-        with session_scope(engine) as session:
-            finca_repo = FincaRepository(session)
-            ledger_repo = FincaAmortizacionLedgerRepository(session)
-            finca = finca_repo.upsert(_sample_finca())
-            assert finca.id is not None
-            entry_a = ledger_repo.upsert(
-                FincaAmortizacionLedgerEntry(
-                    finca_id=finca.id,
-                    period_year=2024,
-                    dias_alquilados=365,
-                    basis_used=Decimal("166666.67"),
-                    amortization_amount=Decimal("5000.00"),
-                    cumulative_amortization_through_year=Decimal("5000.00"),
-                ),
-            )
-            entry_b = ledger_repo.upsert(
-                FincaAmortizacionLedgerEntry(
-                    finca_id=finca.id,
-                    period_year=2025,
-                    dias_alquilados=365,
-                    basis_used=Decimal("166666.67"),
-                    amortization_amount=Decimal("5000.00"),
-                    cumulative_amortization_through_year=Decimal("10000.00"),
-                ),
-            )
-            assert entry_a.id != entry_b.id
+def test_amortization_ledger_repository_unique_per_finca_period(engine: Engine) -> None:
+    with session_scope(engine) as session:
+        finca_repo = FincaRepository(session)
+        ledger_repo = FincaAmortizacionLedgerRepository(session)
+        finca = finca_repo.upsert(_sample_finca())
+        assert finca.id is not None
+        entry_a = ledger_repo.upsert(
+            FincaAmortizacionLedgerEntry(
+                finca_id=finca.id,
+                period_year=2024,
+                dias_alquilados=365,
+                basis_used=Decimal("166666.67"),
+                amortization_amount=Decimal("5000.00"),
+                cumulative_amortization_through_year=Decimal("5000.00"),
+            ),
+        )
+        entry_b = ledger_repo.upsert(
+            FincaAmortizacionLedgerEntry(
+                finca_id=finca.id,
+                period_year=2025,
+                dias_alquilados=365,
+                basis_used=Decimal("166666.67"),
+                amortization_amount=Decimal("5000.00"),
+                cumulative_amortization_through_year=Decimal("10000.00"),
+            ),
+        )
+        assert entry_a.id != entry_b.id
 
-            re_2024 = ledger_repo.upsert(
-                FincaAmortizacionLedgerEntry(
-                    finca_id=finca.id,
-                    period_year=2024,
-                    dias_alquilados=180,
-                    basis_used=Decimal("166666.67"),
-                    amortization_amount=Decimal("2500.00"),
-                    cumulative_amortization_through_year=Decimal("2500.00"),
-                ),
-            )
-            assert re_2024.id == entry_a.id
-            assert re_2024.amortization_amount == Decimal("2500.00")
+        re_2024 = ledger_repo.upsert(
+            FincaAmortizacionLedgerEntry(
+                finca_id=finca.id,
+                period_year=2024,
+                dias_alquilados=180,
+                basis_used=Decimal("166666.67"),
+                amortization_amount=Decimal("2500.00"),
+                cumulative_amortization_through_year=Decimal("2500.00"),
+            ),
+        )
+        assert re_2024.id == entry_a.id
+        assert re_2024.amortization_amount == Decimal("2500.00")
 
-            assert ledger_repo.list_for_finca(finca.id) == [re_2024, entry_b]
-    finally:
-        engine.dispose()
+        assert ledger_repo.list_for_finca(finca.id) == [re_2024, entry_b]

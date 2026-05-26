@@ -18,15 +18,12 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage import SensitivityClass
+from ...tests.secure_sql import isolated_runtime_profile
 from ._codes import ModeloCode
-from ._repository import WorkUnitCatalogueRepository
+from ._repository import _WORK_UNIT_CATALOGUE_VERSION, WorkUnitCatalogueRepository
 from ._work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -37,24 +34,6 @@ from ._work_unit import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "modelo-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _runtime_engine(tmp_path: Path):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-    )
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -114,7 +93,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A WorkUnitCatalogue with one typed WorkUnit roundtrips strictly."""
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         work_unit = _populated_work_unit()
         original = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
 
@@ -123,7 +102,7 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
         loaded = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
     assert repo.bucket_id == _BUCKET_ID
-    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
+    assert (profile.paths.db_dir / "aeat.db").is_file()
     assert loaded == original
     loaded_unit = loaded.work_units[work_unit.work_unit_id]
     # Per-field witnesses: ModeloCode preservation, year/period
@@ -162,10 +141,10 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
     work unit's content-addressed work_unit_id.
 
     Persists a DISCARDED work unit (with discard metadata populated),
-    reaches into ``SecureObjectRow`` via ``session_scope``, surgically
-    flips the persisted ``state`` from ``"discarded"`` back to
-    ``"draft"`` without clearing the discard metadata, and asserts
-    the load path catches the drift via the model_validator's
+    reloads the runtime-owned secure object, surgically flips the
+    persisted ``state`` from ``"discarded"`` back to ``"draft"``
+    without clearing the discard metadata, and asserts the load path
+    catches the drift via the model_validator's
     DRAFT-must-not-carry-discard-metadata check.
 
     If this test ever passes silently with the flipped state, the
@@ -175,47 +154,38 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
 
     import json as _json
 
-    from sqlalchemy import select
-
     from ._repository import _WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
-        engine = _runtime_engine(tmp_path)
-        try:
-            work_unit = _populated_work_unit()
-            catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
-            repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
-            repo.save(catalogue)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        work_unit = _populated_work_unit()
+        catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
+        repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(catalogue)
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _WORK_UNIT_NAMESPACE,
-                    SecureObjectRow.object_key == _WORK_UNIT_OBJECT_KEY,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                work_units = envelope["payload"]["work_units"]
-                unit_dict = work_units[work_unit.work_unit_id]
-                assert unit_dict["state"] == "descartado", (
-                    "fixture must serialise state as 'descartado' for this "
-                    "proof test to be meaningful"
-                )
-                # Flip state back to borrador while leaving discard metadata
-                # in place. The BORRADOR invariant must trip on load.
-                unit_dict["state"] = "borrador"
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        record = profile.repository.load(
+            _WORK_UNIT_NAMESPACE,
+            _WORK_UNIT_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_WORK_UNIT_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        work_units = envelope["payload"]["work_units"]
+        unit_dict = work_units[work_unit.work_unit_id]
+        assert unit_dict["state"] == "descartado", (
+            "fixture must serialise state as 'descartado' for this proof test to be meaningful"
+        )
+        # Flip state back to borrador while leaving discard metadata
+        # in place. The BORRADOR invariant must trip on load.
+        unit_dict["state"] = "borrador"
+        profile.repository.save(
+            namespace=_WORK_UNIT_NAMESPACE,
+            object_key=_WORK_UNIT_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
 
-            regression_caught = False
-            try:
-                WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: flipping state from "
-                "DESCARTADO to BORRADOR while retaining discard metadata did "
-                "NOT surface on load. The work-unit catalogue boundary "
-                "is tautological and the lifecycle state machine is not "
-                "actually enforced post-persistence."
-            )
-        finally:
-            engine.dispose()
+        with pytest.raises(ValidationError):
+            WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()

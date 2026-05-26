@@ -25,9 +25,6 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
-from aeat.adapters.persistence.storage.master_key._active_session import activate_session
-from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.filing import (
     ModeloDraftStatus,
     ModeloOperatorProfile,
@@ -35,7 +32,7 @@ from aeat.application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
-from aeat.core.config import Settings, override_settings
+from aeat.core.config import Settings
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
@@ -45,6 +42,7 @@ from aeat.domain.calculations.registry import (
     resolve_export_layout,
 )
 from aeat.tests import FIXTURES_DIR
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 from ._declarations import (
     Declaracion,
@@ -72,29 +70,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "sede-declarations"
 
 
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
 @pytest.fixture(autouse=True)
 def _isolate_secure_object_backend(tmp_path: Path):
     """Prevent filed-observation store tests from writing into the active profile DB."""
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        yield
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
@@ -1349,8 +1330,7 @@ class TestFiledObservationRelations:
             (requirement.source_modelo, requirement.filing_year, period, requirement.source_output)
             for requirement in relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
             for period in requirement.periods
-            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_output)
-            not in available
+            if (requirement.source_modelo, requirement.filing_year, period, requirement.source_output) not in available
         ]
 
         assert not missing

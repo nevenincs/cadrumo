@@ -24,11 +24,8 @@ from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .....core.classification import SensitivityClass
-from .....core.config import override_settings
-from ....persistence.storage.master_key._active_session import activate_session
-from ....persistence.storage.master_key._bucket_session import BucketSession
+from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....persistence.storage.sql import dispose_engine
 from . import (
     AEAT_SESSION_IDLE_TTL,
     CERTIFICATE_CONTEXT_MARKER,
@@ -66,22 +63,8 @@ _BUCKET_ID = "auth-session"
 
 @pytest.fixture(autouse=True)
 def _isolated_secure_session_backend(tmp_path: Path):
-    session = BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-    dispose_engine()
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(session),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        yield
 
 
 def _serialise_pkcs12(

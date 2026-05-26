@@ -22,9 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...core.config import override_settings
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
@@ -37,18 +35,6 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _populated_draft() -> ModeloDraft:
@@ -115,7 +101,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     by the active bucket runtime.
     """
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         original = _populated_draft()
         repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
         repo.save(original)
@@ -164,7 +150,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
         derive_calculation_revision_id,
     )
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         now = datetime.now(UTC).replace(microsecond=0)
         observation = CasillaObservation(
             casilla_id="iva.resultado-regimen-general",

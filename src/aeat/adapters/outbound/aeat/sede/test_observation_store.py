@@ -11,10 +11,7 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
-from .....core.config import Settings, override_settings
-from ....persistence.storage.master_key._active_session import activate_session
-from ....persistence.storage.master_key._bucket_session import BucketSession
-from ....persistence.storage.sql.engine import dispose_engine
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
@@ -23,29 +20,15 @@ _BUCKET_ID = "sede-observation"
 
 
 @pytest.fixture
-def active_storage(tmp_path: Path) -> Iterator[Settings]:
-    session = BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(session),
-    ):
-        try:
-            yield settings
-        finally:
-            dispose_engine(settings)
+def active_storage(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield profile
 
 
 def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(
     tmp_path: Path,
-    active_storage: Settings,
+    active_storage: TestRuntimeProfile,
 ) -> None:
-    del active_storage
     root = tmp_path / "observations"
     store = FiledDeclaracionObservationStore(root)
     body = b"1302026-1T-submitted-file"
@@ -85,7 +68,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
-    database_bytes = (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").read_bytes()
+    database_bytes = (active_storage.paths.db_dir / "aeat.db").read_bytes()
     assert body not in database_bytes
     assert b"12345678Z" not in database_bytes
     assert b"12.34" not in database_bytes
@@ -98,7 +81,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
 
 def test_store_rejects_artefact_body_that_does_not_match_metadata(
     tmp_path: Path,
-    active_storage: Settings,
+    active_storage: TestRuntimeProfile,
 ) -> None:
     del active_storage
     store = FiledDeclaracionObservationStore(tmp_path / "observations")

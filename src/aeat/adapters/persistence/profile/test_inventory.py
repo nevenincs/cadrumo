@@ -17,22 +17,16 @@ import pytest
 
 from ....domain.profile.errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
-from ..storage import EphemeralMasterKeyProvider
-from ..storage.sql import dispose_engine
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .inventory import load_inventory, record_movement, save_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:
@@ -64,7 +58,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
     assert load_inventory()[0] == updated
 
 
-def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) -> None:
+def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_profile: TestRuntimeProfile) -> None:
     ledger = InventoryLedger(
         actividad_id="retail",
         year=2025,
@@ -85,7 +79,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) ->
     )
 
     path = save_inventory((ledger,))
-    db_bytes = (tmp_path / "aeat.db").read_bytes()
+    db_bytes = (_runtime_profile.paths.db_dir / "aeat.db").read_bytes()
 
     assert not path.exists()
     assert b"LEAK-CANARY-SKU" not in db_bytes

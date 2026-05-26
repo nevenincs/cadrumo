@@ -14,11 +14,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage import SensitivityClass
+from ...tests.secure_sql import isolated_runtime_profile
 from ._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -28,29 +27,15 @@ from ._verification_report import (
     VerificationReportCatalogue,
     derive_verification_report_id,
 )
-from ._verification_repository import VerificationReportCatalogueRepository
+from ._verification_repository import (
+    _VERIFICATION_CATALOGUE_VERSION,
+    _VERIFICATION_OBJECT_KEY,
+    VerificationReportCatalogueRepository,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "modelo-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _runtime_engine(tmp_path: Path):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-    )
 
 
 def _populated_report() -> VerificationReport:
@@ -101,7 +86,7 @@ def test_verification_report_catalogue_survives_encrypted_storage(
 ) -> None:
     """A populated VerificationReportCatalogue roundtrips strictly."""
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = _populated_report()
         catalogue = VerificationReportCatalogue(
             reports={report.verification_report_id: report},
@@ -129,7 +114,7 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     # Resolved + missing casillas tuples preserve order and content.
     assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
     assert loaded_report.missing_required_casillas == ("iva.devengado",)
-    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
+    assert (profile.paths.db_dir / "aeat.db").is_file()
 
 
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(
@@ -146,10 +131,10 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     failed verification.
 
     Persists a BLOCKED report (granted_verificado_completo=False with
-    a blocking finding), reaches into ``SecureObjectRow`` via
-    ``session_scope``, surgically flips the boolean to True in the
-    encrypted JSON envelope, and asserts the load path catches the
-    drift via the model_validator.
+    a blocking finding), reloads the runtime-owned secure object,
+    surgically flips the boolean to True in the encrypted JSON
+    envelope, and asserts the load path catches the drift via the
+    model_validator.
 
     If this test passes silently with the flipped grant, the
     verification report boundary is tautological and every report
@@ -158,13 +143,9 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
 
     import json as _json
 
-    from sqlalchemy import select
-
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
     from ._verification_repository import _VERIFICATION_NAMESPACE
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         report = _populated_report()
         catalogue = VerificationReportCatalogue(
             reports={report.verification_report_id: report},
@@ -172,37 +153,31 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
         repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
         repo.save(catalogue)
 
-        engine = _runtime_engine(tmp_path)
-        try:
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _VERIFICATION_NAMESPACE,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                reports = envelope["payload"]["reports"]
-                report_dict = reports[report.verification_report_id]
-                assert report_dict.get("granted_verificado_completo") is False, (
-                    "fixture must serialise granted_verificado_completo=False "
-                    "on the BLOCKED report for this proof test to be meaningful"
-                )
-                # Flip the grant flag to True. The BLOCKED + blocking-finding
-                # combination must trip the granted ↔ completeness invariant.
-                report_dict["granted_verificado_completo"] = True
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        record = profile.repository.load(
+            _VERIFICATION_NAMESPACE,
+            _VERIFICATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        reports = envelope["payload"]["reports"]
+        report_dict = reports[report.verification_report_id]
+        assert report_dict.get("granted_verificado_completo") is False, (
+            "fixture must serialise granted_verificado_completo=False "
+            "on the BLOCKED report for this proof test to be meaningful"
+        )
+        # Flip the grant flag to True. The BLOCKED + blocking-finding
+        # combination must trip the granted ↔ completeness invariant.
+        report_dict["granted_verificado_completo"] = True
+        profile.repository.save(
+            namespace=_VERIFICATION_NAMESPACE,
+            object_key=_VERIFICATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
 
-            regression_caught = False
-            try:
-                VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
-            except Exception:  # boundary may raise different types
-                regression_caught = True
-        finally:
-            engine.dispose()
-
-    assert regression_caught, (
-        "anti-tautology proof failed: flipping "
-        "granted_verificado_completo=True on a BLOCKED report with "
-        "blocking findings did NOT surface on load. The "
-        "verification report boundary is tautological and every "
-        "report roundtrip in the suite is suspect."
-    )
+        with pytest.raises(ValidationError):
+            VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()

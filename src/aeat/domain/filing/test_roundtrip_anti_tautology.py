@@ -31,12 +31,10 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
+from ...adapters.persistence.storage.sql.engine import get_engine
 from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import Settings, override_settings
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
@@ -49,24 +47,10 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
 
 
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-def _runtime_engine(tmp_path: Path):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
-    )
+def _runtime_engine(profile: TestRuntimeProfile):
+    return get_engine(profile.settings)
 
 
 def _populated_draft() -> ModeloDraft:
@@ -128,8 +112,8 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     re-auditing. Without this test, that conclusion could not be drawn.
     """
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
-        engine = _runtime_engine(tmp_path)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        engine = _runtime_engine(profile)
         try:
             original = _populated_draft()
             repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
@@ -149,8 +133,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
                 row = session.execute(stmt).scalar_one()
                 decoded = json.loads(row.payload.decode("utf-8"))
                 assert "snapshot_ref" in decoded["payload"], (
-                    "fixture must serialise snapshot_ref into the envelope's payload "
-                    "for this test to be meaningful"
+                    "fixture must serialise snapshot_ref into the envelope's payload for this test to be meaningful"
                 )
                 del decoded["payload"]["snapshot_ref"]
                 row.payload = json.dumps(decoded).encode("utf-8")

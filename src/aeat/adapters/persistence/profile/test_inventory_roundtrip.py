@@ -21,7 +21,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....core.config import Settings
 from ....domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -30,10 +29,8 @@ from ....domain.profile.inventory import (
     StockLayer,
     ValuationMethod,
 )
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ....tests.secure_sql import isolated_runtime_profile
+from ...persistence.storage.sql.engine import get_engine
 from .inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -89,41 +86,30 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
 ) -> None:
     """InventoryLedgerDocument roundtrips strictly with non-default movements + layers."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "inventory-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = InventoryLedgerRepository()
+        ledger = _populated_ledger()
+        original_doc = InventoryLedgerDocument(ledgers=(ledger,))
+        repo.save(original_doc)
+        loaded_doc = repo.load()
+
+        assert loaded_doc == original_doc
+        loaded_ledger = loaded_doc.ledgers[0]
+        assert len(loaded_ledger.opening_layers) == 2
+        assert tuple(layer.sku for layer in loaded_ledger.opening_layers) == (
+            "widget-blue",
+            "widget-red",
         )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-
-            repo = InventoryLedgerRepository(objects=objects)
-            ledger = _populated_ledger()
-            original_doc = InventoryLedgerDocument(ledgers=(ledger,))
-            repo.save(original_doc)
-            loaded_doc = repo.load()
-
-            assert loaded_doc == original_doc
-            loaded_ledger = loaded_doc.ledgers[0]
-            assert len(loaded_ledger.opening_layers) == 2
-            assert tuple(layer.sku for layer in loaded_ledger.opening_layers) == (
-                "widget-blue",
-                "widget-red",
-            )
-            assert len(loaded_ledger.period_movements) == 2
-            assert tuple(m.kind for m in loaded_ledger.period_movements) == (
-                MovementKind.PURCHASE,
-                MovementKind.COGS,
-            )
-            # VAT decomposition is FINANCIAL-class identity; pin the
-            # explicit vat_amount survives un-quantised.
-            purchase = loaded_ledger.period_movements[0]
-            assert purchase.vat_amount == Decimal("173.25")
-            assert purchase.deductible_vat_ratio == Decimal("1.00")
-        finally:
-            engine.dispose()
+        assert len(loaded_ledger.period_movements) == 2
+        assert tuple(m.kind for m in loaded_ledger.period_movements) == (
+            MovementKind.PURCHASE,
+            MovementKind.COGS,
+        )
+        # VAT decomposition is FINANCIAL-class identity; pin the
+        # explicit vat_amount survives un-quantised.
+        purchase = loaded_ledger.period_movements[0]
+        assert purchase.vat_amount == Decimal("173.25")
+        assert purchase.deductible_vat_ratio == Decimal("1.00")
 
 
 def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
@@ -156,37 +142,27 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .inventory import _INVENTORY_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "inventory-anti-tautology.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            repo = InventoryLedgerRepository(objects=objects)
-            ledger = _populated_ledger()
-            repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        repo = InventoryLedgerRepository()
+        ledger = _populated_ledger()
+        repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
-                    SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
-                )
-                row = session.execute(stmt).scalar_one()
-                document = _json.loads(row.payload.decode("utf-8"))
-                ledger_dict = document["ledgers"][0]
-                assert ledger_dict.get("opening_stock"), (
-                    "fixture must serialise opening_stock onto the ledger "
-                    "for this proof test to be meaningful"
-                )
-                # Halve the opening_stock so the layer-balance check fails
-                # (sum of layers no longer matches the declared aggregate).
-                ledger_dict["opening_stock"] = "750.00"
-                row.payload = _json.dumps(document).encode("utf-8")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _INVENTORY_NAMESPACE,
+                SecureObjectRow.object_key == _LEDGER_OBJECT_KEY,
+            )
+            row = session.execute(stmt).scalar_one()
+            document = _json.loads(row.payload.decode("utf-8"))
+            ledger_dict = document["ledgers"][0]
+            assert ledger_dict.get("opening_stock"), (
+                "fixture must serialise opening_stock onto the ledger for this proof test to be meaningful"
+            )
+            # Halve the opening_stock so the layer-balance check fails
+            # (sum of layers no longer matches the declared aggregate).
+            ledger_dict["opening_stock"] = "750.00"
+            row.payload = _json.dumps(document).encode("utf-8")
 
-            with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
-                repo.load()
-        finally:
-            engine.dispose()
+        with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
+            repo.load()
