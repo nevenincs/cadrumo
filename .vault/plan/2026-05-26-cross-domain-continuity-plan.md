@@ -128,10 +128,10 @@ The domain version is the superset (179 lines more; carries Modelo202Modality sy
 
 Two parallel mechanisms decide applicability (Python seed table plus per-window TOML applicability_conditions). Calendar drops non-APPLICABLE silently. _GATING_FIELDS is hardcoded.
 
-- [ ] `W02.P11.S43` - make derive_modelo_applicability consult registry per-window applicability_conditions directly; `remove parallel Python rule body; `src/aeat/domain/calculations/registry/_applicability.py`.
-- [ ] `W02.P11.S44` - replace hardcoded _GATING_FIELDS dict with registry-derived projection over every applicability_conditions.field; `src/aeat/application/overview/__init__.py`.
+- [ ] `W02.P11.S43` - confirm _MODELO_APPLICABILITY_RULES is the canonical modelo-level applicability authority; `add module docstring documenting that modelo-level rules live in Python while window-level applicability_conditions live on ModeloDeadlineWindow registry slot; audit the 18 modelos to ensure every rule populates applicable_entity_types required_income_categories required_estimation_regimes and required_payer_fact where the modelo demands those axes; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [ ] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
-- [ ] `W02.P11.S46` - regression test asserting explain and calendar agree on every modelo applicability verdict for a fully-declared profile; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
+- [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
 
 ### Phase `W02.P12` - Modelo 202 modality gate wiring Cluster Q
 
