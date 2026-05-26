@@ -168,4 +168,124 @@ A staged path is also available: land Strategy A first (single helper
 behind a separate migration ADR once Strategy A has run for one
 release cycle and proven hash stability in practice.
 
-ADR follows in `2026-05-26-linkage-p02-s09-casilla-values-collapse-adr`.
+ADR follows in `2026-05-26-linkage-design-audit-adr` (the
+casilla-values-collapse-projection-strategy decision).
+
+## Second topic: typed context keys on RegistryValidationError and RegistrySnapshotError
+
+Pre-flight research for `linkage-design-audit` plan steps `P05.S25`
+and `P05.S26` (add typed context keys to `RegistryValidationError`
+and `RegistrySnapshotError`). The intent is to formalise what
+context-dict keys these errors carry so downstream consumers (CLI
+emit, error registry, JSON output, `--explain` flag per the
+accepted cli-workflow-redesign `--explain` ADR) can rely on the
+shape without parsing free-form strings.
+
+### Current state
+
+`AeatError` (`src/aeat/core/errors/__init__.py:67`) already accepts
+a `context: Mapping[str, object] | None` kwarg and stores it as
+`self.context: dict[str, object] | None`. Plenty of raise sites
+already pass typed context dicts ad-hoc; the keys are not pinned
+by any contract.
+
+### Frequency-ranked context-key inventory
+
+Production raise sites of `RegistryValidationError` and
+`RegistrySnapshotError` under
+`src/aeat/domain/calculations/registry/` (excluding tests) pass the
+following keys with the indicated occurrence counts:
+
+- `op` (12) — formula operator name (`add`, `multiply`,
+  `lookup_bracket_by_ccaa`, etc.)
+- `parameter_id` (7) — registry parameter identity
+- `binding_id` (5) — registry binding identity
+- `position` (4) — formula expression argument slot
+- `expected_kind` (4) — what the formula op expected at that slot
+  (`binding`, `dispatch_table`, etc.)
+- `expected` (2) — opaque expected-value string
+- `dispatch_key` (2) — value resolved against a `dispatch_table`
+- `casilla_ids` (2) — comma-joined casilla ids
+- `bracket_table` (2) — parameter data-type discriminator
+- `base` (2) — input value to a bracket lookup
+- `available_keys` (2) — comma-joined valid dispatch keys
+- `relation_id` (1) — registry relation identity
+- `filing_date` (1) — ISO date the bracket lookup used
+- `computed` (1) — flag indicating a computed casilla
+- `casilla_id` (1) — single casilla identity
+
+Plus the `casilla` key (variant of `casilla_id`) used at several
+constraint-violation sites — partly redundant with `casilla_id`,
+partly distinct (the constraint sites pass the casilla's `number`
+attribute, not the id).
+
+### Constraint surface (downstream consumers)
+
+- `aeat.core.errors._registry.resolve_error_message(error)` looks
+  up the error's registered message template and interpolates from
+  `error.context`. Today the template assumes specific keys exist;
+  a missing key in context renders as the templated placeholder.
+- CLI JSON emit (`SchemaEnvelope` consumers per the
+  cli-workflow-redesign ADR) needs a typed view of the error
+  payload so the `aeat ... --json` shape is stable.
+- Translation locales reference context keys by name (`tr("errors.calc.casilla_constraint_violation",
+  casilla_id=...)` and similar); a key rename today silently breaks
+  one locale per cycle.
+
+### Design space
+
+**Strategy P — pin keys with constants.** Define a closed enum or
+constants set per error type listing the allowed context keys.
+Raise sites use the constants; tests assert no raise site uses an
+unregistered key. Zero runtime overhead; minimal refactor.
+
+**Strategy Q — typed context model per error.** Add a pydantic
+context model (e.g. `RegistryValidationContext`) with typed fields
+matching the key inventory above. Raise sites build the model and
+pass `context=model.model_dump(exclude_none=True)`. The model
+provides field-level validation; consumers get a typed view via
+`error.typed_context` property. Higher refactor cost; gains
+schema-validated context payloads.
+
+**Strategy R — factory method per error subclass.** Add
+classmethod factories on `RegistryValidationError` /
+`RegistrySnapshotError` for each canonical raise scenario
+(`for_unknown_parameter`, `for_dispatch_key_unknown`,
+`for_unsupported_op`, etc.). Each factory takes typed kwargs and
+builds both the message and the context dict. Encapsulates the
+template-key-name mapping so locales and CLI rendering both go
+through one named contract. Refactor cost proportional to the raise
+site count (29 sites across registry production code).
+
+### Cross-campaign collision check
+
+Grounded against in-flight vault docs: no parallel campaign
+currently touches `RegistryValidationError` or
+`RegistrySnapshotError`. The cli-workflow-redesign `--explain` ADR
+authorises the consumer-side legal-grounding surface; the
+error-class context shape is implementation under that umbrella.
+The schema-hardening campaign owns `semantic_role` on
+`CasillaDefinition` and the registry-fragment architecture; it
+does not touch error classes.
+
+### Recommendation surface
+
+Strategy R (factory methods) gives the strongest typing-at-raise-
+time benefit with the smallest blast radius — every raise site
+migrates row-by-row, the existing `raise ...(message, context=...)`
+shape keeps working during migration, and the locale layer + CLI
+emit gain a single named contract per error scenario. Strategy P
+(key constants) is a smaller starting point; Strategy Q (pydantic
+model) is the heaviest with the most cross-cutting impact.
+
+A staged path is available: land Strategy R for the highest-traffic
+canonical scenarios first (the unknown-parameter / dispatch-key /
+unsupported-op / bracket-no-coverage families covering 25+ of 29
+sites), leave the tail as ad-hoc context until a downstream consumer
+needs it pinned.
+
+ADR follows in the same `2026-05-26-linkage-design-audit-adr`
+extension — the architectural decision is recorded alongside the
+casilla-values-collapse decision because they share the same
+"contract typed at the boundary" theme.
+
