@@ -334,11 +334,11 @@ def _default_name(*, modelo: str, filing_year: int, period: str) -> str:
 def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
     """Return the canonical period token consumed by WorkflowEngine.
 
-    The work unit stores the period as a short token (``"1T"``,
-    ``"0A"``, ``"03"``); the :class:`WorkflowEngine` consumes a
-    year-qualified token (``"2026Q1"``, ``"2026"``, ``"2026-03"``).
-    This is the single producer of that mapping, used by the workflow
-    gate and by run-id resolution so they cannot diverge.
+    The work unit stores the period as a short registry token (``"1T"``,
+    ``"0A"``, ``"03"``, ``"1P"``); the :class:`WorkflowEngine` consumes a
+    year-qualified token (``"2026Q1"``, ``"2026"``, ``"2026-03"``,
+    ``"2026P1"``).  This is the single producer of that mapping, used by
+    the workflow gate and by run-id resolution so they cannot diverge.
     """
 
     if work_unit.period.endswith("T") and len(work_unit.period) == 2:
@@ -348,6 +348,12 @@ def workflow_period_for_work_unit(work_unit: WorkUnit) -> str:
         return str(work_unit.filing_year)
     if len(work_unit.period) == 2 and work_unit.period.isdigit():
         return f"{work_unit.filing_year}-{work_unit.period}"
+    # Pago-fraccionado tokens (``"1P"`` / ``"2P"`` / ``"3P"``) compose to
+    # ``"YYYYPn"`` so the workflow engine and registry token resolver share
+    # the same year-qualified form.
+    if len(work_unit.period) == 2 and work_unit.period.endswith("P") and work_unit.period[0] in "123":
+        return f"{work_unit.filing_year}P{work_unit.period[0]}"
+    # Fallback: validate via the canonical parser; raise on unrecognised tokens.
     parse_canonical_period(work_unit.period)
     return work_unit.period
 

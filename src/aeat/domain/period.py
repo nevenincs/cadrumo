@@ -52,6 +52,7 @@ _MONTH_PERIOD_RE = re.compile(r"^(?P<year>\d{4})-(?P<month>0[1-9]|1[0-2])$")
 _ANNUAL_PERIOD_RE = re.compile(r"^(?P<year>\d{4})A$")
 _BARE_YEAR_RE = re.compile(r"^\d{4}$")
 _RAW_QUARTER_RE = re.compile(r"^(?P<quarter>[1-4])T$")
+_PAGO_FRACCIONADO_PERIOD_RE = re.compile(r"^(?P<year>\d{4})P(?P<instalment>[1-3])$")
 
 
 def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tuple[int, str]:
@@ -59,7 +60,8 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
 
     Args:
         period: A canonical filing-period token (``YYYYQ[1-4]``,
-            ``YYYY-MM``, ``YYYYA``, bare ``YYYY``). When ``ejercicio`` is
+            ``YYYY-MM``, ``YYYYA``, bare ``YYYY``, or ``YYYYPn`` for
+            pago-fraccionado instalments). When ``ejercicio`` is
             supplied, the raw AEAT quarterly form (``nT``) is also
             accepted; the year then comes from ``ejercicio``.
         ejercicio: Optional filing year string consumed only when
@@ -69,7 +71,7 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
     Returns:
         ``(filing_year, registry_period)`` where the second element is
         the registry-native period (``"1T"`` … ``"4T"``, ``"01"`` …
-        ``"12"``, or ``"0A"``).
+        ``"12"``, ``"0A"``, or ``"1P"`` … ``"3P"``).
 
     Raises:
         PeriodValidationError: When ``period`` is none of the accepted shapes.
@@ -83,6 +85,8 @@ def parse_canonical_period(period: str, *, ejercicio: str | None = None) -> tupl
         return int(match.group("year")), "0A"
     if _BARE_YEAR_RE.fullmatch(period):
         return int(period), "0A"
+    if match := _PAGO_FRACCIONADO_PERIOD_RE.fullmatch(period):
+        return int(match.group("year")), f"{match.group('instalment')}P"
     if ejercicio is not None and (match := _RAW_QUARTER_RE.fullmatch(period)):
         return int(ejercicio), f"{match.group('quarter')}T"
     raise PeriodValidationError(f"cannot map filing period {period!r} to a registry period")
