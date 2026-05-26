@@ -1380,7 +1380,7 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     with calculation_class discrimination.
     """
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
+    from ._validate_revision_rules import validate_informative_class_invariant
 
     formula = FormulaDefinition(
         id="test.formula",
@@ -1396,5 +1396,5 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     )
     filing_modelo = _minimal_modelo(revision)  # default calculation_class == "filing"
     # The informative invariant must return no failures for a filing modelo.
-    failures = RegistryValidator._validate_informative_class_invariant(filing_modelo)
+    failures = validate_informative_class_invariant(filing_modelo)
     assert failures == [], f"filing modelo must not be rejected by informative invariant; got: {failures}"
