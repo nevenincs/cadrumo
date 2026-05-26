@@ -149,33 +149,7 @@ _IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
 # silent fix can be acknowledged by trimming the baseline). Trim
 # entries as the underlying breakage is fixed; the gate is fully green
 # once this set is empty.
-_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(
-    {
-        # Bucket B — aeat.application.repair_integrity is a single-file
-        # module with no exports for the symbols referenced below.
-        # Backend gap: tests written ahead of implementation.
-        (
-            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
-            "aeat.application.repair_integrity",
-            "RepairRemediationDecision",
-        ),
-        (
-            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
-            "aeat.application.repair_integrity",
-            "RepairRemediationDecisionRepository",
-        ),
-        (
-            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
-            "aeat.application.repair_integrity",
-            "repair_remediation_decision_id",
-        ),
-        (
-            "aeat/entrypoints/cli/test_repair_policy_coverage.py",
-            "aeat.application.repair_integrity",
-            "build_repair_policy_command_surface_catalog",
-        ),
-    }
-)
+_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(set())
 
 
 def _check_triple(triple: tuple[Path, str, str]) -> str | None:
