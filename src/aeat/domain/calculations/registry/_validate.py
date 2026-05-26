@@ -19,7 +19,6 @@ from ._sources import verify_source_catalogue
 from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
 from ._validate_application_links import validate_application_link_closure
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
-from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
     validate_filing_schedule_section,
@@ -35,13 +34,9 @@ from ._validate_record_sections import (
     validate_formula_section,
     validate_parameter_section,
 )
-from ._validate_relation_sources import (
-    validate_previous_filing_binding_closure,
-    validate_relation_closure,
-)
+from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_identity import (
     _collect_record_id_lists,
-    _duplicates,
     _emit_casilla_identity_failures,
     _emit_combined_primary_id_failures,
     _emit_completeness_gate_failures,
@@ -52,12 +47,6 @@ from ._validate_revision_rules import (
     validate_informative_class_invariant,
     validate_reconciliation_total_closure,
     validate_revision_windows,
-)
-from ._validate_semantic_roles import (
-    _emit_semantic_role_typo_twin_warnings,
-    _validate_required_role_declarations,
-    _validate_semantic_role_cardinality,
-    _validate_semantic_role_consistency,
 )
 from ._validate_surfaces import (
     validate_application_link_section,
@@ -204,46 +193,10 @@ class RegistryValidator:
             return
 
         failures: list[str] = list(self._validate_catalogues())
-        modelo_ids = [modelo.id for modelo in modelo_tuple]
-        for duplicate in sorted(_duplicates(modelo_ids)):
-            failures.append(f"registry: duplicate modelo id {duplicate!r}")
-
-        modelos_by_id = {modelo.id: modelo for modelo in modelo_tuple}
         for modelo in modelo_tuple:
             failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
 
-        if len(modelos_by_id) == len(modelo_tuple):
-            failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
-            failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
-
-        # Per-source selector-shape gate at registry-tree validation
-        # level. Without this loop, callers that exercise
-        # ``validate_registry`` directly (rather than going through
-        # ``_build_validated_snapshot``) would skip the discriminator
-        # check entirely.
-        from ._bindings import validate_binding_selector_shape
-
-        for modelo in modelo_tuple:
-            for revision in modelo.revisions.values():
-                prefix = f"modelo {modelo.id} revision {revision.id}"
-                for binding in revision.bindings:
-                    failures.extend(
-                        f"{prefix}: {fail}"
-                        for fail in validate_binding_selector_shape(binding)
-                    )
-
-        # Plan C semantic-role validation: walks every casilla across
-        # the corpus and enforces intra-role data_type and constraints
-        # consistency. Typo-twin warnings are emitted out-of-band.
-        failures.extend(_validate_semantic_role_consistency(modelo_tuple))
-        failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
-        # Hard-flip: required-role label patterns must declare the
-        # canonical role on every matching casilla.
-        failures.extend(_validate_required_role_declarations(modelo_tuple))
-        # Cross-revision drift detection: casillas sharing an id across
-        # revisions of a modelo must declare identical stable fields.
-        failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
-        _emit_semantic_role_typo_twin_warnings(modelo_tuple)
+        failures.extend(validate_registry_scope(modelo_tuple))
 
         if failures:
             _REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
