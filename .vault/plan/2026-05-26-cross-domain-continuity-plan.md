@@ -434,6 +434,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S201` - delete dead __all__ re-exports of build_error_envelope and json_output_requested from _errors.py; `cb0c684f8 follow-up after architecture-specialist surfaced the source-hygiene gap; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W09.P41.S202` - audit stored-data drift taxonomy semantic gap; `class lives under errors.refused.* REFUSED category but stored-data drift is semantically an integrity failure not a safety refusal; decide whether to rename and re-emit telemetry or document the semantic exception; `src/aeat/core/errors/registry/_entrypoints.py`.
 - [ ] `W09.P41.S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory; `Wave-1 drift sweep DUPLICATE finding; `src/aeat/application/user_profile/_repository.py`.
+- [ ] `W09.P41.S206` - remove _I18N_STRICT_PLACEHOLDERS from __all__ in core i18n _render.py; `private names must not be exported; Wave-1 audit FU-C; `src/aeat/core/i18n/_render.py`.
+- [ ] `W09.P41.S207` - add inline comment in _command_matches_current confirming attachment_ids equality is value-equal not identity-equal; pydantic-frozen collection safety note; Wave-1 audit FU-E; `src/aeat/application/ledger/_actions.py`.
 
 ### Phase `W09.P42` - twin function merge
 
