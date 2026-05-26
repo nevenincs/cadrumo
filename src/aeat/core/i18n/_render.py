@@ -11,6 +11,7 @@ import importlib.resources
 import os
 import re
 from collections.abc import Callable, Mapping
+from contextvars import ContextVar
 from functools import lru_cache
 
 import i18n
@@ -23,7 +24,36 @@ _log = get_logger(__name__)
 _INITIALISED = False
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
+
+# Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
+# any {name} token that survives substitution.  Production code leaves this False.
+_I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar(
+    "aeat_i18n_strict_placeholders", default=False
+)
+
+
+class UnmatchedPlaceholderError(Exception):
+    """Raised in strict-placeholder mode when a locale value retains a {name} token.
+
+    Indicates that a ``tr()`` call site supplies a key whose locale value
+    contains a placeholder not covered by the supplied kwargs (ORPHAN), or
+    that the locale value was never interpolated at all.
+
+    Attributes:
+        key: The locale translation key that triggered the error.
+        name: The placeholder name that survived substitution.
+        rendered: The partially-rendered string at the time of detection.
+    """
+
+    def __init__(self, *, key: str, name: str, rendered: str) -> None:
+        super().__init__(
+            f"unmatched placeholder {{{name!r}}} in locale key {key!r}: {rendered!r}"
+        )
+        self.key = key
+        self.name = name
+        self.rendered = rendered
 
 # Application-layer hook: set by aeat.application at startup to allow the i18n
 # layer to read the active-profile output language without importing application
@@ -180,6 +210,13 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(rendered, interpolation)
+    if _I18N_STRICT_PLACEHOLDERS.get():
+        if match := _SURVIVING_PLACEHOLDER_RE.search(rendered):
+            raise UnmatchedPlaceholderError(
+                key=translation_key,
+                name=match.group("name"),
+                rendered=rendered,
+            )
     return rendered
 
 
@@ -247,4 +284,11 @@ def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
         return rendered
 
 
-__all__ = ["SUPPORTED_OUTPUT_LANGUAGES", "output_language", "register_profile_language_resolver", "tr"]
+__all__ = [
+    "SUPPORTED_OUTPUT_LANGUAGES",
+    "UnmatchedPlaceholderError",
+    "_I18N_STRICT_PLACEHOLDERS",
+    "output_language",
+    "register_profile_language_resolver",
+    "tr",
+]

@@ -214,12 +214,12 @@ class RegistryValidationError(RegistryError):
         )
 
     @classmethod
-    def for_bracket_no_window(cls, *, parameter_id: str, filing_date: str) -> Self:
+    def for_bracket_no_window(cls, *, parameter_id: str, as_of: str) -> Self:
         """A bracket-table parameter has no bracket valid for the requested date."""
         return cls(
-            f"parameter {parameter_id!r} has no bracket valid for {filing_date}",
+            f"parameter {parameter_id!r} has no bracket valid for {as_of}",
             translated_message="errors.calc.bracket_no_window",
-            context={"parameter_id": parameter_id, "filing_date": filing_date},
+            context={"parameter_id": parameter_id, "as_of": as_of},
         )
 
     @classmethod

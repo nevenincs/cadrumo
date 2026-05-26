@@ -1,8 +1,7 @@
 """Real-behavior tests for the canonical operator state read-projection.
 
-These tests use a real :class:`EphemeralMasterKeyProvider`, a real
-SQLite engine, and a real filesystem bucket with the production
-repositories.
+These tests use a real profile-scoped storage runtime and filesystem
+bucket with the production repositories.
 
 The projection's contract is that every operator-facing surface reads
 ONE state view, so the surfaces cannot disagree. Two contracts are
@@ -20,13 +19,14 @@ proved here:
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import ExitStack
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from ..adapters.persistence.storage import EphemeralMasterKeyProvider
 from ..adapters.persistence.storage.bucket._layout import provision_bucket_directory
 from ..adapters.persistence.storage.bucket._manifest import (
     BucketLifecycleStatus,
@@ -35,8 +35,9 @@ from ..adapters.persistence.storage.bucket._manifest import (
 )
 from ..adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ..adapters.persistence.storage.sql.engine import dispose_engine
-from ..core.config import override_settings
+from ..core.config import SecretStoreBackend, override_settings
 from ..domain.transactions import BusinessClassification, TransactionDirection
+from ..tests.secure_sql import dev_test_database_password
 from .auth._operator import inspect_operator_auth
 from .auth._operator import test_operator_auth as probe_operator_auth
 from .ledger import ManualLedgerTransactionCommand, create_manual_transaction
@@ -49,28 +50,54 @@ from .workflow._persistence import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+_ACTIVE_STORAGE_STACK: ExitStack | None = None
+_PROFILE_SPAN_OPEN = False
+
 
 @pytest.fixture(autouse=True)
 def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    """Bind a real isolated SQLite engine and filesystem root per test."""
+    """Bind a real isolated filesystem root per test."""
+
+    global _ACTIVE_STORAGE_STACK, _PROFILE_SPAN_OPEN
 
     dispose_engine()
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
-        EphemeralMasterKeyProvider(),
-    ):
+    with ExitStack() as stack:
+        stack.enter_context(
+            override_settings(
+                aeat_local_storage_root=tmp_path,
+                aeat_active_profile=None,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+            )
+        )
+        _ACTIVE_STORAGE_STACK = stack
+        _PROFILE_SPAN_OPEN = False
         try:
             yield
         finally:
             dispose_engine()
+            _PROFILE_SPAN_OPEN = False
+            _ACTIVE_STORAGE_STACK = None
+
+
+def _ensure_operator_storage_span() -> None:
+    global _PROFILE_SPAN_OPEN
+
+    if _PROFILE_SPAN_OPEN:
+        return
+    if _ACTIVE_STORAGE_STACK is None:
+        raise RuntimeError("state projection test storage span is not active")
+    from .user_profile._orchestration import profile_create_storage_span
+
+    _ACTIVE_STORAGE_STACK.enter_context(profile_create_storage_span("operator"))
+    _PROFILE_SPAN_OPEN = True
 
 
 def _register_active_profile() -> str:
     """Register and activate a minimal profile; return its bucket id."""
 
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id="operator")
-    )
+    _ensure_operator_storage_span()
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
     return bucket_id
@@ -417,8 +444,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
 
     assert after_switch.auth.provider == "clave_movil"
     assert after_switch.auth.certificate_path == "", (
-        "certificate_path must be empty for a non-certificate provider — "
-        f"got {after_switch.auth.certificate_path!r}"
+        f"certificate_path must be empty for a non-certificate provider — got {after_switch.auth.certificate_path!r}"
     )
 
 

@@ -70,6 +70,15 @@ def _coerce_profile_fact_value(value: object) -> object:
             return date.fromisoformat(value)
         except ValueError:
             return value
+    # JSON has no boolean primitive distinct from integer — pydantic encodes
+    # ``True``/``False`` as the canonical lowercase tokens ``"true"``/``"false"``
+    # when ``model_dump(mode="json")`` serialises a ``bool``-typed fact. Promote
+    # these tokens back to ``bool`` before the decimal check so the union
+    # resolves to ``bool`` (not ``str`` or ``Decimal``) on re-parse.
+    if isinstance(value, str) and value.lower() == "true":
+        return True
+    if isinstance(value, str) and value.lower() == "false":
+        return False
     if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):
         try:
             return Decimal(value)

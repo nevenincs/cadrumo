@@ -136,7 +136,7 @@ def build_draft(
         )
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
-    calculation_binding_ids = _formula_binding_ids(snapshot)
+    calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
     casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, calculation_binding_ids)
     filing_binding_values = _filing_binding_values(inputs, bindings)
@@ -166,6 +166,18 @@ def build_draft(
                 )
             )
             continue
+        if casilla.input_kind == "bound":
+            value = result.values.get(casilla.id)
+            if value is not None:
+                values.append(
+                    ModeloValue(
+                        casilla_id=casilla.id,
+                        value=value,
+                        kind=ModeloValueKind.INHERITED,
+                        source=f"registry binding {casilla.binding}",
+                    )
+                )
+                continue
         if casilla.id in casilla_inputs:
             values.append(
                 ModeloValue(
@@ -262,6 +274,14 @@ def _formula_binding_ids(snapshot: RegistrySnapshot) -> set[str]:
     for formula in snapshot.revision.formulas:
         _collect_formula_binding_ids(formula.expression, binding_ids)
     return binding_ids
+
+
+def _bound_casilla_binding_ids(snapshot: RegistrySnapshot) -> set[str]:
+    return {
+        casilla.binding
+        for casilla in snapshot.revision.casillas
+        if casilla.input_kind == "bound" and casilla.binding is not None
+    }
 
 
 def _collect_formula_binding_ids(expression: object, binding_ids: set[str]) -> None:

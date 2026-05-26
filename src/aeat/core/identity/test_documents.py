@@ -242,6 +242,34 @@ class TestActionableMessages:
         assert "X" in message
 
 
+class TestCifKindLetterSplit:
+    """Pin the intentional split between _CIF_KIND_LETTERS and _CIF_LEADERS.
+
+    ``_CIF_KIND_LETTERS`` is the AEAT current-spec closed catalogue (17
+    letters).  ``_tax_id._CIF_LEADERS`` is the historical-tolerance superset
+    (20 letters) that keeps K, L, and M so that ``validate_spanish_tax_id``
+    accepts legacy entities.  These tests prevent a future consolidation from
+    silently collapsing the two sets.
+    """
+
+    def test_k_l_m_absent_from_cif_kind_letters(self) -> None:
+        from ._documents import _CIF_KIND_LETTERS
+
+        assert "K" not in _CIF_KIND_LETTERS
+        assert "L" not in _CIF_KIND_LETTERS
+        assert "M" not in _CIF_KIND_LETTERS
+
+    def test_validate_spanish_tax_id_accepts_k_led_cif(self) -> None:
+        # Synthetic K-led CIF: K + 1234567 + check character.
+        # K is in _CIF_LETTER_CONTROL_LEADERS so the check must be a letter.
+        # Computed: even_sum=12, odd_sum_doubled=14, total=26,
+        # digit_control=4, letter_control=_CIF_CONTROL_LETTERS[4]='D'.
+        from ._tax_id import validate_spanish_tax_id
+
+        result = validate_spanish_tax_id("K1234567D")
+        assert result == "K1234567D"
+
+
 class TestErrorCodeBinding:
     def test_class_binds_to_registered_code(self) -> None:
         from ...core.errors._registry import bind_error_code

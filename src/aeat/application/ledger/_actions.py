@@ -1266,6 +1266,7 @@ def update_manual_transaction_fields(
     patch: ManualLedgerTransactionPatch,
     actor: str,
     source_command: str,
+    reaffirm: bool = False,
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
@@ -1275,7 +1276,13 @@ def update_manual_transaction_fields(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     occurred_at: datetime | None = None,
 ) -> ManualLedgerTransactionResult:
-    """Apply a typed field patch to one active bucket-scoped ledger transaction."""
+    """Apply a typed field patch to one active bucket-scoped ledger transaction.
+
+    When ``reaffirm`` is :data:`True` the automatic re-affirmation no-op guard
+    is bypassed and the command is forced through even if the patched fields are
+    field-for-field identical to the stored transaction.  This is the explicit
+    operator-driven counterpart to the automatic silent no-op (S14).
+    """
 
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     current = _require_transaction(repository.load(), transaction_id)
@@ -1291,7 +1298,8 @@ def update_manual_transaction_fields(
     # which would trigger the mutation-required guard in ``update_manual_transaction``.  Treat
     # field-for-field-identical commands originating from a ``business_classification`` patch as
     # confirmed no-ops rather than errors (option b from the S14 architecture verdict).
-    if "business_classification" in patch.model_fields_set and _command_matches_current(command, current):
+    # When ``reaffirm`` is True the operator explicitly requests re-application; skip the guard.
+    if not reaffirm and "business_classification" in patch.model_fields_set and _command_matches_current(command, current):
         return _result(bucket_id, current, ())
     return update_manual_transaction(
         transaction_id=transaction_id,

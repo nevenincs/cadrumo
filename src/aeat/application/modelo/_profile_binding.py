@@ -39,6 +39,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.modelos._errors import ModeloError
 from ...domain.user_profile import (
+    ProfileFactValue,
     ProfileNotFoundError,
     ProfileSchemaDefinition,
     load_user_profile_schema,
@@ -77,8 +78,8 @@ class ProfileSourcedBindingResult(BaseModel):
         return self
 
 
-def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, str]:
-    """Build a selector -> str(value) index covering both selector forms.
+def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict[str, ProfileFactValue]:
+    """Build a selector -> typed-value index covering both selector forms.
 
     A profile binding's selector resolves either as the canonical
     ``section.field`` fact path (``profile_key`` form) or as a schema
@@ -86,6 +87,11 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
     index exposes each non-null fact under its canonical path AND under
     every ``model_selector`` the schema declares for it, so both
     selector forms find the value.
+
+    Values are preserved as their original :data:`ProfileFactValue` type
+    (``bool``, ``Decimal``, ``date``, ``str``, …) so that downstream
+    channel routing can branch on the concrete Python type rather than
+    re-parsing a ``str(value)`` rendering.
     """
 
     selector_index: dict[str, tuple[str, ...]] = {}
@@ -93,37 +99,50 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
         for field in section.fields:
             selector_index[f"{section.key}.{field.key}"] = tuple(field.model_selectors)
 
-    index: dict[str, str] = {}
+    index: dict[str, ProfileFactValue] = {}
     facts = getattr(record, "facts", ())
     for fact in facts:
         if fact.value is None:
             continue
-        rendered = str(fact.value)
-        index[fact.path] = rendered
+        index[fact.path] = fact.value
         for selector in selector_index.get(fact.path, ()):
-            index[selector] = rendered
+            index[selector] = fact.value
     return index
 
 
-def _decimal_value(binding_id: str, value: str) -> Decimal:
-    # A boolean-typed profile fact renders as ``"True"`` / ``"False"``
-    # (pydantic ``str(bool)``); the LIS Art. 29 new-entity override
-    # consumes it as a 1/0 indicator on the Decimal channel for use
-    # inside an ``if_then_else`` predicate. Coerce booleans before the
-    # numeric parse so the engine receives a real Decimal operand.
-    stripped = value.strip()
-    if stripped.lower() == "true":
-        return Decimal("1")
-    if stripped.lower() == "false":
-        return Decimal("0")
-    try:
-        return Decimal(stripped)
-    except (InvalidOperation, ValueError) as exc:
-        raise ProfileBindingResolutionError(
-            f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
-            f"got {value!r}. The registry consumes this binding as a numeric operand, not an enum "
-            f"dispatch key; the profile fact must carry a numeric value"
-        ) from exc
+def _decimal_value(binding_id: str, value: object) -> Decimal:
+    # Boolean-typed profile facts arrive as Python ``bool`` now that
+    # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
+    # subclass of ``int``, so ``isinstance(value, bool)`` must be tested
+    # before ``isinstance(value, (int, Decimal))`` to avoid the ``1``/``0``
+    # integer path silently accepting booleans.
+    if isinstance(value, bool):
+        return Decimal("1") if value else Decimal("0")
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, int):
+        return Decimal(value)
+    if isinstance(value, str):
+        # Legacy path: tolerate string-encoded booleans and numeric strings
+        # that may arrive from older serialised records or direct callers.
+        stripped = value.strip()
+        if stripped.lower() == "true":
+            return Decimal("1")
+        if stripped.lower() == "false":
+            return Decimal("0")
+        try:
+            return Decimal(stripped)
+        except (InvalidOperation, ValueError) as exc:
+            raise ProfileBindingResolutionError(
+                f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
+                f"got {value!r}. The registry consumes this binding as a numeric operand, not an enum "
+                f"dispatch key; the profile fact must carry a numeric value"
+            ) from exc
+    raise ProfileBindingResolutionError(
+        f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "
+        f"got {value!r} (type {type(value).__name__}). The registry consumes this binding as a "
+        f"numeric operand; the profile fact must carry a numeric value"
+    )
 
 
 def resolve_profile_sourced_bindings(
@@ -192,7 +211,16 @@ def resolve_profile_sourced_bindings(
         if value is None:
             continue
         if binding_id in enum_bindings:
-            enum_values[binding_id] = value
+            # Boolean-typed facts must never reach the enum dispatch channel —
+            # enum dispatch keys are string category codes, not yes/no flags.
+            # A bool here signals a mis-wired registry binding; refuse early
+            # rather than letting the engine silently mismatch the dispatch table.
+            if isinstance(value, bool):
+                raise ProfileBindingResolutionError(
+                    f"profile fact for enum-channel binding {binding_id!r} resolved to a boolean "
+                    f"({value!r}); boolean facts are not valid enum dispatch keys"
+                )
+            enum_values[binding_id] = str(value)
         else:
             decimal_values[binding_id] = _decimal_value(binding_id, value)
 
@@ -204,13 +232,20 @@ def resolve_profile_sourced_bindings(
     )
 
 
-def _resolve_one(binding: DataBindingDefinition, fact_index: Mapping[str, str]) -> str | None:
-    """Return the profile fact value for one profile binding, or None if absent."""
+def _resolve_one(
+    binding: DataBindingDefinition, fact_index: Mapping[str, ProfileFactValue]
+) -> ProfileFactValue | None:
+    """Return the typed profile fact value for one profile binding, or None if absent."""
 
     for selector in profile_binding_selectors(binding.selector):
         value = fact_index.get(selector)
-        if value is not None and value.strip():
-            return value.strip()
+        if value is None:
+            continue
+        # Blank strings are treated as absent; all other typed values (bool,
+        # Decimal, date, int) are non-blank by definition.
+        if isinstance(value, str) and not value.strip():
+            continue
+        return value.strip() if isinstance(value, str) else value
     return None
 
 

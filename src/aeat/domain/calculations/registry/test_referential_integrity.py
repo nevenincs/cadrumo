@@ -782,17 +782,17 @@ def test_dangling_modelo_source_refs() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_config_repair_report_includes_registry_integrity_check() -> None:
+def test_config_repair_report_includes_registry_integrity_check(tmp_path) -> None:
     """build_config_repair_report produces a registry.integrity DiagnosticCheck.
 
     The report walks SecureObject storage to surface bucket-side health,
-    so the test runs inside an EphemeralMasterKeyProvider session to
+    so the test runs inside a real active-profile storage runtime to
     satisfy the encrypted-column decrypt path.
     """
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.application.diagnostics import build_config_repair_report
+    from aeat.tests.secure_sql import isolated_runtime_profile
 
-    with EphemeralMasterKeyProvider():
+    with isolated_runtime_profile(tmp_path=tmp_path):
         report = build_config_repair_report()
     check_names = [check.name for check in report.checks]
     assert "registry.integrity" in check_names
@@ -1010,8 +1010,7 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     )
     unknown_casilla_failures = [f for f in failures if "unknown casilla '00562'" in f]
     assert unknown_casilla_failures, (
-        "an ambiguous cross-segment bare-number reference must fail to resolve; "
-        f"got failures: {failures}"
+        f"an ambiguous cross-segment bare-number reference must fail to resolve; got failures: {failures}"
     )
 
 
@@ -1171,8 +1170,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
         semantic_role="is_liquidacion_iii_cuota_integra",
         semantic_role_cardinality="intentional_singleton",
         semantic_role_cardinality_reason=(
-            "Liquidación III cuota íntegra is the single cuota-chain "
-            "integral-quota casilla within the modelo revision."
+            "Liquidación III cuota íntegra is the single cuota-chain integral-quota casilla within the modelo revision."
         ),
         required=False,
         input_kind="manual",
@@ -1240,9 +1238,7 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
 
     casilla = _minimal_casilla("01")
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
-    revision = _minimal_revision(casillas=(casilla,)).model_copy(
-        update={"completeness_manifest": manifest}
-    )
+    revision = _minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
     modelo = _minimal_modelo(revision)
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
 
@@ -1260,9 +1256,9 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     from ._validate import RegistryValidator
 
     manifest = _completeness_manifest((CalculationCompletenessCasilla(number="01"),))
-    revision = _minimal_revision(
-        casillas=(_minimal_casilla("01"), _minimal_casilla("02"))
-    ).model_copy(update={"completeness_manifest": manifest})
+    revision = _minimal_revision(casillas=(_minimal_casilla("01"), _minimal_casilla("02"))).model_copy(
+        update={"completeness_manifest": manifest}
+    )
     modelo = _minimal_modelo(revision)
     # A clean return proves the extra accounting casilla does not fail.
     RegistryValidator(_minimal_catalogues()).validate_modelo(modelo)
@@ -1310,19 +1306,11 @@ def test_completeness_gate_fails_on_mis_segmented_required_casilla() -> None:
     from ._validate import RegistryValidator
 
     declared = _segmented_casilla("DP200014:00562", "00562", "DP200014")
-    manifest = _completeness_manifest(
-        (CalculationCompletenessCasilla(number="00562", segmento="DP200032"),)
-    )
-    revision = _minimal_revision(casillas=(declared,)).model_copy(
-        update={"completeness_manifest": manifest}
-    )
+    manifest = _completeness_manifest((CalculationCompletenessCasilla(number="00562", segmento="DP200032"),))
+    revision = _minimal_revision(casillas=(declared,)).model_copy(update={"completeness_manifest": manifest})
     modelo = _minimal_modelo(revision)
     failures = RegistryValidator(_minimal_catalogues())._validate_revision(modelo, revision)
-    missing = [
-        f
-        for f in failures
-        if "manifest requires casilla number '00562' within segmento 'DP200032'" in f
-    ]
+    missing = [f for f in failures if "manifest requires casilla number '00562' within segmento 'DP200032'" in f]
     extra = [f for f in failures if "within segmento 'DP200014' absent" in f]
     assert missing, f"mis-segmented required casilla must be reported missing; got: {failures}"
     assert not extra, (
@@ -1366,9 +1354,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     legal = [f for f in failures if "casilla number '01'" in f and "without legal_refs" in f]
     source = [f for f in failures if "casilla number '01'" in f and "without source_refs" in f]
     assert legal, f"ungrounded required casilla must be reported without legal_refs; got: {failures}"
-    assert source, (
-        f"ungrounded required casilla must be reported without source_refs; got: {failures}"
-    )
+    assert source, f"ungrounded required casilla must be reported without source_refs; got: {failures}"
 
 
 def test_filing_modelo_with_formula_passes_invariant() -> None:

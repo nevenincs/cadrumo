@@ -158,7 +158,7 @@ class CliStoredDataValidationBoundaryError(AeatError):
         """
 
         super().__init__(
-            translated_message="errors.refused.refused_cli_stored_data_validation_boundary",
+            translated_message="errors.storage.stored_data_validation_boundary",
             context={
                 "recovery": "aeat config repair",
             },

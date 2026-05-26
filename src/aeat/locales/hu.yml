@@ -889,6 +889,8 @@ cli:
       iva_amount_help: cli.ledger.classify.iva_amount_help
       iva_rate_help: cli.ledger.classify.iva_rate_help
       mixed_requires_business_pct: cli.ledger.classify.mixed_requires_business_pct
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: cli.ledger.classify.taxable_base_help
     errors:
       command_input_invalid: cli.ledger.errors.command_input_invalid
@@ -1303,18 +1305,21 @@ cli:
       bucket: cli.review.labels.bucket
       id: cli.review.labels.id
       kind: cli.review.labels.kind
+      legal_refs: cli.review.labels.legal_refs
       next: cli.review.labels.next
       period: cli.review.labels.period
       severity: cli.review.labels.severity
       source_kind: cli.review.labels.source_kind
     queue:
       empty: cli.review.queue.empty
+      explain_help: cli.review.queue.explain_help
       help: cli.review.queue.help
       kind_help: cli.review.queue.kind_help
       modelo_help: cli.review.queue.modelo_help
       source_kind_help: cli.review.queue.source_kind_help
       state_help: cli.review.queue.state_help
     show:
+      explain_help: cli.review.show.explain_help
       help: cli.review.show.help
       id_help: cli.review.show.id_help
   root:
@@ -1525,6 +1530,8 @@ errors:
     auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
   calc:
     binding_value_missing: errors.calc.binding_value_missing
+    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window
@@ -1541,6 +1548,8 @@ errors:
     parameter_unknown: errors.calc.parameter_unknown
     relation_value_missing: errors.calc.relation_value_missing
     unknown_input_casillas: errors.calc.unknown_input_casillas
+    unsupported_comparison_op: errors.calc.unsupported_comparison_op
+    unsupported_op: errors.calc.unsupported_op
   censo:
     no_snapshot_captured: errors.censo.no_snapshot_captured
     profile_not_found: errors.censo.profile_not_found
@@ -1912,6 +1921,8 @@ errors:
     refused_workflow_aborted: errors.refused.refused_workflow_aborted
     refused_workflow_resume: errors.refused.refused_workflow_resume
     unsupported_currency: errors.refused.unsupported_currency
+  snapshot:
+    modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
     engine:
       create_failed: Nem sikerült létrehozni a tárolási adatbázismotort. Ellenőrizd
@@ -1932,6 +1943,9 @@ errors:
         profile switch NAME` parancsot a profil újraaktiválásához.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
         Az éles, profilhoz kötött tároláshoz fájl- vagy kulcstartó-alapú őrzés szükséges.
+    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord már
+      nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális formátumtól.
+      Futtasd az `aeat config repair` parancsot a diagnosztikához és helyreállításhoz.
   transaction:
     import_source_invalid: errors.transaction.import_source_invalid
     ledger_import_failed: errors.transaction.ledger_import_failed

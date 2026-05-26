@@ -87,6 +87,9 @@ def _registry_period_token(period: str) -> tuple[int, str]:
             return year, f"{month:02d}"
     if len(period) == 7 and period.startswith(f"{year}-"):
         return year, period[-2:]
+    # Pago-fraccionado: ``"2026P1"`` / ``"2026P2"`` / ``"2026P3"`` → ``(2026, "1P")`` etc.
+    if len(period) == 6 and period.startswith(f"{year}P") and period[-1] in "123":
+        return year, f"{period[-1]}P"
     raise WorkflowError(f"cannot map workflow period {period!r} to a registry period")
 
 

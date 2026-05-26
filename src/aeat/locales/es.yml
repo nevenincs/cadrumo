@@ -1344,6 +1344,8 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: Importe de base imponible
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -1879,18 +1881,21 @@ cli:
       bucket: Bucket
       id: ID
       kind: Tipo
+      legal_refs: cli.review.labels.legal_refs
       next: Siguiente
       period: Periodo
       severity: Severidad
       source_kind: Tipo origen
     queue:
       empty: No hay elementos pendientes de revisión.
+      explain_help: cli.review.queue.explain_help
       help: Listar elementos pendientes de revisión
       kind_help: Restringir la cola a un tipo de elemento
       modelo_help: Restringir la cola a un modelo
       source_kind_help: Restringir la cola a un tipo de origen
       state_help: Restringir la cola a un estado de revisión
     show:
+      explain_help: cli.review.show.explain_help
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
@@ -2163,6 +2168,8 @@ errors:
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
+    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
@@ -2189,6 +2196,8 @@ errors:
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+    unsupported_comparison_op: errors.calc.unsupported_comparison_op
+    unsupported_op: errors.calc.unsupported_op
   censo:
     no_snapshot_captured: No se ha capturado ninguna instantánea del censo para el
       perfil {profile_id}.
@@ -2815,6 +2824,8 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+  snapshot:
+    modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
     engine:
       create_failed: No se pudo crear el motor de base de datos de almacenamiento.
@@ -2839,6 +2850,9 @@ errors:
         profile switch NAME` para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
+    stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
+      ya no coincide con el esquema esperado — los datos en disco han divergido del
+      formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'

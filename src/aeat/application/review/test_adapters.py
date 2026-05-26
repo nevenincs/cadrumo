@@ -7,18 +7,17 @@ and the severity-mapping invariants.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
-import os
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql import dispose_engine
+from ...application.user_profile._orchestration import profile_create_storage_span
 from ...application.user_profile._testing import register_minimal_profile
 from ...application.workflow._persistence import workflow_state_repository
 from ...core.config import Settings
+from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
 from ...domain.invoices import (
     Invoice,
@@ -62,21 +61,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # ── shared helpers ────────────────────────────────────────────────
 
 
-@pytest.fixture(autouse=True)
-def _secure_object_backend(tmp_path: Path):
-    old_database_url = os.environ.get("AEAT_DATABASE_URL")
-    os.environ["AEAT_DATABASE_URL"] = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
-    dispose_engine()
-    try:
-        yield
-    finally:
-        if old_database_url is None:
-            os.environ.pop("AEAT_DATABASE_URL", None)
-        else:
-            os.environ["AEAT_DATABASE_URL"] = old_database_url
-        dispose_engine()
-
-
 def _build_settings(tmp_path: Path) -> Settings:
     """Build a Settings instance with every disk root anchored at tmp_path."""
     return Settings(
@@ -89,12 +73,12 @@ def _build_settings(tmp_path: Path) -> Settings:
     )
 
 
-def _seed_active_profile() -> None:
+def _seed_active_profile(bucket_id: str = "test") -> None:
     """Register the minimal placeholder profile so drafts match the active tax id."""
     workflow_state_repository().update(
         lambda state: register_minimal_profile(
             state,
-            profile_id="default",
+            profile_id=bucket_id,
             overrides={"identity.tax_id": "00000000T"},
         )
     )
@@ -149,7 +133,8 @@ def _transaction(
 
 def test_transactions_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    assert transactions_pending(settings, bucket_id="test") == ()
+    with profile_create_storage_span("test"):
+        assert transactions_pending(settings, bucket_id="test") == ()
 
 
 def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
@@ -160,8 +145,9 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
             _transaction(source_row_index=2, classification=BusinessClassification.BUSINESS),
         )
     )
-    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-    items = transactions_pending(settings, bucket_id="test")
+    with profile_create_storage_span("test"):
+        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+        items = transactions_pending(settings, bucket_id="test")
     assert len(items) == 1
     item = items[0]
     assert isinstance(item, TransactionReviewItem)
@@ -173,9 +159,9 @@ def test_transactions_pending_filters_unclassified(tmp_path: Path) -> None:
 def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
-    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-
-    items = transactions_pending(settings, bucket_id="test")
+    with profile_create_storage_span("test"):
+        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+        items = transactions_pending(settings, bucket_id="test")
 
     assert len(items) == 1
     assert items[0].drill_command == f"aeat app ledger review --id {items[0].source.transaction_id}"
@@ -186,10 +172,13 @@ def test_transactions_pending_drills_into_ledger_owned_review_command(tmp_path: 
 def test_transactions_pending_reads_only_requested_bucket(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     other_bucket_catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1),))
-    TransactionCatalogueRepository(bucket_id="other-profile").save(other_bucket_catalogue)
+    with profile_create_storage_span("other-profile"):
+        TransactionCatalogueRepository(bucket_id="other-profile").save(other_bucket_catalogue)
 
-    assert transactions_pending(settings, bucket_id="active-profile") == ()
-    assert len(transactions_pending(settings, bucket_id="other-profile")) == 1
+    with profile_create_storage_span("active-profile"):
+        assert transactions_pending(settings, bucket_id="active-profile") == ()
+    with profile_create_storage_span("other-profile"):
+        assert len(transactions_pending(settings, bucket_id="other-profile")) == 1
 
 
 @pytest.mark.parametrize(
@@ -207,8 +196,9 @@ def test_transactions_pending_severity_mapping(
 ) -> None:
     settings = _build_settings(tmp_path)
     catalogue = TransactionCatalogue.from_transactions((_transaction(source_row_index=1, classification=state),))
-    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-    items = transactions_pending(settings, bucket_id="test")
+    with profile_create_storage_span("test"):
+        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+        items = transactions_pending(settings, bucket_id="test")
     assert len(items) == 1
     assert items[0].severity is expected_severity
 
@@ -228,8 +218,9 @@ def test_transactions_pending_skips_skipped_by_rule(tmp_path: Path) -> None:
             ),
         )
     )
-    TransactionCatalogueRepository(bucket_id="test").save(catalogue)
-    assert transactions_pending(settings, bucket_id="test") == ()
+    with profile_create_storage_span("test"):
+        TransactionCatalogueRepository(bucket_id="test").save(catalogue)
+        assert transactions_pending(settings, bucket_id="test") == ()
 
 
 # ── invoices adapter ──────────────────────────────────────────────
@@ -274,7 +265,8 @@ def _invoice(
 
 def test_invoices_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    assert invoices_pending(settings) == ()
+    with profile_create_storage_span("test"):
+        assert invoices_pending(settings) == ()
 
 
 @pytest.mark.parametrize(
@@ -296,8 +288,9 @@ def test_invoices_pending_severity_mapping(
     catalogue = InvoiceCatalogue.from_invoices(
         (_invoice(payment_status=payment_status, linked_transaction_ids=linked),)
     )
-    InvoiceCatalogueRepository().save(catalogue)
-    items = invoices_pending(settings)
+    with profile_create_storage_span("test"):
+        InvoiceCatalogueRepository().save(catalogue)
+        items = invoices_pending(settings)
     assert len(items) == 1
     assert items[0].severity is expected_severity
 
@@ -318,15 +311,17 @@ def test_invoices_pending_skips_paid_and_cancelled(tmp_path: Path) -> None:
             ),
         )
     )
-    InvoiceCatalogueRepository().save(catalogue)
-    assert invoices_pending(settings) == ()
+    with profile_create_storage_span("test"):
+        InvoiceCatalogueRepository().save(catalogue)
+        assert invoices_pending(settings) == ()
 
 
 def test_invoices_pending_emits_invoice_review_item(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
     catalogue = InvoiceCatalogue.from_invoices((_invoice(),))
-    InvoiceCatalogueRepository().save(catalogue)
-    items = invoices_pending(settings)
+    with profile_create_storage_span("test"):
+        InvoiceCatalogueRepository().save(catalogue)
+        items = invoices_pending(settings)
     assert len(items) == 1
     assert isinstance(items[0], InvoiceReviewItem)
 
@@ -376,12 +371,12 @@ def _write_draft(settings: Settings, draft: ModeloDraft) -> Path:
 
 def test_drafts_pending_returns_empty_when_source_missing(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    assert drafts_pending(settings) == ()
+    with profile_create_storage_span("test"):
+        assert drafts_pending(settings) == ()
 
 
 def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
     findings = (
         ModeloValidationFinding(
             casilla_id="03",
@@ -402,8 +397,10 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
             message=_summary("info"),
         ),
     )
-    _write_draft(settings, _draft(draft_id="d1", findings=findings))
-    items = drafts_pending(settings)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(settings, _draft(draft_id="d1", findings=findings))
+        items = drafts_pending(settings)
     assert len(items) == 3
     severities = {item.severity for item in items}
     assert severities == {ReviewSeverity.CRITICAL, ReviewSeverity.HIGH, ReviewSeverity.INFO}
@@ -415,9 +412,10 @@ def test_drafts_pending_emits_one_finding_per_finding(tmp_path: Path) -> None:
 def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> None:
     """`status=DRAFT` with no findings must emit the same placeholder as VALIDATED."""
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.BORRADOR))
-    items = drafts_pending(settings)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(settings, _draft(draft_id="d_draft", status=ModeloDraftStatus.BORRADOR))
+        items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -427,9 +425,10 @@ def test_drafts_pending_emits_placeholder_for_draft_status(tmp_path: Path) -> No
 
 def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDADO))
-    items = drafts_pending(settings)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(settings, _draft(draft_id="d2", status=ModeloDraftStatus.VALIDADO))
+        items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.NORMAL
@@ -438,9 +437,10 @@ def test_drafts_pending_emits_placeholder_when_no_findings_but_status_pending(tm
 def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -> None:
     """`status=APPROVAL_STALE` must surface as a HIGH-severity finding row."""
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APROBACION_CADUCADA))
-    items = drafts_pending(settings)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(settings, _draft(draft_id="d_stale", status=ModeloDraftStatus.APROBACION_CADUCADA))
+        items = drafts_pending(settings)
     assert len(items) == 1
     assert items[0].source is None
     assert items[0].severity is ReviewSeverity.HIGH
@@ -452,14 +452,14 @@ def test_drafts_pending_emits_high_severity_for_approval_stale(tmp_path: Path) -
 
 def test_drafts_pending_skips_ready_drafts_with_no_findings(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
-    _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
-    assert drafts_pending(settings) == ()
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(settings, _draft(draft_id="d3", status=ModeloDraftStatus.LISTO_PARA_PRESENTAR))
+        assert drafts_pending(settings) == ()
 
 
 def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None:
     settings = _build_settings(tmp_path)
-    _seed_active_profile()
     finding = ModeloValidationFinding(
         casilla_id="03",
         severity=BaseSeverity.ERROR,
@@ -467,9 +467,11 @@ def test_drafts_pending_dedups_identical_finding_triples(tmp_path: Path) -> None
         message=_summary("dup"),
     )
     # Same finding repeated twice — dedup should collapse to one.
-    _write_draft(
-        settings,
-        _draft(draft_id="d4", findings=(finding, finding)),
-    )
-    items = drafts_pending(settings)
+    with profile_create_storage_span("test"):
+        _seed_active_profile()
+        _write_draft(
+            settings,
+            _draft(draft_id="d4", findings=(finding, finding)),
+        )
+        items = drafts_pending(settings)
     assert len(items) == 1

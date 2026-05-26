@@ -45,7 +45,7 @@ def _profile() -> ModeloTestProfile:
 
 
 def _schema_provider() -> CasillaSchemaProvider:
-    return build_runtime_schema_provider(filing_year=2026, period="1T")
+    return build_runtime_schema_provider(modelos=("130",), filing_year=2026, period="1T")
 
 
 def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
@@ -61,7 +61,7 @@ def _draft(schema_provider: CasillaSchemaProvider | None = None) -> ModeloDraft:
             "08": Decimal("2000"),
             "10": Decimal("10"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
@@ -82,11 +82,11 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
             "08": Decimal("2000"),
             "10": Decimal("10"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
-        schema_provider=build_runtime_schema_provider(),
+        schema_provider=build_runtime_schema_provider(modelos=("130",)),
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -189,7 +189,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             "05": Decimal("500"),
             "08": Decimal("0"),
             "09": Decimal("0"),
-            "11": Decimal("0"),
+            "modelo-131-2026-resultados-negativos-anteriores": Decimal("0"),
             "12": Decimal("0"),
             "14": Decimal("0"),
             "modelo-131.dpa.013-016.epigrafe-iae": "722",
@@ -331,6 +331,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
             "01": Decimal("100"),
             "02": Decimal("25"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
     )

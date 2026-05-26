@@ -7,6 +7,7 @@ selection happens later in the application reconciliation layer.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import re
 from datetime import UTC, datetime
@@ -340,6 +341,7 @@ async def _continue_own_name_representation(
             _PRE303.representation_own_name_label_selector,
             timeout=settings.aeat_browser_selector_probe_timeout_ms,
         )
+        await _dismiss_pre303_alert_modal_if_present(page)
         await page.click(_PRE303.representation_own_name_label_selector)
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
@@ -360,6 +362,15 @@ async def _continue_own_name_representation(
             },
             suggestion="Do not provide represented-third-party data through this driver.",
         ) from exc
+
+
+async def _dismiss_pre303_alert_modal_if_present(page: Page) -> None:
+    html = await page.content()
+    modal_marker = _PRE303.alert_modal_selector.lstrip("#")
+    if _PRE303.alert_modal_selector not in html and modal_marker not in html:
+        return
+    continue_selector = f'{_PRE303.alert_modal_selector} button:has-text("{_PRE303.alert_continue_button_text}")'
+    await page.click(continue_selector)
 
 
 async def _submit_wallet_execute_gate_if_present(
@@ -418,7 +429,12 @@ async def _submit_wallet_execute_gate_if_present(
                     getattr(page, "url", None),
                     exc_info=True,
                 )
-            post_execute_html = await content()
+            post_execute_html = await _wait_for_wallet_execute_terminal_shape(
+                page,
+                content=content,
+                expected_path=expected_path,
+                timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+            )
             if (
                 _wallet_execute_gate_status(post_execute_html, expected_path=expected_path)
                 == "wallet-execute-submit-present"
@@ -452,6 +468,26 @@ async def _submit_wallet_execute_gate_if_present(
             ) from exc
         return True
     return False
+
+
+async def _wait_for_wallet_execute_terminal_shape(
+    page: Page,
+    *,
+    content,
+    expected_path: str,
+    timeout_ms: int,
+) -> str:
+    deadline = datetime.now(UTC).timestamp() + timeout_ms / 1000
+    last_html = await content()
+    while datetime.now(UTC).timestamp() < deadline:
+        html = await content()
+        last_html = html
+        if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(BeautifulSoup(html, "html.parser")):
+            return html
+        if _wallet_execute_gate_status(html, expected_path=expected_path) != "wallet-execute-submit-present":
+            return html
+        await asyncio.sleep(0.5)
+    return last_html
 
 
 def _wallet_execute_gate_status(html: str, *, expected_path: str) -> str:

@@ -125,6 +125,7 @@ def test_modelo_100_2025_renta_ledger_expense_bindings_resolve_to_bound_casillas
         binding_values={
             **binding_values,
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
