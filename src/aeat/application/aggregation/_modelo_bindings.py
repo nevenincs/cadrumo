@@ -12,6 +12,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
+    resolve_ledger_renta_income_aggregation_binding_values,
 )
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.renta import RentaDeductibleExpenseObservation
@@ -20,6 +21,10 @@ from ._errors import AggregationValidationError, t
 from ._iva_ledger import (
     IvaLedgerAggregationIssue,
     aggregate_iva_ledger_observations_from_repositories,
+)
+from ._renta_income_ledger import (
+    RentaIncomeLedgerAggregationIssue,
+    aggregate_renta_income_ledger_from_repositories,
 )
 from ._renta_ledger import (
     RentaLedgerAggregationIssue,
@@ -47,6 +52,7 @@ class ModeloLedgerBindingAggregation(BaseModel):
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)
     iva_issues: Sequence[IvaLedgerAggregationIssue] = Field(default_factory=tuple)
     renta_issues: Sequence[RentaLedgerAggregationIssue] = Field(default_factory=tuple)
+    renta_income_issues: Sequence[RentaIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
 
     @field_validator("binding_values")
     @classmethod
@@ -89,11 +95,26 @@ class ModeloLedgerBindingAggregation(BaseModel):
     ) -> tuple[IvaLedgerAggregationIssue, ...]:
         return tuple(value)
 
+    @field_validator("renta_income_issues")
+    @classmethod
+    def _freeze_renta_income_issues(
+        cls,
+        value: Sequence[RentaIncomeLedgerAggregationIssue],
+    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
+        return tuple(value)
+
     @field_serializer("renta_issues")
     def _serialize_renta_issues(
         self,
         value: Sequence[RentaLedgerAggregationIssue],
     ) -> tuple[RentaLedgerAggregationIssue, ...]:
+        return tuple(value)
+
+    @field_serializer("renta_income_issues")
+    def _serialize_renta_income_issues(
+        self,
+        value: Sequence[RentaIncomeLedgerAggregationIssue],
+    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
         return tuple(value)
 
 
@@ -207,6 +228,54 @@ class LedgerRentaExpenseAggregationSourceResolver:
         )
 
 
+class LedgerRentaIncomeAggregationSourceResolver:
+    """Source mesh resolver for repository-backed M130 actividad-económica income bindings."""
+
+    resolver_id = "ledger_renta_income_aggregation"
+    owned_sources = ("ledger_renta_income_aggregation",)
+
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
+        self._transaction_repository = transaction_repository
+
+    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
+        if not _revision_has_binding_source(context.revision, "ledger_renta_income_aggregation"):
+            return _empty_source_resolution(self.resolver_id, self.owned_sources)
+
+        aggregation_period = aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period)
+        aggregation = aggregate_renta_income_ledger_from_repositories(
+            bucket_id=context.bucket_id,
+            period=aggregation_period,
+            transaction_repository=self._transaction_repository,
+        )
+        return CalculationSourceResolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            binding_values=resolve_ledger_renta_income_aggregation_binding_values(
+                context.revision,
+                aggregation.observations,
+            ),
+            source_transaction_ids=tuple(
+                sorted(observation.transaction_id for observation in aggregation.observations)
+            ),
+            diagnostics=tuple(
+                CalculationSourceDiagnostic(
+                    reason="source_issue",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=issue.detail,
+                )
+                for issue in aggregation.issues
+            ),
+            provenance=tuple(
+                CalculationSourceProvenance(
+                    source_kind="ledger_renta_income_aggregation",
+                    source_ref=f"transaction:{observation.transaction_id}",
+                )
+                for observation in aggregation.observations
+            ),
+        )
+
+
 def resolve_modelo_ledger_binding_values_from_repositories(
     *,
     bucket_id: str,
@@ -223,6 +292,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
     source_transaction_ids: set[str] = set()
     iva_issues: tuple[IvaLedgerAggregationIssue, ...] = ()
     renta_issues: tuple[RentaLedgerAggregationIssue, ...] = ()
+    renta_income_issues: tuple[RentaIncomeLedgerAggregationIssue, ...] = ()
     aggregation_period = aggregation_period_for_modelo(filing_year=filing_year, period=period)
 
     if _revision_has_binding_source(revision, "ledger_iva_aggregation"):
@@ -253,6 +323,23 @@ def resolve_modelo_ledger_binding_values_from_repositories(
         source_transaction_ids.update(observation.transaction_id for observation in renta_aggregation.observations)
         renta_issues = tuple(renta_aggregation.issues)
 
+    if _revision_has_binding_source(revision, "ledger_renta_income_aggregation"):
+        renta_income_aggregation = aggregate_renta_income_ledger_from_repositories(
+            bucket_id=bucket_id,
+            period=aggregation_period,
+            transaction_repository=transaction_repository,
+        )
+        binding_values.update(
+            resolve_ledger_renta_income_aggregation_binding_values(
+                revision,
+                renta_income_aggregation.observations,
+            )
+        )
+        source_transaction_ids.update(
+            observation.transaction_id for observation in renta_income_aggregation.observations
+        )
+        renta_income_issues = tuple(renta_income_aggregation.issues)
+
     return ModeloLedgerBindingAggregation(
         modelo=modelo,
         filing_year=filing_year,
@@ -261,6 +348,7 @@ def resolve_modelo_ledger_binding_values_from_repositories(
         source_transaction_ids=tuple(sorted(source_transaction_ids)),
         iva_issues=iva_issues,
         renta_issues=renta_issues,
+        renta_income_issues=renta_income_issues,
     )
 
 
@@ -315,6 +403,7 @@ def _renta_observation_provenance(
 __all__ = [
     "LedgerIvaAggregationSourceResolver",
     "LedgerRentaExpenseAggregationSourceResolver",
+    "LedgerRentaIncomeAggregationSourceResolver",
     "ModeloLedgerBindingAggregation",
     "aggregation_period_for_modelo",
     "resolve_modelo_ledger_binding_values_from_repositories",

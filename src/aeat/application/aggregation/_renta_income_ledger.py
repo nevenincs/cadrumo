@@ -1,0 +1,306 @@
+"""Repository-backed Renta income aggregation for actividad económica (Modelo 130).
+
+Modelo 130 casilla 01 (Ingresos íntegros) accumulates professional-service
+revenue from the start of the fiscal year through the end of the declared
+quarter. Unlike the expense pipeline, which processes annual periods, the
+income pipeline accepts a **quarterly** period token and applies a cumulative
+year-to-date window.
+
+Cumulative window rule (RD 439/2007 art. 110.2):
+  For period Qn in year Y the window is [Jan 1, Y] through [last day of Qn, Y].
+  Q1 covers Jan-Mar; Q2 covers Jan-Jun; Q3 covers Jan-Sep; Q4 covers Jan-Dec.
+
+Only ACTIVE, EUR-denominated, INCOMING transactions whose
+``business_classification`` is BUSINESS or MIXED are eligible. Transactions
+whose ``value_date`` (or ``booked_date`` if absent) falls outside the
+cumulative window are excluded with a traceable issue record.
+"""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+from datetime import date
+from decimal import Decimal
+from enum import StrEnum
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
+
+from ...domain.transactions import (
+    BusinessClassification,
+    Transaction,
+    TransactionCatalogue,
+    TransactionCatalogueRepository,
+    TransactionLifecycleState,
+)
+from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
+from . import _shared_issue_reasons
+from ._errors import AggregationPeriodError, AggregationValidationError, t
+from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
+
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+# The only casilla income aggregation feeds for M130 actividad económica direct estimation.
+_TARGET_CASILLA_INGRESOS = "01"
+
+
+class RentaIncomeLedgerAggregationIssueReason(StrEnum):
+    """Machine-readable reasons why a ledger row did not produce an income observation."""
+
+    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
+    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
+    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
+    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
+    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    UNSUPPORTED_PERIOD = "unsupported_period"
+
+
+class RentaIncomeLedgerAggregationIssue(BaseModel):
+    """Traceable exclusion emitted while aggregating income ledger rows."""
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1, max_length=128)
+    reason: RentaIncomeLedgerAggregationIssueReason
+    detail: str = Field(min_length=1, max_length=512)
+
+
+class RentaIncomeObservation(BaseModel):
+    """One eligible INCOMING professional-income ledger row.
+
+    Carries the typed gross amount and the target casilla it feeds. The
+    domain registry resolver matches ``target_casilla`` against the binding
+    selector and sums ``gross_amount`` across all observations for that
+    casilla.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1, max_length=128)
+    target_casilla: str = Field(min_length=2, max_length=8)
+    gross_amount: Decimal = Field(ge=Decimal("0"))
+    filing_date: date
+
+
+class RentaIncomeLedgerAggregation(BaseModel):
+    """Cumulative income observations for one M130 quarter window."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=16)
+    period: Period
+    observations: Sequence[RentaIncomeObservation] = Field(default_factory=tuple)
+    issues: Sequence[RentaIncomeLedgerAggregationIssue] = Field(default_factory=tuple)
+    casilla_aggregation: CasillaAggregation
+
+    @field_validator("observations")
+    @classmethod
+    def _freeze_observations(
+        cls,
+        value: Sequence[RentaIncomeObservation],
+    ) -> tuple[RentaIncomeObservation, ...]:
+        return tuple(value)
+
+    @field_validator("issues")
+    @classmethod
+    def _freeze_issues(
+        cls,
+        value: Sequence[RentaIncomeLedgerAggregationIssue],
+    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
+        return tuple(value)
+
+    @model_validator(mode="after")
+    def _validate_casilla_period(self) -> Self:
+        if self.casilla_aggregation.modelo != self.modelo:
+            raise AggregationValidationError(t("aggregation.renta_ledger.errors.modelo_mismatch"))
+        if self.casilla_aggregation.period != self.period:
+            raise AggregationValidationError(t("aggregation.renta_ledger.errors.period_mismatch"))
+        return self
+
+    @field_serializer("observations")
+    def _serialize_observations(
+        self,
+        value: Sequence[RentaIncomeObservation],
+    ) -> tuple[RentaIncomeObservation, ...]:
+        return tuple(value)
+
+    @field_serializer("issues")
+    def _serialize_issues(
+        self,
+        value: Sequence[RentaIncomeLedgerAggregationIssue],
+    ) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
+        return tuple(value)
+
+
+def aggregate_renta_income_ledger_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period | str,
+    transaction_repository: TransactionCatalogueRepository | None = None,
+) -> RentaIncomeLedgerAggregation:
+    """Load the transaction catalogue and aggregate cumulative M130 income."""
+
+    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.renta_ledger.errors.bucket_mismatch"),
+            context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+        )
+    transactions = repository.load()
+    return aggregate_renta_income_ledger(transactions, bucket_id=bucket_id, period=period)
+
+
+def aggregate_renta_income_ledger(
+    transactions: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    period: Period | str,
+) -> RentaIncomeLedgerAggregation:
+    """Aggregate INCOMING professional-income transactions into M130 casilla 01.
+
+    ``period`` must be a quarterly period token (``{year}Q{n}``). The
+    cumulative window extends from Jan 1 of the period's year through the
+    last day of the declared quarter, implementing the year-to-date
+    accumulation rule for IRPF pagos fraccionados (RD 439/2007 art. 110.2).
+    """
+    resolved_period = _resolve_quarterly_period(period)
+    # Cumulative start: Jan 1 of the fiscal year.
+    cumulative_start = date(resolved_period.year, 1, 1)
+    # Cumulative end: last day of the declared quarter.
+    cumulative_end = resolved_period.end
+
+    observations: list[RentaIncomeObservation] = []
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            continue
+        outcome = _classify_income_transaction(
+            transaction,
+            cumulative_start=cumulative_start,
+            cumulative_end=cumulative_end,
+        )
+        if isinstance(outcome, RentaIncomeLedgerAggregationIssue):
+            issues.append(outcome)
+        else:
+            observations.append(outcome)
+
+    casilla_aggregation = _income_casilla_aggregation(resolved_period, observations)
+    return RentaIncomeLedgerAggregation(
+        modelo="130",
+        period=resolved_period,
+        observations=tuple(observations),
+        issues=tuple(issues),
+        casilla_aggregation=casilla_aggregation,
+    )
+
+
+def _resolve_quarterly_period(period: Period | str) -> Period:
+    resolved = period if isinstance(period, Period) else Period.model_validate(period)
+    if resolved.kind is not PeriodKind.QUARTERLY:
+        raise AggregationPeriodError(
+            t("aggregation.renta_ledger.errors.quarterly_period_required"),
+            context={"period": resolved.raw},
+        )
+    return resolved
+
+
+def _classify_income_transaction(
+    transaction: Transaction,
+    *,
+    cumulative_start: date,
+    cumulative_end: date,
+) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue:
+    """Filter one ledger transaction against the M130 income pipeline."""
+
+    transaction_id = transaction.transaction_id
+
+    if transaction.direction is not LedgerTransactionDirection.INCOMING:
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
+            detail=f"transaction direction {transaction.direction.value!r} is not an income flow",
+        )
+    if transaction.raw.currency != "EUR":
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaIncomeLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta income",
+        )
+
+    gross_amount = _income_business_amount(transaction)
+    if gross_amount is None:
+        reason = (
+            RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+            if transaction.business_classification is BusinessClassification.PERSONAL
+            else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+        )
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=reason,
+            detail=(f"business classification {transaction.business_classification.value!r} cannot feed Renta income"),
+        )
+
+    filing_date = transaction.raw.value_date or transaction.raw.booked_date
+    if filing_date is None or not (cumulative_start <= filing_date <= cumulative_end):
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"filing date {filing_date} is outside the cumulative income window",
+        )
+
+    return RentaIncomeObservation(
+        transaction_id=transaction_id,
+        target_casilla=_TARGET_CASILLA_INGRESOS,
+        gross_amount=gross_amount,
+        filing_date=filing_date,
+    )
+
+
+def _income_business_amount(transaction: Transaction) -> Decimal | None:
+    """Return the business-attributed income amount, or None if not eligible."""
+    amount = abs(transaction.raw.amount)
+    if transaction.business_classification is BusinessClassification.BUSINESS:
+        return amount
+    if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
+        return amount * transaction.business_pct
+    return None
+
+
+def _income_casilla_aggregation(
+    period: Period,
+    observations: Sequence[RentaIncomeObservation],
+) -> CasillaAggregation:
+    totals: dict[str, Decimal] = {}
+    provenance_rows: list[CasillaProvenance] = []
+    grouped: dict[str, list[RentaIncomeObservation]] = {}
+    for observation in observations:
+        totals[observation.target_casilla] = (
+            totals.get(observation.target_casilla, Decimal("0")) + observation.gross_amount
+        )
+        grouped.setdefault(observation.target_casilla, []).append(observation)
+    for casilla, rows in sorted(grouped.items()):
+        provenance_rows.append(
+            CasillaProvenance(
+                casilla=casilla,
+                category_id=None,
+                transaction_ids=tuple(sorted(row.transaction_id for row in rows)),
+                subtotal=sum((row.gross_amount for row in rows), start=Decimal("0")),
+            )
+        )
+    return CasillaAggregation(
+        modelo="130",
+        period=period,
+        casilla_values=totals,
+        provenance=tuple(provenance_rows),
+    )
+
+
+__all__ = [
+    "RentaIncomeLedgerAggregation",
+    "RentaIncomeLedgerAggregationIssue",
+    "RentaIncomeLedgerAggregationIssueReason",
+    "RentaIncomeObservation",
+    "aggregate_renta_income_ledger",
+    "aggregate_renta_income_ledger_from_repositories",
+]
