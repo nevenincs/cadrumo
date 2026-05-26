@@ -31,6 +31,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core.config import Settings
 from ..core.logging import get_logger
 from ..domain.deadlines import (
@@ -411,6 +412,8 @@ def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSum
     if bucket_id is None:
         return ProjectionWorkspaceSummary()
 
+    inspect_bucket_storage_runtime(bucket_id).require_ready()
+
     from .diagnostics import secure_object_unreadable_total
 
     transactions = TransactionCatalogueRepository(bucket_id=bucket_id).load()
@@ -622,6 +625,8 @@ def build_operator_state_projection(
     state: WorkflowState | None = None,
     requested_provider: str | None = None,
     probe_live_backend: bool = False,
+    include_workspace_summary: bool = True,
+    include_pending_obligations: bool = True,
     modelo_readiness_requests: tuple[ModeloReadinessRequest, ...] = (),
     today: date | None = None,
 ) -> OperatorStateProjection:
@@ -643,6 +648,15 @@ def build_operator_state_projection(
         probe_live_backend: When set, the live auth backend is queried
             for the ``available`` / ``health_*`` fields. ``configured``
             is never sourced from the probe.
+        include_workspace_summary: When false, skip ledger, invoice,
+            draft, work-unit, and revision counters. Auth-only surfaces
+            use this so unrelated workspace-store corruption cannot
+            block local auth readiness inspection; overview-style
+            surfaces keep the default full projection.
+        include_pending_obligations: When false, skip period deadline
+            projection. Auth-only surfaces do not render obligation rows,
+            so they should not fail because an unrelated period-readiness
+            path changes.
         modelo_readiness_requests: Optional readiness targets; one
             :class:`ProfilePreflightReport` is computed per request.
         today: Reference date for the deadline computation. Defaults to
@@ -666,7 +680,11 @@ def build_operator_state_projection(
 
     profile_health = assess_active_profile_health(resolved_state)
 
-    workspace = _build_workspace_summary(bucket_id=resolved_state.active_profile_bucket_id())
+    workspace = (
+        _build_workspace_summary(bucket_id=resolved_state.active_profile_bucket_id())
+        if include_workspace_summary
+        else ProjectionWorkspaceSummary()
+    )
     auth = _build_auth_readiness(
         resolved_state,
         requested_provider=requested_provider,
@@ -674,7 +692,7 @@ def build_operator_state_projection(
     )
     active_profile = _build_active_profile(profile_health)
 
-    if has_active_profile:
+    if has_active_profile and include_pending_obligations:
         pending_obligations = _build_pending_obligations(
             _taxpayer_profile_from_state(resolved_state),
             today=reference_today,

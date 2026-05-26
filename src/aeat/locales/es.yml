@@ -1043,6 +1043,10 @@ cli:
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
       help: Diagnosticar y reparar configuración local, registro, perfil, autenticación
         y logs
+      integrity_attribution_details_help: Incluir detalles de metadatos seguros por
+        fila
+      integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
+        por metadatos seguros.
       integrity_help: Comprobar la integridad de los objetos seguros y del registro.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       integrity_objects_help: Comprueba la verificación de etiquetas AES-256-GCM en
@@ -1057,6 +1061,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
+      plan_help: Planificación de reparación en seco y preservación primero para
+        filas de objetos seguros no legibles.
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
@@ -1069,8 +1075,11 @@ cli:
       profile_requires_yes: Pasa --yes para aplicar la reparación del perfil activo.
       quarantine_dry_run_help: Previsualizar las filas que se pondrían en cuarentena
         sin mover nada
-      quarantine_help: Mover filas no descifrables a una tabla de cuarentena (acción
-        destructiva, requiere --yes)
+      quarantine_help: Previsualizar filas no descifrables; la cuarentena activa está
+        desactivada por la política de reparación preserve-first
+      quarantine_preserve_first_refused: La política de reparación preserve-first
+        rechaza la cuarentena activa. Ejecuta la previsualización en seco y la atribución
+        de integridad.
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
@@ -1782,6 +1791,10 @@ cli:
     parity_tape_help: Ruta a un archivo JSON de cinta de paridad guardada
     source_observation_help: Manifiesto cifrado de observación fuente requerido por
       vínculos de declaraciones previas o relaciones
+    sources:
+      source_ref_help: Id de referencia de fuente que se va a mostrar
+      view_help: Mostrar una referencia de fuente por id
+    sources_app_help: Referencias de fuentes del registro
     verify_filed_state_help: Comparar el cálculo local del registro con el estado
       presentado capturado de AEAT
     verify_help: Verificar la integridad del registro local
@@ -2363,6 +2376,7 @@ errors:
       no disponible. Espera unos minutos y vuelve a intentarlo.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
+    fail_secure_storage: Se produjo un error en el almacenamiento seguro.
     fail_sede_census_parse: Un valor de la página del censo de la Sede de la AEAT
       no se pudo interpretar.
     fail_sede_justificante_fetch: La descarga del justificante en PDF desde la Sede

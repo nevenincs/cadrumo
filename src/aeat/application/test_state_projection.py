@@ -1,8 +1,8 @@
 """Real-behavior tests for the canonical operator state read-projection.
 
 These tests use a real :class:`EphemeralMasterKeyProvider`, a real
-SQLite engine, and a real filesystem bucket. No mocks, fakes, or
-monkeypatched repositories.
+SQLite engine, and a real filesystem bucket with the production
+repositories.
 
 The projection's contract is that every operator-facing surface reads
 ONE state view, so the surfaces cannot disagree. Two contracts are
@@ -20,14 +20,22 @@ proved here:
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ..adapters.persistence.storage import EphemeralMasterKeyProvider
+from ..adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from ..adapters.persistence.storage.bucket._manifest import (
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
+from ..adapters.persistence.storage.bucket._manifest_io import write_manifest
 from ..adapters.persistence.storage.sql.engine import dispose_engine
+from ..core.config import override_settings
 from ..domain.transactions import BusinessClassification, TransactionDirection
 from .auth._operator import inspect_operator_auth
 from .auth._operator import test_operator_auth as probe_operator_auth
@@ -36,19 +44,21 @@ from .modelo._actions import create_work_unit, discard_work_unit
 from .overview import build_overview_status_report
 from .state_projection import ModeloReadinessRequest, build_operator_state_projection
 from .user_profile._testing import register_minimal_profile
+from .workflow._models import WorkflowState
 from .workflow._persistence import workflow_state_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _isolated_storage(tmp_path: Path) -> Iterator[None]:
     """Bind a real isolated SQLite engine and filesystem root per test."""
 
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'projection.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
+        EphemeralMasterKeyProvider(),
+    ):
         try:
             yield
         finally:
@@ -64,6 +74,31 @@ def _register_active_profile() -> str:
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
     return bucket_id
+
+
+def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=bucket_id,
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=0x13,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"0123456789abcdef",
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
 
 
 def test_overview_status_reports_modelo_work_units(tmp_path: Path) -> None:
@@ -276,6 +311,27 @@ def test_projection_without_active_profile_is_empty() -> None:
     assert projection.workspace.drafts == 0
     assert projection.auth.configured is False
     assert projection.pending_obligations == ()
+
+
+def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path) -> None:
+    _stage_profile_manifest(tmp_path, "operator")
+
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="operator",
+        aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+    ):
+        projection = build_operator_state_projection(
+            state=WorkflowState(),
+            include_workspace_summary=False,
+            include_pending_obligations=False,
+        )
+
+    assert projection.active_profile.profile_id == "operator"
+    assert projection.active_profile.registered_bucket is True
+    assert projection.active_profile.record_present is False
+    assert projection.active_profile.health_status == "profile_record_unreadable"
+    assert not (tmp_path / "explicit.db").exists()
 
 
 def test_auth_readiness_no_provider_matches_with_and_without_probe() -> None:
