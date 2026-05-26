@@ -137,10 +137,10 @@ Two parallel mechanisms decide applicability (Python seed table plus per-window 
 
 derive_modelo_202_modality is orphaned in the domain. Casillas 03 and 32 compute unconditionally. INCN is not a registry binding for Modelo 202.
 
-- [ ] `W02.P12.S47` - add an INCN profile binding to the Modelo 202 2025-y-siguientes revision; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/`.
-- [ ] `W02.P12.S48` - add the modality gate as a registry-level applicability condition on casillas 03 and 32; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/`.
-- [ ] `W02.P12.S49` - wire derive_modelo_202_modality into registry formula composition as a guard predicate OR remove the orphan function; `src/aeat/domain/calculations/registry/_applicability.py`.
-- [ ] `W02.P12.S50` - end-to-end CLI test: SL with INCN above 6.000.000 EUR gets only Art. 40.3; `below threshold both modalities reachable; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
+- [x] `W02.P12.S47` - add an INCN profile binding to the Modelo 202 2025-y-siguientes revision; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/bindings/`.
+- [x] `W02.P12.S48` - add the modality gate as a registry-level applicability condition on casillas 03 and 32; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/`.
+- [x] `W02.P12.S49` - wire derive_modelo_202_modality into registry formula composition as a guard predicate OR remove the orphan function; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [x] `W02.P12.S50` - end-to-end CLI test: SL with INCN above 6.000.000 EUR gets only Art. 40.3; `below threshold both modalities reachable; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
 
 ### Phase `W02.P13` - Wave-2 review and persona re-run and plan expansion BREAKPOINT
 
@@ -435,7 +435,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S202` - audit stored-data drift taxonomy semantic gap; `class lives under errors.refused.* REFUSED category but stored-data drift is semantically an integrity failure not a safety refusal; decide whether to rename and re-emit telemetry or document the semantic exception; `src/aeat/core/errors/registry/_entrypoints.py`.
 - [ ] `W09.P41.S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory; `Wave-1 drift sweep DUPLICATE finding; `src/aeat/application/user_profile/_repository.py`.
 - [ ] `W09.P41.S206` - remove _I18N_STRICT_PLACEHOLDERS from __all__ in core i18n _render.py; `private names must not be exported; Wave-1 audit FU-C; `src/aeat/core/i18n/_render.py`.
-- [ ] `W09.P41.S207` - add inline comment in _command_matches_current confirming attachment_ids equality is value-equal not identity-equal; pydantic-frozen collection safety note; Wave-1 audit FU-E; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W09.P41.S207` - add inline comment in _command_matches_current confirming attachment_ids equality is value-equal not identity-equal; `pydantic-frozen collection safety note; Wave-1 audit FU-E; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W09.P41.S208` - investigate and fix pre-existing storage regression breaking aeat config profile create CLI test fixture across multiple test files including test_modelo_202_modality test_profile_incn_new_entity_paths and test_modelo_work_applicability_guard; unsecured backend error originates outside Wave-1 surface; `src/aeat/adapters/persistence/storage/`.
 
 ### Phase `W09.P42` - twin function merge
 
