@@ -24,7 +24,7 @@ Moved another S93 domain persistence slice from explicit SQL route setup onto th
 ## Changes
 
 - Replaced the transaction repository test's manual `Settings(aeat_database_url=...)`, injected engine, and direct `SecureObjectRepository(engine=...)` setup with `isolated_runtime_profile`.
-- Replaced the transaction roundtrip tests' hand-built active session and explicit engine creation with `isolated_runtime_profile` and `get_engine(profile.settings)`.
+- Replaced the transaction roundtrip tests' hand-built active session, explicit engine creation, and direct SQL mutation with `isolated_runtime_profile` plus runtime-owned `profile.repository.load/save` mutation.
 - Replaced the attachment repository tests' autouse `AEAT_DATABASE_URL` monkeypatch and manual ephemeral key provider setup with `isolated_runtime_profile`.
 - Replaced the justificante repository tests' autouse `AEAT_DATABASE_URL` monkeypatch, manual secret-store override, and raw default secure-object classification seeding with the runtime-profile repository.
 - Replaced the submission repository tests' autouse `AEAT_DATABASE_URL` monkeypatch, manual secret-store override, and raw default secure-object classification seeding with the runtime-profile repository.

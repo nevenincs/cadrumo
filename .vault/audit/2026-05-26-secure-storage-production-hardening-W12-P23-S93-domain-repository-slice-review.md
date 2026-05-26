@@ -46,3 +46,7 @@ The corrected modelo/usage-ratio slice was re-reviewed by `vaultspec-code-review
 S93-DOMAIN-007 | INFO | Transaction anti-tautology mutation normalized to runtime repository
 
 The combined hygiene scan found the earlier transaction anti-tautology proof still used direct engine/session/ORM access. The test now mutates the persisted encrypted payload through `profile.repository.load/save`, matching the corrected modelo pattern. The combined migrated slice hygiene scan now has no direct engine/session/ORM mutation, deprecated database-route setup, monkeypatching, broad exception swallowing, or masking pragmas.
+
+S93-DOMAIN-008 | LOW | Stale execution wording corrected
+
+Final review found no source-code defects, but noted the execution record still mentioned `get_engine(profile.settings)` for the transaction roundtrip migration. The execution record now states the current runtime-owned `profile.repository.load/save` mutation pattern.
