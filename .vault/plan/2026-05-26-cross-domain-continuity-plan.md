@@ -205,10 +205,10 @@ verify rubber-stamps substantively empty drafts because every casilla in Modelo 
 
 Decide and implement substantive predicates on the registry side so empty drafts no longer trivially pass verification.
 
-- [ ] `W04.P19.S72` - decide and document whether registry marks currently-optional casillas as required true OR a separate verification_predicates field is introduced; `.vault/exec/`.
-- [ ] `W04.P19.S73` - apply the chosen approach to Modelo 130 first; `src/aeat/_data/registry/aeat/modelos/130.toml`.
-- [ ] `W04.P19.S74` - apply the same approach to Modelo 100 303 200 202; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour substantive predicates; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S72` - land a new ADR documenting the two-layer verification strategy: layer 1 per-casilla CasillaDefinition.required boolean for single-casilla mandatory gates layer 2 ModeloRevision.verification_predicates tuple for cross-casilla invariants feeding BLOCKING_RULE finding; `minimal DSL all_nonzero any_nonzero in W04; complex DSL deferred to W09; `.vault/adr/`.
+- [ ] `W04.P19.S73` - mark mandatory casillas required=true in Modelo 130 TOML per BOE AEAT form instructions; `layer 1 of hybrid verification strategy; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [ ] `W04.P19.S74` - mark mandatory casillas required=true in Modelo 100 303 200 202 TOML per BOE AEAT form instructions; `same layer-1 pattern as S73; `src/aeat/_data/registry/aeat/modelos/`.
+- [ ] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour the new CasillaDefinition.required field plus minimal VerificationPredicateDefinition DSL (all_nonzero any_nonzero); BLOCKING_RULE finding kind; include unit test for predicate evaluator; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W04.P19.S76` - regression test that Modelo 130 with all casillas zero is no longer verificado_completo; `src/aeat/application/modelo/test_verification_substance.py`.
 - [ ] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
@@ -445,7 +445,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S214` - add StoredTransactionDriftError ValidationError guard to TransactionCatalogueRepository.load() at domain transactions _repository.py line 139; `mirrors W01.P01.S05 pattern; currently catches only ClassificationError and EnvelopeVersionError but raw ValidationError propagates without typed drift signal; `src/aeat/domain/transactions/_repository.py`.
 - [ ] `W09.P41.S215` - replace four dict[str, object] return types on ledger_transaction_payload ledger_transaction_review_payload ledger_transaction_result_payload ledger_transaction_tracking_payload with typed pydantic models; `aeat-architecture-boundaries forbids bare dict at CLI emit boundary; lines 1024 1055 1064 1075 of application ledger _actions.py; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S216` - add test coverage for _id_resolution.py 95 LOC module; `currently has no dedicated test file; identify callers and write test_id_resolution.py; `src/aeat/application/ledger/_id_resolution.py`.
-- [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; `potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
 
 ### Phase `W09.P42` - twin function merge
 
