@@ -325,11 +325,23 @@ application:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
+      duplicate_tax_id_scan_unreadable_profile: No es pot verificar la unicitat
+        del NIF perquè el perfil '%{profile}' no es pot llegir; executa els diagnòstics
+        de reparació abans de crear un altre perfil.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
+      profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
+        amb l'id de perfil '%{profile}'.
+      profile_label_blank: L'etiqueta del perfil no pot estar buida.
+      profile_manifest_already_registered: El perfil '%{profile}' ja té un manifest
+        de bucket registrat a %{bucket_dir}.
+      profile_manifest_missing: El perfil '%{profile}' no té cap manifest de bucket
+        registrat a %{bucket_dir}.
       profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
         profile create NAME` per crear-lo.
+      profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
+        es pot seleccionar.
   wizard:
     errors:
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per

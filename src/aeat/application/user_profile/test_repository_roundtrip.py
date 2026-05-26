@@ -33,6 +33,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import SensitivityClass
 from ...domain.user_profile import (
+    StoredProfileDriftError,
     UserProfileFact,
     UserProfileRecord,
     UserProfileSnapshot,
@@ -202,10 +203,12 @@ def test_user_profile_active_with_removed_at_surfaces_at_load(
         payload=json.dumps(envelope).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(StoredProfileDriftError) as excinfo:
         UserProfileLifecycleRepository(bucket_id=bucket_id, objects=runtime_profile.repository).load(
             record.profile_id
         )
+    assert excinfo.value.profile_id == record.profile_id
+    assert isinstance(excinfo.value.original_exception, ValidationError)
 
 
 def test_user_profile_snapshot_canonical_hash_drift_surfaces_at_load(
