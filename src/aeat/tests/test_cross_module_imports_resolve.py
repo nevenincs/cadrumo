@@ -277,21 +277,20 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
     "aeat/adapters/inbound/borrador/_extractors/__init__.py": 2,
     "aeat/adapters/outbound/aeat/auth/__init__.py": 2,
-    "aeat/adapters/outbound/aeat/verify/__init__.py": 10,
-    "aeat/application/auth/__init__.py": 1,
+    "aeat/adapters/outbound/aeat/verify/__init__.py": 8,
     "aeat/application/filing/__init__.py": 11,
-    "aeat/application/live/__init__.py": 39,
-    "aeat/application/overview/__init__.py": 14,
+    "aeat/application/live/__init__.py": 34,
+    "aeat/application/overview/__init__.py": 13,
     "aeat/application/registry/__init__.py": 27,
     "aeat/application/topics/__init__.py": 2,
     "aeat/application/user_profile/__init__.py": 5,
-    "aeat/core/corpus_manifest/__init__.py": 2,
+    "aeat/core/corpus_manifest/__init__.py": 1,
     "aeat/core/redaction/__init__.py": 5,
     "aeat/domain/profile/__init__.py": 1,
     "aeat/domain/profile/assets/__init__.py": 1,
     "aeat/domain/profile/inventory/__init__.py": 3,
-    "aeat/entrypoints/cli/__init__.py": 33,
-    "aeat/entrypoints/cli/_config/__init__.py": 101,
+    "aeat/entrypoints/cli/__init__.py": 10,
+    "aeat/entrypoints/cli/_config/__init__.py": 21,
 }
 
 
@@ -317,7 +316,13 @@ def _collect_init_missing_from_all() -> list[tuple[str, str]]:
         if all_names is None:
             continue
         rel = source.relative_to(SRC_AEAT.parent).as_posix()
-        for node in _walk_import_from(tree):
+        # Only TOP-LEVEL ImportFrom nodes bind on the package's __init__
+        # namespace. Function-body and class-body imports are runtime
+        # locals; they neither bind on the package nor count as
+        # implicit re-exports.
+        for node in ast.iter_child_nodes(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
             # Only the package's OWN siblings count — absolute imports
             # from elsewhere in aeat or stdlib re-exports are caller's
             # choice, not a package-public-surface promise.
