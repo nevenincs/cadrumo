@@ -512,6 +512,12 @@ cli:
         calculate_help: cli.app.modelo.work.calculate_help
         calculate_saved: cli.app.modelo.work.calculate_saved
         calculation_revision_id_help: cli.app.modelo.work.calculation_revision_id_help
+        casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
+          ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
+          minősített formát.'
+        casilla_bare_numeric_unknown: 'A --casilla {key} nem illeszkedik egyetlen casilla-számra
+          sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
+          használd az `aeat app modelo casillas <MODELO>` parancsot.'
         casilla_help: cli.app.modelo.work.casilla_help
         casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
         create_created: cli.app.modelo.work.create_created
@@ -1221,6 +1227,7 @@ cli:
       allow_incomplete_help: cli.overview.calendar.allow_incomplete_help
       from_help: cli.overview.calendar.from_help
       help: cli.overview.calendar.help
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: cli.overview.calendar.to_help
     calendar_refused_incomplete: cli.overview.calendar_refused_incomplete
     drafts: cli.overview.drafts
@@ -1537,7 +1544,6 @@ errors:
   calc:
     binding_value_missing: errors.calc.binding_value_missing
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window
@@ -1949,9 +1955,10 @@ errors:
         profile switch NAME` parancsot a profil újraaktiválásához.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
         Az éles, profilhoz kötött tároláshoz fájl- vagy kulcstartó-alapú őrzés szükséges.
-    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord már
-      nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális formátumtól.
-      Futtasd az `aeat config repair` parancsot a diagnosztikához és helyreállításhoz.
+    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord
+      már nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális
+      formátumtól. Futtasd az `aeat config repair` parancsot a diagnosztikához és
+      helyreállításhoz.
   transaction:
     import_source_invalid: errors.transaction.import_source_invalid
     ledger_import_failed: errors.transaction.ledger_import_failed

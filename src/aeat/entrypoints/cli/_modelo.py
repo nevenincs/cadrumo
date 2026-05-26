@@ -57,6 +57,7 @@ from ._common import _emit, _parse_iso_date, _profile_to_taxpayer
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
+    from ...domain.calculations.registry._schema import ModeloRevision
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -65,6 +66,7 @@ _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 
 _CASILLA_MAX_LEN = 64
 _BINDING_MAX_LEN = 128
+_BARE_NUMERIC_RE = re.compile(r"^\d+$")
 
 
 def _validate_work_unit_id(value: str) -> str:
@@ -308,9 +310,7 @@ def describe_modelo(
         # rewritten — an unknown-modelo error keeps its own message.
         message = str(exc)
         if period is not None and "period" in message.lower():
-            raise typer.BadParameter(
-                _bare_period_error(modelo, period, fallback=message)
-            ) from exc
+            raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
         raise typer.BadParameter(message) from exc
     _emit(
         ctx,
@@ -486,9 +486,7 @@ def _parse_kv_spec[T](
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(
-            tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec)
-        )
+        raise typer.BadParameter(tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec))
     if key_validator is not None:
         key_validator(key, spec)
     return key, transform(value)
@@ -515,13 +513,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     except Exception:
         return ()
     return tuple(
-        sorted(
-            {
-                token
-                for revision in definition.revisions.values()
-                for token in revision.period_selector.periods
-            }
-        )
+        sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods})
     )
 
 
@@ -640,8 +632,7 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
     return tr(
         "cli.app.modelo.describe.period_token_invalid",
         default=(
-            f"--period {period!r} is not a valid period token for modelo "
-            f"{modelo}. Valid tokens: {', '.join(declared)}."
+            f"--period {period!r} is not a valid period token for modelo {modelo}. Valid tokens: {', '.join(declared)}."
         ),
         period=period,
         modelo=modelo,
@@ -758,9 +749,7 @@ def bindings_list(
         if missing:
             profile_resolved = _profile_resolved_binding_ids(report)
             rows = tuple(
-                row
-                for row in rows
-                if row.source != "constant_value" and row.binding_id not in profile_resolved
+                row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved
             )
         for row in rows:
             merged_rows.append(
@@ -970,9 +959,7 @@ def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[
         try:
             value = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)) from exc
         if not isinstance(value, dict):
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
         parsed.append(value)
@@ -1201,11 +1188,11 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     bypassed deliberately.
     """
 
+    from ...application.workflow._persistence import workflow_state_repository
     from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
     )
-    from ...application.workflow._persistence import workflow_state_repository
     from ._common import _profile_to_taxpayer
     from ._errors import CliRefusedBoundaryError
 
@@ -1260,11 +1247,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     Non-input registry-validation errors fall through unchanged.
     """
 
-    base = (
-        tr(error.translated_message, **(error.context or {}))
-        if error.translated_message is not None
-        else str(error)
-    )
+    base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
@@ -1332,8 +1315,7 @@ def work_create(
             help=tr(
                 "cli.app.modelo.work.allow_not_applicable_help",
                 default=(
-                    "Crear la unidad de trabajo aunque el modelo no aplique "
-                    "al tipo de contribuyente del perfil activo."
+                    "Crear la unidad de trabajo aunque el modelo no aplique al tipo de contribuyente del perfil activo."
                 ),
             ),
         ),
@@ -1823,6 +1805,85 @@ def _parse_casilla_override(spec: str) -> tuple[str, str]:
     )
 
 
+def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
+    """Return the registry revision for a work unit's modelo + filing scope.
+
+    Loads the work unit from the active profile's bucket, then fetches
+    the registry snapshot for its ``(modelo, filing_year, period)``
+    triple. The result is used by :func:`_normalise_casilla_key` so
+    bare-numeric ``--casilla`` tokens can be resolved against the real
+    casilla catalogue before the calculation is dispatched.
+    """
+
+    unit = get_work_unit(work_unit_id)
+    authority = _service()._authority
+    snapshot = authority.snapshot(
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+    )
+    return snapshot.revision
+
+
+def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
+    """Resolve a bare-numeric ``--casilla`` key to its qualified CasillaId.
+
+    When the operator supplies a bare integer token (e.g. ``"69"`` or
+    ``"552"``), this function searches ``revision.casillas`` for entries
+    whose ``number`` attribute is numerically equal to the supplied token
+    (leading zeros stripped on both sides for comparison).
+
+    - Exactly one match → return the qualified ``casilla.id``
+      (e.g. ``"iva.resultado"`` or ``"DP200014:00552"``).
+    - Multiple matches → raise :class:`typer.BadParameter` naming each
+      candidate id so the operator can supply the unambiguous form.
+    - No match → raise :class:`typer.BadParameter` listing the casilla
+      prefixes available for this revision (S60 improved error).
+    - Non-numeric key → return unchanged (already qualified or format
+      validation will reject it).
+    """
+
+    if not _BARE_NUMERIC_RE.fullmatch(key):
+        return key
+
+    # Strip leading zeros for numeric equality; "69", "069", "00069" all match.
+    key_numeric = key.lstrip("0") or "0"
+    matches = [c for c in revision.casillas if ((c.number or "").lstrip("0") or "0") == key_numeric]
+    if len(matches) == 1:
+        return str(matches[0].id)
+
+    if len(matches) > 1:
+        candidates = ", ".join(str(c.id) for c in sorted(matches, key=lambda c: str(c.id)))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.casilla_bare_numeric_ambiguous",
+                default=(
+                    f"--casilla {key!r} matches multiple casillas in this revision: "
+                    f"{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate."
+                ),
+                key=key,
+                candidates=candidates,
+            )
+        )
+
+    # No match — build a helpful suggestion listing the available
+    # segmento prefixes so the operator knows the key shape for
+    # this revision (S60).
+    prefixes: list[str] = sorted({str(c.id).split(":")[0] for c in revision.casillas if ":" in str(c.id)})
+    prefix_hint = f" Available prefixes for this revision: {', '.join(prefixes)}." if prefixes else ""
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.casilla_bare_numeric_unknown",
+            default=(
+                f"--casilla {key!r} does not match any casilla number in this revision."
+                f"{prefix_hint} Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs."
+            ),
+            key=key,
+            prefix_hint=prefix_hint,
+        )
+    )
+
+
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
 def work_calculate(
     ctx: typer.Context,
@@ -1888,15 +1949,23 @@ def work_calculate(
         ModeloIvaWalletReconciliationBlocked,
     )
 
-    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_specs = list(casilla or ())
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in casilla_specs)
+    if casilla_pairs:
+        # Resolve bare-numeric tokens against the casilla catalogue before
+        # the decimal conversion pass so the application layer only sees
+        # qualified CasillaIds.
+        try:
+            revision = _casilla_revision_for_work_unit(work_unit_id)
+        except WorkUnitNotFoundError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        casilla_pairs = {_normalise_casilla_key(k, revision): v for k, v in casilla_pairs.items()}
     casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -1913,9 +1982,7 @@ def work_calculate(
         try:
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)) from exc
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
@@ -1959,15 +2026,38 @@ def work_calculate(
         state=revision.state.value,
         work_unit_id=revision.work_unit_id,
     )
+    # For Modelo 202 derive and surface the Art. 40.2 / 40.3 modality so
+    # the operator knows which pago-fraccionado lane applies. The verdict
+    # is gated by the LIS Art. 40.3 INCN threshold (6.000.000 EUR over
+    # the prior 12 months).  derive_modelo_202_modality returns INCOMPLETE
+    # when the profile does not declare an INCN or is not a legal entity.
+    modality_payload: dict[str, object] = {}
+    modality_lines: list[str] = []
+    unit_for_modality = get_work_unit(revision.work_unit_id)
+    if str(unit_for_modality.modelo) == "202":
+        from ...application.workflow._persistence import workflow_state_repository
+        from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+
+        _wf_state = workflow_state_repository().load()
+        _profile_202 = _profile_to_taxpayer(_wf_state)
+        _verdict = derive_modelo_202_modality(_profile_202)
+        modality_payload = {
+            "modality": _verdict.modality.value,
+            "modality_reason": _verdict.reason,
+        }
+        modality_lines = [f"modality\t{_verdict.modality.value}"]
+
     payload = {
         "operation": "modelo.work.calculate",
         "saved": True,
         "saved_confirmation": saved_confirmation,
         **_calculation_revision_payload(revision),
+        **modality_payload,
     }
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
+        *modality_lines,
         saved_confirmation,
     ]
     _emit(ctx, payload, lines)
@@ -2026,11 +2116,32 @@ def work_revision(
         revision = get_calculation_revision(calculation_revision_id)
     except CalculationRevisionNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
+    modality_payload_r: dict[str, object] = {}
+    modality_lines_r: list[str] = []
+    unit_for_modality_r = get_work_unit(revision.work_unit_id)
+    if str(unit_for_modality_r.modelo) == "202":
+        from ...application.workflow._persistence import workflow_state_repository
+        from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+
+        _wf_state_r = workflow_state_repository().load()
+        _profile_202_r = _profile_to_taxpayer(_wf_state_r)
+        _verdict_r = derive_modelo_202_modality(_profile_202_r)
+        modality_payload_r = {
+            "modality": _verdict_r.modality.value,
+            "modality_reason": _verdict_r.reason,
+        }
+        modality_lines_r = [f"modality\t{_verdict_r.modality.value}"]
+
     payload = {
         "operation": "modelo.work.revision",
         **_calculation_revision_payload(revision),
+        **modality_payload_r,
     }
-    lines = ["operation\tmodelo.work.revision", *_calculation_revision_lines(revision)]
+    lines = [
+        "operation\tmodelo.work.revision",
+        *_calculation_revision_lines(revision),
+        *modality_lines_r,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -2435,9 +2546,7 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
         try:
             return Decimal(value.strip())
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.set_not_decimal", value=value)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value)) from exc
 
     return _parse_kv_spec(
         spec,
@@ -3202,8 +3311,8 @@ def modelo_reconcile_verb(
         "cli.app.modelo.reconcile_from_justificante.help",
         default=(
             "Reconcile a modelo work unit against a justificante PDF. Sugar for "
-            "operators who think \"reconcile from this justificante\" rather than "
-            "\"reconcile, source = justificante\". Shares the modelo_reconcile "
+            'operators who think "reconcile from this justificante" rather than '
+            '"reconcile, source = justificante". Shares the modelo_reconcile '
             "application service entry point with the flag-based form. Local-only; "
             "never contacts AEAT."
         ),

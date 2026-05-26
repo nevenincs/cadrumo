@@ -290,8 +290,8 @@ application:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
-      duplicate_tax_id_scan_unreadable_profile: Cannot verify tax-id uniqueness
-        because profile '%{profile}' is unreadable; run repair diagnostics before creating
+      duplicate_tax_id_scan_unreadable_profile: Cannot verify tax-id uniqueness because
+        profile '%{profile}' is unreadable; run repair diagnostics before creating
         another profile.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
@@ -657,6 +657,11 @@ cli:
           with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
+        casilla_bare_numeric_ambiguous: '--casilla {key} matches multiple casillas in
+          this revision: {candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate.'
+        casilla_bare_numeric_unknown: '--casilla {key} does not match any casilla number
+          in this revision.{prefix_hint} Use `aeat app modelo casillas <MODELO>` to
+          list valid casilla IDs.'
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
@@ -1627,6 +1632,7 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile edit NAME'' or pass --allow-incomplete to see the calendar computed
@@ -2076,7 +2082,6 @@ errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
