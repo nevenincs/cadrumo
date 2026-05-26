@@ -11,6 +11,7 @@ target_casillas = [
     {casilla_id = "decl.importe-rectificaciones", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Importe\s+de\s+las\s+rectificaciones'},
 ]
 confidence = "review_required"
+provisional_pending_specimen = true
 min_coverage = "0.5"
 failure_semantics = "fail_hard"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
