@@ -41,9 +41,9 @@ The generic command_error_boundary catches every pydantic ValidationError and em
 - [x] `W01.P01.S02` - add a typed StoredDataValidationBoundaryError class with distinct locale key and remediation suggestion; `src/aeat/entrypoints/cli/_errors.py`.
 - [x] `W01.P01.S03` - register the new error class in the error code catalogue; `src/aeat/core/errors/registry/_application.py`.
 - [x] `W01.P01.S04` - add four locale keys es en ca hu for the stored-data boundary via the locale CLI; `src/aeat/locales/`.
-- [ ] `W01.P01.S05` - wrap UserProfileRecord model_validate_json at the profile repository load boundary in a typed StoredProfileDriftError so drift surfaces as a domain error before reaching command_error_boundary; `src/aeat/application/user_profile/_repository.py`.
-- [ ] `W01.P01.S06` - narrow command_error_boundary to discriminate input-time versus load-time ValidationError; `src/aeat/entrypoints/cli/_errors.py`.
-- [ ] `W01.P01.S07` - real-CLI tests proving drifted stored profile gets stored-data message and malformed flag gets input message; `src/aeat/entrypoints/cli/test_errors_boundary.py`.
+- [x] `W01.P01.S05` - wrap UserProfileRecord model_validate_json at the profile repository load boundary in a typed StoredProfileDriftError so drift surfaces as a domain error before reaching command_error_boundary; `src/aeat/application/user_profile/_repository.py`.
+- [x] `W01.P01.S06` - narrow command_error_boundary to discriminate input-time versus load-time ValidationError; `src/aeat/entrypoints/cli/_errors.py`.
+- [x] `W01.P01.S07` - real-CLI tests proving drifted stored profile gets stored-data message and malformed flag gets input message; `src/aeat/entrypoints/cli/test_errors_boundary.py`.
 
 ### Phase `W01.P03` - per-verb validation handlers on every ledger CLI verb
 
@@ -118,11 +118,11 @@ Single source of truth for does Modelo X apply to this profile. Today three sour
 
 The domain version is the superset (179 lines more; carries Modelo202Modality system, iter_modelo_applicability_rules, taxpayer_model_is_declared). The application version is the stale copy. Collapse.
 
-- [ ] `W02.P10.S38` - delete duplicate _MODELO_APPLICABILITY_RULES and derive_modelo_applicability from application copy; `replace with thin re-export from domain module; `src/aeat/application/overview/_applicability.py`.
-- [ ] `W02.P10.S39` - delete duplicate reason constants _INCOMPLETE_LEGAL_REFS _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS _ATTRIBUTION_PASS_THROUGH_REASON _INCOMPLETE_UNDECLARED_REASON _INCOMPLETE_UNRULED_REASON _INCOMPLETE_UNDETERMINED_REASON; `src/aeat/application/overview/_applicability.py`.
-- [ ] `W02.P10.S40` - update CLI consumer to import from canonical domain module or via thin application re-export; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W02.P10.S41` - remove private-symbol entries from applicability facade __all__; `private symbols must not be in __all__; `src/aeat/domain/calculations/registry/applicability.py`.
-- [ ] `W02.P10.S42` - regression test asserting _MODELO_APPLICABILITY_RULES is a unique source with one definition and one identity; `src/aeat/domain/calculations/registry/test_applicability_canonical.py`.
+- [x] `W02.P10.S38` - delete duplicate _MODELO_APPLICABILITY_RULES and derive_modelo_applicability from application copy; `replace with thin re-export from domain module; `src/aeat/application/overview/_applicability.py`.
+- [x] `W02.P10.S39` - delete duplicate reason constants _INCOMPLETE_LEGAL_REFS _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS _ATTRIBUTION_PASS_THROUGH_REASON _INCOMPLETE_UNDECLARED_REASON _INCOMPLETE_UNRULED_REASON _INCOMPLETE_UNDETERMINED_REASON; `src/aeat/application/overview/_applicability.py`.
+- [x] `W02.P10.S40` - update CLI consumer to import from canonical domain module or via thin application re-export; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W02.P10.S41` - remove private-symbol entries from applicability facade __all__; `private symbols must not be in __all__; `src/aeat/domain/calculations/registry/applicability.py`.
+- [x] `W02.P10.S42` - regression test asserting _MODELO_APPLICABILITY_RULES is a unique source with one definition and one identity; `src/aeat/domain/calculations/registry/test_applicability_canonical.py`.
 
 ### Phase `W02.P11` - calendar to deadline-engine unification
 
@@ -458,7 +458,7 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 
 - [ ] `W09.P45.S168` - extract _covered_by_namespace to one location and import from the other; `src/aeat/locales/`.
 - [ ] `W09.P45.S203` - fix 5 i18n ORPHAN placeholders surfaced by S32 parity validator; `either supply missing kwargs at tr call sites or remove orphan placeholders from locale; keys: cli.app.ledger.inventory.unknown_movement_kind kind; cli.app.ledger.ratios.no_override_error bucket_id and category; cli.app.ledger.ratios.unknown_category raw; cli.app.modelo.work.resume_invalid_target target; `src/aeat/`.
-- [ ] `W09.P45.S204` - fix 27 i18n SURPLUS kwargs surfaced by S32 parity validator; either add placeholders to locale text or remove dead kwargs from tr call sites; affected keys include application.auth.operator.errors.unreadable_active_profile cli.common.errors.invalid_iso_date cli.common.errors.period_unrecognised cli.diagnostics.summary.* cli.diagnostics.version.* cli.ledger.errors.filter_parse_error cli.operator_surface.errors.contract_not_accepted cli.operator_surface.landing.*; `src/aeat/`.
+- [ ] `W09.P45.S204` - fix 27 i18n SURPLUS kwargs surfaced by S32 parity validator; `either add placeholders to locale text or remove dead kwargs from tr call sites; affected keys include application.auth.operator.errors.unreadable_active_profile cli.common.errors.invalid_iso_date cli.common.errors.period_unrecognised cli.diagnostics.summary.* cli.diagnostics.version.* cli.ledger.errors.filter_parse_error cli.operator_surface.errors.contract_not_accepted cli.operator_surface.landing.*; `src/aeat/`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
