@@ -210,6 +210,8 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [ ] `W04.P19.S74` - apply the same approach to Modelo 100 303 200 202; `src/aeat/_data/registry/aeat/modelos/`.
 - [ ] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour substantive predicates; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W04.P19.S76` - regression test that Modelo 130 with all casillas zero is no longer verificado_completo; `src/aeat/application/modelo/test_verification_substance.py`.
+- [ ] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
 
 ### Phase `W04.P20` - verification path naming and boundary documentation
 
