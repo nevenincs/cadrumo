@@ -15,6 +15,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.entrypoints.cli._errors.CliStoredDataValidationBoundaryError",
+        ErrorCode(
+            code="REFUSED_CLI_STORED_DATA_VALIDATION_BOUNDARY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_cli_stored_data_validation_boundary",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.entrypoints.cli._log_levels.LogLevelResolutionError",
         ErrorCode(
             code="REFUSED_CLI_LOG_LEVEL_RESOLUTION",
