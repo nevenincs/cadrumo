@@ -2,10 +2,22 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from ._errors import RegistryValidationError
 from ._schema import ModeloRevision
+from ._validate_cross_domain_snapshot import (
+    _CROSS_DOMAIN_SNAPSHOT_CHECKS as _CROSS_DOMAIN_SNAPSHOT_CHECKS,
+)
+from ._validate_cross_domain_snapshot import (
+    CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
+)
+from ._validate_cross_domain_snapshot import (
+    check_cross_domain_snapshot_routing,
+)
+from ._validate_cross_domain_snapshot import (
+    register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
+)
 
 if TYPE_CHECKING:
     from ._schema import ExtractionProfileDefinition
@@ -124,7 +136,7 @@ def _check_all_id_references(snapshot: RegistrySnapshot) -> None:
     _check_algorithm_provider_refs(checker, revision)
     _check_algorithm_binding_refs(checker, revision)
     _check_export_layout_refs(checker, revision)
-    _check_cross_domain_snapshot_routing(checker, snapshot)
+    check_cross_domain_snapshot_routing(checker, snapshot)
     _check_binding_selector_shapes(checker, revision)
 
     if checker.failures:
@@ -358,73 +370,6 @@ def _check_export_layout_refs(checker: _IdReferenceChecker, revision: ModeloRevi
                 checker.chk_opt(f"{efp}.casilla", field.casilla, checker.casilla_ids)
                 checker.chk_opt(f"{efp}.binding", field.binding, checker.binding_ids)
                 checker.chk_legal_source_refs(efp, field.legal_refs, field.source_refs)
-
-
-class CrossDomainSnapshotCheck(Protocol):
-    """Snapshot-time referential-integrity check owned by a peer domain.
-
-    A peer domain (for example :mod:`aeat.domain.renta`) may need to
-    assert that the casilla ids it routes to are real casillas on a
-    registry snapshot. The registry must not import the peer domain
-    directly — that reverses the dependency direction the restructure
-    ADR fixes (defect F7, Wave 2 P04). Instead the peer domain
-    registers a :class:`CrossDomainSnapshotCheck` via
-    :func:`register_cross_domain_snapshot_check`; the registry calls
-    every registered check at snapshot-build time without naming the
-    peer.
-
-    A check receives the modelo id and the snapshot's casilla id set
-    and returns a list of failure strings (empty when consistent).
-    """
-
-    def __call__(self, modelo_id: str, casilla_ids: frozenset[str]) -> list[str]: ...
-
-
-_CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
-
-
-def register_cross_domain_snapshot_check(check: CrossDomainSnapshotCheck) -> None:
-    """Register a peer-domain snapshot referential-integrity check.
-
-    Idempotent: registering the same callable twice is a no-op so a
-    peer-domain module re-imported in a fresh interpreter (or under
-    test reload) does not stack duplicate checks.
-    """
-
-    if check not in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
-        _CROSS_DOMAIN_SNAPSHOT_CHECKS.append(check)
-
-
-def _check_cross_domain_snapshot_routing(checker: _IdReferenceChecker, snapshot: RegistrySnapshot) -> None:
-    """Run every registered peer-domain referential-integrity check.
-
-    The registry depends on the abstract :class:`CrossDomainSnapshotCheck`
-    Protocol only. Concrete checks (such as the renta first-slice
-    routing gate) are injected by their owning domain at import time
-    via :func:`register_cross_domain_snapshot_check`.
-
-    Modelo 100 has a known-required cross-domain gate -- the renta
-    first-slice routing referential-integrity check owned by
-    :mod:`aeat.domain.renta`. That check registers itself only as an
-    import side effect of the ``renta`` package. A ``build_snapshot``
-    caller that never imports ``renta`` would otherwise validate an
-    M100 snapshot with the gate silently absent. Rather than skip a
-    known-required gate, fail loudly so the missing registration
-    surfaces at snapshot build instead of as a later runtime KeyError.
-    """
-
-    casilla_ids = frozenset(checker.casilla_ids)
-    if snapshot.modelo.id == "100" and not _CROSS_DOMAIN_SNAPSHOT_CHECKS:
-        checker.failures.append(
-            f"{checker.prefix}: modelo 100 requires the renta first-slice "
-            "routing cross-domain snapshot check, but no cross-domain checks "
-            "are registered -- import aeat.domain.renta at the composition "
-            "point that builds the snapshot so register_cross_domain_snapshot_check "
-            "runs before validation"
-        )
-    for check in _CROSS_DOMAIN_SNAPSHOT_CHECKS:
-        for failure in check(snapshot.modelo.id, casilla_ids):
-            checker.failures.append(f"{checker.prefix}: {failure}")
 
 
 def _check_binding_selector_shapes(checker: _IdReferenceChecker, revision: ModeloRevision) -> None:
