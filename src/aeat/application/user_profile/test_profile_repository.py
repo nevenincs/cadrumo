@@ -391,8 +391,8 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
 def test_deleted_profile_name_is_reusable(_backend: Path) -> None:
     """After ``delete`` the freed display name is reusable by ``create``.
 
-    Per the profile-UUID-identity ADR, display names are unique among
-    *live* profiles only; a tombstoned profile's name is free to reuse.
+    Display names are unique among *live* profiles only; a tombstoned
+    profile's name is free to reuse.
     """
 
     repository = ProfileRepository()

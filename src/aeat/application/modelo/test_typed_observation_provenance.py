@@ -31,7 +31,7 @@ from aeat.application.modelo._actions import (
 )
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
-    RegistryCalculationEntry,
+    CasillaObservation,
     RegistryCalculationResult,
     RegistrySnapshot,
 )
@@ -54,31 +54,43 @@ def _modelo_100_snapshot() -> RegistrySnapshot:
 def _engine_result(snapshot: RegistrySnapshot) -> RegistryCalculationResult:
     """Assemble a structurally faithful result from the real revision.
 
-    Every casilla on the revision appears in ``values``; every
-    formula-computed casilla also appears in ``entries`` carrying the
-    formula id and its registry-authored legal / source refs.
+    Every casilla on the revision lands as one
+    :class:`CasillaObservation`. Formula-computed casillas carry the
+    formula id, op label, and the formula's registry-authored
+    legal / source refs; non-computed casillas pull legal / source
+    refs from the casilla definition so the derived ``values`` and
+    ``entries`` views remain faithful to a real engine run.
     """
     revision = snapshot.revision
     formulas_by_target = {formula.target: formula for formula in revision.formulas}
-    values = {str(casilla.id): Decimal("0") for casilla in revision.casillas}
-    entries = tuple(
-        RegistryCalculationEntry(
-            formula_id=str(formula.id),
-            target=str(formula.target),
-            op="literal",
-            operand_refs=(),
-            operand_values=(),
-            value=Decimal("0"),
-            legal_refs=formula.legal_refs,
-            source_refs=formula.source_refs,
-        )
-        for formula in formulas_by_target.values()
-    )
+    observations: list[CasillaObservation] = []
+    for casilla in revision.casillas:
+        casilla_id = str(casilla.id)
+        formula = formulas_by_target.get(casilla_id)
+        if formula is not None:
+            observations.append(
+                CasillaObservation(
+                    casilla_id=casilla_id,
+                    value=Decimal("0"),
+                    formula_id=str(formula.id),
+                    op="literal",
+                    legal_refs=formula.legal_refs,
+                    source_refs=formula.source_refs,
+                )
+            )
+        else:
+            observations.append(
+                CasillaObservation(
+                    casilla_id=casilla_id,
+                    value=Decimal("0"),
+                    legal_refs=casilla.legal_refs,
+                    source_refs=casilla.source_refs,
+                )
+            )
     return RegistryCalculationResult(
         modelo=str(revision.id).split(":")[0] if ":" in str(revision.id) else "100",
         revision=str(revision.id),
-        values=values,
-        entries=entries,
+        observations=tuple(observations),
     )
 
 
@@ -110,9 +122,10 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     orphan_casilla = "9999999"
     assert orphan_casilla not in casilla_ids
 
-    polluted_values = dict(engine_result.values)
-    polluted_values[orphan_casilla] = Decimal("123")
-    polluted_result = engine_result.model_copy(update={"values": polluted_values})
+    polluted_observations = engine_result.observations + (
+        CasillaObservation(casilla_id=orphan_casilla, value=Decimal("123")),
+    )
+    polluted_result = engine_result.model_copy(update={"observations": polluted_observations})
 
     with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
         _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)

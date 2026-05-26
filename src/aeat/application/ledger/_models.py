@@ -230,6 +230,35 @@ class ManualLedgerTransactionResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
+class LedgerTransactionPayload(BaseModel):
+    """Canonical read projection for one ledger transaction."""
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=64, max_length=64)
+    date: str = Field(min_length=10, max_length=10)
+    booked_date: str = Field(min_length=10, max_length=10)
+    value_date: str | None = None
+    amount: str = Field(min_length=1)
+    currency: str = Field(min_length=3, max_length=3)
+    direction: str = Field(min_length=1)
+    counterparty: str = ""
+    description: str = Field(min_length=1)
+    business_classification: str = Field(min_length=1)
+    business_pct: str | None = None
+    category_id: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    irpf_category: str | None = None
+    usage_ratio_id: str | None = None
+    prorrata_reference: str | None = None
+    purchase_invoice_evidence_id: str | None = None
+    attachment_ids: tuple[str, ...] = ()
+    notes: str = ""
+    lifecycle_state: str = Field(min_length=1)
+
+
 class SplitChildCommand(BaseModel):
     """One slice of an N-way split.
 

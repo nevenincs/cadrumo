@@ -18,7 +18,7 @@ Public API:
 
 from __future__ import annotations
 
-from ._errors import DeclaracionParseError
+from ._errors import DeclaracionParseError, TemplateNotDetectedError
 from ._parser import parse_declaracion, parse_declaracion_bytes
 from ._schema import (
     DeclaracionObservation,
@@ -30,6 +30,7 @@ __all__ = [
     "DeclaracionObservation",
     "DeclaracionParseError",
     "ExtractionWarning",
+    "TemplateNotDetectedError",
     "TemplateRevision",
     "parse_declaracion",
     "parse_declaracion_bytes",

@@ -6,6 +6,8 @@ accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     {casilla_id = "27", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+cuota\s+devengada'},
+    {casilla_id = "29", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Por\s+cuotas\s+soportadas\s+en\s+operaciones\s+interiores\s+corrientes'},
+    {casilla_id = "37", match_strategy = "named_label", value_kind = "amount", label_pattern = 'En\s+adquisiciones\s+intracomunitarias\s+de\s+bienes\s+y\s+servicios\s+corrientes'},
     {casilla_id = "45", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Total\s+a\s+deducir'},
     {casilla_id = "iva.resultado-regimen-general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+r[eé]gimen\s+general\s+\(27\s*-\s*45\)'},
     {casilla_id = "64", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Suma\s+de\s+resultados'},

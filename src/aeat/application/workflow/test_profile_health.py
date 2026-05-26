@@ -31,7 +31,6 @@ from ._profile_health import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
 _KEK = b"k" * 32
 _DEK = b"d" * 32
 
@@ -42,7 +41,7 @@ def _session(bucket_id: str) -> BucketSession:
         kek=_KEK,
         dek=_DEK,
         idle_minutes=15,
-        opened_at=_NOW,
+        opened_at=datetime.now(UTC),
     )
 
 
