@@ -104,7 +104,7 @@ _interpolate swallows KeyError on placeholder context mismatches and emits half-
 
 Mandated breakpoint. Dispatch code-reviewer on Wave-1 commits, round-7 persona fleet, fresh Haiku drift sweep on touched files, consolidate findings audit, EXPAND this plan in place with every new BLOCKER MAJOR.
 
-- [ ] `W01.P09.S33` - dispatch vaultspec-code-reviewer against every Wave-1 commit and consolidate verdict; `.vault/exec/`.
+- [x] `W01.P09.S33` - dispatch vaultspec-code-reviewer against every Wave-1 commit and consolidate verdict; `.vault/exec/`.
 - [ ] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
 - [x] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
 - [ ] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
@@ -433,7 +433,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S200` - consolidate the two divergent _decimal_value helpers; `the modelo binding variant has bool-sentinel handling the borrador variant does not; extract one canonical helper and import; `src/aeat/application/modelo/`.
 - [ ] `W09.P41.S201` - delete dead __all__ re-exports of build_error_envelope and json_output_requested from _errors.py; `cb0c684f8 follow-up after architecture-specialist surfaced the source-hygiene gap; `src/aeat/entrypoints/cli/_errors.py`.
 - [ ] `W09.P41.S202` - audit stored-data drift taxonomy semantic gap; `class lives under errors.refused.* REFUSED category but stored-data drift is semantically an integrity failure not a safety refusal; decide whether to rename and re-emit telemetry or document the semantic exception; `src/aeat/core/errors/registry/_entrypoints.py`.
-- [ ] `W09.P41.S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory; Wave-1 drift sweep DUPLICATE finding; `src/aeat/application/user_profile/_repository.py`.
+- [ ] `W09.P41.S205` - consolidate UserProfileLifecycleRepository.__init__ and UserProfileSnapshotRepository.__init__ identical signatures into shared base class or factory; `Wave-1 drift sweep DUPLICATE finding; `src/aeat/application/user_profile/_repository.py`.
 
 ### Phase `W09.P42` - twin function merge
 
