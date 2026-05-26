@@ -7,12 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import SecretStoreBackend
+from aeat.core.config import SecretStoreBackend, override_settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.modelos._codes import ModeloCode
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_work_unit
@@ -38,17 +39,21 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
-    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    try:
-        workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-        yield
-    finally:
-        dispose_engine()
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_secret_store_backend=SecretStoreBackend.FILE,
+            aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+        ),
+        profile_create_storage_span("operator"),
+    ):
+        try:
+            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+            yield
+        finally:
+            dispose_engine()
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:
