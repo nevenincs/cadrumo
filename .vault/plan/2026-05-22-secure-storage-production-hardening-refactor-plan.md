@@ -247,6 +247,6 @@ Repair secure-storage user-facing errors and exception handling only after W10 i
 Repair implementation and test gaps where W10 finds naked environment access, tautological tests, or duplicated contracts instead of central Settings, shared enums, and shared pydantic models.
 
 - [x] `W11.P19.S74` - Repair naked environment handling by routing storage and test configuration through centralized Settings helpers; `src/aeat`.
-- [ ] `W11.P19.S75` - Repair tautological or shortcut tests with real-behavior coverage that imports production code directly; `src/aeat`.
+- [x] `W11.P19.S75` - Repair tautological or shortcut tests with real-behavior coverage that imports production code directly; `src/aeat`.
 - [ ] `W11.P19.S76` - Repair duplicated secure-storage enums and models by reusing core enums, shared models, and pydantic contracts; `src/aeat`.
 - [ ] `W11.P19.S77` - Add guard checks for settings-backed environment use, translation coverage, error registry binding, and test-hygiene regressions; `src/aeat`.

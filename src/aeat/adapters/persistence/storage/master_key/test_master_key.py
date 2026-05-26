@@ -6,14 +6,24 @@ import base64
 import os
 import secrets
 from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from .....core.config import SecretStoreBackend, Settings
+from .....core.config import SecretStoreBackend, Settings, override_settings
+from ..bucket._layout import provision_bucket_directory
+from ..bucket._manifest import (
+    BucketKeySchedule,
+    BucketLifecycleStatus,
+    BucketManifest,
+    ManifestKdfParams,
+)
+from ..bucket._manifest_io import write_manifest
 from ..crypto import KEY_SIZE
 from ..errors import (
     KeyringUnavailableError,
+    MasterKeyMaterialMissingError,
     MasterKeyUnavailableError,
     SecretStoreError,
     UnsecuredModeRefusedError,
@@ -24,10 +34,12 @@ from . import (
     KeyringMasterKeyProvider,
     MasterKeyProvider,
     UnsecuredMasterKeyProvider,
+    activate_master_key_provider,
     get_master_key_provider,
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
 )
+from ._active_session import get_active_master_key
 from ._master_key import (
     PASSPHRASE_ENV_VAR,
     _b64decode,
@@ -79,8 +91,42 @@ class _InMemoryKeyringClient:
 
 def _settings_with_store(tmp_path: Path, backend: SecretStoreBackend) -> Settings:
     return Settings(
+        aeat_local_storage_root=tmp_path / "state",
         aeat_secret_store_dir=tmp_path / "secrets",
         aeat_secret_store_backend=backend,
+    )
+
+
+def _write_registered_bucket(
+    root: Path,
+    bucket_id: str,
+    *,
+    idle_lock_minutes: int | None = None,
+    key_schedule: BucketKeySchedule = BucketKeySchedule.LEGACY_MASTER_KEY,
+) -> None:
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=bucket_id,
+            created_at=datetime(2026, 5, 22, 12, 0, 0, tzinfo=UTC),
+            last_unlocked_at=None,
+            kdf_params=ManifestKdfParams(
+                algorithm="argon2id",
+                version=19,
+                memory_cost=19_456,
+                time_cost=2,
+                parallelism=1,
+                salt=b"0123456789abcdef",
+                output_length=32,
+            ),
+            recovery_enrolled=False,
+            idle_lock_minutes=idle_lock_minutes,
+            key_schedule=key_schedule,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
     )
 
 
@@ -110,16 +156,202 @@ class TestEphemeralProvider:
 class TestFileFallbackProvider:
     """The file backend mints, persists, and unwraps the master key."""
 
-    def test_mint_and_persist(self, tmp_path: Path) -> None:
+    def test_get_master_key_refuses_unprovisioned_store(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "correct horse battery staple",
         )
-        key = provider.get_master_key()
+        with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
+            provider.get_master_key()
+        assert not (tmp_path / "secrets" / "master.key").exists()
+
+    def test_explicit_provision_mints_and_persists(self, tmp_path: Path) -> None:
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=tmp_path / "secrets",
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
         assert (tmp_path / "secrets" / "salt").exists()
         assert (tmp_path / "secrets" / "master.key").exists()
         assert (tmp_path / "secrets" / "master.kdf").exists()
+
+    def test_bootstrap_activation_mints_distinct_persisted_bucket_dek(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        master_key = provider.provision_master_key()
+        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="alpha",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            first_dek = get_active_master_key()
+
+        assert bucket_dek_path.is_file()
+        assert first_dek != master_key
+        _write_registered_bucket(
+            settings.aeat_local_storage_root,
+            "alpha",
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+        )
+
+        second = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(second, fallback_bucket_id="alpha"),
+        ):
+            assert get_active_master_key() == first_dek
+
+    def test_registered_legacy_bucket_without_dek_keeps_master_key_data_path(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
+        _write_registered_bucket(settings.aeat_local_storage_root, "legacy")
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        master_key = provider.provision_master_key()
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(provider, fallback_bucket_id="legacy"),
+        ):
+            assert get_active_master_key() == master_key
+
+        assert not (settings.aeat_local_storage_root / "keystore" / "legacy" / "bucket.dek.json").exists()
+
+    def test_bucket_dek_manifest_without_dek_fails_closed(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
+        _write_registered_bucket(
+            settings.aeat_local_storage_root,
+            "current",
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
+        )
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "current" / "bucket.dek.json"
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            pytest.raises(MasterKeyMaterialMissingError, match="bucket-dek-v1"),
+            activate_master_key_provider(provider, fallback_bucket_id="current"),
+        ):
+            pass
+
+        assert not bucket_dek_path.exists()
+
+    def test_fallback_bucket_id_does_not_authorize_dek_enrollment(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+        bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "missing" / "bucket.dek.json"
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            pytest.raises(MasterKeyMaterialMissingError, match="no manifest"),
+            activate_master_key_provider(provider, fallback_bucket_id="missing"),
+        ):
+            pass
+
+        assert not bucket_dek_path.exists()
+
+    def test_existing_dek_without_manifest_does_not_authorize_activation(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id="orphaned",
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            staged_dek = get_active_master_key()
+        assert (settings.aeat_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
+
+        second = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+            ),
+            pytest.raises(MasterKeyMaterialMissingError, match="no manifest"),
+            activate_master_key_provider(second, fallback_bucket_id="orphaned"),
+        ):
+            assert get_active_master_key() != staged_dek
+
+    def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
+        settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
+        settings.aeat_local_storage_root.mkdir(parents=True, exist_ok=True)
+        _write_registered_bucket(settings.aeat_local_storage_root, "short-idle", idle_lock_minutes=3)
+        provider = FileFallbackMasterKeyProvider(
+            store_dir=settings.aeat_secret_store_dir,
+            passphrase_callback=lambda: "correct horse battery staple",
+        )
+        provider.provision_master_key()
+
+        with (
+            override_settings(
+                aeat_local_storage_root=settings.aeat_local_storage_root,
+                aeat_secret_store_dir=settings.aeat_secret_store_dir,
+                aeat_secret_store_backend=SecretStoreBackend.FILE,
+                aeat_bucket_default_idle_lock_minutes=15,
+            ),
+            activate_master_key_provider(provider, fallback_bucket_id="short-idle"),
+        ):
+            assert provider._session is not None
+            remaining = provider._session.idle_deadline - datetime.now(UTC)
+            assert 120 <= remaining.total_seconds() <= 181
 
     def test_round_trip_across_provider_instances(self, tmp_path: Path) -> None:
         """A second provider over the same dir + passphrase recovers the same key."""
@@ -127,7 +359,7 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "correct horse battery staple",
         )
-        first_key = first.get_master_key()
+        first_key = first.provision_master_key()
 
         second = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
@@ -140,7 +372,7 @@ class TestFileFallbackProvider:
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "right-passphrase",
-        ).get_master_key()
+        ).provision_master_key()
 
         # Distinguish passphrase-mismatch from material-missing. Both
         # inherit from MasterKeyUnavailableError so legacy catchers
@@ -159,7 +391,7 @@ class TestFileFallbackProvider:
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "right-passphrase",
-        ).get_master_key()
+        ).provision_master_key()
 
         # The narrowed subclass still satisfies the parent type.
         with pytest.raises(MasterKeyUnavailableError):
@@ -171,7 +403,7 @@ class TestFileFallbackProvider:
     def test_passphrase_via_env_var(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv(PASSPHRASE_ENV_VAR, "from-env-var")
         provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
-        key = provider.get_master_key()
+        key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
 
     def test_empty_passphrase_rejected(self, tmp_path: Path) -> None:
@@ -186,7 +418,7 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
         )
-        provider.get_master_key()
+        provider.provision_master_key()
         params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding="utf-8")
         params = _KdfParameters.model_validate_json(params_text)
         assert params.version == 2
@@ -202,7 +434,7 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
         )
-        plaintext_key = provider.get_master_key()
+        plaintext_key = provider.provision_master_key()
         wrapped = base64.b64decode(
             (tmp_path / "secrets" / "master.key").read_bytes(),
             validate=True,
@@ -214,7 +446,7 @@ class TestFileFallbackProvider:
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
         )
-        provider.get_master_key()
+        provider.provision_master_key()
         master_key_path = tmp_path / "secrets" / "master.key"
         contents = base64.b64decode(master_key_path.read_bytes(), validate=True)
         tampered = bytes([contents[0] ^ 0x01]) + contents[1:]
@@ -248,11 +480,11 @@ class TestKeyringProvider:
             pytest.skip("no usable OS keychain backend on this host")
         return keyring
 
-    def test_get_or_mint_round_trip(self, keyring_module) -> None:
+    def test_get_after_explicit_provision_round_trip(self, keyring_module) -> None:
         service = f"aeat:test:{secrets.token_hex(8)}"
         provider = KeyringMasterKeyProvider(service=service)
         try:
-            first = provider.get_master_key()
+            first = provider.provision_master_key()
             assert len(first) == KEY_SIZE
             second = KeyringMasterKeyProvider(service=service).get_master_key()
             assert first == second
@@ -295,7 +527,7 @@ class TestKeyringFailureSurfaces:
         client = _InMemoryKeyringClient(set_=_fail_set)
         provider = KeyringMasterKeyProvider(service=service, client=client)
         with pytest.raises(KeyringUnavailableError):
-            provider.get_master_key()
+            provider.provision_master_key()
 
 
 class TestTornStateGate:
@@ -330,8 +562,8 @@ class TestTornStateGate:
             provider.get_master_key()
         # The runbook hints both options.
         msg = str(excinfo.value)
-        assert "aeat security recover" in msg
-        assert "aeat security provision --force" in msg
+        assert "profile recovery flow" in msg
+        assert "aeat config profile create NAME" in msg
 
     def test_torn_state_master_key_plus_kdf_raises(
         self,
@@ -370,20 +602,19 @@ class TestTornStateGate:
         with pytest.raises(MasterKeyMaterialMissingError, match="torn state"):
             provider.get_master_key()
 
-    def test_no_install_mints_normally(
+    def test_no_install_refuses_implicit_mint(
         self,
         store_dir: Path,
     ) -> None:
-        # No artefacts at all → cold start mint is allowed (the
-        # silent-first-run-mint contract).
+        # No artefacts at all require explicit enrollment; the read path
+        # must not silently create key material.
         from . import FileFallbackMasterKeyProvider
 
         provider = FileFallbackMasterKeyProvider(store_dir=store_dir)
-        key = provider.get_master_key()
-        assert len(key) == KEY_SIZE
-        # All three artefacts now present after the mint.
+        with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
+            provider.get_master_key()
         for name in ("master.key", "master.kdf", "salt"):
-            assert (store_dir / name).exists()
+            assert not (store_dir / name).exists()
 
 
 class TestSecurityHardening:
@@ -429,16 +660,19 @@ class TestSecurityHardening:
         with pytest.raises(SecretStoreError):
             _default_passphrase_callback()
 
-    @pytest.mark.skipif(os.name != "posix", reason="POSIX-only file mode bits")
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
         """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
             passphrase_callback=lambda: "test-passphrase",
         )
-        provider.get_master_key()
+        provider.provision_master_key()
         for name in ("master.key", "master.kdf", "salt"):
-            mode = (tmp_path / "secrets" / name).stat().st_mode & 0o777
+            path = tmp_path / "secrets" / name
+            assert path.is_file()
+            if os.name != "posix":
+                continue
+            mode = path.stat().st_mode & 0o777
             assert mode == 0o600, f"{name} must be 0o600; got {oct(mode)}"
 
     def test_keyring_no_op_backend_refused(self) -> None:
@@ -459,14 +693,14 @@ class TestSecurityHardening:
         service_a = f"aeat:test:{secrets.token_hex(8)}"
         service_b = f"aeat:test:{secrets.token_hex(8)}"
 
-        key_a = KeyringMasterKeyProvider(service=service_a, client=shared).get_master_key()
-        key_b = KeyringMasterKeyProvider(service=service_b, client=shared).get_master_key()
+        key_a = KeyringMasterKeyProvider(service=service_a, client=shared).provision_master_key()
+        key_b = KeyringMasterKeyProvider(service=service_b, client=shared).provision_master_key()
         assert key_a != key_b
         # Re-binding the first service must return the same key (still cached).
         assert KeyringMasterKeyProvider(service=service_a, client=shared).get_master_key() == key_a
 
     def test_keyring_round_trip_disagreement_raises(self) -> None:
-        """A backend that accepts set_password but drops the value MUST be detected."""
+        """Explicit provision detects a backend that drops the stored value."""
 
         # "Silent dropper": set_password swallows the value; get_password
         # afterwards returns None.
@@ -476,7 +710,7 @@ class TestSecurityHardening:
         )
         provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
         with pytest.raises(KeyringUnavailableError):
-            provider.get_master_key()
+            provider.provision_master_key()
 
 
 class TestFactory:
@@ -489,7 +723,8 @@ class TestFactory:
             passphrase_callback=lambda: "test-passphrase",
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
-        assert len(provider.get_master_key()) == KEY_SIZE
+        with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
+            provider.get_master_key()
 
     def test_unknown_backend_raises(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
@@ -507,14 +742,12 @@ class TestFactory:
 
         client = _InMemoryKeyringClient(get=_refuse, set_=_refuse)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
-        # The explicit ``keyring`` backend rejects the operation rather
-        # than silently routing through file. The provider surfaces
-        # ``MasterKeyKeychainLockedError`` (backend works but
-        # get_password refused) which extends
-        # ``SecretStoreError``; accept the parent class so the test
-        # remains robust.
+        # The explicit ``keyring`` backend returns the provider without
+        # provisioning. The first read still rejects the operation
+        # rather than silently routing through file.
+        provider = get_master_key_provider(settings_override=settings, keyring_client=client)
         with pytest.raises(SecretStoreError):
-            get_master_key_provider(settings_override=settings, keyring_client=client)
+            provider.get_master_key()
 
     def test_auto_backend_falls_back_when_keyring_unavailable(
         self,
@@ -538,7 +771,8 @@ class TestFactory:
             keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
-        assert len(provider.get_master_key()) == KEY_SIZE
+        with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
+            provider.get_master_key()
 
     def test_auto_backend_refuses_locked_keychain_without_file_state(
         self,
@@ -591,7 +825,7 @@ class TestFactory:
             store_dir=store_dir,
             passphrase_callback=lambda: "seed-passphrase",
         )
-        seed_provider.get_master_key()
+        seed_provider.provision_master_key()
         client = _InMemoryKeyringClient(get=_locked, set_=_locked)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
