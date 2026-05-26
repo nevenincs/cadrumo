@@ -74,6 +74,6 @@ P05 handoff record:
 Track the remaining structural hardening work after validator modularisation: relation/reference balance, fragment-schema regression gates, and broader modelo fragmentation support without per-modelo special cases.
 
 - [x] `P06.S16` - Finish reference-validator balancing by splitting remaining snapshot reference sections only if the next pass keeps each module under the current reviewability baseline; `src/aeat/domain/calculations/registry/_validate_references.py`.
-- [ ] `P06.S17` - Add or tighten fragment-schema regression gates for loader directory mode, TOML file-size, row-length, and multi-revision single-file prevention; `src/aeat/domain/calculations/registry/test_loader_directory_mode.py`.
+- [x] `P06.S17` - Add or tighten fragment-schema regression gates for loader directory mode, TOML file-size, row-length, and multi-revision single-file prevention; `src/aeat/domain/calculations/registry/test_loader_directory_mode.py`.
 - [ ] `P06.S18` - Audit generic revision-fragment support across M100 and non-fragmented modelos without adding per-modelo schema definitions; `src/aeat/domain/calculations/registry/_loader.py`.
 - [ ] `P06.S19` - Identify the next modelo-family fragmentation target using committed line-count and revision-count evidence before touching registry TOMLs; `src/aeat/_data/registry/aeat/modelos`.
