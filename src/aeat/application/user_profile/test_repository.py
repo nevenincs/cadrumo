@@ -8,9 +8,8 @@ from pathlib import Path
 import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, StorageValidationError
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.config import override_settings
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
@@ -19,6 +18,7 @@ from ...domain.user_profile import (
     UserProfileSnapshot,
     new_profile_snapshot_id,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     USER_PROFILE_SNAPSHOT_NAMESPACE,
     USER_PROFILE_VALUE_NAMESPACE,
@@ -33,16 +33,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="user-profile-repository-test",
+    ) as profile:
+        yield profile.repository
 
 
 def test_object_key_helpers_reject_blank_inputs() -> None:
