@@ -49,9 +49,9 @@ The generic command_error_boundary catches every pydantic ValidationError and em
 
 Two ledger verbs have local _ledger_validation_bad catches; five rely on the generic boundary and emit the misleading config repair message. Wire local handlers on all five.
 
-- [ ] `W01.P03.S08` - add _ledger_validation_bad catch to ledger_update; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P03.S09` - add _ledger_validation_bad catch to ledger_list; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P03.S10` - add _ledger_validation_bad catch to ledger_view; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W01.P03.S08` - wrap _patch_from_options and update_manual_transaction_fields call inside ledger_update in a try/except ValidationError as exc: raise _ledger_validation_bad(exc) from exc mirroring the pattern already in ledger_classify; `surfaces field-combination errors as operator-readable refusals instead of the opaque boundary message; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W01.P03.S09` - no code change required in ledger_list; `the Cluster A opaque-boundary symptom is resolved upstream by S05 stored-profile-drift guard; ledger_list has no ValidationError path of its own; record this as a documentation note in the verb and close the Step; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W01.P03.S10` - no code change required in ledger_view; same rationale as S09; ledger_view takes only a transaction-id string not a multi-field patch; record as documentation note and close; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P03.S11` - add _ledger_validation_bad catch to ledger_allocate; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P03.S12` - add _ledger_validation_bad catch to ledger_split; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P03.S13` - real-CLI tests asserting each ledger verb surfaces specific field error not generic boundary; `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
