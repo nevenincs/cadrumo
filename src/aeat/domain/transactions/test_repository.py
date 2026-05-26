@@ -6,13 +6,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
 from ...core.errors import get_registered_error_code
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from . import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
@@ -23,16 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
-        try:
-            yield engine
-        finally:
-            engine.dispose()
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-log") as profile:
+        yield profile
 
 
 def test_transaction_repository_rejects_blank_bucket_with_ledger_storage_error() -> None:
@@ -43,13 +32,10 @@ def test_transaction_repository_rejects_blank_bucket_with_ledger_storage_error()
 
 
 def test_transaction_repository_logs_bucket_fields(
-    secure_engine: Engine,
+    runtime_profile: TestRuntimeProfile,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    repo = TransactionCatalogueRepository(
-        bucket_id="bucket-log",
-        objects=SecureObjectRepository(engine=secure_engine),
-    )
+    repo = TransactionCatalogueRepository(bucket_id=runtime_profile.bucket_id)
 
     with caplog.at_level("INFO", logger="aeat.domain.transactions._repository"):
         repo.save(repo.load())
