@@ -1538,6 +1538,7 @@ class ClaveMovilAuthProvider:
                 pre303.representation_own_name_label_selector,
                 timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
             )
+            await self._dismiss_pre303_alert_modal_if_present(page)
             await click(pre303.representation_own_name_label_selector)
             await click(pre303.representation_submit_selector)
         except PlaywrightError as exc:
@@ -1551,6 +1552,21 @@ class ClaveMovilAuthProvider:
                 },
                 suggestion="Do not provide represented-third-party data through this driver.",
             ) from exc
+
+    async def _dismiss_pre303_alert_modal_if_present(self, page: BrowserPageLike) -> None:
+        pre303 = self._settings.external_constants().aeat.pre303
+        content = getattr(page, "content", None)
+        click = getattr(page, "click", None)
+        if content is None or click is None:
+            return
+        html = await content()
+        modal_marker = pre303.alert_modal_selector.lstrip("#")
+        if pre303.alert_modal_selector not in html and modal_marker not in html:
+            return
+        continue_selector = (
+            f'{pre303.alert_modal_selector} button:has-text("{pre303.alert_continue_button_text}")'
+        )
+        await click(continue_selector)
 
 
 __all__ = [

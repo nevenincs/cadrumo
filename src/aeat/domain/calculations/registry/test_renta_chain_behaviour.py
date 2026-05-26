@@ -97,7 +97,10 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
         filing_year=2025,
         period="0A",
         inputs=inputs,
-        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0")},
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
         expected_outputs=expected,
