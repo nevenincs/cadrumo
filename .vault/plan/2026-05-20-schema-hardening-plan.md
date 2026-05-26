@@ -273,10 +273,10 @@ ADR and role-taxonomy reference.
 This Phase verifies the structural mitigation that originally blocked
 reviewability.
 
-- [x] `W06.P15.S102` - verify `src/aeat/_data/registry/aeat/modelos/200.toml` is absent and M200 is authored through `modelos/200/manifest.toml` plus revision fragments.
+- [x] `W06.P15.S102` - verify `src/aeat/_data/registry/aeat/modelos/200.toml` is absent and M200 is authored through `modelos/200/manifest.toml` plus revision fragments; `src/aeat/_data/registry/aeat/modelos/200/`.
 - [x] `W06.P15.S103` - verify the largest remaining TOML registry fragment is reviewable; latest inventory reports M200 `records/constructs.toml` at 3,244 lines, with no monolithic 100k-line modelo TOML remaining.
 - [x] `W06.P15.S104` - run cross-revision drift and M200 registry gates: `uv run pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py src/aeat/domain/calculations/registry/test_modelo_200_registry.py --tb=short`; result on 2026-05-20 was 15 passed.
-- [x] `W06.P15.S105` - confirm drift validation is wired into registry validation through `_validate_cross_revision_casilla_consistency` and covered by synthetic and committed-corpus tests.
+- [x] `W06.P15.S105` - confirm drift validation is wired into registry validation through `_validate_cross_revision_casilla_consistency` and covered by synthetic and committed-corpus tests; `src/aeat/domain/calculations/registry/_validate.py`.
 
 ### Phase `W06.P16` - singleton semantic-role warning burn-down
 
@@ -295,7 +295,7 @@ need an explicit policy.
 - [x] `W06.P16.S112` - harden the singleton typo-warning scan so snapshot validation uses an indexed candidate search instead of comparing each singleton role against every role; verified by direct typo-warning unit tests and the committed-corpus warning-count gate.
 - [x] `W06.P16.S113` - classify the M200 `is_correccion_*` singleton family; 166 of 169 M200 warnings are role-axis siblings (`permanente`/`temporaria`, `aumento`/`disminucion`, current/prior-year axes), not typo drift.
 - [x] `W06.P16.S114` - add a generic semantic-role axis-sibling rule to the typo-warning detector so legal axis variants are not reported as spelling twins while same-axis near-duplicates still warn; live baseline lowered from 224 to 84 warnings.
-- [x] `W06.P16.S115` - tighten the committed singleton-warning regression cap to the live 84-warning baseline after the indexed scan and semantic-axis sibling filter.
+- [x] `W06.P16.S115` - tighten the committed singleton-warning regression cap to the live 84-warning baseline after the indexed scan and semantic-axis sibling filter; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
 - [x] `W06.P16.S116` - extend the generic sibling detector to token-axis pairs (`clave`/`subclave`, `count`/`amount`, prior/future, internal/international, roman buckets) and optional `sin` legal variants; live baseline lowered from 84 to 64 warnings.
 - [x] `W06.P16.S117` - extend the generic sibling detector to legal-reference axes (`art*`, `dt*`, `rdleg`, `lis`) and detail/other scope axes; M200 singleton warning inventory is now clean and the live baseline is 49 M100-only warnings.
 - [x] `W06.P16.S118` - extend the generic sibling detector to M100 year, relationship, optional field/scope, numeric slot, and CCAA axes; singleton typo-warning inventory is now zero and the regression cap requires zero warnings.
@@ -310,16 +310,16 @@ bounds.
 
 ### Phase `W07.P17` - file and row size gates
 
-- [x] `W07.P17.S119` - add a committed-corpus layout test capping single-file modelo TOMLs at 2,000 lines, any TOML fragment at 4,000 lines, and any TOML row at an initial 1,200 characters.
-- [x] `W07.P17.S120` - add a committed-corpus layout test requiring every multi-revision modelo to use directory layout instead of inline single-file copy-per-revision TOML.
-- [x] `W07.P17.S121` - add generic `dispatch_table_entries` formula authoring support that normalizes to the existing `dispatch_table` runtime contract, enabling long dispatch maps to be authored as reviewable entry arrays.
+- [x] `W07.P17.S119` - add a committed-corpus layout test capping single-file modelo TOMLs at 2,000 lines, any TOML fragment at 4,000 lines, and any TOML row at an initial 1,200 characters; `src/aeat/domain/calculations/registry/`.
+- [x] `W07.P17.S120` - add a committed-corpus layout test requiring every multi-revision modelo to use directory layout instead of inline single-file copy-per-revision TOML; `src/aeat/domain/calculations/registry/`.
+- [x] `W07.P17.S121` - add generic `dispatch_table_entries` formula authoring support that normalizes to the existing `dispatch_table` runtime contract, enabling long dispatch maps to be authored as reviewable entry arrays; `src/aeat/domain/calculations/registry/_loader.py`.
 - [x] `W07.P17.S122` - migrate the long M100 autonomic dispatch formula rows to `dispatch_table_entries`; the committed-corpus row-size gate now caps TOML rows at 800 characters with the live maximum at 704 characters.
-- [x] `W07.P17.S123` - add generic same-id fragment merging for large export-record field lists and construct membership lists so M200 can be split below the 2,000-line fragment target without model-specific loader rules.
+- [x] `W07.P17.S123` - add generic same-id fragment merging for large export-record field lists and construct membership lists so M200 can be split below the 2,000-line fragment target without model-specific loader rules; `src/aeat/domain/calculations/registry/_loader.py`.
 - [x] `W07.P17.S124` - split the oversized M200 2024+ export-record field fragments and foundation construct membership fragment into ordered part files; the committed-corpus fragment-size gate now caps TOML fragments at 2,200 lines, with M111/M349 revision files identified as the remaining blockers to a 2,000-line cap.
 - [x] `W07.P17.S125` - split the M111 and M349 revision files into generic top-level revision fragments; the committed-corpus fragment-size gate now caps all TOML fragments at 2,000 lines.
 - [x] `W07.P17.S131` - migrate the remaining M190 long formula rows to multiline TOML expression authoring and tighten the committed-corpus TOML row cap to 600 characters; `uv run pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_modelo_190_registry.py --tb=short` passed with 23 tests.
 - [x] `W07.P17.S133` - disambiguate repeated generated M202 export-field ids by appending byte-offset suffixes across the affected 2019-2022, 2023-2024, and 2025+ export-layout fragments; `uv run pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_modelo_202_registry.py --tb=short` passed with 24 tests.
-- [x] `W07.P17.S134` - add a loader regression test proving same-record export fragments reject duplicate nested field ids after merge instead of letting ambiguous records reach schema validation.
+- [x] `W07.P17.S134` - add a loader regression test proving same-record export fragments reject duplicate nested field ids after merge instead of letting ambiguous records reach schema validation; `src/aeat/domain/calculations/registry/test_loader_directory_mode.py`.
 
 ## Wave `W08` - fail-fast exception handling
 
@@ -330,10 +330,10 @@ are accepting, and unexpected exceptions must keep propagating.
 ### Phase `W08.P18` - census ownership exception specificity
 
 - [x] `W08.P18.S126` - make historical M037 ownership accept only the explicit “not present in the calculation registry” snapshot error; any other `RegistrySnapshotError` now propagates instead of being swallowed.
-- [x] `W08.P18.S127` - add a registry production-code hygiene gate that rejects `except ...: pass` and `contextlib.suppress` so future exception swallowing fails in tests.
-- [x] `W08.P18.S128` - preserve the original `AttributeError` message when extraction-profile parser resolution fails, so dotted parser validation does not hide the failing attribute lookup.
-- [x] `W08.P18.S129` - extend the registry exception hygiene gate to reject bare `except:` handlers in production registry modules.
-- [x] `W08.P18.S130` - extend the registry exception hygiene gate so broad `Exception`/`BaseException` handlers must either re-raise or log the failure.
+- [x] `W08.P18.S127` - add a registry production-code hygiene gate that rejects `except ...: pass` and `contextlib.suppress` so future exception swallowing fails in tests; `src/aeat/domain/calculations/registry/`.
+- [x] `W08.P18.S128` - preserve the original `AttributeError` message when extraction-profile parser resolution fails, so dotted parser validation does not hide the failing attribute lookup; `src/aeat/domain/calculations/registry/`.
+- [x] `W08.P18.S129` - extend the registry exception hygiene gate to reject bare `except:` handlers in production registry modules; `src/aeat/domain/calculations/registry/`.
+- [x] `W08.P18.S130` - extend the registry exception hygiene gate so broad `Exception`/`BaseException` handlers must either re-raise or log the failure; `src/aeat/domain/calculations/registry/`.
 - [x] `W08.P18.S132` - update the M100 registry test composition point to import `aeat.domain.renta`, proving the fail-fast first-slice cross-domain snapshot gate is registered in the focused M100 surface; the broader registry hardening pass over exception hygiene, directory layout, drift validation, and M100/M190/M200 passed with 81 tests.
 - [x] `W08.P18.S135` - migrate M303 from flat `303.toml` to canonical directory layout (`manifest.toml` + `revisions/2009-y-siguientes/{revision.toml, casillas/0001-casillas.toml, export/0001..0003-export-layout.toml, extraction_profiles/0001-modelo-303-declaracion-pdf.toml}`) per the W07.P17.S120 multi-revision directory regression; resolves the dual-layout `RegistryLoadError` collision that surfaced during the linkage P02.S08 typed-observation collapse and brings M303 in line with the 10 other directory-mode modelos (100, 111, 123, 131, 180, 200, 202, 232, 349, 369); functional equivalence proved by `test_modelo_303_registry.py` (16/16), `test_formula_runtime.py` (15/15), `test_loader_directory_mode.py` (21/21); commit `7091d867d`; `src/aeat/_data/registry/aeat/modelos/303/`.
 
