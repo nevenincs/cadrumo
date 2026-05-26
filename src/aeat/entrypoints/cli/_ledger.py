@@ -492,6 +492,7 @@ def ledger_classify(
         help=tr("cli.ledger.classify.irpf_category_help"),
     ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
+    reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
 ) -> None:
     """Classify one ledger transaction through the bucket-scoped backend."""
     state = _state()
@@ -530,10 +531,13 @@ def ledger_classify(
             patch=patch,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger classify",
+            reaffirm=reaffirm,
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    if reaffirm:
+        typer.echo(tr("cli.ledger.classify.reaffirmed"))
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
 
 
