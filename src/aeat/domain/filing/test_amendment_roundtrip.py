@@ -20,8 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage.sql.engine import get_engine
-from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._amendment import (
     AmendmentKind,
@@ -40,10 +39,6 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-
-
-def _runtime_engine(profile: TestRuntimeProfile):
-    return get_engine(profile.settings)
 
 
 def _populated_amended_draft() -> ModeloDraft:
@@ -178,13 +173,12 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
     from ._complementaria_repository import _AMENDMENT_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        engine = _runtime_engine(profile)
         try:
             original = _populated_amendment()
             repo = ModeloAmendmentRepository(bucket_id=_BUCKET_ID)
             repo.save(original)
 
-            with session_scope(engine) as session:
+            with session_scope(profile.repository._engine) as session:
                 all_rows = session.execute(select(SecureObjectRow)).scalars().all()
                 amendment_rows = [r for r in all_rows if r.namespace == _AMENDMENT_NAMESPACE]
                 assert len(amendment_rows) == 1, (
@@ -203,4 +197,4 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
             with pytest.raises(ValidationError, match="delta"):
                 ModeloAmendmentRepository(bucket_id=_BUCKET_ID).load(original.amendment_id)
         finally:
-            engine.dispose()
+            profile.repository._engine.dispose()
