@@ -172,6 +172,7 @@ from .runtime import (
     StorageRuntimeReadinessCode,
     StorageRuntimeReadinessIssue,
     StorageRuntimeSession,
+    inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
@@ -288,6 +289,7 @@ __all__ = [
     "get_secret_store",
     "get_sessionmaker",
     "has_active_bucket_session",
+    "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
     "load_corpus_manifest",
     "load_encrypted_envelope",

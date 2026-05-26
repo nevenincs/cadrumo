@@ -31,6 +31,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
@@ -157,7 +158,7 @@ def _index_bundle_by_namespace(
     return bundle_by_namespace
 
 
-def _wipe_and_recreate_secure_objects_table(engine, *, repo: SecureObjectRepository) -> None:  # type: ignore[no-untyped-def]
+def _wipe_and_recreate_secure_objects_table(engine: Engine, *, repo: SecureObjectRepository) -> None:
     """Phase 3: drop the table, recreate it empty, and assert the raw walk yields nothing."""
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)

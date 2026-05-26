@@ -99,6 +99,13 @@ class BucketLifecycleStatus(StrEnum):
     TOMBSTONED = "tombstoned"
 
 
+class BucketKeySchedule(StrEnum):
+    """Data-key schedule used by encrypted records in this bucket."""
+
+    LEGACY_MASTER_KEY = "legacy-master-key"
+    BUCKET_DEK_V1 = "bucket-dek-v1"
+
+
 class BucketManifest(BaseModel):
     """Plaintext manifest for one per-bucket directory.
 
@@ -114,6 +121,8 @@ class BucketManifest(BaseModel):
     last_unlocked_at: datetime | None
     kdf_params: ManifestKdfParams
     recovery_enrolled: bool
+    idle_lock_minutes: int | None = Field(default=None, gt=0)
+    key_schedule: BucketKeySchedule = BucketKeySchedule.LEGACY_MASTER_KEY
     schema_version: int = Field(ge=1)
     status: BucketLifecycleStatus
     """Plaintext mirror of the encrypted record's lifecycle status.
@@ -145,6 +154,15 @@ class BucketManifest(BaseModel):
             return BucketLifecycleStatus(value)
         raise TypeError("status must be a BucketLifecycleStatus or its string value")
 
+    @field_validator("key_schedule", mode="before")
+    @classmethod
+    def _coerce_key_schedule(cls, value: object) -> BucketKeySchedule:
+        if isinstance(value, BucketKeySchedule):
+            return value
+        if isinstance(value, str):
+            return BucketKeySchedule(value)
+        raise TypeError("key_schedule must be a BucketKeySchedule or its string value")
+
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
@@ -158,4 +176,4 @@ class BucketManifest(BaseModel):
         return _ensure_utc(value)
 
 
-__all__ = ["BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]
+__all__ = ["BucketKeySchedule", "BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]
