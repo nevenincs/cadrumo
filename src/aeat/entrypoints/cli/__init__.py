@@ -73,6 +73,11 @@ def _root(
         help=tr("cli.root.language_help"),
         is_eager=True,
     ),
+    profile: str | None = typer.Option(
+        None,
+        "--profile",
+        help=tr("cli.root.profile_help"),
+    ),
     version: bool = typer.Option(
         False,
         "--version",
@@ -139,6 +144,8 @@ def _root(
     # silently ignore a profile's ``preferences.output_language``. Kept
     # after the ``--version`` / ``--help`` fast-path exits so those
     # surfaces stay free of the application-layer import.
+    if profile is not None:
+        _activate_profile_override(ctx, profile)
     from ...application.user_profile import _language_resolver as _language_resolver
 
     _activate_active_bucket_session(ctx)
@@ -169,6 +176,22 @@ def _root(
         raise typer.Exit()
 
 
+def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
+    """Resolve ``--profile`` to a bucket id and set the active-profile override."""
+
+    from ...application.workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
+    from ...core.config import override_settings
+    from ._errors import CliRefusedBoundaryError
+
+    requested = profile.strip()
+    if not requested:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile))
+    pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
+    if pointer is None:
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=requested))
+    ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
+
+
 def _activate_active_bucket_session(ctx: typer.Context) -> None:
     """Active-gate the CLI session against the bootstrap-exempt registry.
 
@@ -185,21 +208,27 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     - An active profile resolves — open its bucket session (unless one
       is already active) so the verb body can decrypt stored records.
 
-    The per-verb guards are the primary refusal surface. A non-exempt
-    verb that still reaches its body without a session surfaces a
-    clean translated refusal regardless: ``NoActiveBucketSessionError``
-    is an :class:`AeatError` and the CLI error decorator renders it. A
-    centralized refusal here is intentionally not used —
-    :func:`_full_invocation_verb_path` reads ``sys.argv``, which the
-    Typer test runner does not populate, so a centralized refusal
-    mis-fires on bootstrap-exempt verbs under test.
+    The per-verb guards remain the primary refusal surface. This root
+    callback adds only one fail-closed guard before the verb body: a
+    real operator invocation of a guarded profile-bound mutation verb
+    may not proceed when settings route the primary SQL store to the
+    root fallback database.
+    ``_full_invocation_verb_path`` returns ``None`` for in-process test
+    runner invocations, so this guard does not misclassify cached
+    Typer tests that do not populate the console-script argv shape.
     """
 
     from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
+    from ...application.storage_write_policy import inspect_storage_write_policy
     from ...application.workflow._models import resolve_active_bucket_id
     from ._bootstrap_exempt import is_bootstrap_exempt
+    from ._errors import CliRefusedBoundaryError
 
-    exempt = is_bootstrap_exempt(_full_invocation_verb_path())
+    verb_path = _full_invocation_verb_path()
+    exempt = is_bootstrap_exempt(verb_path)
+    write_policy = inspect_storage_write_policy(verb_path, bootstrap_exempt=exempt)
+    if not write_policy.allowed:
+        raise CliRefusedBoundaryError(write_policy.render_refusal_message())
     if resolve_active_bucket_id() is None:
         # No active profile: each non-exempt verb refuses for itself
         # with a translated message (see the per-verb
@@ -212,18 +241,8 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     if has_active_bucket_session():
         return
     if exempt:
-        # Bootstrap-exempt verbs (``config repair`` family) must run
-        # cleanly *without* a session, but when an active profile does
-        # exist they should still read its encrypted facts and honour
-        # its ``preferences.output_language``. Open the session
-        # opportunistically — a failure is non-fatal: the verb falls
-        # back to its sessionless path.
-        import contextlib
-
-        with contextlib.suppress(Exception):
-            ctx.with_resource(get_master_key_provider())
-    else:
-        ctx.with_resource(get_master_key_provider())
+        return
+    ctx.with_resource(get_master_key_provider())
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
@@ -244,7 +263,8 @@ def _full_invocation_verb_path() -> str | None:
     so the returned string is the canonical subcommand chain the
     operator typed: ``"config profile create"`` for
     ``aeat --quiet config profile create alice``. Returns ``None``
-    for the bare invocation.
+    for the bare invocation and for non-entrypoint processes such as
+    in-process test runners.
 
     Matched against :data:`BOOTSTRAP_EXEMPT_VERB_PATHS` via prefix
     so ``"config profile create alice"`` matches the exempt entry
@@ -252,8 +272,15 @@ def _full_invocation_verb_path() -> str | None:
     """
 
     import sys
+    from pathlib import Path
+
+    executable = Path(sys.argv[0]).name.lower()
+    if executable not in {"aeat", "aeat.exe", "__main__.py"}:
+        return None
 
     tokens = sys.argv[1:]
+    if any(token in {"--help", "-h", "--version", "-V"} for token in tokens):
+        return None
     verb_tokens: list[str] = []
     skip_next = False
     for token in tokens:
@@ -261,7 +288,7 @@ def _full_invocation_verb_path() -> str | None:
             skip_next = False
             continue
         if token.startswith("-"):
-            if token in ("--language", "--lang", "--format") and "=" not in token:
+            if token in ("--language", "--lang", "--format", "--profile") and "=" not in token:
                 skip_next = True
             continue
         verb_tokens.append(token)

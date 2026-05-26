@@ -83,6 +83,9 @@ def test_bucket_manifest_round_trips_strictly_via_toml(tmp_path: Path) -> None:
     assert loaded.kdf_params.salt == original.kdf_params.salt
     assert loaded.kdf_params.algorithm == "argon2id"
     assert loaded.kdf_params.memory_cost == 65536
+    assert loaded.kdf_params.time_cost == 3
+    assert loaded.kdf_params.parallelism == 4
+    assert loaded.kdf_params.output_length == 32
     assert loaded.last_unlocked_at == original.last_unlocked_at
     assert loaded.recovery_enrolled is True
     # The lifecycle marker is the plaintext mirror the manifest scan

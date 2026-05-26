@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ..categories import (
@@ -55,8 +56,8 @@ def usage_ratios_object_key(bucket_id: str) -> str:
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
     """Load one bucket's persisted usage-ratio profile, or return an empty one."""
 
-    repository = objects or SecureObjectRepository()
     object_key = usage_ratios_object_key(bucket_id)
+    repository = objects or secure_object_repository_for_bucket(bucket_id)
     try:
         record = repository.load(
             _USAGE_RATIO_NAMESPACE,
@@ -120,14 +121,14 @@ def save_usage_ratios(
 ) -> None:
     """Persist one bucket's usage-ratio profile in the encrypted database."""
 
+    object_key = usage_ratios_object_key(bucket_id)
     envelope = Envelope[UsageRatioProfile](
         schema_version=_USAGE_RATIO_VERSION,
         written_at=datetime.now(UTC),
         classification=SensitivityClass.FINANCIAL,
         payload=profile,
     )
-    object_key = usage_ratios_object_key(bucket_id)
-    repository = objects or SecureObjectRepository()
+    repository = objects or secure_object_repository_for_bucket(bucket_id)
     try:
         repository.save(
             namespace=_USAGE_RATIO_NAMESPACE,

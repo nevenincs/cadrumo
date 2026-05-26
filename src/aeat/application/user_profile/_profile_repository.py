@@ -179,6 +179,7 @@ class ProfileRepository:
         facts: Sequence[UserProfileFact] = (),
         profile_id: str | None = None,
         enforce_unique_tax_id: bool = True,
+        routing_profile_id: str | None = None,
     ) -> ProfileAggregate:
         """Create a new profile as a cross-store unit of work.
 
@@ -227,6 +228,10 @@ class ProfileRepository:
         # Capture the genuine pre-create pointer before any store write
         # so the rollback restores it exactly.
         rollback_pointer_text = self._read_pointer_text()
+        if routing_profile_id is not None and routing_profile_id != resolved_id:
+            from ...domain.user_profile._errors import UserProfileValidationError
+
+            raise UserProfileValidationError("routing profile id must match the created profile id")
 
         # Refuse before any store write: a label already carried by a
         # live profile, or a UUID that already carries a registered
@@ -274,6 +279,8 @@ class ProfileRepository:
 
             # Step 2: write the active-profile pointer. The per-bucket
             # engine resolves its URL from the pointer chain.
+            if routing_profile_id is not None:
+                self._restore_pointer_text(rollback_pointer_text)
             write_pointer(self._root, BucketPointer(bucket_id=resolved_id, schema_version=1))
 
             # Step 3: commit the encrypted record and its bucket events

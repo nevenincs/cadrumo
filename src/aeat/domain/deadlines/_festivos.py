@@ -451,8 +451,8 @@ def shift_deadline(
 
 
 __all__ = (
-    "CalendarCCAA",
     "MODELOS_WITHOUT_SHIFT",
+    "CalendarCCAA",
     "DeadlineShift",
     "Holiday",
     "HolidayCalendar",

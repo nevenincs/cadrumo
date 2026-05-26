@@ -18,6 +18,7 @@ from ....domain.profile.inventory import (
     compute_inventory_valuation,
 )
 from ..storage import SensitivityClass
+from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -109,14 +110,13 @@ class InventoryLedgerRepository:
             objects: Optional injected secure-object repository. When
                 supplied, every encrypted-store read and write is routed
                 through it instead of a :class:`SecureObjectRepository`
-                resolved from the pydantic-settings :class:`Settings`
-                object. This is the dependency-injection seam
-                real-adapter tests use to bind a single explicit SQLite
-                engine; production callers leave it ``None`` and the
-                repository self-resolves from settings.
+                resolved from the active profile-bucket storage runtime.
+                This is the dependency-injection seam low-level
+                repository tests use to bind a single route-validated
+                engine; production callers leave it ``None``.
         """
 
-        self._objects = objects if objects is not None else SecureObjectRepository()
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:

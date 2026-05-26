@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr, ValidationError
 
-from .config import load_settings, override_settings
+from .config import DEV_TEST_DATABASE_PASSWORD, load_settings, override_settings
 from .paths import resolve_project_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
@@ -143,9 +143,9 @@ def test_override_settings_carries_secretstr_through_validation() -> None:
     baseline = load_settings()
     assert baseline.aeat_secret_passphrase is None
 
-    with override_settings(aeat_secret_passphrase=SecretStr("test-pass")):
+    with override_settings(aeat_secret_passphrase=SecretStr(DEV_TEST_DATABASE_PASSWORD)):
         overridden = load_settings()
         assert overridden.aeat_secret_passphrase is not None
-        assert overridden.aeat_secret_passphrase.get_secret_value() == "test-pass"
+        assert overridden.aeat_secret_passphrase.get_secret_value() == DEV_TEST_DATABASE_PASSWORD
 
     assert load_settings().aeat_secret_passphrase is None

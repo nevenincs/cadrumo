@@ -88,32 +88,32 @@ Close medium-severity calculation, persistence, CLI, boundary, export, and bindi
 - [x] `P07.S29` - WCLI-5/WCLI-6 (86364440c) - WCLI-5: `_parse_bucket_event_types` now catches the failing token and raises a localized `cli.config.bucket.history.invalid_event_type` refusal (4 locales) naming the bad value + valid set, replacing the raw `str(exc)`; `WCLI-6: `_ledger.py` invoice-link handler routes through `resolve_error_message(exc)` instead of `str(exc)`, consistent with the apoderado/modelo/app-live error-rendering fixes; locale audit green; `src/aeat/entrypoints/cli`.
 - [x] `P07.S30` - XDOM-7/XDOM-8/XDOM-9: all three verified already-satisfied - XDOM-7: `LedgerTransactionPayload` pydantic model exists (`ledger/_models.py:419`) and `LedgerReviewRow.transaction` already uses it, not `dict[str, object]`; `XDOM-8: `diagnostics.py` imports the public `validate_site_health_url` helper from the `browser` package surface, not the private `_URL_ADAPTER`; XDOM-9: `_iva_wallet_reconciliation.py` imports `IvaCompensationWalletObservation` from the public `sede` surface (exported in `sede/__init__.py`); `src/aeat/application src/aeat/adapters/outbound/aeat/sede`.
 - [x] `P07.S31` - EXIM-6: verify verdict reports reserved-field unchecked casillas (0f412f364) - `DeclaracionVerifyResult.unchecked_casillas` was declared but `verify_export` never populated it; `now computes `draft casillas − parser-checked set` and reports it, with a coverage-partition test (modelo-130 `saldo-negativo-fin-periodo` surfaces as unchecked); 39 export tests green; `src/aeat/application/filing`.
-- [x] `P07.S32` - BIND-3/BIND-4/BIND-5 - BIND-3 (e20cf8e34): numeric profile-binding Decimal-channel test (real snapshot extended with a controlled decimal `source="profile"` binding, asserts resolution into `binding_values` not the enum channel); BIND-4 (dd53cef44): removed the four dead source kinds (`ledger`, `rental`, `vat`, `category`) from `DataBindingDefinition.source` after verifying zero TOML + code usage; BIND-5: dispositioned to `P09.S42` (GEN-6 / coordinator task #521) — the estimacion-directa profile-auto-resolution decision is the same item and is resolved there, not duplicated here; `src/aeat/domain/calculations/registry`.
+- [x] `P07.S32` - BIND-3/BIND-4/BIND-5 - BIND-3 (e20cf8e34): numeric profile-binding Decimal-channel test (real snapshot extended with a controlled decimal `source="profile"` binding, asserts resolution into `binding_values` not the enum channel); `BIND-4 (dd53cef44): removed the four dead source kinds (`ledger`, `rental`, `vat`, `category`) from `DataBindingDefinition.source` after verifying zero TOML + code usage; BIND-5: dispositioned to `P09.S42` (GEN-6 / coordinator task #521) - the estimacion-directa profile-auto-resolution decision is the same item and is resolved there, not duplicated here; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P08` - LOW cluster
 
 Close lower-severity typing, persistence, boundary, and binding-stability findings.
 
-- [ ] `P08.S33` - CALC-7: tighten `ModeloInputsProviderProtocol.load_inputs` return type; `src/aeat/application/modelo`.
-- [ ] `P08.S34` - PERS-10/PERS-11: KDF-param witnesses and `SecureObjectNamespaceIntegrity` test; `src/aeat/adapters/persistence`.
-- [ ] `P08.S35` - XDOM-11/XDOM-12: re-point registry private imports, export `RegistrySnapshotRef`, and add non-303 period-binding tests; `src/aeat/domain/calculations/registry src/aeat/application/modelo`.
-- [ ] `P08.S36` - BIND-8/BIND-9: stabilise the `test_invoice_bindings` fixture filter and atribucion/refund source-kind disposition; `src/aeat/domain/calculations/registry`.
+- [x] `P08.S33` - CALC-7: tightened `ModeloInputsProviderProtocol.load_inputs` from `Mapping[str, object]` to the exported `ModeloInputs = Mapping[str, str | Decimal]` contract, narrowed the workflow engine and revision-backed providers to that return type, and verified with ty plus workflow/modelo provider suites; `src/aeat/application/workflow src/aeat/application/modelo`.
+- [x] `P08.S34` - PERS-10/PERS-11: added explicit manifest roundtrip witnesses for `time_cost`, `parallelism`, and `output_length`, and validated `SecureObjectNamespaceIntegrity` rejects empty namespaces and negative readable/unreadable counts; `src/aeat/adapters/persistence`.
+- [x] `P08.S35` - XDOM-11/XDOM-12: exported `RegistrySnapshotRef` plus the registry runtime helpers consumed by Modelo, re-pointed Modelo/filing imports to the public registry API, and added 111 monthly plus 100 annual declaration-period resolver coverage; `src/aeat/domain/calculations/registry src/aeat/application/modelo src/aeat/application/filing`.
+- [x] `P08.S36` - BIND-8/BIND-9: stabilised `test_invoice_bindings` by selecting the named Modelo 130 previous-filing binding instead of filtering `source != "invoice"`; `verified BIND-9 already covered by committed Modelo 184 `atribucion_member` and Modelo 360 `refund_operation` row-set tests; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P09` - carried-over coordinator items (Axis G)
 
 Pre-existing coordinator task-list items folded into this rollout.
 
-- [ ] `P09.S37` - GEN-1 task 501: wire the live G313 Playwright driver actual fetch path; `src/aeat/adapters/outbound/aeat`.
-- [ ] `P09.S38` - GEN-2 task 506: triage the discovery-swarm legacy/shim inventory into fixes; `.vault/audit src/aeat`.
-- [ ] `P09.S39` - GEN-3 task 517: non-303 period-token test coverage for `_resolve_declaration_period_inputs`; `src/aeat/application/modelo`.
-- [ ] `P09.S40` - GEN-4 task 518: profile UUID-vs-label delegated to the `cli-workflow-redesign` campaign; `.vault/plan`.
-- [ ] `P09.S41` - GEN-5 task 520: CLI UX polish cluster cross-check against the `cli-workflow-redesign` bug-inventory clusters D/E; `.vault/audit src/aeat/entrypoints/cli`.
-- [ ] `P09.S42` - GEN-6 task 521: estimacion-directa profile auto-resolution disposition; `src/aeat/domain/calculations/registry`.
+- [x] `P09.S37` - GEN-1 task 501: wire the live G313 Playwright driver actual fetch path; `src/aeat/adapters/outbound/aeat`.
+- [x] `P09.S38` - GEN-2 task 506: triage the discovery-swarm legacy/shim inventory into fixes; `.vault/audit src/aeat`.
+- [x] `P09.S39` - GEN-3 task 517: non-303 period-token test coverage for `_resolve_declaration_period_inputs`; `src/aeat/application/modelo`.
+- [x] `P09.S40` - GEN-4 task 518: profile UUID-vs-label delegated to the `cli-workflow-redesign` campaign; `.vault/plan`.
+- [x] `P09.S41` - GEN-5 task 520: CLI UX polish cluster cross-check against the `cli-workflow-redesign` bug-inventory clusters D/E; `.vault/audit src/aeat/entrypoints/cli`.
+- [x] `P09.S42` - GEN-6 task 521: estimacion-directa profile auto-resolution disposition; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P10` - verification + persona-testimonial re-audit
 
 Run final gates and re-audit the operator-facing scenarios after all finding rows close.
 
-- [ ] `P10.S43` - run the full gate set: locale parity, CLI suite, registry suite, and touched-domain suites; `src/aeat`.
-- [ ] `P10.S44` - persona-testimonial pass over the hardened CLI and backend; `.vault/audit src/aeat`.
-- [ ] `P10.S45` - fold any testimonial regressions into a follow-up wave and re-run affected gates; `.vault/plan src/aeat`.
+- [x] `P10.S43` - run the full gate set: locale parity, CLI suite, registry suite, and touched-domain suites; `src/aeat`.
+- [x] `P10.S44` - persona-testimonial pass over the hardened CLI and backend; `.vault/audit src/aeat`.
+- [x] `P10.S45` - fold any testimonial regressions into a follow-up wave and re-run affected gates; `.vault/plan src/aeat`.

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -24,6 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.auth_gate_4033}"
+_WALLET_ERROR_PREFIX = "adapters.aeat.iva_wallet.errors"
 
 
 def test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total() -> None:
@@ -89,7 +92,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
     </body></html>
     """
 
-    with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
+    with pytest.raises(SedeParseError) as exc_info:
         parse_iva_compensation_wallet_html(
             html,
             taxpayer_nif="12345678Z",
@@ -99,6 +102,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
+    _assert_wallet_error_key(exc_info.value, "missing_wallet_table")
 
 
 def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surface() -> None:
@@ -114,7 +118,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
     </html>
     """
 
-    with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
+    with pytest.raises(SedeParseError) as exc_info:
         parse_iva_compensation_wallet_html(
             html,
             taxpayer_nif="12345678Z",
@@ -124,6 +128,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
+    _assert_wallet_error_key(exc_info.value, "missing_wallet_table")
 
 
 def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_wallet() -> None:
@@ -138,7 +143,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
     </html>
     """
 
-    with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
+    with pytest.raises(SedeParseError) as exc_info:
         parse_iva_compensation_wallet_html(
             html,
             taxpayer_nif="12345678Z",
@@ -148,6 +153,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
             source_url=IVA_COMPENSATION_WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
+    _assert_wallet_error_key(exc_info.value, "missing_wallet_table")
 
 
 def test_parse_iva_compensation_wallet_html_accepts_executed_empty_wallet_shell_only_when_authorized() -> None:
@@ -191,7 +197,7 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
     </html>
     """
 
-    with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
+    with pytest.raises(SedeParseError) as exc_info:
         parse_iva_compensation_wallet_html(
             html,
             taxpayer_nif="12345678Z",
@@ -202,6 +208,54 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
         )
+    _assert_wallet_error_key(exc_info.value, "missing_wallet_table")
+
+
+def test_parse_iva_compensation_wallet_html_redacts_invalid_wallet_values_from_errors() -> None:
+    sensitive_value = "negative-wallet-amount=999999"
+    html = f"""
+    <html><body>
+      <table id="cartera">
+        <thead>
+          <tr>
+            <th>Ejercicio</th>
+            <th>Periodo</th>
+            <th>Cuota generada</th>
+            <th>Cuota aplicada</th>
+            <th>Cuota pendiente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{sensitive_value}</td>
+            <td>4T</td>
+            <td>1.500,00</td>
+            <td>300,00</td>
+            <td>1.200,00</td>
+          </tr>
+        </tbody>
+      </table>
+    </body></html>
+    """
+
+    with pytest.raises(SedeParseError) as exc_info:
+        parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif="12345678Z",
+            authenticated_identity="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        )
+
+    exc = exc_info.value
+    _assert_wallet_error_key(exc, "generation_year_unparseable")
+    assert sensitive_value not in str(exc)
+    assert sensitive_value not in repr(exc.context)
+    assert exc.context is not None
+    assert exc.context["value_length"] == len(sensitive_value)
+    assert "value_sha256" in exc.context
 
 
 def test_wallet_execute_gate_detection_identifies_read_query_shape() -> None:
@@ -247,3 +301,33 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
     assert (
         f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL
+
+
+def test_iva_wallet_sede_errors_do_not_use_raw_positional_messages() -> None:
+    source_path = Path(__file__).with_name("_iva_compensation_wallet.py")
+    source = source_path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(source_path))
+
+    violations: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        if not isinstance(node.func, ast.Name):
+            continue
+        if node.func.id not in {"SedeNavigationError", "SedeParseError"}:
+            continue
+        if not node.args:
+            continue
+        first_arg = node.args[0]
+        if not isinstance(first_arg, ast.Constant | ast.JoinedStr):
+            continue
+        has_translated_message = any(keyword.arg == "translated_message" for keyword in node.keywords)
+        if not has_translated_message:
+            violations.append(f"{source_path.name}:{node.lineno}:{node.func.id}")
+
+    assert violations == []
+
+
+def _assert_wallet_error_key(exc: SedeParseError, suffix: str) -> None:
+    assert exc.args == ()
+    assert exc.translated_message == f"{_WALLET_ERROR_PREFIX}.{suffix}"

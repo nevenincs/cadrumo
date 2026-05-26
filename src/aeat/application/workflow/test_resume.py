@@ -10,6 +10,7 @@ import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import load_settings, override_settings
 from ...domain.deadlines import ModeloDeadline, ObligationStatus
 from . import (
     WorkflowAbortReason,
@@ -28,14 +29,19 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
+def _active_profile_runtime(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="workflow-resume",
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        provider = EphemeralMasterKeyProvider()
         try:
-            yield
+            with provider:
+                yield
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
 
 _T = datetime(2026, 4, 12, 9, 0, 0, tzinfo=UTC)

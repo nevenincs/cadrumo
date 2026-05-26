@@ -27,17 +27,17 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
+from ....core.config import override_settings
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
 from ....domain.attachments._errors import AttachmentValidationError
 from ....domain.attachments._models import Attachment
 from . import EphemeralMasterKeyProvider
 from .attachment import AttachmentStore
 from .sql import SecureObjectRepository
-from .sql._orm import Base
-from .sql.engine import create_engine_from_settings
+from .sql.engine import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "attachment-roundtrip"
 
 
 def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
@@ -72,13 +72,11 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
 def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
     """Bytes survive put_bytes -> read_bytes; manifest survives write -> load."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "attachment-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
             objects = SecureObjectRepository(engine=engine)
             store = AttachmentStore(objects=objects)
@@ -115,11 +113,11 @@ def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
             assert loaded.bytes_size == len(payload)
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: corrupting attachment_id vs sha256 must surface.
 
@@ -147,17 +145,13 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
     from .sql._orm import SecureObjectRow
     from .sql.session import session_scope
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "attachment-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
-            SecureObjectRepository(engine=engine)
-            store = AttachmentStore()
+            store = AttachmentStore(objects=SecureObjectRepository(engine=engine))
             payload = b"sample attachment body for anti-tautology proof"
             digest = store.put_bytes(payload)
             attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
@@ -186,3 +180,4 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
                 store.load_manifest(attachment.attachment_id)
         finally:
             engine.dispose()
+            dispose_engine(settings)

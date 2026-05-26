@@ -541,14 +541,11 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     ``SetupAnswers`` model construction, no descriptor-default seeding.
     """
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ..user_profile._orchestration import _write_active_profile_pointer
+    from ..user_profile._orchestration import profile_storage_session
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_patch
 
-    _write_active_profile_pointer(profile_id)
-    provider = get_master_key_provider()
-    with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
+    with profile_storage_session(profile_id):
         repository = workflow_state_repository()
         repository.update(lambda state: persist_patch(flow, explicit_flags, state=state))
 
@@ -576,11 +573,9 @@ def _run_full_flow(
     hide it, so an explicitly-given flag value is always honoured.
     """
 
-    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ..user_profile._orchestration import (
-        _write_active_profile_pointer,
-        capture_active_profile_pointer,
-        restore_active_profile_pointer,
+        profile_create_storage_span,
+        profile_storage_session,
     )
     from ..workflow._persistence import workflow_state_repository
     from ._persistence import persist_answers
@@ -658,37 +653,20 @@ def _run_full_flow(
         question.id for section in flow.sections for question in section.questions
     )
 
-    # Cold-start: the active-profile pointer must aim at the target
-    # profile before `workflow_state_repository()` opens its per-bucket
-    # engine. For `create`, `ProfileRepository.create` (inside
-    # `persist_answers`) owns the cross-store unit of work — bucket
-    # directory, manifest, encrypted record, AND the pointer — and
-    # rolls every store back on a failure inside the create. The
-    # genuine prior pointer is captured here and restored if the
-    # surrounding span fails before or around `create` (engine open,
-    # master-key activation), the window the repository's own rollback
-    # cannot see. For `edit` the profile already has a record, so the
-    # pointer write only sets the active profile.
-    prior_pointer = capture_active_profile_pointer() if mode == "create" else None
-    _write_active_profile_pointer(profile_id)
-    try:
-        provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-            workflow_state_repository().update(
-                lambda state: persist_answers(
-                    flow,
-                    answers,
-                    state=state,
-                    profile_name=profile_name,
-                    profile_id=profile_id,
-                    mode=mode,
-                    supplied_question_ids=supplied_question_ids,
-                )
+    storage_span = profile_create_storage_span if mode == "create" else profile_storage_session
+    with storage_span(profile_id) as routing_profile_id:
+        workflow_state_repository().update(
+            lambda state: persist_answers(
+                flow,
+                answers,
+                state=state,
+                profile_name=profile_name,
+                profile_id=profile_id,
+                mode=mode,
+                supplied_question_ids=supplied_question_ids,
+                routing_profile_id=routing_profile_id,
             )
-    except Exception:
-        if mode == "create":
-            restore_active_profile_pointer(prior_pointer)
-        raise
+        )
 
 
 def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callable[..., None]:

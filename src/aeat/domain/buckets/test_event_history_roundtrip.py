@@ -11,18 +11,21 @@ Real :class:`EphemeralMasterKeyProvider`, real SQLite, no mocks.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine, get_engine
+from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core.config import Settings, load_settings, override_settings
 from ._event import (
     BucketEvent,
     BucketEventHistoryCatalogue,
@@ -33,6 +36,21 @@ from ._event import (
 from ._event_repository import BucketEventHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+@contextmanager
+def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[Settings]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=bucket_id,
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield settings
+            finally:
+                dispose_engine(settings)
 
 
 def _build_event(
@@ -71,65 +89,54 @@ def test_bucket_event_history_survives_encrypted_storage_roundtrip(
 ) -> None:
     """The full event-history catalogue round-trips strictly under encryption."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "events-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    runtime_bucket_id = "events-roundtrip"
+    with _active_runtime(tmp_path, runtime_bucket_id) as settings:
+        bucket_id = "b" * 32
+        now = datetime.now(UTC).replace(microsecond=0)
+        # Two events with different shapes: one with a small payload
+        # of three string keys, one with no payload at all. Both
+        # must survive identity-preserving across the boundary.
+        event_a = _build_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+            occurred_at=now,
+            actor="cli/aeat",
+            object_type=BucketEventObjectType.CALCULATION_REVISION,
+            object_id="r" * 64,
+            payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
         )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+        event_b = _build_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.PROFILE_SELECTED,
+            occurred_at=now,
+            actor="cli/aeat",
+            object_type=BucketEventObjectType.PROFILE,
+            object_id="profile-active",
+            payload={},
+        )
+        catalogue = BucketEventHistoryCatalogue(
+            events={event_a.event_id: event_a, event_b.event_id: event_b},
+        )
 
-            bucket_id = "b" * 32
-            now = datetime.now(UTC).replace(microsecond=0)
-            # Two events with different shapes: one with a small payload
-            # of three string keys, one with no payload at all. Both
-            # must survive identity-preserving across the boundary.
-            event_a = _build_event(
-                bucket_id=bucket_id,
-                event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-                occurred_at=now,
-                actor="cli/aeat",
-                object_type=BucketEventObjectType.CALCULATION_REVISION,
-                object_id="r" * 64,
-                payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
-            )
-            event_b = _build_event(
-                bucket_id=bucket_id,
-                event_type=BucketEventType.PROFILE_SELECTED,
-                occurred_at=now,
-                actor="cli/aeat",
-                object_type=BucketEventObjectType.PROFILE,
-                object_id="profile-active",
-                payload={},
-            )
-            catalogue = BucketEventHistoryCatalogue(
-                events={event_a.event_id: event_a, event_b.event_id: event_b},
-            )
+        repo = BucketEventHistoryRepository(objects=SecureObjectRepository(engine=get_engine(settings)))
+        repo.save(catalogue)
+        loaded = repo.load()
 
-            repo = BucketEventHistoryRepository()
-            repo.save(catalogue)
-            loaded = repo.load()
-
-            assert loaded == catalogue
-            loaded_a = loaded.events[event_a.event_id]
-            assert loaded_a.payload == {"modelo": "303", "filing_year": "2025", "period": "1T"}
-            assert loaded_a.event_type is BucketEventType.MODELO_CALCULATION_CREATED
-            assert loaded_a.object_type is BucketEventObjectType.CALCULATION_REVISION
-            # Empty-payload event survives as an empty mapping, not as
-            # missing or None — guards against a future encoder change
-            # that drops empty dicts to None.
-            loaded_b = loaded.events[event_b.event_id]
-            assert loaded_b.payload == {}
-            assert loaded_b.event_type is BucketEventType.PROFILE_SELECTED
-        finally:
-            engine.dispose()
+        assert loaded == catalogue
+        loaded_a = loaded.events[event_a.event_id]
+        assert loaded_a.payload == {"modelo": "303", "filing_year": "2025", "period": "1T"}
+        assert loaded_a.event_type is BucketEventType.MODELO_CALCULATION_CREATED
+        assert loaded_a.object_type is BucketEventObjectType.CALCULATION_REVISION
+        # Empty-payload event survives as an empty mapping, not as
+        # missing or None — guards against a future encoder change
+        # that drops empty dicts to None.
+        loaded_b = loaded.events[event_b.event_id]
+        assert loaded_b.payload == {}
+        assert loaded_b.event_type is BucketEventType.PROFILE_SELECTED
 
 
 def test_bucket_event_payload_tampering_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: mutating an event's payload must surface.
 
@@ -159,59 +166,42 @@ def test_bucket_event_payload_tampering_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._event_repository import _NAMESPACE as _BUCKET_EVENT_NAMESPACE
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "bucket-events-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    runtime_bucket_id = "bucket-events-anti-tautology"
+    with _active_runtime(tmp_path, runtime_bucket_id) as settings:
+        engine = create_engine_from_settings(settings)
         Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
 
-            bucket_id = "b" * 32
-            now = datetime.now(UTC).replace(microsecond=0)
-            event = _build_event(
-                bucket_id=bucket_id,
-                event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-                occurred_at=now,
-                actor="cli/aeat",
-                object_type=BucketEventObjectType.CALCULATION_REVISION,
-                object_id="r" * 64,
-                payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
+        bucket_id = "b" * 32
+        now = datetime.now(UTC).replace(microsecond=0)
+        event = _build_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+            occurred_at=now,
+            actor="cli/aeat",
+            object_type=BucketEventObjectType.CALCULATION_REVISION,
+            object_id="r" * 64,
+            payload={"modelo": "303", "filing_year": "2025", "period": "1T"},
+        )
+        catalogue = BucketEventHistoryCatalogue(events={event.event_id: event})
+        repo = BucketEventHistoryRepository(objects=SecureObjectRepository(engine=engine))
+        repo.save(catalogue)
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _BUCKET_EVENT_NAMESPACE,
             )
-            catalogue = BucketEventHistoryCatalogue(events={event.event_id: event})
-            repo = BucketEventHistoryRepository()
-            repo.save(catalogue)
-
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _BUCKET_EVENT_NAMESPACE,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                events = envelope["payload"]["events"]
-                event_dict = events[event.event_id]
-                assert event_dict["payload"]["modelo"] == "303", (
-                    "fixture must serialise the modelo payload key as '303' "
-                    "for this proof test to be meaningful"
-                )
-                # Tamper with the payload without recomputing the event_id.
-                # The content-addressed id derivation must fail on load.
-                event_dict["payload"]["modelo"] = "100"
-                row.payload = _json.dumps(envelope).encode("utf-8")
-
-            regression_caught = False
-            try:
-                repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: mutating the payload without "
-                "recomputing event_id did NOT surface on load. The bucket-"
-                "event-history boundary is tautological and the audit "
-                "trail is not actually content-addressed."
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            events = envelope["payload"]["events"]
+            event_dict = events[event.event_id]
+            assert event_dict["payload"]["modelo"] == "303", (
+                "fixture must serialise the modelo payload key as '303' "
+                "for this proof test to be meaningful"
             )
-        finally:
-            engine.dispose()
+            # Tamper with the payload without recomputing the event_id.
+            # The content-addressed id derivation must fail on load.
+            event_dict["payload"]["modelo"] = "100"
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        with pytest.raises(ValidationError, match="event_id"):
+            repo.load()

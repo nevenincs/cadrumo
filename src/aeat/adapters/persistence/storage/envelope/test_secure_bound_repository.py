@@ -20,12 +20,11 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Engine
 
+from .....core.config import Settings, override_settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from ..errors import EnvelopeVersionError
 from ..sql import SecureObjectRepository
-from ..sql._orm import Base
-from ..sql.engine import create_engine_from_settings
-from .....core.config import Settings
+from ..sql.engine import create_engine_from_settings, dispose_engine
 from ._envelope import Envelope
 from ._secure_repository import SecureBoundRepository
 
@@ -53,17 +52,16 @@ class _DummyRepository(SecureBoundRepository[_DummyPayload]):
         return payload.id
 
 
-def _bound_repo_with_engine(tmp_path: Path) -> tuple[_DummyRepository, Engine]:
-    """Build an isolated SQLite engine + repository against ``tmp_path``."""
+_BUCKET_ID = "secure-bound-roundtrip"
 
-    db_path = tmp_path / "secure-bound-roundtrip.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    Base.metadata.create_all(engine)
+
+def _bound_repo_with_engine(settings: Settings) -> tuple[_DummyRepository, SecureObjectRepository, Engine]:
+    """Build an isolated active-bucket engine + repository."""
+
+    engine = create_engine_from_settings(settings)
     objects = SecureObjectRepository(engine=engine)
     repo = _DummyRepository(objects=objects)
-    return repo, engine
+    return repo, objects, engine
 
 
 def test_secure_bound_repository_save_load_iter_delete_roundtrip(
@@ -71,9 +69,11 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
 ) -> None:
     """Full CRUD cycle survives the encrypted SQL boundary intact."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        repo, engine = _bound_repo_with_engine(tmp_path)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        repo, _, engine = _bound_repo_with_engine(settings)
         try:
             first = _DummyPayload(id="alpha", value=42)
             second = _DummyPayload(id="beta", value=99)
@@ -95,18 +95,22 @@ def test_secure_bound_repository_save_load_iter_delete_roundtrip(
             assert tuple(repo.iter_ids()) == ("beta",)
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_secure_bound_repository_missing_returns_none(tmp_path: Path) -> None:
     """``load`` for an unknown identifier returns ``None``, never raises."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        repo, engine = _bound_repo_with_engine(tmp_path)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        repo, _, engine = _bound_repo_with_engine(settings)
         try:
             assert repo.load("nonexistent") is None
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_secure_bound_repository_rejects_future_schema_version(
@@ -124,9 +128,11 @@ def test_secure_bound_repository_rejects_future_schema_version(
 
     from datetime import UTC, datetime
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        repo, engine = _bound_repo_with_engine(tmp_path)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        repo, objects, engine = _bound_repo_with_engine(settings)
         try:
             future_payload = _DummyPayload(id="future", value=7)
             future_envelope = Envelope[_DummyPayload](
@@ -138,7 +144,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
             # Write directly through the underlying object store so the
             # row carries schema_version=2 even though the bound repo
             # declares max=1.
-            repo._objects.save(  # noqa: SLF001 - test reaches across boundary intentionally
+            objects.save(
                 namespace=_DummyRepository.namespace,
                 object_key="future",
                 classification=SensitivityClass.AUDIT,
@@ -151,3 +157,4 @@ def test_secure_bound_repository_rejects_future_schema_version(
                 repo.load("future")
         finally:
             engine.dispose()
+            dispose_engine(settings)

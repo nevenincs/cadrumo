@@ -15,17 +15,16 @@ from pydantic import BaseModel, ConfigDict
 # import. `_clave_movil` is a leaf module (no application-layer
 # import), so importing the public-named constant from it directly
 # breaks the cycle.
-from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+from ...adapters.outbound.aeat.auth._clave_movil import (
+    CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+    CLAVE_MOVIL_OPERATOR_PHONE_STATES,
+    _operator_phone_state_report_commands,
+)
 from ...adapters.persistence.storage import SensitivityClass
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = (
-    "app_prompted_and_accepted",
-    "app_prompted_not_accepted",
-    "app_did_not_prompt",
-    "operator_did_not_check",
-)
+AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = CLAVE_MOVIL_OPERATOR_PHONE_STATES
 
 
 class AuthDiagnosticSummary(BaseModel):
@@ -72,6 +71,7 @@ class AuthDiagnosticDetail(AuthDiagnosticSummary):
     """Redacted detail for one encrypted auth diagnostic artefact."""
 
     html_excerpt: str | None = None
+    operator_report_commands: tuple[str, ...] = ()
     profile_tax_id_fingerprint: str = ""
     clave_identity_fingerprint: str = ""
     dni_fecha_fingerprint: str = ""
@@ -94,7 +94,10 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 
     rows = tuple(
         sorted(
-            (_summary_from_payload(_payload(record.payload)) for record in _diagnostic_records()),
+            (
+                _summary_from_payload(_payload(record.payload), include_private_context=False)
+                for record in _diagnostic_records()
+            ),
             key=lambda row: row.captured_at,
             reverse=True,
         )
@@ -105,7 +108,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
 
-    record = SecureObjectRepository().load(
+    record = secure_object_repository_for_active_bucket().load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -121,6 +124,9 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
         excerpt = f"[redacted html captured: {len(html)} chars]"
     return AuthDiagnosticDetail(
         **summary.model_dump(),
+        operator_report_commands=(
+            _operator_phone_state_report_commands(summary.diagnostic_id) if summary.diagnostic_id else ()
+        ),
         **_detail_fingerprints_from_payload(payload),
         html_excerpt=excerpt,
     )
@@ -134,7 +140,8 @@ def record_auth_diagnostic_phone_state(
 
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
         raise ValueError(phone_state)
-    record = SecureObjectRepository().load(
+    repository = secure_object_repository_for_active_bucket()
+    record = repository.load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -148,7 +155,7 @@ def record_auth_diagnostic_phone_state(
         "phone_state": phone_state,
         "reported_at": reported_at.isoformat(),
     }
-    SecureObjectRepository().save(
+    repository.save(
         namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         object_key=diagnostic_id,
         classification=SensitivityClass.SESSION,
@@ -164,7 +171,7 @@ def record_auth_diagnostic_phone_state(
 
 
 def _diagnostic_records():
-    return SecureObjectRepository().list_records(
+    return secure_object_repository_for_active_bucket().list_records(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         expected_class=SensitivityClass.SESSION,
         max_supported_version=1,
@@ -186,7 +193,11 @@ def _json_object(value: object) -> dict[str, object]:
     return {str(key): item for key, item in value.items()}
 
 
-def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
+def _summary_from_payload(
+    payload: dict[str, object],
+    *,
+    include_private_context: bool = True,
+) -> AuthDiagnosticSummary:
     captured_at = payload.get("captured_at")
     if not isinstance(captured_at, str):
         raise ValueError("auth diagnostic payload is missing captured_at")
@@ -207,21 +218,39 @@ def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
         screenshot_captured=isinstance(payload.get("screenshot_png_base64"), str)
         and bool(str(payload.get("screenshot_png_base64")).strip()),
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
-        identity_kind=str(auth_attempt.get("identity_kind") or ""),
+        identity_kind=str(auth_attempt.get("identity_kind") or "") if include_private_context else "",
         headless=raw_headless if isinstance(raw_headless, bool) else None,
-        active_profile_id=str(auth_attempt.get("active_profile_id") or ""),
-        active_profile_label=str(auth_attempt.get("active_profile_label") or ""),
-        active_profile_registered=_optional_bool(auth_attempt.get("active_profile_registered")),
-        profile_record_present=_optional_bool(auth_attempt.get("profile_record_present")),
-        profile_tax_id_present=_optional_bool(auth_attempt.get("profile_tax_id_present")),
-        identity_alignment=str(auth_attempt.get("identity_alignment") or ""),
-        clave_identity_configured=_optional_bool(auth_attempt.get("clave_identity_configured")),
-        dni_fecha_configured=_optional_bool(auth_attempt.get("dni_fecha_configured")),
-        nie_soporte_configured=_optional_bool(auth_attempt.get("nie_soporte_configured")),
-        certificate_path_configured=_optional_bool(auth_attempt.get("certificate_path_configured")),
-        certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
-        certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
-        certificate_backend=str(auth_attempt.get("certificate_backend") or ""),
+        active_profile_id=str(auth_attempt.get("active_profile_id") or "") if include_private_context else "",
+        active_profile_label=str(auth_attempt.get("active_profile_label") or "") if include_private_context else "",
+        active_profile_registered=(
+            _optional_bool(auth_attempt.get("active_profile_registered")) if include_private_context else None
+        ),
+        profile_record_present=(
+            _optional_bool(auth_attempt.get("profile_record_present")) if include_private_context else None
+        ),
+        profile_tax_id_present=(
+            _optional_bool(auth_attempt.get("profile_tax_id_present")) if include_private_context else None
+        ),
+        identity_alignment=str(auth_attempt.get("identity_alignment") or "") if include_private_context else "",
+        clave_identity_configured=(
+            _optional_bool(auth_attempt.get("clave_identity_configured")) if include_private_context else None
+        ),
+        dni_fecha_configured=(
+            _optional_bool(auth_attempt.get("dni_fecha_configured")) if include_private_context else None
+        ),
+        nie_soporte_configured=(
+            _optional_bool(auth_attempt.get("nie_soporte_configured")) if include_private_context else None
+        ),
+        certificate_path_configured=(
+            _optional_bool(auth_attempt.get("certificate_path_configured")) if include_private_context else None
+        ),
+        certificate_password_configured=(
+            _optional_bool(auth_attempt.get("certificate_password_configured")) if include_private_context else None
+        ),
+        certificate_file_present=(
+            _optional_bool(auth_attempt.get("certificate_file_present")) if include_private_context else None
+        ),
+        certificate_backend=str(auth_attempt.get("certificate_backend") or "") if include_private_context else "",
         phone_state=str(operator_report.get("phone_state") or payload.get("phone_state") or ""),
         phone_state_reported_at=phone_state_reported_at,
     )

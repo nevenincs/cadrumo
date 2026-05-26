@@ -49,6 +49,10 @@ class TestExtractedCasillaShape:
         assert record.printed_value == Decimal("1234.56")
         assert record.extraction_confidence == 1.0
 
+    def test_accepts_registry_semantic_casilla_identifier(self) -> None:
+        record = self._build(casilla_id="iva.compensacion-pendiente-periodos-anteriores")
+        assert record.casilla_id == "iva.compensacion-pendiente-periodos-anteriores"
+
     def test_accepts_every_documented_value_type(self) -> None:
         for value in (Decimal("0"), 42, "SII", True, date(2025, 1, 1), None):
             record = self._build(printed_value=value)

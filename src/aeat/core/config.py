@@ -57,6 +57,10 @@ class SecretStoreBackend(StrEnum):
 # Project root: four levels up from src/aeat/core/config.py
 # (file → core/ → aeat/ → src/ → REPO_ROOT).
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+DEV_TEST_DATABASE_PASSWORD = "aeat-dev-test-database-password"  # noqa: S105 - published dev/test-only value.
+"""Shared development/test password for database-backed secure-storage tests."""
+DEV_TEST_DATABASE_PASSWORD_ENV_VAR = "AEAT_DEV_TEST_DATABASE_PASSWORD"  # noqa: S105 - env var name, not a secret.
+"""Environment variable backing :attr:`Settings.aeat_dev_test_database_password`."""
 
 
 class LLMProviderSetting(StrEnum):
@@ -391,6 +395,14 @@ class Settings(BaseSettings):
             "never empty when the storage root is set. Tests that need a "
             "deterministic location supply this field explicitly; production "
             "reads the computed value."
+        ),
+    )
+    aeat_dev_test_database_password: SecretStr = Field(
+        default_factory=lambda: SecretStr(DEV_TEST_DATABASE_PASSWORD),
+        description=(
+            "Published development/test-only password used by database-backed "
+            "secure-storage tests. Production code must not use this field for "
+            "operator custody or live AEAT access."
         ),
     )
     aeat_storage_backup_dir: Path = Field(
@@ -935,8 +947,7 @@ class Settings(BaseSettings):
             # Delegate to the canonical pointer-file reader rather
             # than re-implementing the TOML parse inline. The reader
             # uses strict pydantic validation; this preserves the
-            # one-resolver invariant the disaster ADR Ruling 2
-            # mandates.
+            # one-resolver invariant.
             try:
                 from ._bucket_pointer_io import read_pointer
 
@@ -1226,6 +1237,33 @@ def _bucket_id_for_route(*, database_path: Path | None, storage_root: Path) -> s
     if len(parts) == 4 and parts[0] == "buckets" and parts[2:] == ("db", "aeat.db"):
         return parts[1]
     return ""
+
+
+def settings_for_active_profile_bucket(bucket_id: str, settings: Settings | None = None) -> Settings:
+    """Return settings re-derived for a named active-profile bucket route.
+
+    This is the central escape hatch for code that must inspect or open a
+    specific profile bucket independently of the process-wide active pointer.
+    It refuses operator-supplied primary database URLs and otherwise clears the
+    derived database URL before validation so the normal active-profile route
+    derivation can produce
+    ``<storage-root>/buckets/<bucket-id>/db/aeat.db`` without classifying the
+    result as an operator-supplied explicit URL.
+    """
+
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise ValueError("bucket_id must not be blank")
+    current = settings or load_settings()
+    if "aeat_database_url" in current.model_fields_set:
+        raise ValueError("cannot derive bucket settings from an explicit database URL")
+    merged = current.model_dump()
+    merged["aeat_active_profile"] = trimmed
+    merged["aeat_database_url"] = ""
+    bucket_settings = Settings.model_validate(merged)
+    explicit_fields = (current.model_fields_set | {"aeat_active_profile"}) - {"aeat_database_url"}
+    object.__setattr__(bucket_settings, "__pydantic_fields_set__", explicit_fields)
+    return bucket_settings
 
 
 def load_settings() -> Settings:

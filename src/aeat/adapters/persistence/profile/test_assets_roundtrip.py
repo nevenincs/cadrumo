@@ -23,7 +23,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....core.config import Settings
+from ....core.config import override_settings
 from ....domain.profile.assets import (
     AmortizacionEntry,
     AmortizacionLedger,
@@ -34,14 +34,14 @@ from ....domain.profile.assets import (
 )
 from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ...persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
 from .assets import (
     AmortizacionLedgerRepository,
     AssetsLedgerRepository,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "profile-assets-roundtrip"
 
 
 def _populated_asset() -> AssetRecord:
@@ -72,23 +72,19 @@ def _populated_asset() -> AssetRecord:
 
 def test_assets_ledger_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """AssetsLedgerDocument + AmortizacionLedger roundtrip through encrypted SQL."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
-            assets_repo = AssetsLedgerRepository()
-            amortizacion_repo = AmortizacionLedgerRepository()
+            assets_repo = AssetsLedgerRepository(objects=objects)
+            amortizacion_repo = AmortizacionLedgerRepository(objects=objects)
 
             asset = _populated_asset()
             original_doc = AssetsLedgerDocument(assets=(asset,))
@@ -120,11 +116,11 @@ def test_assets_ledger_survives_encrypted_storage_roundtrip(
             assert loaded_ledger.entries[0].amount == Decimal("2762.50")
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: corrupting the VAT decomposition must surface.
 
@@ -152,17 +148,14 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
-            SecureObjectRepository(engine=engine)
-            assets_repo = AssetsLedgerRepository()
+            objects = SecureObjectRepository(engine=engine)
+            assets_repo = AssetsLedgerRepository(objects=objects)
             asset = _populated_asset()
             assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
 
@@ -191,11 +184,11 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
                 assets_repo.load()
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: a *deleted* cost_basis must surface at load.
 
@@ -216,17 +209,14 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .assets import _ASSETS_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "assets-missing-cost-basis.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
-            SecureObjectRepository(engine=engine)
-            assets_repo = AssetsLedgerRepository()
+            objects = SecureObjectRepository(engine=engine)
+            assets_repo = AssetsLedgerRepository(objects=objects)
             assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
 
             with session_scope(engine) as session:
@@ -245,3 +235,4 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
                 assets_repo.load()
         finally:
             engine.dispose()
+            dispose_engine(settings)

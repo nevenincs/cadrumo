@@ -1,11 +1,4 @@
-"""Tests for the ``authenticated_simulator`` cross-reference surface category.
-
-The ``authenticated_simulator`` category models cross-references whose
-empirical semantics are cl@ve-movil-required, synthetic-NIFs-accepted,
-and form-submit POST (the GROI binding's shape). The schema validator
-enforces explicit rules for the category; these tests pin the
-canonical content the validator allows.
-"""
+"""Tests for the ``authenticated_simulator`` cross-reference surface category."""
 
 from __future__ import annotations
 
@@ -20,12 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 def _kwargs(**overrides: object) -> dict[str, object]:
-    """Default kwargs for an authenticated_simulator cross-reference.
-
-    The defaults form the canonical 'GROI Spanish-ROI consult' shape;
-    individual tests override one field at a time to exercise
-    validator rules.
-    """
+    """Default kwargs for an authenticated_simulator cross-reference."""
 
     base: dict[str, object] = {
         "id": "modelo-349-groi-spanish-counterparty-check",
@@ -35,7 +23,7 @@ def _kwargs(**overrides: object) -> dict[str, object]:
         "allowed_hosts": ("www2.agenciatributaria.gob.es",),
         "allowed_methods": ("GET", "POST"),
         "forbidden_actions": AEAT_WRITE_FORBIDDEN_ACTIONS,
-        "synthetic_data_allowed": True,
+        "synthetic_data_allowed": False,
         "requires_authentication": True,
         "requires_aeat_authorization": False,
         "legal_refs": ("orden-hac-174-2020:art-1",),
@@ -47,15 +35,14 @@ def _kwargs(**overrides: object) -> dict[str, object]:
 
 
 def test_authenticated_simulator_with_canonical_groi_shape_validates() -> None:
-    """The canonical GROI cross-reference shape — auth required, synthetic data,
-    POST in allowed_methods, executable parity — validates clean."""
+    """The canonical GROI shape validates without synthetic AEAT input."""
 
     decision = LiveCrossReferenceDecision.model_validate(_kwargs())
 
     assert decision.surface == "authenticated_simulator"
     assert decision.evidence_tier == "executable_parity_evidence"
     assert decision.requires_authentication is True
-    assert decision.synthetic_data_allowed is True
+    assert decision.synthetic_data_allowed is False
     assert "POST" in decision.allowed_methods
 
 
@@ -91,18 +78,20 @@ def test_authenticated_simulator_rejects_methods_outside_query_set() -> None:
         LiveCrossReferenceDecision.model_validate(_kwargs(allowed_methods=("PATCH",)))
 
 
-def test_authenticated_simulator_permits_synthetic_data_optional_authorization() -> None:
-    """synthetic_data_allowed and requires_aeat_authorization are both flexible."""
+def test_authenticated_simulator_rejects_synthetic_data_on_aeat_hosts() -> None:
+    with pytest.raises(ValidationError, match="synthetic data is prohibited"):
+        LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=True))
 
-    # Synthetic data permitted (GROI accepts arbitrary NIFs).
-    a = LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=True))
+
+def test_authenticated_simulator_permits_synthetic_data_only_off_aeat_hosts() -> None:
+    """The no-synthetic rule is host-scoped, not a surface-shape ban."""
+
+    a = LiveCrossReferenceDecision.model_validate(
+        _kwargs(synthetic_data_allowed=True, allowed_hosts=("oracle.example.test",))
+    )
     assert a.synthetic_data_allowed is True
-    # Synthetic data also permitted False (a future surface that only
-    # accepts the caller's own NIF would set this False).
     b = LiveCrossReferenceDecision.model_validate(_kwargs(synthetic_data_allowed=False))
     assert b.synthetic_data_allowed is False
-    # Authorization required (a future surface gated on certificate
-    # tier on top of cl@ve-movil).
     c = LiveCrossReferenceDecision.model_validate(_kwargs(requires_aeat_authorization=True))
     assert c.requires_aeat_authorization is True
 
@@ -149,7 +138,7 @@ def test_existing_surface_categories_still_validate() -> None:
             allowed_hosts=("sede.agenciatributaria.gob.es",),
             allowed_methods=("GET",),
             forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-            synthetic_data_allowed=True,
+            synthetic_data_allowed=False,
             requires_authentication=False,
             requires_aeat_authorization=False,
             legal_refs=("orden-hac-174-2020:art-1",),

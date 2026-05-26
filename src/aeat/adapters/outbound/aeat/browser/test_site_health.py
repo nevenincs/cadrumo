@@ -27,6 +27,7 @@ from . import (
     SiteHealthState,
     SiteHealthStatus,
     evaluate_response,
+    validate_site_health_url,
 )
 from ._site_health_parsers import (
     parse_mantenimiento_banner,
@@ -70,6 +71,12 @@ _MANTENIMIENTO_FILES = _fixture_files("mantenimiento")
 _WAF_FILES = _fixture_files("waf_challenge")
 _RATE_LIMITED_FILES = _fixture_files("rate_limited")
 _OK_FILES = _fixture_files("ok")
+
+
+def test_validate_site_health_url_is_public_browser_surface() -> None:
+    parsed = validate_site_health_url(_PROBE_URL)
+
+    assert str(parsed) == _PROBE_URL
 
 
 class TestFixtureCorpusShape:

@@ -138,3 +138,64 @@ def test_inter_locale_parity(locales_state):
 
     if errors:
         pytest.fail("\n".join(errors))
+
+
+def test_scaffold_can_sync_dynamic_namespace_locale_parity(tmp_path):
+    """Scaffolding repairs dynamic namespace drift between abstract catalogues."""
+
+    src_dir = tmp_path / "src"
+    locales_dir = src_dir / "locales"
+    locales_dir.mkdir(parents=True)
+    (src_dir / "producer.py").write_text(
+        "\n".join(
+            [
+                "def render(slug):",
+                "    tr('shared.key')",
+                "    return tr(f'topic.{slug}')",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (locales_dir / "catalogue_a.yml").write_text(
+        "\n".join(
+            [
+                "shared:",
+                "  key: shared.key",
+                "topic:",
+                "  alpha: topic.alpha",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (locales_dir / "catalogue_b.yml").write_text(
+        "\n".join(
+            [
+                "shared:",
+                "  key: shared.key",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    manager = LocaleManager(src_dir, locales_dir)
+    before = {
+        locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
+        for locale_path in sorted(locales_dir.glob("*.yml"))
+    }
+    assert before == {
+        "catalogue_a.yml": {"shared.key", "topic.alpha"},
+        "catalogue_b.yml": {"shared.key"},
+    }
+
+    manager.scaffold(sync_locale_parity=True)
+
+    after = {
+        locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
+        for locale_path in sorted(locales_dir.glob("*.yml"))
+    }
+    assert after == {
+        "catalogue_a.yml": {"shared.key", "topic.alpha"},
+        "catalogue_b.yml": {"shared.key", "topic.alpha"},
+    }
+    catalogue_b = manager.load_locale(locales_dir / "catalogue_b.yml")
+    assert catalogue_b["topic"]["alpha"] == "topic.alpha"

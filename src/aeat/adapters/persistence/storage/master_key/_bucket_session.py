@@ -202,7 +202,7 @@ class BucketSession:
             target_url = f"sqlite:///{bucket_db_path.as_posix()}"
             dispose_engine(Settings(aeat_database_url=target_url))
         except Exception as exc:
-            _log.debug("bucket session engine eviction failed: %s", type(exc).__name__)
+            _log.warning("bucket session engine eviction failed during close: %s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]

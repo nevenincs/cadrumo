@@ -6,7 +6,7 @@ This test asserts the save / load cycle preserves every typed field of
 the record across the column-encryption boundary with byte-identical
 fidelity.
 
-Real :class:`EphemeralMasterKeyProvider`, real SQLite, no mocks. A
+Real :class:`EphemeralMasterKeyProvider` and real SQLite. A
 regression in the audit-class column-encryption hook, the
 ``Envelope[Justificante]`` schema, or the repository load path
 surfaces as a strict pydantic inequality.
@@ -88,10 +88,10 @@ def test_justificante_survives_encrypted_storage_roundtrip(
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_justificante()
-            repo = JustificanteRepository()
+            repo = JustificanteRepository(objects=objects)
             repo.save(original)
             loaded = repo.load(original.csv)
 

@@ -8,7 +8,9 @@ import pytest
 
 from . import (
     DeadlineEngine,
+    EntityType,
     IVARegime,
+    LegalEntityForm,
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -204,6 +206,33 @@ class TestCompute:
             "131",
             "131",
         ]
+
+    def test_legal_entity_profile_selects_modelo_202_instalment_windows(self) -> None:
+        schedule = _engine().compute(
+            _profile(
+                entity_type=EntityType.LEGAL_ENTITY,
+                legal_entity_form=LegalEntityForm.SL,
+            ),
+            2026,
+            today=date(2026, 1, 1),
+        )
+
+        instalments = [obligation for obligation in schedule.obligations if obligation.modelo == "202"]
+        assert [(item.period, item.opens_on, item.closes_on) for item in instalments] == [
+            ("2026-1P", date(2026, 4, 1), date(2026, 4, 20)),
+            ("2026-2P", date(2026, 10, 1), date(2026, 10, 20)),
+            ("2026-3P", date(2026, 12, 1), date(2026, 12, 21)),
+        ]
+        assert all("ley-27-2014:art-40" in item.boe_references for item in instalments)
+
+    def test_natural_person_profile_does_not_select_modelo_202_instalments(self) -> None:
+        schedule = _engine().compute(
+            _profile(entity_type=EntityType.NATURAL_PERSON),
+            2026,
+            today=date(2026, 1, 1),
+        )
+
+        assert all(obligation.modelo != "202" for obligation in schedule.obligations)
 
     def test_q1_2026_window_comes_from_registry_data(self) -> None:
         schedule = _engine().compute(_profile(), 2026, today=date(2026, 1, 1))

@@ -23,23 +23,38 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Generic, TypeVar
+from typing import ClassVar
 
 from pydantic import BaseModel
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
 from .._path_safety import safe_repository_id
-from ..errors import ClassificationError, EnvelopeVersionError
+from ..errors import ClassificationError, EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ..sql import SecureObjectRepository
+from ..sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
 from ._envelope import Envelope
 
 _log = get_logger(__name__)
 
-T = TypeVar("T", bound=BaseModel)
+
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return the runtime-created secure-object repository for ``bucket_id``."""
+
+    from ..runtime_repository import secure_object_repository_for_bucket
+
+    return secure_object_repository_for_bucket(bucket_id)
 
 
-class SecureBoundRepository(Generic[T]):
+def _secure_objects_for_active_bucket() -> SecureObjectRepository:
+    """Return the runtime-created repository for the selected active profile."""
+
+    from ..runtime_repository import secure_object_repository_for_active_bucket
+
+    return secure_object_repository_for_active_bucket()
+
+
+class SecureBoundRepository[T: BaseModel]:
     """Generic repository over encrypted SQL-backed envelopes for one payload type.
 
     Subclasses MUST set class attributes:
@@ -69,8 +84,19 @@ class SecureBoundRepository(Generic[T]):
     # assign the concrete class. Marked ClassVar here for clarity.
     payload_type: ClassVar[type[BaseModel]]
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+    def __init__(
+        self,
+        *,
+        objects: SecureObjectRepository | None = None,
+        bucket_id: str | None = None,
+    ) -> None:
+        self._objects = objects
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if bucket_id is not None and self._bucket_id == "":
+            raise StorageValidationError(
+                "bucket_id must not be blank",
+                translated_message="errors.storage.runtime.not_ready",
+            )
         cls = type(self)
         for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:
@@ -78,6 +104,16 @@ class SecureBoundRepository(Generic[T]):
                     f"{cls.__name__} must set class attribute {attr!r} "
                     f"before instantiating SecureBoundRepository",
                 )
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = (
+                _secure_objects_for_bucket(self._bucket_id)
+                if self._bucket_id is not None
+                else _secure_objects_for_active_bucket()
+            )
+        return self._objects
 
     # ------------------------------------------------------------------
     # Subclass extension point
@@ -123,7 +159,7 @@ class SecureBoundRepository(Generic[T]):
     def load(self, identifier: str) -> T | None:
         """Return the persisted payload or ``None`` if absent."""
         safe_repository_id(identifier, context="identifier")
-        record = self._objects.load(
+        record = self._repository.load(
             self.namespace,
             identifier,
             expected_class=self.sensitivity,
@@ -159,7 +195,7 @@ class SecureBoundRepository(Generic[T]):
             classification=self.sensitivity,
             payload=payload,
         )
-        self._objects.save(
+        self._repository.save(
             namespace=self.namespace,
             object_key=identifier,
             classification=self.sensitivity,
@@ -176,7 +212,7 @@ class SecureBoundRepository(Generic[T]):
     def delete(self, identifier: str) -> bool:
         """Remove the row for ``identifier``; return whether a row was deleted."""
         safe_repository_id(identifier, context="identifier")
-        deleted = self._objects.delete(self.namespace, identifier)
+        deleted = self._repository.delete(self.namespace, identifier)
         if deleted:
             _log.debug("secure-bound: deleted %s/%s", self.namespace, identifier)
         return deleted
@@ -188,11 +224,18 @@ class SecureBoundRepository(Generic[T]):
     def iter_ids(self) -> Iterator[str]:
         """Yield every persisted identifier in lexicographic order."""
         identifiers: list[str] = []
-        for record in self._objects.list_records(
+        for item in self._repository.iter_records_with_failures(
             self.namespace,
             expected_class=self.sensitivity,
             max_supported_version=self.schema_version,
         ):
+            if isinstance(item, SecureObjectUnreadable):
+                raise SecureObjectUnreadableError(
+                    self.namespace,
+                    item.row_id,
+                    cause=ValueError(item.reason),
+                )
+            record: SecureObjectRecord = item
             envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
             identifiers.append(self.extract_identifier(envelope.payload))  # type: ignore[arg-type]
         yield from sorted(identifiers)

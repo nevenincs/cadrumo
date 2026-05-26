@@ -37,10 +37,9 @@ class ExtractedCasilla(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    # max_length is 32 to allow named-field identifiers
-    # (e.g. ``total_operadores``) for modelos 036/037/232/369/720
-    # whose summary blocks have no numeric casilla IDs.
-    casilla_id: str = Field(min_length=1, max_length=32)
+    # Keep this aligned with registry-facing casilla identifiers, which
+    # include long semantic IDs in modelos such as 303 and 369.
+    casilla_id: str = Field(min_length=1, max_length=128)
     printed_value: Decimal | int | str | bool | date | None
     source_page: int = Field(ge=1)
     source_bbox: tuple[float, float, float, float] | None = None

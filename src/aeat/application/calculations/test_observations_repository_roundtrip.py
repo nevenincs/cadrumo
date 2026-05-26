@@ -21,6 +21,7 @@ import pytest
 from ...adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
 )
+from ...adapters.persistence.storage.errors import SecureObjectUnreadableError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import dispose_engine, get_engine
@@ -38,6 +39,12 @@ from ._observations_repository import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "calculation-observations"
+
+
+def _bucket_database_path(root: Path) -> Path:
+    return root / "buckets" / _BUCKET_ID / "db" / "aeat.db"
 
 
 def _populated_observation() -> RegistryModeloObservation:
@@ -74,18 +81,20 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     """A RegistryModeloObservation roundtrips through the encrypted observation repo."""
 
     provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_BUCKET_ID,
+    ) as settings, provider:
         engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_observation()
             # Non-default source_kind: the audit-sink path that pulls
             # from the AEAT justificante.
             captured_at = datetime.now(UTC).replace(microsecond=0)
-            repo = CalculationObservationRepository()
+            repo = CalculationObservationRepository(objects=objects)
             repo.save_observation(
                 original,
                 source_kind="aeat_sede_justificante",
@@ -120,13 +129,15 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
     """Modelo scans must enumerate through decrypted records, not raw HMAC keys."""
 
     provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-iter-modelo.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_BUCKET_ID,
+    ) as settings, provider:
         engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
-            repo = CalculationObservationRepository()
+            objects = SecureObjectRepository(engine=engine)
+            repo = CalculationObservationRepository(objects=objects)
             target = _populated_observation()
             other = target.model_copy(update={"modelo": "130", "period": "2T"})
             repo.save_observation(
@@ -144,6 +155,37 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
 
             assert len(loaded) == 1
             assert loaded[0].observation == target
+        finally:
+            dispose_engine(settings)
+
+
+def test_calculation_observation_iter_modelo_fails_closed_on_unreadable_rows(
+    tmp_path: Path,
+) -> None:
+    """Prior-filing scans must not silently skip rows sealed under another key."""
+
+    old_provider = EphemeralMasterKeyProvider()
+    new_provider = EphemeralMasterKeyProvider()
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings, old_provider:
+        engine = get_engine(settings)
+        Base.metadata.create_all(engine)
+        try:
+            objects = SecureObjectRepository(engine=engine)
+            CalculationObservationRepository(objects=objects).save_observation(
+                _populated_observation(),
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+            )
+        finally:
+            dispose_engine(settings)
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings, new_provider:
+        engine = get_engine(settings)
+        objects = SecureObjectRepository(engine=engine)
+        try:
+            with pytest.raises(SecureObjectUnreadableError):
+                tuple(CalculationObservationRepository(objects=objects).iter_modelo("303"))
         finally:
             dispose_engine(settings)
 
@@ -179,16 +221,18 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     observation_namespace = CalculationObservationRepository.namespace
 
     provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-anti-tautology.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_BUCKET_ID,
+    ) as settings, provider:
         engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_observation()
             captured_at = datetime.now(UTC).replace(microsecond=0)
-            repo = CalculationObservationRepository()
+            repo = CalculationObservationRepository(objects=objects)
             repo.save_observation(
                 original,
                 source_kind="aeat_sede_justificante",
@@ -237,13 +281,15 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
     """An IVA wallet reconciliation decision round-trips as AUDIT state."""
 
     provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "iva-wallet-decision-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_BUCKET_ID,
+    ) as settings, provider:
         engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
-            repo = IvaWalletDecisionRepository()
+            objects = SecureObjectRepository(engine=engine)
+            repo = IvaWalletDecisionRepository(objects=objects)
             decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
             decision = IvaCompensationReconciliationDecision(
                 taxpayer_nif="12345678Z",
@@ -273,7 +319,7 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
             assert iva_wallet_decision_key("12345678Z", 2026, "2T").startswith("iva-wallet-decision:")
             assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
-            database_bytes = db_path.read_bytes()
+            database_bytes = _bucket_database_path(tmp_path).read_bytes()
             assert b"12345678Z" not in database_bytes
             assert b"12345678Z:2026:2T" not in database_bytes
         finally:
@@ -286,13 +332,15 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
     """Later decisions update latest lookup without deleting prior audit events."""
 
     provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "iva-wallet-decision-history.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_BUCKET_ID,
+    ) as settings, provider:
         engine = get_engine(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
-            repo = IvaWalletDecisionRepository()
+            objects = SecureObjectRepository(engine=engine)
+            repo = IvaWalletDecisionRepository(objects=objects)
             first_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
             second_at = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
             first = IvaCompensationReconciliationDecision(
@@ -328,7 +376,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
 
             assert repo.load_decision("12345678Z", 2026, "2T") == second
             assert repo.load_decision_history("12345678Z", 2026, "2T") == (first, second)
-            database_bytes = db_path.read_bytes()
+            database_bytes = _bucket_database_path(tmp_path).read_bytes()
             assert b"12345678Z" not in database_bytes
             assert b"12345678Z:2026:2T" not in database_bytes
         finally:

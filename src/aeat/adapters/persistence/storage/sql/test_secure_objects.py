@@ -8,20 +8,66 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
-from .....core.config import Settings
-from .. import EphemeralMasterKeyProvider
-from ..errors import EnvelopeVersionError
+from .....core.config import SecretStoreBackend, Settings, override_settings
+from .....domain.user_profile import UserProfileFact, UserProfileRecord
+from .. import (
+    Envelope,
+    EphemeralMasterKeyProvider,
+    UnsecuredMasterKeyProvider,
+    activate_master_key_provider,
+)
+from ..crypto._encrypted_columns import EncryptedBytes
+from ..errors import EnvelopeVersionError, StorageValidationError, UnsecuredModeRefusedError
+from ..master_key._active_session import NoActiveBucketSessionError, activate_session
+from ..master_key._bucket_session import BucketSession
 from ._orm import Base
 from .engine import create_engine_from_settings
 from .secure_objects import (
+    SecureObjectNamespaceIntegrity,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectUnreadable,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_USER_PROFILE_VALUE_NAMESPACE = "aeat.application.user_profile.value"
+
+
+def _profile_payload(*, profile_id: str, tax_id: str) -> bytes:
+    envelope = Envelope[UserProfileRecord](
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        classification=SensitivityClass.IDENTITY,
+        payload=UserProfileRecord(
+            profile_id=profile_id,
+            display_name=profile_id,
+            facts=(UserProfileFact(path="identity.tax_id", value=tax_id),),
+        ),
+    )
+    return envelope.model_dump_json().encode("utf-8")
+
+
+def test_secure_object_unreadable_is_public_sql_surface() -> None:
+    """Adapter callers import unreadable-row diagnostics from the SQL package surface."""
+
+    from . import SecureObjectUnreadable as PublicSecureObjectUnreadable
+
+    assert PublicSecureObjectUnreadable is SecureObjectUnreadable
+
+
+def test_secure_object_namespace_integrity_rejects_invalid_diagnostic_shape() -> None:
+    """The namespace integrity diagnostic is strict at its construction boundary."""
+
+    with pytest.raises(ValidationError, match="namespace"):
+        SecureObjectNamespaceIntegrity(namespace="", readable=0, unreadable=0)
+    with pytest.raises(ValidationError, match="readable"):
+        SecureObjectNamespaceIntegrity(namespace="aeat.test", readable=-1, unreadable=0)
+    with pytest.raises(ValidationError, match="unreadable"):
+        SecureObjectNamespaceIntegrity(namespace="aeat.test", readable=0, unreadable=-1)
 
 
 def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
@@ -67,6 +113,281 @@ def test_secure_object_payload_is_encrypted_in_database(tmp_path: Path) -> None:
             engine.dispose()
 
 
+def test_unsecured_backend_refuses_real_profile_write(tmp_path: Path) -> None:
+    provider = UnsecuredMasterKeyProvider()
+    with override_settings(aeat_local_storage_root=tmp_path / "state"), provider:
+        db_path = tmp_path / "unsecured-write.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(UnsecuredModeRefusedError) as excinfo:
+                repo.save(
+                    namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                    object_key="user-profile:operator",
+                    classification=SensitivityClass.IDENTITY,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=_profile_payload(profile_id="operator", tax_id="12345678Z"),
+                )
+        finally:
+            engine.dispose()
+
+    assert "12345678Z" not in str(excinfo.value)
+
+
+def test_unsecured_backend_refuses_real_cif_profile_write(tmp_path: Path) -> None:
+    provider = UnsecuredMasterKeyProvider()
+    with override_settings(aeat_local_storage_root=tmp_path / "state"), provider:
+        db_path = tmp_path / "unsecured-cif-write.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(UnsecuredModeRefusedError) as excinfo:
+                repo.save(
+                    namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                    object_key="user-profile:company",
+                    classification=SensitivityClass.IDENTITY,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=_profile_payload(profile_id="company", tax_id="B66012345"),
+                )
+        finally:
+            engine.dispose()
+
+    assert "B66012345" not in str(excinfo.value)
+
+
+def test_unsecured_backend_refuses_malformed_profile_payload(tmp_path: Path) -> None:
+    provider = UnsecuredMasterKeyProvider()
+    with override_settings(aeat_local_storage_root=tmp_path / "state"), provider:
+        db_path = tmp_path / "unsecured-malformed.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(UnsecuredModeRefusedError):
+                repo.save(
+                    namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                    object_key="user-profile:malformed",
+                    classification=SensitivityClass.IDENTITY,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b'{"payload": {"facts": []}}',
+                )
+        finally:
+            engine.dispose()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        b"not-json",
+        b'{"payload": {"profile": {"tax_id": "12345678Z"}}}',
+    ),
+)
+def test_unsecured_backend_refuses_unprovable_profile_payload_shapes(tmp_path: Path, payload: bytes) -> None:
+    provider = UnsecuredMasterKeyProvider()
+    with override_settings(aeat_local_storage_root=tmp_path / "state"), provider:
+        db_path = tmp_path / "unsecured-unprovable.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(UnsecuredModeRefusedError) as excinfo:
+                repo.save(
+                    namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                    object_key="user-profile:unprovable",
+                    classification=SensitivityClass.IDENTITY,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=payload,
+                )
+        finally:
+            engine.dispose()
+
+    assert "12345678Z" not in str(excinfo.value)
+
+
+def test_unsecured_backend_allows_synthetic_profile_write(tmp_path: Path) -> None:
+    provider = UnsecuredMasterKeyProvider()
+    with override_settings(aeat_local_storage_root=tmp_path / "state"), provider:
+        db_path = tmp_path / "unsecured-synthetic.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                object_key="user-profile:operator",
+                classification=SensitivityClass.IDENTITY,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=_profile_payload(profile_id="operator", tax_id="00000000T"),
+            )
+            loaded = repo.load(
+                _USER_PROFILE_VALUE_NAMESPACE,
+                "user-profile:operator",
+                expected_class=SensitivityClass.IDENTITY,
+                max_supported_version=1,
+            )
+        finally:
+            engine.dispose()
+
+    assert loaded is not None
+
+
+def test_secure_object_repository_requires_active_session(tmp_path: Path) -> None:
+    db_path = tmp_path / "no-session.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        repo = SecureObjectRepository(engine=engine)
+        with pytest.raises(NoActiveBucketSessionError):
+            repo.exists("aeat.test", "key")
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_save_many_empty_requires_active_session(tmp_path: Path) -> None:
+    db_path = tmp_path / "empty-save-many.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        repo = SecureObjectRepository(engine=engine)
+        with pytest.raises(NoActiveBucketSessionError):
+            repo.save_many(())
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_repository_refuses_route_mismatched_active_bucket(tmp_path: Path) -> None:
+    root = tmp_path / "state"
+    bucket_a = root / "buckets" / "bucket-a" / "db" / "aeat.db"
+    bucket_b = root / "buckets" / "bucket-b" / "db" / "aeat.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{bucket_b.as_posix()}"))
+    Base.metadata.create_all(engine)
+    session = BucketSession.open(
+        bucket_id="bucket-a",
+        kek=b"a" * 32,
+        dek=b"b" * 32,
+        idle_minutes=60,
+        opened_at=datetime.now(UTC),
+    )
+    try:
+        with override_settings(aeat_local_storage_root=root), activate_session(session):
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(StorageValidationError, match="active bucket session"):
+                repo.save(
+                    namespace="aeat.test.route",
+                    object_key="key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"payload",
+                )
+    finally:
+        session.close()
+        engine.dispose()
+    assert not bucket_a.exists()
+
+
+def test_secure_object_repository_refuses_root_fallback_write_under_active_bucket(tmp_path: Path) -> None:
+    root = tmp_path / "state"
+    db_path = root / "aeat.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    session = BucketSession.open(
+        bucket_id="bucket-a",
+        kek=b"a" * 32,
+        dek=b"b" * 32,
+        idle_minutes=60,
+        opened_at=datetime.now(UTC),
+    )
+    try:
+        with override_settings(aeat_local_storage_root=root), activate_session(session):
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(StorageValidationError, match="active bucket database"):
+                repo.save(
+                    namespace="aeat.test.route",
+                    object_key="key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"payload",
+                )
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def test_secure_object_quarantine_refuses_route_mismatched_active_bucket(tmp_path: Path) -> None:
+    root = tmp_path / "state"
+    db_path = root / "buckets" / "bucket-b" / "db" / "aeat.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    session = BucketSession.open(
+        bucket_id="bucket-a",
+        kek=b"a" * 32,
+        dek=b"b" * 32,
+        idle_minutes=60,
+        opened_at=datetime.now(UTC),
+    )
+    try:
+        with override_settings(aeat_local_storage_root=root), activate_session(session):
+            repo = SecureObjectRepository(engine=engine)
+            with pytest.raises(StorageValidationError, match="active bucket session"):
+                repo.quarantine_unreadable_rows()
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def test_unsecured_activation_refuses_bucket_with_real_profile(tmp_path: Path) -> None:
+    root = tmp_path / "state"
+    bucket_id = "operator"
+    db_path = root / "buckets" / bucket_id / "db" / "aeat.db"
+    with override_settings(
+        aeat_local_storage_root=root,
+        aeat_secret_store_backend=SecretStoreBackend.UNSECURED,
+        aeat_allow_unencrypted="1",
+    ):
+        provider = UnsecuredMasterKeyProvider()
+        with activate_master_key_provider(provider, fallback_bucket_id=bucket_id):
+            engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+            Base.metadata.create_all(engine)
+            try:
+                repo = SecureObjectRepository(engine=engine)
+                repo.save(
+                    namespace=_USER_PROFILE_VALUE_NAMESPACE,
+                    object_key="user-profile:operator",
+                    classification=SensitivityClass.IDENTITY,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=_profile_payload(profile_id="operator", tax_id="00000000T"),
+                )
+                encrypted_real_payload = EncryptedBytes().process_bind_param(
+                    _profile_payload(profile_id="operator", tax_id="12345678Z"),
+                    engine.dialect,
+                )
+                with engine.begin() as connection:
+                    connection.exec_driver_sql(
+                        "UPDATE secure_objects SET payload = ? WHERE namespace = ?",
+                        (encrypted_real_payload, _USER_PROFILE_VALUE_NAMESPACE),
+                    )
+            finally:
+                engine.dispose()
+
+        with (
+            pytest.raises(UnsecuredModeRefusedError) as excinfo,
+            activate_master_key_provider(UnsecuredMasterKeyProvider(), fallback_bucket_id=bucket_id),
+        ):
+            pass
+
+    assert "12345678Z" not in str(excinfo.value)
+
+
 def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: Path) -> None:
     """A decrypted record roundtrip must preserve every boundary field."""
 
@@ -94,6 +415,9 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
                     "SELECT object_key FROM secure_objects WHERE namespace = ?",
                     (namespace,),
                 ).fetchone()
+            assert isinstance(stored_key, bytes)
+            assert len(stored_key) == 32
+            assert natural_key.encode("utf-8") not in stored_key
 
             loaded = repo.load(
                 namespace,
@@ -104,7 +428,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
 
             assert loaded == SecureObjectRecord(
                 namespace=namespace,
-                object_key=stored_key,
+                object_key=natural_key,
                 classification=SensitivityClass.FINANCIAL,
                 schema_version=3,
                 written_at=written_at,
@@ -134,12 +458,15 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
                 written_at=datetime(2026, 5, 21, 10, 35, 0, tzinfo=UTC),
                 payload=b"mutation-sentinel-payload",
             )
-            assert repo.load(
-                namespace,
-                natural_key,
-                expected_class=SensitivityClass.FINANCIAL,
-                max_supported_version=3,
-            ) is not None
+            assert (
+                repo.load(
+                    namespace,
+                    natural_key,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=3,
+                )
+                is not None
+            )
             with sqlite3.connect(db_path) as con:
                 con.execute(
                     "UPDATE secure_objects SET schema_version = ? WHERE namespace = ?",

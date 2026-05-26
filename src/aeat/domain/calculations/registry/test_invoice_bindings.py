@@ -43,7 +43,7 @@ def _binding(binding_id: str) -> DataBindingDefinition:
 def _other_source_binding() -> DataBindingDefinition:
     modelo = resources().modelos.get("130")
     revision = modelo.revisions["2019-y-siguientes"]
-    return next(item for item in revision.bindings if item.source != "invoice")
+    return next(item for item in revision.bindings if item.id == "modelo-130-resultados-negativos-anteriores")
 
 
 def _revision(*bindings: DataBindingDefinition) -> ModeloRevision:

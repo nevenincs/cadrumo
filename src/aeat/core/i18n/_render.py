@@ -95,7 +95,17 @@ _OUTPUT_LANGUAGE_KEY_ENV_VARS: tuple[str, ...] = (
 def _output_language_cache_key() -> tuple[object, ...]:
     override = _settings_override.get()
     if override is not None:
-        return ("override", id(override), _OUTPUT_LANGUAGE_CACHE_VERSION)
+        return (
+            "override",
+            override.aeat_output_language,
+            "aeat_output_language" in override.model_fields_set,
+            override.aeat_active_profile,
+            str(override.aeat_local_storage_root),
+            str(override.aeat_database_url),
+            override.aeat_secret_store_backend,
+            override.aeat_allow_unencrypted,
+            _OUTPUT_LANGUAGE_CACHE_VERSION,
+        )
     env_file = PROJECT_ROOT / "env" / ".env"
     try:
         env_mtime_ns = env_file.stat().st_mtime_ns

@@ -21,7 +21,7 @@ from pydantic import ValidationError
 from ....core._toml import freeze_toml
 from ....core.classification import SensitivityClass
 from ....core.resources import bundled_path
-from . import RegistryValidationError
+from . import RegistryValidationError, RegistryValidator
 from ._authority import ValidatedRegistryAuthority
 from ._loader import load_registry_tree
 from ._schema import (
@@ -54,6 +54,7 @@ from ._schema import (
     WorkbookParityReference,
 )
 from ._validate_references import _check_all_id_references
+from ._validate_revision_rules import validate_informative_class_invariant
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -951,8 +952,8 @@ def test_single_segment_bare_number_reference_resolves() -> None:
     expression reads that casilla and whose target is a computed casilla
     must validate with no unknown-casilla failure.
     """
+    from . import RegistryValidator
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
 
     input_casilla = _segmented_casilla("01", "01", None)
     computed_casilla = _segmented_casilla("02", "02", None).model_copy(
@@ -986,7 +987,6 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     segment-qualified id.
     """
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
 
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
@@ -1027,7 +1027,6 @@ def test_bare_number_reference_resolves_when_id_is_segment_qualified() -> None:
     context without the formula having to repeat the segment qualifier.
     """
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
 
     sole_occurrence = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     target_casilla = _segmented_casilla("DP200014:00999", "00999", "DP200014").model_copy(
@@ -1064,7 +1063,6 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     failure.
     """
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
 
     liquidacion = _segmented_casilla("DP200014:00562", "00562", "DP200014")
     ecpn = _segmented_casilla("DP200032:00562", "00562", "DP200032")
@@ -1380,8 +1378,6 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     with calculation_class discrimination.
     """
     from ._schema import FormulaDefinition, FormulaExpression
-    from ._validate import RegistryValidator
-
     formula = FormulaDefinition(
         id="test.formula",
         target="01",
@@ -1396,5 +1392,5 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
     )
     filing_modelo = _minimal_modelo(revision)  # default calculation_class == "filing"
     # The informative invariant must return no failures for a filing modelo.
-    failures = RegistryValidator._validate_informative_class_invariant(filing_modelo)
+    failures = validate_informative_class_invariant(filing_modelo)
     assert failures == [], f"filing modelo must not be rejected by informative invariant; got: {failures}"

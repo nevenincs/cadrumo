@@ -14,6 +14,7 @@ from ._site_health import (
     SiteHealthEvidence,
     SiteHealthState,
     SiteHealthStatus,
+    validate_site_health_url,
 )
 from ._site_health_parsers import (
     evaluate_response,
@@ -48,4 +49,5 @@ __all__ = [
     "parse_waf_challenge",
     "run_health_check",
     "shared_playwright_runtime",
+    "validate_site_health_url",
 ]

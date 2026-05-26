@@ -22,7 +22,7 @@ from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_eng
 from aeat.application.calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import Settings
+from aeat.core.config import override_settings
 from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 from aeat.domain.filing import ModeloCasillaProvenance
@@ -67,14 +67,14 @@ def _profile() -> TaxpayerProfile:
 
 
 @pytest.fixture
-def isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'export.db').as_posix()}")
-    dispose_engine()
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="operator") as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 def _seed_profile(*, tax_id: str | None = None) -> str:
@@ -94,7 +94,9 @@ def _seed_revision(
     modelo: str = "130",
     filing_year: int = 2026,
     period: str = "Q1",
+    repository_bucket_id: str | None = None,
 ) -> tuple[str, str]:
+    storage_bucket_id = repository_bucket_id or bucket_id
     revision_id_suffix = state.value.lower()[:3]
     base = revision_id_suffix + "0" * (63 - len(revision_id_suffix))
     revision_id = "r" + base
@@ -117,9 +119,8 @@ def _seed_revision(
         created_at=now,
         updated_at=now,
     )
-    WorkUnitCatalogueRepository().save(
-        upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit),
-    )
+    work_repo = WorkUnitCatalogueRepository(bucket_id=storage_bucket_id)
+    work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         inputs_snapshot={},
@@ -135,7 +136,7 @@ def _seed_revision(
         verified_at=now if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
     )
-    cr_repo = CalculationRevisionCatalogueRepository()
+    cr_repo = CalculationRevisionCatalogueRepository(bucket_id=storage_bucket_id)
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return work_unit_id, calculation_revision_id
 
@@ -160,10 +161,9 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     )
 
 
-def _wallet_decision_repository_at(database_path: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
-    settings = Settings(aeat_database_url=f"sqlite:///{database_path.as_posix()}")
-    objects = SecureObjectRepository(engine=get_engine(settings))
-    return IvaWalletDecisionRepository(objects=objects), settings
+def _wallet_decision_repository() -> IvaWalletDecisionRepository:
+    objects = SecureObjectRepository(engine=get_engine())
+    return IvaWalletDecisionRepository(objects=objects)
 
 
 def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
@@ -201,10 +201,7 @@ def test_export_result_json_surfaces_casilla_provenance(tmp_path: Path) -> None:
     ]
 
 
-def test_export_refuses_when_no_active_bucket(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
+def test_export_refuses_when_no_active_bucket(tmp_path: Path) -> None:
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
@@ -246,9 +243,8 @@ def test_export_refuses_borrador_revision(
     """A revision still in BORRADOR state cannot be exported; only
     verificado-completo or filed revisions are legal export sources.
 
-    Locks the contract from app-modelo-shape ADR §export: the export
-    artefact must reflect a revision the operator has already
-    verified, not a work-in-progress."""
+    The export artefact must reflect a revision the operator has
+    already verified, not a work-in-progress."""
 
     bucket_id = _seed_profile()
     _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
@@ -273,11 +269,12 @@ def test_export_refuses_cross_bucket_revision(
     event into a foreign bucket would let any caller pollute another
     operator's history."""
 
-    _seed_profile()
+    active_bucket_id = _seed_profile()
     foreign_bucket_id = "other-bucket-7" * 4
     _, calc_rev_id = _seed_revision(
         bucket_id=foreign_bucket_id,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        repository_bucket_id=active_bucket_id,
     )
 
     with pytest.raises(ModeloExportCrossBucketRefusedError, match=r"active profile bucket"):
@@ -304,7 +301,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
         filing_year=2026,
         period="2T",
     )
-    IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
+    _wallet_decision_repository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
 
     with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
         export_modelo_revision(
@@ -331,23 +328,19 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
         filing_year=2026,
         period="2T",
     )
-    decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
+    decision_repo = _wallet_decision_repository()
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
 
-    try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
-            export_modelo_revision(
-                ModeloExportCommand(
-                    calculation_revision_id=calc_rev_id,
-                    output_path=tmp_path / "out.txt",
-                    actor="operator",
-                ),
-                workflow_profile=_profile(),
-                iva_compensation_decision_repository=decision_repo,
-            )
-    finally:
-        dispose_engine(decision_settings)
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=tmp_path / "out.txt",
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+            iva_compensation_decision_repository=decision_repo,
+        )
     assert not (tmp_path / "out.txt").exists()
 
 
@@ -364,26 +357,22 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
         filing_year=2026,
         period="2T",
     )
-    decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
+    decision_repo = _wallet_decision_repository()
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
 
-    try:
-        report = verify_modelo_revision(
-            calc_rev_id,
-            actor="operator",
-            workflow_profile=_profile(),
-            work_unit_repository=WorkUnitCatalogueRepository(),
-            calculation_repository=CalculationRevisionCatalogueRepository(),
-            verification_repository=VerificationReportCatalogueRepository(),
-            iva_compensation_decision_repository=decision_repo,
-        )
-    finally:
-        dispose_engine(decision_settings)
+    report = verify_modelo_revision(
+        calc_rev_id,
+        actor="operator",
+        workflow_profile=_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+        calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id),
+        verification_repository=VerificationReportCatalogueRepository(bucket_id=bucket_id),
+        iva_compensation_decision_repository=decision_repo,
+    )
 
     assert report.granted_verificado_completo is False
     assert any("wallet_higher" in finding.message for finding in report.findings)
-    revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
+    revision = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load().get(calc_rev_id)
     assert revision is not None
     assert revision.state is CalculationRevisionState.BORRADOR
 
@@ -401,33 +390,29 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
         filing_year=2026,
         period="2T",
     )
-    decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
+    decision_repo = _wallet_decision_repository()
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
-    assert IvaWalletDecisionRepository().load_decision(taxpayer_nif, 2026, "2T") is None
 
-    try:
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
-            file_modelo_revision(
-                calc_rev_id,
-                actor="operator",
-                workflow_profile=_profile(),
-                work_unit_repository=WorkUnitCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                filing_repository=ModeloRecordCatalogueRepository(),
-                iva_compensation_decision_repository=decision_repo,
-            )
-    finally:
-        dispose_engine(decision_settings)
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
+        file_modelo_revision(
+            calc_rev_id,
+            actor="operator",
+            workflow_profile=_profile(),
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=bucket_id),
+            calculation_repository=CalculationRevisionCatalogueRepository(bucket_id=bucket_id),
+            filing_repository=ModeloRecordCatalogueRepository(bucket_id=bucket_id),
+            iva_compensation_decision_repository=decision_repo,
+        )
 
-    revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
+    revision = CalculationRevisionCatalogueRepository(bucket_id=bucket_id).load().get(calc_rev_id)
     assert revision is not None
     assert revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
     assert (
-        ModeloRecordCatalogueRepository()
+        ModeloRecordCatalogueRepository(bucket_id=bucket_id)
         .load()
         .current_for(bucket_id=bucket_id, modelo="303", filing_year=2026, period="2T")
         is None
     )
-    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    work_unit = WorkUnitCatalogueRepository(bucket_id=bucket_id).load().get(work_unit_id)
     assert work_unit is not None
     assert work_unit.filed_calculation_revision_id is None

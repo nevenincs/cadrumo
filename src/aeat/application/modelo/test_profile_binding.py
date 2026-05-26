@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.application.modelo import calculate_modelo_revision, create_work_unit
@@ -51,28 +52,37 @@ _CCAA_BINDING = "renta-2025-profile-tax-residence-ccaa"
 _ESTIMACION_BINDING = "renta-2025-modelo-100-estimacion-directa-es-normal"
 _SYNTHETIC_DECIMAL_PROFILE_BINDING = "test-profile-business-ratio-decimal-binding"
 _CLOCK = datetime(2026, 5, 21, 10, 0, 0, tzinfo=UTC)
+_KEK = b"m" * 32
+_DEK = b"p" * 32
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    with provider, override_settings(
-        aeat_database_url=f"sqlite:///{(tmp_path / 'profile-binding.db').as_posix()}",
-        aeat_active_profile=_BUCKET_ID,
-    ) as settings:
-        engine = get_engine(settings)
-        SecureObjectRepository(engine=engine)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+def _secure_backend(tmp_path: Path) -> Iterator:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with activate_session(_session()):
+            try:
+                yield settings
+            finally:
+                dispose_engine(settings)
 
 
-def _calculation_repositories() -> tuple:
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _calculation_repositories(settings) -> tuple:
+    objects = SecureObjectRepository(engine=get_engine(settings))
     return (
-        WorkUnitCatalogueRepository(),
-        CalculationRevisionCatalogueRepository(),
-        BucketEventHistoryRepository(),
+        WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID),
+        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID),
+        BucketEventHistoryRepository(objects=objects),
     )
 
 
@@ -253,10 +263,10 @@ def test_calculate_modelo_revision_resolves_ccaa_from_profile_without_caller_inp
     and producing autonomic-chain casillas proves the profile fact
     reached the enum channel through ``calculate_modelo_revision``.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as settings:
         _store_profile(_profile_with_ccaa("madrid"))
         snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
+        work_repo, calc_repo, event_repo = _calculation_repositories(settings)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",
@@ -293,10 +303,10 @@ def test_calculate_modelo_revision_rejects_ccaa_supplied_through_decimal_channel
     mismatch; the boundary rejects it with a clear message instead of
     letting the engine raise an opaque ``binding has no supplied value``.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as settings:
         _store_profile(_profile_with_ccaa("madrid"))
         snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
+        work_repo, calc_repo, event_repo = _calculation_repositories(settings)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",
@@ -336,10 +346,10 @@ def test_estimacion_directa_binding_stays_in_the_decimal_channel(
     must not misroute it to the enum channel on the strength of its
     ``typed_enum`` tag alone.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as settings:
         _store_profile(_profile_with_ccaa("madrid"))
         snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
+        work_repo, calc_repo, event_repo = _calculation_repositories(settings)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",
@@ -373,10 +383,10 @@ def test_estimacion_directa_binding_rejected_through_enum_channel(
     channel, but the formula consumes it as a Decimal operand. The
     boundary rejects the mismatch with a clear message.
     """
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as settings:
         _store_profile(_profile_with_ccaa("madrid"))
         snapshot = _modelo_100_snapshot()
-        work_repo, calc_repo, event_repo = _calculation_repositories()
+        work_repo, calc_repo, event_repo = _calculation_repositories(settings)
         work_unit = create_work_unit(
             bucket_id=_BUCKET_ID,
             modelo="100",

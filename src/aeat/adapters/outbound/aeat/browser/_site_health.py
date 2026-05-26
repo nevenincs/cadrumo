@@ -125,3 +125,9 @@ class SiteHealthStatus(_SiteHealthRecord):
 
 _URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 """Module-level adapter used by parser call sites to validate URLs."""
+
+
+def validate_site_health_url(url: str) -> AnyHttpUrl:
+    """Validate a URL for site-health evidence records."""
+
+    return _URL_ADAPTER.validate_python(url)

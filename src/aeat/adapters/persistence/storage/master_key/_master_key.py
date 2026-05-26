@@ -976,11 +976,18 @@ class EphemeralMasterKeyProvider:
             )
         from datetime import UTC, datetime
 
+        from .....core._bucket_pointer_io import resolve_active_bucket_id
+        from ..bucket._errors import NoActiveBucketError
         from ._active_session import activate_session
         from ._bucket_session import BucketSession
 
+        bucket_id = resolve_active_bucket_id()
+        if not bucket_id:
+            raise NoActiveBucketError(
+                "no active profile resolves; activate a profile bucket before opening an ephemeral test session.",
+            )
         session = BucketSession.open(
-            bucket_id="ephemeral",
+            bucket_id=bucket_id,
             kek=self._key,
             dek=self._key,
             idle_minutes=60,

@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, StorageValidationError
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.bucket._layout import provision_bucket_directory
+from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
+from ...adapters.persistence.storage.bucket._manifest_io import write_manifest
+from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
+from ...core.config import override_settings
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
@@ -30,19 +34,38 @@ from . import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+_SECURE_OBJECTS_BUCKET_ID = "repository-test-bucket"
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+
+@contextmanager
+def _active_profile_storage(root: Path, bucket_id: str) -> Iterator[None]:
+    _write_registered_bucket_manifest(root, bucket_id)
     provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with (
+        override_settings(
+            aeat_local_storage_root=root,
+            aeat_active_profile=bucket_id,
+        ),
+        provider,
+    ):
+        yield
+
+
+def _write_registered_bucket_manifest(root: Path, bucket_id: str) -> None:
+    paths = provision_bucket_directory(root, bucket_id)
+    write_manifest(
+        paths,
+        BucketManifest(
+            bucket_id=bucket_id,
+            label=f"Profile {bucket_id}",
+            created_at=datetime.now(UTC),
+            last_unlocked_at=None,
+            kdf_params=KdfParams.default().to_manifest_params(),
+            recovery_enrolled=False,
+            schema_version=1,
+            status=BucketLifecycleStatus.ACTIVE,
+        ),
+    )
 
 
 def test_object_key_helpers_reject_blank_inputs() -> None:
@@ -67,20 +90,21 @@ def test_object_key_helpers_compose_canonical_keys() -> None:
     )
 
 
-def test_lifecycle_round_trip_carries_record(secure_objects: SecureObjectRepository) -> None:
+def test_lifecycle_round_trip_carries_record(tmp_path: Path) -> None:
     profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
     profile = UserProfileRecord(
         profile_id=profile_id,
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
-    repository = UserProfileLifecycleRepository(bucket_id=profile_id, objects=secure_objects)
+    with _active_profile_storage(tmp_path, profile_id):
+        repository = UserProfileLifecycleRepository(bucket_id=profile_id)
 
-    assert repository.exists(profile_id) is False
-    repository.save(profile)
-    assert repository.exists(profile_id) is True
+        assert repository.exists(profile_id) is False
+        repository.save(profile)
+        assert repository.exists(profile_id) is True
 
-    reloaded = repository.load(profile_id)
+        reloaded = repository.load(profile_id)
     assert reloaded.profile_id == profile_id
     assert reloaded.facts == profile.facts
 
@@ -93,33 +117,47 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
         display_name="Operator",
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
+    provider = EphemeralMasterKeyProvider()
+    _write_registered_bucket_manifest(tmp_path, profile_a)
     with (
-        EphemeralMasterKeyProvider(),
         override_settings(
             aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
+            aeat_active_profile=profile_a,
         ),
+        provider,
     ):
         bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
-        bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
-
         bucket_a.save(profile)
 
         assert bucket_a.exists(profile_a) is True
+
+    _write_registered_bucket_manifest(tmp_path, profile_b)
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile=profile_b,
+        ),
+        provider,
+    ):
+        bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
         assert bucket_b.exists(profile_a) is False
-        assert (tmp_path / "buckets" / profile_a / "db" / "aeat.db").is_file()
+
+    assert (tmp_path / "buckets" / profile_a / "db" / "aeat.db").is_file()
+    assert (tmp_path / "buckets" / profile_b / "db" / "aeat.db").is_file()
 
 
 def test_default_lifecycle_repository_refuses_explicit_database_url(tmp_path: Path) -> None:
     profile_id = "a4f1c2e0-1111-4222-8333-444455556666"
 
+    provider = EphemeralMasterKeyProvider()
+    _write_registered_bucket_manifest(tmp_path, profile_id)
     with (
-        EphemeralMasterKeyProvider(),
         override_settings(
             aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
             aeat_local_storage_root=tmp_path,
-            aeat_active_profile=None,
+            aeat_active_profile=profile_id,
         ),
+        provider,
         pytest.raises(StorageValidationError, match="not attached to an active profile bucket"),
     ):
         UserProfileLifecycleRepository(bucket_id=profile_id)
@@ -138,13 +176,14 @@ def test_default_lifecycle_repository_requires_ready_runtime(tmp_path: Path) -> 
         UserProfileLifecycleRepository(bucket_id=profile_id)
 
 
-def test_lifecycle_load_missing_raises_profile_not_found(secure_objects: SecureObjectRepository) -> None:
-    repo = UserProfileLifecycleRepository(bucket_id="bucket-a", objects=secure_objects)
-    with pytest.raises(ProfileNotFoundError, match="operator"):
-        repo.load("operator")
+def test_lifecycle_load_missing_raises_profile_not_found(tmp_path: Path) -> None:
+    with _active_profile_storage(tmp_path, _SECURE_OBJECTS_BUCKET_ID):
+        repo = UserProfileLifecycleRepository(bucket_id=_SECURE_OBJECTS_BUCKET_ID)
+        with pytest.raises(ProfileNotFoundError, match="operator"):
+            repo.load("operator")
 
 
-def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObjectRepository) -> None:
+def test_snapshot_round_trip_carries_canonical_hash(tmp_path: Path) -> None:
     profile = UserProfileRecord(
         profile_id="operator",
         display_name="Operator",
@@ -152,19 +191,21 @@ def test_snapshot_round_trip_carries_canonical_hash(secure_objects: SecureObject
     )
     snapshot_id = new_profile_snapshot_id("operator")
     snapshot = UserProfileSnapshot.from_profile(profile, snapshot_id=snapshot_id)
-    repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
+    with _active_profile_storage(tmp_path, _SECURE_OBJECTS_BUCKET_ID):
+        repo = UserProfileSnapshotRepository(bucket_id=_SECURE_OBJECTS_BUCKET_ID)
 
-    repo.save(snapshot)
-    assert repo.exists(snapshot_id)
-    reloaded = repo.load(snapshot_id)
+        repo.save(snapshot)
+        assert repo.exists(snapshot_id)
+        reloaded = repo.load(snapshot_id)
     assert reloaded.canonical_hash == snapshot.canonical_hash
     assert reloaded.facts == snapshot.facts
 
 
-def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureObjectRepository) -> None:
-    repo = UserProfileSnapshotRepository(bucket_id="bucket-a", objects=secure_objects)
-    with pytest.raises(ProfileSnapshotNotFoundError, match="missing"):
-        repo.load("missing")
+def test_snapshot_load_missing_raises_snapshot_not_found(tmp_path: Path) -> None:
+    with _active_profile_storage(tmp_path, _SECURE_OBJECTS_BUCKET_ID):
+        repo = UserProfileSnapshotRepository(bucket_id=_SECURE_OBJECTS_BUCKET_ID)
+        with pytest.raises(ProfileSnapshotNotFoundError, match="missing"):
+            repo.load("missing")
 
 
 def test_lifecycle_namespace_is_stable() -> None:

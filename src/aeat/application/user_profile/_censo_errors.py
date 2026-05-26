@@ -21,7 +21,7 @@ class CensoNotAvailableError(CensoSyncError):
     declared), or G313 authentication failed at the AEAT side (e.g.
     the certificate is valid but not registered against the operator's
     NIF in AEAT's census). The CLI surfaces this with a recovery
-    hint pointing at ``aeat config profile init`` or
+    hint pointing at ``aeat config profile create NAME`` or
     ``aeat config auth configure``.
     """
 

@@ -16,13 +16,9 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.core.config import load_settings, override_settings
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     CensoRatioMismatchError,
@@ -31,31 +27,23 @@ from aeat.domain.usage_ratios import (
     save_usage_ratios,
 )
 
-
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs-secret",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
+def _active_runtime(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="b1",
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        provider = EphemeralMasterKeyProvider()
         try:
-            yield
+            with provider:
+                yield
         finally:
-            override_secret_store(None)
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def test_load_returns_profile_when_no_home_office_overrides() -> None:

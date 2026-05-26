@@ -133,9 +133,9 @@ def unwrap_recovery_envelope(*, envelope: RecoveryRecord, mnemonic: str) -> byte
 def verify_recovery_mnemonic(*, envelope: RecoveryRecord, mnemonic: str) -> bool:
     """Return True iff the mnemonic correctly unwraps the envelope.
 
-    Used by the `aeat config verify-recovery` periodic-custody-test
-    verb. Catches `RecoveryVerificationError` and surfaces a boolean
-    so the CLI renders the outcome without leaking detail.
+    Used by profile recovery custody checks. Catches
+    `RecoveryVerificationError` and surfaces a boolean so callers can
+    render the outcome without leaking detail.
     """
 
     try:

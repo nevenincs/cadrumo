@@ -38,7 +38,9 @@ def _json_output(result: Result) -> str:
 
 
 def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
     from aeat.adapters.persistence.storage.sql import dispose_engine
+    from aeat.tests.secure_sql import dev_test_database_password
 
     dispose_engine()
     for name in (
@@ -50,9 +52,9 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
@@ -63,27 +65,29 @@ def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 @pytest.fixture
 def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+    from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
     from aeat.adapters.persistence.storage.sql import dispose_engine
+    from aeat.tests.secure_sql import dev_test_database_password
 
     dispose_engine()
-    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
+    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
+    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
     monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.delenv("AEAT_ACTIVE_PROFILE", raising=False)
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
     monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
     monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    with EphemeralMasterKeyProvider():
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine()
+    try:
+        yield tmp_path
+    finally:
+        dispose_engine()
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
-    db_path = tmp_path / "aeat.db"
+    db_path = tmp_path / "storage" / "buckets" / "default" / "db" / "aeat.db"
     assert db_path.exists()
     on_disk = db_path.read_bytes()
     assert b"secure_objects" in on_disk
@@ -110,6 +114,7 @@ def _seed_profile(
     """
 
     from aeat.application.user_profile._testing import register_minimal_profile
+    from aeat.application.user_profile._orchestration import profile_create_storage_span
     from aeat.application.workflow._persistence import workflow_state_repository
 
     repo = workflow_state_repository()
@@ -121,19 +126,19 @@ def _seed_profile(
     }
     if extra_values:
         values.update(extra_values)
-    repo.update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id="default",
-            display_name=name,
-            overrides=values,
+    with profile_create_storage_span("default"):
+        repo.update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="default",
+                display_name=name,
+                overrides=values,
+            )
         )
-    )
 
 
 def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_bucket(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    encrypted_user_cli: Path,
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
@@ -141,8 +146,6 @@ def test_config_init_profile_set_deadlines_and_filing_runtime_share_profile_buck
     from aeat.application.user_profile import UserProfileLifecycleRepository
     from aeat.application.user_profile._orchestration import fact_value
     from aeat.application.workflow import workflow_state_repository
-
-    _isolate_user_cli(monkeypatch, tmp_path)
 
     init_result = _invoke(
         [
@@ -460,10 +463,10 @@ def test_user_help_surfaces_do_not_leak_translation_keys() -> None:
 
 
 def test_ledger_split_is_top_level_verb_with_yes_and_reason() -> None:
-    """Per the 2026-05-14 ledger-transaction-lifecycle ADR, `split` is the
-    canonical N-way row splitter — a first-class top-level verb, not a
-    flag nested under `update`. It requires --yes confirmation and accepts
-    --reason for the bucket-event payload."""
+    """The ``split`` command is the canonical N-way row splitter: a
+    first-class top-level verb, not a flag nested under ``update``. It
+    requires ``--yes`` confirmation and accepts ``--reason`` for the
+    bucket-event payload."""
 
     ledger = _invoke(["app", "ledger", "--help"])
     split = _invoke(["app", "ledger", "split", "--help"])
@@ -501,10 +504,8 @@ def test_review_filter_help_lists_supported_filter_keys() -> None:
 
 
 def test_config_auth_accepts_supported_provider_and_rejects_others(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    encrypted_user_cli: Path,
 ) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
     created = _invoke(
         [
             "config",
@@ -695,12 +696,8 @@ def test_ledger_import_verify_source_rejects_missing_original_file(
     assert "missing.pdf" in imported.output
 
 
-def test_read_only_status_commands_use_isolated_local_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-
-    with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id="default"):
-        _seed_profile(tax_id="00000000T", name="operator", activity="design")
+def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: Path) -> None:
+    _seed_profile(tax_id="00000000T", name="operator", activity="design")
 
     config_status = _invoke(["--format", "json", "config", "profile", "status"])
     overview = _invoke(["--format", "json", "app", "overview", "status"])
@@ -739,15 +736,13 @@ def test_config_profile_show_requires_active_profile_with_typed_error(
 
 
 def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    encrypted_user_cli: Path,
 ) -> None:
     """Profile creation must persist ``iva.regime`` for the deadline engine."""
     from aeat.application.user_profile._projections import projection_for_taxpayer
     from aeat.application.workflow import workflow_state_repository
     from aeat.domain.deadlines import IVARegime
 
-    _isolate_user_cli(monkeypatch, tmp_path)
     created = _invoke(
         [
             "config",
@@ -776,14 +771,12 @@ def test_config_profile_create_iva_regime_round_trips_to_deadline_engine(
 
 
 def test_config_profile_create_does_intracomunitario_round_trips_to_deadline_engine(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    encrypted_user_cli: Path,
 ) -> None:
     """Boolean profile flags must survive creation and reach the engine."""
     from aeat.application.user_profile._projections import projection_for_taxpayer
     from aeat.application.workflow import workflow_state_repository
 
-    _isolate_user_cli(monkeypatch, tmp_path)
     created = _invoke(
         [
             "config",

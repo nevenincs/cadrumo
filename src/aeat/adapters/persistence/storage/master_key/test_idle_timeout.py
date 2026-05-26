@@ -6,6 +6,11 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from aeat.adapters.persistence.storage.bucket._errors import BucketLockedError
+from aeat.adapters.persistence.storage.master_key._active_session import (
+    activate_session,
+    get_active_master_key,
+)
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
 from aeat.adapters.persistence.storage.master_key._idle_timeout import (
     DEFAULT_IDLE_LOCK_MINUTES,
@@ -80,6 +85,21 @@ def test_evaluate_idle_treats_sealed_session_as_expired() -> None:
 
     assert evaluation.expired is True
     assert evaluation.remaining_seconds == 0
+
+
+def test_active_key_resolution_refuses_expired_session() -> None:
+    session = BucketSession.open(
+        bucket_id="bucket-a",
+        kek=bytes(range(32)),
+        dek=bytes(range(32, 64)),
+        idle_minutes=1,
+        opened_at=datetime.now(UTC) - timedelta(minutes=2),
+    )
+
+    with activate_session(session), pytest.raises(BucketLockedError):
+        get_active_master_key()
+
+    assert session.sealed is True
 
 
 def test_touch_rolls_deadline_forward() -> None:

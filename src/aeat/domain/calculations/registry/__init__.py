@@ -182,7 +182,12 @@ from ._renta_web_open_oracle import (
     equivalent_renta_web_open_value,
     parse_renta_web_open_live_payload,
 )
-from ._runtime_graph import expression_casilla_refs
+from ._runtime_graph import (
+    enum_consumed_binding_ids,
+    expression_binding_refs,
+    expression_casilla_refs,
+    input_casilla_alias_map,
+)
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
@@ -213,6 +218,7 @@ from ._schema import (
     ProfilePredicateDefinition,
     RegistryCatalogues,
     RegistrySnapshot,
+    RegistrySnapshotRef,
     SourceReference,
     SupportRemovalDecisionDefinition,
     VerificationExpectationDefinition,
@@ -351,6 +357,7 @@ __all__ = [
     "RegistryQueryService",
     "RegistrySnapshot",
     "RegistrySnapshotError",
+    "RegistrySnapshotRef",
     "RegistryValidationError",
     "RegistryValidator",
     "RemoteOperation",
@@ -409,11 +416,13 @@ __all__ = [
     "detect_workbook_runner",
     "discover_modelo_sources",
     "discover_workbooks",
+    "enum_consumed_binding_ids",
     "equivalent_renta_web_open_value",
     "evaluate_cross_reference_applicability",
     "evaluate_profile_conditions",
     "evaluate_remote_operation",
     "export_fields_for_casilla",
+    "expression_binding_refs",
     "expression_casilla_refs",
     "extract_record_design",
     "extract_record_design_pdf",
@@ -421,6 +430,7 @@ __all__ = [
     "extract_record_design_workbook",
     "generate_parity_tape_path",
     "get_censo_modelo_foundation_contract",
+    "input_casilla_alias_map",
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
     "is_active_censo_modelo",

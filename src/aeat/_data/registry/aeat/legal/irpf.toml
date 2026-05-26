@@ -875,6 +875,28 @@ required_text = [
     "ejercicio 2025 y siguientes",
 ]
 
+[legal."orden-hac-1432-2024:df-unica"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-1432-2024.html#disposicion-final-unica"
+document_id = "BOE-A-2024-26484"
+article = "Disposición final única"
+section = "Modelo 190"
+permalink = "https://www.boe.es/eli/es/o/2024/12/11/hac1432"
+published_at = 2024-12-19
+effective_from = 2024-12-20
+review_status = "reviewed"
+reviewed_at = 2026-05-26
+reviewed_by = "codex"
+notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190. La disposición final única aplica la orden por primera vez al Modelo 190 correspondiente al ejercicio 2024, salvo el apartado uno del artículo único, diferido al ejercicio 2025."
+required_text = [
+    "modelo 190 correspondiente al ejercicio 2024",
+    "1 de enero de 2025",
+    "apartado uno del artículo único",
+    "ejercicio 2025",
+]
+
 [sources."aeat-dr-130-2019-v12"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -1264,6 +1286,19 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-190-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf"
+sha256 = "20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e"
+bytes = 1176058
+retrieved_at = 2026-05-03
+published_at = 2024-12-19
+applies_from = 2024-01-01
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DISENOS_LOGICOS_190-2024.pdf"
+review_status = "reviewed"
+
 [sources."aeat-modelo-190-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -1287,6 +1322,19 @@ retrieved_at = 2026-05-05
 published_at = 2009-11-23
 applies_from = 2025-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-18567"
+review_status = "reviewed"
+
+[sources."boe-modelo-190-2024-amendment"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1432-2024.html"
+sha256 = "d2171e5f34202573a98953a4467b5e1b048794dd6167a3198a3a168e8a3daac3"
+bytes = 45946
+retrieved_at = 2026-05-26
+published_at = 2024-12-19
+applies_from = 2024-01-01
+source_url = "https://www.boe.es/eli/es/o/2024/12/11/hac1432"
 review_status = "reviewed"
 
 [sources."boe-modelo-190-2025-amendment"]

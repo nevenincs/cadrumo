@@ -133,6 +133,7 @@ from .errors import (
     SecretAlreadyExistsError,
     SecretNotFoundError,
     SecretStoreError,
+    SecureStorageError,
     StorageError,
     StorageValidationError,
     UnsecuredModeRefusedError,
@@ -172,7 +173,12 @@ from .runtime import (
     StorageRuntimeReadinessCode,
     StorageRuntimeReadinessIssue,
     StorageRuntimeSession,
+    inspect_bucket_storage_runtime,
     inspect_storage_runtime,
+)
+from .runtime_repository import (
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_bucket,
 )
 from .secret_store._secret_store import SecretRecord, SecretStore
 from .sql.engine import create_engine_from_settings, dispose_engine, get_engine
@@ -248,6 +254,7 @@ __all__ = [
     "SecretRecord",
     "SecretStore",
     "SecretStoreError",
+    "SecureStorageError",
     "SensitivityClass",
     "SqlRecordRepository",
     "StorageError",
@@ -288,6 +295,7 @@ __all__ = [
     "get_secret_store",
     "get_sessionmaker",
     "has_active_bucket_session",
+    "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
     "load_corpus_manifest",
     "load_encrypted_envelope",
@@ -311,6 +319,8 @@ __all__ = [
     "save_encrypted_envelope",
     "save_envelope",
     "save_wrapped_master_key",
+    "secure_object_repository_for_active_bucket",
+    "secure_object_repository_for_bucket",
     "session_scope",
     "unwrap_master_key",
     "verify_corpus_manifest",

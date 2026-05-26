@@ -13,6 +13,9 @@ Playwright/browser automation belongs in the adapter layer, not the domain.
 
 from __future__ import annotations
 
+import subprocess
+import sys
+
 import pytest
 
 from . import __all__ as justificante_all
@@ -41,3 +44,23 @@ def test_justificante_public_surface_has_every_frozen_symbol() -> None:
 def test_justificante_domain_surface_does_not_reexport_parser_pipeline() -> None:
     """The parser entry point belongs to the inbound adapter surface."""
     assert "parse_justificante" not in justificante_all
+
+
+def test_justificante_repository_public_export_does_not_reopen_storage_import_cycle() -> None:
+    """Repository import stays valid after declaration/PDF error imports."""
+
+    script = "\n".join(
+        [
+            "from aeat.adapters.inbound.declaracion import DeclaracionObservation",
+            "from aeat.domain.justificante import JustificanteRepository",
+            "print(DeclaracionObservation.__name__, JustificanteRepository.__name__)",
+        ]
+    )
+    result = subprocess.run(  # noqa: S603 - fixed interpreter and inline import smoke script.
+        [sys.executable, "-c", script],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.stdout.strip() == "DeclaracionObservation JustificanteRepository"

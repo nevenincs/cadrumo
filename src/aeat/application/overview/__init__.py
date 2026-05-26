@@ -56,7 +56,10 @@ from ...domain.deadlines._festivos import DeadlineValidationError
 from ._applicability import (
     ApplicabilityVerdict,
     ModeloApplicability,
+    TaxRoute,
     derive_modelo_applicability,
+    derive_tax_route,
+    iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
 from ._errors import (
@@ -68,6 +71,7 @@ from ._errors import (
 )
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry import ModeloRevision, ParameterDefinition
     from ..state_projection import OperatorStateProjection
     from ..workflow import WorkflowState
 
@@ -218,6 +222,35 @@ class OverviewCalendarEntry(BaseModel):
         return self
 
 
+class OverviewCalculationSelection(BaseModel):
+    """Registry-backed calculation modelo selected by the taxpayer model."""
+
+    model_config = _STRICT_FROZEN
+
+    modelo: str = Field(min_length=1, max_length=8)
+    title: str = Field(min_length=1)
+    calculation_class: str = Field(min_length=1, max_length=32)
+    verdict: ApplicabilityVerdict
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(default=())
+
+
+class OverviewRateScheduleResolution(BaseModel):
+    """Registry rate/bracket schedule selected, or made selectable, by the route."""
+
+    model_config = _STRICT_FROZEN
+
+    filing_year: int = Field(ge=1990, le=2200)
+    modelo: str = Field(min_length=1, max_length=8)
+    revision: str = Field(min_length=1, max_length=64)
+    parameter_id: str = Field(min_length=1)
+    data_type: str = Field(min_length=1, max_length=32)
+    selector: str | None = None
+    selector_value: str | None = None
+    legal_refs: tuple[str, ...] = Field(min_length=1)
+    source_refs: tuple[str, ...] = Field(default=())
+
+
 class CalendarWarning(BaseModel):
     """One under-specified-profile warning attached to a calendar query.
 
@@ -305,6 +338,14 @@ class OverviewCalendar(BaseModel):
         incomplete_reason: Operator-facing "declare your taxpayer type
             first" guidance, present only when
             ``taxpayer_model_declared`` is ``False``.
+        tax_route: Tax branch selected by the declared taxpayer model.
+        calculation_selections: Registry modelos whose calculation
+            surface is selected by the route and positive applicability
+            verdict. Informative modelos are intentionally excluded.
+        rate_schedule_resolutions: Registry parameter references for
+            the route's rate / bracket schedules for each year covered
+            by the calendar. A covered year with no registered rate
+            revision contributes no row rather than guessing.
     """
 
     model_config = _STRICT_FROZEN
@@ -316,6 +357,9 @@ class OverviewCalendar(BaseModel):
     completeness: CalendarCompleteness = Field(default_factory=CalendarCompleteness)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+    tax_route: TaxRoute = TaxRoute.INCOMPLETE
+    calculation_selections: tuple[OverviewCalculationSelection, ...] = Field(default=())
+    rate_schedule_resolutions: tuple[OverviewRateScheduleResolution, ...] = Field(default=())
 
 
 class OverviewStatusReport(BaseModel):
@@ -433,6 +477,192 @@ def _build_completeness_and_warnings(
     return completeness, tuple(warnings)
 
 
+def _calculation_selections(profile: TaxpayerProfile) -> tuple[OverviewCalculationSelection, ...]:
+    """Return positive, calculation-bearing modelos for ``profile``."""
+
+    from ...core.resources import ResourceNotFoundError, resources
+
+    selections: list[OverviewCalculationSelection] = []
+    repository = resources().modelos
+    for rule in iter_modelo_applicability_rules():
+        applicability = derive_modelo_applicability(profile, rule.modelo)
+        if applicability.verdict is not ApplicabilityVerdict.APPLICABLE:
+            continue
+        try:
+            modelo = repository.get(rule.modelo)
+        except ResourceNotFoundError:
+            continue
+        if modelo.calculation_class == "informative":
+            continue
+        selections.append(
+            OverviewCalculationSelection(
+                modelo=rule.modelo,
+                title=modelo.title,
+                calculation_class=modelo.calculation_class,
+                verdict=applicability.verdict,
+                legal_refs=applicability.legal_refs,
+                source_refs=tuple(str(ref) for ref in modelo.source_refs),
+            )
+        )
+    return tuple(sorted(selections, key=lambda selection: selection.modelo))
+
+
+def _rate_schedule_resolutions(
+    profile: TaxpayerProfile,
+    *,
+    filing_years: tuple[int, ...],
+) -> tuple[OverviewRateScheduleResolution, ...]:
+    """Resolve route-specific rate / bracket schedule refs from registry data."""
+
+    from ...core.resources import resources
+    from ...domain.calculations.registry import RegistrySnapshotError, RegistryValidationError
+
+    authority = resources().modelos.authority
+    route = derive_tax_route(profile)
+    resolutions: list[OverviewRateScheduleResolution] = []
+    if route is TaxRoute.IRPF:
+        for filing_year in filing_years:
+            try:
+                snapshot = authority.snapshot("100", filing_year=filing_year, period="0A")
+            except (RegistrySnapshotError, RegistryValidationError):
+                continue
+            resolutions.extend(
+                _irpf_rate_schedule_resolutions(
+                    filing_year=filing_year,
+                    revision=snapshot.revision,
+                )
+            )
+        return tuple(resolutions)
+    if route is TaxRoute.IMPUESTO_SOCIEDADES:
+        for filing_year in filing_years:
+            try:
+                snapshot = authority.snapshot("200", filing_year=filing_year, period="0A")
+            except (RegistrySnapshotError, RegistryValidationError):
+                continue
+            resolutions.extend(
+                _is_rate_schedule_resolutions(
+                    profile,
+                    filing_year=filing_year,
+                    revision=snapshot.revision,
+                )
+            )
+        return tuple(resolutions)
+    return ()
+
+
+def _irpf_rate_schedule_resolutions(
+    *,
+    filing_year: int,
+    revision: ModeloRevision,
+) -> tuple[OverviewRateScheduleResolution, ...]:
+    """Return Modelo 100 IRPF bracket schedule refs for one revision."""
+
+    parameters = {str(parameter.id): parameter for parameter in revision.parameters}
+    year = str(revision.id)
+    base_parameter_ids = (
+        f"renta-{year}-escala-estatal-base-general",
+        f"renta-{year}-escala-estatal-base-ahorro",
+        f"renta-{year}-escala-autonomica-base-ahorro",
+    )
+    resolutions = [
+        _rate_schedule_resolution(
+            filing_year=filing_year,
+            modelo="100",
+            revision=year,
+            parameter=parameters[parameter_id],
+        )
+        for parameter_id in base_parameter_ids
+        if parameter_id in parameters
+    ]
+    dispatch_formula_id = f"renta-{year}-cuota-escala-autonomica-sobre-base-liquidable-general"
+    dispatch_formula = next(
+        (
+            formula
+            for formula in revision.formulas
+            if str(formula.id) == dispatch_formula_id
+        ),
+        None,
+    )
+    if dispatch_formula is not None:
+        dispatch_table = dispatch_formula.expression.args[2].dispatch_table
+        for selector_value, parameter_id in sorted(dispatch_table.items()):
+            parameter = parameters.get(parameter_id)
+            if parameter is None:
+                continue
+            resolutions.append(
+                _rate_schedule_resolution(
+                    filing_year=filing_year,
+                    modelo="100",
+                    revision=year,
+                    parameter=parameter,
+                    selector="renta-profile-tax-residence-ccaa",
+                    selector_value=selector_value,
+                )
+            )
+    return tuple(resolutions)
+
+
+def _is_rate_schedule_resolutions(
+    profile: TaxpayerProfile,
+    *,
+    filing_year: int,
+    revision: ModeloRevision,
+) -> tuple[OverviewRateScheduleResolution, ...]:
+    """Return the Modelo 200 LIS Art. 29 rate selected by legal form."""
+
+    parameters = {str(parameter.id): parameter for parameter in revision.parameters}
+    dispatch_formula = next(
+        (
+            formula
+            for formula in revision.formulas
+            if str(formula.id) == "modelo-200-tipo-gravamen-por-forma-juridica"
+        ),
+        None,
+    )
+    if dispatch_formula is None or profile.legal_entity_form is None:
+        return ()
+    parameter_id = dispatch_formula.expression.args[2].dispatch_table.get(profile.legal_entity_form.value)
+    if parameter_id is None:
+        return ()
+    parameter = parameters.get(parameter_id)
+    if parameter is None:
+        return ()
+    return (
+        _rate_schedule_resolution(
+            filing_year=filing_year,
+            modelo="200",
+            revision=str(revision.id),
+            parameter=parameter,
+            selector="legal_entity_form",
+            selector_value=profile.legal_entity_form.value,
+        ),
+    )
+
+
+def _rate_schedule_resolution(
+    *,
+    filing_year: int,
+    modelo: str,
+    revision: str,
+    parameter: ParameterDefinition,
+    selector: str | None = None,
+    selector_value: str | None = None,
+) -> OverviewRateScheduleResolution:
+    """Adapt a registry parameter to the overview derivation payload."""
+
+    return OverviewRateScheduleResolution(
+        filing_year=filing_year,
+        modelo=modelo,
+        revision=revision,
+        parameter_id=str(parameter.id),
+        data_type=parameter.data_type,
+        selector=selector,
+        selector_value=selector_value,
+        legal_refs=tuple(str(ref) for ref in parameter.legal_refs),
+        source_refs=tuple(str(ref) for ref in parameter.source_refs),
+    )
+
+
 def build_overview_calendar(
     profile: TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
@@ -481,6 +711,9 @@ def build_overview_calendar(
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
             incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+            tax_route=TaxRoute.INCOMPLETE,
+            calculation_selections=(),
+            rate_schedule_resolutions=(),
         )
 
     deadline_engine = engine if engine is not None else DeadlineEngine()
@@ -569,6 +802,12 @@ def build_overview_calendar(
         generated_at=datetime.now(UTC),
         warnings=warnings,
         completeness=completeness,
+        tax_route=derive_tax_route(profile),
+        calculation_selections=_calculation_selections(profile),
+        rate_schedule_resolutions=_rate_schedule_resolutions(
+            profile,
+            filing_years=calendar_range.covered_years(),
+        ),
     )
 
 
@@ -638,6 +877,7 @@ __all__ = [
     "ModeloApplicability",
     "OverviewAgendaError",
     "OverviewBacklogError",
+    "OverviewCalculationSelection",
     "OverviewCalendar",
     "OverviewCalendarEntry",
     "OverviewCalendarError",
@@ -645,10 +885,13 @@ __all__ = [
     "OverviewError",
     "OverviewExplainError",
     "OverviewPeriodState",
+    "OverviewRateScheduleResolution",
     "OverviewStatusReport",
+    "TaxRoute",
     "build_overview_calendar",
     "build_overview_status_report",
     "derive_modelo_applicability",
+    "derive_tax_route",
     "overview_status_report_from_projection",
     "render_overview_status_lines",
     "user_state_for",

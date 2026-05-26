@@ -78,6 +78,10 @@ def _mapping_get(m: Mapping, key: str) -> object:
 def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     if isinstance(profile_facts, Mapping) and field in profile_facts:
         return _mapping_get(profile_facts, field)
+    if field.startswith("taxpayer.") and not (
+        isinstance(profile_facts, Mapping) and "taxpayer" in profile_facts
+    ):
+        return _resolve_profile_fact(profile_facts, field.removeprefix("taxpayer."))
     if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
         _attr = "iva_regime"
         return getattr(profile_facts, _attr)

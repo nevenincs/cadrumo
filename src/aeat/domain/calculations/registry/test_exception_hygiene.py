@@ -7,10 +7,22 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.errors import AeatError
+
+from ._errors import RegistryError, RegistryLoadError, RegistrySnapshotError, RegistryValidationError
+
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 _REGISTRY_PACKAGE = Path(__file__).parent
+
+
+def test_registry_errors_stay_on_core_exception_hierarchy() -> None:
+    assert issubclass(RegistryError, AeatError)
+    assert issubclass(RegistryError, ValueError)
+    assert issubclass(RegistryLoadError, RegistryError)
+    assert issubclass(RegistrySnapshotError, RegistryError)
+    assert issubclass(RegistryValidationError, RegistryError)
 
 
 def _production_modules() -> tuple[Path, ...]:

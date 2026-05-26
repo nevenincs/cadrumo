@@ -43,7 +43,7 @@ from .....core.config import Settings as _Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
-from ....persistence.storage.sql import SecureObjectRepository
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
 from ._authenticator import (
@@ -81,6 +81,12 @@ AEAT_CLAVE_MOVIL_METADATA_SCHEMA_VERSION: Final[int] = 2
 
 CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_movil.diagnostics"
 _DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+CLAVE_MOVIL_OPERATOR_PHONE_STATES: Final[tuple[str, ...]] = (
+    "app_prompted_and_accepted",
+    "app_prompted_not_accepted",
+    "app_did_not_prompt",
+    "operator_did_not_check",
+)
 
 
 def _auth_browser_action_policy(settings: _Settings) -> RemoteStateGuardPolicy:
@@ -98,6 +104,13 @@ def _auth_browser_action_policy(settings: _Settings) -> RemoteStateGuardPolicy:
         synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=True,
+    )
+
+
+def _operator_phone_state_report_commands(diagnostic_id: str) -> tuple[str, ...]:
+    return tuple(
+        f"aeat config auth diagnostics report {diagnostic_id} --phone-state {phone_state}"
+        for phone_state in CLAVE_MOVIL_OPERATOR_PHONE_STATES
     )
 
 
@@ -917,6 +930,7 @@ class ClaveMovilAuthProvider:
                 diagnostic_id = await self._dump_diagnostic(page, reason="post-auth-landing-timeout")
                 await self._cancel_pending_auth_request(page)
                 current_url = getattr(page, "url", "") or ""
+                report_commands = _operator_phone_state_report_commands(diagnostic_id)
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
                     "The driver observed the AEAT browser page but cannot infer the phone/app state.",
@@ -928,20 +942,14 @@ class ClaveMovilAuthProvider:
                         "diagnostic_id": diagnostic_id,
                         "phone_state": "unknown",
                         "operator_report_required": True,
-                        "operator_report_options": (
-                            "app_prompted_and_accepted",
-                            "app_prompted_not_accepted",
-                            "app_did_not_prompt",
-                            "operator_did_not_check",
-                        ),
+                        "operator_report_options": CLAVE_MOVIL_OPERATOR_PHONE_STATES,
+                        "operator_report_commands": report_commands,
                         **attempt_context,
                         "verification_code_present": bool(verification_code),
                     },
                     suggestion=(
-                        "`aeat config auth diagnostics report "
-                        f"{diagnostic_id} --phone-state app_did_not_prompt` if no Cl@ve app prompt appeared, "
-                        "or use app_prompted_and_accepted / app_prompted_not_accepted / operator_did_not_check "
-                        "for the observed phone state."
+                        "Record the operator phone/app observation with exactly one of these commands: "
+                        + " ; ".join(report_commands)
                     ),
                 ) from exc
 
@@ -1439,7 +1447,7 @@ class ClaveMovilAuthProvider:
                         payload["screenshot_png_base64"] = base64.b64encode(bytes(image)).decode("ascii")
                 except (TimeoutError, PlaywrightTimeoutError):
                     payload["screenshot_capture_error"] = "timeout"
-            SecureObjectRepository().save(
+            secure_object_repository_for_active_bucket().save(
                 namespace=_DIAGNOSTIC_NAMESPACE,
                 object_key=ts,
                 classification=SensitivityClass.SESSION,
@@ -1517,6 +1525,7 @@ class ClaveMovilAuthProvider:
         pre303 = self._settings.external_constants().aeat.pre303
         wait_for = getattr(page, "wait_for_selector", None)
         click = getattr(page, "click", None)
+        check = getattr(page, "check", None)
         if wait_for is None or click is None:
             raise AeatLoginAssertionError(
                 "Playwright page does not expose wait_for_selector()/click(); "
@@ -1524,11 +1533,31 @@ class ClaveMovilAuthProvider:
             )
         try:
             await wait_for(
+                pre303.representation_own_name_selector,
+                timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
+            )
+            await wait_for(
                 pre303.representation_own_name_label_selector,
                 timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
             )
-            await click(pre303.representation_own_name_label_selector)
-            await click(pre303.representation_submit_selector)
+            if check is not None:
+                try:
+                    await check(
+                        pre303.representation_own_name_selector,
+                        timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
+                        force=True,
+                    )
+                except TypeError:
+                    await check(pre303.representation_own_name_selector)
+            else:
+                await click(pre303.representation_own_name_label_selector)
+            try:
+                await click(
+                    pre303.representation_submit_selector,
+                    timeout=self._settings.aeat_browser_selector_probe_timeout_ms,
+                )
+            except TypeError:
+                await click(pre303.representation_submit_selector)
         except PlaywrightError as exc:
             raise AeatLoginAssertionError(
                 "AEAT representation gate did not expose the own-name continuation expected for the "

@@ -296,3 +296,234 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     assert binding.typed_enum == "LegalEntityForm"
     assert binding.selector.get("field") == "legal_entity_form"
     assert "ley-27-2014:art-29" in binding.legal_refs
+
+
+# Micro-empresa lane: INCN-gated routing to the LIS Art. 29.1 two-
+# tranche pyme scale via `lookup_bracket_by_entity_type`. The expected
+# cuotas come straight from the AEAT folleto actividades económicas
+# 4.3 and the AEAT Manual de Sociedades "Tipos de gravamen vigentes"
+# scale (17 % on 0-50.000 / 20 % on the rest for 2025, 19 / 21 for
+# 2026) applied to round bases — these are AEAT-published worked
+# tranches, not registry-formula recomputations.
+
+_INCN_BINDING = "modelo-200-2024-profile-incn-prior-12-months"
+_NEW_ENTITY_BINDING = "modelo-200-2024-profile-new-entity-flag"
+
+
+def _cuota_with_bindings(
+    *,
+    base: Decimal,
+    legal_entity_form: str,
+    incn: Decimal | None,
+    new_entity: Decimal,
+    period_end: date,
+) -> Decimal:
+    binding_values: dict[str, Decimal] = {_NEW_ENTITY_BINDING: new_entity}
+    if incn is not None:
+        binding_values[_INCN_BINDING] = incn
+    return calculate_registry_snapshot(
+        _snapshot(),
+        inputs={
+            "DP200014:00552": base,
+            "DP200014:01033": Decimal("0"),
+            "DP200014:01034": Decimal("0"),
+            "DP200014B:00592": Decimal("0"),
+            "DP200014B:01766": Decimal("0"),
+            "DP200014B:01784": Decimal("0"),
+            "DP200026:00625": Decimal("100"),
+        },
+        enum_binding_values={_DISPATCH_BINDING: legal_entity_form},
+        binding_values=binding_values,
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": period_end},
+    ).values["DP200014:00562"]
+
+
+def test_micro_empresa_cuota_routes_through_pyme_two_tranche_scale_for_2025_period() -> None:
+    """A pyme profile in a 2025 period applies the 17 % / 20 % scale via the bracket dispatch.
+
+    For a base of 100.000 EUR the LIS Art. 29.1 micro-empresa scale
+    yields 50.000 x 17 % + 50.000 x 20 % = 8.500 + 10.000 = 18.500
+    EUR (AEAT folleto actividades económicas 4.3 worked tranches). The
+    INCN binding is 500.000 — below the LIS Art. 29.1 1.000.000 EUR
+    threshold ("importe neto de la cifra de negocios del período
+    impositivo inmediato anterior sea inferior a 1 millón de euros")
+    — so the cuota lane is the pyme bracket, not the sub-form scalar
+    25 %.
+    """
+    cuota = _cuota_with_bindings(
+        base=Decimal("100000"),
+        legal_entity_form="sl",
+        incn=Decimal("500000"),
+        new_entity=Decimal("0"),
+        period_end=date(2025, 12, 31),
+    )
+    assert cuota == Decimal("18500.00")
+
+
+def test_micro_empresa_cuota_routes_through_pyme_two_tranche_scale_for_2026_period() -> None:
+    """A pyme profile in a 2026 period applies the 19 % / 21 % scale via the bracket dispatch.
+
+    For a base of 100.000 EUR the LIS Art. 29.1 micro-empresa scale
+    yields 50.000 x 19 % + 50.000 x 21 % = 9.500 + 10.500 = 20.000
+    EUR (AEAT Manual de Sociedades "Tipos de gravamen vigentes"
+    2026 update). The same INCN gate and dispatch lane as the 2025
+    case applies; only the bracket window shifts via ``bracket_axis
+    = "filing_period"``.
+    """
+    cuota = _cuota_with_bindings(
+        base=Decimal("100000"),
+        legal_entity_form="sl",
+        incn=Decimal("500000"),
+        new_entity=Decimal("0"),
+        period_end=date(2026, 12, 31),
+    )
+    assert cuota == Decimal("20000.00")
+
+
+def test_incn_above_one_million_routes_through_sub_form_general_rate_not_pyme() -> None:
+    """INCN above 1.000.000 EUR falls through to the sub-form general 25 % rate.
+
+    LIS Art. 29.1: the micro-empresa scale applies only when the
+    prior-12-months INCN is "inferior a 1 millón de euros". A
+    sociedad limitada with INCN = 5.000.000 stays on the general
+    25 % rate. For a base of 100.000 EUR the cuota is 100.000 x 25 %
+    = 25.000 EUR; the pyme 18.500 EUR alternative is not reached.
+    The structural check is that the INCN gate flips the dispatch
+    lane: same sub-form, same base, two different cuotas keyed on
+    the INCN binding alone.
+    """
+    cuota = _cuota_with_bindings(
+        base=Decimal("100000"),
+        legal_entity_form="sl",
+        incn=Decimal("5000000"),
+        new_entity=Decimal("0"),
+        period_end=date(2025, 12, 31),
+    )
+    assert cuota == Decimal("25000.00")
+
+
+def test_new_entity_override_beats_micro_empresa_lane_even_when_incn_qualifies() -> None:
+    """The 15 % new-entity override layers on top of the micro-empresa lane.
+
+    LIS Art. 29 par. 4 fixes 15 % for the first two profit-making
+    periods of a newly created entity. The cuota formula's outer
+    ``if_then_else`` selects the override first; the INCN-gated
+    micro-empresa lane and the sub-form fallback never execute when
+    the new-entity flag is set. For a base of 100.000 EUR the
+    expected cuota is 100.000 x 15 % = 15.000 EUR — distinct from
+    the 18.500 EUR pyme outcome and the 25.000 EUR general outcome
+    on the same base and INCN.
+    """
+    cuota = _cuota_with_bindings(
+        base=Decimal("100000"),
+        legal_entity_form="sl",
+        incn=Decimal("500000"),
+        new_entity=Decimal("1"),
+        period_end=date(2025, 12, 31),
+    )
+    assert cuota == Decimal("15000.00")
+
+
+def test_new_entity_override_beats_general_sub_form_when_incn_does_not_qualify() -> None:
+    """The 15 % override also wins over a general sub-form profile (INCN above threshold).
+
+    With a high INCN (no micro-empresa lane) and the new-entity flag
+    set, the outer override still routes the cuota through the 15 %
+    bracket — proving the override sits ABOVE both inner lanes
+    rather than only the micro-empresa lane. 100.000 x 15 % = 15.000.
+    """
+    cuota = _cuota_with_bindings(
+        base=Decimal("100000"),
+        legal_entity_form="sl",
+        incn=Decimal("5000000"),
+        new_entity=Decimal("1"),
+        period_end=date(2025, 12, 31),
+    )
+    assert cuota == Decimal("15000.00")
+
+
+def test_cuota_integra_raises_when_incn_binding_is_unsupplied_for_non_new_entity() -> None:
+    """A non-new-entity cuota with no INCN binding raises rather than guessing.
+
+    The micro-empresa identification is INCN-gated and INCN is
+    optional on the profile (``Decimal | None``). When the
+    new-entity override is OFF and the INCN binding is absent the
+    formula cannot decide whether the pyme lane or the sub-form
+    lane applies, and the runtime raises ``binding has no supplied
+    value`` — INCOMPLETE rather than a silent default. (When the
+    new-entity flag IS set the override short-circuits the inner
+    ``if_then_else`` and no INCN binding is required; this is
+    asserted by the override tests above which omit no INCN value
+    but still pass.)
+    """
+    with pytest.raises(RegistryValidationError, match="incn-prior-12-months"):
+        _cuota_with_bindings(
+            base=Decimal("100000"),
+            legal_entity_form="sl",
+            incn=None,
+            new_entity=Decimal("0"),
+            period_end=date(2025, 12, 31),
+        )
+
+
+def test_cuota_integra_formula_is_a_three_lane_layered_if_then_else() -> None:
+    """Structural assertion: the cuota formula is a layered ``if_then_else`` graph.
+
+    Three dispatch lanes coexist — new-entity 15 % override, INCN-
+    gated micro-empresa bracket, sub-form scalar bracket — and the
+    composition selects exactly one per profile. The graph shape is
+    ``if_then_else(new_entity_flag,
+                   override_bracket,
+                   if_then_else(less_than(incn, 1_000_000),
+                                pyme_bracket,
+                                sub_form_bracket))``.
+    This is wiring-shape testing (permitted by the no-tautological
+    -calculation-tests rule), not a registry-formula recomputation.
+    """
+    formula = next(
+        f for f in _snapshot().revision.formulas if f.id == "modelo-200-cuota-integra"
+    )
+    assert formula.expression.op == "if_then_else"
+    predicate, override_branch, fallback_branch = formula.expression.args
+    assert predicate.binding == _NEW_ENTITY_BINDING
+    assert override_branch.op == "lookup_bracket_by_entity_type"
+
+    assert fallback_branch.op == "if_then_else"
+    incn_predicate, micro_branch, sub_form_branch = fallback_branch.args
+    assert incn_predicate.op == "less_than"
+    assert incn_predicate.args[0].binding == _INCN_BINDING
+    assert incn_predicate.args[1].literal == Decimal("1000000")
+
+    assert micro_branch.op == "lookup_bracket_by_entity_type"
+    pyme_dispatch = micro_branch.args[2].dispatch_table
+    assert pyme_dispatch is not None
+    assert set(pyme_dispatch.values()) == {"is.modelo-200.tipo-gravamen-pyme"}
+
+    assert sub_form_branch.op == "lookup_bracket_by_entity_type"
+    sub_form_dispatch = sub_form_branch.args[2].dispatch_table
+    assert sub_form_dispatch is not None
+    assert sub_form_dispatch["sl"] == "is.modelo-200.cuota-integra-bracket-general"
+    assert sub_form_dispatch["cooperativa"] == "is.modelo-200.cuota-integra-bracket-cooperative-protected"
+    assert sub_form_dispatch["sin_fines_lucrativos"] == "is.modelo-200.cuota-integra-bracket-non-profit-special-regime"
+
+
+def test_incn_binding_is_decimal_channel_profile_sourced_and_grounded() -> None:
+    """The INCN binding is profile-sourced, Decimal-channel, grounded in LIS Art. 29.
+
+    The micro-empresa gate must read from the operator-declared
+    taxpayer profile fact ``incn_prior_12_months`` (no hand-typed
+    casilla), arrive on the Decimal binding channel (so the
+    ``less_than`` comparison can consume it numerically), and carry
+    LIS Art. 29 legal grounding.
+    """
+    binding = next(
+        b for b in _snapshot().revision.bindings if b.id == _INCN_BINDING
+    )
+    assert binding.source == "profile"
+    assert binding.selector.get("field") == "incn_prior_12_months"
+    # The Decimal channel is determined by the binding NOT being consumed
+    # as an enum-dispatch key anywhere in the formula graph; carrying no
+    # ``typed_enum`` is the structural marker.
+    assert binding.typed_enum is None
+    assert "ley-27-2014:art-29" in binding.legal_refs

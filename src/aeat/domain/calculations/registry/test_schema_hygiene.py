@@ -431,6 +431,37 @@ def test_renta_typed_binding_candidates_declare_substrate_enum_class() -> None:
     assert not offences, "Renta typed-binding gate violations:\n  " + "\n  ".join(offences)
 
 
+def test_renta_estimacion_directa_manual_supply_disposition_is_explicit() -> None:
+    """The Modelo 100 estimacion-directa flag stays a grounded manual-input binding.
+
+    ``irpf.estimation_regime`` is a profile fact for obligation-family
+    selection, but the Modelo 100 casilla 0168 binding is consumed as a
+    Decimal boolean operand in the calculation graph. The registry must
+    keep that manual-supply disposition explicit and source-cited across
+    every Renta revision.
+    """
+
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    bindings = [
+        binding
+        for binding in _modelo_100_bindings(modelos)
+        if str(binding.id).endswith("estimacion-directa-es-normal")
+    ]
+
+    assert bindings, "Modelo 100 must declare the estimacion-directa binding"
+    for binding in bindings:
+        assert binding.source == "manual_input", binding.id
+        assert binding.selector == {
+            "casilla": "0168",
+            "data_type": "boolean",
+            "true_value": "N",
+            "false_value": "S",
+        }, binding.id
+        assert binding.typed_enum == "EstimacionDirectaModalidad", binding.id
+        assert binding.source_refs, binding.id
+        assert binding.source_citations, binding.id
+
+
 _RENTA_TYPED_BINDING_BRIDGES: tuple[tuple[str, str], ...] = (
     ("tax-residence-ccaa", "CCAA"),
     ("estimacion-directa-es-normal", "EstimacionDirectaModalidad"),

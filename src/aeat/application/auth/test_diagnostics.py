@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -10,27 +12,34 @@ import pytest
 
 from ...adapters.outbound.aeat.auth import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider, SensitivityClass
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import Settings, load_settings, override_settings
 from ._diagnostics import list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
+@contextmanager
+def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[Settings]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=bucket_id,
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield settings
+        finally:
+            dispose_engine(settings)
+
+
 def test_auth_diagnostics_list_and_show_redact_page_bodies(
     tmp_path: Path,
-    monkeypatch,
 ) -> None:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "auth-diagnostics.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            repo = SecureObjectRepository(engine=engine)
+    bucket_id = "auth-diagnostics"
+    with _active_runtime(tmp_path, bucket_id), EphemeralMasterKeyProvider():
+            repo = secure_object_repository_for_bucket(bucket_id)
             older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
             newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
             repo.save(
@@ -101,16 +110,16 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
             assert listed.rows[0].html_captured is True
             assert listed.rows[0].screenshot_captured is False
             assert listed.rows[0].auth_mode == "non_qr"
-            assert listed.rows[0].identity_kind == "NIE"
+            assert listed.rows[0].identity_kind == ""
             assert listed.rows[0].headless is True
-            assert listed.rows[0].active_profile_id == "profile-123"
-            assert listed.rows[0].active_profile_label == "live-operator"
-            assert listed.rows[0].profile_tax_id_present is True
-            assert listed.rows[0].clave_identity_configured is True
-            assert listed.rows[0].identity_alignment == "mismatch"
-            assert listed.rows[0].nie_soporte_configured is True
-            assert listed.rows[0].certificate_path_configured is True
-            assert listed.rows[0].certificate_backend == "playwright_context"
+            assert listed.rows[0].active_profile_id == ""
+            assert listed.rows[0].active_profile_label == ""
+            assert listed.rows[0].profile_tax_id_present is None
+            assert listed.rows[0].clave_identity_configured is None
+            assert listed.rows[0].identity_alignment == ""
+            assert listed.rows[0].nie_soporte_configured is None
+            assert listed.rows[0].certificate_path_configured is None
+            assert listed.rows[0].certificate_backend == ""
             assert listed.rows[0].url == (
                 "www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
                 "?keys=qAA,ref,storksp,from,ts"
@@ -123,10 +132,25 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
             assert detail.url == listed.rows[0].url
             assert detail.auth_mode == "non_qr"
             assert detail.identity_kind == "NIE"
+            assert detail.active_profile_id == "profile-123"
+            assert detail.active_profile_label == "live-operator"
+            assert detail.profile_tax_id_present is True
+            assert detail.clave_identity_configured is True
+            assert detail.identity_alignment == "mismatch"
+            assert detail.nie_soporte_configured is True
+            assert detail.certificate_path_configured is True
+            assert detail.certificate_backend == "playwright_context"
             assert detail.profile_tax_id_fingerprint == "sha256:profiletax"
             assert detail.clave_identity_fingerprint == "sha256:clavetax"
             assert detail.nie_soporte_fingerprint == "sha256:support"
             assert detail.certificate_path_fingerprint == "sha256:certpath"
+            assert detail.operator_report_commands == (
+                "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
+                "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",
+                "aeat config auth diagnostics report diag-new --phone-state app_did_not_prompt",
+                "aeat config auth diagnostics report diag-new --phone-state operator_did_not_check",
+            )
+            assert not any("secret" in command for command in detail.operator_report_commands)
             assert detail.html_excerpt == "[redacted html captured: 72 chars]"
             assert "sensitive form fields" not in detail.html_excerpt
             report = record_auth_diagnostic_phone_state("diag-new", "app_did_not_prompt")
@@ -142,5 +166,3 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
             assert record_auth_diagnostic_phone_state("missing", "app_did_not_prompt") is None
             with pytest.raises(ValueError):
                 record_auth_diagnostic_phone_state("diag-new", "guessed")
-        finally:
-            engine.dispose()

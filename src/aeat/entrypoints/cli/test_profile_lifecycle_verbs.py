@@ -20,7 +20,7 @@ from aeat.adapters.persistence.storage.bucket._manifest import (
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import load_settings
+from aeat.core.config import Settings, load_settings
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config import profile_app, repair_app
 
@@ -67,7 +67,7 @@ def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterat
     from aeat.adapters.persistence.storage import get_master_key_provider
     from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-verbs.db').as_posix()}")
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
     monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
     monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
@@ -85,11 +85,10 @@ def cli_runner() -> CliRunner:
 
 
 def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
-    # ``register_minimal_profile`` derives a profile-unique NIF by
-    # default so two ``_seed`` calls never collide on the
-    # duplicate-tax-id refusal; a test that asserts a specific tax id
-    # passes it explicitly.
-    overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
+    # These tests run under the unsecured test backend. Keep profile
+    # identities synthetic so the storage guard does not permit realistic
+    # identifiers through an unencrypted session.
+    overrides = {"identity.tax_id": tax_id or _synthetic_tax_id(name)}
     workflow_state_repository().update(
         lambda state: register_minimal_profile(state, profile_id=name, overrides=overrides)
     )
@@ -147,7 +146,7 @@ def test_config_profile_create_refuses_manifest_only_profile(cli_runner: CliRunn
             "--quiet",
             "--accept-defaults",
             "--tax-id",
-            "12345678Z",
+            "00000000T",
             "--name",
             "Operator",
             "--activity",
@@ -203,7 +202,7 @@ def test_config_profile_create_refuses_existing_profile(cli_runner: CliRunner) -
             "--quiet",
             "--accept-defaults",
             "--tax-id",
-            "12345678Z",
+            "00000000T",
             "--name",
             "Operator",
             "--activity",
@@ -281,7 +280,7 @@ def test_config_profile_edit_refuses_missing_profile_without_creating_bucket(cli
             "--quiet",
             "--accept-defaults",
             "--tax-id",
-            "12345678Z",
+            "00000000T",
             "--name",
             "Ghost",
             "--activity",
@@ -303,13 +302,22 @@ def test_config_profile_switch_emits_profile_activated_event(cli_runner: CliRunn
     captures workflow-state-level selection).
     """
 
+    from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
+    from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
     from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 
     _seed("operator")
     result = cli_runner.invoke(profile_app, ["switch", "operator"])
     assert result.exit_code == 0, result.output
 
-    catalogue = BucketEventHistoryRepository().load()
+    pointer = read_profile_bucket("operator")
+    assert pointer is not None
+    db_path = load_settings().aeat_local_storage_root / "buckets" / pointer.bucket_id / "db" / "aeat.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        catalogue = BucketEventHistoryRepository(objects=SecureObjectRepository(engine=engine)).load()
+    finally:
+        engine.dispose()
     matching = [
         event
         for event in catalogue.events.values()
@@ -330,7 +338,7 @@ def test_config_profile_show_emits_active_profile_facts(cli_runner: CliRunner) -
 
 
 def test_config_profile_show_named_profile_includes_canonical_facts(cli_runner: CliRunner) -> None:
-    _seed("operator", tax_id="00000001R")
+    _seed("operator", tax_id="X0000000T")
     _seed("spouse", tax_id="00000000T")
     result = cli_runner.invoke(profile_app, ["show", "spouse"])
     assert result.exit_code == 0, result.output
@@ -369,6 +377,25 @@ def test_config_profile_list_excludes_a_tombstoned_profile(cli_runner: CliRunner
     assert result.exit_code == 0, result.output
     assert "operator" not in result.output
     assert "<none>" in result.output
+
+
+def test_config_profile_list_skips_legacy_manifest_missing_status(cli_runner: CliRunner) -> None:
+    """A single legacy manifest must not make the profile list unusable."""
+
+    _seed("operator")
+    _stage_bucket_manifest("legacy-bucket", label="legacy")
+    target = manifest_path(bucket_paths(load_settings().aeat_local_storage_root, "legacy-bucket"))
+    legacy_text = "\n".join(
+        line for line in target.read_text(encoding="utf-8").splitlines() if not line.startswith("status = ")
+    )
+    target.write_text(f"{legacy_text}\n", encoding="utf-8")
+
+    result = cli_runner.invoke(profile_app, ["list"])
+
+    assert result.exit_code == 0, result.output
+    assert "operator" in result.output
+    assert "legacy" not in result.output
+    assert "skipped_invalid_manifests\t1" in result.output
 
 
 def test_config_profile_switch_refuses_a_tombstoned_profile(cli_runner: CliRunner) -> None:
@@ -427,7 +454,7 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
             "--quiet",
             "--accept-defaults",
             "--tax-id",
-            "12345678Z",
+            "X0000000T",
             "--name",
             "Operator",
             "--activity",
@@ -441,7 +468,7 @@ def test_deleted_profile_name_is_reusable_by_create_and_rename(
     # And the freed name is reachable through ``rename`` too. Delete the
     # recreated profile, seed a live one, rename it onto the freed name.
     assert cli_runner.invoke(profile_app, ["delete", "operator", "--yes"]).exit_code == 0
-    _seed("colleague", tax_id="00000001R")
+    _seed("colleague", tax_id="Y0000000Z")
     renamed = cli_runner.invoke(profile_app, ["rename", "colleague", "operator"])
     assert renamed.exit_code == 0, renamed.output
     assert "display_name\toperator" in renamed.output
@@ -512,7 +539,7 @@ def test_config_profile_create_quiet_emits_confirmation(cli_runner: CliRunner) -
             "freshprofile",
             "--quiet",
             "--tax-id",
-            "12345678Z",
+            "00000000T",
             "--name",
             "Test",
             "--activity",
@@ -541,7 +568,7 @@ def test_config_profile_edit_quiet_emits_updated_confirmation(cli_runner: CliRun
             "editme",
             "--quiet",
             "--tax-id",
-            "12345678Z",
+            "00000000T",
             "--name",
             "Edited",
             "--activity",
@@ -653,21 +680,20 @@ def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iter
         dispose_engine()
 
 
-_NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
+_SYNTHETIC_TAX_IDS = {
+    "alpha": "00000000T",
+    "beta": "X0000000T",
+    "operator": "00000000T",
+    "operator-spouse": "X0000000T",
+    "spouse": "X0000000T",
+    "colleague": "Y0000000Z",
+}
 
 
-def _distinct_nif(name: str) -> str:
-    """Return a checksum-valid NIF derived deterministically from ``name``.
+def _synthetic_tax_id(name: str) -> str:
+    """Return a checksum-valid synthetic tax id for unsecured-backend tests."""
 
-    ``profile create`` refuses two profiles that share a tax id, so a
-    test creating several profiles needs a distinct, valid NIF per
-    profile rather than one hard-coded literal.
-    """
-
-    import hashlib
-
-    number = int(hashlib.sha256(name.encode("utf-8")).hexdigest(), 16) % 100_000_000
-    return f"{number:08d}{_NIF_CONTROL_LETTERS[number % 23]}"
+    return _SYNTHETIC_TAX_IDS.get(name, "00000000T")
 
 
 def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) -> None:
@@ -676,7 +702,7 @@ def _create_via_cli(runner: CliRunner, name: str, *, tax_id: str | None = None) 
         [
             "config", "profile", "create", name,
             "--quiet",
-            "--tax-id", tax_id or _distinct_nif(name),
+            "--tax-id", tax_id or _synthetic_tax_id(name),
             "--name", name.capitalize(),
             "--activity", "design",
             "--iva-regime", "GENERAL",
@@ -793,7 +819,7 @@ def test_profile_create_refuses_case_insensitive_duplicate_label(
         [
             "config", "profile", "create", "OPERATOR",
             "--quiet",
-            "--tax-id", "12345678Z",
+            "--tax-id", "X0000000T",
             "--name", "Operator2",
             "--activity", "design",
             "--iva-regime", "GENERAL",

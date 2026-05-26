@@ -13,16 +13,18 @@ field.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...core.config import Settings, load_settings, override_settings
 from ._models import (
     WorkflowAbortReason,
     WorkflowResult,
@@ -32,6 +34,19 @@ from ._models import (
 from ._persistence import load_run, save_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+@contextmanager
+def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[Settings]:
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile=bucket_id,
+            aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+        ) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        yield settings
 
 
 def _populated_run() -> WorkflowResult:
@@ -72,21 +87,13 @@ def _populated_run() -> WorkflowResult:
 
 def test_workflow_run_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A WorkflowResult saved via save_run loads back strictly equal."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-run-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    with _active_runtime(tmp_path, "workflow-run-roundtrip") as settings:
+        engine = create_engine_from_settings(settings)
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
-
             original = _populated_run()
             save_run(original)
             loaded = load_run(original.run_id)
@@ -116,7 +123,6 @@ def test_workflow_run_survives_encrypted_storage_roundtrip(
 
 def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: ABORTED ↔ aborted_reason invariant holds post-persistence.
 
@@ -142,21 +148,21 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     from ...adapters.persistence.storage import SensitivityClass
     from ._persistence import _RUN_NAMESPACE, _RUN_VERSION
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "workflow-run-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
+    with _active_runtime(tmp_path, "workflow-run-anti-tautology") as settings:
+        engine = create_engine_from_settings(settings)
         Base.metadata.create_all(engine)
         try:
-            objects = SecureObjectRepository(engine=engine)
+            from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+
+            repository = inspect_bucket_storage_runtime(
+                "workflow-run-anti-tautology",
+                settings,
+            ).secure_object_repository()
             original = _populated_run()
             save_run(original)
 
             # Sanity: the run is loadable through the same engine.
-            loaded = objects.load(
+            loaded = repository.load(
                 _RUN_NAMESPACE,
                 original.run_id,
                 expected_class=SensitivityClass.FINANCIAL,
@@ -176,7 +182,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             )
             payload["aborted_reason"] = None
             envelope["payload"] = payload
-            objects.save(
+            repository.save(
                 namespace=_RUN_NAMESPACE,
                 object_key=original.run_id,
                 classification=SensitivityClass.FINANCIAL,
@@ -186,16 +192,7 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
             )
 
             # load_run must trip the ABORTED ↔ aborted_reason invariant.
-            regression_caught = False
-            try:
+            with pytest.raises(ValidationError, match="aborted_reason"):
                 load_run(original.run_id)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: clearing aborted_reason on "
-                "an ABORTED run did NOT surface on load. The workflow-runs "
-                "boundary is tautological and the abort-classification "
-                "contract cannot be trusted on replay."
-            )
         finally:
             engine.dispose()

@@ -21,7 +21,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from ....core.config import Settings
+from ....core.config import override_settings
 from ....domain.profile.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -32,11 +32,11 @@ from ....domain.profile.inventory import (
 )
 from ...persistence.storage import EphemeralMasterKeyProvider
 from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ...persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
 from .inventory import InventoryLedgerRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "profile-inventory-roundtrip"
 
 
 def _populated_ledger() -> InventoryLedger:
@@ -89,13 +89,11 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
 ) -> None:
     """InventoryLedgerDocument roundtrips strictly with non-default movements + layers."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "inventory-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
             objects = SecureObjectRepository(engine=engine)
 
@@ -124,6 +122,7 @@ def test_inventory_ledger_survives_encrypted_storage_roundtrip(
             assert purchase.deductible_vat_ratio == Decimal("1.00")
         finally:
             engine.dispose()
+            dispose_engine(settings)
 
 
 def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
@@ -156,13 +155,11 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     from ...persistence.storage.sql.session import session_scope
     from .inventory import _INVENTORY_NAMESPACE, _LEDGER_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "inventory-anti-tautology.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
         try:
             objects = SecureObjectRepository(engine=engine)
             repo = InventoryLedgerRepository(objects=objects)
@@ -190,3 +187,4 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
                 repo.load()
         finally:
             engine.dispose()
+            dispose_engine(settings)

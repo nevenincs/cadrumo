@@ -128,7 +128,8 @@ def test_show_refuses_when_no_snapshot_exists(cli_runner: CliRunner) -> None:
     # The CLI error boundary re-raises AeatError under test rather than
     # rendering it to output; assert the refusal carries the message
     # (the boundary renders this same text to stderr in real use).
-    assert "no census snapshot" in str(result.exception).lower()
+    rendered = f"{result.output}\n{result.exception}".lower()
+    assert "no census snapshot" in rendered
 
 
 def test_show_emits_active_snapshot(cli_runner: CliRunner) -> None:

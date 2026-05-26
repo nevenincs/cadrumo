@@ -28,7 +28,8 @@ from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path
 from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import read_pointer, write_pointer
 from ...core.config import override_settings
@@ -48,6 +49,8 @@ from ._orchestration import ProfileAlreadyRegisteredError
 from ._profile_repository import ProfileRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_PROFILE_STORE_BUCKET_ID = "profile-repository"
 
 # The minimum schema-valid fact set the user-profile schema accepts.
 _VALID_FACTS: tuple[UserProfileFact, ...] = (
@@ -83,15 +86,25 @@ _INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
 def _backend(tmp_path: Path) -> Iterator[Path]:
     """A real per-bucket storage root with an active master-key session."""
 
-    dispose_engine()
     provider = EphemeralMasterKeyProvider()
-    provider.__enter__()
-    try:
-        with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None):
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=_PROFILE_STORE_BUCKET_ID,
+    ) as settings:
+        dispose_engine(settings)
+        provider.__enter__()
+        try:
             yield tmp_path
-    finally:
-        provider.__exit__(None, None, None)
-        dispose_engine()
+        finally:
+            provider.__exit__(None, None, None)
+            dispose_engine(settings)
+
+
+def _repository(root: Path) -> ProfileRepository:
+    return ProfileRepository(
+        root=root,
+        secure_objects=SecureObjectRepository(engine=get_engine()),
+    )
 
 
 def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
@@ -103,7 +116,7 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     load-re-defaults-field regression would surface as inequality.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Roundtrip Operator", facts=_VALID_FACTS)
 
     loaded = repository.load(created.profile_id)
@@ -128,7 +141,7 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
     profiles and refuses the duplicate before any store write.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     first = repository.create(label="Original", facts=_VALID_FACTS)
 
     # `_VALID_FACTS` carries tax id 00000000T; a second create with the
@@ -151,7 +164,7 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
 def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
     """Two profiles with distinct tax ids both register cleanly."""
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     first = repository.create(label="First", facts=_VALID_FACTS)
     second = repository.create(label="Second", facts=_SECOND_FACTS)
 
@@ -171,7 +184,7 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     drift would be served silently and every load is tautological.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Drift Operator", facts=_VALID_FACTS)
 
     # Corrupt the manifest in place: rewrite bucket_id to a foreign UUID.
@@ -200,7 +213,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
 
     # A pre-existing profile so "pointer restored to its prior state"
     # is a non-trivial assertion: the pointer must end at the survivor.
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     survivor = repository.create(label="Survivor", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=survivor.profile_id, schema_version=1))
     prior_pointer = read_pointer(_backend)
@@ -224,7 +237,7 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
 def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
     """``delete`` tombstones the record and clears the active pointer."""
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="To Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
@@ -250,7 +263,7 @@ def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     pointer stranded" intermediate.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Torn Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
@@ -289,7 +302,7 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
     own (untouched) state.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     active = repository.create(label="Active One", facts=_VALID_FACTS)
     other = repository.create(label="Other One", facts=_SECOND_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=active.profile_id, schema_version=1))
@@ -308,7 +321,7 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
 def test_list_summarises_every_registered_profile(_backend: Path) -> None:
     """``list`` returns one typed summary per registered profile."""
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     first = repository.create(label="First", facts=_VALID_FACTS)
     second = repository.create(label="Second", facts=_SECOND_FACTS)
 
@@ -332,7 +345,7 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
     from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Soft Delete", facts=_VALID_FACTS)
 
     repository.delete(created.profile_id)
@@ -353,7 +366,7 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
 
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Vanishing", facts=_VALID_FACTS)
     assert read_profile_bucket("Vanishing", root=_backend) is not None
 
@@ -380,7 +393,7 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
     same error class as an unknown profile.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Not Selectable", facts=_VALID_FACTS)
     repository.delete(created.profile_id)
 
@@ -391,11 +404,11 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
 def test_deleted_profile_name_is_reusable(_backend: Path) -> None:
     """After ``delete`` the freed display name is reusable by ``create``.
 
-    Per the profile-UUID-identity ADR, display names are unique among
-    *live* profiles only; a tombstoned profile's name is free to reuse.
+    Display names are unique among live profiles only; a tombstoned
+    profile's name is free to reuse.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     first = repository.create(label="Recyclable", facts=_VALID_FACTS)
     repository.delete(first.profile_id)
 
@@ -413,7 +426,7 @@ def test_deleted_profile_name_is_reusable_by_rename(_backend: Path) -> None:
     rename onto a tombstoned profile's former name succeeds.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     retired = repository.create(label="Old Label", facts=_VALID_FACTS)
     repository.delete(retired.profile_id)
     live = repository.create(label="Live Label", facts=_SECOND_FACTS)
@@ -433,7 +446,7 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
     the tombstone leak could recur undetected.
     """
 
-    repository = ProfileRepository()
+    repository = _repository(_backend)
     created = repository.create(label="Status Drift", facts=_VALID_FACTS)
     # The fresh profile's record is ACTIVE and the manifest mirrors it.
     assert created.status is UserProfileStatus.ACTIVE

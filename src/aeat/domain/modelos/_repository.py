@@ -27,6 +27,8 @@ _LOGGER = get_logger(__name__)
 _WORK_UNIT_NAMESPACE = "aeat.domain.modelos.work_units"
 _WORK_UNIT_OBJECT_KEY = "catalogue"
 _WORK_UNIT_CATALOGUE_VERSION = 1
+WORK_UNIT_NAMESPACE = _WORK_UNIT_NAMESPACE
+WORK_UNIT_CATALOGUE_VERSION = _WORK_UNIT_CATALOGUE_VERSION
 
 
 class WorkUnitPersistenceError(ModeloError):
@@ -149,6 +151,8 @@ def remove_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str) -> WorkUni
 
 
 __all__ = [
+    "WORK_UNIT_CATALOGUE_VERSION",
+    "WORK_UNIT_NAMESPACE",
     "WorkUnitCatalogueRepository",
     "WorkUnitPersistenceError",
     "remove_work_unit",

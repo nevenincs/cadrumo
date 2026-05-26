@@ -42,6 +42,15 @@ Audited secure-storage implementation for duplicated enums, duplicated models, d
 - `W03.P05` and `W03.P06` remain the architectural owner for central namespace registry work.
 - `W11.P19.S77` should add guard coverage for duplicated storage constants after the namespace registry exists.
 
+## Repairs
+
+- `W11.P19.S76` removed duplicated Argon2id KDF defaults from `src/aeat/application/user_profile/_profile_repository.py`.
+- `W11.P19.S76` added `KdfParams.to_manifest_params()` so the canonical master-key KDF model can materialise the manifest-side `ManifestKdfParams` shape without repeating algorithm, version, cost, salt length, or output-length literals in the profile repository.
+- `W11.P19.S76` kept the conversion local-imported to avoid an import-time cycle between the master-key KDF model and bucket manifest model.
+- `W11.P19.S76` left namespace registry consolidation and lifecycle enum consolidation to the existing architectural owner waves because those require a broader registry decision rather than a narrow shared-contract repair.
+
 ## Validation
 
 The audit used targeted scans for repository namespace strings, schema-version constants, `SensitivityClass`, `StorageRouteKind`, pydantic models, and local `StrEnum` declarations across secure-storage and application repository code.
+
+Follow-up validation for `W11.P19.S76` included focused ruff checks, canonical KDF model tests, real profile repository roundtrip tests, and a targeted code review of layering, schema-drift, security, and test-quality risks.

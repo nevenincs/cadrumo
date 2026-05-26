@@ -55,6 +55,7 @@ _WALLET_SELECTOR_URL = _EXTERNAL.aeat.clave_movil.selector_access_url_template.f
 )
 _OWN_NAME_REPRESENTATION_ACTION = "representation-gate-own-name-continue"
 _WALLET_EXECUTE_READ_ACTION = "wallet-execute-read-query"
+_WALLET_ERROR_PREFIX = "adapters.aeat.iva_wallet.errors"
 IVA_COMPENSATION_WALLET_URL = _WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 _READ_GUARD_POLICY = RemoteStateGuardPolicy(
@@ -85,7 +86,10 @@ async def fetch_iva_compensation_wallet(
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            translated_message=f"{_WALLET_ERROR_PREFIX}.missing_auth_session",
+            suggestion="aeat config auth status",
+        )
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
@@ -103,17 +107,14 @@ async def fetch_iva_compensation_wallet(
                 )
                 if is_aeat_wallet_auth_gate_redirect(page.url):
                     raise SedeNavigationError(
-                        "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
+                        translated_message=f"{_WALLET_ERROR_PREFIX}.pre303_auth_gate",
                         failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                         context={
                             "landing_url": page.url,
                             "expected_url": _PRE303_PRESENTATION_URL,
                             "surface": "pre303_presentation_service",
                         },
-                        suggestion=(
-                            "Authenticate specifically for the Pre303 presentation service before reading "
-                            "the IVA compensation wallet."
-                        ),
+                        suggestion="aeat config auth status",
                     )
                 wallet_execute_submitted = await _open_authenticated_surface(
                     page,
@@ -126,21 +127,24 @@ async def fetch_iva_compensation_wallet(
                 )
             except PlaywrightError as exc:
                 raise SedeNavigationError(
-                    f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}"
+                    translated_message=f"{_WALLET_ERROR_PREFIX}.navigation_failed",
+                    context={
+                        "source_surface": "pre303_presentation_service",
+                        "target_surface": "iva_compensation_wallet",
+                        "cause_type": type(exc).__name__,
+                    },
+                    suggestion="aeat app live iva-wallet pull --help",
                 ) from exc
             if is_aeat_wallet_auth_gate_redirect(page.url):
                 raise SedeNavigationError(
-                    "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                    translated_message=f"{_WALLET_ERROR_PREFIX}.wallet_auth_gate",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                     context={
                         "landing_url": page.url,
                         "expected_url": _WALLET_URL,
                         "surface": "iva_compensation_wallet",
                     },
-                    suggestion=(
-                        "Authenticate specifically for the Pre303 presentation service, then retry the "
-                        "read-only wallet capture."
-                    ),
+                    suggestion="aeat config auth status",
                 )
             html = await page.content()
             try:
@@ -156,13 +160,10 @@ async def fetch_iva_compensation_wallet(
                 )
             except SedeParseError as exc:
                 raise SedeParseError(
-                    str(exc),
                     failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
                     context=_wallet_page_shape_context(html, landing_url=page.url),
-                    suggestion=(
-                        "Inspect the captured AEAT wallet page shape and update the read-only parser or "
-                        "navigation chain; do not hard-code operator wallet values into tests."
-                    ),
+                    translated_message=f"{_WALLET_ERROR_PREFIX}.external_shape_changed",
+                    suggestion="aeat app live iva-wallet pull --help",
                 ) from exc
         finally:
             try:
@@ -204,7 +205,14 @@ def parse_iva_compensation_wallet_html(
             except SedeParseError:
                 raise
             except Exception as exc:
-                raise SedeParseError(f"could not parse IVA compensation wallet row {cells!r}: {exc}") from exc
+                raise SedeParseError(
+                    translated_message=f"{_WALLET_ERROR_PREFIX}.row_parse_failed",
+                    context={
+                        "row_cell_count": len(cells),
+                        "row_sha256": hashlib.sha256("|".join(cells).encode("utf-8")).hexdigest(),
+                        "cause_type": type(exc).__name__,
+                    },
+                ) from exc
 
     if not matched_wallet_table and allow_empty_wallet_shell and _looks_like_executed_empty_wallet_page(soup):
         return IvaCompensationWalletObservation(
@@ -219,7 +227,7 @@ def parse_iva_compensation_wallet_html(
             raw_sha256=hashlib.sha256(html.encode("utf-8")).hexdigest(),
         )
     if not matched_wallet_table:
-        raise SedeParseError("captured page does not contain a recognizable IVA compensation wallet table")
+        raise SedeParseError(translated_message=f"{_WALLET_ERROR_PREFIX}.missing_wallet_table")
 
     total_pending = sum((row.pending_amount for row in rows), Decimal("0"))
     return IvaCompensationWalletObservation(
@@ -337,11 +345,25 @@ async def _continue_own_name_representation(
     _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         await page.wait_for_selector(
+            _PRE303.representation_own_name_selector,
+            timeout=settings.aeat_browser_selector_probe_timeout_ms,
+        )
+        await page.wait_for_selector(
             _PRE303.representation_own_name_label_selector,
             timeout=settings.aeat_browser_selector_probe_timeout_ms,
         )
-        await page.click(_PRE303.representation_own_name_label_selector)
-        await page.click(_PRE303.representation_submit_selector)
+        try:
+            await page.check(
+                _PRE303.representation_own_name_selector,
+                timeout=settings.aeat_browser_selector_probe_timeout_ms,
+                force=True,
+            )
+        except AttributeError:
+            await page.click(_PRE303.representation_own_name_label_selector)
+        await page.click(
+            _PRE303.representation_submit_selector,
+            timeout=settings.aeat_browser_selector_probe_timeout_ms,
+        )
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
             timeout=settings.aeat_browser_navigation_timeout_ms,
@@ -349,8 +371,7 @@ async def _continue_own_name_representation(
         await page.wait_for_load_state("domcontentloaded")
     except PlaywrightError as exc:
         raise SedeNavigationError(
-            "AEAT representation gate did not expose the own-name continuation expected for the "
-            "authenticated profile user.",
+            translated_message=f"{_WALLET_ERROR_PREFIX}.representation_gate_unexpected",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={
                 "landing_url": getattr(page, "url", None),
@@ -358,7 +379,7 @@ async def _continue_own_name_representation(
                 "surface": surface,
                 "blocked_operation": "representative_or_unknown_representation_gate",
             },
-            suggestion="Do not provide represented-third-party data through this driver.",
+            suggestion="aeat app live iva-wallet pull --help",
         ) from exc
 
 
@@ -383,20 +404,20 @@ async def _submit_wallet_execute_gate_if_present(
     content = getattr(page, "content", None)
     if content is None:
         raise SedeNavigationError(
-            "Playwright page does not expose content(); cannot inspect AEAT wallet execute gate",
+            translated_message=f"{_WALLET_ERROR_PREFIX}.page_content_missing",
             failure_mode=SedeFailureMode.BROWSER_BACKEND_FAILED,
         )
     try:
         html = await content()
     except PlaywrightError as exc:
         raise SedeNavigationError(
-            "AEAT IVA wallet execute gate could not be inspected",
+            translated_message=f"{_WALLET_ERROR_PREFIX}.execute_gate_inspection_failed",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         ) from exc
     result = _wallet_execute_gate_status(html, expected_path=expected_path)
     if result == "unexpected-wallet-form":
         raise SedeNavigationError(
-            "AEAT IVA wallet form action did not match the expected wallet surface",
+            translated_message=f"{_WALLET_ERROR_PREFIX}.wallet_form_action_mismatch",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context=_wallet_page_shape_context(html, landing_url=getattr(page, "url", "") or ""),
         )
@@ -425,30 +446,25 @@ async def _submit_wallet_execute_gate_if_present(
                 and not _has_wallet_table(post_execute_html)
             ):
                 raise SedeNavigationError(
-                    "AEAT IVA wallet read query left the executable wallet shell without a wallet table",
+                    translated_message=f"{_WALLET_ERROR_PREFIX}.wallet_execute_left_shell",
                     failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
                     context=_wallet_page_shape_context(
                         post_execute_html,
                         landing_url=getattr(page, "url", "") or current_url,
                     ),
-                    suggestion=(
-                        "Treat this as an incomplete wallet read, not an empty wallet. Inspect the structural "
-                        "diagnostic before accepting zero compensation evidence."
-                    ),
+                    suggestion="aeat app live iva-wallet pull --help",
                 )
         except PlaywrightError as exc:
             raise SedeNavigationError(
-                "AEAT IVA wallet read query could not be completed",
+                translated_message=f"{_WALLET_ERROR_PREFIX}.wallet_execute_failed",
                 failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 context={
                     **_wallet_page_shape_context(html, landing_url=current_url),
                     "expected_url": expected_url,
                     "blocked_operation": "wallet_execute_read_query",
+                    "cause_type": type(exc).__name__,
                 },
-                suggestion=(
-                    "Inspect the structural wallet shape diagnostic; do not provide or hard-code live "
-                    "taxpayer wallet values."
-                ),
+                suggestion="aeat app live iva-wallet pull --help",
             ) from exc
         return True
     return False
@@ -535,7 +551,7 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     year = _parse_year(cells[0])
     period = cells[1].strip().upper()
     if not period:
-        raise SedeParseError("IVA wallet period cell is empty")
+        raise SedeParseError(translated_message=f"{_WALLET_ERROR_PREFIX}.period_empty")
     return IvaCompensationWalletRow(
         generation_year=year,
         generation_period=period,
@@ -549,7 +565,10 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
 def _parse_year(value: str) -> int:
     match = re.search(r"\b(20[0-9]{2})\b", value)
     if match is None:
-        raise SedeParseError(f"IVA wallet generation year could not be parsed from {value!r}")
+        raise SedeParseError(
+            translated_message=f"{_WALLET_ERROR_PREFIX}.generation_year_unparseable",
+            context=_redacted_value_context(value),
+        )
     return int(match.group(1))
 
 
@@ -558,14 +577,27 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     cleaned = cleaned.replace(".", "").replace(",", ".")
     cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
     if not cleaned:
-        raise SedeParseError("IVA wallet amount cell is empty")
+        raise SedeParseError(translated_message=f"{_WALLET_ERROR_PREFIX}.amount_empty")
     try:
         amount = Decimal(cleaned)
     except InvalidOperation as exc:
-        raise SedeParseError(f"IVA wallet amount could not be parsed from {value!r}") from exc
+        raise SedeParseError(
+            translated_message=f"{_WALLET_ERROR_PREFIX}.amount_unparseable",
+            context=_redacted_value_context(value),
+        ) from exc
     if amount < Decimal("0"):
-        raise SedeParseError(f"IVA wallet amount must be non-negative: {value!r}")
+        raise SedeParseError(
+            translated_message=f"{_WALLET_ERROR_PREFIX}.amount_negative",
+            context=_redacted_value_context(value),
+        )
     return amount
+
+
+def _redacted_value_context(value: str) -> dict[str, object]:
+    return {
+        "value_length": len(value),
+        "value_sha256": hashlib.sha256(value.encode("utf-8")).hexdigest(),
+    }
 
 
 def _normalised_text(value: str) -> str:

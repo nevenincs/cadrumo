@@ -1,5 +1,9 @@
 [[revisions."2022".bindings]]
 id = "renta-2022-modelo-100-estimacion-directa-es-normal"
+# Intentionally manual_input: profile irpf.estimation_regime selects
+# obligation families, while Modelo 100 casilla 0168 is a
+# per-declaration modality flag consumed by formulas as a Decimal
+# boolean operand. Operators supply this binding for the calculation.
 source = "manual_input"
 selector = { casilla = "0168", data_type = "boolean", true_value = "N", false_value = "S" }
 aggregation = { op = "copy" }

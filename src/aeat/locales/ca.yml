@@ -964,27 +964,6 @@ cli:
         push_namespace_help: Espai de dades que vols pujar; es pot repetir
         root_folder_id_unset: No hi ha cap carpeta arrel de Google Drive configurada;
           executa `aeat config google folder set <id>` primer
-    init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
-      certificate_path_help: Path to the .p12 or .pfx certificate file
-      drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
-      from_help: Source profile ID to import settings from
-      help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
-      output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
-      quiet_help: Amaga el missatge d'èxit després d'inicialitzar
-      submissions_dir_help: Directory to store submitted filing receipts
-      success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
-      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     profile:
@@ -1887,6 +1866,7 @@ cli:
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
     language_help: Idioma de sortida per a aquesta ordre (substitueix el perfil actiu)
+    profile_help: Nom de perfil AEAT o id de bucket que cal usar per a aquesta ordre
     quiet_help: Mostrar només errors a stderr
     startup_import_error: 'No es pot iniciar la interfície d''ordres d''AEAT: falta
       la dependència {dependency}. Executa `aeat config repair`.'

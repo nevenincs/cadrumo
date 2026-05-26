@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.bucket._errors import NoActiveBucketError
 from aeat.adapters.persistence.storage.errors import StorageValidationError
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
@@ -17,6 +19,8 @@ from aeat.adapters.persistence.storage.runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
+from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings, StorageRouteKind, override_settings
@@ -188,7 +192,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
         override_settings(
             aeat_local_storage_root=tmp_path,
         ),
-        activate_session(_session("bucket-a")),
+        activate_session(_session("bucket-a", opened_at=datetime.now(UTC))),
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
@@ -234,7 +238,7 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session("bucket-a", opened_at=datetime.now(UTC))):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with pytest.raises(StorageValidationError, match="no active bucket session"):
@@ -244,11 +248,11 @@ def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> Non
 def test_runtime_repository_factory_rechecks_session_bucket(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session("bucket-a", opened_at=datetime.now(UTC))):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
-        activate_session(_session("bucket-b")),
+        activate_session(_session("bucket-b", opened_at=datetime.now(UTC))),
         pytest.raises(StorageValidationError, match="active bucket session changed"),
     ):
         runtime.secure_object_repository()
@@ -259,7 +263,7 @@ def test_runtime_repository_factory_rechecks_sealed_session(tmp_path: Path) -> N
     sealed_session = _session("bucket-a")
     sealed_session.close()
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session("bucket-a", opened_at=datetime.now(UTC))):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
@@ -277,7 +281,7 @@ def test_runtime_repository_factory_rechecks_expired_session(tmp_path: Path) -> 
         idle_minutes=5,
     )
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session("bucket-a", opened_at=datetime.now(UTC))):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
@@ -290,11 +294,40 @@ def test_runtime_repository_factory_rechecks_expired_session(tmp_path: Path) -> 
 def test_runtime_repository_factory_rechecks_unsecured_session(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
-    with activate_session(_session("bucket-a")):
+    with activate_session(_session("bucket-a", opened_at=datetime.now(UTC))):
         runtime = inspect_storage_runtime(settings, now=_NOW)
 
     with (
-        activate_session(_session("bucket-a", unsecured_backend=True)),
+        activate_session(_session("bucket-a", opened_at=datetime.now(UTC), unsecured_backend=True)),
         pytest.raises(StorageValidationError, match="active bucket session uses unsecured backend"),
     ):
         runtime.secure_object_repository()
+
+
+def test_ephemeral_master_key_provider_requires_active_profile(tmp_path: Path) -> None:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None),
+        pytest.raises(NoActiveBucketError),
+        EphemeralMasterKeyProvider(),
+    ):
+        pass
+
+
+def test_secure_object_load_rejects_mismatched_route(tmp_path: Path) -> None:
+    mismatched_settings = _settings_for_bucket(tmp_path, "bucket-b")
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        activate_session(_session("bucket-a", opened_at=datetime.now(UTC))),
+    ):
+        engine = create_engine_from_settings(mismatched_settings)
+        try:
+            with pytest.raises(StorageValidationError, match="route does not match"):
+                SecureObjectRepository(engine=engine).load(
+                    "aeat.test.runtime.read",
+                    "object-1",
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+        finally:
+            engine.dispose()

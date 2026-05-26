@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from .._errors import DomainError
 
-class BucketsError(Exception):
+
+class BucketsError(DomainError):
     """Base error for the bucket-event-history domain."""
 
 

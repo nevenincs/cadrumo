@@ -128,7 +128,7 @@ def test_finca_invariant_violation_surfaces_on_reload(tmp_path: Path) -> None:
         try:
             with session_scope(engine) as session:
                 FincaRepository(session).get(saved.id)
-        except Exception:  # noqa: BLE001 - boundary may raise different types
+        except Exception:
             regression_caught = True
 
         assert regression_caught, (

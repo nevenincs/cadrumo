@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
 from ....domain.profile.errors import InventoryLedgerError
 from ....domain.profile.inventory import InventoryLedger, MovementKind, MovementRecord, StockLayer, ValuationMethod
 from ..storage import EphemeralMasterKeyProvider
@@ -22,17 +23,18 @@ from ..storage.sql import dispose_engine
 from .inventory import load_inventory, record_movement, save_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "profile-inventory"
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _ephemeral_master_key(tmp_path: Path) -> Iterator[None]:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 def _movement(kind: MovementKind, quantity: str, unit_cost: str, day: int) -> MovementRecord:
@@ -85,7 +87,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(tmp_path) ->
     )
 
     path = save_inventory((ledger,))
-    db_bytes = (tmp_path / "aeat.db").read_bytes()
+    db_bytes = (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").read_bytes()
 
     assert not path.exists()
     assert b"LEAK-CANARY-SKU" not in db_bytes

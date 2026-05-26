@@ -15,7 +15,6 @@ from ....application.diagnostics import (
     build_config_repair_report,
     preview_quarantine_unreadable_secure_objects,
     probe_browser_connectivity,
-    quarantine_unreadable_secure_objects,
     render_browser_connectivity_text,
     render_config_repair_text,
 )
@@ -28,7 +27,7 @@ from ....core.i18n import tr
 from ....core.logging import default_log_file_path
 from .._command_suggestions import AeatTyperGroup
 from .._common import _emit
-from .._errors import CliRefusedBoundaryError
+from .._errors import CliRefusedBoundaryError, decorate_typer_app
 
 _wizard_create_command = build_wizard_command(SETUP_FLOW, mode="create")
 _wizard_edit_command = build_wizard_command(SETUP_FLOW, mode="edit")
@@ -129,8 +128,7 @@ def repair_quarantine(
         raise CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
     # Cold-root guard: quarantine is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database to scan. Report
-    # cleanly rather than crashing on the absent database URL
-    # (disaster ADR Ruling 6).
+    # cleanly rather than crashing on the absent database URL.
     if resolve_active_bucket_id() is None:
         _emit(
             ctx,
@@ -143,6 +141,8 @@ def repair_quarantine(
             ),
         )
         return
+    if not dry_run:
+        raise CliRefusedBoundaryError(tr("cli.config.repair.quarantine_preserve_first_refused"))
     if dry_run:
         report = preview_quarantine_unreadable_secure_objects()
         payload = {"dry_run": True, **report.model_dump(mode="json")}
@@ -153,25 +153,10 @@ def repair_quarantine(
                 "dry_run\ttrue",
                 f"would_quarantine\t{report.unreadable_total}",
                 f"would_retain\t{report.readable_total}",
-                *tuple(
-                    f"{item.namespace}\t{item.unreadable}"
-                    for item in report.namespaces
-                    if item.unreadable > 0
-                ),
+                *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
             ),
         )
         return
-    report = quarantine_unreadable_secure_objects()
-    _emit(
-        ctx,
-        {"dry_run": False, **report.model_dump(mode="json")},
-        (
-            "dry_run\tfalse",
-            f"quarantined\t{report.unreadable_total}",
-            f"retained\t{report.readable_total}",
-            *tuple(f"{item.namespace}\t{item.unreadable}" for item in report.namespaces if item.unreadable > 0),
-        ),
-    )
 
 
 def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
@@ -180,8 +165,7 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     Reads the file from the end in bounded chunks (seek-from-end)
     rather than materialising the whole file in memory. The previous
     ``read_text().splitlines()`` implementation raised ``MemoryError``
-    on a large log file (disaster ADR Ruling 6 / fumbler testimony
-    F8). The chunked tail keeps memory proportional to the requested
+    on a large log file. The chunked tail keeps memory proportional to the requested
     line count, not the file size.
     """
 
@@ -230,7 +214,7 @@ def repair_reset_state(
     # Cold-root guard: reset-state is bootstrap-exempt; on a root with
     # no active profile there is no workflow-state envelope to reset.
     # Report cleanly rather than crashing on the absent per-bucket
-    # database (disaster ADR Ruling 6).
+    # database.
     if resolve_active_bucket_id() is None:
         _emit(
             ctx,
@@ -482,7 +466,7 @@ def repair_integrity_objects(
     # Cold-root guard: integrity is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database whose secure-object
     # rows could be probed. Report cleanly rather than crashing on the
-    # absent database URL (disaster ADR Ruling 6).
+    # absent database URL.
     if resolve_active_bucket_id() is None:
         _emit(
             ctx,
@@ -509,6 +493,116 @@ def repair_integrity_objects(
 
 
 @integrity_app.command(
+    "attribution",
+    help=tr(
+        "cli.config.repair.integrity_attribution_help",
+        default="Group undecryptable secure-object rows by safe metadata.",
+    ),
+)
+def repair_integrity_attribution(
+    ctx: typer.Context,
+    details: typing.Annotated[
+        bool,
+        typer.Option(
+            "--details",
+            help=tr(
+                "cli.config.repair.integrity_attribution_details_help",
+                default="Print one line per unreadable secure-object row.",
+            ),
+        ),
+    ] = False,
+) -> None:
+    """Render grouped unreadable-row attribution through the repair surface."""
+
+    from ....application.repair_integrity import build_repair_integrity_attribution_report
+
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        _emit(
+            ctx,
+            {
+                "attribution_version": 1,
+                "payload_disclosure": "metadata_only",
+                "namespaces": (),
+                "unreadable_total": 0,
+                "reason": "no-active-profile",
+            },
+            (
+                "unreadable\t0",
+                "payload_disclosure\tmetadata_only",
+                "reason\tno active profile; nothing to attribute",
+            ),
+        )
+        return
+    report = build_repair_integrity_attribution_report(active_bucket_id=active_bucket_id)
+    lines = [
+        f"unreadable\t{report.unreadable_total}",
+        f"payload_disclosure\t{report.payload_disclosure}",
+        f"row_detail_mode\t{'details' if details else 'summary'}",
+    ]
+    if report.unreadable_total and not details:
+        lines.append("details_hint\taeat config repair integrity attribution --details")
+    for namespace in report.namespaces:
+        lines.extend(
+            (
+                f"namespace\t{namespace.namespace}",
+                f"namespace_role\t{namespace.namespace_classification.role}",
+                f"owner_semantics\t{namespace.owner_semantics}",
+                f"unreadable_count\t{namespace.unreadable_count}",
+                f"first_written_at\t{namespace.first_written_at.isoformat() if namespace.first_written_at else ''}",
+                f"last_written_at\t{namespace.last_written_at.isoformat() if namespace.last_written_at else ''}",
+            )
+        )
+        for requirement in namespace.namespace_classification.replacement_evidence_requirements:
+            lines.append(f"replacement_evidence_required\t{requirement}")
+        for group in namespace.classification_groups:
+            lines.append(f"classification\t{group.classification}\tunreadable_count\t{group.unreadable_count}")
+        if not details:
+            continue
+        for row in namespace.unreadable_rows:
+            parts = [
+                f"key\t{row.object_key_digest}",
+                f"owner_semantics\t{row.owner_semantics}",
+                f"likely_origin\t{row.likely_origin}",
+                f"origin_confidence\t{row.origin_confidence}",
+            ]
+            if row.row_id is not None:
+                parts.append(f"row_id\t{row.row_id}")
+            if row.classification:
+                parts.append(f"class\t{row.classification}")
+            if row.schema_version is not None:
+                parts.append(f"schema\t{row.schema_version}")
+            if row.written_at is not None:
+                parts.append(f"written_at\t{row.written_at.isoformat()}")
+            if row.reason:
+                parts.append(f"reason\t{row.reason}")
+            if row.context_bucket_id:
+                parts.append(f"context_bucket_id\t{row.context_bucket_id}")
+            if row.object_key_kind:
+                parts.append(f"object_key_kind\t{row.object_key_kind}")
+            if row.object_key_hint:
+                parts.append(f"object_key_hint\t{row.object_key_hint}")
+            if row.context_confidence:
+                parts.append(f"context_confidence\t{row.context_confidence}")
+            if row.context_note:
+                parts.append(f"context_note\t{row.context_note}")
+            lines.append("\t".join(parts))
+    _emit(ctx, _repair_attribution_payload(report, include_rows=details), lines)
+
+
+def _repair_attribution_payload(report: typing.Any, *, include_rows: bool) -> dict[str, typing.Any]:
+    payload = report.model_dump(mode="json")
+    payload["row_detail_mode"] = "details" if include_rows else "summary"
+    if include_rows:
+        return payload
+    for namespace in payload["namespaces"]:
+        namespace.pop("unreadable_rows", None)
+    if report.unreadable_total:
+        payload["details_hint"] = "aeat config repair integrity attribution --details"
+    return payload
+
+
+@integrity_app.command(
     "registry",
     help=tr(
         "cli.config.repair.integrity_registry_help",
@@ -518,11 +612,10 @@ def repair_integrity_objects(
 def repair_integrity_registry(ctx: typer.Context) -> None:
     """Run full registry validation as an explicit, opt-in verb.
 
-    Disaster ADR Ruling 4 moves the full registry TOML parse +
-    cross-domain referential-integrity gate off the ``--version``
-    and bare-invocation surfaces, where it caused a multi-minute
-    cold-start hang. The validation is engineer-facing and runs only
-    when the operator explicitly asks for it here.
+    The full registry TOML parse and cross-domain referential-integrity
+    gate are intentionally off the ``--version`` and bare-invocation
+    surfaces. The validation is engineer-facing and runs only when the
+    operator explicitly asks for it here.
     """
 
     from ....application.diagnostics import build_registry_integrity_report
@@ -541,6 +634,70 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
 
 
 repair_app.add_typer(integrity_app, name="integrity")
+
+
+@repair_app.command(
+    "plan",
+    help=tr(
+        "cli.config.repair.plan_help",
+        default="Dry-run preserve-first remediation planning for unreadable secure-object rows.",
+    ),
+)
+def repair_plan(ctx: typer.Context) -> None:
+    """Render a dry-run remediation plan without mutating secure-object state."""
+
+    from ....application.repair_integrity import build_repair_remediation_plan
+
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        _emit(
+            ctx,
+            {
+                "dry_run": True,
+                "payload_disclosure": "metadata_only",
+                "planned_mutations": 0,
+                "namespaces": (),
+                "unreadable_total": 0,
+                "reason": "no-active-profile",
+            },
+            (
+                "dry_run\ttrue",
+                "payload_disclosure\tmetadata_only",
+                "planned_mutations\t0",
+                "unreadable\t0",
+                "reason\tno active profile; nothing to plan",
+            ),
+        )
+        return
+    report = build_repair_remediation_plan(active_bucket_id=active_bucket_id)
+    lines = [
+        "dry_run\ttrue",
+        f"payload_disclosure\t{report.payload_disclosure}",
+        f"planned_mutations\t{report.planned_mutations}",
+        f"unreadable\t{report.unreadable_total}",
+        f"status\t{report.check.status}",
+        f"summary\t{report.check.summary}",
+    ]
+    if report.check.next_action:
+        lines.append(f"next_action\t{report.check.next_action}")
+    for item in report.namespaces:
+        lines.extend(
+            (
+                f"namespace\t{item.namespace}",
+                f"namespace_role\t{item.namespace_role}",
+                f"unreadable_count\t{item.unreadable_count}",
+                f"recommended_outcome\t{item.recommended_outcome}",
+                f"mutation_allowed\t{str(item.mutation_allowed).lower()}",
+                f"destructive_quarantine_allowed\t{str(item.destructive_quarantine_allowed).lower()}",
+                f"destructive_quarantine_policy\t{item.destructive_quarantine_policy}",
+                f"namespace_next_action\t{item.next_action}",
+            )
+        )
+        for origin in item.likely_origins:
+            lines.append(f"likely_origin\t{origin}")
+        for requirement in item.replacement_evidence_requirements:
+            lines.append(f"replacement_evidence_required\t{requirement}")
+    _emit(ctx, report.model_dump(mode="json"), lines)
 
 
 @repair_app.command(
@@ -578,7 +735,8 @@ def repair_list(
                 default="--all and --unreadable cannot be combined; pass one or neither.",
             )
         )
-    if resolve_active_bucket_id() is None:
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
         _emit(
             ctx,
             {"namespace": namespace, "rows_total": 0, "reason": "no-active-profile"},
@@ -593,14 +751,23 @@ def repair_list(
         namespace=namespace,
         include_all=include_all,
         only_unreadable=only_unreadable,
+        active_bucket_id=active_bucket_id,
     )
     lines = [
         f"namespace\t{report.namespace}",
         f"filter\t{report.filter_mode}",
+        f"namespace_role\t{report.namespace_classification.role}",
+        f"iva_reconciliation_relevance\t{report.namespace_classification.iva_reconciliation_relevance}",
+        "iva_compensation_history_participant\t"
+        f"{report.namespace_classification.participates_in_iva_compensation_history}",
+        f"destructive_repair_risk\t{report.namespace_classification.destructive_repair_risk}",
+        f"operator_note\t{report.namespace_classification.operator_note}",
         f"readable\t{report.integrity.readable}",
         f"unreadable\t{report.integrity.unreadable}",
         f"rows_total\t{report.rows_total}",
     ]
+    for requirement in report.namespace_classification.replacement_evidence_requirements:
+        lines.append(f"replacement_evidence_required\t{requirement}")
     for row in report.rows:
         parts = [
             f"key\t{row.object_key_digest}",
@@ -616,6 +783,16 @@ def repair_list(
             parts.append(f"written_at\t{row.written_at.isoformat()}")
         if row.reason:
             parts.append(f"reason\t{row.reason}")
+        if row.context_bucket_id:
+            parts.append(f"context_bucket_id\t{row.context_bucket_id}")
+        if row.object_key_kind:
+            parts.append(f"object_key_kind\t{row.object_key_kind}")
+        if row.object_key_hint:
+            parts.append(f"object_key_hint\t{row.object_key_hint}")
+        if row.context_confidence:
+            parts.append(f"context_confidence\t{row.context_confidence}")
+        if row.context_note:
+            parts.append(f"context_note\t{row.context_note}")
         lines.append("\t".join(parts))
     _emit(ctx, report.model_dump(mode="json"), lines)
 
@@ -703,37 +880,28 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     repository's own rollback cannot see.
     """
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from ....application.user_profile._orchestration import (
-        _write_active_profile_pointer,
-        capture_active_profile_pointer,
+        profile_create_storage_span,
         register_active_profile,
-        restore_active_profile_pointer,
     )
     from ....domain.user_profile import new_profile_id
 
     profile_id = new_profile_id()
-    prior_pointer = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
-    try:
-        provider = get_master_key_provider()
-        with activate_master_key_provider(provider, fallback_bucket_id=profile_id):
-            repository = _profile_state()
-            repository.update(
-                lambda current: register_active_profile(
-                    current,
-                    profile_id=profile_id,
-                    display_name=display_name,
-                    facts=facts,
-                    # `duplicate` and `import` legitimately reproduce an
-                    # existing profile's tax id; the duplicate-tax-id
-                    # refusal applies to a fresh `profile create` only.
-                    enforce_unique_tax_id=False,
-                )
+    with profile_create_storage_span(profile_id) as routing_profile_id:
+        repository = _profile_state()
+        repository.update(
+            lambda current: register_active_profile(
+                current,
+                profile_id=profile_id,
+                display_name=display_name,
+                facts=facts,
+                # `duplicate` and `import` legitimately reproduce an
+                # existing profile's tax id; the duplicate-tax-id
+                # refusal applies to a fresh `profile create` only.
+                enforce_unique_tax_id=False,
+                routing_profile_id=routing_profile_id,
             )
-    except Exception:
-        restore_active_profile_pointer(prior_pointer)
-        raise
+        )
     return profile_id
 
 
@@ -749,14 +917,19 @@ def config_list(ctx: typer.Context) -> None:
     set without unlocking any bucket.
     """
 
-    from ....application.workflow._profile_bucket_scan import list_profile_buckets
+    from ....application.workflow._profile_bucket_scan import (
+        list_profile_bucket_scan_issues,
+        list_profile_buckets,
+    )
 
     active = resolve_active_bucket_id()
     buckets = list_profile_buckets()
+    scan_issues = list_profile_bucket_scan_issues()
     rows = sorted(buckets.values(), key=lambda pointer: pointer.label.casefold())
     active_label = next((p.label for p in rows if p.bucket_id == active), None)
     payload = {
         "active_profile": active_label,
+        "skipped_invalid_manifests": len(scan_issues),
         "profiles": [
             {
                 "name": pointer.label,
@@ -773,6 +946,8 @@ def config_list(ctx: typer.Context) -> None:
         for pointer in rows:
             marker = "*" if pointer.bucket_id == active else " "
             lines.append(f"{marker}\t{pointer.label}")
+    if scan_issues:
+        lines.append(f"skipped_invalid_manifests\t{len(scan_issues)}")
     _emit(ctx, payload, lines)
 
 
@@ -783,41 +958,15 @@ def config_profile_switch(
 ) -> None:
     """Select an existing profile as the active profile."""
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._orchestration import select_profile
-    from ....core.config import override_settings
+    from ....application.user_profile._orchestration import select_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     pointer = read_profile_bucket(name)
     if pointer is None:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
-    _assert_profile_record_present(
-        ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
-    )
+    _assert_profile_record_present(ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label)
     try:
-        # ``switch`` is the verb that *establishes* a bucket session; it
-        # must not depend on one already being open. The root callback
-        # only opens a session when an active profile already resolves,
-        # so a switch from a no-active-profile state (the first switch,
-        # or a switch after the active profile was deleted) reaches the
-        # decrypting selection write with no session. Open a session
-        # scoped to the target bucket here, mirroring the bootstrap-
-        # create path, so both the workflow-state selection write and
-        # the PROFILE_ACTIVATED event append can decrypt their buckets.
-        with (
-            override_settings(aeat_active_profile=pointer.bucket_id),
-            activate_master_key_provider(
-                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
-            ),
-        ):
-            repository = _profile_state()
-            repository.update(
-                lambda current: select_profile(current, profile_id=pointer.bucket_id)
-            )
-            _emit_profile_activated_event(
-                profile_id=pointer.bucket_id,
-                active_profile=resolve_active_bucket_id(),
-            )
+        select_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         _emit_profile_record_missing(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
@@ -830,9 +979,7 @@ def config_profile_switch(
     )
 
 
-def _assert_profile_record_present(
-    ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str
-) -> None:
+def _assert_profile_record_present(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
     from ....domain.user_profile import ProfileNotFoundError
 
     try:
@@ -913,77 +1060,15 @@ def _emit_profile_record_unreadable(
 def _read_profile_record(*, profile_id: str, bucket_id: str):
     """Read a profile record under a bucket session scoped to that profile."""
 
-    from ....adapters.persistence.storage import (
-        activate_master_key_provider,
-        get_master_key_provider,
-        has_active_bucket_session,
-    )
-    from ....application.user_profile._orchestration import build_lifecycle_service
+    from ....adapters.persistence.storage import has_active_bucket_session
+    from ....application.user_profile._orchestration import build_lifecycle_service, profile_storage_session
     from ....application.workflow._models import resolve_active_bucket_id
-    from ....core.config import override_settings
 
     if bucket_id == resolve_active_bucket_id() and has_active_bucket_session():
         return build_lifecycle_service(bucket_id=bucket_id).read(profile_id)
-    with override_settings(aeat_active_profile=bucket_id):
+    with profile_storage_session(bucket_id):
         service = build_lifecycle_service(bucket_id=bucket_id)
-        with activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=bucket_id):
-            return service.read(profile_id)
-
-
-def _emit_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
-    """Append a PROFILE_ACTIVATED event to the bucket-event-history catalogue.
-
-    Records the operator-visible profile-activation transition so
-    downstream auditors can replay the activation timeline without
-    re-deriving it from secure-object snapshots. Distinct from
-    PROFILE_SELECTED (which records selection at workflow-state level)
-    so the catalogue carries the explicit activation event.
-    """
-
-    from datetime import UTC, datetime
-
-    from ....domain.buckets import (
-        BucketEvent,
-        BucketEventHistoryRepository,
-        BucketEventObjectType,
-        BucketEventType,
-        append_bucket_event,
-        derive_bucket_event_id,
-    )
-
-    if active_profile is None:
-        return
-
-    occurred_at = datetime.now(UTC)
-    payload = {"profile_id": profile_id, "active_profile": active_profile}
-    actor = "operator"
-    bucket_id = active_profile
-    event_id = derive_bucket_event_id(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.PROFILE_ACTIVATED,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=profile_id,
-        payload=payload,
-    )
-    repo = BucketEventHistoryRepository()
-    repo.save(
-        append_bucket_event(
-            repo.load(),
-            BucketEvent(
-                event_id=event_id,
-                bucket_id=bucket_id,
-                event_type=BucketEventType.PROFILE_ACTIVATED,
-                occurred_at=occurred_at,
-                actor=actor,
-                object_type=BucketEventObjectType.PROFILE,
-                object_id=profile_id,
-                payload_version=1,
-                payload=payload,
-            ),
-        )
-    )
+        return service.read(profile_id)
 
 
 @profile_app.command("show", help=tr("cli.config.profile.show_help"))
@@ -999,9 +1084,10 @@ def config_profile_show(
     discover the failure on stdout and via the shell exit status.
     """
 
-    from ....application.user_profile._orchestration import build_lifecycle_service
     from ....application.user_profile._projections import record_to_path_values
+    from ....application.user_profile._validation import ProfileValidationService
     from ....domain.user_profile import ProfileNotFoundError
+    from ....domain.user_profile import load_user_profile_schema
 
     if name is not None:
         # ``show`` is the inspect surface: a tombstoned profile is still
@@ -1018,7 +1104,6 @@ def config_profile_show(
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
             raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
-    service = build_lifecycle_service(bucket_id=pointer.bucket_id)
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -1033,7 +1118,7 @@ def config_profile_show(
         raise typer.Exit(code=2) from exc
     from ....domain.user_profile import UserProfileStatus
 
-    report = service._validator.validate_record(record)
+    report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
     blocking = [issue for issue in report.issues if issue.severity.value == "error"]
     is_tombstoned = record.status is UserProfileStatus.TOMBSTONED
     values = record_to_path_values(record)
@@ -1075,9 +1160,7 @@ def config_profile_delete(
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
-    from ....adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
-    from ....application.user_profile._profile_repository import ProfileRepository
-    from ....core.config import override_settings
+    from ....application.user_profile._orchestration import delete_profile_with_lifecycle_span
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
@@ -1095,16 +1178,9 @@ def config_profile_delete(
     # Its load + remove decrypt the target bucket, so a session scoped
     # to that bucket must be open even when the profile is not active.
     try:
-        with (
-            override_settings(aeat_active_profile=pointer.bucket_id),
-            activate_master_key_provider(
-                get_master_key_provider(), fallback_bucket_id=pointer.bucket_id
-            ),
-        ):
-            aggregate = ProfileRepository().delete(pointer.bucket_id)
+        record = delete_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
-    record = aggregate.record
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
@@ -1221,9 +1297,7 @@ def config_profile_rename(
     source: str = typer.Argument(
         ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
     ),
-    target: str = typer.Argument(
-        ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
-    ),
+    target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
 ) -> None:
     """Rename a profile by changing its operator-visible label.
 
@@ -1380,15 +1454,11 @@ def config_profile_import(
     # `--label` lets the operator land a second copy under a new name.
     target_label = label.strip() if label is not None and label.strip() else record.display_name
     if read_profile_bucket(target_label) is not None:
-        raise CliRefusedBoundaryError(
-            tr("cli.config.profile.import_label_taken", name=target_label)
-        )
+        raise CliRefusedBoundaryError(tr("cli.config.profile.import_label_taken", name=target_label))
     try:
         target_id = _atomic_create_profile(display_name=target_label, facts=record.facts)
     except ProfileAlreadyRegisteredError as exc:
-        raise CliRefusedBoundaryError(
-            tr("cli.config.profile.already_exists", name=target_label)
-        ) from exc
+        raise CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target_label)) from exc
     _emit(
         ctx,
         {
@@ -1414,10 +1484,9 @@ def config_profile_import(
 def config_profile_logout(ctx: typer.Context) -> None:
     """Clear the active-profile pointer so subsequent verbs refuse without an explicit switch."""
 
-    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+    from ....application.user_profile._orchestration import logout_active_profile
 
-    before = resolve_active_bucket_id()
-    _clear_active_profile_pointer()
+    before = logout_active_profile()
     _emit(
         ctx,
         {"logged_out_profile": before or "", "active_profile": None},
@@ -1765,9 +1834,6 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
                     row.captured_at.isoformat(),
                     row.reason,
                     f"mode={row.auth_mode or '-'}",
-                    f"identity_kind={row.identity_kind or '-'}",
-                    f"profile={row.active_profile_label or row.active_profile_id or '-'}",
-                    f"alignment={row.identity_alignment or '-'}",
                     f"headless={row.headless if row.headless is not None else '-'}",
                     f"phone_state={row.phone_state or '-'}",
                     f"html={row.html_captured}",
@@ -1792,9 +1858,7 @@ def auth_diagnostics_show(
 
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
-        raise CliRefusedBoundaryError(
-            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
-        )
+        raise CliRefusedBoundaryError(tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id))
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     bool_value = _optional_bool_text
     _emit(
@@ -2201,6 +2265,7 @@ from ._profile_census import register as _register_profile_census
 
 _register_profile_census(profile_app)
 
+decorate_typer_app(profile_app)
 app.add_typer(profile_app, name="profile")
 auth_app.add_typer(apoderado_app, name="apoderado")
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")

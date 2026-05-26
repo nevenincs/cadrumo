@@ -10,7 +10,24 @@ related:
 
 # `declaracion-extraction-architecture` `W03.P06.S19`
 
-BLOCKED — M303 `declaracion_pdf` profile cannot be authored in W03 due to casilla ID / form number mismatch in the registry.
+COMPLETED on 2026-05-22 — M303 now has a source-grounded `declaracion_pdf` profile for registered, extractable result-chain casillas.
+
+## 2026-05-22 superseding execution
+
+The earlier blocker below was true for the semantic-only M303 registry, but the current split registry now carries numeric printed casilla IDs in `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.toml`. I added `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` and wired `modelo-303-declaracion-pdf` into the `modelo-303-iva-autoliquidacion` construct.
+
+The profile is deliberately limited to casillas that are both registered and visible in the sanitized real 2024-1T declaration fixture: `27`, `45`, `64`, `66`, and `71`. Printed boxes `46`, `69`, `87`, and `110` appear in the fixture text, but they are not registered as numeric casilla IDs in the current `casillas/0001-casillas.toml`, so they remain out of the profile rather than bypassing referential integrity.
+
+Legal/source grounding:
+- `legal_refs`: LIVA IVA/result articles plus RIVA and Orden EHA/3786/2008 references already used by the registered M303 result casillas.
+- `source_refs`: `aeat-dr-303-2025`, `boe-modelo-303-2008-form`.
+
+Verification:
+- `uv run --no-sync pytest -x src\aeat\adapters\inbound\declaracion\test_parser_boundary.py` -> 8 passed.
+- `uv run --no-sync pytest -x src\aeat\domain\calculations\registry\test_committed_registry.py` -> 41 passed.
+- `uv run --no-sync ruff check src\aeat\adapters\inbound\declaracion\_parser.py src\aeat\adapters\inbound\declaracion\test_parser_boundary.py` -> passed.
+
+## Prior 2026-05-21 blocker record
 
 ## Description
 

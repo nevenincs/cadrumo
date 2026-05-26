@@ -21,6 +21,7 @@ from ....core.config import (
     StorageRouteKind,
     classify_storage_route,
     load_settings,
+    settings_for_active_profile_bucket,
 )
 from .errors import StorageValidationError
 from .master_key._active_session import _active_session
@@ -29,9 +30,6 @@ if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
-
-
 class StorageRuntimeReadinessCode(StrEnum):
     """Machine-readable secure-storage runtime readiness states."""
 
@@ -149,7 +147,7 @@ class StorageRuntime(BaseModel):
                 "storage runtime is not ready for profile-bound storage: active bucket session uses unsecured backend.",
                 message_key="errors.storage.runtime.unsecured_backend",
             )
-        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and active.bucket_id != self.bucket_id:
+        if active.bucket_id != self.bucket_id:
             raise _runtime_not_ready_error(
                 "storage runtime is not ready for profile-bound storage: active bucket session changed.",
                 message_key="errors.storage.runtime.session_changed",
@@ -272,7 +270,6 @@ def inspect_storage_runtime(
         )
     elif (
         active is not None
-        and active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS
         and route.bucket_id != active.bucket_id
     ):
         issues.append(
@@ -323,14 +320,7 @@ def inspect_bucket_storage_runtime(
         and current_route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     ):
         return inspect_storage_runtime(resolved, now=now)
-    bucket_settings = Settings(
-        aeat_local_storage_root=resolved.aeat_local_storage_root,
-        aeat_active_profile=trimmed,
-        aeat_database_url="",
-    )
-    explicit_fields = set(bucket_settings.model_fields_set)
-    explicit_fields.discard("aeat_database_url")
-    object.__setattr__(bucket_settings, "__pydantic_fields_set__", explicit_fields)
+    bucket_settings = settings_for_active_profile_bucket(trimmed, resolved)
     return inspect_storage_runtime(bucket_settings, now=now)
 
 
