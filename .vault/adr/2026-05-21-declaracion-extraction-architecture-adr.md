@@ -181,3 +181,49 @@ cost, and makes the dead-stub failure mode a hard snapshot-build error.
   parser-code extension; those are Plan/execution work depending on this
   decision.
 - No live AEAT write surface is affected.
+
+## 2026-05-26 amendment
+
+### Silent-failure class and the provisional_pending_specimen field
+
+The task-32 audit (swarm axis: extraction-profile grounding) identified a
+systematic silent-failure class not addressed by this ADR's original
+`named_label` rule: nine `declaracion_pdf` profiles had loaded green for
+months with `label_pattern` values derived circularly from the registry's
+own casilla `label_es` fields, never verified against a real printed PDF.
+Three profiles (M036, M347, M840) carried inline `# PROVISIONAL` comments;
+six (M184, M193, M232 ×2, M720, M349) were silently provisional. Task-33
+added warning comments and downgraded confidence on M184, M193, and M720.
+
+This amendment formalises the acknowledgement mechanism as a typed schema
+field. `ExtractionProfileDefinition` now carries `provisional_pending_specimen:
+bool = False`. When True, it declares that the profile's `label_pattern`
+values were authored without a corpus PDF specimen for round-trip
+verification — the silent-failure class described above.
+
+### Validator gate
+
+The snapshot-build validator gains a complementary rule: for any
+`declaracion_pdf` profile that is NOT marked `provisional_pending_specimen =
+true`, the validator checks for a corpus fixture PDF at
+`tests/fixtures/justificantes/<modelo_id>/`. If no fixture exists and the
+flag is false, validation raises `RegistryValidationError`, requiring the
+author to either supply a specimen or explicitly acknowledge the open risk
+by setting the field. The gate is activated when the `RegistryValidator`
+has a `justificante_corpus_root` available (derived automatically from
+`source_root` or supplied directly for tests). M190 — the only GROUNDED
+profile in the audit's classification — retains the default `false` because
+its corpus fixture at `tests/fixtures/justificantes/190/` satisfies the
+gate.
+
+### Discipline going forward
+
+Any new `declaracion_pdf` extraction profile without a corpus fixture PDF
+must set `provisional_pending_specimen = true` explicitly. The silent
+path — authoring a profile, watching it load green, and shipping it — is
+now closed. Removing the provisional flag requires depositing a real
+specimen PDF and confirming the `label_pattern` values match its printed
+labels. The nine profiles tagged in task-34 (M036, M184, M193, M232
+2016-2017, M232 2018-y-siguientes, M347, M349, M720, M840) carry the flag
+until their respective specimen PDFs are acquired and the patterns are
+verified.
