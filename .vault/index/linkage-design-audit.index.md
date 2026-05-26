@@ -3,7 +3,7 @@ generated: true
 tags:
   - '#index'
   - '#linkage-design-audit'
-date: '2026-05-15'
+date: '2026-05-26'
 related:
   - '[[2026-05-15-linkage-design-audit-audit]]'
   - '[[2026-05-15-linkage-design-audit-plan]]'
@@ -15,6 +15,8 @@ related:
   - '[[2026-05-17-linkage-design-audit-plan]]'
   - '[[2026-05-18-linkage-design-audit-audit]]'
   - '[[2026-05-18-linkage-design-audit-plan]]'
+  - '[[2026-05-26-linkage-design-audit-adr]]'
+  - '[[2026-05-26-linkage-design-audit-research]]'
 ---
 
 # `linkage-design-audit` feature index
@@ -22,6 +24,10 @@ related:
 Auto-generated index of all documents tagged with `#linkage-design-audit`.
 
 ## Documents
+
+### adr
+
+- `2026-05-26-linkage-design-audit-adr` - `linkage-design-audit` ADR: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
 
 ### audit
 
@@ -44,3 +50,4 @@ Auto-generated index of all documents tagged with `#linkage-design-audit`.
 ### research
 
 - `2026-05-15-linkage-design-audit-research` - `linkage-design-audit` research: `Cross-domain linkage design — raw multi-agent audit record`
+- `2026-05-26-linkage-design-audit-research` - `linkage-design-audit` research: `casilla-values-collapse-hash-stability`
