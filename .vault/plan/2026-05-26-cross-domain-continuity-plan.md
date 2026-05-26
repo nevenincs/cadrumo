@@ -176,9 +176,9 @@ Casilla 552 IS manually inputable; the CLI accepts bare numeric 552 but the regi
 
 Every renta-2025-profile-* binding shows missing despite the fact existing on the profile. Audit the selector projection chain.
 
-- [ ] `W03.P16.S62` - for every renta-2025-profile-* binding list selector.field value and verify against canonical profile-fact path wizard emits; `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/bindings/`.
-- [ ] `W03.P16.S63` - confirm via schema audit that no other modelo (200 202 303 etc) has registered profile-sourced bindings today; `if findings surface a profile binding declared elsewhere; add it to the validation pass; otherwise close S63 as confirmed-empty with a note that S62 already covers the only modelo (100) with profile bindings; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W03.P16.S64` - identify the mismatch class key-namespace missing projection arm schema-version drift; `apply canonical fix at correct boundary; `src/aeat/application/modelo/_profile_binding.py`.
+- [x] `W03.P16.S62` - for every renta-2025-profile-* binding list selector.field value and verify against canonical profile-fact path wizard emits; `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/bindings/`.
+- [x] `W03.P16.S63` - confirm via schema audit that no other modelo (200 202 303 etc) has registered profile-sourced bindings today; `if findings surface a profile binding declared elsewhere; add it to the validation pass; otherwise close S63 as confirmed-empty with a note that S62 already covers the only modelo (100) with profile bindings; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W03.P16.S64` - identify the mismatch class key-namespace missing projection arm schema-version drift; `apply canonical fix at correct boundary; `src/aeat/application/modelo/_profile_binding.py`.
 - [ ] `W03.P16.S65` - regression test constructing realistic profile and asserting every renta-2025-profile-* binding resolves to stored fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
 
 ### Phase `W03.P17` - end-to-end CLI test coverage through real profile to binding path
@@ -437,7 +437,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S206` - remove _I18N_STRICT_PLACEHOLDERS from __all__ in core i18n _render.py; `private names must not be exported; Wave-1 audit FU-C; `src/aeat/core/i18n/_render.py`.
 - [ ] `W09.P41.S207` - add inline comment in _command_matches_current confirming attachment_ids equality is value-equal not identity-equal; `pydantic-frozen collection safety note; Wave-1 audit FU-E; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S208` - investigate and fix pre-existing storage regression breaking aeat config profile create CLI test fixture across multiple test files including test_modelo_202_modality test_profile_incn_new_entity_paths and test_modelo_work_applicability_guard; `unsecured backend error originates outside Wave-1 surface; `src/aeat/adapters/persistence/storage/`.
-- [ ] `W09.P41.S209` - migrate unsecured-backend monkeypatch test fixtures to isolated_runtime_profile pattern; S05/S06 require_ready enforcement broke test_modelo_discovery_defects test_modelo_work_ux and other tests; volume significant; sweep all unsecured-backend monkeypatch sites and migrate to the new fixture; restore green CI on those modules; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P41.S209` - migrate unsecured-backend monkeypatch test fixtures to isolated_runtime_profile pattern; `S05/S06 require_ready enforcement broke test_modelo_discovery_defects test_modelo_work_ux and other tests; volume significant; sweep all unsecured-backend monkeypatch sites and migrate to the new fixture; restore green CI on those modules; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W09.P42` - twin function merge
 
