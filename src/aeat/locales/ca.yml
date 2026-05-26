@@ -1327,6 +1327,8 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: Import de base imposable
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
@@ -2142,7 +2144,6 @@ errors:
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
     bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
@@ -2661,9 +2662,6 @@ errors:
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
-    refused_cli_stored_data_validation_boundary: Un registre de perfil o flux de treball
-      emmagatzemat ja no coincideix amb l'esquema esperat — les dades al disc han divergit
-      del format actual. Executa `aeat config repair` per diagnosticar i recuperar.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
       Executa `aeat config repair` o restableix l'estat del perfil.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
@@ -2837,6 +2835,9 @@ errors:
       unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
         L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
         o anell de claus.
+    stored_data_validation_boundary: Un registre de perfil o flux de treball emmagatzemat
+      ja no coincideix amb l'esquema esperat — les dades al disc han divergit del
+      format actual. Executa `aeat config repair` per diagnosticar i recuperar.
   transaction:
     import_source_invalid: l'origen no és un extracte bancari vàlid
     ledger_import_failed: 'No es pot importar l''extracte bancari: {reason}'

@@ -1344,6 +1344,8 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: Importe de base imponible
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -2167,7 +2169,6 @@ errors:
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
     bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
@@ -2677,10 +2678,6 @@ errors:
       son contradictorias. Usa solo una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Este comando necesita una entrada interactiva, pero la entrada
       estándar está redirigida. Ejecútalo en una terminal interactiva.
-    refused_cli_stored_data_validation_boundary: Un registro de perfil o flujo de
-      trabajo almacenado ya no coincide con el esquema esperado — los datos en disco
-      han divergido del formato actual. Ejecuta `aeat config repair` para diagnosticar
-      y recuperar.
     refused_cli_validation_boundary: La entrada del comando no superó la validación.
       Ejecuta `aeat config repair` o restablece el estado del perfil.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
@@ -2853,6 +2850,9 @@ errors:
         profile switch NAME` para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
+    stored_data_validation_boundary: Un registro de perfil o flujo de trabajo almacenado
+      ya no coincide con el esquema esperado — los datos en disco han divergido del
+      formato actual. Ejecuta `aeat config repair` para diagnosticar y recuperar.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'

@@ -1249,6 +1249,8 @@ cli:
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: Taxable base amount
     errors:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
@@ -2062,7 +2064,6 @@ errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
     bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
@@ -2529,9 +2530,6 @@ errors:
       Use only one of --quiet, --verbose or --debug.
     refused_cli_non_tty: This command needs interactive input, but standard input
       is piped. Run it in an interactive terminal.
-    refused_cli_stored_data_validation_boundary: A stored profile or workflow record
-      no longer matches the expected schema — the data on disk has drifted from the
-      current format. Run `aeat config repair` to diagnose and recover.
     refused_cli_validation_boundary: The command input failed validation. Run `aeat
       config repair` or reset the profile state.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
@@ -2691,6 +2689,9 @@ errors:
         switch NAME` to re-activate the profile.
       unsecured_backend: The active bucket session uses the unsecured backend. Production
         profile-bound storage requires file or keyring custody.
+    stored_data_validation_boundary: A stored profile or workflow record no longer
+      matches the expected schema — the data on disk has drifted from the current
+      format. Run `aeat config repair` to diagnose and recover.
   transaction:
     import_source_invalid: the source is not a valid ledger document
     ledger_import_failed: 'The ledger file cannot be imported: {reason}'
