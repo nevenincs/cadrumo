@@ -5,10 +5,8 @@ The orchestration layer's `register_active_profile` and
 `<aeat-root>/active-profile` pointer file so a subsequent process
 invocation resolves the active profile from disk before any
 encrypted state row needs to load. This file pins that contract
-end-to-end against a real `EphemeralMasterKeyProvider`, real
-SQLite, and the canonical `application/conftest.py`
-`override_settings(aeat_local_storage_root=tmp_path)` autouse
-fixture so the pointer write lands inside the sandbox.
+end-to-end against the canonical test runtime profile helper so the
+pointer write lands inside the sandboxed active-profile storage root.
 """
 
 from __future__ import annotations
@@ -18,11 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.application.user_profile._orchestration import (
     remove_active_profile,
     select_profile,
@@ -30,23 +24,22 @@ from aeat.application.user_profile._orchestration import (
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._models import WorkflowState
 from aeat.core._bucket_pointer_io import pointer_path, read_pointer
-from aeat.core.config import Settings, load_settings
+from aeat.core.config import load_settings, override_settings
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'orch-pointer.db').as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with (
+        isolated_runtime_profile(
+            tmp_path=tmp_path,
+            bucket_id="user-profile-orchestration-pointer-test",
+        ) as profile,
+        override_settings(aeat_active_profile=None),
+    ):
+        yield profile.repository
 
 
 def test_register_active_profile_writes_pointer_file(
