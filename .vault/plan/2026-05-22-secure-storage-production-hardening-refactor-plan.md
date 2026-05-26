@@ -226,9 +226,9 @@ Inspect existing implementation patterns and current secure-storage changes befo
 - [x] `W10.P17.S65` - Audit user-facing secure-storage error messages for tr-backed locale rendering before further repairs; `src/aeat`.
 - [x] `W10.P17.S66` - Audit secure-storage exceptions for AEAT core error base-class derivation and registry coverage; `src/aeat/adapters/persistence/storage`.
 - [x] `W10.P17.S67` - Audit exception swallowing and require at-least-debug logging or explicit typed degradation records; `src/aeat`.
-- [ ] `W10.P17.S68` - Audit secure-storage tests for tautological assertions, fake helpers, stubs, patches, skips, xfails, and mirrored business logic; `src/aeat`.
-- [ ] `W10.P17.S69` - Audit environment and storage-route handling for centralized Settings usage and naked env access; `src/aeat`.
-- [ ] `W10.P17.S70` - Audit secure-storage implementations for duplicated enums, duplicated models, and missed shared pydantic model reuse; `src/aeat`.
+- [x] `W10.P17.S68` - Audit secure-storage tests for tautological assertions, fake helpers, stubs, patches, skips, xfails, and mirrored business logic; `src/aeat`.
+- [x] `W10.P17.S69` - Audit environment and storage-route handling for centralized Settings usage and naked env access; `src/aeat`.
+- [x] `W10.P17.S70` - Audit secure-storage implementations for duplicated enums, duplicated models, and missed shared pydantic model reuse; `src/aeat`.
 
 ## Wave `W11` - convention hardening remediation
 
