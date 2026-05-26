@@ -240,9 +240,9 @@ Add the missing LedgerRentaIncomeAggregationSourceResolver and wire it into Mode
 
 - [x] `W05.P22.S81` - add LedgerRentaIncomeAggregationSourceResolver covering IRPF actividad-economica income side; `src/aeat/application/aggregation/_modelo_bindings.py`.
 - [x] `W05.P22.S82` - implement income-side aggregation logic following the expense-side resolver pattern; `src/aeat/application/aggregation/_renta_income_ledger.py`.
-- [ ] `W05.P22.S83` - register binding modelo-130-actividad-economica-ingresos-cumulative consuming the new resolver; `src/aeat/_data/registry/aeat/modelos/130.toml`.
-- [ ] `W05.P22.S84` - bind Modelo 130 casilla 01 to the new aggregation result; `src/aeat/_data/registry/aeat/modelos/130.toml`.
-- [ ] `W05.P22.S85` - regression test real autonomo ledger imports flow into Modelo 130 casilla 01 with expected cumulative ingresos; `src/aeat/application/aggregation/test_renta_income_aggregation.py`.
+- [x] `W05.P22.S83` - register binding modelo-130-actividad-economica-ingresos-cumulative consuming the new resolver; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [x] `W05.P22.S84` - bind Modelo 130 casilla 01 to the new aggregation result; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [x] `W05.P22.S85` - regression test real autonomo ledger imports flow into Modelo 130 casilla 01 with expected cumulative ingresos; `src/aeat/application/aggregation/test_renta_income_aggregation.py`.
 
 ### Phase `W05.P23` - FX-conversion contract for non-EUR transactions
 
@@ -480,7 +480,7 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S222` - R7-001 / W01.P03 follow-up localise ledger CSV date-parse error inner reason; `today wrapper text is es/ca/hu but the inner 'unsupported date format' string is English raw; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W09.P45.S224` - R7-A fix ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions; `LedgerTransactionPayload currency Field min_length 3 max_length 3 rejects empty or short currency strings; ledger review uses LedgerReviewRow without currency and succeeds; relax currency validation OR default to EUR on CSV import OR provide explicit operator-readable error pointing to the CSV currency column not config repair; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P45.S225` - R7-C pre-profile error language; `when active-profile pointer is malformed the language resolver cannot read output_language and defaults to Spanish; on subsequent runs after restore the message appears in Catalan; either hardcode multi-language critical-error rendering OR cache last-known-language outside the profile envelope OR document the inevitable Spanish-fallback in the error suggestion; `src/aeat/`.
-- [ ] `W09.P45.S226` - R7-D Pere observation calculation-result casilla labels remain in Spanish even with output-language ca; investigate whether registry casilla.label fields are localised and whether the CLI emitter consults the active profile language when rendering casilla rows; decide whether to translate labels or document the legal-Spanish convention explicitly to operators; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S226` - R7-D Pere observation calculation-result casilla labels remain in Spanish even with output-language ca; `investigate whether registry casilla.label fields are localised and whether the CLI emitter consults the active profile language when rendering casilla rows; decide whether to translate labels or document the legal-Spanish convention explicitly to operators; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
