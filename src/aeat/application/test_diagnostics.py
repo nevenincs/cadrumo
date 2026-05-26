@@ -15,7 +15,7 @@ from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.core.classification import SensitivityClass
-from aeat.core.config import Settings
+from aeat.core.config import Settings, override_settings
 from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 from .diagnostics import (
@@ -173,7 +173,6 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
 
 
 def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_master_key(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """A namespace populated under master key K1 must be reported as unreadable under K2.
@@ -184,7 +183,6 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     counts whenever rows from a prior keychain generation persist.
     """
     db_path = tmp_path / "rotated.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
     dispose_engine()
 
     key_old = EphemeralMasterKeyProvider()
@@ -231,22 +229,23 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
 
         # The default repair pipeline resolves storage from settings and
         # decrypts through the active K2 provider bound by this context.
-        dispose_engine()
-        try:
-            report = build_config_repair_report()
-            integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
-            assert integrity_check.status == "warn"
-            assert str(report.secure_objects.unreadable_total) in integrity_check.summary
-            assert str(report.secure_objects.readable_total) in integrity_check.summary
-            assert integrity_check.next_action == "aeat config repair quarantine --yes"
+        with override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+            dispose_engine(settings)
+            try:
+                report = build_config_repair_report()
+                integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
+                assert integrity_check.status == "warn"
+                assert str(report.secure_objects.unreadable_total) in integrity_check.summary
+                assert str(report.secure_objects.readable_total) in integrity_check.summary
+                assert integrity_check.next_action == "aeat config repair quarantine --yes"
 
-            ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
-            # Three rows sealed under the OLD ephemeral key should be
-            # unreadable under K2; the K2 row remains readable.
-            assert ns_report.unreadable >= 3
-            assert ns_report.unreadable + ns_report.readable == 4
-        finally:
-            dispose_engine()
+                ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
+                # Three rows sealed under the OLD ephemeral key should be
+                # unreadable under K2; the K2 row remains readable.
+                assert ns_report.unreadable >= 3
+                assert ns_report.unreadable + ns_report.readable == 4
+            finally:
+                dispose_engine(settings)
 
 
 def test_secure_objects_integrity_check_reports_ok_on_clean_database(
@@ -262,7 +261,6 @@ def test_secure_objects_integrity_check_reports_ok_on_clean_database(
 
 
 def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """The helper consumed by overview status returns the aggregate count.
@@ -273,7 +271,6 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
     pointing the operator at ``aeat config repair``.
     """
     db_path = tmp_path / "agg.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
     dispose_engine()
 
     key_old = EphemeralMasterKeyProvider()
@@ -300,13 +297,13 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
         finally:
             engine_old.dispose()
 
-    with key_new:
-        dispose_engine()
+    with key_new, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        dispose_engine(settings)
         try:
             total = secure_object_unreadable_total()
             assert total >= 3, f"expected at least three unreadable rows; got {total}"
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def test_secure_object_unreadable_total_is_zero_on_clean_database(
@@ -367,7 +364,6 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path) -> No
 
 
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """Quarantine archives the undecryptable rows; readable rows stay put.
@@ -387,7 +383,6 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
     import sqlite3
 
     db_path = tmp_path / "quar.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
     dispose_engine()
 
     key_old = EphemeralMasterKeyProvider()
@@ -413,8 +408,8 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
         finally:
             engine_old.dispose()
 
-    with key_new:
-        dispose_engine()
+    with key_new, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        dispose_engine(settings)
 
         engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         try:
@@ -429,13 +424,13 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
         finally:
             engine_new.dispose()
 
-        dispose_engine()
+        dispose_engine(settings)
         try:
             report = quarantine_unreadable_secure_objects()
             assert report.unreadable_total == 2
             assert report.readable_total == 1
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
     # Inspect the database directly to prove the row distribution.
     with sqlite3.connect(db_path) as con:
@@ -446,7 +441,6 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
 
 
 def test_preview_quarantine_reports_unreadable_rows_without_mutating(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """``preview_quarantine_*`` counts the rows the verb would move and moves none.
@@ -461,7 +455,6 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     import sqlite3
 
     db_path = tmp_path / "preview-quar.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
     dispose_engine()
 
     key_old = EphemeralMasterKeyProvider()
@@ -487,8 +480,8 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
         finally:
             engine_old.dispose()
 
-    with key_new:
-        dispose_engine()
+    with key_new, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+        dispose_engine(settings)
         engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
         try:
             SecureObjectRepository(engine=engine_new).save(
@@ -502,13 +495,13 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
         finally:
             engine_new.dispose()
 
-        dispose_engine()
+        dispose_engine(settings)
         try:
             preview = preview_quarantine_unreadable_secure_objects()
             assert preview.unreadable_total == 2
             assert preview.readable_total == 1
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
     # The preview moved nothing: all three rows stay in secure_objects
     # and the quarantine archive table was never created.
