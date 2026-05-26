@@ -1,0 +1,383 @@
+"""Static guards for secure-storage production-hardening conventions."""
+
+from __future__ import annotations
+
+import ast
+import importlib
+from pathlib import Path
+
+import pytest
+
+from aeat.adapters.persistence.storage.errors import SecureStorageError
+from aeat.core.errors import ERROR_REGISTRY, AeatError, get_registered_error_code
+from aeat.core.paths import PROJECT_ROOT
+from aeat.locales.manager import LocaleManager
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_HARDENING_TEST_SURFACES = (
+    "src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py",
+    "src/aeat/adapters/persistence/storage/master_key/test_master_key.py",
+    "src/aeat/adapters/persistence/storage/test_runtime.py",
+    "src/aeat/adapters/persistence/storage/master_key/test_kdf_params.py",
+    "src/aeat/application/user_profile/test_profile_repository.py",
+    "src/aeat/core/test_storage_route_classification.py",
+)
+
+_ALLOWED_ENV_KEYS_BY_SURFACE = {
+    "src/aeat/adapters/persistence/storage/master_key/test_master_key.py": {
+        "PASSPHRASE_ENV_VAR",
+    },
+}
+
+
+def test_bucket_session_cleanup_observability_does_not_use_suppression_markers() -> None:
+    path = PROJECT_ROOT / "src/aeat/adapters/persistence/storage/master_key/_bucket_session.py"
+    function = _function_named(path, "_evict_engine")
+    segment = _source_segment(path, function)
+
+    assert "# noqa" not in segment
+    assert "pragma: no cover" not in segment
+    assert "pass" not in {node.__class__.__name__.lower() for node in ast.walk(function)}
+    assert any(_is_logger_call(node, "warning") for node in ast.walk(function))
+    assert not any(_call_has_keyword(node, "exc_info") for node in ast.walk(function) if isinstance(node, ast.Call))
+
+
+def test_named_bucket_settings_derivation_stays_in_core_settings_boundary() -> None:
+    runtime_path = PROJECT_ROOT / "src/aeat/adapters/persistence/storage/runtime.py"
+    config_path = PROJECT_ROOT / "src/aeat/core/config.py"
+
+    runtime_text = runtime_path.read_text(encoding="utf-8")
+    assert "__pydantic_fields_set__" not in runtime_text
+    assert "settings_for_active_profile_bucket" in runtime_text
+
+    config_function = _function_named(config_path, "settings_for_active_profile_bucket")
+    config_segment = _source_segment(config_path, config_function)
+    assert "__pydantic_fields_set__" in config_segment
+    assert "aeat_database_url" in config_segment
+
+
+def test_profile_repository_kdf_defaults_flow_from_canonical_master_key_model() -> None:
+    path = PROJECT_ROOT / "src/aeat/application/user_profile/_profile_repository.py"
+    function = _function_named(path, "_default_kdf_params")
+    calls = [node for node in ast.walk(function) if isinstance(node, ast.Call)]
+
+    assert any(_is_kdf_default_to_manifest_call(call) for call in calls)
+    assert not any(_call_name(call.func) == "ManifestKdfParams" for call in calls)
+    assert not any(
+        keyword.arg in {"algorithm", "version", "memory_cost", "time_cost", "parallelism", "salt", "output_length"}
+        for call in calls
+        for keyword in call.keywords
+    )
+
+
+def test_hardening_test_surfaces_do_not_reintroduce_shortcut_markers() -> None:
+    offences: list[str] = []
+    for relative in _HARDENING_TEST_SURFACES:
+        path = PROJECT_ROOT / relative
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        constants = _collect_string_bindings(tree)
+        os_aliases = _collect_os_aliases(tree)
+        environ_aliases = _collect_environ_aliases(tree)
+        for node in ast.walk(tree):
+            if _is_pytest_skip_or_xfail_marker(node):
+                offences.append(f"{relative}:{node.lineno}: {_qualified_name(node)}")
+            if (
+                isinstance(node, ast.Call)
+                and _is_environment_call(node, constants, os_aliases, environ_aliases)
+                and not _is_allowed_env_key(relative, _env_key_for_call(node, constants))
+            ):
+                offences.append(f"{relative}:{node.lineno}: environment call")
+            if isinstance(node, ast.Assign | ast.AnnAssign | ast.AugAssign | ast.Delete) and _mutates_environment(
+                node, constants, os_aliases, environ_aliases
+            ):
+                offences.append(f"{relative}:{node.lineno}: environment mutation")
+            if isinstance(node, ast.ClassDef) and node.name.startswith(("_Fake", "_Stub")):
+                offences.append(f"{relative}:{node.lineno}: {node.name}")
+            if _is_mock_import(node):
+                offences.append(f"{relative}:{node.lineno}: mock import")
+    assert offences == []
+
+
+def test_secure_storage_error_registry_bindings_have_locale_keys() -> None:
+    _import_secure_storage_error_modules()
+    locale_keys = _locale_key_map()
+    offences: list[str] = []
+    for error_type in sorted(_iter_error_subclasses(SecureStorageError), key=lambda cls: cls.__name__):
+        code = get_registered_error_code(error_type)
+        if code.code not in ERROR_REGISTRY:
+            offences.append(f"{error_type.__module__}.{error_type.__name__}: unregistered code {code.code}")
+        missing = [locale_name for locale_name, keys in locale_keys.items() if code.message_key not in keys]
+        if missing:
+            offences.append(
+                f"{error_type.__module__}.{error_type.__name__}: {code.message_key} missing from {missing}"
+            )
+
+    assert offences == []
+
+
+def _function_named(path: Path, name: str) -> ast.FunctionDef | ast.AsyncFunctionDef:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:
+            return node
+    raise AssertionError(f"{path.relative_to(PROJECT_ROOT).as_posix()} does not define {name}")
+
+
+def _source_segment(path: Path, node: ast.AST) -> str:
+    source = path.read_text(encoding="utf-8")
+    segment = ast.get_source_segment(source, node)
+    assert segment is not None
+    return segment
+
+
+def _call_name(node: ast.expr) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
+
+
+def _qualified_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Call):
+        return _qualified_name(node.func)
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        parent = _qualified_name(node.value)
+        return f"{parent}.{node.attr}" if parent else node.attr
+    return ""
+
+
+def _is_logger_call(node: ast.AST, method: str) -> bool:
+    return (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == method
+        and isinstance(node.func.value, ast.Name)
+        and node.func.value.id == "_log"
+    )
+
+
+def _call_has_keyword(node: ast.Call, keyword_name: str) -> bool:
+    return any(keyword.arg == keyword_name for keyword in node.keywords)
+
+
+def _is_kdf_default_to_manifest_call(node: ast.Call) -> bool:
+    if not isinstance(node.func, ast.Attribute) or node.func.attr != "to_manifest_params":
+        return False
+    default_call = node.func.value
+    return (
+        isinstance(default_call, ast.Call)
+        and isinstance(default_call.func, ast.Attribute)
+        and default_call.func.attr == "default"
+        and isinstance(default_call.func.value, ast.Name)
+        and default_call.func.value.id == "KdfParams"
+    )
+
+
+def _is_pytest_skip_or_xfail_marker(node: ast.AST) -> bool:
+    name = _qualified_name(node)
+    return name in {
+        "pytest.skip",
+        "pytest.mark.skip",
+        "pytest.mark.skipif",
+        "pytest.mark.xfail",
+        "skip",
+        "skipif",
+        "xfail",
+    }
+
+
+def _is_mock_import(node: ast.AST) -> bool:
+    if isinstance(node, ast.ImportFrom):
+        return node.module in {"mock", "unittest.mock"} or (
+            node.module == "unittest" and any(alias.name == "mock" for alias in node.names)
+        )
+    if isinstance(node, ast.Import):
+        return any(alias.name in {"mock", "unittest.mock"} for alias in node.names)
+    return False
+
+
+def _collect_string_bindings(tree: ast.AST) -> dict[str, str]:
+    constants: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    constants[target.id] = node.value.value
+        if (
+            isinstance(node, ast.AnnAssign)
+            and isinstance(node.target, ast.Name)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
+            constants[node.target.id] = node.value.value
+    return constants
+
+
+def _collect_os_aliases(tree: ast.AST) -> set[str]:
+    aliases = {"os"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            aliases.update(alias.asname or "os" for alias in node.names if alias.name == "os")
+    return aliases
+
+
+def _collect_environ_aliases(tree: ast.AST) -> set[str]:
+    aliases: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom) and node.module == "os":
+            aliases.update(alias.asname or "environ" for alias in node.names if alias.name == "environ")
+    return aliases
+
+
+def _is_aeat_database_env_mutation_call(node: ast.Call, constants: dict[str, str]) -> bool:
+    qualified = _qualified_name(node.func)
+    if qualified in {"os.putenv", "os.unsetenv"}:
+        return bool(node.args) and _is_aeat_database_key(node.args[0], constants)
+    if _call_name(node.func) not in {"setenv", "delenv", "putenv", "unsetenv"}:
+        return False
+    if not node.args:
+        return False
+    return _is_aeat_database_key(node.args[0], constants)
+
+
+def _mutates_aeat_database_env(
+    node: ast.Assign | ast.AnnAssign | ast.AugAssign | ast.Delete,
+    constants: dict[str, str],
+) -> bool:
+    targets: list[ast.expr] = []
+    if isinstance(node, ast.Assign):
+        targets.extend(node.targets)
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+        targets.append(node.target)
+    elif isinstance(node, ast.Delete):
+        targets.extend(node.targets)
+    return any(_is_aeat_database_environ_subscript(target, constants) for target in targets)
+
+
+def _is_aeat_database_environ_subscript(node: ast.expr, constants: dict[str, str]) -> bool:
+    return isinstance(node, ast.Subscript) and _qualified_name(node.value) == "os.environ" and _is_aeat_database_key(
+        node.slice, constants
+    )
+
+
+def _is_aeat_database_key(node: ast.expr, constants: dict[str, str]) -> bool:
+    if isinstance(node, ast.Constant):
+        return node.value == "AEAT_DATABASE_URL"
+    if isinstance(node, ast.Name):
+        return constants.get(node.id) == "AEAT_DATABASE_URL"
+    return False
+
+
+def _is_environment_call(
+    node: ast.Call,
+    constants: dict[str, str],
+    os_aliases: set[str],
+    environ_aliases: set[str],
+) -> bool:
+    qualified = _qualified_name(node.func)
+    os_functions = {f"{alias}.{name}" for alias in os_aliases for name in ("getenv", "putenv", "unsetenv")}
+    if qualified in os_functions or qualified == "getenv":
+        return True
+    if _is_environ_method_call(node, os_aliases, environ_aliases):
+        return True
+    if _call_name(node.func) in {"setenv", "delenv", "putenv", "unsetenv"}:
+        return bool(node.args) and _env_key_name(node.args[0], constants) is not None
+    return False
+
+
+def _env_key_for_call(node: ast.Call, constants: dict[str, str]) -> str | None:
+    if not node.args:
+        return None
+    if _call_name(node.func) == "update":
+        return _env_key_from_mapping(node.args[0], constants)
+    return _env_key_name(node.args[0], constants)
+
+
+def _env_key_name(node: ast.expr, constants: dict[str, str]) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name):
+        return constants.get(node.id, node.id)
+    return None
+
+
+def _env_key_from_mapping(node: ast.expr, constants: dict[str, str]) -> str | None:
+    if not isinstance(node, ast.Dict):
+        return None
+    for key in node.keys:
+        if key is not None and (resolved := _env_key_name(key, constants)) is not None:
+            return resolved
+    return None
+
+
+def _is_allowed_env_key(relative: str, key: str | None) -> bool:
+    if key is None:
+        return False
+    return key in _ALLOWED_ENV_KEYS_BY_SURFACE.get(relative, set())
+
+
+def _mutates_environment(
+    node: ast.Assign | ast.AnnAssign | ast.AugAssign | ast.Delete,
+    constants: dict[str, str],
+    os_aliases: set[str],
+    environ_aliases: set[str],
+) -> bool:
+    targets: list[ast.expr] = []
+    if isinstance(node, ast.Assign):
+        targets.extend(node.targets)
+    elif isinstance(node, ast.AnnAssign | ast.AugAssign):
+        targets.append(node.target)
+    elif isinstance(node, ast.Delete):
+        targets.extend(node.targets)
+    return any(
+        isinstance(target, ast.Subscript)
+        and _is_environ_target(target.value, os_aliases, environ_aliases)
+        and _env_key_name(target.slice, constants) is not None
+        for target in targets
+    )
+
+
+def _is_environ_method_call(node: ast.Call, os_aliases: set[str], environ_aliases: set[str]) -> bool:
+    return (
+        isinstance(node.func, ast.Attribute)
+        and node.func.attr in {"get", "pop", "setdefault", "update", "__setitem__"}
+        and _is_environ_target(node.func.value, os_aliases, environ_aliases)
+    )
+
+
+def _is_environ_target(node: ast.expr, os_aliases: set[str], environ_aliases: set[str]) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id in environ_aliases
+    if not isinstance(node, ast.Attribute) or node.attr != "environ":
+        return False
+    return isinstance(node.value, ast.Name) and node.value.id in os_aliases
+
+
+def _import_secure_storage_error_modules() -> None:
+    for module_name in (
+        "aeat.adapters.persistence.storage.bucket._errors",
+        "aeat.adapters.persistence.storage.errors",
+        "aeat.adapters.persistence.storage.master_key._active_session",
+    ):
+        importlib.import_module(module_name)
+
+
+def _iter_error_subclasses(root: type[AeatError]) -> set[type[AeatError]]:
+    discovered: set[type[AeatError]] = set()
+    for subclass in root.__subclasses__():
+        discovered.add(subclass)
+        discovered.update(_iter_error_subclasses(subclass))
+    return discovered
+
+
+def _locale_key_map() -> dict[str, set[str]]:
+    locales_dir = PROJECT_ROOT / "src/aeat/locales"
+    manager = LocaleManager(PROJECT_ROOT / "src/aeat", locales_dir)
+    return {
+        locale_path.name: manager.get_yaml_keys(manager.load_locale(locale_path))
+        for locale_path in sorted(locales_dir.glob("*.yml"))
+    }
