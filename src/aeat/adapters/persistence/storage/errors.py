@@ -17,7 +17,16 @@ from __future__ import annotations
 from ....core.errors import AeatError
 
 
-class StorageError(AeatError):
+class SecureStorageError(AeatError):
+    """Base class for secure-storage failures.
+
+    This named base keeps the encrypted persistence, secret-store,
+    bucket-session, and per-bucket lifecycle surfaces catchable as one
+    family while still deriving from the central AEAT error registry.
+    """
+
+
+class StorageError(SecureStorageError):
     """Base class for every error raised by :mod:`aeat.adapters.persistence.storage`."""
 
 
@@ -64,8 +73,10 @@ class SecureObjectUnreadableError(DecryptionError):
     """
 
     def __init__(self, namespace: str, row_id: int, *, cause: BaseException | None = None) -> None:
-        message = f"secure object {namespace}/#{row_id} cannot be decrypted under the current master key"
-        super().__init__(message)
+        super().__init__(
+            context={"namespace": namespace, "row_id": row_id},
+            translated_message="errors.integrity.integrity_storage_secure_object_unreadable",
+        )
         self.namespace = namespace
         self.row_id = row_id
         self.__cause__ = cause
@@ -141,7 +152,7 @@ class MasterKeyPassphraseMismatchError(MasterKeyUnavailableError):
 
     Recoverable by re-entering the passphrase. If the passphrase has
     been forgotten, the operator can use
-    ``aeat security recover --recovery-key`` to re-mint the master key
+    the profile recovery flow to re-mint the master key
     from a recovery-key backup. The CLI's error envelope distinguishes
     this case from :class:`MasterKeyMaterialMissingError` so retries
     do not waste backoff budget on missing-file errors.
@@ -154,16 +165,13 @@ class MasterKeyMaterialMissingError(MasterKeyUnavailableError):
     Neither the keyring entry nor the file-fallback artefacts
     (``master.key`` / ``master.kdf`` / ``salt``) are present. The
     substrate has not been provisioned. The operator's actionable
-    next step is ``aeat security provision`` or, if a recovery key
-    is available, ``aeat security recover --recovery-key``.
+    next step is ``aeat config profile create NAME`` or, if a recovery key
+    is available, the profile recovery flow.
 
-    Reserved for callers that need to distinguish "not provisioned"
-    from "wrong passphrase" — the default ``get_master_key`` path
-    silently mints when material is absent (the first-
-    run mint contract), so this class does not fire on the canonical
-    load path. Future load-only / probe-only entry points (e.g. a
-    diagnostic API or a ``--no-mint`` CLI option) raise this class
-    instead of triggering a silent mint.
+    Raised by canonical read paths to distinguish "not provisioned"
+    from "wrong passphrase" without minting key material. Explicit
+    profile creation is responsible for provisioning; ordinary load
+    paths fail closed with this class when material is absent.
     """
 
 

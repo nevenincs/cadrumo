@@ -491,7 +491,8 @@ cli:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
           no_exportable_revision_work_verify: Work unit has no verified-complete or
-            filed calculation revision to export. Run `aeat app modelo work verify` first.
+            filed calculation revision to export. Run `aeat app modelo work verify`
+            first.
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -961,6 +962,8 @@ cli:
       connectivity_target_help: Connectivity target to probe
       help: Diagnose and repair local configuration, registry, profile, auth, and
         logs
+      integrity_attribution_details_help: Include per-row safe metadata details
+      integrity_attribution_help: Group undecryptable secure-object rows by safe metadata.
       integrity_help: Probe secure-object and registry integrity.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       integrity_objects_help: Probe AES-256-GCM tag verification across one namespace
@@ -975,6 +978,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
+      plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
+        rows.
       profile_clear_active_help: Clear a pointer-file active profile only when it
         points at unreadable profile state.
       profile_clear_active_mismatch: --clear-active can only clear the active profile
@@ -988,8 +993,10 @@ cli:
       profile_requires_yes: Pass --yes to apply the active-profile repair.
       quarantine_dry_run_help: Preview the rows that would be quarantined without
         moving anything
-      quarantine_help: Move undecryptable rows into a quarantine table (destructive;
-        requires --yes)
+      quarantine_help: Preview undecryptable rows; active quarantine is disabled by
+        preserve-first repair policy
+      quarantine_preserve_first_refused: Preserve-first repair policy refuses active
+        quarantine. Run the dry-run preview and integrity attribution instead.
       quarantine_requires_yes: This operation is destructive. Re-run with --yes to
         confirm.
       quarantine_yes_help: Explicitly confirm the quarantine operation
@@ -1693,6 +1700,10 @@ cli:
     parity_tape_help: Path to a stored parity tape JSON file
     source_observation_help: Encrypted source observation manifest required by previous-filing
       bindings or relations
+    sources:
+      source_ref_help: Source reference id to show
+      view_help: Show one source reference by id
+    sources_app_help: Registry source references
     verify_filed_state_help: Compare local registry calculation output against captured
       filed AEAT state
     verify_help: Verify the integrity of the local registry
@@ -2241,6 +2252,7 @@ errors:
       Wait a few minutes and try again.
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sanitization_source_parse: The source PDF could not be opened for sanitization.
+    fail_secure_storage: A secure-storage error occurred.
     fail_sede_census_parse: A value on the AEAT Sede census page could not be parsed.
     fail_sede_justificante_fetch: The receipt PDF download from the AEAT Sede failed,
       or the file is malformed.
@@ -2807,8 +2819,8 @@ wizard:
       activity:
         help: Business activity as plain text, or the IAE heading if you know it
       activity-start-date:
-        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional; when
-          set, obligations for periods before this date are not shown.
+        help: Census registration / start-of-activity date (YYYY-MM-DD). Optional;
+          when set, obligations for periods before this date are not shown.
       address-postcode:
         help: Tax address postcode
       bienes-extranjero-above-threshold:

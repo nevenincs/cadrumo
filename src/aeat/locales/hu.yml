@@ -1018,6 +1018,10 @@ cli:
       connectivity_target_help: Ellenőrizendő kapcsolati cél
       help: Helyi konfiguráció, regiszter, profil, hitelesítés és naplók diagnosztikája
         és javítása
+      integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
+        megjelenítése
+      integrity_attribution_help: Nem visszafejthető biztonságosobjektum-sorok csoportosítása
+        biztonságos metaadatok alapján.
       integrity_help: A biztonságos objektumok és a nyilvántartás integritásának ellenőrzése.
       integrity_namespace_help: Restrict the integrity probe to one namespace.
       integrity_objects_help: AES-256-GCM címke-ellenőrzés futtatása egy névtérben
@@ -1032,6 +1036,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Naplófájl útvonalának és friss sorainak megjelenítése
       logs_lines_help: Megjelenítendő friss naplósorok száma
+      plan_help: Száraz futású, megőrzésközpontú javítási terv az olvashatatlan
+        biztonságosobjektum-sorokhoz.
       profile_clear_active_help: Mutatófájlból származó aktív profil törlése csak
         akkor, ha olvashatatlan profilállapotra mutat.
       profile_clear_active_mismatch: A --clear-active csak az aktív profilmutatót
@@ -1046,8 +1052,10 @@ cli:
         alkalmazásához.
       quarantine_dry_run_help: A karanténba helyezendő sorok előnézete bármi mozgatása
         nélkül
-      quarantine_help: A nem dekódolható sorok karantén táblába helyezése (romboló;
-        --yes szükséges)
+      quarantine_help: Nem visszafejthető sorok előnézete; az aktív karantén a preserve-first
+        javítási szabály miatt le van tiltva
+      quarantine_preserve_first_refused: A preserve-first javítási szabály elutasítja
+        az aktív karantént. Futtasd a dry-run előnézetet és az integritási attribúciót.
       quarantine_requires_yes: Ez a művelet romboló. Futtasd újra a --yes kapcsolóval
         a megerősítéshez.
       quarantine_yes_help: A karantén művelet kifejezett megerősítése
@@ -1747,6 +1755,10 @@ cli:
     parity_tape_help: Egy mentett paritási szalag JSON fájl elérési útja
     source_observation_help: Korábbi bevallási kötéshez vagy relációhoz szükséges
       titkosított forrásmegfigyelési manifeszt
+    sources:
+      source_ref_help: Megjelenítendő forráshivatkozás-azonosító
+      view_help: Egy forráshivatkozás megjelenítése azonosító alapján
+    sources_app_help: Nyilvántartási forráshivatkozások
     verify_filed_state_help: Helyi registry számítás összehasonlítása rögzített AEAT
       benyújtott állapottal
     verify_help: A helyi nyilvántartás integritásának ellenőrzése
@@ -2299,6 +2311,7 @@ errors:
       el. Várj néhány percet, és próbáld újra.
     fail_review_source_load: A forrásfájl létezik, de nem sikerült értelmezni.
     fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni a tisztításhoz.
+    fail_secure_storage: Biztonságos tárolási hiba történt.
     fail_sede_census_parse: Az AEAT Sede nyilvántartási oldalának egy értékét nem
       sikerült értelmezni.
     fail_sede_justificante_fetch: Az igazolás PDF letöltése az AEAT Sede oldaláról
@@ -3231,14 +3244,14 @@ wizard:
       tax_id_present: 'Adóazonosító: ellenőrzés, hogy a profil tartalmaz-e NIF vagy
         NIE azonosítót.'
   test:
-    description: Test your configuration and connectivity
+    description: Teszteld a konfigurációt és a kapcsolatot
     example:
       choices:
         'yes':
-          description: Select this to confirm
+          description: Válaszd ezt a megerősítéshez
           label: true
-      help: Example help text for testing
-      prompt: Example test question
+      help: Példa súgószöveg teszteléshez
+      prompt: Példa tesztkérdés
     main:
-      title: Main test
-    title: Test
+      title: Fő teszt
+    title: Teszt
