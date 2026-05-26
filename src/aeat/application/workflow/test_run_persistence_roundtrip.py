@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...tests.secure_sql import isolated_runtime_profile
 from ._models import (
@@ -113,10 +114,8 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
     the same Repository, and asserts :func:`load_run` rejects via
     the model_validator's stage ↔ reason pairing.
 
-    Going through the Repository public API (rather than reaching
-    into SecureObjectRow via session_scope) sidesteps the
-    HashedLookup digest-context plumbing that caused a previous
-    attempt to fail.
+    Going through the Repository public API exercises the same
+    encrypted-object boundary the production load path reads.
     """
 
     import json as _json
@@ -160,14 +159,5 @@ def test_workflow_run_aborted_reason_drift_surfaces_at_load(
         )
 
         # load_run must trip the ABORTED ↔ aborted_reason invariant.
-        regression_caught = False
-        try:
+        with pytest.raises(ValidationError):
             load_run(original.run_id)
-        except Exception:
-            regression_caught = True
-        assert regression_caught, (
-            "anti-tautology proof failed: clearing aborted_reason on "
-            "an ABORTED run did NOT surface on load. The workflow-runs "
-            "boundary is tautological and the abort-classification "
-            "contract cannot be trusted on replay."
-        )
