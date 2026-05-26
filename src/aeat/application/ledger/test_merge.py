@@ -23,11 +23,8 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.transactions import (
     SplitRole,
@@ -36,6 +33,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     ManualLedgerTransactionCommand,
     SplitChildCommand,
@@ -48,19 +46,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
-    database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
-    monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
-    dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
+def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         try:
-            yield engine
+            yield get_engine(profile.settings)
         finally:
-            engine.dispose()
-            dispose_engine()
+            dispose_engine(profile.settings)
 
 
 def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):

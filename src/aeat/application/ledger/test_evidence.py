@@ -8,9 +8,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository, get_engine
 from aeat.application.ledger._evidence import (
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceNotFoundError,
@@ -19,6 +17,7 @@ from aeat.application.ledger._evidence import (
 )
 from aeat.core.config import Settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -30,16 +29,8 @@ def isolated_settings(tmp_path: Path) -> Settings:
 
 @pytest.fixture
 def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield engine
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+        yield get_engine(profile.settings)
 
 
 @pytest.fixture

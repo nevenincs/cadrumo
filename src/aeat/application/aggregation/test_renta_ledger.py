@@ -8,16 +8,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -41,6 +34,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
 )
 from ...entrypoints.cli._common import _aggregate_renta_filing_inputs
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     AggregationValidationError,
     RentaLedgerAggregationIssueReason,
@@ -53,24 +47,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        engine = create_engine(f"sqlite:///{tmp_path / 'aeat.db'}")
-        try:
-            yield engine
-        finally:
-            engine.dispose()
-            override_secret_store(None)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
+        yield get_engine(profile.settings)
 
 
 def _raw_transaction(
