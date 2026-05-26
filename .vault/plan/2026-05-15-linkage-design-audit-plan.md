@@ -95,7 +95,7 @@ shapes already live here. Highest-leverage files: `_models.py` in
 Per the disciplined adapter-boundary policy these are direct fixes,
 not shims. Highest-leverage file: encrypted-columns adapter (8).
 
-- [ ] `P06.S33` - replace Any/cast in encrypted-columns adapter; `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [x] `P06.S33` - replace Any/cast in encrypted-columns adapter — verified already-satisfied: `rg "Any|cast\("` returns zero matches across the file (272 lines); current state uses `object | None` parameter typing and `TypeDecorator[object]` rather than `Any` or runtime `cast()`. A prior commit must have done the cleanup; no further code change required.
 - [x] `P06.S34` - sweep remaining 30 adapter-internal files for suppression eradication; `src/aeat/adapters/`.
 
 ### Phase `P07` - core/ suppression eradication
