@@ -21,6 +21,7 @@ related:
   - '[[2026-05-21-fresh-cli-persona-testimonials-audit]]'
   - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
   - '[[2026-05-21-fresh-cli-persona-capability-gap-design]]'
+  - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -250,3 +251,70 @@ Repair implementation and test gaps where W10 finds naked environment access, ta
 - [x] `W11.P19.S75` - Repair tautological or shortcut tests with real-behavior coverage that imports production code directly; `src/aeat`.
 - [x] `W11.P19.S76` - Repair duplicated secure-storage enums and models by reusing core enums, shared models, and pydantic contracts; `src/aeat`.
 - [x] `W11.P19.S77` - Add guard checks for settings-backed environment use, translation coverage, error registry binding, and test-hygiene regressions; `src/aeat`.
+
+## Wave `W12` - active-profile StorageRuntime rollout
+
+This Wave expands the accepted W02 runtime direction into an explicit application-wide rollout. It does not create a competing ADR. It treats the active-profile storage runtime discovery audit as the mechanical baseline and converts each discovered production storage/profile signal into a typed disposition before implementation proceeds.
+
+Execution rule: every changed production caller must be classified as exactly one of `runtime-default`, `manifest-discovery`, `bootstrap-custody`, `test-runtime`, `plaintext-exception`, `remote-mirror`, or `retired`. Every `runtime-default` caller must receive repositories through `StorageRuntime` or a runtime-owned factory. Every retained exception must have an owning plan row, a rationale, and a closeout check.
+
+Runtime adoption register rows must use this shape in execution notes:
+
+| Path or slice | Current API | Target type | Runtime requirement | Test isolation impact | Status |
+| --- | --- | --- | --- | --- | --- |
+| `src/aeat/...` | `SecureObjectRepository()` | `runtime-default` | active bucket session and route match | migrate to test runtime profile | pending |
+
+### Phase `W12.P20` - adoption register and classification
+
+Turn the audit inventory into a repeatable rollout register so implementation agents do not rediscover or re-scope the surface independently.
+
+- [ ] `W12.P20.S78` - Convert the active-profile runtime discovery audit production index into a runtime adoption register grouped by adapter, application, domain, core, and CLI ownership; `.vault/exec`.
+- [ ] `W12.P20.S79` - Classify each direct `SecureObjectRepository()` and `SecureBoundRepository` default as `runtime-default`, `bootstrap-custody`, `test-runtime`, or `retired`; `src/aeat`.
+- [ ] `W12.P20.S80` - Classify each pointer, manifest, and bucket scan caller as `manifest-discovery`, `bootstrap-custody`, or `runtime-default`; `src/aeat`.
+- [ ] `W12.P20.S81` - Classify each SQL route, active-profile, and master-key session caller as runtime policy, bootstrap policy, or test-only setup; `src/aeat`.
+- [ ] `W12.P20.S82` - Persist classification closeout with unresolved exceptions and explicit owner rows before migration tasks start; `.vault/audit`.
+
+### Phase `W12.P21` - runtime default repository migration
+
+Move production repositories away from direct physical-store construction while preserving explicit constructor injection for real-behavior tests and controlled bootstrap paths.
+
+- [ ] `W12.P21.S83` - Migrate workflow state and bucket-event repositories to runtime-owned secure-object factories; `src/aeat/application/workflow`, `src/aeat/domain/buckets`.
+- [ ] `W12.P21.S84` - Migrate transaction, invoice, filing, submission, justificante, and modelo repositories to runtime-owned secure-bound or secure-object factories; `src/aeat/domain`.
+- [ ] `W12.P21.S85` - Migrate ledger, filing history, modelo reconciliation, calculation observation, usage-ratio, and calc-sheet repositories to runtime-owned defaults; `src/aeat/application`.
+- [ ] `W12.P21.S86` - Migrate auth, AEAT observation, Google OAuth/session, LLM cache/usage, and outbound adapter repositories to runtime-owned defaults or classified remote-mirror paths; `src/aeat/adapters`.
+- [ ] `W12.P21.S87` - Add focused real-behavior tests for each migrated repository family proving active profile routing, route mismatch refusal, missing-session refusal, and isolated test profile writes; `src/aeat`.
+
+### Phase `W12.P22` - CLI and profile bootstrap boundary
+
+Keep the CLI as the operator-command surface while moving storage readiness and write-policy decisions into runtime/backend services.
+
+- [ ] `W12.P22.S88` - Replace CLI guarded write-verb route policy with a runtime readiness/write-policy query while preserving bootstrap exemptions; `src/aeat/entrypoints/cli`.
+- [ ] `W12.P22.S89` - Move profile create, switch, delete, and logout storage spans behind named runtime or profile-lifecycle operations without bypassing `ProfileRepository`; `src/aeat/entrypoints/cli/_config`, `src/aeat/application/user_profile`.
+- [ ] `W12.P22.S90` - Preserve manifest scanning as a read-only profile discovery adapter separate from encrypted runtime attachment; `src/aeat/application/user_profile`, `src/aeat/application/workflow`.
+- [ ] `W12.P22.S91` - Add CLI regression tests for bootstrap, explicit profile selection, environment selection, pointer selection, root fallback refusal, and explicit route refusal through backend runtime policy; `src/aeat/entrypoints/cli`.
+
+### Phase `W12.P23` - first-class test profile runtime
+
+Replace ad hoc database-route sandboxing with a sanctioned real runtime profile path so tests exercise the same storage attachment contract as production.
+
+- [ ] `W12.P23.S92` - Add a test runtime profile helper that creates a real isolated profile bucket, SQLite database, bucket manifest, master-key session, and runtime-bound secure-object repository; `src/aeat/tests`.
+- [ ] `W12.P23.S93` - Migrate explicit `aeat_database_url`, `AEAT_DATABASE_URL`, and injected-engine test setup to the test runtime helper except in route-classification and refusal tests; `src/aeat`.
+- [ ] `W12.P23.S94` - Add guard coverage that rejects new production raw secure-object construction and new unapproved route-based test setup; `src/aeat/adapters/persistence/storage`.
+- [ ] `W12.P23.S95` - Persist a test-isolation closeout audit listing remaining approved explicit-route tests and their owning refusal behavior; `.vault/audit`.
+
+### Phase `W12.P24` - side-store and mirror disposition
+
+Classify bucket-local plaintext stores and remote provider surfaces so the runtime rollout does not leave sensitive data in parallel backends.
+
+- [ ] `W12.P24.S96` - Classify evidence, inventory, ledger evidence, business-operation invoice, live notification, live verification, expedientes, and snapshot file stores as secure-object migration, export-only, rebuildable cache, or accepted plaintext exception; `src/aeat/application`.
+- [ ] `W12.P24.S97` - Migrate sensitive bucket-local side stores to runtime-created secure-object repositories or persist accepted exception ADR coverage before retaining them; `src/aeat/application`.
+- [ ] `W12.P24.S98` - Bind outbound storage providers to encrypted mirror semantics with runtime-derived profile identity and namespace policy; `src/aeat/adapters/outbound/storage`.
+- [ ] `W12.P24.S99` - Add real-behavior tests proving retained file stores do not become alternate sensitive persistence backends; `src/aeat`.
+
+### Phase `W12.P25` - rollout closeout gates
+
+Close the runtime rollout only after mechanical checks prove the application no longer depends on competing active-profile storage APIs.
+
+- [ ] `W12.P25.S100` - Run the mechanical scanner from the active-profile runtime audit and persist a before/after delta for production and test signals; `.vault/audit`.
+- [ ] `W12.P25.S101` - Run focused storage, profile lifecycle, CLI, workflow, domain repository, outbound adapter, and test-runtime gates after runtime migration; `src/aeat`.
+- [ ] `W12.P25.S102` - Persist a final runtime rollout review proving direct constructors, explicit-route tests, manifest discovery, bootstrap custody, side-store exceptions, and remote mirrors each have one accepted disposition; `.vault/audit`.
