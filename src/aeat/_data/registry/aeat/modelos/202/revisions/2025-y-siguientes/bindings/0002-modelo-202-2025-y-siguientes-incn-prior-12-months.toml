@@ -1,0 +1,25 @@
+# Calculation-only Decimal binding: carries the importe neto de la
+# cifra de negocios (INCN) of the prior 12 months. This is the sole
+# input to the LIS Art. 40.3 modality split at the 6.000.000 EUR
+# threshold: when INCN > 6.000.000 EUR the Art. 40.3 lane is mandatory
+# and the Art. 40.2 lane (clave 03) is not offered; when INCN ≤
+# 6.000.000 EUR both modalities are reachable and Art. 40.2 is the
+# default. An undeclared INCN prevents modality determination and the
+# engine returns INCOMPLETE rather than guessing — a wrong pago
+# fraccionado modality is a regulatory error, not a minor rounding.
+#
+# Sourced from the Decimal profile fact `incn_prior_12_months` under
+# the `taxpayer_type` profile section. An undeclared value raises
+# `binding has no supplied value` in the formula executor so the
+# Art. 40.2 formula (clave 03) is refused when INCN is unknown.
+[[revisions.2025-y-siguientes.bindings]]
+id = "modelo-202-2025-y-siguientes-incn-prior-12-months"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-202-instructions"
+required_text = ["importe neto de la cifra de negocios"]
