@@ -10,6 +10,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._errors import ModeloError
 from ._filing_record import ModeloRecord, ModeloRecordCatalogue
+from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 _LOGGER = get_logger(__name__)
 # namespace string preserved across rename to avoid orphaning persisted envelopes
@@ -25,8 +26,17 @@ class ModeloRecordPersistenceError(ModeloError):
 class ModeloRecordCatalogueRepository:
     """Read / write the filing-record catalogue in encrypted storage."""
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if objects is not None:
+            self._objects = objects
+            return
+        self._bucket_id = resolve_modelo_repository_bucket_id(bucket_id, error_type=ModeloRecordPersistenceError)
+        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+
+    @property
+    def bucket_id(self) -> str | None:
+        return self._bucket_id
 
     def exists(self) -> bool:
         return self._objects.exists(_FILING_NAMESPACE, _FILING_OBJECT_KEY)

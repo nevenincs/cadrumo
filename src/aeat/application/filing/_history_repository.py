@@ -14,7 +14,12 @@ from typing import ClassVar
 from ...adapters.persistence.storage import SensitivityClass
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ._history_models import ModeloHistory
+from ._runtime_repository import (
+    resolve_application_filing_bucket_id,
+    secure_objects_for_application_filing_bucket,
+)
 
 
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
@@ -24,6 +29,19 @@ class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
     schema_version: ClassVar[int] = 1
     payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
+
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if objects is None:
+            self._bucket_id = resolve_application_filing_bucket_id(bucket_id)
+            objects = secure_objects_for_application_filing_bucket(self._bucket_id)
+        super().__init__(objects=objects)
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+
+        return self._bucket_id
 
     def extract_identifier(self, payload: ModeloHistory) -> str:
         return str(payload.modelo)
