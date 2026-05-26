@@ -86,6 +86,12 @@ class CasillaObservation(BaseModel):
     casilla_id: str = Field(min_length=1)
     value: Decimal
     formula_id: str | None = None
+    # ``op`` is the formula's top-level operator label (``add``, ``multiply``,
+    # ``lookup_bracket_by_ccaa`` …). Carried alongside ``formula_id`` so the
+    # full :class:`RegistryCalculationEntry` shape projects back from a typed
+    # observation tuple without losing the dispatch label. ``None`` for
+    # input / bound casillas where no formula ran.
+    op: str | None = None
     operand_refs: tuple[str, ...] = ()
     operand_values: tuple[Decimal, ...] = ()
     legal_refs: tuple[str, ...] = ()
