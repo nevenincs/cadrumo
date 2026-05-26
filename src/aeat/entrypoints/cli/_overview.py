@@ -107,6 +107,17 @@ def overview_calendar(
             default="Render the calendar even when profile data is incomplete.",
         ),
     ),
+    show_suppressed: bool = typer.Option(
+        False,
+        "--show-suppressed",
+        help=tr(
+            "cli.overview.calendar.show_suppressed_help",
+            default=(
+                "Include filtered (non-applicable) obligations in the output "
+                "with their applicability verdict and reason."
+            ),
+        ),
+    ),
 ) -> None:
     """Render the deadline calendar over the supplied window."""
 
@@ -124,6 +135,7 @@ def overview_calendar(
         rng,
         today=_date.today(),
         raw_values=raw_values,
+        show_suppressed=show_suppressed,
     )
     if not cal.taxpayer_model_declared:
         # The taxpayer model is undeclared — the engine refuses
@@ -158,6 +170,12 @@ def overview_calendar(
         lines.append(
             f"computable\t{len(cal.completeness.computable_modelos)}"
             f"\tdefaulted\t{len(cal.completeness.defaulted_modelos)}"
+        )
+    for suppressed in cal.suppressed_entries:
+        lines.append(
+            f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
+            f"\tverdict={suppressed.verdict.value}"
+            f"\treason={suppressed.reason[:80]}"
         )
     _emit(ctx, payload, lines)
 
