@@ -132,6 +132,107 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
     assert id_a != id_b
 
 
+def test_observations_consistency_validator_accepts_matching_projection() -> None:
+    """Stage one of ADR 2026-05-26: when observations is populated, casilla_values
+    must equal the projection of observations. Matching pair validates clean."""
+    from datetime import UTC, datetime
+
+    from aeat.domain.calculations.registry import CasillaObservation
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "d" * 64
+    casilla_values = {"100": Decimal("250.00"), "200": Decimal("-75.50")}
+    observations = (
+        CasillaObservation(casilla_id="100", value=Decimal("250.00")),
+        CasillaObservation(casilla_id="200", value=Decimal("-75.50")),
+    )
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    rev = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        observations=observations,
+        created_at=created,
+        updated_at=created,
+    )
+    assert rev.observations == observations
+    assert dict(rev.casilla_values) == casilla_values
+
+
+def test_observations_consistency_validator_rejects_drift() -> None:
+    """Stage one of ADR 2026-05-26: when observations diverges from casilla_values,
+    construction must raise ModeloValidationError — save/load drift surfaces at
+    load time rather than at a downstream hash mismatch."""
+    from datetime import UTC, datetime
+
+    import pydantic
+
+    from aeat.domain.calculations.registry import CasillaObservation
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "e" * 64
+    casilla_values = {"100": Decimal("250.00")}
+    # observations encodes a DIFFERENT value for the same casilla — the
+    # validator must refuse to construct.
+    observations = (CasillaObservation(casilla_id="100", value=Decimal("999.99")),)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    with pytest.raises(pydantic.ValidationError, match="inconsistent with the typed observations envelope"):
+        CalculationRevision(
+            calculation_revision_id=revision_id,
+            work_unit_id=work_unit_id,
+            state=CalculationRevisionState.BORRADOR,
+            casilla_values=casilla_values,
+            observations=observations,
+            created_at=created,
+            updated_at=created,
+        )
+
+
+def test_observations_consistency_validator_tolerates_empty_observations() -> None:
+    """Stage one of ADR 2026-05-26: historical revisions persisted before the
+    typed envelope landed carry observations=() — the validator must let them
+    construct (no projection to compare against)."""
+    from datetime import UTC, datetime
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "f" * 64
+    casilla_values = {"100": Decimal("250.00")}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    rev = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        # observations omitted — default-factory empty tuple
+        created_at=created,
+        updated_at=created,
+    )
+    assert rev.observations == ()
+    assert dict(rev.casilla_values) == casilla_values
+
+
 def test_revision_id_is_insensitive_to_dict_key_insertion_order() -> None:
     """Dict key ordering must not affect the derived id (sort_keys guarantee)."""
     id_ordered = derive_calculation_revision_id(
