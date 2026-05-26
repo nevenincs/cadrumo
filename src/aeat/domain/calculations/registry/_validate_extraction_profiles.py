@@ -44,6 +44,47 @@ def validate_declaracion_pdf_specimen_gate(
     ]
 
 
+def validate_declaracion_pdf_round_trip_gate(
+    scope: str,
+    modelo_id: str,
+    profile: ExtractionProfileDefinition,
+    corpus_root: Path,
+) -> list[str]:
+    """Enforce that a declaracion_pdf profile with a corpus fixture has a real round-trip test.
+
+    The ``validate_declaracion_pdf_specimen_gate`` already handles the no-fixture case.
+    This gate handles the complementary case: fixture EXISTS but neither
+    ``corpus_round_trip_verified`` nor ``provisional_pending_specimen`` is set.
+
+    A profile in that state has real corpus PDFs but no confirmed round-trip test,
+    which is the exact silent-failure class the M111/M130 audit surfaced — fixture
+    presence gave a false signal of extraction correctness.
+
+    Gate logic:
+    - surface != declaracion_pdf → dormant
+    - provisional_pending_specimen → dormant (explicit opt-out, no check)
+    - corpus_round_trip_verified → dormant (author asserts verified)
+    - no corpus fixture → dormant (specimen gate handles this case)
+    - fixture EXISTS, neither flag set → FAIL
+    """
+    if profile.surface != "declaracion_pdf":
+        return []
+    if profile.provisional_pending_specimen:
+        return []
+    if profile.corpus_round_trip_verified:
+        return []
+    fixture_dir = corpus_root / modelo_id
+    if not (fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf"))):
+        return []
+    return [
+        f"{scope}: extraction profile {profile.id!r} has corpus fixture at '{fixture_dir}' "
+        f"but corpus_round_trip_verified is False and provisional_pending_specimen is False; "
+        f"either set corpus_round_trip_verified = true once a parametrized real-corpus "
+        f"round-trip test exists, or set provisional_pending_specimen = true to acknowledge "
+        f"unverified status"
+    ]
+
+
 def validate_extraction_profile_artefacts(
     scope: str,
     profile: ExtractionProfileDefinition,
