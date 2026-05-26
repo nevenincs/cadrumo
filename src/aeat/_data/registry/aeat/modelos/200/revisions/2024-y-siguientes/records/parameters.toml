@@ -113,6 +113,94 @@ value = "20"
 date_axis = "filing_period"
 valid_from = 2024-01-01
 
+# Cuota-integra bracket tables per LIS Art. 29 sub-form. Each is a
+# single-row bracket whose marginal_rate equals the sub-form flat rate
+# and whose fixed_addition is zero: applying the bracket to the post-
+# nivelación base 01330 yields the cuota integra 00562 directly. This
+# is the bracket counterpart of the scalar tipo-gravamen-* parameters
+# above; the cuota formula `modelo-200-cuota-integra-by-form` reaches
+# all sub-forms through a single `lookup_bracket_by_entity_type`
+# dispatch (including the micro-empresa two-tranche scale, which the
+# scalar dispatch op cannot route).
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-general"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-cooperative-protected"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.20"
+valid_from = 2024-01-01
+
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2024-01-01
+
+# LIS Art. 29 newly-created-entity 15 % rate (first two profit-making
+# periods). Layered on top of the sub-form by the cuota-integra formula
+# via an `if_then_else` predicate over the
+# `new_entity_first_two_profit_periods` period-state binding; the
+# bracket form mirrors the per-form brackets above so the dispatch
+# stays uniform.
+[[revisions."2024-y-siguientes".parameters]]
+id = "is.modelo-200.cuota-integra-bracket-new-entity"
+data_type = "bracket_table"
+unit = "EUR"
+bracket_axis = "filing_period"
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+
 [[revisions."2024-y-siguientes".parameters]]
 id = "is.modelo-200.tipo-gravamen-non-profit-special-regime"
 data_type = "ratio"
