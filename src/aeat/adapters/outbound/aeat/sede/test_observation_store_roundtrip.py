@@ -25,7 +25,6 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage.sql.engine import get_engine
 from ._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import (
@@ -144,7 +143,6 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     from ._observation_store import _OBSERVATION_NAMESPACE
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        engine = get_engine(profile.settings)
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
         body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
@@ -163,7 +161,7 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
         observation = _populated_observation(persisted_artefact)
         logical_path = store.persist_observation(observation)
 
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             all_rows = session.execute(select(SecureObjectRow)).scalars().all()
             obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
             assert len(obs_rows) == 1, (

@@ -21,7 +21,6 @@ from pathlib import Path
 import pytest
 
 from ....tests.secure_sql import TestRuntimeProfile
-from ...persistence.storage.sql.engine import get_engine
 from ._cache import LLMCache
 from ._models import LLMProvider, LLMRequest, LLMResponse
 
@@ -118,7 +117,6 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     from ._cache import _CACHE_NAMESPACE
     from ._errors import LLMCacheError
 
-    engine = get_engine(secure_object_test_profile.settings)
     created_at = datetime.now(UTC).replace(microsecond=0)
     request = _populated_request()
     response = _populated_response(created_at)
@@ -129,7 +127,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     # from the nested response on the redacted entry. The column
     # accessor handles encrypt/decrypt automatically; the
     # _CACHE_NAMESPACE filter pins the right row.
-    with session_scope(engine) as session:
+    with session_scope(secure_object_test_profile.repository._engine) as session:
         stmt = select(SecureObjectRow).where(
             SecureObjectRow.namespace == _CACHE_NAMESPACE,
         )
