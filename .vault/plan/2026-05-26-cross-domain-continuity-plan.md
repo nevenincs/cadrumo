@@ -106,7 +106,7 @@ Mandated breakpoint. Dispatch code-reviewer on Wave-1 commits, round-7 persona f
 
 - [ ] `W01.P09.S33` - dispatch vaultspec-code-reviewer against every Wave-1 commit and consolidate verdict; `.vault/exec/`.
 - [ ] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
-- [ ] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
+- [x] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
 - [ ] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
 - [ ] `W01.P09.S37` - expand this plan in place: every new BLOCKER and MAJOR becomes a new Phase or Step in the appropriate Wave; `re-run vault plan check; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
@@ -131,7 +131,7 @@ Two parallel mechanisms decide applicability (Python seed table plus per-window 
 - [ ] `W02.P11.S43` - confirm _MODELO_APPLICABILITY_RULES is the canonical modelo-level applicability authority; `add module docstring documenting that modelo-level rules live in Python while window-level applicability_conditions live on ModeloDeadlineWindow registry slot; audit the 18 modelos to ensure every rule populates applicable_entity_types required_income_categories required_estimation_regimes and required_payer_fact where the modelo demands those axes; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [ ] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
-- [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
+- [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; `pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
 
 ### Phase `W02.P12` - Modelo 202 modality gate wiring Cluster Q
 
