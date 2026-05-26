@@ -98,6 +98,7 @@ class RegistryValidator:
         catalogues: RegistryCatalogues,
         *,
         source_root: Path | None = None,
+        justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
     ) -> None:
         self._legal = catalogues.legal
@@ -110,6 +111,18 @@ class RegistryValidator:
             source_root=self._source_root,
         )
         self._catalogue_failures: tuple[str, ...] | None = None
+        # Corpus root for declaracion_pdf specimen gate:
+        # caller may supply it directly; when not supplied, derive from
+        # source_root by navigating to the co-located tests/fixtures/justificantes
+        # directory (source_root is typically src/aeat/_data/registry/aeat,
+        # so three parents up reaches src/aeat).
+        if justificante_corpus_root is not None:
+            self._justificante_corpus_root: Path | None = justificante_corpus_root
+        elif source_root is not None:
+            candidate = source_root.resolve().parents[2] / "tests" / "fixtures" / "justificantes"
+            self._justificante_corpus_root = candidate if candidate.is_dir() else None
+        else:
+            self._justificante_corpus_root = None
 
     def validate_modelo(self, modelo: ModeloDefinition) -> None:
         failures = self._cached_modelo_failures(modelo)
@@ -409,11 +422,13 @@ class RegistryValidator:
         validate_extraction_profile_section(
             failures,
             prefix=prefix,
+            modelo_id=modelo.id,
             revision=revision,
             casillas=casillas,
             exported_casillas=exported_casillas,
             legal_refs=self._legal,
             source_refs=self._sources,
+            corpus_root=self._justificante_corpus_root,
         )
         validate_cross_reference_section(
             failures,

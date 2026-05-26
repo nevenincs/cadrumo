@@ -752,6 +752,7 @@ class ExtractionProfileDefinition(RegistryModel):
     parser: str
     target_casillas: tuple[ExtractionTargetDefinition, ...] = Field(min_length=1)
     confidence: Literal["strict", "review_required"]
+    provisional_pending_specimen: bool = False
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
