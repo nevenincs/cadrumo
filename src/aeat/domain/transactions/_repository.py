@@ -27,6 +27,15 @@ _TX_CATALOGUE_VERSION = 1
 TX_BUCKET_NAMESPACE = "aeat.domain.transactions.bucket"
 
 
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return the runtime-created secure-object repository for ``bucket_id``."""
+
+    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...core.config import load_settings
+
+    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+
+
 def transaction_catalogue_object_key(bucket_id: str) -> str:
     """Return the secure object key for one profile bucket's transaction catalogue.
 
@@ -91,7 +100,7 @@ class TransactionCatalogueRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         self._object_key = transaction_catalogue_object_key(bucket_id)
         self._bucket_id = bucket_id.strip()
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str:
