@@ -22,7 +22,7 @@ from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_eng
 from aeat.application.calculations import IvaCompensationReconciliationDecision, IvaWalletDecisionRepository
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import Settings
+from aeat.core.config import Settings, override_settings
 from aeat.domain.deadlines import TaxpayerProfile
 from aeat.domain.deadlines._models import IVARegime
 from aeat.domain.filing import ModeloCasillaProvenance
@@ -68,12 +68,15 @@ def _profile() -> TaxpayerProfile:
 
 @pytest.fixture
 def isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'export.db').as_posix()}")
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="operator"):
+        provider = EphemeralMasterKeyProvider()
+        provider.__enter__()
         try:
             yield
         finally:
+            provider.__exit__(None, None, None)
             dispose_engine()
 
 
@@ -208,7 +211,10 @@ def test_export_refuses_when_no_active_bucket(
     """Without an active profile bucket the service cannot scope the
     MODELO_EXPORTED event and must refuse cleanly."""
 
-    with pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config profile create NAME"):
+    with (
+        pytest.raises(ModeloExportNoActiveBucketError, match=r"aeat config profile create NAME"),
+        override_settings(aeat_active_profile=None),
+    ):
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id="r" + "0" * 63,
@@ -246,9 +252,8 @@ def test_export_refuses_borrador_revision(
     """A revision still in BORRADOR state cannot be exported; only
     verificado-completo or filed revisions are legal export sources.
 
-    Locks the contract from app-modelo-shape ADR §export: the export
-    artefact must reflect a revision the operator has already
-    verified, not a work-in-progress."""
+    The export artefact must reflect a revision the operator has
+    already verified, not a work-in-progress."""
 
     bucket_id = _seed_profile()
     _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)

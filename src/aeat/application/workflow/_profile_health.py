@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import tomllib
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError
 
+from ...adapters.persistence.storage.bucket._layout import bucket_paths
+from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
+from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, write_manifest
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core._bucket_pointer_io import pointer_path, read_pointer
 from ...core.config import load_settings
+from ...core.logging import get_logger
+from ...domain.user_profile import UserProfileRecord
 from ..user_profile._keys_validation import list_profile_key_records, validate_profile_values
 from ..user_profile._projections import record_to_path_values
 from ._models import WorkflowState
@@ -19,6 +26,7 @@ ProfileHealthStatus = Literal[
     "dangling_pointer",
     "missing_profile_record",
     "profile_record_unreadable",
+    "manifest_unreadable",
     "incomplete",
     "ready",
 ]
@@ -57,6 +65,31 @@ class ActiveProfileRepairResult(BaseModel):
     after: ActiveProfileHealth | None = None
 
 
+class ActiveProfileManifestStatusRepairResult(BaseModel):
+    """Result of a safe manifest lifecycle-status repair probe/action."""
+
+    model_config = _STRICT_FROZEN
+
+    dry_run: bool
+    repaired: bool
+    before: ActiveProfileHealth
+    after: ActiveProfileHealth | None = None
+    status: str = ""
+    reason: str = ""
+
+
+_log = get_logger(__name__)
+
+_MANIFEST_HEALTH_EXCEPTIONS = (
+    OSError,
+    StorageValidationError,
+    ValidationError,
+    tomllib.TOMLDecodeError,
+    TypeError,
+    ValueError,
+)
+
+
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret health projection for the active profile."""
 
@@ -75,7 +108,23 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             next_action="aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>",
         )
 
-    registered_pointer = read_profile_bucket_by_id(active_profile)
+    try:
+        registered_pointer = read_profile_bucket_by_id(active_profile)
+    except _MANIFEST_HEALTH_EXCEPTIONS as exc:
+        _log.debug(
+            "active profile manifest unreadable bucket_id=%s",
+            active_profile,
+            exc_info=exc,
+        )
+        return ActiveProfileHealth(
+            active_profile=active_profile,
+            source=source,
+            status="manifest_unreadable",
+            registered_bucket=True,
+            profile_record_error=_compact_error(exc),
+            profile_total_keys=total_keys,
+            next_action="aeat config repair profile --repair-manifest-status --yes",
+        )
     registered = registered_pointer is not None
     if not registered:
         return ActiveProfileHealth(
@@ -184,6 +233,55 @@ def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> Act
     )
 
 
+def repair_active_profile_manifest_status(*, confirmed: bool) -> ActiveProfileManifestStatusRepairResult:
+    """Backfill a legacy active-bucket manifest status from the encrypted record."""
+
+    before = _assess_with_best_effort_session()
+    if before.status != "manifest_unreadable" or before.active_profile is None:
+        return ActiveProfileManifestStatusRepairResult(
+            dry_run=True,
+            repaired=False,
+            before=before,
+            reason="active profile manifest does not need lifecycle-status repair",
+        )
+    if not confirmed:
+        return ActiveProfileManifestStatusRepairResult(
+            dry_run=True,
+            repaired=False,
+            before=before,
+            reason="confirmation required",
+        )
+
+    record = _load_active_profile_record()
+    status = BucketLifecycleStatus(record.status.value)
+    paths = bucket_paths(load_settings().aeat_local_storage_root, before.active_profile)
+    payload = dict(tomllib.loads(manifest_path(paths).read_text(encoding="utf-8")))
+    payload.setdefault("last_unlocked_at", None)
+    payload.setdefault("idle_lock_minutes", None)
+    payload["status"] = status.value
+    manifest = BucketManifest.model_validate(payload)
+    write_manifest(paths, manifest)
+    return ActiveProfileManifestStatusRepairResult(
+        dry_run=False,
+        repaired=True,
+        before=before,
+        after=_assess_with_best_effort_session(),
+        status=status.value,
+    )
+
+
+def _load_active_profile_record() -> UserProfileRecord:
+    """Load the encrypted active-profile record or raise a precise refusal."""
+
+    state = workflow_state_repository().load()
+    record = state.active_profile_record()
+    if record is None:
+        from ...domain.user_profile import ProfileNotFoundError
+
+        raise ProfileNotFoundError("active profile record is missing; manifest status cannot be repaired")
+    return record
+
+
 def _assess_with_best_effort_session() -> ActiveProfileHealth:
     """Assess profile health, opening the active bucket session when available."""
 
@@ -213,7 +311,9 @@ def _compact_error(exc: Exception) -> str:
 
 __all__ = [
     "ActiveProfileHealth",
+    "ActiveProfileManifestStatusRepairResult",
     "ActiveProfileRepairResult",
     "assess_active_profile_health",
+    "repair_active_profile_manifest_status",
     "repair_active_profile_pointer",
 ]
