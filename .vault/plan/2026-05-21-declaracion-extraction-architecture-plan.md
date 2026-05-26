@@ -273,3 +273,68 @@ centralized settings, shared model boundaries, and source-grounded tests.
 - [x] `W06.P19.S118` - Verify declaration extraction uses existing shared enums/models/pydantic records and document or eliminate any duplicated local shape definitions; `src/aeat/adapters/inbound/declaracion/_schema.py src/aeat/adapters/inbound/pdf/_shared.py src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `W06.P19.S119` - Harden the Modelo 840 printed-form label grounding test so it pins the official labels and cannot pass solely through an over-broad registry regex; `src/aeat/domain/calculations/registry/test_modelo_840_registry.py`.
 - [x] `W06.P19.S120` - Resolve the remaining direct `JustificanteRepository` storage crypto/sql import cycle exposed while localizing PDF error imports; `src/aeat/domain/justificante/__init__.py src/aeat/domain/justificante/_repository.py src/aeat/adapters/persistence/storage/`.
+
+## Wave `W07` - session-2026-05-26: out-of-W02-scope authoring, PROVISIONAL gate, regression healing
+
+Track work delivered in the 2026-05-26 session that extends the W02 named_label primitive beyond its original 6-modelo scope (M390, M100, M303 older template) and converts the silent-failure audit findings into a structural validator gate. Also captures the cross-cutting regression triage that landed during the session (parser tax-id multi-line NIF, ExtractedCasilla canonical CasillaId alignment, M190 revision-range + label-pattern, 50-test broad-suite cluster fix).
+
+### Phase `W07.P20` - M303 named_label profile + 2021-2022 template variant
+
+Unblock W03 BLOCKED finding: M303 corpus PDFs are hybrid documents (receipt header + full printed declaracion form below). Author named_label profile for 2023+ template; later add 2021-2022 template-revision variant with its own profile. End-state: 15/15 M303 corpus PDFs round-trip via 2 template revisions.
+
+- [x] `W07.P20.S129` - Author Modelo 303 declaracion_pdf named_label profile with 10 closure-casilla targets for 2023+ template; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `W07.P20.S130` - Author parametrized round-trip test for 8 corpus PDFs 2023-2024 asserting Decimal value for stable closure targets; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W07.P20.S131` - Expand Modelo 303 profile to 12 named_label targets adding boxes 29 IVA soportado interiores and 37 intracomunitarias; `src/aeat/_data/registry/aeat/modelos/303.toml`.
+- [x] `W07.P20.S132` - Author Modelo 303 older-template revision 2009-y-siguientes with 4-casilla closure profile for 2021-2022 printed-form layout; `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml`.
+- [x] `W07.P20.S133` - Author parametrized round-trip test for 7 older-template corpus PDFs 2021-2022; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+
+### Phase `W07.P21` - M390 declaracion_pdf profile authoring + closure-casilla coverage
+
+M390 IVA annual was ABSENT in W01 classification. Corpus PDFs exist at tests/fixtures/justificantes/390/. Apply same hybrid-PDF named_label pattern as M303. Honest partial coverage of closure casillas; the remaining 7/13 are structurally not coverable via named_label (multi-column tables need bbox extraction, or are application-internal reconciliation values).
+
+- [x] `W07.P21.S134` - Author Modelo 390 declaracion_pdf named_label profile with 5 closure-casilla targets; `src/aeat/_data/registry/aeat/modelos/390.toml`.
+- [x] `W07.P21.S135` - Author parametrized round-trip test for 2 Spanish-language corpus PDFs excluding the English 2021 specimen; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W07.P21.S136` - Expand Modelo 390 profile to 6 named_label targets adding box 49 IVA soportado total interiores corrientes; `src/aeat/_data/registry/aeat/modelos/390.toml`.
+
+### Phase `W07.P22` - M100 IRPF declaracion_pdf profile — closure casillas + apartado totals
+
+M100 IRPF Renta annual was ABSENT — Kent's headline annual filing. Author multi-revision declaracion_pdf profile (2021/2022/2023) covering closure cuota-chain casillas + base-liquidable / saldo-neto apartado totals. Multi-chunk iterative work bounded by corpus content (kent persona has actividades-económicas income only; trabajo/capital sections empty).
+
+- [x] `W07.P22.S137` - Author Modelo 100 declaracion_pdf profile first chunk 9 closure casillas across 3 revisions 2021 2022 2023; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
+- [x] `W07.P22.S138` - Wire Modelo 100 application_links to parse_declaracion consumer across all 3 revisions; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
+- [x] `W07.P22.S139` - Export TemplateNotDetectedError from declaracion init module pre-existing broken import; `src/aeat/adapters/inbound/declaracion/__init__.py`.
+- [x] `W07.P22.S140` - Author Modelo 100 round-trip test parametrized over 2021 2022 2023 corpus PDFs; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W07.P22.S141` - Expand Modelo 100 profile second chunk 4 apartado-summary casillas across all 3 revisions; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
+
+### Phase `W07.P23` - Parser fixes + canonical type alignment
+
+Fix parser-level bugs surfaced during corpus-driven extraction. Fixes: _TAX_ID_RE multi-line NIF regex (8/15 -> 15/15 M303 tax-id); ExtractedCasilla.casilla_id max_length 32 -> 64 aligned to canonical CasillaId (semantic slugs longer than 32 chars); M190 revision range + retenciones label_pattern (silent-failure: pattern missing 'las ' token, profile loaded green but never matched).
+
+- [x] `W07.P23.S142` - Fix _TAX_ID_RE multi-line NIF pattern add _TAX_ID_BEFORE_LABEL_RE fallback 15-of-15 M303 tax-id extraction; `src/aeat/adapters/inbound/declaracion/_parser.py`.
+- [x] `W07.P23.S143` - Align ExtractedCasilla casilla_id field to canonical CasillaId type alias max_length 32 to 64; `src/aeat/adapters/inbound/pdf/_shared.py`.
+- [x] `W07.P23.S144` - Fix Modelo 190 revision range year_from 2024 plus retenciones-total label_pattern missing las token; `src/aeat/_data/registry/aeat/modelos/190.toml`.
+
+### Phase `W07.P24` - PROVISIONAL gate — silent-failure audit + first-class schema field + enforcement fix
+
+Audit 9 unverified named_label profiles for silent-failure risk (label_patterns derived circularly from registry self-reference, never validated against printed-form). Annotate silently-PROVISIONAL profiles. Promote PROVISIONAL to first-class typed field provisional_pending_specimen with validator gate: declaracion_pdf profiles without a corpus fixture MUST explicitly opt-in. Fix the production-path corpus-root derivation bug that silently disabled the gate.
+
+- [x] `W07.P24.S145` - Run silent-failure audit on 9 unverified named_label profiles produce per-profile GROUNDED PROVISIONAL UNKNOWN report; `.vault/audit/`.
+- [x] `W07.P24.S146` - Annotate M184 M193 M720 with explicit PROVISIONAL warning comment downgrade confidence to review_required; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W07.P24.S147` - Add provisional_pending_specimen typed field to ExtractionProfileDefinition with 5 unit tests; `src/aeat/domain/calculations/registry/`.
+- [x] `W07.P24.S148` - Author validate_declaracion_pdf_specimen_gate validator thread justificante_corpus_root through cache keys; `src/aeat/domain/calculations/registry/`.
+- [x] `W07.P24.S149` - Tag the 9 PROVISIONAL profiles with provisional_pending_specimen true; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W07.P24.S150` - Author ADR amendment formalising provisional_pending_specimen as canonical silent-failure-prevention mechanism; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
+- [x] `W07.P24.S151` - Fix corpus-root derivation bug parents 2 to parents 0 that silently disabled the production gate add production-path test; `src/aeat/domain/calculations/registry/`.
+
+### Phase `W07.P25` - Broad-suite regression triage + 6-cluster healing
+
+Triage 50 broad-suite registry failures surfaced after the session's profile-authoring and revision-rename work. Cluster by root cause (BIND-4 ledger source removed, M190 rename ripple, RegistryValidator refactor callsite, M720 confidence assertion, registry private-import gate, M100 synthetic-data assertion). Surgical 6-cluster fix + bonus M200 cross-dependency. 1923/1923 final pass.
+
+- [x] `W07.P25.S152` - Triage 50 broad-suite registry failures into 6 surgical clusters with concrete file line root-cause attribution; `.vault/audit/`.
+- [x] `W07.P25.S153` - Cluster B rename M190 revision to 2024-y-siguientes year_from 2024 update test refs drop M303 cross-revision reviewed_singletons; `src/aeat/_data/registry/aeat/modelos/190.toml`.
+- [x] `W07.P25.S154` - Cluster A change _binding helper source ledger to invoice remove vacuous test_free_form_source; `src/aeat/domain/calculations/registry/test_export.py`.
+- [x] `W07.P25.S155` - Cluster C reroute static-method callsite to module-level validate_informative_class_invariant; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
+- [x] `W07.P25.S156` - Cluster D update M720 confidence assertion strict to review_required; `src/aeat/domain/calculations/registry/test_modelo_720_registry.py`.
+- [x] `W07.P25.S157` - Cluster E reroute 3 private registry imports through public init API stage 2 untracked test files; `src/aeat/adapters/ src/aeat/domain/calculations/registry/`.
+- [x] `W07.P25.S158` - Cluster F flip M100 renta-web-open synthetic_data_allowed assertion True to False; `src/aeat/domain/calculations/registry/test_modelo_100_registry.py`.
+- [x] `W07.P25.S159` - Bonus M200 cross-dependency fix new-entity-flag and incn-prior-12-months binding values; `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`.
