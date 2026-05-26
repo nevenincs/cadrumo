@@ -90,8 +90,8 @@ the operator-facing surface prints `legal_refs` / `source_refs`
 attached at the registry layer.
 
 - [ ] `P05.S24` - apply emit_json_success to modelo work-lifecycle commands; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `P05.S25` - add typed context keys to RegistryValidationError; `src/aeat/domain/calculations/registry/_errors.py`.
-- [ ] `P05.S26` - add typed context keys to RegistrySnapshotError; `src/aeat/domain/calculations/registry/_errors.py`.
+- [x] `P05.S25` - add typed context keys to RegistryValidationError; landed per ADR `2026-05-26-linkage-design-audit-adr` decision 2 (`registry-error-typed-context-factories`) — 18 classmethod factories on `RegistryValidationError` (`for_unsupported_op`, `for_unknown_parameter`, `for_dispatch_key_unknown`, `for_lookup_dispatch_arg_kind`, `for_lookup_dispatch_arg_count`, `for_dispatch_parameter_kind`, `for_enum_binding_value_missing`, `for_binding_value_missing`, `for_relation_value_missing`, `for_casilla_referenced_before_evaluation`, `for_unknown_input_casillas`, `for_computed_supplied_as_input`, `for_bracket_no_window`, `for_bracket_no_coverage`, `for_bracket_negative_base`, `for_divide_by_zero`, `for_empty_expression`, `for_unsupported_comparison_op`) covering every canonical raise scenario the frequency-ranked inventory surfaced. Each pins its context-dict keys and `translated_message` identifier. 20/20 contract tests at `test_error_factories.py`. Existing constructor signature stays valid; raise-site migration is additive; `src/aeat/domain/calculations/registry/_errors.py`.
+- [x] `P05.S26` - add typed context keys to RegistrySnapshotError; landed in the same commit — single canonical `for_modelo_not_registered(modelo_id=)` factory covering the `_authority.modelo` boundary's sole raise scenario; bare constructor stays valid for one-off subscenarios not yet promoted; `src/aeat/domain/calculations/registry/_errors.py`.
 - [ ] `P05.S27` - implement --explain flag printing legal_refs in modelo formulas; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `P05.S28` - surface legal_refs in review queue findings; `src/aeat/entrypoints/cli/_review.py`.
 
