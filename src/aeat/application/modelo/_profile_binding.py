@@ -112,9 +112,9 @@ def _decimal_value(binding_id: str, value: str) -> Decimal:
     # inside an ``if_then_else`` predicate. Coerce booleans before the
     # numeric parse so the engine receives a real Decimal operand.
     stripped = value.strip()
-    if stripped == "True":
+    if stripped.lower() == "true":
         return Decimal("1")
-    if stripped == "False":
+    if stripped.lower() == "false":
         return Decimal("0")
     try:
         return Decimal(stripped)
