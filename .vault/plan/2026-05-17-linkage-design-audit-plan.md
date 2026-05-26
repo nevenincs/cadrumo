@@ -131,3 +131,72 @@ pre-flight so S09 lands cleanly.
 - [x] `P08.S37` - execute P02.S09 against the pre-flight pin: per the ADR's staged path, the wave-one landing keeps `casilla_values` as a model field (not @property) but enforces it equal to `_outputs_for_hash_from_observations(observations)` at construction. Hash derivation routes through `_outputs_for_hash_from_mapping`; both helpers produce the same canonical projection so the P08.S35 pin (`5b78dd04…`) resolves identically. Stage two (true @property) deferred to a separate ADR after one release cycle; `src/aeat/domain/modelos/_calculation_revision.py`.
 - [x] `P08.S38` - execute P02.S10 codemod against the 27 construction sites only after S37 lands; the codemod is mechanical once the storage shape stabilises; superseded by the ADR staged path — stage one keeps the constructor kwarg shape, so no codemod is required today. Resurfaces inside the future stage-two ADR `casilla-values-flat-field-retirement`; `src/aeat/`.
 - [x] `P08.S39` - run the four persistence roundtrip suites (`test_calculation_repository_roundtrip.py`, `test_secure_storage_roundtrip.py`, `test_cross_boundary_roundtrip.py`, `test_runtime_migrated_repositories.py`) and confirm every fully-populated fixture survives strict pydantic equality across the boundary; 16/16 across the first three suites green after S37 landing; `test_runtime_migrated_repositories.py` deferred — that suite collects against the in-flight `live-iva-compensation-wallet` backend (`RepairRemediationDecision` et al.) tracked at W09.P20.S143, not at this surface; will re-verify once the upstream campaign lands; `src/aeat/`.
+
+### Phase `P09` - JSON envelope migration on modelo work-lifecycle commands
+
+Pulled back into scope per the mono-worktree mandate (everything is
+in scope). Surfaced during P05.S24 grounding: today's `_emit`
+helper writes bare-payload JSON; the `SchemaEnvelope` wrapper from
+`aeat.core.json_contract.emit_json_success` is the canonical
+contract per the `2026-04-25-json-output-contract-audit` and the
+cli-workflow-redesign ADR family but has not been adopted on the
+modelo work-lifecycle surface. The typed payload classes plus
+`register_schema` decorators are already in place at
+`_modelo_payloads.py`; the migration is mechanical at the emit
+site but contract-breaking on the JSON output shape — every
+downstream JSON-shape test that pins the bare-payload shape needs
+re-baselining alongside.
+
+- [ ] `P09.S40` - extend the linkage-design-audit research note with a `json-envelope-migration` section capturing today's bare-payload sites, the SchemaEnvelope target shape, the downstream-test inventory that pins the bare shape, and the migration sequencing options (per-command incremental vs whole-surface flip); `.vault/research/`.
+- [ ] `P09.S41` - extend the linkage-design-audit ADR with a third decision (`json-envelope-migration-sequencing`) ratifying the per-command incremental path with a documented compatibility window (both envelope-wrapped and bare-payload accepted by the conformance test during migration), or the whole-surface flip with a single-commit re-baseline; `.vault/adr/`.
+- [ ] `P09.S42` - migrate `aeat app modelo work calculate` to `emit_json_success("modelo.work.calculate", ...)` as the proof-of-pattern landing; update `test_json_schema_conformance.py` (or the relevant guard) to accept the new shape for this command; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `P09.S43` - migrate the remaining work-lifecycle commands (`work create`, `work list`, `work status`, `work rename`, `work discard`, `work verify`, `work file`, `work amend`, `work revisions`, `work revision`) per the ADR-chosen sequencing; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `P09.S44` - re-baseline every CLI surface test that asserts the bare-payload JSON shape against the new envelope shape; the conformance test acts as the regression cap; `src/aeat/entrypoints/cli/test_*.py`.
+
+### Phase `P10` - repair_integrity backend scaffolding
+
+Pulled back into scope per the mono-worktree mandate. Originally
+deferred at `W09.P20.S143` to the `live-iva-compensation-wallet`
+campaign; per the mono-worktree principle, that campaign and this
+one share a single working tree and cross-campaign coordination is
+normal here. Either land minimal scaffolds compatible with the
+in-flight campaign's RepairRemediationDecision design, or pull the
+upstream campaign's work over once it's ready. The W09.P20
+cross-module-import gate's baseline carries the 4 entries; this
+phase closes them out.
+
+- [ ] `P10.S45` - extend the linkage-design-audit research note with a `repair-integrity-backend-shape` section grounding against the `.vault/exec/2026-05-19-live-iva-compensation-wallet/2026-05-22-*w05-p02-s01.md` and sibling execution records to recover the in-flight design's `RepairRemediationDecision`/`RepairRemediationDecisionRepository`/`repair_remediation_decision_id`/`build_repair_policy_command_surface_catalog` shape; `.vault/research/`.
+- [ ] `P10.S46` - extend the linkage-design-audit ADR with a fourth decision (`repair-integrity-cross-campaign-coordination`) ratifying either (a) land scaffolds matching the in-flight shape so the failing tests collect, (b) pull the campaign's production code over wholesale, or (c) wait for the upstream campaign to land first; `.vault/adr/`.
+- [ ] `P10.S47` - execute the ADR-chosen path: land the four missing symbols at `src/aeat/application/repair_integrity.py` so the test_runtime_migrated_repositories.py + test_repair_policy_coverage.py suites collect; `src/aeat/application/repair_integrity.py`.
+- [ ] `P10.S48` - trim the 4 baseline entries from `_BASELINE_BROKEN_IMPORTS` in `test_cross_module_imports_resolve.py`; the gate's silent-fix detector should demand this trim once the imports resolve; `src/aeat/tests/test_cross_module_imports_resolve.py`.
+- [ ] `P10.S49` - re-run the previously-deferred `test_runtime_migrated_repositories.py` roundtrip suite and verify it collects + passes; closes the P08.S39 deferral; `src/aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py`.
+
+### Phase `P11` - __init__.py public-imports-in-__all__ cap burndown
+
+Surfaced by the W09.P20.S140 gate; 146 findings across 16 files
+capped at landing. Per the mono-worktree mandate, the cap-burndown
+work is in-scope linkage hygiene. Each step closes one file's cap
+by classifying every public sibling import as either (a) intentional
+public re-export (add to `__all__`) or (b) internal-use-only
+(rename to `_private` or move import into the function body that
+uses it). Gate's silent-fix detector demands the cap decrement
+after each fix.
+
+- [ ] `P11.S50` - close `application/auth/__init__.py` cap (already 0 after the S140 top-level-only fix; verify cap entry removed from baseline); `src/aeat/application/auth/__init__.py`.
+- [ ] `P11.S51` - close `domain/profile/__init__.py` cap (1 finding: `ProfileValidationError`); `src/aeat/domain/profile/__init__.py`.
+- [ ] `P11.S52` - close `domain/profile/assets/__init__.py` cap (1 finding: `AssetValidationError`); `src/aeat/domain/profile/assets/__init__.py`.
+- [ ] `P11.S53` - close `core/corpus_manifest/__init__.py` cap (1 finding remaining after top-level-only fix); `src/aeat/core/corpus_manifest/__init__.py`.
+- [ ] `P11.S54` - close `application/topics/__init__.py` cap (2 findings: `AeatError`, `bundled_path`); `src/aeat/application/topics/__init__.py`.
+- [ ] `P11.S55` - close `adapters/outbound/aeat/auth/__init__.py` cap (2 findings: `AuthProvider`, `AuthProviderKind`); `src/aeat/adapters/outbound/aeat/auth/__init__.py`.
+- [ ] `P11.S56` - close `adapters/inbound/borrador/_extractors/__init__.py` cap (2 findings: `BorradorParseError`, `Modelo100ObservedV2025Extractor`); `src/aeat/adapters/inbound/borrador/_extractors/__init__.py`.
+- [ ] `P11.S57` - close `domain/profile/inventory/__init__.py` cap (3 findings); `src/aeat/domain/profile/inventory/__init__.py`.
+- [ ] `P11.S58` - close `core/redaction/__init__.py` cap (5 findings); `src/aeat/core/redaction/__init__.py`.
+- [ ] `P11.S59` - close `application/user_profile/__init__.py` cap (5 findings); `src/aeat/application/user_profile/__init__.py`.
+- [ ] `P11.S60` - close `adapters/outbound/aeat/verify/__init__.py` cap (8 findings); `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
+- [ ] `P11.S61` - close `entrypoints/cli/__init__.py` cap (10 findings); `src/aeat/entrypoints/cli/__init__.py`.
+- [ ] `P11.S62` - close `application/filing/__init__.py` cap (11 findings); `src/aeat/application/filing/__init__.py`.
+- [ ] `P11.S63` - close `application/overview/__init__.py` cap (13 findings); `src/aeat/application/overview/__init__.py`.
+- [ ] `P11.S64` - close `entrypoints/cli/_config/__init__.py` cap (21 findings); `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `P11.S65` - close `application/registry/__init__.py` cap (27 findings); `src/aeat/application/registry/__init__.py`.
+- [ ] `P11.S66` - close `application/live/__init__.py` cap (34 findings); `src/aeat/application/live/__init__.py`.
+- [ ] `P11.S67` - verify the W09.P20.S140 cap baseline is empty after every per-file phase closes; trim the gate's `_INIT_MISSING_FROM_ALL_BASELINE` to `{}` and assert the gate runs against an empty baseline; `src/aeat/tests/test_cross_module_imports_resolve.py`.
