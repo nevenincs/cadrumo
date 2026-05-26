@@ -47,11 +47,11 @@ from types import MappingProxyType
 from urllib.parse import urlparse
 
 from ..classification import (
-    ClassificationPolicy,
-    RedactionRule,
-    RedactionStrategy,
-    SensitivityClass,
-    default_policy_for,
+    ClassificationPolicy as _ClassificationPolicy,
+    RedactionRule as _RedactionRule,
+    RedactionStrategy as _RedactionStrategy,
+    SensitivityClass as _SensitivityClass,
+    default_policy_for as _default_policy_for,
 )
 
 # NIF / NIE / CIF — Spanish identity numbers. Eight digits + check letter
@@ -92,75 +92,75 @@ def _host_only(value: str) -> str:
     return f"{scheme}://{parsed.hostname}"
 
 
-_DEFAULT_RULES: Mapping[str, RedactionRule] = MappingProxyType(
+_DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
     {
-        "nif-hash": RedactionRule(
+        "nif-hash": _RedactionRule(
             name="nif-hash",
             pattern=_NIF_PATTERN,
-            strategy=RedactionStrategy.SHA256_PREFIX,
+            strategy=_RedactionStrategy.SHA256_PREFIX,
             applies_to=(
-                SensitivityClass.IDENTITY,
-                SensitivityClass.FINANCIAL,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.IDENTITY,
+                _SensitivityClass.FINANCIAL,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "url-host-only": RedactionRule(
+        "url-host-only": _RedactionRule(
             name="url-host-only",
             pattern=_URL_PATTERN,
-            strategy=RedactionStrategy.HOST_ONLY,
+            strategy=_RedactionStrategy.HOST_ONLY,
             applies_to=(
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "token-fingerprint": RedactionRule(
+        "token-fingerprint": _RedactionRule(
             name="token-fingerprint",
             pattern=_BEARER_PATTERN,
-            strategy=RedactionStrategy.FINGERPRINT,
+            strategy=_RedactionStrategy.FINGERPRINT,
             applies_to=(
-                SensitivityClass.SECRET,
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SECRET,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
-        "bearer-token-fingerprint": RedactionRule(
+        "bearer-token-fingerprint": _RedactionRule(
             name="bearer-token-fingerprint",
             pattern=_OPAQUE_BEARER_PATTERN,
-            strategy=RedactionStrategy.FINGERPRINT,
+            strategy=_RedactionStrategy.FINGERPRINT,
             applies_to=(
-                SensitivityClass.SECRET,
-                SensitivityClass.SESSION,
-                SensitivityClass.AUDIT,
-                SensitivityClass.DIAGNOSTIC,
+                _SensitivityClass.SECRET,
+                _SensitivityClass.SESSION,
+                _SensitivityClass.AUDIT,
+                _SensitivityClass.DIAGNOSTIC,
             ),
         ),
     }
 )
 
 
-def default_rules() -> Mapping[str, RedactionRule]:
+def default_rules() -> Mapping[str, _RedactionRule]:
     """Return the immutable default-rule registry keyed by rule name.
 
     Returns:
         A read-only :class:`~collections.abc.Mapping` from rule name
-        to :class:`~aeat.core.classification.RedactionRule`.
+        to :class:`~aeat.core.classification._RedactionRule`.
     """
     return _DEFAULT_RULES
 
 
-def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]:
+def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 
     Args:
         policy: A
-            :class:`~aeat.core.classification.ClassificationPolicy`
+            :class:`~aeat.core.classification._ClassificationPolicy`
             whose ``redaction_rules`` field carries rule names.
 
     Returns:
-        A tuple of :class:`~aeat.core.classification.RedactionRule`
+        A tuple of :class:`~aeat.core.classification._RedactionRule`
         instances in the order they were declared on the policy.
         Names that are not in the default registry are silently
         skipped: this is deliberate so per-domain policies can
@@ -169,39 +169,39 @@ def default_rules_for(policy: ClassificationPolicy) -> tuple[RedactionRule, ...]
     return tuple(_DEFAULT_RULES[name] for name in policy.redaction_rules if name in _DEFAULT_RULES)
 
 
-def default_rules_for_class(sensitivity: SensitivityClass) -> tuple[RedactionRule, ...]:
+def default_rules_for_class(sensitivity: _SensitivityClass) -> tuple[_RedactionRule, ...]:
     """Resolve the default rule set for a sensitivity class.
 
     Convenience wrapper that goes through
-    :func:`~aeat.core.classification.default_policy_for` and then
+    :func:`~aeat.core.classification._default_policy_for` and then
     :func:`default_rules_for` so callers do not need to know about
     the policy table.
 
     Args:
         sensitivity: The
-            :class:`~aeat.core.classification.SensitivityClass` whose
+            :class:`~aeat.core.classification._SensitivityClass` whose
             default rules should apply.
 
     Returns:
         Ordered tuple of rules for that class.
     """
-    return default_rules_for(default_policy_for(sensitivity))
+    return default_rules_for(_default_policy_for(sensitivity))
 
 
-def _apply_one(rule: RedactionRule, value: str) -> str:
+def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = re.compile(rule.pattern, re.MULTILINE)
-    if rule.strategy is RedactionStrategy.ELLIPSIS:
+    if rule.strategy is _RedactionStrategy.ELLIPSIS:
         return pattern.sub("...", value)
-    if rule.strategy is RedactionStrategy.SHA256_PREFIX:
+    if rule.strategy is _RedactionStrategy.SHA256_PREFIX:
         return pattern.sub(lambda m: _sha256_prefix(m.group(0)), value)
-    if rule.strategy is RedactionStrategy.HOST_ONLY:
+    if rule.strategy is _RedactionStrategy.HOST_ONLY:
         return pattern.sub(lambda m: _host_only(m.group(0)), value)
-    if rule.strategy is RedactionStrategy.FINGERPRINT:
+    if rule.strategy is _RedactionStrategy.FINGERPRINT:
         return pattern.sub(lambda m: _fingerprint(m.group(0)), value)
     return value  # pragma: no cover - exhaustive enum
 
 
-def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
+def redact(value: str, *, rules: tuple[_RedactionRule, ...]) -> str:
     """Apply ``rules`` to a flat string in declared order.
 
     Args:
@@ -225,7 +225,7 @@ def redact(value: str, *, rules: tuple[RedactionRule, ...]) -> str:
     return result
 
 
-def redact_structured(value: object, *, rules: tuple[RedactionRule, ...]) -> object:
+def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> object:
     """Recursively apply ``rules`` to every string leaf inside a structure.
 
     Walks dicts, lists, and tuples; redacts every string at the
@@ -280,12 +280,12 @@ def redact_for_log(text: str) -> str:
     The AUDIT rule set is the right default for exception text: it
     redacts NIF (sha256-prefix), URL host-only, and bearer-token
     fingerprints. The
-    :attr:`~aeat.core.classification.SensitivityClass.IDENTITY`
+    :attr:`~aeat.core.classification._SensitivityClass.IDENTITY`
     class is for ciphertext-at-rest, not log-shaped strings; the
-    :attr:`~aeat.core.classification.SensitivityClass.DIAGNOSTIC`
+    :attr:`~aeat.core.classification._SensitivityClass.DIAGNOSTIC`
     class has the same rules but is named for observability sinks
     specifically.
-    :attr:`~aeat.core.classification.SensitivityClass.AUDIT` is the
+    :attr:`~aeat.core.classification._SensitivityClass.AUDIT` is the
     canonical class for the log/error path.
 
     Args:
@@ -294,7 +294,7 @@ def redact_for_log(text: str) -> str:
     Returns:
         The redacted string.
     """
-    return redact(text, rules=default_rules_for_class(SensitivityClass.AUDIT))
+    return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
 
 
 __all__ = [
