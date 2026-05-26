@@ -227,3 +227,77 @@ labels. The nine profiles tagged in task-34 (M036, M184, M193, M232
 2016-2017, M232 2018-y-siguientes, M347, M349, M720, M840) carry the flag
 until their respective specimen PDFs are acquired and the patterns are
 verified.
+
+## 2026-05-26 amendment (round-trip gate)
+
+### Silent-failure class exposed by M111 and M130
+
+Task-37 real-corpus round-trip work revealed a second silent-failure class
+not addressed by the existing provisional_pending_specimen gate: M111 and
+M130 both had real corpus fixture PDFs at
+tests/fixtures/justificantes/{111,130}/ -- satisfying the specimen gate's
+fixture-existence check -- yet production-profile extraction structurally
+fails on both. M111's numeric_casilla strategy cannot match AEAT's printed
+form because casilla numbers appear at line-end merged with value tokens
+rather than at line-start. M130's numeric casillas appear in a detached value
+block that the parser's line-anchored patterns cannot reach. The specimen gate
+passed them as grounded; round-trip tests exposed them as extraction failures.
+
+Fixture existence alone is therefore an insufficient signal of extraction
+correctness. A profile may have corpus AND fail silently on every PDF in it.
+
+### Strengthened gate: corpus_round_trip_verified
+
+ExtractionProfileDefinition gains a second boolean field:
+corpus_round_trip_verified: bool = False.
+
+Semantic: true declares that the author has confirmed extraction works
+end-to-end against the modelo's corpus PDFs via a parametrized real-corpus
+round-trip test in test_parser_boundary.py (or an equivalent module).
+
+The snapshot-build validator gains a complementary rule
+(validate_declaracion_pdf_round_trip_gate): for any declaracion_pdf
+profile where corpus fixture exists AND both corpus_round_trip_verified and
+provisional_pending_specimen are false, validation raises
+RegistryValidationError. The gate logic is:
+
+- surface != declaracion_pdf: dormant
+- provisional_pending_specimen = true: dormant (explicit opt-out)
+- corpus_round_trip_verified = true: dormant (author asserts verified)
+- no corpus fixture: dormant (specimen gate handles the missing-fixture case)
+- fixture exists, neither flag set: FAIL
+
+The two gates are complementary and non-overlapping: the specimen gate fires
+when no fixture exists and the provisional flag is absent; the round-trip gate
+fires when a fixture exists but neither verification flag is set.
+
+### Ground-truth tagging applied
+
+VERIFIED (corpus_round_trip_verified = true):
+- M100 revisions 2021, 2022, 2023: 19 named_label casillas, round-trip
+  confirmed against 3-PDF corpus.
+- M190 revision 2024-y-siguientes: 3 named_label casillas, 1-PDF corpus.
+- M303 revisions 2009-y-siguientes and 2023-y-siguientes: 4 and 12 casillas,
+  15-PDF corpus across two templates.
+- M390 revision 2010-y-siguientes: 6 named_label casillas, 2-PDF corpus.
+
+CORPUS-GAP (provisional_pending_specimen = true added):
+- M111 revision 2019-y-siguientes: corpus exists; numeric_casilla layout
+  defeats extraction due to line-end box-number merging.
+- M130 revision 2019-y-siguientes: corpus exists; numeric_casilla layout
+  defeats extraction due to detached value blocks. Coverage = 0 on all
+  corpus PDFs. Layout-defeated counts as unverified.
+
+NO-FIXTURE-ALREADY-PROVISIONAL (no change):
+- M036, M115, M123 (x2), M131, M184, M193, M232 (x2), M347, M349, M720, M840.
+
+### Discipline going forward
+
+Any declaracion_pdf profile with a corpus fixture must satisfy one of two
+conditions or fail the snapshot-build gate:
+1. A real parametrized round-trip test exists and corpus_round_trip_verified =
+   true is set.
+2. Extraction is known to fail or is unverified, and provisional_pending_specimen
+   = true is set explicitly.
+
+Fixture presence with neither flag is the newly-closed silent-failure path.
