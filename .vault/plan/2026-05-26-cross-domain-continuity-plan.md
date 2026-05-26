@@ -179,7 +179,7 @@ Every renta-2025-profile-* binding shows missing despite the fact existing on th
 - [x] `W03.P16.S62` - for every renta-2025-profile-* binding list selector.field value and verify against canonical profile-fact path wizard emits; `src/aeat/_data/registry/aeat/modelos/100/revisions/2025/bindings/`.
 - [x] `W03.P16.S63` - confirm via schema audit that no other modelo (200 202 303 etc) has registered profile-sourced bindings today; `if findings surface a profile binding declared elsewhere; add it to the validation pass; otherwise close S63 as confirmed-empty with a note that S62 already covers the only modelo (100) with profile bindings; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `W03.P16.S64` - identify the mismatch class key-namespace missing projection arm schema-version drift; `apply canonical fix at correct boundary; `src/aeat/application/modelo/_profile_binding.py`.
-- [ ] `W03.P16.S65` - regression test constructing realistic profile and asserting every renta-2025-profile-* binding resolves to stored fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
+- [x] `W03.P16.S65` - regression test constructing realistic profile and asserting every renta-2025-profile-* binding resolves to stored fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
 
 ### Phase `W03.P17` - end-to-end CLI test coverage through real profile to binding path
 
