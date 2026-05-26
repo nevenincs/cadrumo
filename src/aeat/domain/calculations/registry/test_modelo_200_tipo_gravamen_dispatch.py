@@ -137,9 +137,16 @@ def test_micro_empresa_rate_is_a_two_bracket_scale_not_a_flat_value() -> None:
     assert rates_2026[Decimal("0")] == Decimal("0.19"), "2026 first tranche must be 19 %"
     assert rates_2026[Decimal("50000")] == Decimal("0.21"), "2026 rest tranche must be 21 %"
 
-    # No window carries the previous wrong flat 23 % figure in any form.
-    for window_rates in by_window.values():
-        assert Decimal("0.23") not in window_rates.values()
+    # The 2025+ windows must not carry the pre-2025 flat 23 % figure;
+    # the two-tranche scale replaced it. The 2024 window is the
+    # legitimate backfill at 23 % (LIS Art. 29 pre-2025 pyme regime)
+    # and is expected exactly there.
+    for window, window_rates in by_window.items():
+        window_year = window[0].year
+        if window_year >= 2025:
+            assert Decimal("0.23") not in window_rates.values(), (
+                f"2025+ window must not carry the pre-2025 flat 23 % rate (window {window})"
+            )
         assert Decimal("23") not in window_rates.values()
 
 
