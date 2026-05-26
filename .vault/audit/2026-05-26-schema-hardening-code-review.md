@@ -60,3 +60,23 @@ Verification reviewed:
 
 - Ruff passed for `test_loader_directory_mode.py`.
 - `test_loader_directory_mode.py` passed with 23 tests.
+
+REVIEW-2026-05-26-003 | INFO | P06.S18 loader genericity audit passes
+
+Reviewed the loader fragment-support audit. No LOW, MEDIUM, HIGH, or CRITICAL
+issues were found.
+
+The loader continues to describe generic source layouts using `ModeloSource`,
+`ModeloRevisionSource`, `single_file`, `directory`, `revision_file`, and
+`fragment_directory`. The audit found no per-modelo branches for M100, M200,
+M303, M349, or other modelo ids.
+
+Verification reviewed:
+
+- Text search over `_loader.py` found only generic `modelo_id` bookkeeping and
+  fragment-layout code.
+- Runtime discovery reported M100 and M200 through fragment-directory sources,
+  M131 through revision-file sources, and M130 through single-file source
+  layout.
+- S17's loader-directory tests cover filesystem-vs-discovery fragment
+  inventory drift.
