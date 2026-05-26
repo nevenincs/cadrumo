@@ -69,7 +69,7 @@ Define the runtime object that owns bucket session readiness, route attachment, 
 
 - [x] `W02.P03.S11` - add StorageRuntime models and readiness result types; `src/aeat/adapters/persistence/storage`.
 - [x] `W02.P03.S12` - add bucket-attached repository factory methods to the storage runtime; `src/aeat/adapters/persistence/storage`.
-- [ ] `W02.P03.S13` - route profile aggregate repositories through the storage runtime; `src/aeat/application/user_profile`.
+- [x] `W02.P03.S13` - route profile aggregate repositories through the storage runtime; `src/aeat/application/user_profile`.
 - [ ] `W02.P03.S14` - route profile state projection reads through runtime readiness; `src/aeat/application/user_profile`.
 
 ### Phase `W02.P04` - consumer repository enrollment
