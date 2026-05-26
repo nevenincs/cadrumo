@@ -9,6 +9,8 @@ related:
   - '[[2026-05-15-linkage-design-audit-reference]]'
   - '[[2026-05-16-linkage-design-audit-audit]]'
   - '[[2026-05-16-linkage-design-audit-plan]]'
+  - '[[2026-05-26-linkage-design-audit-research]]'
+  - '[[2026-05-26-linkage-design-audit-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -125,7 +127,7 @@ already-persisted CalculationRevision. This Phase stages the
 pre-flight so S09 lands cleanly.
 
 - [x] `P08.S35` - write the hash-stability anti-tautology proof BEFORE touching the field: landed as `test_revision_id_pinned_against_fully_populated_fixture` — pins SHA-256 `5b78dd04e614a50fe448439b7fdb843f1e31afe76f9d424d0276866679dee7ca` for a fully-populated derivation exercising every branch of the hash payload (inputs, overrides, outputs, source_transaction_ids, borrador_snapshot_id, bindings_sourced_from_borrador). Any future change to the hash domain — including the planned S09 collapse of `casilla_values` into a derived projection — must keep this pin stable, or every already-persisted CalculationRevision id phantom-mismatches. 7/7 tests in the file green; `src/aeat/domain/modelos/test_calculation_revision.py`.
-- [ ] `P08.S36` - decide the hash-domain projection: either (a) keep the flat `{casilla_id: Decimal}` shape but build it from `observations` at hash time, or (b) define a new canonical projection over `observations` and bump the revision-id derivation contract with a documented migration; `.vault/adr/`.
+- [x] `P08.S36` - decide the hash-domain projection: either (a) keep the flat `{casilla_id: Decimal}` shape but build it from `observations` at hash time, or (b) define a new canonical projection over `observations` and bump the revision-id derivation contract with a documented migration; decided: **staged two-strategy path** ratified at `2026-05-26-linkage-design-audit-adr` (status: accepted). Stage one lands an `_outputs_for_hash(observations)` helper routing both the model validator and `derive_calculation_revision_id` through the projection; `casilla_values` becomes a denormalised cache enforced equal at construction time. Hash domain unchanged — pinned SHA stable. Stage two (drop the flat field, JSON-schema migration) is deferred to a separate ADR after one release cycle. Research note `2026-05-26-linkage-design-audit-research` carries the cross-campaign-collision survey, the two-strategy tradeoff table, and the recommendation; `.vault/adr/2026-05-26-linkage-design-audit-adr.md`.
 - [ ] `P08.S37` - execute P02.S09 against the pre-flight pin: make `casilla_values` a derived `@property` over `observations`, route hash derivation through the chosen projection, and confirm the S35 pin still resolves identically; `src/aeat/domain/modelos/_calculation_revision.py`.
 - [ ] `P08.S38` - execute P02.S10 codemod against the 27 construction sites only after S37 lands; the codemod is mechanical once the storage shape stabilises; `src/aeat/`.
 - [ ] `P08.S39` - run the four persistence roundtrip suites (`test_calculation_repository_roundtrip.py`, `test_secure_storage_roundtrip.py`, `test_cross_boundary_roundtrip.py`, `test_runtime_migrated_repositories.py`) and confirm every fully-populated fixture survives strict pydantic equality across the boundary; `src/aeat/`.
