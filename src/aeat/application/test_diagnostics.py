@@ -229,12 +229,8 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         finally:
             engine_new.dispose()
 
-        # The default repair pipeline picks up the master key from the keyring;
-        # we want it to use the same NEW key we just wrote under, so keep the
-        # process-wide override in place but redirect the engine resolution to
-        # the same database file.
-        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-        monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
+        # The default repair pipeline resolves storage from settings and
+        # decrypts through the active K2 provider bound by this context.
         dispose_engine()
         try:
             report = build_config_repair_report()
@@ -245,10 +241,8 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
             assert integrity_check.next_action == "aeat config repair quarantine --yes"
 
             ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
-            # Three rows sealed under the OLD ephemeral key should be unreadable
-            # under the unsecured backend; rows we wrote under the unsecured
-            # backend itself remain readable (set is at least 0 under the
-            # unsecured key, depending on whether the canary fires).
+            # Three rows sealed under the OLD ephemeral key should be
+            # unreadable under K2; the K2 row remains readable.
             assert ns_report.unreadable >= 3
             assert ns_report.unreadable + ns_report.readable == 4
         finally:
@@ -306,8 +300,6 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
         finally:
             engine_old.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     with key_new:
         dispose_engine()
         try:
@@ -421,8 +413,6 @@ def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
         finally:
             engine_old.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     with key_new:
         dispose_engine()
 
@@ -497,8 +487,6 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
         finally:
             engine_old.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     with key_new:
         dispose_engine()
         engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
