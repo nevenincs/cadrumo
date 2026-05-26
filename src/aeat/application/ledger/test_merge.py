@@ -21,9 +21,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.transactions import (
@@ -46,16 +45,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         try:
-            yield get_engine(profile.settings)
+            yield profile.repository
         finally:
             dispose_engine(profile.settings)
 
 
-def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):
-    objects = SecureObjectRepository(engine=engine)
+def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
@@ -95,8 +93,8 @@ def _split_setup(transaction_repository, event_repository, *, parent_amount: Dec
     return parent, split
 
 
-def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result, split = _split_setup(transaction_repository, event_repository)
 
     merge = merge_transactions(
@@ -129,8 +127,8 @@ def test_merge_archives_parent_and_children_and_persists_fresh_merged(secure_eng
     assert set(merged.split_lineage.sibling_transaction_ids) == set(split.child_transaction_ids)
 
 
-def test_merged_transaction_id_differs_from_original_parent_id(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merged_transaction_id_differs_from_original_parent_id(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result, split = _split_setup(transaction_repository, event_repository)
 
     merge = merge_transactions(
@@ -144,13 +142,13 @@ def test_merged_transaction_id_differs_from_original_parent_id(secure_engine: En
     assert merge.parent_transaction_id == parent_result.ref.transaction_id
 
 
-def test_merge_amount_round_trips_parent_amount(secure_engine: Engine) -> None:
+def test_merge_amount_round_trips_parent_amount(secure_objects: SecureObjectRepository) -> None:
     """Identity passthrough: merged_transaction.raw.amount equals the
     original parent amount because the merge synthesises the merged
     row from the parent's raw fields. This is not a tautological
     arithmetic check — it asserts the backend preserves the operator-
     supplied amount across split+merge, not that any formula matches."""
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result, split = _split_setup(transaction_repository, event_repository)
     _parent = transaction_repository.load().get(parent_result.ref.transaction_id)
     assert _parent is not None, "parent transaction must be present after split"
@@ -166,8 +164,8 @@ def test_merge_amount_round_trips_parent_amount(secure_engine: Engine) -> None:
     assert merge.merged_transaction.raw.amount == original_amount
 
 
-def test_merge_emits_single_event_anchored_on_parent(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_emits_single_event_anchored_on_parent(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result, split = _split_setup(transaction_repository, event_repository)
 
     merge = merge_transactions(
@@ -190,8 +188,8 @@ def test_merge_emits_single_event_anchored_on_parent(secure_engine: Engine) -> N
     assert event.payload["split_group_id"] == merge.split_group_id
 
 
-def test_merge_refuses_partial_cohort(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_refuses_partial_cohort(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     # Split into 3 so we can supply 2 of them and trigger partial-cohort refusal.
     parent_command = ManualLedgerTransactionCommand(
         bucket_id="bucket-a",
@@ -231,8 +229,8 @@ def test_merge_refuses_partial_cohort(secure_engine: Engine) -> None:
         )
 
 
-def test_merge_refuses_duplicate_child_ids(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_refuses_duplicate_child_ids(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     _parent_result, split = _split_setup(transaction_repository, event_repository)
     duplicate = (split.child_transaction_ids[0], split.child_transaction_ids[0])
 
@@ -246,8 +244,8 @@ def test_merge_refuses_duplicate_child_ids(secure_engine: Engine) -> None:
         )
 
 
-def test_merge_refuses_cross_group(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_refuses_cross_group(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     _parent_a, split_a = _split_setup(transaction_repository, event_repository)
     # Create a second parent + split.
     second_parent = create_manual_transaction(
@@ -285,8 +283,8 @@ def test_merge_refuses_cross_group(secure_engine: Engine) -> None:
         )
 
 
-def test_merge_refuses_single_child(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_merge_refuses_single_child(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     _parent_result, split = _split_setup(transaction_repository, event_repository)
     with pytest.raises(TransactionValidationError, match="at least two child"):
         merge_transactions(
@@ -298,11 +296,11 @@ def test_merge_refuses_single_child(secure_engine: Engine) -> None:
         )
 
 
-def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_engine: Engine) -> None:
+def test_split_then_merge_chain_is_addressable_via_event_for_object(secure_objects: SecureObjectRepository) -> None:
     """for_object(parent_id) returns both the SPLIT and the MERGED events
     in chronological order, proving the audit chain is reconstructable
     via the existing event-store query helper."""
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result, split = _split_setup(transaction_repository, event_repository)
     merge = merge_transactions(
         bucket_id="bucket-a",

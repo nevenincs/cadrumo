@@ -8,9 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.categories import SpendingCategory
 from ...domain.invoices import (
     Invoice,
@@ -46,9 +45,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
-        yield get_engine(profile.settings)
+        yield profile.repository
 
 
 def _raw_transaction(
@@ -159,23 +158,21 @@ def _invoice(
 
 
 def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casilla_values(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
     initial = _transaction("row-linked")
     invoice = _invoice(initial.transaction_id)
     linked = _transaction("row-linked", purchase_invoice_evidence_id=invoice.invoice_id)
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=SecureObjectRepository(engine=secure_engine))
-    invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((linked,)))
     invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
 
     result = aggregate_renta_ledger_expenses_from_repositories(
         bucket_id="test",
         period="2025",
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id="test", objects=SecureObjectRepository(engine=secure_engine)
-        ),
-        invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
         profile_year=2025,
     )
 
@@ -191,24 +188,22 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
     assert result.casilla_aggregation.provenance[0].transaction_ids == (linked.transaction_id,)
 
 
-def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_engine: Engine) -> None:
+def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects: SecureObjectRepository) -> None:
     transaction = _transaction(
         "row-cli-renta",
         amount=Decimal("-121.00"),
         category=SpendingCategory.ASESORIA_FISCAL,
     )
-    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=SecureObjectRepository(engine=secure_engine))
-    invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    tx_repo = TransactionCatalogueRepository(bucket_id="test", objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     tx_repo.save(TransactionCatalogue.from_transactions((transaction,)))
     invoice_repo.save(InvoiceCatalogue())
 
     inputs = _aggregate_renta_filing_inputs(
         bucket_id="test",
         filing_year=2025,
-        transaction_repository=TransactionCatalogueRepository(
-            bucket_id="test", objects=SecureObjectRepository(engine=secure_engine)
-        ),
-        invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+        transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
     )
 
     assert inputs["0199"] == Decimal("121.00")
@@ -218,16 +213,16 @@ def test_cli_renta_filing_aggregation_resolves_registry_bound_inputs(secure_engi
 
 
 def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mismatch(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
-    repo = TransactionCatalogueRepository(bucket_id="other", objects=SecureObjectRepository(engine=secure_engine))
+    repo = TransactionCatalogueRepository(bucket_id="other", objects=secure_objects)
 
     with pytest.raises(AggregationValidationError, match="bucket"):
         aggregate_renta_ledger_expenses_from_repositories(
             bucket_id="test",
             period="2025",
             transaction_repository=repo,
-            invoice_repository=InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine)),
+            invoice_repository=InvoiceCatalogueRepository(objects=secure_objects),
             profile_year=2025,
         )
 

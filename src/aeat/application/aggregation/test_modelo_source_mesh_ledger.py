@@ -8,9 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository, get_engine
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.resources import resources
 from ...domain.calculations.registry import ModeloRevision
 from ...domain.categories import SpendingCategory
@@ -59,9 +58,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield get_engine(profile.settings)
+        yield profile.repository
 
 
 def _revision(modelo: str, revision_id: str) -> ModeloRevision:
@@ -170,11 +169,11 @@ def _invoice(tx_id: str, *, bucket_id: str = "bucket-a") -> Invoice:
     )
 
 
-def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_engine: Engine) -> None:
+def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_objects: SecureObjectRepository) -> None:
     revision = _revision("303", "2009-y-siguientes")
     tx_repo = TransactionCatalogueRepository(
         bucket_id="bucket-a",
-        objects=SecureObjectRepository(engine=secure_engine),
+        objects=secure_objects,
     )
     incoming = _iva_transaction(
         "sale-general",
@@ -220,14 +219,14 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_e
 
 
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance(
-    secure_engine: Engine,
+    secure_objects: SecureObjectRepository,
 ) -> None:
     revision = _revision("100", "2025")
     tx_repo = TransactionCatalogueRepository(
         bucket_id="bucket-a",
-        objects=SecureObjectRepository(engine=secure_engine),
+        objects=secure_objects,
     )
-    invoice_repo = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+    invoice_repo = InvoiceCatalogueRepository(objects=secure_objects)
     initial = _renta_transaction("renta-linked", purchase_invoice_evidence_id=None)
     invoice = _invoice(initial.transaction_id)
     linked = _renta_transaction("renta-linked", purchase_invoice_evidence_id=invoice.invoice_id)
