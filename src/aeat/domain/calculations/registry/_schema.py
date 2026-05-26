@@ -785,6 +785,32 @@ class ProfilePredicateDefinition(RegistryModel):
     source_refs: SourceRefs
 
 
+# Suffix match for AEAT-owned infrastructure. Synthetic taxpayer,
+# counterparty, declaration, profile, or form data must not be sent to
+# any host under these suffixes; see the no-synthetic-sede-live-surfaces
+# ADR. The companion guard layer (``_remote_state_guard``) keeps an
+# identical suffix tuple as a runtime defence-in-depth check.
+_AEAT_HOST_SUFFIXES_FOR_SYNTHETIC_BAN: tuple[str, ...] = (
+    "agenciatributaria.gob.es",
+    "aeat.es",
+)
+
+
+def _first_aeat_allowed_host(hosts: tuple[str, ...]) -> str | None:
+    """Return the first AEAT-owned host in ``hosts`` or ``None``.
+
+    A host is AEAT-owned if its normalised lowercase form equals one of
+    the canonical AEAT suffixes or ends with ``f".{suffix}"``.
+    """
+
+    for host in hosts:
+        normalised = host.lower()
+        for suffix in _AEAT_HOST_SUFFIXES_FOR_SYNTHETIC_BAN:
+            if normalised == suffix or normalised.endswith(f".{suffix}"):
+                return host
+    return None
+
+
 class LiveCrossReferenceDecision(RegistryModel):
     id: CrossReferenceId
     evidence_tier: EvidenceTier
@@ -923,13 +949,30 @@ class LiveCrossReferenceDecision(RegistryModel):
             )
 
     def _validate_synthetic_data_constraints(self) -> None:
-        """Read surfaces and static docs must not accept synthetic data."""
+        """Read surfaces and static docs must not accept synthetic data.
+
+        Additionally, no cross-reference whose ``allowed_hosts`` include an
+        AEAT-owned host (suffix match against ``agenciatributaria.gob.es``
+        or ``aeat.es``) may declare ``synthetic_data_allowed = true``.
+        Synthetic taxpayer, counterparty, declaration, profile, or form
+        data is prohibited on AEAT-hosted live surfaces; the surface
+        shape (``open_simulator`` / ``authenticated_simulator``) does not
+        license synthetic input against AEAT infrastructure.
+        """
         if self.surface in {"public_read_surface", "authenticated_read_surface"} and self.synthetic_data_allowed:
             raise RegistryValidationError(f"cross-reference {self.id!r} read surface must not accept synthetic data")
         if self.surface == "static_official_documentation" and self.synthetic_data_allowed:
             raise RegistryValidationError(
                 f"cross-reference {self.id!r} static documentation cannot accept synthetic data"
             )
+        if self.synthetic_data_allowed:
+            aeat_host = _first_aeat_allowed_host(self.allowed_hosts)
+            if aeat_host is not None:
+                raise RegistryValidationError(
+                    f"cross-reference {self.id!r} declares synthetic_data_allowed = true "
+                    f"on AEAT-hosted allowed host {aeat_host!r}; synthetic data is prohibited "
+                    f"on AEAT-hosted live surfaces"
+                )
 
     def _validate_allowed_method(self, method: str) -> None:
         """Per-surface HTTP method allowlist + uppercase shape requirement."""
