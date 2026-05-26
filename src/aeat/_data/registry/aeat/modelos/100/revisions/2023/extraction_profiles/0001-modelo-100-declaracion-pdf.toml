@@ -1,0 +1,51 @@
+[[revisions."2023".extraction_profiles]]
+id = "modelo-100-2023-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    # Cuota-chain closure casillas — first chunk.
+    # All label_patterns tested against 2021-0A.pdf, 2022-0A.pdf, 2023-0A.pdf corpus.
+    # Pattern design notes:
+    #   - Patterns with \s*\[ anchor to the formula-bearing body line to prevent matching
+    #     duplicate short labels in the summary section (page 4 of the declaración PDF).
+    #   - Cuota líquida estatal / autonómica (0570/0571) are ambiguous in 2023 because
+    #     both body and summary carry identical short labels; deferred to follow-up chunk.
+    #   - Cuota líquida autonómica incrementada (0586) requires \[ to exclude casilla 0671
+    #     (CCAA passthrough row with same label but no formula reference).
+    #
+    # 0545 — cuota íntegra estatal (ley-35-2006:art-62, art-66)
+    {casilla_id = "0545", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+estatal\s*\['},
+    # 0546 — cuota íntegra autonómica (ley-35-2006:art-62, art-67)
+    {casilla_id = "0546", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+[íi]ntegra\s+auton[oó]mica\s*\['},
+    # 0505 — base liquidable general sometida a gravamen (ley-35-2006:art-50)
+    {casilla_id = "0505", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+liquidable\s+general\s+sometida\s+a\s+gravamen\s*\['},
+    # 0585 — cuota líquida estatal incrementada (ley-35-2006:art-68)
+    {casilla_id = "0585", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+estatal\s+incrementada'},
+    # 0586 — cuota líquida autonómica incrementada (ley-35-2006:art-68)
+    {casilla_id = "0586", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+auton[oó]mica\s+incrementada\s*\['},
+    # 0587 — cuota líquida incrementada total = 0585 + 0586 (ley-35-2006:art-77)
+    {casilla_id = "0587", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+l[íi]quida\s+incrementada\s+total'},
+    # 0595 — cuota resultante de la autoliquidación (ley-35-2006:art-79)
+    {casilla_id = "0595", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+resultante\s+de\s+la\s+autoliquidaci[oó]n'},
+    # 0610 — cuota diferencial = 0595 − retenciones y pagos a cuenta (ley-35-2006:art-79)
+    {casilla_id = "0610", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Cuota\s+diferencial\s*\['},
+    # 0670 — resultado de la declaración (ley-35-2006:art-103)
+    {casilla_id = "0670", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Resultado\s+de\s+la\s+declaraci[oó]n(?!\s+complementaria)'},
+]
+confidence = "strict"
+min_coverage = "1"
+failure_semantics = "fail_hard"
+legal_refs = [
+    "ley-35-2006:art-50",
+    "ley-35-2006:art-62",
+    "ley-35-2006:art-66",
+    "ley-35-2006:art-67",
+    "ley-35-2006:art-68",
+    "ley-35-2006:art-73",
+    "ley-35-2006:art-77",
+    "ley-35-2006:art-79",
+    "ley-35-2006:art-103",
+]
+source_refs = ["aeat-dr-100-2023-dictionary", "boe-modelo-100-2023-form", "aeat-modelo-100-procedure"]
