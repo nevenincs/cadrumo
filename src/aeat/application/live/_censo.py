@@ -26,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
@@ -187,20 +188,26 @@ class CensoSnapshotRepository:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise LiveApplicationInputError("bucket_id must not be blank")
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = secure_object_repository_for_bucket(self._bucket_id)
+        return self._objects
 
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
 
     def exists(self, snapshot_id: str) -> bool:
-        return self._objects.exists(
+        return self._repository.exists(
             CENSUS_SNAPSHOT_NAMESPACE,
             census_snapshot_object_key(self._bucket_id, snapshot_id),
         )
 
     def load(self, snapshot_id: str) -> CensoSnapshot:
-        record = self._objects.load(
+        record = self._repository.load(
             CENSUS_SNAPSHOT_NAMESPACE,
             census_snapshot_object_key(self._bucket_id, snapshot_id),
             expected_class=SensitivityClass.IDENTITY,
@@ -227,7 +234,7 @@ class CensoSnapshotRepository:
     def list_snapshots(self) -> tuple[CensoSnapshot, ...]:
         snapshots = [
             snapshot
-            for record in self._objects.list_records(
+            for record in self._repository.list_records(
                 CENSUS_SNAPSHOT_NAMESPACE,
                 expected_class=SensitivityClass.IDENTITY,
                 max_supported_version=_CENSUS_SNAPSHOT_VERSION,
@@ -271,7 +278,7 @@ class CensoSnapshotRepository:
             classification=SensitivityClass.IDENTITY,
             payload=snapshot,
         )
-        self._objects.save(
+        self._repository.save(
             namespace=CENSUS_SNAPSHOT_NAMESPACE,
             object_key=census_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
             classification=SensitivityClass.IDENTITY,
