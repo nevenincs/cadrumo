@@ -8,6 +8,7 @@ related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-research]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'
   - '[[2026-05-21-declaracion-extraction-architecture-plan]]'
+  - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
 <!-- LINK RULES:
@@ -44,3 +45,13 @@ Run the focused validation gates, record execution evidence, and close the decla
 
 - [x] `P03.S07` - Run focused registry and Sede test gates for the no-synthetic policy: registry invariant, Modelo 100/349, registry oracle/applicability/parity, committed registry, GROI, NIF-IVA, and Renta WEB Open offline Sede gates passed; broader Sede declarations batch still has three unrelated Modelo 303 export-layout failures on `modelo-303-envelope-marker`; `validation residual tracked out of scope`.
 - [x] `P03.S08` - Record execution evidence and close the declaration-extraction S124 handoff; `.vault/exec/`.
+
+### Phase `P04` - live IVA read-only follow-through
+
+Bind the no-synthetic policy to the live IVA work so the wallet/filed-history
+driver cannot regress into AEAT-hosted synthetic preview, filing, payment, or
+representation submissions while hardening the read-only acquisition backend.
+
+- [ ] `P04.S09` - Verify live IVA wallet and filed-history drivers use only configured read-only/authentication action classes and no synthetic AEAT-hosted inputs; `src/aeat/adapters/outbound/aeat/sede src/aeat/domain/calculations/registry/_remote_state_guard.py`.
+- [ ] `P04.S10` - Add a constants-centralization guard for AEAT-hosted live-surface hosts, routes, and read-action markers discovered during the live IVA work; `src/aeat/core/external_constants.toml src/aeat/tests`.
+- [ ] `P04.S11` - Re-run no-synthetic live-surface gates after live IVA auth/acquisition changes; `src/aeat/domain/calculations/registry src/aeat/adapters/outbound/aeat/sede`.
