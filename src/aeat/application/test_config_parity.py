@@ -12,7 +12,10 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
+from aeat.core.config import SecretStoreBackend
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -21,9 +24,8 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'parity.db').as_posix()}")
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
+    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
     monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
 
 
@@ -83,18 +85,15 @@ def test_config_create_then_config_show_round_trips_iva_regime(
     facts = {row["path"]: row["value"] for row in json.loads(show_via_config.output)["facts"]}
     assert facts["iva.regime"] == "GENERAL"
 
-    from aeat.adapters.persistence.storage import get_master_key_provider
     from aeat.application.user_profile import UserProfileLifecycleRepository
-    from aeat.application.user_profile._orchestration import fact_value
-    from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.application.user_profile._orchestration import fact_value, profile_storage_session
     from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
 
-    with get_master_key_provider():
-        workflow_state_repository().load()
-        # The bucket directory is named by the minted UUID; resolve it
-        # from the operator label "default" carried in the manifest.
-        pointer = read_profile_bucket("default")
-        assert pointer is not None
+    # The bucket directory is named by the minted UUID; resolve it
+    # from the operator label "default" carried in the manifest.
+    pointer = read_profile_bucket("default")
+    assert pointer is not None
+    with profile_storage_session(pointer.bucket_id):
         record = UserProfileLifecycleRepository(bucket_id=pointer.bucket_id).load(pointer.bucket_id)
         assert fact_value(record, "iva.regime") == "GENERAL"
 
