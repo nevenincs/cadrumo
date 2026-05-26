@@ -24,7 +24,7 @@ from aeat.core.errors import resolve_error_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
-_NOW = datetime(2026, 5, 26, 10, 0, tzinfo=UTC)
+_NOW = datetime.now(UTC).replace(microsecond=0)
 _KEK = b"k" * 32
 _DEK = b"d" * 32
 
