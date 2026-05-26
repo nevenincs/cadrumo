@@ -33,12 +33,14 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
     )
 
     assert snapshot.revision.id == "2019-y-siguientes"
@@ -195,11 +197,11 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
             "05": Decimal("4000"),
             "08": Decimal("50"),
             "09": Decimal("25"),
-            "11": Decimal("10"),
             "12": Decimal("15"),
             "14": Decimal("20"),
         },
         date_context={"filing_period": filing_period},
+        binding_values={f"modelo-131-{revision_id}-resultados-negativos-anteriores": Decimal("10")},
     )
 
     assert snapshot.revision.id == revision_id

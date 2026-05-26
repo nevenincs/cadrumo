@@ -27,6 +27,7 @@ from ._snapshot import build_snapshot
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _PREVIOUS_YEAR_NET_INCOME_BINDING = "irpf.previous_year_economic_activity_net_income"
+_PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING = "modelo-130-resultados-negativos-anteriores"
 
 
 @pytest.fixture
@@ -72,12 +73,14 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
-        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+        binding_values={
+            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        },
     )
 
     order = {entry.target: index for index, entry in enumerate(result.entries)}
@@ -135,12 +138,14 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
             "06": Decimal("50"),
             "08": Decimal("100"),
             "10": Decimal("10"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
-        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+        binding_values={
+            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        },
     )
 
     assert result.values["07"] < Decimal("0")
@@ -160,12 +165,14 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={"filing_period": date(2026, 3, 31)},
-        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500")},
+        binding_values={
+            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),
+            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        },
     )
 
     assert {"13", "19"} <= set(result.values)
@@ -529,12 +536,14 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
             "06": Decimal("0"),
             "08": Decimal("0"),
             "10": Decimal("0"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
         date_context={},
-        binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+        binding_values={
+            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+        },
     )
 
     assert "04" in result.values
@@ -563,12 +572,14 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
                 "06": Decimal("0"),
                 "08": Decimal("0"),
                 "10": Decimal("0"),
-                "15": Decimal("0"),
                 "16": Decimal("0"),
                 "18": Decimal("0"),
             },
             date_context={},
-            binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
+            binding_values={
+                _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+                _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+            },
         )
 
 

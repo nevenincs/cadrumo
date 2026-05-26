@@ -80,4 +80,5 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
             _snapshot_130(modelo_130_registry),
             inputs={"01": Decimal("12000.00"), "02": Decimal("4000.00")},
             date_context={"filing_period": date(2026, 4, 20)},
+            binding_values={"modelo-130-resultados-negativos-anteriores": Decimal("0")},
         )
