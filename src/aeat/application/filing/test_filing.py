@@ -9,6 +9,7 @@ import pytest
 
 from ...core.errors import BaseSeverity
 from ...core.i18n import Translatable as tr
+from ...core.resources import resources
 from ...domain.transactions import TransactionCatalogue
 from . import (
     CasillaSchemaProvider,
@@ -148,6 +149,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
 
 
 def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
+    snapshot = resources().modelos.authority.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     draft = build_draft(
         modelo="123",
         period="2026Q1",
@@ -168,7 +170,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
 
     values = {value.casilla_id: value for value in draft.values}
     assert draft.status is ModeloDraftStatus.LISTO_PARA_PRESENTAR
-    assert draft.schema_version == "registry:123:2024-y-siguientes"
+    assert draft.schema_version == f"registry:123:{snapshot.revision.id}"
     assert {"03", "06", "09", "12", "14"} <= set(values)
     assert values["03"].formula_trace == ("01", "02")
     assert values["06"].formula_trace == ("04", "05")
@@ -411,6 +413,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
 
 
 def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
+    snapshot = resources().modelos.authority.snapshot("123", filing_year=2026, period="1T", on=date(2026, 4, 1))
     schema_provider = build_runtime_schema_provider()
     draft = build_draft(
         modelo="123",
@@ -439,7 +442,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
     )
 
     assert approved.status is ModeloDraftStatus.APROBADO
-    assert approved.schema_version == "registry:123:2024-y-siguientes"
+    assert approved.schema_version == f"registry:123:{snapshot.revision.id}"
     assert approved.approval_basis is not None
     assert approved.approval_basis.schema_formula_fingerprint
 
