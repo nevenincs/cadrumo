@@ -130,6 +130,21 @@ def test_profile_creates_without_incn_flag_leaves_fact_unset() -> None:
     assert "taxpayer_type.incn_prior_12_months" not in rows
 
 
+def _load_active_taxpayer_profile():
+    """Return the reloaded ``TaxpayerProfile`` for the active profile.
+
+    Used by the three-state assertions below — the projection layer
+    is the surface the LIS Art. 29 gate reads, so the contract under
+    test must be asserted there, not only at the canonical-dict layer.
+    """
+
+    from aeat.application.wizard._status import load_active_taxpayer_profile
+    from aeat.application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    return load_active_taxpayer_profile(state)
+
+
 def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:
     """The optional LIS Art. 29 first-two-profit-periods state lands in
     its own profile fact. A positively-declared True opts the entity
@@ -160,15 +175,20 @@ def test_new_entity_first_two_profit_periods_flag_stores_the_bool() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows(runner, "new-co")
     assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
+    profile = _load_active_taxpayer_profile()
+    assert profile.new_entity_first_two_profit_periods is True
 
 
-def test_profile_creates_without_new_entity_flag_records_false() -> None:
-    """The new-entity state is opt-in: a profile created with neither
-    `--new-entity-first-two-profit-periods` nor `--no-...` lands the
-    CONFIRM widget's ``"false"`` default. The 15 percent override is
-    triggered only by a positively-declared ``"true"``, so a stored
-    ``"false"`` keeps the entity on the otherwise-applicable
-    sub-form rate."""
+def test_profile_creates_without_new_entity_flag_leaves_fact_undeclared() -> None:
+    """The new-entity state is opt-in and three-state: a profile created
+    with neither ``--new-entity-first-two-profit-periods`` nor
+    ``--no-new-entity-first-two-profit-periods`` must not carry the
+    fact at all, so the LIS Art. 29 gate reads it as INCOMPLETE rather
+    than collapsing onto a positively-declared no-override.
+
+    This is the BLOCKER-1 contract: the canonical row is absent (not
+    a stored ``"false"``), and the reloaded ``TaxpayerProfile``
+    projection reads ``None``."""
 
     runner = CliRunner()
     result = runner.invoke(
@@ -193,7 +213,45 @@ def test_profile_creates_without_new_entity_flag_records_false() -> None:
 
     assert result.exit_code == 0, result.output
     rows = _profile_rows(runner, "no-new-co")
-    assert rows.get("taxpayer_type.new_entity_first_two_profit_periods", "false") == "false"
+    assert "taxpayer_type.new_entity_first_two_profit_periods" not in rows
+    profile = _load_active_taxpayer_profile()
+    assert profile.new_entity_first_two_profit_periods is None
+
+
+def test_no_new_entity_first_two_profit_periods_flag_records_declared_false() -> None:
+    """``--no-new-entity-first-two-profit-periods`` positively declares
+    the absence of the override. The stored canonical row is the
+    explicit ``"false"`` token, and the reloaded
+    ``TaxpayerProfile`` projects it to ``False`` — distinct from the
+    undeclared three-state ``None``."""
+
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        [
+            "config",
+            "profile",
+            "create",
+            "decline-new-co",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "legal_entity",
+            "--legal-entity-form",
+            "sl",
+            "--tax-id",
+            "B66012345",
+            "--activity",
+            "asesoria",
+            "--no-new-entity-first-two-profit-periods",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    rows = _profile_rows(runner, "decline-new-co")
+    assert rows["taxpayer_type.new_entity_first_two_profit_periods"] == "false"
+    profile = _load_active_taxpayer_profile()
+    assert profile.new_entity_first_two_profit_periods is False
 
 
 def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:

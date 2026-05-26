@@ -190,3 +190,65 @@ def test_resolve_canonical_returns_none_when_no_profile_key_and_no_default() -> 
     question = _question(answer_type=str, profile_key=None, default=None)
 
     assert _resolve_canonical(question, {}) is None
+
+
+# ---------------------------------------------------------------------------
+# optional-CONFIRM three-state round-trip (LIS Art. 29 new-entity contract)
+# ---------------------------------------------------------------------------
+
+
+def test_parse_canonical_optional_bool_blank_projects_to_undeclared() -> None:
+    """An optional CONFIRM (``required=False``, no ``visible_when``) must
+    project a blank canonical to the empty string, not to ``False``.
+
+    This is the typed boundary that preserves the three-state
+    invariant: a profile whose operator never declared the boolean
+    fact must reload with the typed projection at ``None``, never
+    collapsed onto declared-``False``. If ``_parse_canonical`` ever
+    returns ``False`` here, the serialise → persist → reload cycle
+    materialises a ``"false"`` token and the downstream LIS Art. 29
+    gate misreads every undeclared-quiet-create profile as a positive
+    no-override declaration.
+    """
+
+    question = WizardQuestion(
+        id="example",
+        profile_key="taxpayer_type.new_entity_first_two_profit_periods",
+        widget=WizardWidget.CONFIRM,
+        prompt=tr("wizard.test.example.prompt"),
+        required=False,
+        answer_type=bool,
+    )
+    assert _parse_canonical(question, "") == ""
+
+
+def test_parse_canonical_optional_bool_declared_tokens_project_to_bool() -> None:
+    """A positively-declared optional CONFIRM still projects to ``True``
+    or ``False`` — the blank-aware branch must only fire for blank."""
+
+    question = WizardQuestion(
+        id="example",
+        profile_key="taxpayer_type.new_entity_first_two_profit_periods",
+        widget=WizardWidget.CONFIRM,
+        prompt=tr("wizard.test.example.prompt"),
+        required=False,
+        answer_type=bool,
+    )
+    assert _parse_canonical(question, "true") is True
+    assert _parse_canonical(question, "false") is False
+
+
+def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:
+    """``_canonicalise`` must round-trip the undeclared sentinel as the
+    empty canonical so the persistence-layer ``if value`` filter drops
+    it and the fact does not land in storage."""
+
+    question = WizardQuestion(
+        id="example",
+        profile_key="taxpayer_type.new_entity_first_two_profit_periods",
+        widget=WizardWidget.CONFIRM,
+        prompt=tr("wizard.test.example.prompt"),
+        required=False,
+        answer_type=bool,
+    )
+    assert _canonicalise(question, "") == ""

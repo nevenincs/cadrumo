@@ -2001,8 +2001,17 @@ wizard:
     flags:
       activity:
         help: wizard.setup.flags.activity.help
+      incn-prior-12-months:
+        help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR
+          küszöb felett a 202-es modell a LIS 40.3 cikk szerinti módozatot
+          írja elő; alatta mindkét módozat választható. Opcionális.
       name:
         help: wizard.setup.flags.name.help
+      new-entity-first-two-profit-periods:
+        help: Jelölje be, ha az újonnan alapított jogi személy a nyereséges
+          első két adóévének valamelyikében van (LIS 29. cikk), a 15
+          százalékos kedvezményes adókulcs alkalmazásához. Opcionális;
+          jelölés hiányában a kedvezményes kulcs nem érvényesül.
       notes:
         help: wizard.setup.flags.notes.help
       surnames:
@@ -2031,6 +2040,20 @@ wizard:
       title: wizard.setup.spouse.title
     taxpayer:
       title: wizard.setup.taxpayer.title
+    taxpayer-type:
+      incn-prior-12-months:
+        help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e
+          Önt a 202-es modell a LIS 40. cikk 3. bekezdése szerinti
+          módozatra (6 000 000 EUR felett). Hagyja üresen, ha nem
+          ismeri az adatot.
+        prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban?
+          (euróban, opcionális)
+      new-entity-first-two-profit-periods:
+        help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás
+          a 15 százalékos kedvezményes adókulccsal adózik az említett
+          két adóévben.
+        prompt: Újonnan alapított jogi személyként az első két nyereséges
+          adóévének valamelyikében van?
     title: wizard.setup.title
     verifier:
       activity_present: wizard.setup.verifier.activity_present

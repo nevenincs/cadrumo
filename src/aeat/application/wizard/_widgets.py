@@ -116,9 +116,24 @@ def validate_secret(raw: str, question: WizardQuestion) -> str:
 
 
 def validate_confirm(raw: str, question: WizardQuestion) -> str:
-    """Canonicalise a boolean answer to ``"true"`` / ``"false"``."""
+    """Canonicalise a boolean answer to ``"true"`` / ``"false"``.
+
+    Blank-answer policy mirrors :func:`validate_select`: a blank token
+    is accepted for an optional question or for a conditionally-gated
+    question (one that declares ``visible_when``) and returns the
+    empty canonical, representing the undeclared three-state. The
+    persistence layer drops blank values, so an optional CONFIRM that
+    the operator never positively declared persists nothing and the
+    typed projection reloads as ``None`` rather than collapsing onto
+    declared-``False``. A blank answer fails only for an
+    unconditionally-required CONFIRM.
+    """
 
     token = raw.strip().lower()
+    if not token:
+        if question.required and question.visible_when is None:
+            raise _fail(question, "invalid_confirm", raw=raw)
+        return ""
     if token in _TRUE_TOKENS:
         return "true"
     if token in _FALSE_TOKENS:
