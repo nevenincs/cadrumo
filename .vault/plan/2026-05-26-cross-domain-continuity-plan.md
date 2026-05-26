@@ -457,6 +457,8 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES is hardcoded frozenset replace with registry-s
 _covered_by_namespace defined identically in two locale modules extract to one.
 
 - [ ] `W09.P45.S168` - extract _covered_by_namespace to one location and import from the other; `src/aeat/locales/`.
+- [ ] `W09.P45.S203` - fix 5 i18n ORPHAN placeholders surfaced by S32 parity validator; `either supply missing kwargs at tr call sites or remove orphan placeholders from locale; keys: cli.app.ledger.inventory.unknown_movement_kind kind; cli.app.ledger.ratios.no_override_error bucket_id and category; cli.app.ledger.ratios.unknown_category raw; cli.app.modelo.work.resume_invalid_target target; `src/aeat/`.
+- [ ] `W09.P45.S204` - fix 27 i18n SURPLUS kwargs surfaced by S32 parity validator; either add placeholders to locale text or remove dead kwargs from tr call sites; affected keys include application.auth.operator.errors.unreadable_active_profile cli.common.errors.invalid_iso_date cli.common.errors.period_unrecognised cli.diagnostics.summary.* cli.diagnostics.version.* cli.ledger.errors.filter_parse_error cli.operator_surface.errors.contract_not_accepted cli.operator_surface.landing.*; `src/aeat/`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
