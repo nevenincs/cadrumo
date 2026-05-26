@@ -317,6 +317,23 @@ class _PreviousModeloSelector(BaseModel):
     source_casillas: tuple[str, ...] = ()
     source_output: str | None = Field(default=None, min_length=1)
     relation: str | None = Field(default=None, min_length=1)
+    # Cap on the absolute year-delta of resolved source anchors. When
+    # set, anchors whose implied ``period_year_delta`` is strictly
+    # greater than ``max_year_delta`` are dropped from the resolver's
+    # return tuple, surfacing as absent-by-design (empty anchors).
+    # ``max_year_delta = 0`` admits same-ejercicio anchors only — the
+    # shape required by AEAT's Modelo 130 prior-quarter carry-forward
+    # rule under RD 439/2007 art. 110.5, where 1T has no prior period
+    # within the same ejercicio and must produce no observation
+    # requirement. ``None`` preserves the unbounded behaviour.
+    max_year_delta: int | None = None
+
+    @field_validator("max_year_delta")
+    @classmethod
+    def _max_year_delta_non_negative(cls, value: int | None) -> int | None:
+        if value is not None and value < 0:
+            raise RegistryValidationError("previous-filing max_year_delta must be non-negative")
+        return value
 
     @field_validator("source_periods")
     @classmethod
