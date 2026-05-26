@@ -228,6 +228,10 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
             "DP200026:00625": Decimal("100"),
         },
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+        },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("10000")},
         date_context={"filing_period": date(2024, 12, 31)},
     )
@@ -284,6 +288,10 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
             "DP200026:00625": Decimal("100"),
         },
         enum_binding_values={"modelo-200-2024-profile-legal-entity-form": "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+        },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
     )

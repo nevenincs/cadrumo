@@ -54,15 +54,84 @@ required_text = [
     "cuota integra (casilla 00562)",
 ]
 
+# Cuota integra (casilla 00562) via layered LIS Art. 29 dispatch.
+# Three lanes coexist; the formula composition selects exactly one:
+#
+#   1. New-entity override (LIS Art. 29 par. 4): if the period state
+#      flag `new_entity_first_two_profit_periods` is set, the cuota
+#      applies the 15 % rate regardless of sub-form. The override
+#      layers ON TOP of the sub-form dispatch via the outer
+#      `if_then_else` predicate over
+#      `modelo-200-2024-profile-new-entity-flag`.
+#   2. Micro-empresa lane (LIS Art. 29.1 par. 1): if the prior-12-
+#      months INCN is below 1.000.000 EUR (the LIS Art. 29.1 threshold
+#      "importe neto de la cifra de negocios del periodo impositivo
+#      inmediato anterior sea inferior a 1 millon de euros"), the
+#      post-nivelacion base 01330 is resolved against the two-tranche
+#      micro-empresa scale `is.modelo-200.tipo-gravamen-pyme`
+#      (17 / 20 in 2025, 19 / 21 in 2026; AEAT Manual de Sociedades
+#      "Tipos de gravamen vigentes"). All sub-forms route to the
+#      same pyme table; the dispatch keys exist to satisfy the
+#      `lookup_bracket_by_entity_type` enum-dispatch contract.
+#   3. Sub-form lane (LIS Art. 29.1-3): otherwise the base resolves
+#      against the sub-form's single-row bracket — general 25 %,
+#      cooperativa fiscalmente protegida 20 %, entidad sin fines
+#      lucrativos 10 %.
+#
+# A profile that would otherwise micro-empresa-qualify but supplies no
+# INCN raises `binding has no supplied value` and yields INCOMPLETE
+# rather than a defaulted answer; an unrecognised sub-form raises
+# `dispatch_table is missing key`. The casilla 00558 scalar-rate
+# dispatch (`modelo-200-tipo-gravamen-por-forma-juridica`) is
+# preserved for the export-layout rate echo, but the cuota integra
+# is no longer derived from 00558.
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-integra"
 target = "DP200014:00562"
-expression = { op = "divide", args = [
-    { op = "multiply", args = [
+expression = { op = "if_then_else", args = [
+    { binding = "modelo-200-2024-profile-new-entity-flag" },
+    { op = "lookup_bracket_by_entity_type", args = [
         { casilla = "DP200014:01330" },
-        { casilla = "DP200014:00558" },
+        { binding = "modelo-200-2024-profile-legal-entity-form" },
+        { dispatch_table_entries = [
+            { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+        ] },
     ] },
-    { literal = "100" },
+    { op = "if_then_else", args = [
+        { op = "less_than", args = [
+            { binding = "modelo-200-2024-profile-incn-prior-12-months" },
+            { literal = "1000000" },
+        ] },
+        { op = "lookup_bracket_by_entity_type", args = [
+            { casilla = "DP200014:01330" },
+            { binding = "modelo-200-2024-profile-legal-entity-form" },
+            { dispatch_table_entries = [
+                { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sin_fines_lucrativos", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+            ] },
+        ] },
+        { op = "lookup_bracket_by_entity_type", args = [
+            { casilla = "DP200014:01330" },
+            { binding = "modelo-200-2024-profile-legal-entity-form" },
+            { dispatch_table_entries = [
+                { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },
+                { key = "sin_fines_lucrativos", parameter = "is.modelo-200.cuota-integra-bracket-non-profit-special-regime" },
+            ] },
+        ] },
+    ] },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-27-2014:art-30", "ley-27-2014:art-29"]
@@ -72,7 +141,7 @@ source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = [
     "cuota integra (casilla 00562)",
-    "[00562] = [01330] x [00558]/100",
+    "tipo de gravamen",
 ]
 
 [[revisions."2024-y-siguientes".formulas]]
