@@ -24,9 +24,10 @@ formulas, export layouts, extraction profiles, live references, verification
 expectations, constructs, application links, completeness manifests, and the
 2026 deadline windows.
 
-The split preserved the current shared-worktree registry content, including the
-pre-existing selector bound edits on the M131 previous-filing bindings. No
-per-modelo loader rule was added.
+The split preserved the current shared-worktree registry content. That content
+already included selector bound edits on the M131 previous-filing bindings, but
+`42e9cd4dc` is the first Git commit that contains those fields. No per-modelo
+loader rule was added.
 
 ## Tests
 

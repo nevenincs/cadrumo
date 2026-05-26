@@ -29,4 +29,4 @@ Split Modelo 131 from large per-revision TOML files into generic revision fragme
 - [x] `P01.S01` - Inventory M131 revision section boundaries and record the mechanical split strategy before touching registry data; `.vault/audit`.
 - [x] `P01.S02` - Mechanically split M131 revision files into revision-directory fragments without changing schema semantics or per-modelo loader behavior; `src/aeat/_data/registry/aeat/modelos/131`.
 - [x] `P01.S03` - Verify M131 fragment loading, registry integrity, and reviewability gates after the split; `src/aeat/domain/calculations/registry tests`.
-- [ ] `P01.S04` - Record review outcome, file-size baseline, and next fragmentation edge; `.vault/exec`.
+- [x] `P01.S04` - Record review outcome, file-size baseline, and next fragmentation edge; `.vault/exec`.
