@@ -70,7 +70,7 @@ Wizard persistence emits lowercase true and false; binding-side Decimal coercion
 
 - [x] `W01.P05.S17` - update _decimal_value to accept lowercase canonical strings in addition to the Python form; `src/aeat/application/modelo/_profile_binding.py`.
 - [x] `W01.P05.S18` - promote lowercase boolean tokens to Python bool in _coerce_profile_fact_value so union resolves before coercion; `src/aeat/domain/user_profile/_values.py`.
-- [ ] `W01.P05.S19` - add a typed-boolean channel on profile bindings so the runtime never reads bool as Decimal; `src/aeat/domain/calculations/registry/_runtime_graph.py`.
+- [ ] `W01.P05.S19` - preserve typed ProfileFactValue through _profile_fact_index instead of stringifying at the index entry; update _resolve_one and _decimal_value to accept object and route via isinstance(value, bool) before Decimal parse; engine-facing ProfileSourcedBindingResult fields unchanged; add guard at enum routing site to reject bool-typed values as enum dispatch keys; `src/aeat/application/modelo/_profile_binding.py`.
 - [ ] `W01.P05.S20` - regression test exercising full wizard to persistence to binding to decimal_value path for boolean profile fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
 - [x] `W01.P05.S21` - project-wide grep for any other site checking Python True or False as a sentinel and convert each to the lowercase canonical; `src/aeat/`.
 
