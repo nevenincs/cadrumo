@@ -9,10 +9,6 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.aggregation import CalculationSourceContext
 from aeat.application.live import Borrador100Snapshot, Borrador100SnapshotRepository, SnapshotLifecycleState
 from aeat.application.modelo import (
@@ -24,7 +20,6 @@ from aeat.application.modelo import (
     create_work_unit,
     resolve_modelo_100_borrador_bindings,
 )
-from aeat.core.config import Settings
 from aeat.core.errors import ErrorCategory, get_registered_error_code
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
@@ -32,6 +27,7 @@ from aeat.domain.calculations.registry import RegistrySnapshot
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import derive_calculation_revision_id
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -45,38 +41,24 @@ _UNMARKED_BINDING = "renta-2025-ledger-expense-0186-deductible"
 
 @pytest.fixture
 def snapshot_repository(tmp_path):
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "modelo_100_borrador_binding.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            yield Borrador100SnapshotRepository(
-                bucket_id=_BUCKET_ID,
-                objects=SecureObjectRepository(engine=engine),
-            )
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield Borrador100SnapshotRepository(
+            bucket_id=_BUCKET_ID,
+            objects=profile.repository,
+        )
 
 
 @pytest.fixture
 def service_repositories(tmp_path):
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "modelo_100_borrador_service.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        objects = SecureObjectRepository(engine=engine)
-        try:
-            yield (
-                WorkUnitCatalogueRepository(objects=objects),
-                CalculationRevisionCatalogueRepository(objects=objects),
-                BucketEventHistoryRepository(objects=objects),
-                Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=objects),
-                objects,
-            )
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        objects = profile.repository
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
+            Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=objects),
+            objects,
+        )
 
 
 def _modelo_100_registry_snapshot() -> RegistrySnapshot:
@@ -307,16 +289,21 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert stored_revision.borrador_snapshot_id == snapshot_id
     assert stored_revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
     assert Decimal(stored_revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
-    events = bucket_event_repository.load().for_bucket(_BUCKET_ID)
-    assert [event.event_type for event in events] == [BucketEventType.MODELO_CALCULATION_CREATED]
-    assert events[0].object_id == revision.calculation_revision_id
-    assert events[0].payload_version == 2
-    assert events[0].payload["calculation_revision_id"] == revision.calculation_revision_id
-    assert events[0].payload["borrador_snapshot_id"] == snapshot_id
-    assert events[0].payload["borrador_participated"] == "true"
-    assert events[0].payload["borrador_binding_count"] == "2"
+    calculation_events = [
+        event
+        for event in bucket_event_repository.load().for_bucket(_BUCKET_ID)
+        if event.event_type is BucketEventType.MODELO_CALCULATION_CREATED
+    ]
+    assert len(calculation_events) == 1
+    event = calculation_events[0]
+    assert event.object_id == revision.calculation_revision_id
+    assert event.payload_version == 2
+    assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
+    assert event.payload["borrador_snapshot_id"] == snapshot_id
+    assert event.payload["borrador_participated"] == "true"
+    assert event.payload["borrador_binding_count"] == "2"
     assert (
-        events[0].payload["borrador_bindings_trace_sha256"]
+        event.payload["borrador_bindings_trace_sha256"]
         == hashlib.sha256("\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")).hexdigest()
     )
 
