@@ -174,27 +174,20 @@ _BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(
             "aeat.application.repair_integrity",
             "build_repair_policy_command_surface_catalog",
         ),
-        # Bucket C — aeat.entrypoints.cli legacy ``_ledger`` private
-        # module referenced by test_backend_boundary; the module either
-        # was renamed or never landed.
-        (
-            "aeat/entrypoints/cli/test_backend_boundary.py",
-            "aeat.entrypoints.cli",
-            "_ledger",
-        ),
-        # Bucket A-private — private name expected in ``_censo_live``
-        # that does not exist in the module body.
-        (
-            "aeat/adapters/outbound/aeat/sede/test_censo_live.py",
-            "aeat.adapters.outbound.aeat.sede._censo_live",
-            "_fetch_g313_census_with_storage_state",
-        ),
     }
 )
 
 
 def _check_triple(triple: tuple[Path, str, str]) -> str | None:
-    """Return None when the triple resolves, or a one-line failure description otherwise."""
+    """Return None when the triple resolves, or a one-line failure description otherwise.
+
+    Two resolution paths: (a) ``name`` is bound as an attribute on the
+    target package (the canonical ``__init__.py`` re-export pattern),
+    or (b) ``name`` is a submodule importable as ``{module}.{name}``
+    (the ``from pkg import mod`` shape Python resolves lazily). The
+    gate must accept both — only a triple that fails both paths is a
+    true broken-import finding.
+    """
     source, module, name = triple
     try:
         target = importlib.import_module(module)
@@ -205,6 +198,14 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
         )
     if hasattr(target, name):
         return None
+    # Submodule import path — ``from pkg import mod`` succeeds if
+    # ``pkg.mod`` is a real importable module, regardless of whether
+    # ``pkg.__init__`` binds ``mod`` as an attribute.
+    try:
+        importlib.import_module(f"{module}.{name}")
+        return None
+    except ImportError:
+        pass
     return f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}"
 
 
