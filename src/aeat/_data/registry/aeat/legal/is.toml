@@ -380,6 +380,28 @@ required_text = [
     "El pago fraccionado tendrá la consideración de deuda tributaria",
 ]
 
+[legal."ley-27-2014:art-40-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-40.html#a40"
+document_id = "BOE-A-2014-12328"
+article = "40.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+published_at = 2014-11-28
+effective_from = 2015-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-26
+reviewed_by = "wgergely"
+notes = "LIS art 40.3: modalidad opcional / obligatoria del pago fraccionado del Impuesto sobre Sociedades calculada sobre la parte de la base imponible de los 3, 9 u 11 primeros meses del año natural. La modalidad es obligatoria para los contribuyentes cuyo importe neto de la cifra de negocios haya superado los 6 millones de euros durante los 12 meses anteriores al inicio del periodo impositivo. La cuantia se obtiene aplicando a la base el porcentaje resultante de multiplicar por cinco septimos el tipo de gravamen redondeado por defecto. Funda el gate de aplicabilidad de la modalidad Modelo 202 Art. 40.3 frente a la modalidad Art. 40.2."
+required_text = [
+    "Los pagos fraccionados también podrán realizarse, a opción del contribuyente, sobre la parte de la base imponible",
+    "estarán obligados a aplicar la modalidad a que se refiere este apartado",
+    "importe neto de la cifra de negocios haya superado la cantidad de 6 millones de euros",
+    "12 meses anteriores a la fecha en que se inicie el período impositivo",
+    "el porcentaje que resulte de multiplicar por cinco séptimos el tipo de gravamen redondeado por defecto",
+]
+
 [sources."aeat-dr-202-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
