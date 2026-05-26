@@ -889,6 +889,8 @@ cli:
       iva_amount_help: cli.ledger.classify.iva_amount_help
       iva_rate_help: cli.ledger.classify.iva_rate_help
       mixed_requires_business_pct: cli.ledger.classify.mixed_requires_business_pct
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
       taxable_base_help: cli.ledger.classify.taxable_base_help
     errors:
       command_input_invalid: cli.ledger.errors.command_input_invalid
@@ -1529,7 +1531,6 @@ errors:
   calc:
     binding_value_missing: errors.calc.binding_value_missing
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
     bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
@@ -1844,10 +1845,6 @@ errors:
     refused_cli_boundary: errors.refused.refused_cli_boundary
     refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
     refused_cli_non_tty: errors.refused.refused_cli_non_tty
-    refused_cli_stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord
-      már nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális
-      formátumtól. Futtasd az `aeat config repair` parancsot a diagnosztikához és
-      helyreállításhoz.
     refused_cli_validation_boundary: errors.refused.refused_cli_validation_boundary
     refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
     refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
@@ -1946,6 +1943,9 @@ errors:
         profile switch NAME` parancsot a profil újraaktiválásához.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
         Az éles, profilhoz kötött tároláshoz fájl- vagy kulcstartó-alapú őrzés szükséges.
+    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord már
+      nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális formátumtól.
+      Futtasd az `aeat config repair` parancsot a diagnosztikához és helyreállításhoz.
   transaction:
     import_source_invalid: errors.transaction.import_source_invalid
     ledger_import_failed: errors.transaction.ledger_import_failed
