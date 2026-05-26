@@ -56,6 +56,7 @@ from ...domain.user_profile import (
     UserProfileStatus,
     new_profile_id,
 )
+from ...domain.user_profile._errors import UserProfileValidationError
 from . import RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
@@ -179,6 +180,7 @@ class ProfileRepository:
         facts: Sequence[UserProfileFact] = (),
         profile_id: str | None = None,
         enforce_unique_tax_id: bool = True,
+        routing_profile_id: str | None = None,
     ) -> ProfileAggregate:
         """Create a new profile as a cross-store unit of work.
 
@@ -223,6 +225,10 @@ class ProfileRepository:
         """
 
         resolved_id = profile_id if profile_id is not None else new_profile_id()
+        if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
+            raise UserProfileValidationError(
+                f"profile create route {routing_profile_id!r} does not match profile id {resolved_id!r}"
+            )
         paths = bucket_paths(self._root, resolved_id)
         # Capture the genuine pre-create pointer before any store write
         # so the rollback restores it exactly.

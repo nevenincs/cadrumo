@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import secrets
 from collections.abc import Iterable
-from datetime import date
+from contextlib import contextmanager
+from datetime import UTC, date, datetime
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -24,6 +25,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -41,6 +43,7 @@ from . import (
 from ._lifecycle import ProfileLifecycleService
 from ._profile_repository import ProfileRepository
 
+_log = get_logger(__name__)
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
 _SENTINEL_DATE = date.min
 
@@ -109,6 +112,53 @@ def _write_active_profile_pointer(bucket_id: str) -> None:
     )
 
 
+@contextmanager
+def profile_create_storage_span(profile_id: str):
+    """Open the first-profile storage span for a bucket being created."""
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
+    from ...core.config import override_settings
+
+    prior_pointer = capture_active_profile_pointer()
+    _write_active_profile_pointer(profile_id)
+    provider = get_master_key_provider()
+    try:
+        try:
+            provider.get_master_key()
+        except MasterKeyMaterialMissingError:
+            try:
+                provider.provision_master_key()
+            except SecretAlreadyExistsError:
+                _log.debug("master key already provisioned while opening create span for profile %s", profile_id)
+        with (
+            override_settings(aeat_active_profile=profile_id),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id=profile_id,
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            yield profile_id
+    except Exception:
+        restore_active_profile_pointer(prior_pointer)
+        raise
+
+
+@contextmanager
+def profile_storage_session(profile_id: str):
+    """Open a storage session scoped to ``profile_id`` for application-owned writes."""
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...core.config import override_settings
+
+    with (
+        override_settings(aeat_active_profile=profile_id),
+        activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=profile_id),
+    ):
+        yield profile_id
+
+
 def _clear_active_profile_pointer() -> None:
     """Remove the active-profile pointer file if present.
 
@@ -145,6 +195,7 @@ def register_active_profile(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
     enforce_unique_tax_id: bool = True,
+    routing_profile_id: str | None = None,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -178,6 +229,7 @@ def register_active_profile(
         facts=facts,
         profile_id=profile_id,
         enforce_unique_tax_id=enforce_unique_tax_id,
+        routing_profile_id=routing_profile_id,
     )
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
@@ -189,6 +241,82 @@ def register_active_profile(
                 updated, action="profile.values.updated", bucket_id=profile_id, object_id=keys_id
             )
     return updated
+
+
+def _append_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
+    """Append a PROFILE_ACTIVATED event to the active bucket-event catalogue."""
+
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    if active_profile is None:
+        return
+
+    occurred_at = datetime.now(UTC)
+    payload = {"profile_id": profile_id, "active_profile": active_profile}
+    actor = "operator"
+    bucket_id = active_profile
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.PROFILE_ACTIVATED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=profile_id,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    repo.save(
+        append_bucket_event(
+            repo.load(),
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PROFILE_ACTIVATED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=profile_id,
+                payload_version=1,
+                payload=payload,
+            ),
+        )
+    )
+
+
+def select_profile_with_lifecycle_span(profile_id: str) -> None:
+    """Select ``profile_id`` inside an application-owned bucket session."""
+
+    from ..workflow._models import resolve_active_bucket_id
+    from ..workflow._persistence import workflow_state_repository
+
+    with profile_storage_session(profile_id):
+        workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
+        _append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
+
+
+def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
+    """Tombstone ``profile_id`` inside an application-owned bucket session."""
+
+    with profile_storage_session(profile_id):
+        aggregate = ProfileRepository().delete(profile_id)
+    return aggregate.record
+
+
+def logout_active_profile() -> str | None:
+    """Clear the active profile pointer and return the profile that was logged out."""
+
+    from ..workflow._models import resolve_active_bucket_id
+
+    before = resolve_active_bucket_id()
+    _clear_active_profile_pointer()
+    return before
 
 
 def capture_active_profile_pointer() -> str | None:
@@ -285,13 +413,12 @@ def _require_registered_label(display_name: str) -> None:
 def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
-    Used both by atomic-create rollback (disaster ADR Ruling 3 step
-    4 / 5 rollback contract) and by scoped config reset. The
+    Used both by atomic-create rollback and by scoped config reset. The
     directory is first renamed to a trash-prefix sibling so a crashed
     removal leaves a recoverable on-disk trace, then recursively
     deleted. When the rename is refused — Windows denies renaming a
-    directory whose SQLite file was only just closed — the directory
-    is removed in place so the bucket does not survive the reset.
+    directory whose SQLite file was only just closed — the directory is
+    removed in place so the bucket does not survive the reset.
 
     Raises :class:`OSError` if the in-place removal also fails and the
     bucket directory genuinely survives on disk, so a caller (config
@@ -494,12 +621,17 @@ def rename_profile(
 
 __all__ = [
     "build_lifecycle_service",
+    "delete_profile_with_lifecycle_span",
     "fact_value",
+    "logout_active_profile",
+    "profile_create_storage_span",
+    "profile_storage_session",
     "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
     "rename_profile",
     "select_profile",
+    "select_profile_with_lifecycle_span",
     "set_active_field",
     "set_active_fields",
 ]

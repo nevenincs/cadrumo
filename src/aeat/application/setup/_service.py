@@ -5,10 +5,8 @@ from __future__ import annotations
 from ...domain.user_profile import UserProfileFact, new_profile_id
 from ..auth import AuthProviderReservedError, configure_operator_auth
 from ..user_profile._orchestration import (
-    _write_active_profile_pointer,
-    capture_active_profile_pointer,
+    profile_create_storage_span,
     register_active_profile,
-    restore_active_profile_pointer,
 )
 from ..workflow._persistence import workflow_state_repository
 from ._contracts import InitializeWorkspaceCommand, InitializeWorkspaceResult
@@ -31,29 +29,16 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
     # chosen ``profile_name`` becomes the decoupled display label.
     profile_id = new_profile_id()
 
-    # Cold-start: the active-profile pointer must aim at the new UUID
-    # before ``workflow_state_repository()`` opens its per-bucket
-    # engine. ``ProfileRepository.create`` (inside ``register_active_
-    # profile``) owns the cross-store unit of work — bucket directory,
-    # manifest, encrypted record, AND the pointer — and rolls every
-    # store back on a failure inside the create. The genuine prior
-    # pointer is captured here and restored if the surrounding span
-    # fails BEFORE or AROUND ``create`` (engine open, master-key
-    # activation), the window the repository's own rollback cannot see.
-    prior_pointer = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
-    try:
+    with profile_create_storage_span(profile_id) as routing_profile_id:
         workflow_state_repository().update(
             lambda state: register_active_profile(
                 state,
                 profile_id=profile_id,
                 display_name=command.profile_name,
                 facts=tuple(facts),
+                routing_profile_id=routing_profile_id,
             )
         )
-    except Exception:
-        restore_active_profile_pointer(prior_pointer)
-        raise
 
     # 2. Configure auth
     auth_configured = False
