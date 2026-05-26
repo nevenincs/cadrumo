@@ -161,7 +161,7 @@ def _runtime_not_ready_error(message: str, *, message_key: str) -> StorageValida
 
     return StorageValidationError(
         message,
-        context={"details": tr(message_key)},
+        context={"details": tr(message_key, locale=_settings_output_language())},
         translated_message="errors.storage.runtime.not_ready",
     )
 
@@ -178,10 +178,20 @@ def _readiness_issue(
 def _render_readiness_details(issues: tuple[StorageRuntimeReadinessIssue, ...]) -> str:
     from ....core.i18n import tr
 
-    rendered = tuple(tr(issue.message_key) for issue in issues)
+    locale = _settings_output_language()
+    rendered = tuple(tr(issue.message_key, locale=locale) for issue in issues)
     if not rendered:
-        return tr("errors.storage.runtime.no_detail")
+        return tr("errors.storage.runtime.no_detail", locale=locale)
     return "; ".join(rendered)
+
+
+def _settings_output_language() -> str:
+    """Resolve locale without consulting active-profile storage."""
+
+    try:
+        return load_settings().aeat_output_language
+    except (AttributeError, KeyError, ValueError):
+        return "es"
 
 
 def inspect_storage_runtime(
