@@ -32,10 +32,10 @@ from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
-from ..logging import get_logger
+from ..logging import get_logger as _get_logger
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
-_logger = get_logger(__name__)
+_logger = _get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _MANIFEST_VERSION = 1

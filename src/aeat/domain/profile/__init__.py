@@ -153,6 +153,7 @@ __all__ = [
     "ProfileKeyRequirement",
     "ProfileName",
     "ProfileNotConfiguredError",
+    "ProfileValidationError",
     "RentaAscendantProfile",
     "RentaDeclaracionType",
     "RentaDescendantProfile",

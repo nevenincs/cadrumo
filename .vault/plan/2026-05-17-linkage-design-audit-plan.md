@@ -182,10 +182,10 @@ public re-export (add to `__all__`) or (b) internal-use-only
 uses it). Gate's silent-fix detector demands the cap decrement
 after each fix.
 
-- [ ] `P11.S50` - close `application/auth/__init__.py` cap (already 0 after the S140 top-level-only fix; verify cap entry removed from baseline); `src/aeat/application/auth/__init__.py`.
-- [ ] `P11.S51` - close `domain/profile/__init__.py` cap (1 finding: `ProfileValidationError`); `src/aeat/domain/profile/__init__.py`.
-- [ ] `P11.S52` - close `domain/profile/assets/__init__.py` cap (1 finding: `AssetValidationError`); `src/aeat/domain/profile/assets/__init__.py`.
-- [ ] `P11.S53` - close `core/corpus_manifest/__init__.py` cap (1 finding remaining after top-level-only fix); `src/aeat/core/corpus_manifest/__init__.py`.
+- [x] `P11.S50` - close `application/auth/__init__.py` cap (already 0 after the S140 top-level-only fix; verify cap entry removed from baseline); closed with the S140 commit `8710c7b2b` — cap entry dropped from `_INIT_MISSING_FROM_ALL_BASELINE`; `src/aeat/application/auth/__init__.py`.
+- [x] `P11.S51` - close `domain/profile/__init__.py` cap (1 finding: `ProfileValidationError`); added `"ProfileValidationError"` to `__all__` (line 156) — public error type, matches the `ForalRegimeError`/`ProfileNotConfiguredError`/`TaxResidenceProfileError` pattern already in `__all__`. Cap dropped from baseline. Gate silent-fix detector demanded the trim; `src/aeat/domain/profile/__init__.py`.
+- [x] `P11.S52` - close `domain/profile/assets/__init__.py` cap (1 finding: `AssetValidationError`); zero external consumers (canonical import path is `aeat.domain.profile.errors.AssetValidationError`); renamed the package-local import to `from ..errors import AssetValidationError as _AssetValidationError` so the in-module raise sites stay unchanged while the public-surface re-export retires. Cap dropped from baseline; `src/aeat/domain/profile/assets/__init__.py`.
+- [x] `P11.S53` - close `core/corpus_manifest/__init__.py` cap (1 finding remaining after top-level-only fix); `get_logger` is a logging primitive imported for internal use only (creates `_logger` at line 38); renamed to `from ..logging import get_logger as _get_logger`. Cap dropped from baseline; `src/aeat/core/corpus_manifest/__init__.py`.
 - [ ] `P11.S54` - close `application/topics/__init__.py` cap (2 findings: `AeatError`, `bundled_path`); `src/aeat/application/topics/__init__.py`.
 - [ ] `P11.S55` - close `adapters/outbound/aeat/auth/__init__.py` cap (2 findings: `AuthProvider`, `AuthProviderKind`); `src/aeat/adapters/outbound/aeat/auth/__init__.py`.
 - [ ] `P11.S56` - close `adapters/inbound/borrador/_extractors/__init__.py` cap (2 findings: `BorradorParseError`, `Modelo100ObservedV2025Extractor`); `src/aeat/adapters/inbound/borrador/_extractors/__init__.py`.
