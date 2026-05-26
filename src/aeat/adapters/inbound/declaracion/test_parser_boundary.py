@@ -24,6 +24,7 @@ pytestmark = [
 ]
 
 _REAL_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
+_MODELO_349_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "349" / "2024-1T.pdf"
 _REAL_MODELO_303_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
 _REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
 _MODELO_840_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "840" / "2024-0A.pdf"
@@ -127,9 +128,7 @@ def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int,
 
     tax_id = _extract_tax_id(text)
 
-    assert tax_id == "Y0000001S", (
-        f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}"
-    )
+    assert tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {tax_id!r}"
 
 
 @pytest.mark.parametrize(
@@ -141,9 +140,7 @@ def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int,
         ("2024-4T", 2024, "4T"),
     ],
 )
-def test_parser_extracts_modelo_111_closure_casillas_from_corpus(
-    pdf_stem: str, year: int, period: str
-) -> None:
+def test_parser_extracts_modelo_111_closure_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip: parse all 4 corpus M111 PDFs and verify closure casillas 28 and 30.
 
     Ground truth is derived from reading the printed declaracion form text directly.
@@ -223,9 +220,7 @@ def test_parser_extracts_modelo_111_closure_casillas_from_corpus(
     assert filing.registry_snapshot_ref.modelo_year == year
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(values.keys()) == {"28", "30"}, (
-        f"{pdf_stem}: expected casillas {{28, 30}}, got {set(values.keys())!r}"
-    )
+    assert set(values.keys()) == {"28", "30"}, f"{pdf_stem}: expected casillas {{28, 30}}, got {set(values.keys())!r}"
 
     # Casilla 30 always carries 1.000,00 directly on the label line in every
     # corpus specimen; ground truth from reading the printed form text.
@@ -241,8 +236,7 @@ def test_parser_extracts_modelo_111_closure_casillas_from_corpus(
     )
     if pdf_stem != "2024-4T":
         assert values["28"] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla '28' expected Decimal('1000.00') for non-negative "
-            f"filing, got {values['28']!r}"
+            f"{pdf_stem}: casilla '28' expected Decimal('1000.00') for non-negative filing, got {values['28']!r}"
         )
 
 
@@ -308,9 +302,7 @@ def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int,
         ("2024-4T", 2024, "4T"),
     ],
 )
-def test_parser_modelo_130_corpus_numeric_casilla_profile_gap(
-    pdf_stem: str, year: int, period: str
-) -> None:
+def test_parser_modelo_130_corpus_numeric_casilla_profile_gap(pdf_stem: str, year: int, period: str) -> None:
     """Assert that the numeric_casilla profile cannot extract any casillas from
     the real AEAT M130 corpus PDFs; documents the structural layout gap.
 
@@ -486,9 +478,7 @@ def test_parser_extracts_tax_id_from_all_m303_corpus_pdfs(pdf_stem: str) -> None
         ("2024-4T", 2024, "4T"),
     ],
 )
-def test_parser_extracts_modelo_303_profile_targets_from_corpus(
-    pdf_stem: str, year: int, period: str
-) -> None:
+def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip: parse all 8 corpus M303 PDFs and verify casilla coverage.
 
     Ground truth is derived from reading the printed declaracion form text
@@ -830,8 +820,7 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
     # no ahorro income; parse_spanish_decimal still returns a valid Decimal.
     for casilla_id in values:
         assert isinstance(values[casilla_id], Decimal), (
-            f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, "
-            f"got {values[casilla_id]!r}"
+            f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, got {values[casilla_id]!r}"
         )
 
 
@@ -871,6 +860,81 @@ def test_real_redacted_declaration_copy_fails_on_registry_coverage_gap() -> None
             año_override=2024,
             period_override="1T",
         )
+
+
+def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M349 synthetic fixture and verify all four casillas.
+
+    Ground truth is the AEAT-published instructions PDF at:
+      src/aeat/_data/corpus/aeat_official/instructions/modelo_349/files/instr_mod_349.pdf
+    pages 8-9 (CUMPLIMENTACIÓN DE LA HOJA-RESUMEN).
+
+    AEAT text (verbatim):
+      "Casilla 01 Número total de operadores intracomunitarios."
+      "Casilla 02 Importe de las operaciones intracomunitarias."
+      "Casilla 03 Número total de operadores intracomunitarios con rectificaciones."
+      "Casilla 04 Importe de las rectificaciones."
+
+    The synthetic fixture prints those labels so the named_label parser captures
+    the trailing value token on each line.  The profile patterns are grounded
+    against this AEAT-published text — NOT the registry casilla label fields —
+    so this test is non-tautological: a pattern that drifts away from the AEAT
+    label format will produce a zero-match parse failure.
+    """
+    filing = parse_declaracion(
+        _MODELO_349_SYNTHETIC_FIXTURE,
+        modelo_override="349",
+        año_override=2024,
+        period_override="1T",
+    )
+
+    assert filing.modelo == "349"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "349"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # All four casillas defined by the M349 declaracion_pdf profile must be present.
+    assert set(values.keys()) == {
+        "decl.numero-operadores",
+        "decl.importe-operaciones",
+        "decl.numero-rectificaciones",
+        "decl.importe-rectificaciones",
+    }, f"expected exactly the four M349 profile casillas, got {set(values.keys())!r}"
+
+    # decl.numero-operadores: fixture prints "Numero total de operadores intracomunitarios 5";
+    # parse_spanish_decimal("5") = Decimal("5").
+    # Ground truth: AEAT instructions page 8 "Casilla 01 Número total de operadores intracomunitarios."
+    assert values["decl.numero-operadores"] == Decimal("5"), (
+        f"decl.numero-operadores: expected Decimal('5'), got {values['decl.numero-operadores']!r}"
+    )
+
+    # decl.importe-operaciones: fixture prints "Importe de las operaciones intracomunitarias 1.234,56";
+    # parse_spanish_decimal("1.234,56") = Decimal("1234.56").
+    # Ground truth: AEAT instructions page 8 "Casilla 02 Importe de las operaciones intracomunitarias."
+    assert values["decl.importe-operaciones"] == Decimal("1234.56"), (
+        f"decl.importe-operaciones: expected Decimal('1234.56'), got {values['decl.importe-operaciones']!r}"
+    )
+
+    # decl.numero-rectificaciones: fixture prints
+    # "Numero total de operadores intracomunitarios con rectificaciones 0";
+    # parse_spanish_decimal("0") = Decimal("0").
+    # Ground truth: AEAT instructions page 9 "Casilla 03 Número total de operadores
+    # intracomunitarios con rectificaciones."
+    assert values["decl.numero-rectificaciones"] == Decimal("0"), (
+        f"decl.numero-rectificaciones: expected Decimal('0'), got {values['decl.numero-rectificaciones']!r}"
+    )
+
+    # decl.importe-rectificaciones: fixture prints "Importe de las rectificaciones 0,00";
+    # parse_spanish_decimal("0,00") = Decimal("0.00").
+    # Ground truth: AEAT instructions page 9 "Casilla 04 Importe de las rectificaciones."
+    assert values["decl.importe-rectificaciones"] == Decimal("0.00"), (
+        f"decl.importe-rectificaciones: expected Decimal('0.00'), got {values['decl.importe-rectificaciones']!r}"
+    )
 
 
 def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
@@ -922,8 +986,7 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     # parse_spanish_decimal converts "2024" to Decimal("2024").
     # Ground truth: the printed form label is "14Ejercicio:" (corpus-confirmed).
     assert values["decl.ejercicio"] == Decimal("2024"), (
-        f"decl.ejercicio: expected Decimal('2024') from corpus-grounded fixture, "
-        f"got {values['decl.ejercicio']!r}"
+        f"decl.ejercicio: expected Decimal('2024') from corpus-grounded fixture, got {values['decl.ejercicio']!r}"
     )
 
     # decl.tipo-declaracion: the synthetic fixture prints "15Declaracion de: Alta";
@@ -933,9 +996,7 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     # "15Declaración de:" (corpus-confirmed).
     # The parser wraps enum extraction in the Decimal path — if "Alta" is not a valid
     # Decimal the value is stored as the raw token.  Either way the casilla is present.
-    assert values["decl.tipo-declaracion"] is not None, (
-        "decl.tipo-declaracion: expected a non-None extracted value"
-    )
+    assert values["decl.tipo-declaracion"] is not None, "decl.tipo-declaracion: expected a non-None extracted value"
 
 
 def _modelo_130_snapshot():
