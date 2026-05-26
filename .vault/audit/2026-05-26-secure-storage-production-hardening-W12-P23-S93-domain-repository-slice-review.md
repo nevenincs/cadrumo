@@ -50,3 +50,15 @@ The combined hygiene scan found the earlier transaction anti-tautology proof sti
 S93-DOMAIN-008 | LOW | Stale execution wording corrected
 
 Final review found no source-code defects, but noted the execution record still mentioned `get_engine(profile.settings)` for the transaction roundtrip migration. The execution record now states the current runtime-owned `profile.repository.load/save` mutation pattern.
+
+S93-DOMAIN-009 | LOW | Work-unit frozen mutation test retained noqa
+
+Initial review of the work-unit/finca increment found a legitimate but unnecessary `noqa` suppression in the work-unit frozen-model mutation proof. The test now uses direct assignment under `pytest.raises(ValidationError)`, preserving the real pydantic frozen-instance behavior without suppressing lint diagnostics.
+
+S93-DOMAIN-010 | INFO | Work-unit and finca increment reviewed with no findings
+
+The corrected work-unit/finca increment was re-reviewed by `vaultspec-code-reviewer` with no findings. Work-unit tests now use `isolated_runtime_profile` and real repositories without explicit database URLs, injected engines, direct default secure-object setup, monkeypatching, fakes, stubs, skips, xfails, pragmas, `noqa`, type suppressions, or broad exceptions. The finca anti-tautology test still uses the real SQL table repository and now asserts the concrete `ValidationError` boundary.
+
+S93-DOMAIN-011 | INFO | Plan check blocked by unrelated duplicate identifiers
+
+The focused source gates pass, but the plan checker currently reports duplicate W07/W08 canonical identifiers around `S56` through `S61`. That structural plan issue is outside this source slice and should be reconciled before closing S93 or later W12 rows.
