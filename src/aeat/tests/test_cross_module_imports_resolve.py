@@ -1,0 +1,263 @@
+"""Cross-module import resolution gate.
+
+The companion :mod:`test_layout_import_smoke` proves every canonical
+layout package imports cleanly. This gate proves the inverse: every
+``from aeat.X import {name}`` statement under ``src/aeat/`` resolves
+to an attribute that actually exists on ``aeat.X``.
+
+Closes the foreign-WIP failure pattern that surfaced three times in
+the linkage-P02.S08 + M303 session — a sibling agent added an import
+to a caller without adding the matching name to the target package's
+``__init__.py`` imports / ``__all__``. The consumer module then
+raises ``ImportError`` the next time any test collection walks it,
+breaking the whole suite at collection time even though the target
+package itself imports cleanly.
+
+The scan walks every ``.py`` file under ``src/aeat/``, parses each
+via :mod:`ast`, collects every ``ImportFrom`` statement that targets
+the in-repo ``aeat.*`` namespace (absolute or relative), resolves
+the target package, and asserts every imported name is
+attribute-accessible after :func:`importlib.import_module`. Conditional
+imports inside ``if TYPE_CHECKING:`` blocks are skipped because their
+names are never bound at runtime; everything else is in scope.
+"""
+
+from __future__ import annotations
+
+import ast
+import importlib
+from pathlib import Path
+from typing import Iterator
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+SRC_AEAT = Path(__file__).resolve().parents[1]
+
+
+def _python_sources() -> Iterator[Path]:
+    """Yield every committed `.py` file under ``src/aeat/`` excluding caches."""
+    for path in SRC_AEAT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        yield path
+
+
+def _is_type_checking_block(node: ast.AST) -> bool:
+    """Return True when ``node`` is an ``if TYPE_CHECKING:`` guard."""
+    if not isinstance(node, ast.If):
+        return False
+    test = node.test
+    if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+        return True
+    if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
+        return True
+    return False
+
+
+def _resolve_relative_module(source: Path, level: int, module: str | None) -> str | None:
+    """Resolve ``from .module import X`` against ``source``'s package path.
+
+    Python's relative-import semantics: ``level=1`` means *the package
+    that contains this module*; ``level=2`` means that package's
+    parent; and so on. For a non-``__init__`` file at
+    ``aeat/sub/mod.py`` the containing package is ``aeat.sub``; for
+    ``aeat/sub/__init__.py`` the file IS the package ``aeat.sub`` and
+    the containing package is still ``aeat.sub``.
+
+    Returns the absolute dotted module name (e.g. ``aeat.domain.modelos``)
+    or ``None`` if the source file lives outside ``src/aeat`` (which
+    would be a project layout violation; not this gate's concern).
+    """
+    try:
+        relative = source.relative_to(SRC_AEAT.parent)
+    except ValueError:
+        return None
+    parts = list(relative.with_suffix("").parts)
+    if parts[-1] == "__init__":
+        # ``__init__.py`` IS the package; trim the marker so the
+        # remaining parts identify the package itself.
+        package_parts = parts[:-1]
+    else:
+        # Non-init module lives inside its containing package; strip
+        # the leaf module name to recover the package's dotted path.
+        package_parts = parts[:-1]
+    # ``level=1`` keeps every element; each additional level walks one
+    # package up.
+    if level - 1 > len(package_parts):
+        return None
+    anchor = package_parts[: len(package_parts) - (level - 1)] if level > 1 else package_parts
+    if module:
+        anchor = anchor + module.split(".")
+    return ".".join(anchor)
+
+
+def _walk_import_from(tree: ast.AST) -> Iterator[ast.ImportFrom]:
+    """Yield every ``ImportFrom`` node not inside an ``if TYPE_CHECKING:`` block."""
+    skip: set[int] = set()
+    for node in ast.walk(tree):
+        if _is_type_checking_block(node):
+            for child in ast.walk(node):
+                skip.add(id(child))
+    for node in ast.walk(tree):
+        if id(node) in skip:
+            continue
+        if isinstance(node, ast.ImportFrom):
+            yield node
+
+
+def _collect_import_pairs() -> list[tuple[Path, str, str]]:
+    """Walk every aeat source and yield ``(source_file, module, name)`` import triples.
+
+    Only ``from aeat.X import Y`` (absolute) and relative imports
+    resolving back into the ``aeat.*`` tree are returned. ``import *``
+    statements are excluded — they don't pin a specific name and the
+    no-wildcard hygiene is a separate concern.
+    """
+    triples: list[tuple[Path, str, str]] = []
+    for source in _python_sources():
+        try:
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        except SyntaxError:
+            # A pre-existing syntax error in the worktree is a separate
+            # diagnostic surface; let other gates report it.
+            continue
+        for node in _walk_import_from(tree):
+            if node.level > 0:
+                resolved = _resolve_relative_module(source, node.level, node.module)
+            else:
+                resolved = node.module
+            if not resolved or not resolved.startswith("aeat"):
+                continue
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                triples.append((source, resolved, alias.name))
+    return triples
+
+
+_IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
+
+
+# Committed-baseline allow-list of broken cross-module imports the gate
+# captured on its first run. Each entry is a known finding tracked as a
+# follow-up (see ``W09.P20`` in the schema-hardening plan). The gate
+# asserts the live set of broken triples equals this baseline exactly:
+# any NEW broken import fails fast (the regression we want to catch),
+# and any allow-list entry that becomes resolvable also fails (so a
+# silent fix can be acknowledged by trimming the baseline). Trim
+# entries as the underlying breakage is fixed; the gate is fully green
+# once this set is empty.
+_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(
+    {
+        # Bucket B — aeat.application.repair_integrity is a single-file
+        # module with no exports for the symbols referenced below.
+        # Backend gap: tests written ahead of implementation.
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "RepairRemediationDecision",
+        ),
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "RepairRemediationDecisionRepository",
+        ),
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "repair_remediation_decision_id",
+        ),
+        (
+            "aeat/entrypoints/cli/test_repair_policy_coverage.py",
+            "aeat.application.repair_integrity",
+            "build_repair_policy_command_surface_catalog",
+        ),
+        # Bucket C — aeat.entrypoints.cli legacy ``_ledger`` private
+        # module referenced by test_backend_boundary; the module either
+        # was renamed or never landed.
+        (
+            "aeat/entrypoints/cli/test_backend_boundary.py",
+            "aeat.entrypoints.cli",
+            "_ledger",
+        ),
+        # Bucket A-private — private name expected in ``_censo_live``
+        # that does not exist in the module body.
+        (
+            "aeat/adapters/outbound/aeat/sede/test_censo_live.py",
+            "aeat.adapters.outbound.aeat.sede._censo_live",
+            "_fetch_g313_census_with_storage_state",
+        ),
+    }
+)
+
+
+def _check_triple(triple: tuple[Path, str, str]) -> str | None:
+    """Return None when the triple resolves, or a one-line failure description otherwise."""
+    source, module, name = triple
+    try:
+        target = importlib.import_module(module)
+    except ImportError as exc:
+        return (
+            f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}  "
+            f"(target module raised ImportError: {exc})"
+        )
+    if hasattr(target, name):
+        return None
+    return f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}"
+
+
+def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
+    """Every ``from aeat.X import Y`` triple resolves, modulo the committed baseline.
+
+    Walks every parsed import triple, classifies it as resolvable or
+    broken, then asserts the broken set equals ``_BASELINE_BROKEN_IMPORTS``
+    exactly. Fails fast on:
+
+    * **regressions**: a new broken triple not in the baseline (the
+      foreign-WIP-without-export pattern this gate exists to catch).
+    * **silent fixes**: an allow-list entry that no longer fails (so
+      the baseline gets trimmed instead of accruing dead entries).
+
+    Closes ``W09.P20.S139`` (gate definition). ``W09.P20.S140`` extends
+    the gate to fail at ``__init__.py``-modification time, not just
+    when a broken consumer is encountered.
+    """
+    live_breakage: set[tuple[str, str, str]] = set()
+    for triple in _IMPORT_TRIPLES:
+        source, module, name = triple
+        if _check_triple(triple) is None:
+            continue
+        live_breakage.add((source.relative_to(SRC_AEAT.parent).as_posix(), module, name))
+
+    regressions = live_breakage - _BASELINE_BROKEN_IMPORTS
+    silent_fixes = _BASELINE_BROKEN_IMPORTS - live_breakage
+
+    failure_lines: list[str] = []
+    if regressions:
+        failure_lines.append(
+            "New broken cross-module imports detected (regression — fix the import "
+            "or update the target package's __init__.py + __all__):"
+        )
+        failure_lines.extend(f"  + {entry}" for entry in sorted(regressions))
+    if silent_fixes:
+        failure_lines.append(
+            "Allow-list entries are now resolvable (trim _BASELINE_BROKEN_IMPORTS):"
+        )
+        failure_lines.extend(f"  - {entry}" for entry in sorted(silent_fixes))
+    assert not failure_lines, "\n" + "\n".join(failure_lines)
+
+
+def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
+    """Sanity: the AST walk found import triples to validate.
+
+    Guards against a future refactor that silently breaks the source
+    discovery (e.g. renaming ``src/aeat`` or changing the package
+    layout) and turns the gate into a zero-row no-op.
+    """
+    assert len(_IMPORT_TRIPLES) > 100, (
+        f"Cross-module import scan found only {len(_IMPORT_TRIPLES)} import triples — "
+        f"the source-tree walk probably broke. Expected hundreds of "
+        f"``from aeat.X import Y`` statements across the package."
+    )
