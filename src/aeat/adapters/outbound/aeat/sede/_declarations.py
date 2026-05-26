@@ -1051,12 +1051,19 @@ async def _capture_filed_declaration_observation_from_row(
                     else:
                         raise
                 else:
-                    if resolved_layout.layout.format == "xml_dictionary":
+                    if resolved_layout.layout.format == "xml_dictionary" or _is_modelo_303_page_03_fallback(casillas):
                         extraction_coverage["submitted_file"] = 1.0
                     else:
-                        expected_casillas = len(resolved_layout.fields_by_casilla)
-                        extraction_coverage["submitted_file"] = (
-                            len(casillas) / expected_casillas if expected_casillas else 0.0
+                        parsed = parse_export_payload(
+                            resolved_layout.layout,
+                            submitted_body,
+                            source_root=bundled_path(),
+                            sources=snapshot.sources,
+                        )
+                        extraction_coverage["submitted_file"] = _submitted_file_extraction_coverage(
+                            parsed_field_ids=frozenset(field.field_id for field in parsed.fields),
+                            observed_casillas=frozenset(casilla.casilla_id for casilla in casillas),
+                            fields_by_casilla=resolved_layout.fields_by_casilla,
                         )
             except (RegistryValidationError, SedeParseError) as exc:
                 metadata["submitted_file_extraction_error"] = str(exc)
@@ -1275,12 +1282,17 @@ def _observed_casillas_from_submitted_file(
         if snapshot.modelo.id == "303" and "has no exports" in str(exc):
             return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
         raise
-    parsed = parse_export_payload(
-        resolved.layout,
-        body,
-        source_root=bundled_path(),
-        sources=snapshot.sources,
-    )
+    try:
+        parsed = parse_export_payload(
+            resolved.layout,
+            body,
+            source_root=bundled_path(),
+            sources=snapshot.sources,
+        )
+    except RegistryValidationError:
+        if snapshot.modelo.id == "303":
+            return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
+        raise
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.casillas:
@@ -1300,9 +1312,28 @@ def _observed_casillas_from_submitted_file(
     return tuple(observations)
 
 
+def _is_modelo_303_page_03_fallback(casillas: tuple[ObservedCasillaValue, ...]) -> bool:
+    return bool(casillas) and all(
+        casilla.source_locator.startswith("record:T30303:pos:") for casilla in casillas
+    )
+
+
+def _submitted_file_extraction_coverage(
+    *,
+    parsed_field_ids: frozenset[str],
+    observed_casillas: frozenset[str],
+    fields_by_casilla: Mapping[str, tuple[ExportFieldDefinition, ...]],
+) -> float:
+    expected = {
+        casilla_id
+        for casilla_id, fields in fields_by_casilla.items()
+        if any(field.id in parsed_field_ids for field in fields)
+    }
+    return len(observed_casillas.intersection(expected)) / len(expected) if expected else 0.0
+
+
 _MODELO_303_PAGE_03_TAG = "<T30303000>"
 _MODELO_303_PAGE_03_END_TAG = "</T30303000>"
-_MODELO_303_PAGE_03_RECORD_LENGTH = 1017
 _MODELO_303_PAGE_03_MONEY_FIELDS: Final[Mapping[str, tuple[int, int]]] = {
     "110": (255, 17),
     "78": (272, 17),
@@ -1332,15 +1363,12 @@ def _observed_modelo_303_casillas_from_submitted_file(
     page_start = text.find(_MODELO_303_PAGE_03_TAG)
     if page_start < 0:
         raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has no page-03 record")
-    page = text[page_start : page_start + _MODELO_303_PAGE_03_RECORD_LENGTH]
-    if len(page) != _MODELO_303_PAGE_03_RECORD_LENGTH:
-        raise SedeParseError(
-            f"submitted Modelo 303 file for {declaration.expediente_id!r} has truncated page-03 record"
-        )
+    page_end = text.find(_MODELO_303_PAGE_03_END_TAG, page_start + len(_MODELO_303_PAGE_03_TAG))
+    if page_end < 0:
+        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 footer")
+    page = text[page_start : page_end + len(_MODELO_303_PAGE_03_END_TAG)]
     if not page.startswith(_MODELO_303_PAGE_03_TAG):
         raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 header")
-    if page[1005:1017] != _MODELO_303_PAGE_03_END_TAG:
-        raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has invalid page-03 footer")
     observations: list[ObservedCasillaValue] = []
     money_fields = _MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR.get(
         declaration.ejercicio,
@@ -1497,15 +1525,30 @@ def _with_derived_303_compensation_available_observation(
         return observation
     values: dict[str, Decimal] = {}
     for casilla in observation.casillas:
-        if casilla.casilla_id not in {"87", "69"} or casilla.source_artefact_kind == "justificante_pdf":
+        if (
+            casilla.casilla_id
+            not in {
+                "87",
+                "69",
+                "iva.compensacion-pendiente-periodos-posteriores",
+                "iva.resultado",
+            }
+            or casilla.source_artefact_kind == "justificante_pdf"
+        ):
             continue
         try:
             values[casilla.casilla_id] = Decimal(casilla.value)
         except InvalidOperation as exc:
             raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
-    if "87" not in values or "69" not in values:
+    posterior = _observed_decimal(
+        values,
+        "87",
+        "iva.compensacion-pendiente-periodos-posteriores",
+    )
+    resultado = _observed_decimal(values, "69", "iva.resultado")
+    if posterior is None or resultado is None:
         return observation
-    available = values["87"] + max(Decimal("0"), -values["69"])
+    available = posterior + max(Decimal("0"), -resultado)
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(available),
@@ -1514,6 +1557,14 @@ def _with_derived_303_compensation_available_observation(
         confidence=1.0,
     )
     return observation.model_copy(update={"casillas": (*observation.casillas, derived)})
+
+
+def _observed_decimal(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
+    for casilla_id in casilla_ids:
+        value = values.get(casilla_id)
+        if value is not None:
+            return value
+    return None
 
 
 def resolve_previous_filing_bindings_from_filed_declarations(
