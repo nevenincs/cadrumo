@@ -181,8 +181,28 @@ Reconcile the remaining classified files with the accepted R1 through R3 repair 
 
 Close each adopted hygiene slice only after focused tests, the secure-SQL guard, and a review audit prove the slice used real code paths without monkeypatch, fake, stub, or naked environment shortcuts.
 
-- [ ] `W07.P13.S54` - Run the secure-SQL guard and focused repaired-slice tests; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
+- [x] `W07.P13.S54` - Run the secure-SQL guard and focused repaired-slice tests for the first adopted slice; `commit `177f0669a` passed the secure-SQL helper tests, the ephemeral-key hygiene guard, and the focused repaired-slice suite; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py src/aeat/tests/test_secure_sql.py`.
 - [ ] `W07.P13.S55` - Persist hygiene review and remaining-backlog closeout after each adopted slice; `.vault/audit`.
+
+### Phase `W07.P14` - cross-contamination residual queue
+
+Keep the post-commit residual test-contamination work explicit. The first guard
+slice is closed, but the remaining storage, profile, application, and domain
+tests still need inventory and repair before the storage state surface can be
+treated as broadly hardened.
+
+- [x] `W07.P14.S56` - Define the shared development/test database password in core settings and route database-backed storage tests through `Settings.aeat_dev_test_database_password` or `aeat.tests.secure_sql`; `src/aeat/core/config.py src/aeat/tests/secure_sql.py`.
+- [x] `W07.P14.S57` - Add a guard that flags ad hoc secure-storage test password and ephemeral default-repository patterns; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
+- [x] `W07.P14.S58` - Commit the first secure-SQL isolation helper and proof tests; `commit `177f0669a`; `src/aeat/tests/secure_sql.py src/aeat/tests/test_secure_sql.py`.
+- [ ] `W07.P14.S59` - Audit the remaining W04.F12 files and classify each as already isolated, repairable with `aeat.tests.secure_sql`, or requiring runtime-profile orchestration; `src/aeat/adapters src/aeat/application src/aeat/domain`.
+- [ ] `W07.P14.S60` - Repair the next bounded residual slice without fakes, stubs, monkeypatches, private taxpayer data, or root-database cross-contamination; `src/aeat`.
+- [ ] `W07.P14.S61` - Run the secure-SQL guard plus focused residual-slice tests after each repair and persist the review result; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py .vault/audit`.
+
+### Phase `W07.P27` - ModeloDraft roundtrip fixture hardening
+
+Populate all optional ModeloDraft fields with non-default values in roundtrip fixtures so a save-drops-field / load-re-defaults-field regression cannot pass vacuously. Extend the anti-tautology companion with parametrized field-drop proofs for each previously-defaulted optional field.
+
+- [x] `W07.P27.S396` - Populate 6 optional ModeloDraft fields (casilla_provenance, notes, approved_at, approved_by, review_checksum, approval_basis) with non-default values in both roundtrip fixtures; `extend anti-tautology suite with 6 parametrized field-drop cases; all 9 tests pass, ruff clean; `src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py`.
 
 ## Wave `W08` - fresh CLI persona findings adoption
 
