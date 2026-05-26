@@ -72,14 +72,14 @@ if TYPE_CHECKING:
 
 _CatalogueCacheKey = tuple[int, int, str | None]
 _CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
-_ModeloValidationCacheKey = tuple[int, int, int, str | None]
+_ModeloValidationCacheKey = tuple[int, int, int, str | None, str | None]
 _ModeloValidationCacheValue = tuple[
     ModeloDefinition,
     Mapping[str, LegalReference],
     Mapping[str, SourceReference],
     tuple[str, ...],
 ]
-_RegistryValidationCacheKey = tuple[tuple[int, ...], int, int, str | None]
+_RegistryValidationCacheKey = tuple[tuple[int, ...], int, int, str | None, str | None]
 _RegistryValidationCacheValue = tuple[
     tuple[ModeloDefinition, ...],
     Mapping[str, LegalReference],
@@ -132,8 +132,15 @@ class RegistryValidator:
     def _source_root_key(self) -> str | None:
         return str(self._source_root.expanduser().resolve()) if self._source_root is not None else None
 
+    def _corpus_root_key(self) -> str | None:
+        return (
+            str(self._justificante_corpus_root.expanduser().resolve())
+            if self._justificante_corpus_root is not None
+            else None
+        )
+
     def _cached_modelo_failures(self, modelo: ModeloDefinition) -> tuple[str, ...]:
-        cache_key = (id(modelo), id(self._legal), id(self._sources), self._source_root_key())
+        cache_key = (id(modelo), id(self._legal), id(self._sources), self._source_root_key(), self._corpus_root_key())
         cached = _MODELO_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] is modelo and cached[1] is self._legal and cached[2] is self._sources:
             return cached[3]
@@ -187,6 +194,7 @@ class RegistryValidator:
             id(self._legal),
             id(self._sources),
             self._source_root_key(),
+            self._corpus_root_key(),
         )
         cached = _REGISTRY_VALIDATION_CACHE.get(cache_key)
         if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:
