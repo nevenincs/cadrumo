@@ -312,7 +312,7 @@ class TestFileFallbackProvider:
                 allow_bucket_dek_enrollment=True,
             ),
         ):
-            staged_dek = get_active_master_key()
+            assert len(get_active_master_key()) == KEY_SIZE
         assert (settings.aeat_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
 
         second = FileFallbackMasterKeyProvider(
@@ -328,7 +328,8 @@ class TestFileFallbackProvider:
             pytest.raises(MasterKeyMaterialMissingError, match="no manifest"),
             activate_master_key_provider(second, fallback_bucket_id="orphaned"),
         ):
-            assert get_active_master_key() != staged_dek
+            pass
+        assert (settings.aeat_local_storage_root / "keystore" / "orphaned" / "bucket.dek.json").is_file()
 
     def test_bucket_manifest_idle_lock_overrides_settings_default(self, tmp_path: Path) -> None:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
@@ -467,29 +468,18 @@ class TestFileFallbackProvider:
 
 
 class TestKeyringProvider:
-    """Live keyring tests gated on the platform shipping a usable backend."""
+    """Keyring provider tests using a protocol-compatible in-process backend."""
 
-    @pytest.fixture
-    def keyring_module(self):
-        keyring = pytest.importorskip("keyring")
-        from keyring.errors import NoKeyringError
-
-        try:
-            keyring.get_password("aeat:test:probe", "probe")
-        except NoKeyringError:
-            pytest.skip("no usable OS keychain backend on this host")
-        return keyring
-
-    def test_get_after_explicit_provision_round_trip(self, keyring_module) -> None:
+    def test_get_after_explicit_provision_round_trip(self) -> None:
         service = f"aeat:test:{secrets.token_hex(8)}"
-        provider = KeyringMasterKeyProvider(service=service)
-        try:
-            first = provider.provision_master_key()
-            assert len(first) == KEY_SIZE
-            second = KeyringMasterKeyProvider(service=service).get_master_key()
-            assert first == second
-        finally:
-            keyring_module.delete_password(service, "master")
+        client = _InMemoryKeyringClient()
+        provider = KeyringMasterKeyProvider(service=service, client=client)
+
+        first = provider.provision_master_key()
+        second = KeyringMasterKeyProvider(service=service, client=client).get_master_key()
+
+        assert len(first) == KEY_SIZE
+        assert first == second
 
     def test_satisfies_protocol(self) -> None:
         assert isinstance(KeyringMasterKeyProvider(), MasterKeyProvider)
