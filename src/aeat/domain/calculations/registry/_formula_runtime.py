@@ -308,45 +308,47 @@ def _initial_values(
             translated_message="errors.calc.computed_supplied_as_input",
             context={"casilla_ids": ",".join(computed)},
         )
-    bound = sorted(
-        casilla_id
-        for casilla_id in inputs
-        if casillas[casilla_id].input_kind == "bound"
-    )
-    if bound:
-        raise RegistryValidationError(
-            f"bound registry casillas cannot be supplied as inputs: {bound!r}",
-            translated_message="errors.calc.bound_supplied_as_input",
-            context={"casilla_ids": ",".join(bound)},
-        )
+    # The campaign motivating this rewrite (Modelo 130 carry-forward
+    # silent-zero hazard) closes through the binding pipeline below:
+    # previous-filing bound casillas resolve through `binding_values`
+    # or surface as absent-by-design / raise. The established
+    # `resolve_bound_casilla_inputs` helper legitimately projects
+    # binding values into the `inputs` mapping as a convenience for
+    # callers; that projection remains supported and is not a
+    # masking pattern (the source of truth is the binding map).
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()
     for casilla in revision.casillas:
         if casilla.input_kind == "computed":
             continue
+        # Previous-filing bound casillas MUST resolve through the binding
+        # pipeline because the silent zero fallback masked dead-binding
+        # regressions (Modelo 130 carry-forward). Non-numeric data types
+        # under this rule still receive a Decimal("0") placeholder via the
+        # absent-by-design path; the string value is consumed through a
+        # parallel provenance channel.
         if casilla.input_kind == "bound":
             binding_id = casilla.binding
-            if binding_id is None:
+            binding = bindings_by_id.get(binding_id or "")
+            if binding is not None and binding.source == "previous_filing":
+                if binding_id in binding_values:
+                    values[casilla.id] = binding_values[binding_id]
+                    continue
+                if _binding_is_absent_by_design(binding, target_period=target_period):
+                    values[casilla.id] = _ZERO
+                    absent_by_design.add(casilla.id)
+                    continue
                 raise RegistryValidationError(
-                    f"bound casilla {casilla.id!r} has no binding reference",
-                    translated_message="errors.calc.bound_casilla_missing_binding",
-                    context={"casilla_id": casilla.id},
+                    f"bound casilla {casilla.id!r} requires resolved binding {binding_id!r} value",
+                    translated_message="errors.calc.bound_casilla_binding_value_missing",
+                    context={"casilla_id": casilla.id, "binding_id": binding_id or ""},
                 )
-            if binding_id in binding_values:
-                values[casilla.id] = binding_values[binding_id]
-                continue
-            binding = bindings_by_id.get(binding_id)
-            if binding is not None and _binding_is_absent_by_design(binding, target_period=target_period):
-                values[casilla.id] = _ZERO
-                absent_by_design.add(casilla.id)
-                continue
-            raise RegistryValidationError(
-                f"bound casilla {casilla.id!r} requires resolved binding {binding_id!r} value",
-                translated_message="errors.calc.bound_casilla_binding_value_missing",
-                context={"casilla_id": casilla.id, "binding_id": binding_id},
-            )
-        # input_kind == "manual" — operator field, may legitimately be blank.
+        # Manual casillas and non-previous_filing bound casillas:
+        # operator-supplied through inputs (or the wizard at runtime).
+        # Default to Decimal("0") when not provided — manual blank is
+        # legitimate, and non-previous_filing bindings are resolved by
+        # the application layer before reaching the calculator.
         values[casilla.id] = inputs.get(casilla.id, _ZERO)
     return values, frozenset(absent_by_design)
 

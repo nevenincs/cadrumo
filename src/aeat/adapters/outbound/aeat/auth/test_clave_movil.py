@@ -137,6 +137,15 @@ class _RecordingPage:
         self.closed = True
 
 
+class _RepresentationAlertPage(_RecordingPage):
+    async def content(self) -> str:
+        return f"""
+        <div id="{_PRE303_SURFACE.alert_modal_selector.lstrip("#")}" class="modal show">
+          <button>{_PRE303_SURFACE.alert_continue_button_text.title()}</button>
+        </div>
+        """
+
+
 class _SelectorDispatchPage(_RecordingPage):
     async def goto(self, url: str, *, timeout: float | None = None) -> BrowserResponseLike | None:
         del timeout
@@ -646,6 +655,26 @@ class TestPostAuthLanding:
 
         asyncio.run(run())
         assert page.clicks == [
+            _PRE303_SURFACE.representation_own_name_label_selector,
+            _PRE303_SURFACE.representation_submit_selector,
+        ]
+
+    def test_representation_dispatcher_dismisses_alert_modal_before_own_name(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _RepresentationAlertPage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
+
+        async def run() -> None:
+            await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
+
+        asyncio.run(run())
+        assert page.clicks == [
+            f'{_PRE303_SURFACE.alert_modal_selector} button:has-text("{_PRE303_SURFACE.alert_continue_button_text}")',
             _PRE303_SURFACE.representation_own_name_label_selector,
             _PRE303_SURFACE.representation_submit_selector,
         ]
