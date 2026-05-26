@@ -8,6 +8,8 @@ related:
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-research]]"
   - "[[2026-05-21-persona-fleet-round3-findings]]"
+  - "[[2026-05-21-cli-testimonial-audit]]"
+  - "[[2026-05-26-corporate-tax-runtime-plan]]"
 ---
 
 # `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
@@ -51,7 +53,7 @@ default, with an undeclared model yielding an explicit incomplete
 answer instead of a confident wrong obligation.
 
 - [x] `W02.S07` - Rewrite the overview applicability engine to derive each modelo applicable verdict from the taxpayer model via registry rules and remove the autónomo default; `src/aeat/application/overview`.
-- [ ] `W02.S08` - Derive the filing calendar, calculation selection, and bracket/rate resolution from the taxpayer model; `src/aeat/application/overview`.
+- [x] `W02.S08` - Derive the filing calendar, calculation selection, and bracket/rate resolution from the taxpayer model; `src/aeat/application/overview`.
 - [x] `W02.S09` - Yield an explicit incomplete applicability answer for an undeclared taxpayer model rather than a confident wrong obligation; `src/aeat/application/overview`.
 - [x] `W02.S10` - Add tests proving a landlord, a salaried-only taxpayer, a pensioner, and a sociedad limitada each receive the correct modelo set; `src/aeat/application/overview`.
 
@@ -62,9 +64,9 @@ engine consumes - per-entity and per-regime modelo applicability
 rules, the missing deadline windows, and the bracket/rate schedules
 per entity type - each carrying its legal references.
 
-- [ ] `W03.S11` - Register per-entity and per-regime modelo applicability rules each carrying legal_refs; `src/aeat/domain/calculations/registry`.
-- [ ] `W03.S12` - Register the missing Modelo 100, 303, and 347 deadline windows and the corporate Modelo 200/202 calendar verified against BOE article text; `src/aeat/domain/calculations/registry`.
-- [ ] `W03.S13` - Register the bracket/rate schedules per entity type covering IRPF tarifa and IS rate schedule with legal_refs; `src/aeat/domain/calculations/registry`.
+- [x] `W03.S11` - Register per-entity and per-regime modelo applicability rules each carrying legal_refs; `src/aeat/domain/calculations/registry`.
+- [x] `W03.S12` - Register the missing Modelo 100, 303, and 347 deadline windows and the corporate Modelo 200/202 calendar verified against BOE article text; `src/aeat/domain/calculations/registry`.
+- [x] `W03.S13` - Register the bracket/rate schedules per entity type covering IRPF tarifa and IS rate schedule with legal_refs; `src/aeat/domain/calculations/registry`.
 
 ## Child ADRs (spawn before their dependent waves)
 
@@ -86,4 +88,30 @@ per entity type - each carrying its legal references.
   each closes with a `.vault/audit/` note.
 - Owner approval of this plan is required before W01 execution; the
   ADR is accepted, the plan is the next gate.
+
+## Follow-on plans
+
+Two real follow-on workstreams emerged during execution and are tracked
+in their own binding plans rather than retrofitting them into the
+already-landed Steps of this plan.
+
+The micro-empresa bracketed IS rate dispatch and the new-entity
+first-two-profit-periods 15 percent rate need a new bracket-by-entity-
+type calculation-runtime op and a restructured Modelo 200 cuota-integra
+formula; the same INCN profile fact also gates the Modelo 202 modality
+split per the corporate-entity child ADR. The corrected
+`tipo-gravamen-pyme` LIS Art. 29 bracket data landed in `W03.S13` so no
+consumer reads a wrong flat value meanwhile, and a micro-empresa
+profile fails loudly under the current scalar dispatch op rather than
+computing a wrong cuota. The runtime extension is the corporate-tax-
+runtime follow-on plan dated 2026-05-26 carrying the
+`#corporate-tax-runtime` feature tag and linked from the `related:`
+frontmatter above.
+
+The Modelo 200 and 202 corporate-calendar deadline windows are in
+foreign-flight at the time of this plan's closure; `W03.S12` above
+captures the R1 Modelo 100 / 303 / 347 windows that were the priority
+emerging from round-3 testimonials. The corporate-calendar Modelo 202
+1P / 2P / 3P windows are being registered by a parallel campaign and
+will land outside this plan's scope.
 </content>
