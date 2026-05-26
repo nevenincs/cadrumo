@@ -329,6 +329,76 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     assert filing.registry_snapshot_ref.period == "0A"
 
 
+@pytest.mark.parametrize(
+    "pdf_stem,year",
+    [
+        ("2022-0A", 2022),
+        ("2023-0A", 2023),
+    ],
+)
+def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
+    """Round-trip: parse Spanish-language M390 corpus PDFs and verify all 5 closure casillas.
+
+    Ground truth is derived from reading the printed declaracion-resumen anual text
+    directly. The sanitised corpus replaces real amounts with 1.000,00 synthetic
+    values; all 5 target casillas carry their value adjacent to the printed label in
+    every Spanish-language specimen.
+
+    The 2021 corpus PDF is in English (non-standard AEAT account language) and uses
+    English-language labels that do not match the Spanish named_label patterns; it is
+    excluded from this parametrised test.
+
+    Casilla identity mapped from the printed form:
+    - iva.anual.cuota-devengada-total  (box 47): "Total cuotas IVA y recargo de equivalencia"
+    - iva.anual.cuota-deducible-total  (box 64): "Suma de deducciones"
+    - iva.anual.resultado-regimen-general (box 65): "Resultado régimen general (47 - 64)"
+    - iva.anual.compensacion-ultimo-periodo-97 (box 97): "A compensar"
+    - iva.anual.compensacion-generada-ejercicio-no-97 (box 662):
+      "Cuotas pendientes de compensación generadas en el ejercicio"
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
+
+    filing = parse_declaracion(
+        pdf_path,
+        modelo_override="390",
+        año_override=year,
+        period_override="0A",
+    )
+
+    assert filing.modelo == "390"
+    assert filing.period == "0A"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "390"
+    assert filing.registry_snapshot_ref.modelo_year == year
+    assert filing.registry_snapshot_ref.period == "0A"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    assert set(values.keys()) == {
+        "iva.anual.cuota-devengada-total",
+        "iva.anual.cuota-deducible-total",
+        "iva.anual.resultado-regimen-general",
+        "iva.anual.compensacion-ultimo-periodo-97",
+        "iva.anual.compensacion-generada-ejercicio-no-97",
+    }
+
+    # All 5 casillas carry 1.000,00 directly adjacent to their label in both corpus
+    # specimens; ground truth derived from reading the printed form text, not from
+    # re-running the parser.
+    for casilla_id in (
+        "iva.anual.cuota-devengada-total",
+        "iva.anual.cuota-deducible-total",
+        "iva.anual.resultado-regimen-general",
+        "iva.anual.compensacion-ultimo-periodo-97",
+        "iva.anual.compensacion-generada-ejercicio-no-97",
+    ):
+        assert values[casilla_id] == Decimal("1000.00"), (
+            f"{pdf_stem}: casilla {casilla_id!r} expected Decimal('1000.00') "
+            f"from corpus PDF text, got {values[casilla_id]!r}"
+        )
+
+
 def test_parser_fails_when_registry_profile_targets_are_missing(tmp_path: Path) -> None:
     snapshot = _modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
