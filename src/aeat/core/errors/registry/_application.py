@@ -114,6 +114,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._operator.AuthLoginNotEnabledError",
+        ErrorCode(
+            code="REFUSED_AUTH_LOGIN_LIVE_TESTS_DISABLED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_login_live_tests_disabled",
+            default_suggestion="aeat config auth status",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._operator.AuthLoginPreconditionError",
+        ErrorCode(
+            code="REFUSED_AUTH_LOGIN_PRECONDITION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_login_precondition",
+            default_suggestion="aeat config auth status",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",

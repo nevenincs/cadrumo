@@ -330,7 +330,21 @@ def _build_auth_readiness(
     health_severity = ""
     if probe_live_backend and provider:
         try:
-            backend = select_provider(AuthProviderKind(provider), settings=Settings())
+            # The certificate path persisted by ``auth configure`` lives in
+            # workflow state; the backend reads from ``Settings``. Carry the
+            # workflow-state path into the Settings instance the backend
+            # sees so ``configure`` and ``status`` cannot disagree on
+            # whether the certificate is configured.
+            backend_settings = Settings()
+            if (
+                provider == AuthProviderKind.CERTIFICATE.value
+                and auth.certificate_path
+                and backend_settings.aeat_certificate_path is None
+            ):
+                backend_settings = backend_settings.model_copy(
+                    update={"aeat_certificate_path": Path(auth.certificate_path)}
+                )
+            backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
             description = backend.describe()
             available = description.available
             health_summary = description.health_summary or ""
@@ -391,9 +405,14 @@ def _resolve_health_severity(
     selected and the backend left the severity blank, derive a token
     that agrees with the readiness signals: ``ok`` for a configured,
     available, authenticated provider; ``warning`` for one that is
-    configured but not yet usable end-to-end; ``error`` when no
-    provider is configured at all. With no provider selected and no
-    summary the field stays empty — there is nothing to classify.
+    configured but not yet usable end-to-end; ``info`` when a provider
+    is selected but the configuration is still incomplete (an undeclared
+    state, not a genuine fault — round-5 M5). With no provider selected
+    and no summary the field stays empty — there is nothing to classify.
+
+    ``error`` is reserved for backend-reported genuine faults (a
+    certificate corrupt, expired, or unreadable) so a benign pending
+    or undeclared state can never be paired with the loudest severity.
     """
 
     if backend_severity:
@@ -401,7 +420,7 @@ def _resolve_health_severity(
     if not provider:
         return ""
     if not configured:
-        return "error"
+        return "info"
     if available and authenticated:
         return "ok"
     return "warning"

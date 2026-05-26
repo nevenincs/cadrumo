@@ -24,6 +24,7 @@ from ._sessions import (
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth.certificate import LoadedCertificate
     from ..state_projection import OperatorStateProjection
     from ..workflow._models import WorkflowState
     from ..workflow._persistence import WorkflowStateRepository
@@ -92,14 +93,17 @@ class AuthTestResult(AuthStatusResult):
 
     ``auth status`` is a pure read of the canonical state projection.
     ``auth test`` carries every field ``auth status`` does — so the two
-    can never disagree on ``configured`` — and adds a local readiness
-    probe ``auth status`` does NOT perform: it inspects the persisted
-    AEAT session token on disk for the active provider and reports
-    whether one exists and whether it is still within its idle
-    deadline. This is the observable difference between the two verbs
-    (persona-fleet finding G5): ``auth status`` answers "what is
-    configured", ``auth test`` additionally answers "is the local
-    session token actually usable right now".
+    can never disagree on ``configured`` — and runs a real per-provider
+    local probe. For the certificate provider the probe opens the
+    ``.p12`` file, parses the PKCS#12 envelope, classifies the bundle
+    health (``ok`` / ``expired`` / ``expiring`` / ``corrupt`` /
+    ``unreadable``), and surfaces the verdict as ``probe_result``. For
+    Cl@ve Móvil the probe classifies the configured DNI/NIE through the
+    real identity classifier and reports ``ok`` / ``invalid_identity`` /
+    ``identity_unset``. The persisted-session inspection ``auth status``
+    cannot perform — does an encrypted AEAT session token exist on disk
+    and is it still within its idle deadline — is also reported here
+    (round-3 G5 + round-5 M4).
 
     Attributes:
         persisted_session_present: Whether an encrypted AEAT session
@@ -108,6 +112,11 @@ class AuthTestResult(AuthStatusResult):
             idle deadline; ``None`` when no token is present.
         probe_summary: A one-line operator-facing verdict of the local
             probe.
+        probe_result: A typed verdict of the per-provider probe. Values
+            include ``ok``, ``expired``, ``expiring``, ``corrupt``,
+            ``unreadable``, ``invalid_identity``, ``identity_unset``,
+            ``no_path_set``, ``file_missing``, ``no_provider``. Empty
+            only when no provider could be resolved.
     """
 
     model_config = _STRICT_FROZEN
@@ -115,6 +124,7 @@ class AuthTestResult(AuthStatusResult):
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
     probe_summary: str = ""
+    probe_result: str = ""
 
 
 class AuthLoginResult(BaseModel):
@@ -406,21 +416,22 @@ def _auth_configure_result(
 def _identity_alignment_next_action(alignment: str) -> str:
     """Return the concrete command that resolves a Cl@ve alignment fault.
 
-    A misaligned Cl@ve identity cannot authenticate; the operator must
-    fix the identity before any ``auth test`` is meaningful. A missing
-    Cl@ve identity routes to the env-var that supplies it; a missing or
-    mismatched profile tax id routes to the profile editor / switcher.
+    Fully localised (round-5 M6 — earlier versions dropped into English
+    mid-sentence in non-English locales). A misaligned Cl@ve identity
+    cannot authenticate; a missing Cl@ve identity routes to the
+    configuration command that supplies it; a missing or mismatched
+    profile tax id routes to the profile editor / switcher.
     """
 
     if alignment == "clave_identity_missing":
-        return "set AEAT_CLAVE_MOVIL_DNI_NIE to the DNI/NIE of the active profile"
+        return tr("application.auth.operator.alignment.clave_identity_missing_next_action")
     if alignment == "profile_tax_id_missing":
-        return "aeat config profile edit NAME --tax-id <DNI/NIE>"
+        return tr("application.auth.operator.alignment.profile_tax_id_missing_next_action")
     if alignment == "profile_tax_id_missing_and_clave_identity_missing":
-        return "aeat config profile edit NAME --tax-id <DNI/NIE>"
+        return tr("application.auth.operator.alignment.both_missing_next_action")
     # mismatch: the two identities differ; switch to the matching
     # profile or correct whichever value is wrong.
-    return "aeat config profile switch NAME (the profile whose tax id matches the Cl@ve DNI/NIE)"
+    return tr("application.auth.operator.alignment.mismatch_next_action")
 
 
 def _identity_alignment_detail(
@@ -523,12 +534,14 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
         include_pending_obligations=False,
     )
     status = _auth_status_from_projection(projection)
-    probe = _probe_local_session(status.provider)
+    session_probe = _probe_local_session(status.provider)
+    provider_probe = _probe_configured_provider(status.provider, status.certificate_path)
     return AuthTestResult(
         **status.model_dump(),
-        persisted_session_present=probe.present,
-        persisted_session_expired=probe.expired,
-        probe_summary=probe.summary,
+        persisted_session_present=session_probe.present,
+        persisted_session_expired=session_probe.expired,
+        probe_summary=provider_probe.summary or session_probe.summary,
+        probe_result=provider_probe.result,
     )
 
 
@@ -585,6 +598,227 @@ def _probe_local_session(provider: str) -> _LocalSessionProbe:
     )
 
 
+class _ProviderProbeOutcome(BaseModel):
+    """Verdict of the per-provider local probe run by ``auth test``."""
+
+    model_config = _STRICT_FROZEN
+
+    result: str = ""
+    summary: str = ""
+
+
+def _probe_configured_provider(provider: str, certificate_path: str) -> _ProviderProbeOutcome:
+    """Run a real per-provider local probe and return a typed verdict.
+
+    For the certificate provider this opens the ``.p12`` file, parses
+    the PKCS#12 envelope, and surfaces the bundle's expiry health. For
+    Cl@ve Móvil the configured DNI/NIE is classified through the real
+    identity classifier. No network call is made; the probe is a pure
+    local readiness check (round-5 M4).
+    """
+
+    if not provider:
+        return _ProviderProbeOutcome(
+            result="no_provider",
+            summary=tr("application.auth.operator.probe.no_provider"),
+        )
+    try:
+        kind = AuthProviderKind(provider)
+    except ValueError:
+        return _ProviderProbeOutcome(
+            result="no_provider",
+            summary=tr("application.auth.operator.probe.no_provider"),
+        )
+
+    if kind is AuthProviderKind.CERTIFICATE:
+        return _probe_certificate_bundle(certificate_path)
+    if kind is AuthProviderKind.CLAVE_MOVIL:
+        return _probe_clave_movil_identity()
+    return _ProviderProbeOutcome()
+
+
+def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
+    """Open the configured ``.p12`` and classify the certificate's health.
+
+    Resolves the three certificate-state cases distinctly: no path,
+    path-set-file-missing, path-set-file-present. The file-present case
+    additionally opens the bundle and inspects expiry through the
+    health classifier so the probe distinguishes a corrupt envelope
+    from an expired-but-readable certificate.
+    """
+
+    from ...adapters.outbound.aeat.auth.certificate import (
+        CertificateError,
+        CertificateHealthSeverity,
+        evaluate_loaded_certificate_health,
+    )
+    from ...core.config import Settings
+
+    settings = Settings()
+    raw = (certificate_path or "").strip() or (
+        str(settings.aeat_certificate_path) if settings.aeat_certificate_path is not None else ""
+    )
+    if not raw:
+        return _ProviderProbeOutcome(
+            result="no_path_set",
+            summary=tr("application.auth.operator.probe.certificate_path_unset"),
+        )
+    path = Path(raw)
+    if not path.is_file():
+        return _ProviderProbeOutcome(
+            result="file_missing",
+            summary=tr(
+                "application.auth.operator.probe.certificate_file_missing",
+                path=str(path),
+            ),
+        )
+    # Inspect the bundle without requiring the password: parse the
+    # PKCS#12 envelope, derive expiry, and classify health. A wrong /
+    # missing password surfaces as ``unreadable``; a malformed file
+    # surfaces as ``corrupt``.
+    try:
+        bundle_bytes = path.read_bytes()
+    except OSError as exc:
+        return _ProviderProbeOutcome(
+            result="unreadable",
+            summary=tr(
+                "application.auth.operator.probe.certificate_unreadable",
+                error=type(exc).__name__,
+            ),
+        )
+    loaded = _try_load_certificate_metadata(path, bundle_bytes, settings)
+    if loaded is None:
+        return _ProviderProbeOutcome(
+            result="corrupt",
+            summary=tr("application.auth.operator.probe.certificate_corrupt"),
+        )
+    try:
+        health = evaluate_loaded_certificate_health(
+            loaded,
+            warn_days=settings.aeat_cert_warn_days,
+            critical_days=settings.aeat_cert_critical_days,
+        )
+    except CertificateError as exc:
+        return _ProviderProbeOutcome(
+            result="corrupt",
+            summary=tr(
+                "application.auth.operator.probe.certificate_corrupt_detail",
+                error=str(exc),
+            ),
+        )
+    severity = health.severity
+    if severity is CertificateHealthSeverity.EXPIRED:
+        return _ProviderProbeOutcome(
+            result="expired",
+            summary=tr(
+                "application.auth.operator.probe.certificate_expired",
+                days=abs(health.days_until_expiry),
+            ),
+        )
+    if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
+        return _ProviderProbeOutcome(
+            result="expiring",
+            summary=tr(
+                "application.auth.operator.probe.certificate_expiring",
+                days=health.days_until_expiry,
+            ),
+        )
+    return _ProviderProbeOutcome(
+        result="ok",
+        summary=tr(
+            "application.auth.operator.probe.certificate_ok",
+            days=health.days_until_expiry,
+        ),
+    )
+
+
+def _try_load_certificate_metadata(
+    path: Path,
+    bundle_bytes: bytes,
+    settings: Settings,
+) -> "LoadedCertificate | None":
+    """Parse the PKCS#12 envelope and return a :class:`LoadedCertificate` or ``None``.
+
+    Returns ``None`` when the bundle cannot be parsed for any reason
+    (wrong password, malformed envelope, unsupported encoding) so the
+    caller can classify the failure as ``corrupt`` without surfacing
+    a stack trace to the operator.
+    """
+
+    from ...adapters.outbound.aeat.auth.certificate import CertificateBundle, load_certificate
+
+    del bundle_bytes  # the loader reads the file via the bundle path
+    password = settings.aeat_certificate_password_secret
+    if password is None:
+        return None
+    try:
+        bundle = CertificateBundle(
+            path=path,
+            password=password,
+            friendly_name=settings.aeat_certificate_friendly_name,
+            backend=settings.aeat_certificate_backend,
+        )
+        return load_certificate(bundle)
+    except Exception:
+        return None
+
+
+def _probe_clave_movil_identity() -> _ProviderProbeOutcome:
+    """Classify the configured Cl@ve Móvil DNI/NIE through the real classifier.
+
+    A well-formed identity surfaces as ``ok``; a malformed identity as
+    ``invalid_identity``; an unset identity as ``identity_unset``. The
+    probe never contacts AEAT — it validates the local configuration.
+    """
+
+    from ...adapters.outbound.aeat.auth._clave_movil import (
+        ClaveMovilConfigurationError,
+        _classify_identity,
+    )
+
+    raw = (Settings().aeat_clave_movil_dni_nie or "").strip()
+    if not raw:
+        return _ProviderProbeOutcome(
+            result="identity_unset",
+            summary=tr("application.auth.operator.probe.clave_movil_identity_unset"),
+        )
+    try:
+        _classify_identity(raw)
+    except ClaveMovilConfigurationError as exc:
+        return _ProviderProbeOutcome(
+            result="invalid_identity",
+            summary=tr(
+                "application.auth.operator.probe.clave_movil_identity_invalid",
+                error=str(exc),
+            ),
+        )
+    return _ProviderProbeOutcome(
+        result="ok",
+        summary=tr("application.auth.operator.probe.clave_movil_identity_ok"),
+    )
+
+
+class AuthLoginNotEnabledError(AeatError):
+    """Raised when ``auth login`` is invoked without the live-tests safety gate enabled.
+
+    ``aeat`` is a build / verify / export tool; live AEAT submission is
+    permanently forbidden and live reads are gated behind
+    ``AEAT_LIVE_TESTS_ENABLED=1``. Surfacing this refusal here, in user
+    prose, replaces the raw engineering English that previously bubbled
+    from the certificate-bundle precondition (round-5 B2).
+    """
+
+
+class AuthLoginPreconditionError(AeatError):
+    """Raised when ``auth login`` cannot proceed because the configured provider is unusable.
+
+    The error carries a localised, operator-facing message — never an
+    env-var or class name (round-5 B2). Concrete cases include a
+    certificate path that is unset, points at a missing file, or
+    cannot be read at all.
+    """
+
+
 async def login_operator_auth(
     provider: str | None = None,
     *,
@@ -593,13 +827,36 @@ async def login_operator_auth(
     target_url: str | None = None,
     settings: Settings | None = None,
 ) -> AuthLoginResult:
-    """Acquire or verify a live AEAT session and persist backend auth state."""
+    """Acquire or verify a live AEAT session and persist backend auth state.
+
+    Refuses with a localised, user-prose message — never a raw env-var
+    or class name — when (a) the ``AEAT_LIVE_TESTS_ENABLED`` safety gate
+    is off, or (b) the configured provider is locally incomplete
+    (certificate path unset / file missing / unreadable). Round-5 B2.
+    """
 
     resolved_settings = settings or Settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
         provider_kind = _configured_or_default_provider(resolved_settings)
     _implemented_provider(provider_kind.value)
+
+    # The live-tests safety gate is the FIRST reason a non-live tool
+    # refuses login, and must surface before any per-provider check.
+    # The refusal text is user prose, never the env-var name.
+    if resolved_settings.aeat_live_tests_enabled != "1":
+        raise AuthLoginNotEnabledError(
+            tr(
+                "application.auth.operator.login.refused_live_tests_disabled",
+                provider=provider_kind.value,
+            )
+        )
+
+    # Provider-specific local-readiness preconditions. A certificate
+    # provider with no path / a missing file / an unreadable bundle
+    # cannot authenticate; refuse here with prose, rather than letting
+    # the raw bundle-load exception escape.
+    _assert_login_precondition(resolved_settings, provider_kind)
 
     result = await ensure_authenticated_aeat_session(
         resolved_settings,
@@ -756,6 +1013,42 @@ def _optional_clear_events(
     if cleared_locks:
         events.append(("auth.lock.cleared", event_object))
     return tuple(events)
+
+
+def _assert_login_precondition(settings: Settings, provider_kind: AuthProviderKind) -> None:
+    """Refuse login when a provider's local readiness is unmet.
+
+    Uses :class:`AuthLoginPreconditionError` carrying a localised
+    summary so the operator never sees raw env-var or class names
+    (round-5 B2). Reads the workflow-state certificate path when
+    Settings has none, mirroring how :func:`inspect_operator_auth` and
+    the state projection cross the env-var / workflow-state seam.
+    """
+
+    if provider_kind is AuthProviderKind.CERTIFICATE:
+        cert_path = settings.aeat_certificate_path
+        if cert_path is None:
+            from ..workflow._persistence import workflow_state_repository
+
+            recorded = workflow_state_repository().load().auth.certificate_path or ""
+            cert_path = Path(recorded) if recorded else None
+        if cert_path is None:
+            raise AuthLoginPreconditionError(
+                tr("application.auth.operator.login.refused_certificate_path_unset")
+            )
+        if not cert_path.is_file():
+            raise AuthLoginPreconditionError(
+                tr(
+                    "application.auth.operator.login.refused_certificate_file_missing",
+                    path=str(cert_path),
+                )
+            )
+    if provider_kind is AuthProviderKind.CLAVE_MOVIL and not (
+        settings.aeat_clave_movil_dni_nie or ""
+    ).strip():
+        raise AuthLoginPreconditionError(
+            tr("application.auth.operator.login.refused_clave_movil_identity_unset")
+        )
 
 
 def _implemented_provider(provider: str) -> AuthProviderListing:

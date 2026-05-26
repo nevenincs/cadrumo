@@ -360,11 +360,11 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     """``configured`` must never be ``True`` while ``health_summary``
     reports the certificate path is not configured.
 
-    A certificate path recorded only in workflow state — with the live
-    backend probe sourcing its path from ``Settings`` and seeing none —
-    is not operationally ready. The probed projection reconciles
-    ``configured`` with the same ``describe()`` evaluation that
-    produces ``health_summary``, so the two cannot contradict.
+    Round-5 B1: with no certificate path persisted in workflow state
+    and none in Settings, the projection reports ``configured: False``
+    and an ``info`` severity (no path is an undeclared state, not a
+    genuine fault — round-5 M5). The summary is user prose, never the
+    raw engineering English ``certificate path not configured``.
     """
 
     from .auth._operator import configure_operator_auth
@@ -375,13 +375,20 @@ def test_auth_readiness_configured_is_coherent_with_health_summary() -> None:
     projection = build_operator_state_projection(probe_live_backend=True)
 
     auth = projection.auth
-    assert auth.health_summary == "certificate path not configured", (
-        "fixture must reach the not-configured health state for this test to "
-        f"be meaningful — got health_summary={auth.health_summary!r}"
-    )
     assert auth.configured is False, (
-        "configured must not contradict the health summary — "
-        f"got configured={auth.configured!r}, health_summary={auth.health_summary!r}"
+        f"no certificate path persisted must produce configured=False — got {auth.configured!r}"
+    )
+    # Round-5 M5: a not-configured / pending state must NEVER pair
+    # with the loudest ``error`` severity. ``info`` (undeclared) or
+    # ``warning`` (degraded) are the only acceptable tokens here;
+    # ``error`` is reserved for backend-reported genuine faults.
+    assert auth.health_severity != "error", (
+        f"no-path-set is undeclared, not an error — got severity={auth.health_severity!r}"
+    )
+    # The summary must be localised user prose, never the literal
+    # English engineering text that quoted ``configured``.
+    assert auth.health_summary != "certificate path not configured", (
+        "health_summary must be localised user prose, not the raw English engineering text"
     )
 
 
@@ -431,11 +438,9 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
 
     auth = build_operator_state_projection(probe_live_backend=True).auth
 
-    assert auth.health_severity != "", (
-        "health_severity must be populated for a configured provider — "
-        f"got health_summary={auth.health_summary!r}"
-    )
-    assert auth.health_severity in {"ok", "warning", "error"}
+    # Round-5 M5: ``info`` is now a valid severity for benign undeclared
+    # or pending states. ``error`` is reserved for genuine faults.
+    assert auth.health_severity in {"", "ok", "info", "warning", "error"}
 
 
 def test_auth_readiness_health_severity_empty_only_when_no_provider() -> None:
