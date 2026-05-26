@@ -72,7 +72,7 @@ Wizard persistence emits lowercase true and false; binding-side Decimal coercion
 - [x] `W01.P05.S18` - promote lowercase boolean tokens to Python bool in _coerce_profile_fact_value so union resolves before coercion; `src/aeat/domain/user_profile/_values.py`.
 - [ ] `W01.P05.S19` - add a typed-boolean channel on profile bindings so the runtime never reads bool as Decimal; `src/aeat/domain/calculations/registry/_runtime_graph.py`.
 - [ ] `W01.P05.S20` - regression test exercising full wizard to persistence to binding to decimal_value path for boolean profile fact; `src/aeat/application/modelo/test_profile_binding_real_path.py`.
-- [ ] `W01.P05.S21` - project-wide grep for any other site checking Python True or False as a sentinel and convert each to the lowercase canonical; `src/aeat/`.
+- [x] `W01.P05.S21` - project-wide grep for any other site checking Python True or False as a sentinel and convert each to the lowercase canonical; `src/aeat/`.
 
 ### Phase `W01.P06` - CIF identity validator consolidation
 
