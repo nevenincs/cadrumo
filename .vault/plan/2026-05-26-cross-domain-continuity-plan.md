@@ -78,9 +78,9 @@ Wizard persistence emits lowercase true and false; binding-side Decimal coercion
 
 Two parallel CIF validators disagree on whether K is a valid leading letter. Unify to a single canonical constant in a single module.
 
-- [ ] `W01.P06.S22` - delete _CIF_KIND_LETTERS from _documents.py and import from _tax_id.py instead; `src/aeat/core/identity/_documents.py`.
-- [ ] `W01.P06.S23` - rename _CIF_LEADERS to a public canonical name and document the AEAT NIF CIF spec source authority; `src/aeat/core/identity/_tax_id.py`.
-- [ ] `W01.P06.S24` - regression test pinning K-letter behaviour and asserting validate_identity and validate_spanish_tax_id agree; `src/aeat/core/identity/test_identity_consolidation.py`.
+- [ ] `W01.P06.S22` - add a module-level cross-reference comment in _tax_id.py documenting that _CIF_LEADERS is a historical-tolerance superset of _documents._CIF_KIND_LETTERS K L M accepted only on the legacy NIF validator path not the IdentityDocument shape gate; `src/aeat/core/identity/_tax_id.py`.
+- [ ] `W01.P06.S23` - add a paired comment at _CIF_KIND_LETTERS in _documents.py explaining the 17-char set is the AEAT current-spec closed catalogue and K L M are deliberately excluded as historical-only forms tolerated by the legacy path; `src/aeat/core/identity/_documents.py`.
+- [ ] `W01.P06.S24` - pin the intentional split with a regression test asserting K L M are not in _CIF_KIND_LETTERS while validate_spanish_tax_id still accepts a K-led valid CIF; `prevents future consolidation from silently collapsing the two sets; `src/aeat/core/identity/test_documents.py`.
 
 ### Phase `W01.P07` - period normalisation unification
 
@@ -431,6 +431,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S198` - delete duplicate AuthProviderReservedError registration; `the class is registered twice at lines 62-65 and 106-109; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W09.P41.S199` - delete duplicate AuthConfigureDanglingActiveProfileError registration; `the class is registered twice at lines 84-92 and 95-103; `src/aeat/core/errors/registry/_application.py`.
 - [ ] `W09.P41.S200` - consolidate the two divergent _decimal_value helpers; `the modelo binding variant has bool-sentinel handling the borrador variant does not; extract one canonical helper and import; `src/aeat/application/modelo/`.
+- [ ] `W09.P41.S201` - delete dead __all__ re-exports of build_error_envelope and json_output_requested from _errors.py; cb0c684f8 follow-up after architecture-specialist surfaced the source-hygiene gap; `src/aeat/entrypoints/cli/_errors.py`.
 
 ### Phase `W09.P42` - twin function merge
 
