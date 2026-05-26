@@ -114,12 +114,13 @@ class RegistryValidator:
         # Corpus root for declaracion_pdf specimen gate:
         # caller may supply it directly; when not supplied, derive from
         # source_root by navigating to the co-located tests/fixtures/justificantes
-        # directory (source_root is typically src/aeat/_data/registry/aeat,
-        # so three parents up reaches src/aeat).
+        # directory.  Production callers pass source_root=bundled_path() which
+        # resolves to src/aeat/_data, so parents[0] = src/aeat, and the corpus
+        # lives at src/aeat/tests/fixtures/justificantes.
         if justificante_corpus_root is not None:
             self._justificante_corpus_root: Path | None = justificante_corpus_root
         elif source_root is not None:
-            candidate = source_root.resolve().parents[2] / "tests" / "fixtures" / "justificantes"
+            candidate = source_root.resolve().parents[0] / "tests" / "fixtures" / "justificantes"
             self._justificante_corpus_root = candidate if candidate.is_dir() else None
         else:
             self._justificante_corpus_root = None
