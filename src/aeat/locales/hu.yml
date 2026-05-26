@@ -211,9 +211,15 @@ application:
   user_profile:
     errors:
       duplicate_tax_id: application.user_profile.errors.duplicate_tax_id
+      duplicate_tax_id_scan_unreadable_profile: application.user_profile.errors.duplicate_tax_id_scan_unreadable_profile
       no_active_profile_selected: application.user_profile.errors.no_active_profile_selected
       profile_already_exists: application.user_profile.errors.profile_already_exists
+      profile_create_route_mismatch: application.user_profile.errors.profile_create_route_mismatch
+      profile_label_blank: application.user_profile.errors.profile_label_blank
+      profile_manifest_already_registered: application.user_profile.errors.profile_manifest_already_registered
+      profile_manifest_missing: application.user_profile.errors.profile_manifest_missing
       profile_not_registered: application.user_profile.errors.profile_not_registered
+      profile_tombstoned_not_selectable: application.user_profile.errors.profile_tombstoned_not_selectable
   wizard:
     errors:
       profile_flag_required: application.wizard.errors.profile_flag_required

@@ -48,7 +48,6 @@ from ._values import (
 
 __all__ = [
     "ProfileAlreadyExistsError",
-    "StoredProfileDriftError",
     "ProfileFactValue",
     "ProfileFieldDefinition",
     "ProfileFieldType",
@@ -61,6 +60,7 @@ __all__ = [
     "ProfileSnapshotHashMismatchError",
     "ProfileSnapshotNotFoundError",
     "ProfileSnapshotPolicy",
+    "StoredProfileDriftError",
     "UserProfileFact",
     "UserProfilePortableExport",
     "UserProfileRecord",

@@ -227,7 +227,12 @@ class ProfileRepository:
         resolved_id = profile_id if profile_id is not None else new_profile_id()
         if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
             raise UserProfileValidationError(
-                f"profile create route {routing_profile_id!r} does not match profile id {resolved_id!r}"
+                tr(
+                    "application.user_profile.errors.profile_create_route_mismatch",
+                    default="Profile create route '%{route}' does not match profile id '%{profile}'.",
+                    route=routing_profile_id,
+                    profile=resolved_id,
+                )
             )
         paths = bucket_paths(self._root, resolved_id)
         # Capture the genuine pre-create pointer before any store write
@@ -240,7 +245,14 @@ class ProfileRepository:
         # nothing to roll back.
         if manifest_path(paths).is_file():
             raise ProfileNotFoundError(
-                f"profile {resolved_id!r} already has a registered bucket manifest at {paths.bucket_dir}"
+                tr(
+                    "application.user_profile.errors.profile_manifest_already_registered",
+                    default=(
+                        "Profile '%{profile}' already has a registered bucket manifest at %{bucket_dir}."
+                    ),
+                    profile=resolved_id,
+                    bucket_dir=paths.bucket_dir,
+                )
             )
         self._refuse_duplicate_label(label)
         if enforce_unique_tax_id:
@@ -341,7 +353,12 @@ class ProfileRepository:
         paths = bucket_paths(self._root, profile_id)
         if not manifest_path(paths).is_file():
             raise ProfileNotFoundError(
-                f"profile {profile_id!r} has no registered bucket manifest at {paths.bucket_dir}"
+                tr(
+                    "application.user_profile.errors.profile_manifest_missing",
+                    default="Profile '%{profile}' has no registered bucket manifest at %{bucket_dir}.",
+                    profile=profile_id,
+                    bucket_dir=paths.bucket_dir,
+                )
             )
         manifest = read_manifest(paths)
         record = self._lifecycle_repository(profile_id).load(profile_id)
@@ -430,7 +447,12 @@ class ProfileRepository:
         if not trimmed:
             from ...domain.user_profile._errors import UserProfileValidationError
 
-            raise UserProfileValidationError("profile label must not be blank")
+            raise UserProfileValidationError(
+                tr(
+                    "application.user_profile.errors.profile_label_blank",
+                    default="Profile label must not be blank.",
+                )
+            )
 
         if trimmed.casefold() != aggregate.label.casefold():
             clash = read_profile_bucket(trimmed, root=self._root)
@@ -541,7 +563,13 @@ class ProfileRepository:
 
         aggregate = self.load(profile_id)
         if aggregate.status is UserProfileStatus.TOMBSTONED:
-            raise ProfileNotFoundError(f"profile {profile_id!r} is tombstoned and cannot be selected")
+            raise ProfileNotFoundError(
+                tr(
+                    "application.user_profile.errors.profile_tombstoned_not_selectable",
+                    default="Profile '%{profile}' is tombstoned and cannot be selected.",
+                    profile=profile_id,
+                )
+            )
         write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
         return aggregate
 
@@ -617,8 +645,9 @@ class ProfileRepository:
         filing history. The refusal scans every registered profile's
         encrypted record, compares the canonical (upper-cased, trimmed)
         tax id, and fires before any store write so there is nothing to
-        roll back. A torn bucket whose record cannot be loaded cannot
-        claim a tax id and is skipped.
+        roll back. A torn bucket whose record cannot be loaded blocks
+        creation until repair diagnostics make the uniqueness scan
+        trustworthy again.
         """
 
         new_tax_id = _canonical_tax_id(facts)
@@ -634,14 +663,25 @@ class ProfileRepository:
             try:
                 aggregate = self.load(summary.profile_id)
             except Exception as exc:
-                # A torn / unreadable bucket cannot claim a tax id; log
-                # the skip at debug so the silent omission is traceable.
+                # A torn / unreadable bucket may carry the same tax id.
+                # Fail closed rather than silently allowing a duplicate
+                # taxpayer profile while local storage needs repair.
                 _log.debug(
-                    "tax-id uniqueness scan skipped unreadable profile %s: %s",
+                    "tax-id uniqueness scan blocked by unreadable profile %s: %s",
                     summary.profile_id,
                     exc,
+                    exc_info=True,
                 )
-                continue
+                raise UserProfileValidationError(
+                    tr(
+                        "application.user_profile.errors.duplicate_tax_id_scan_unreadable_profile",
+                        default=(
+                            "Cannot verify tax-id uniqueness because profile '%{profile}' is unreadable; "
+                            "run repair diagnostics before creating another profile."
+                        ),
+                        profile=summary.label,
+                    )
+                ) from exc
             existing_tax_id = _canonical_tax_id(aggregate.record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
                 raise ProfileAlreadyRegisteredError(
