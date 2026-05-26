@@ -46,8 +46,17 @@ Audited secure-storage-related tests for tautological assertions, fake or stub h
 - `W11.P19.S75` owns replacing tautological or shortcut tests with real-behavior coverage.
 - `W11.P19.S77` owns guard expansion so new tests cannot reintroduce direct env mutation, fake/stub shortcuts, skip/xfail shortcuts, or mirrored business logic.
 
+## Repairs
+
+- `W11.P19.S77` added focused convention guards for the secure-storage hardening surfaces completed in this wave.
+- The guard blocks skip/xfail shortcut markers, fake/stub class names, mock imports, and unapproved environment access on the W11 hardening test surfaces.
+- The guard covers `pytest.mark.*` shortcut forms, `mock` import variants, `os` aliases, `from os import environ`, direct `os.environ[...]` mutation, environment method calls, `os.putenv`/`os.unsetenv`, and simple constant-indirected environment keys.
+- The guard intentionally stays scoped to the W11 hardening surfaces because broader legacy environment-test migration remains classified backlog rather than a single-step repair.
+
 ## Validation
 
 `uv run pytest src/aeat/tests/test_secure_sql.py src/aeat/entrypoints/cli/test_backend_boundary.py -q` reported 26 passed.
 
 The audit used targeted `rg` scans for `monkeypatch`, direct `os.environ` storage mutation, mocks, fakes, stubs, `skip`, `skipif`, and `xfail` in secure-storage-related test surfaces.
+
+Follow-up validation for `W11.P19.S77` included focused ruff checks, the new hardening convention guard, settings single-surface checks, error registry enforcement, locale parity/honesty tests, and `python -m aeat.locales` scaffold/audit gates.

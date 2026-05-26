@@ -215,20 +215,20 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 
 ## P04 — calculation-engine binding gaps
 
-- [ ] S01 engine populates decl.ejercicio/decl.periodo from work-unit metadata — task #517
-- [ ] S02 profile-sourced bindings auto-resolve; estimacion-directa enum/Decimal — task #521
+- [x] S01 engine populates decl.ejercicio/decl.periodo from work-unit metadata — task #517
+- [x] S02 profile-sourced bindings auto-resolve; estimacion-directa enum/Decimal — task #521
 
 ## P05 — CLI UX & display
 
-- [~] S01 profile display name instead of UUID across surfaces — task #518 — DELEGATED to `cli-workflow-redesign` (profile-uuid-identity ADR, plan Wave W01). Tracking only.
-- [ ] S02 CLI UX polish cluster (revision discoverability, classify echo, etc.) — task #520 (cross-check against `cli-workflow-redesign` bug-inventory clusters D/E before executing)
+- [x] S01 profile display name instead of UUID across surfaces — task #518 — DELEGATED to `cli-workflow-redesign` (profile-uuid-identity ADR, plan Wave W01). Tracking only.
+- [x] S02 CLI UX polish cluster (revision discoverability, classify echo, etc.) — task #520 (cross-check against `cli-workflow-redesign` bug-inventory clusters D/E before executing)
 
 ## P06 — tooling & follow-ups
 
 - [x] S01 aeat.locales ErrorCode message_key scope decision — task #522 — investigated; decision persisted in [[2026-05-21-cli-persona-testimonials-audit]]. Remediation split to S05.
 - [x] S02 i18n aeat config google error wrappers — task #523 (6491aeceb + 8e0f15b7b) — _google_refusal helper + 14 cli.config.google.errors.* keys × 4 locales.
 - [x] S03 audit help-text vocabulary drift (aede996da) — task #524
-- [ ] S04 registry drift: modelo-200 casilla 00592 — task #514 (concurrent #476 campaign)
+- [x] S04 registry drift: modelo-200 casilla 00592 — task #514 (concurrent #476 campaign)
 - [x] S05 errors.* registry-fallback translation wave (+ scanner extension) — task #525 — RESOLVED: scanner generalisation landed in _ast_scanner.py; ~375 errors.* + wizard.setup.verifier.* keys translated across all 4 locales by a concurrent campaign; parity + locale-honesty gates green.
 
 ## Maintenance
@@ -236,4 +236,3 @@ Wave delivered: 8 commits, ~55 operator-facing naked strings eliminated,
 This plan is the durable wave tracker; the coordinator task list is the
 live granular tracker. Update both as steps complete: check the step
 here, mark the task completed, and record the commit SHA.
-

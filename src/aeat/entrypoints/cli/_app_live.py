@@ -161,23 +161,41 @@ def iva_wallet_history_cmd(
         int | None,
         typer.Option("--as-of-year", min=2000, max=2099, help=tr("cli.app.live.iva_wallet.as_of_year_help")),
     ] = None,
+    details: Annotated[
+        bool,
+        typer.Option(
+            "--details/--summary",
+            help=tr(
+                "cli.app.live.iva_wallet.history_details_help",
+                default="Print detailed private rows and amounts; summary mode prints counts only.",
+            ),
+        ),
+    ] = False,
 ) -> None:
     """List the profile-local IVA compensation history without contacting AEAT."""
 
     from ...application.live import list_iva_compensation_history
 
     report = list_iva_compensation_history(as_of_year=as_of_year)
-    _emit(ctx, report, _iva_wallet_history_lines(report))
+    _emit(ctx, report, _iva_wallet_history_lines(report, include_private_details=details))
 
 
-def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str, ...]:
+def _iva_wallet_history_lines(
+    report: IvaCompensationHistoryReport,
+    *,
+    include_private_details: bool = False,
+) -> tuple[str, ...]:
     lines = [
+        _metric_line("privacy_mode", "details" if include_private_details else "summary"),
         _metric_line("row_count", report.row_count),
         _metric_line("as_of_year", report.as_of_year),
         _metric_line("carry_forward_lot_count", report.carry_forward_lot_count),
-        _metric_line("unallocated_applied_amount", report.unallocated_applied_amount),
         _metric_line("authority_decision_count", report.authority_decision_count),
     ]
+    if not include_private_details:
+        lines.append(_metric_line("details_available", "use --details to print private rows and amounts"))
+        return tuple(lines)
+    lines.append(_metric_line("unallocated_applied_amount", report.unallocated_applied_amount))
     for row in report.rows:
         lines.append(
             _metric_line(
@@ -294,7 +312,8 @@ def iva_wallet_capture_history_cmd(
         _metric_line("captured_count", report.captured_count),
         _metric_line("calculation_observation_count", report.calculation_observation_count),
         _metric_line("reloaded_history_count", report.reloaded_history_count),
-        _metric_line("output_root", report.output_root),
+        _metric_line("storage_backend", "secure_objects"),
+        _metric_line("storage_scope", "encrypted_profile_local"),
     )
     _emit(ctx, report, lines)
 

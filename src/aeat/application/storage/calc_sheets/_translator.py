@@ -25,12 +25,13 @@ from collections.abc import Callable, Mapping
 from decimal import Decimal
 from typing import Final
 
+from ....core.errors import AeatError
 from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
 from ....domain.calculations.registry._schema import FormulaExpression
 from ._layout import SheetLayout
 
 
-class TranslationError(Exception):
+class TranslationError(AeatError):
     """A registry expression has no closed-form Sheets equivalent."""
 
     def __init__(self, message: str, *, op: str | None = None, hint: str | None = None) -> None:

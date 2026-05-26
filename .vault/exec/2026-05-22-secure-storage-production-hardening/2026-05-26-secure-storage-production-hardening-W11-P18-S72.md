@@ -26,9 +26,14 @@ Repaired and verified secure-storage exception hierarchy coverage.
 
 - Adopted the in-flight bucket lifecycle error repair so `BucketError` derives from `SecureStorageError`, keeping bucket lifecycle failures inside the secure-storage catch family.
 - Ensured bucket lifecycle errors render from registered `translated_message` keys rather than literal constructor strings.
+- Added registry coverage and four-locale message keys for the bucket event-history domain error family after the central registry gate exposed the missing adjacent bucket-domain binding.
+- Removed new default suggestions that pointed at non-mounted `aeat config bucket` verbs, preserving the accepted custody surface without reintroducing deprecated `config init` or `security` command guidance.
 - Re-ran central registry enforcement to confirm every imported `AeatError` subclass still binds exactly one registry code.
 
 ## Validation
 
 - `uv run ruff check src\aeat\adapters\persistence\storage\errors.py src\aeat\adapters\persistence\storage\bucket\_errors.py src\aeat\adapters\persistence\storage\test_errors.py src\aeat\core\errors\test_registry_enforcement.py`
 - `uv run pytest src\aeat\adapters\persistence\storage\test_errors.py src\aeat\adapters\persistence\storage\bucket\test_bucket_errors.py src\aeat\core\errors\test_registry_enforcement.py -q`
+- `uv run --no-sync pytest src\aeat\core\errors\test_registry_enforcement.py -q`
+- `uv run python -m aeat.locales scaffold --check`
+- `uv run python -m aeat.locales audit`

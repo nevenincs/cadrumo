@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
+from sqlalchemy import text
+from sqlalchemy.engine.url import make_url
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
@@ -15,7 +20,7 @@ from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.core.classification import SensitivityClass
-from aeat.core.config import Settings
+from aeat.core.config import SecretStoreBackend, Settings, load_settings, override_settings
 
 from .diagnostics import (
     ConfigRepairReport,
@@ -23,6 +28,9 @@ from .diagnostics import (
     DiagnosticFinding,
     RegistryVersionSummary,
     SecureObjectIntegrityReport,
+    _active_profile_storage_check,
+    _relational_database_integrity_check,
+    _relational_database_integrity_check_for_engine,
     build_config_repair_report,
     preview_quarantine_unreadable_secure_objects,
     quarantine_unreadable_secure_objects,
@@ -31,6 +39,35 @@ from .diagnostics import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@contextmanager
+def _active_runtime(
+    tmp_path: Path,
+    bucket_id: str = "operator",
+    *,
+    unsecured: bool = False,
+) -> Iterator[Settings]:
+    overrides: dict[str, object] = {
+        "aeat_local_storage_root": tmp_path,
+        "aeat_active_profile": bucket_id,
+        "aeat_secret_passphrase": load_settings().aeat_dev_test_database_password,
+    }
+    if unsecured:
+        overrides["aeat_secret_store_backend"] = SecretStoreBackend.UNSECURED
+        overrides["aeat_allow_unencrypted"] = "1"
+    with override_settings(**overrides) as settings:
+        dispose_engine(settings)
+        try:
+            yield settings
+        finally:
+            dispose_engine(settings)
+
+
+def _database_path(settings: Settings) -> Path:
+    database = make_url(settings.aeat_database_url).database
+    assert database is not None
+    return Path(database)
 
 
 def test_diagnostic_check_fail_without_recovery_field_raises_validation_error() -> None:
@@ -99,24 +136,16 @@ def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
     assert dumped["dead_end"] is None
 
 
-def test_config_repair_report_contains_registry_and_setup_checks(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-
-    report = build_config_repair_report()
+def test_config_repair_report_contains_registry_and_setup_checks(tmp_path) -> None:
+    with _active_runtime(tmp_path), EphemeralMasterKeyProvider():
+        report = build_config_repair_report()
 
     assert report.package_name == "aeat"
     assert report.registry.available is True
     assert report.registry.modelo_count > 0
     assert {check.name for check in report.checks} >= {
         "environment.python",
+        "relational_database.integrity",
         "registry.load",
         "secure_state.load",
         "profile.readiness",
@@ -127,22 +156,220 @@ def test_config_repair_report_contains_registry_and_setup_checks(
     assert report.overall == expected_overall
 
 
-def test_render_config_repair_text_is_operator_readable(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-
-    rendered = render_config_repair_text(build_config_repair_report())
+def test_render_config_repair_text_is_operator_readable(tmp_path) -> None:
+    with _active_runtime(tmp_path), EphemeralMasterKeyProvider():
+        rendered = render_config_repair_text(build_config_repair_report())
 
     from aeat.core.i18n import tr
 
     assert f"{tr('cli.diagnostics.repair.overall_label')}\t" in rendered
     assert "registry.load" in rendered
     assert f"{tr('cli.diagnostics.repair.logs_label')}\t" in rendered
+
+
+def test_config_repair_text_redacts_active_profile_identifier() -> None:
+    """The top-level repair report must not echo the active bucket UUID."""
+
+    from aeat.application.wizard._status import WizardStatusReport
+
+    active_bucket_id = "36732be3-652a-4400-92b8-dcaf39e1e0a0"
+    registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
+    repair_report = ConfigRepairReport(
+        overall="ok",
+        package_name="aeat",
+        package_version="0.1.0",
+        python_version="3.13.11",
+        log_file="aeat.log",
+        registry=registry,
+        setup=WizardStatusReport(
+            active_profile=active_bucket_id,
+            profile_ready=True,
+            identity_ready=True,
+            enrolment_ready=True,
+            profile_present_keys=24,
+            profile_total_keys=47,
+            auth_provider="clave_movil",
+            login_ready=False,
+            next_action="aeat config auth test --provider clave_movil",
+        ),
+        secure_objects=SecureObjectIntegrityReport(),
+        checks=(),
+    )
+
+    rendered = render_config_repair_text(repair_report)
+
+    assert active_bucket_id not in rendered
+    assert "active_profile (24/47)" in rendered
+
+
+def test_profile_storage_check_redacts_active_profile_identifier() -> None:
+    """The profile.storage diagnostic summary should be copy-safe."""
+
+    from aeat.application.workflow._profile_health import ActiveProfileHealth
+
+    active_bucket_id = "36732be3-652a-4400-92b8-dcaf39e1e0a0"
+
+    check = _active_profile_storage_check(
+        ActiveProfileHealth(
+            active_profile=active_bucket_id,
+            source="pointer",
+            status="ready",
+            registered_bucket=True,
+            profile_record_present=True,
+        )
+    )
+
+    assert active_bucket_id not in check.summary
+    assert "active_profile" in check.summary
+
+
+def test_relational_database_integrity_check_reports_clean_schema(tmp_path) -> None:
+    db_path = tmp_path / "relational-clean.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        Base.metadata.create_all(engine)
+
+        check = _relational_database_integrity_check_for_engine(engine)
+
+        assert check.name == "relational_database.integrity"
+        assert check.status == "ok"
+        assert "relational table(s) present" in check.summary
+        assert "expected columns" in check.summary
+    finally:
+        engine.dispose()
+
+
+def test_relational_database_integrity_check_ignores_secure_object_table_absence(tmp_path) -> None:
+    db_path = tmp_path / "relational-no-secure-objects.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        for table in Base.metadata.sorted_tables:
+            if table.name != "secure_objects":
+                table.create(engine)
+
+        check = _relational_database_integrity_check_for_engine(engine)
+
+        assert check.name == "relational_database.integrity"
+        assert check.status == "ok"
+        assert "secure_objects" not in check.summary
+        assert check.detail is None
+    finally:
+        engine.dispose()
+
+
+def test_relational_database_integrity_check_reports_missing_tables(tmp_path) -> None:
+    db_path = tmp_path / "relational-missing.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        Base.metadata.tables["modelos"].create(engine)
+
+        check = _relational_database_integrity_check_for_engine(engine)
+
+        assert check.name == "relational_database.integrity"
+        assert check.status == "fail"
+        assert check.audience == "internal"
+        assert "missing" in check.summary
+        assert "corpus_artifacts" in (check.detail or "")
+        assert "secure_objects" not in (check.detail or "")
+        assert check.findings
+        assert check.findings[0].summary == "Relational table missing"
+    finally:
+        engine.dispose()
+
+
+def test_relational_database_integrity_check_reports_table_column_drift(tmp_path) -> None:
+    db_path = tmp_path / "relational-column-drift.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        Base.metadata.create_all(engine)
+        with engine.begin() as connection:
+            connection.execute(text("DROP TABLE modelos"))
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE modelos (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        identifier VARCHAR(64) NOT NULL UNIQUE
+                    )
+                    """
+                )
+            )
+
+        check = _relational_database_integrity_check_for_engine(engine)
+
+        assert check.name == "relational_database.integrity"
+        assert check.status == "fail"
+        assert check.audience == "internal"
+        assert "schema drift" in check.summary
+        assert "`modelos`" in (check.detail or "")
+        assert "name" in (check.detail or "")
+        assert check.findings
+        assert check.findings[0].summary == "Relational table `modelos` is missing required column(s)"
+        assert check.findings[0].detail == "name"
+    finally:
+        engine.dispose()
+
+
+def test_relational_database_integrity_check_flags_missing_database_for_active_profile(tmp_path) -> None:
+    active_bucket = "active-calculation-bucket"
+    db_path = tmp_path / "buckets" / active_bucket / "db" / "aeat.db"
+
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=active_bucket):
+        check = _relational_database_integrity_check()
+
+    assert check.name == "relational_database.integrity"
+    assert check.status == "fail"
+    assert check.audience == "internal"
+    assert "active profile" in check.summary
+    assert not db_path.exists()
+
+
+def test_relational_database_integrity_check_reports_foreign_key_drift(tmp_path) -> None:
+    db_path = tmp_path / "relational-fk.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    try:
+        Base.metadata.create_all(engine)
+        raw_connection = engine.raw_connection()
+        try:
+            cursor = raw_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=OFF")
+            cursor.execute(
+                """
+                INSERT INTO rental_contracts (
+                    finca_id,
+                    contract_celebration_date,
+                    tenant_count,
+                    qualifying_co_tenant_count,
+                    tenant_is_public_admin,
+                    tenant_is_ley_49_2002_entity_with_social_use,
+                    tenant_is_imv_beneficiary,
+                    dwelling_in_public_program,
+                    initial_rent,
+                    is_first_rental,
+                    lau_17_6_compliant,
+                    schema_version
+                )
+                VALUES (999, '2026-01-01', 1, 0, 0, 0, 0, 0, 1000.00, 1, 1, '1')
+                """
+            )
+            raw_connection.commit()
+        finally:
+            raw_connection.close()
+
+        check = _relational_database_integrity_check_for_engine(engine)
+
+        assert check.name == "relational_database.integrity"
+        assert check.status == "fail"
+        assert check.audience == "internal"
+        assert "foreign-key violation" in check.summary
+        assert "rental_contracts:rowid=" in (check.detail or "")
+        assert check.findings
+        assert check.findings[0].summary == "Foreign-key violation in `rental_contracts`"
+        assert "parent=rental_fincas" in (check.findings[0].detail or "")
+        assert "999" not in (check.detail or "")
+        assert "999" not in (check.findings[0].detail or "")
+    finally:
+        engine.dispose()
 
 
 def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
@@ -184,7 +411,6 @@ def test_render_browser_connectivity_text_resolves_row_label_keys() -> None:
 
 
 def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_master_key(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """A namespace populated under master key K1 must be reported as unreadable under K2.
@@ -194,66 +420,56 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
     ``secure_objects.integrity`` row must surface non-zero unreadable
     counts whenever rows from a prior keychain generation persist.
     """
-    db_path = tmp_path / "rotated.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
     namespace = "aeat.test.repair.rotation"
 
-    # Seed three rows under the OLD master key.
-    with key_old:
-        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine_old)
-        try:
-            repo_old = SecureObjectRepository(engine=engine_old)
-            for natural_key, payload in (
-                ("repair-row-1", b"old-1"),
-                ("repair-row-2", b"old-2"),
-                ("repair-row-3", b"old-3"),
-            ):
-                repo_old.save(
+    with _active_runtime(tmp_path) as settings:
+        # Seed three rows under the OLD master key.
+        with key_old:
+            engine_old = create_engine_from_settings(settings)
+            Base.metadata.create_all(engine_old)
+            try:
+                repo_old = SecureObjectRepository(engine=engine_old)
+                for natural_key, payload in (
+                    ("repair-row-1", b"old-1"),
+                    ("repair-row-2", b"old-2"),
+                    ("repair-row-3", b"old-3"),
+                ):
+                    repo_old.save(
+                        namespace=namespace,
+                        object_key=natural_key,
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime.now(UTC),
+                        payload=payload,
+                    )
+            finally:
+                engine_old.dispose()
+
+        # Switch to the NEW master key and add one decryptable row.
+        with key_new:
+            engine_new = create_engine_from_settings(settings)
+            Base.metadata.create_all(engine_new)
+            try:
+                SecureObjectRepository(engine=engine_new).save(
                     namespace=namespace,
-                    object_key=natural_key,
+                    object_key="repair-row-4",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
                     written_at=datetime.now(UTC),
-                    payload=payload,
+                    payload=b"new-4",
                 )
-        finally:
-            engine_old.dispose()
+            finally:
+                engine_new.dispose()
 
-    # Switch to the NEW master key and add one decryptable row.
-    with key_new:
-        engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine_new)
-        try:
-            SecureObjectRepository(engine=engine_new).save(
-                namespace=namespace,
-                object_key="repair-row-4",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime.now(UTC),
-                payload=b"new-4",
-            )
-        finally:
-            engine_new.dispose()
-
-        # The default repair pipeline picks up the master key from the keyring;
-        # we want it to use the same NEW key we just wrote under, so keep the
-        # process-wide override in place but redirect the engine resolution to
-        # the same database file.
-        monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-        monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-        dispose_engine()
-        try:
+            dispose_engine(settings)
             report = build_config_repair_report()
             integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
             assert integrity_check.status == "warn"
             assert str(report.secure_objects.unreadable_total) in integrity_check.summary
             assert str(report.secure_objects.readable_total) in integrity_check.summary
-            assert integrity_check.next_action == "aeat config repair quarantine --yes"
+            assert integrity_check.next_action == f"aeat config repair list {namespace} --unreadable"
 
             ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
             # Three rows sealed under the OLD ephemeral key should be unreadable
@@ -262,29 +478,18 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
             # unsecured key, depending on whether the canary fires).
             assert ns_report.unreadable >= 3
             assert ns_report.unreadable + ns_report.readable == 4
-        finally:
-            dispose_engine()
 
 
-def test_secure_objects_integrity_check_reports_ok_on_clean_database(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path,
-) -> None:
+def test_secure_objects_integrity_check_reports_ok_on_clean_database(tmp_path) -> None:
     """An empty or fully-decryptable secure-objects table renders ``ok``."""
-    db_path = tmp_path / "clean.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-
-    report = build_config_repair_report()
+    with _active_runtime(tmp_path), EphemeralMasterKeyProvider():
+        report = build_config_repair_report()
     integrity_check = next(c for c in report.checks if c.name == "secure_objects.integrity")
     assert integrity_check.status == "ok"
     assert report.secure_objects.unreadable_total == 0
 
 
 def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """The helper consumed by overview status returns the aggregate count.
@@ -294,61 +499,46 @@ def test_secure_object_unreadable_total_is_nonzero_after_master_key_rotation(
     ``aeat app overview status`` to render an inline warning footer
     pointing the operator at ``aeat config repair``.
     """
-    db_path = tmp_path / "agg.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
 
-    with key_old:
-        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine_old)
-        try:
-            repo_old = SecureObjectRepository(engine=engine_old)
-            for namespace, key, payload in (
-                ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
-                ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
-                ("aeat.test.agg.beta", "beta-1", b"beta-1"),
-            ):
-                repo_old.save(
-                    namespace=namespace,
-                    object_key=key,
-                    classification=SensitivityClass.FINANCIAL,
-                    schema_version=1,
-                    written_at=datetime.now(UTC),
-                    payload=payload,
-                )
-        finally:
-            engine_old.dispose()
+    with _active_runtime(tmp_path) as settings:
+        with key_old:
+            engine_old = create_engine_from_settings(settings)
+            Base.metadata.create_all(engine_old)
+            try:
+                repo_old = SecureObjectRepository(engine=engine_old)
+                for namespace, key, payload in (
+                    ("aeat.test.agg.alpha", "alpha-1", b"alpha-1"),
+                    ("aeat.test.agg.alpha", "alpha-2", b"alpha-2"),
+                    ("aeat.test.agg.beta", "beta-1", b"beta-1"),
+                ):
+                    repo_old.save(
+                        namespace=namespace,
+                        object_key=key,
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime.now(UTC),
+                        payload=payload,
+                    )
+            finally:
+                engine_old.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    with key_new:
-        dispose_engine()
-        try:
+        with key_new:
+            dispose_engine(settings)
             total = secure_object_unreadable_total()
             assert total >= 3, f"expected at least three unreadable rows; got {total}"
-        finally:
-            dispose_engine()
 
 
 def test_secure_object_unreadable_total_is_zero_on_clean_database(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """Aggregate returns zero when no namespace has unreadable rows."""
-    db_path = tmp_path / "agg-clean.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-
-    assert secure_object_unreadable_total() == 0
+    with _active_runtime(tmp_path), EphemeralMasterKeyProvider():
+        assert secure_object_unreadable_total() == 0
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """``aeat config repair`` and ``aeat config status`` must read auth readiness from one source.
@@ -363,12 +553,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
     from aeat.application.user_profile._testing import register_minimal_profile
     from aeat.application.workflow import WorkflowState
 
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'auth.db').as_posix()}")
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-
-    with EphemeralMasterKeyProvider():
+    with _active_runtime(tmp_path), EphemeralMasterKeyProvider():
         base = register_minimal_profile(
             WorkflowState(),
             profile_id="operator",
@@ -399,89 +584,73 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(
                 assert setup_report.login_ready is True
 
 
-def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
-    monkeypatch: pytest.MonkeyPatch,
+def test_quarantine_unreadable_secure_objects_refuses_preserve_first_policy(
     tmp_path,
 ) -> None:
-    """Quarantine archives the undecryptable rows; readable rows stay put.
+    """Non-preview quarantine refuses to move active secure-object rows.
 
-    Seeds two rows under master key K1 plus one row under K2, runs
-    the quarantine pipeline under K2, and asserts (via raw SQL) that:
-
-    - ``secure_objects`` retains exactly the K2-decryptable row.
-    - ``secure_objects_quarantine`` contains the two K1-sealed rows
-      with their original metadata.
-    - ``secure_object_unreadable_total()`` returns 0 after the run.
-
-    Proves the user's ciphertext is preserved (rows are archived, not
-    deleted) and that the active table is left in a fully-decryptable
-    state.
+    Seeds two rows under master key K1 plus one row under K2, calls the
+    destructive application entrypoint under K2, and asserts the
+    preserve-first policy refuses the operation and leaves all rows in
+    ``secure_objects`` with no quarantine archive table.
     """
     import sqlite3
 
-    db_path = tmp_path / "quar.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
+    with _active_runtime(tmp_path) as settings:
+        db_path = _database_path(settings)
+        with key_old:
+            engine_old = create_engine_from_settings(settings)
+            Base.metadata.create_all(engine_old)
+            try:
+                repo_old = SecureObjectRepository(engine=engine_old)
+                for namespace, key, payload in (
+                    ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
+                    ("aeat.test.quar.beta", "row-old-2", b"old-2"),
+                ):
+                    repo_old.save(
+                        namespace=namespace,
+                        object_key=key,
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime.now(UTC),
+                        payload=payload,
+                    )
+            finally:
+                engine_old.dispose()
 
-    with key_old:
-        engine_old = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine_old)
-        try:
-            repo_old = SecureObjectRepository(engine=engine_old)
-            for namespace, key, payload in (
-                ("aeat.test.quar.alpha", "row-old-1", b"old-1"),
-                ("aeat.test.quar.beta", "row-old-2", b"old-2"),
-            ):
-                repo_old.save(
-                    namespace=namespace,
-                    object_key=key,
+        with key_new:
+            dispose_engine(settings)
+            engine_new = create_engine_from_settings(settings)
+            try:
+                SecureObjectRepository(engine=engine_new).save(
+                    namespace="aeat.test.quar.alpha",
+                    object_key="row-new-1",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
                     written_at=datetime.now(UTC),
-                    payload=payload,
+                    payload=b"new-1",
                 )
-        finally:
-            engine_old.dispose()
+            finally:
+                engine_new.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    with key_new:
-        dispose_engine()
+            dispose_engine(settings)
+            with pytest.raises(RuntimeError, match="preserve-first repair policy"):
+                quarantine_unreadable_secure_objects()
 
-        engine_new = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        try:
-            SecureObjectRepository(engine=engine_new).save(
-                namespace="aeat.test.quar.alpha",
-                object_key="row-new-1",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime.now(UTC),
-                payload=b"new-1",
-            )
-        finally:
-            engine_new.dispose()
-
-        dispose_engine()
-        try:
-            report = quarantine_unreadable_secure_objects()
-            assert report.unreadable_total == 2
-            assert report.readable_total == 1
-        finally:
-            dispose_engine()
-
-    # Inspect the database directly to prove the row distribution.
+    # Inspect the database directly to prove the preserve-first distribution.
     with sqlite3.connect(db_path) as con:
         active = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0]
-        archived = con.execute("SELECT COUNT(*) FROM secure_objects_quarantine").fetchone()[0]
-    assert active == 1, f"expected one row left in secure_objects; got {active}"
-    assert archived == 2, f"expected two rows archived; got {archived}"
+        archive_exists = con.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' "
+            "AND name='secure_objects_quarantine'"
+        ).fetchone()
+    assert active == 3, f"expected all rows left in secure_objects; got {active}"
+    assert archive_exists is None, "preserve-first refusal must not create the quarantine table"
 
 
 def test_preview_quarantine_reports_unreadable_rows_without_mutating(
-    monkeypatch: pytest.MonkeyPatch,
     tmp_path,
 ) -> None:
     """``preview_quarantine_*`` counts the rows the verb would move and moves none.
@@ -495,61 +664,49 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     """
     import sqlite3
 
-    db_path = tmp_path / "preview-quar.db"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-    dispose_engine()
-
     key_old = EphemeralMasterKeyProvider()
     key_new = EphemeralMasterKeyProvider()
+    with _active_runtime(tmp_path) as settings:
+        db_path = _database_path(settings)
+        with key_old:
+            engine_old = create_engine_from_settings(settings)
+            Base.metadata.create_all(engine_old)
+            try:
+                repo_old = SecureObjectRepository(engine=engine_old)
+                for namespace, key, payload in (
+                    ("aeat.test.preview.alpha", "row-old-1", b"old-1"),
+                    ("aeat.test.preview.beta", "row-old-2", b"old-2"),
+                ):
+                    repo_old.save(
+                        namespace=namespace,
+                        object_key=key,
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime.now(UTC),
+                        payload=payload,
+                    )
+            finally:
+                engine_old.dispose()
 
-    with key_old:
-        engine_old = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-        )
-        Base.metadata.create_all(engine_old)
-        try:
-            repo_old = SecureObjectRepository(engine=engine_old)
-            for namespace, key, payload in (
-                ("aeat.test.preview.alpha", "row-old-1", b"old-1"),
-                ("aeat.test.preview.beta", "row-old-2", b"old-2"),
-            ):
-                repo_old.save(
-                    namespace=namespace,
-                    object_key=key,
+        with key_new:
+            dispose_engine(settings)
+            engine_new = create_engine_from_settings(settings)
+            try:
+                SecureObjectRepository(engine=engine_new).save(
+                    namespace="aeat.test.preview.alpha",
+                    object_key="row-new-1",
                     classification=SensitivityClass.FINANCIAL,
                     schema_version=1,
                     written_at=datetime.now(UTC),
-                    payload=payload,
+                    payload=b"new-1",
                 )
-        finally:
-            engine_old.dispose()
+            finally:
+                engine_new.dispose()
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    with key_new:
-        dispose_engine()
-        engine_new = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}")
-        )
-        try:
-            SecureObjectRepository(engine=engine_new).save(
-                namespace="aeat.test.preview.alpha",
-                object_key="row-new-1",
-                classification=SensitivityClass.FINANCIAL,
-                schema_version=1,
-                written_at=datetime.now(UTC),
-                payload=b"new-1",
-            )
-        finally:
-            engine_new.dispose()
-
-        dispose_engine()
-        try:
+            dispose_engine(settings)
             preview = preview_quarantine_unreadable_secure_objects()
             assert preview.unreadable_total == 2
             assert preview.readable_total == 1
-        finally:
-            dispose_engine()
 
     # The preview moved nothing: all three rows stay in secure_objects
     # and the quarantine archive table was never created.

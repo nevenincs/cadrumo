@@ -3,13 +3,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
+from ...adapters.persistence.storage.sql import SecureObjectWrite
 from ...core.logging import get_logger
 from ._errors import BucketsError
 from ._event import BucketEvent, BucketEventHistoryCatalogue
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
 _NAMESPACE = "aeat.domain.buckets.event_history"
@@ -21,24 +25,51 @@ class BucketEventHistoryPersistenceError(BucketsError):
     """Raised when the bucket-event-history catalogue cannot be persisted or loaded."""
 
 
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return the runtime-created secure-object repository for ``bucket_id``."""
+
+    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...core.config import load_settings
+
+    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+
+
+def _secure_objects_for_active_bucket() -> SecureObjectRepository:
+    """Return the runtime-created repository for the selected active profile."""
+
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
+    from ...core.i18n import tr
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        raise BucketEventHistoryPersistenceError(tr("application.workflow.errors.no_active_profile_bucket"))
+    return _secure_objects_for_bucket(bucket_id)
+
+
 class BucketEventHistoryRepository:
     """Read / write the bucket-event-history catalogue."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
         """Return the secure-object backend used by this catalogue."""
 
+        return self._repository
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = _secure_objects_for_active_bucket()
         return self._objects
 
     def exists(self) -> bool:
-        return self._objects.exists(_NAMESPACE, _OBJECT_KEY)
+        return self._repository.exists(_NAMESPACE, _OBJECT_KEY)
 
     def load(self) -> BucketEventHistoryCatalogue:
         try:
-            record = self._objects.load(
+            record = self._repository.load(
                 _NAMESPACE,
                 _OBJECT_KEY,
                 expected_class=SensitivityClass.FINANCIAL,
@@ -64,7 +95,7 @@ class BucketEventHistoryRepository:
         return envelope.payload
 
     def save(self, catalogue: BucketEventHistoryCatalogue) -> None:
-        self._objects.save_many((self.to_secure_object_write(catalogue),))
+        self._repository.save_many((self.to_secure_object_write(catalogue),))
 
     def to_secure_object_write(self, catalogue: BucketEventHistoryCatalogue) -> SecureObjectWrite:
         """Return the secure-object upsert for ``catalogue`` without committing it."""

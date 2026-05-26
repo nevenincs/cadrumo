@@ -68,6 +68,7 @@ from . import (
     LedgerExportCommand,
     LedgerReviewQuery,
     LedgerSourceImportCommand,
+    LedgerTransactionPayload,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -1018,6 +1019,8 @@ def test_query_ledger_review_rows_filters_exact_period_and_projects_rows(secure_
     assert listed.filters == ("period=2026-05", "status=pending")
     assert single.rows[0].id == may.ref.transaction_id
     assert single.rows[0].transaction is not None
+    assert isinstance(single.rows[0].transaction, LedgerTransactionPayload)
+    assert single.rows[0].transaction.transaction_id == may.ref.transaction_id
     assert single_filtered_out.rows == ()
 
 

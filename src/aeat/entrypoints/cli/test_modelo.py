@@ -172,6 +172,21 @@ def test_casillas_form_number_filter_matches_declared_casilla() -> None:
     assert rows, result.output
 
 
+def test_casillas_form_number_filter_matches_printed_number() -> None:
+    """``--form-number`` also accepts the printed numeric ``number``
+    shown in the casillas table.
+
+    Modelo 303 casilla 69 has no distinct ``form_number`` metadata, but
+    the CLI prints ``69`` in the number column. Filtering by that
+    printed number must find the same row the operator just saw.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--period", "1T", "--form-number", "69"])
+    assert result.exit_code == 0, result.output
+    rows = [line for line in result.output.splitlines() if line.startswith("iva.resultado\t69\t")]
+    assert rows, result.output
+
+
 def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
     """``--form-number`` with a value not declared by any casilla returns an empty table."""
     result = invoke_cached_cli(["app", "modelo", "casillas", "303", "--form-number", "9999"])
@@ -182,6 +197,37 @@ def test_casillas_form_number_filter_no_match_returns_empty_table() -> None:
         if line and not line.startswith("operation\t") and not line.startswith("casilla_id\t")
     ]
     assert not data_rows, result.output
+
+
+def test_formulas_explain_emits_reference_drill_down_commands() -> None:
+    """``formulas --explain`` should not strand operators on opaque
+    legal/source ref ids; it emits concrete registry follow-up commands.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "formulas", "111", "--period", "1T", "--explain"])
+    assert result.exit_code == 0, result.output
+    legal_command = (
+        "legal_ref_command\tley-35-2006:art-99\t"
+        "aeat app registry legal view ley-35-2006:art-99"
+    )
+    assert legal_command in result.output
+    assert (
+        "source_ref_command\taeat-dr-111-2019-v18\t"
+        "aeat app registry sources view aeat-dr-111-2019-v18"
+    ) in result.output
+
+
+def test_modelo_111_required_casillas_explain_practical_empty_set() -> None:
+    """Modelo 111 has no always-required structural casillas, but the
+    CLI should explain the practical retention buckets when
+    ``--required`` returns no data rows.
+    """
+
+    result = invoke_cached_cli(["app", "modelo", "casillas", "111", "--required"])
+    assert result.exit_code == 0, result.output
+    assert "casilla_id\tnumber\tinput\trequired\tlabel" in result.output
+    assert "employees: casillas 01-03" in result.output
+    assert "professionals: casillas 07-09" in result.output
 
 
 # ---------------------------------------------------------------------------

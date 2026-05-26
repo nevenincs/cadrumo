@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -15,7 +16,6 @@ from ...adapters.persistence.storage.errors import (
     SecretStoreError,
     StorageError,
 )
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import Settings
 from ...core.i18n import tr
@@ -25,7 +25,10 @@ from ._events import (
     WorkflowStateResetFingerprint,
     emit_workflow_state_reset,
 )
-from ._models import WorkflowResult, WorkflowState, utc_now
+from ._models import WorkflowResult, WorkflowState, active_bucket_id_or_raise, utc_now
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.storage.sql import SecureObjectRepository
 
 _logger = get_logger(__name__)
 
@@ -34,6 +37,21 @@ _STATE_NAMESPACE = "aeat.workflow"
 _STATE_OBJECT_KEY = "state"
 _RUN_VERSION = 1
 _RUN_NAMESPACE = "aeat.application.workflow.runs"
+
+
+def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
+    """Return the runtime-created secure-object repository for ``bucket_id``."""
+
+    from ...adapters.persistence.storage import inspect_bucket_storage_runtime
+    from ...core.config import load_settings
+
+    return inspect_bucket_storage_runtime(bucket_id, load_settings()).secure_object_repository()
+
+
+def _secure_objects_for_active_bucket() -> SecureObjectRepository:
+    """Return the runtime-created repository for the selected active profile."""
+
+    return _secure_objects_for_bucket(active_bucket_id_or_raise())
 
 
 def _clear_output_language_cache() -> None:
@@ -51,19 +69,20 @@ class WorkflowStateRepository:
     def __init__(
         self,
         *,
-        emit_reset: Callable[..., object] = emit_workflow_state_reset,
+        objects: SecureObjectRepository | None = None,
     ) -> None:
-        self._objects = SecureObjectRepository()
-        # Injectable so the emit-first ordering contract in
-        # reset_workflow_state can be exercised with a real failing
-        # emitter — no module monkeypatching. Mirrors the injectable
-        # ``objects`` seam on WorkflowRunRepository.
-        self._emit_reset = emit_reset
+        self._objects = objects
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = _secure_objects_for_active_bucket()
+        return self._objects
 
     def load(self) -> WorkflowState:
         """Load state or return an empty payload when absent."""
 
-        record = self._objects.load(
+        record = self._repository.load(
             _STATE_NAMESPACE,
             _STATE_OBJECT_KEY,
             expected_class=SensitivityClass.FINANCIAL,
@@ -93,7 +112,7 @@ class WorkflowStateRepository:
         """Persist state in the encrypted database object store."""
 
         write = self.to_secure_object_write(state)
-        self._objects.save_many((write,))
+        self._repository.save_many((write,))
         _clear_output_language_cache()
         _logger.debug("persisted workflow state to secure backend")
 
@@ -159,7 +178,7 @@ class WorkflowStateRepository:
         """
 
         try:
-            metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+            metadata = self._repository.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
         except StorageError:
             return WorkflowStateResetFingerprint(
                 schema_version=None,
@@ -228,8 +247,8 @@ class WorkflowStateRepository:
         """
 
         fingerprint = self.fingerprint_state(reason_class=reason_class)
-        self._emit_reset(fingerprint=fingerprint, actor=actor, source=source)
-        self._objects.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
+        emit_workflow_state_reset(fingerprint=fingerprint, actor=actor, source=source)
+        self._repository.delete(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
         _clear_output_language_cache()
         _logger.info("workflow state envelope reset; recovery route fired by operator")
         return fingerprint
@@ -247,7 +266,13 @@ class WorkflowRunRepository:
     """Encrypted SQL object repository for :class:`WorkflowResult` runs."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = _secure_objects_for_active_bucket()
+        return self._objects
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
@@ -260,7 +285,7 @@ class WorkflowRunRepository:
             classification=SensitivityClass.FINANCIAL,
             payload=result,
         )
-        self._objects.save(
+        self._repository.save(
             namespace=_RUN_NAMESPACE,
             object_key=run_id,
             classification=SensitivityClass.FINANCIAL,
@@ -274,7 +299,7 @@ class WorkflowRunRepository:
         """Load one persisted workflow result from the secure backend."""
 
         safe_run_id = _validate_run_id(run_id)
-        record = self._objects.load(
+        record = self._repository.load(
             _RUN_NAMESPACE,
             safe_run_id,
             expected_class=SensitivityClass.FINANCIAL,
@@ -297,7 +322,7 @@ class WorkflowRunRepository:
     def list(self, *, since: date | None = None) -> tuple[WorkflowResult, ...]:
         """List persisted workflow runs newest-first, optionally filtered by date."""
 
-        records = self._objects.list_records(
+        records = self._repository.list_records(
             _RUN_NAMESPACE,
             expected_class=SensitivityClass.FINANCIAL,
             max_supported_version=_RUN_VERSION,

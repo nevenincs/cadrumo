@@ -117,6 +117,28 @@ Implementation must either derive the axis from the official label or keep
 each record open for manual policy review. It must not infer correctness from
 the current role suffix alone.
 
+### Warning-sidecar behavior
+
+The semantic-role typo-warning validator may treat the audited correction-table
+suffixes as warning axes when two roles preserve the same base stem. This is
+only a warning-suppression decision; it does not extract structured correction
+metadata or certify the embedded suffix as legally correct.
+
+The warning-sidecar suffix set includes:
+
+- `permanente_aumento`
+- `permanente_disminucion`
+- `temporaria_ejercicio_aumento`
+- `temporaria_ejercicio_disminucion`
+- `temporaria_anteriores_aumento`
+- `temporaria_anteriores_disminucion`
+- `saldo_inicial`
+- `saldo_final`
+
+The mismatch bucket remains excluded from future metadata extraction unless a
+later policy derives axes from official labels or corrects the registry role
+under a source-backed decision.
+
 ## Modelo 100 family-local pilot
 
 Repeated labels in Modelo 100 are not a cross-region equivalence proof.
@@ -140,6 +162,143 @@ and pending/application state for the generated/pending rows. No role may be
 merged across autonomous communities or deduction families because its label
 caption repeats.
 
+The W04 manual lookup also promoted these source-grounded family-local
+generated/pending warning-sidecar candidates:
+
+- `irpf_deduccion_murcia_infraestructuras`
+- `irpf_deduccion_madrid_nuevos_contribuyentes`
+
+For warning-suppression only, these promoted families may treat family-local
+`generado`, `pendiente`, `2025_generado`, `2025_pendiente`, and
+`2024_pendiente` suffixes as generated-year and pending-state axes.
+
+The following remain blocked until a registry role correction or separate
+source-data policy creates a family-specific preserved base:
+
+- `irpf_deduccion_la_rioja_generado_2025`
+- `irpf_deduccion_la_rioja_generado_2025_pendiente`
+- `irpf_deduccion_catalunya_generado_2025`
+- `irpf_deduccion_catalunya_pendiente_ejercicio_anterior`
+
+These La Rioja and Catalunya roles are source-identified but currently
+CCAA-generic. They must not be normalized by a generated/pending suffix rule.
+
+### Cross-CCAA warning boundary
+
+Autonomous-community tokens are not warning-sidecar axes by themselves.
+Roles such as `irpf_deduccion_murcia_vehiculo_importe` and
+`irpf_deduccion_asturias_vehiculo_importe`, or
+`irpf_deduccion_andalucia_nacimiento_adopcion` and
+`irpf_deduccion_madrid_nacimiento_adopcion`, must not be treated as role
+siblings merely because the non-region tokens are similar.
+
+If a current registry role is a legitimate region-local singleton, the
+registry must mark it with `semantic_role_cardinality = "intentional_singleton"`
+and a source-backed reason. The warning validator must not hide it through a
+global CCAA normalization rule.
+
+### Legal-reference warning boundary
+
+Legal-reference tokens are not warning-sidecar axes by themselves. Role
+fragments such as `art11_4`, `dt1`, `rdleg`, and `lis` identify source-visible
+legal regimes or provisions and must stay inside the preserved role stem unless
+a later source-backed policy explicitly says otherwise.
+
+The warning validator must therefore not treat these as typo-warning siblings:
+
+- `is_correccion_operaciones_a_plazos_art11_4_permanente_aumento` and
+  `is_correccion_operaciones_a_plazos_dt1_permanente_aumento`
+- `is_deduccion_di_internacional_rdleg_pendiente` and
+  `is_deduccion_di_internacional_pendiente`
+
+If a current registry role is a legitimate legal-reference-specific singleton,
+the registry must mark it with
+`semantic_role_cardinality = "intentional_singleton"` and a source-backed
+reason. The warning validator must not hide it through generic article,
+transitional-provision, RDLeg, or LIS token stripping.
+
+### Generic warning-suppressor control boundary
+
+The remaining older warning suppressors are not all equally source-grounded.
+Future work must distinguish exact source-backed helper families from generic
+token stripping:
+
+- The correction suffix guard is already tied to the Modelo 200 correction
+  table contract and remains warning-only unless a later extractor policy is
+  approved.
+- The Anexo C carryforward, deferred-imputation slot, and family-local
+  generated/pending helpers are exact allowlists from prior source-audit
+  slices.
+- The `axis_token_group` helper is a mixed legacy helper. Its current exposure
+  includes relationship fields, birth/death fields, RIC Canarias type letters,
+  internal/international DI, liquidacion roman numerals, and
+  detail/other-correction roles. Each token group needs its own source-backed
+  boundary before promotion or removal.
+- The `optional_or_numeric_token_strip` helper is the highest-risk remaining
+  broad suppressor because it strips optional words and all numeric tokens.
+  Its current exposure includes year-specific C Valenciana and Cantabria rows,
+  Murcia generated/pending rows, catastral slots, quoted-fund `coti` branches,
+  and Modelo 200 `con/sin mantenimiento de empleo` rows. Do not replace it
+  with another broad rule; burn it down by exact family-local policies.
+
+## Modelo 100 audited warning-sidecar guards
+
+The W08 source lookup adds two source-grounded warning-sidecar recognizers.
+These recognizers only decide whether singleton `semantic_role` names are
+axis siblings for typo-warning purposes. They do not rename registry roles,
+rewrite role bases, or define legal concepts.
+
+### Anexo C carryforward
+
+The Anexo C carryforward guard is limited to the source-confirmed carryforward
+baskets recorded in the sidecar audit. It may treat the following state
+suffixes as axes within the same preserved basket:
+
+- `pendiente_inicio`
+- `aplicado`
+- `pendiente_fin`
+- `generado`
+
+It must preserve the basket stem. For example,
+`irpf_anexo_c_saldo_neg_gyp_general_pendiente_inicio` and
+`irpf_anexo_c_saldo_neg_gyp_general_aplicado` are warning-sidecar siblings,
+but `irpf_anexo_c_saldo_neg_gyp_general_pendiente_inicio` and
+`irpf_anexo_c_saldo_neg_gyp_ahorro_pendiente_inicio` are not.
+
+Typo-adjacent stems remain blocked from automatic equivalence. In particular,
+`irpf_anexo_c_exceso_eeficiencia_*` must not be equated to
+`irpf_anexo_c_exceso_eficiencia_energetica_*` without a separate
+semantic-role correction policy.
+
+### Deferred imputation
+
+The deferred-imputation guard is limited to the source-confirmed Anexo C.1
+slot layout for:
+
+- ordinary patrimonial elements,
+- cryptocurrency elements,
+- immovable-property elements.
+
+It may treat slot numbers and `resto` as slot axes inside the same branch and
+field. It may also treat `pendiente_imputacion` as the same pending field
+label shape where the dictionary uses that spelling in a branch-local slot.
+
+It must not merge:
+
+- ordinary, cryptocurrency, and immovable-property branches,
+- `ganancia` and `perdida` polarity,
+- amount, year, pending-gain, and pending-loss fields.
+
+### Cadastral references
+
+The W08 audit blocks global cadastral-reference normalization. The validator
+therefore must not treat text cadastral-reference roles and logical
+no-reference marker roles as axis siblings merely because their labels share
+`Referencia catastral`.
+
+Future family-local cadastral slot extraction requires a separate exact-ID
+policy decision that preserves field type and source family.
+
 ## Regression requirements
 
 Future implementation must include real-behavior checks that prove:
@@ -149,6 +308,46 @@ Future implementation must include real-behavior checks that prove:
 - A repeated Modelo 100 label does not create a cross-region normalization.
 - The `c_valenciana_autoconsumo` pilot preserves the `hasta_2022` and
   `desde_2023` legal windows while extracting only generated/pending axes.
+- The Murcia infraestructuras and Madrid nuevos contribuyentes generated and
+  pending roles suppress typo warnings only inside their exact family bases.
+- The La Rioja and Catalunya generated/pending pairs remain non-siblings while
+  their role bases are CCAA-generic.
+- Cross-CCAA role names remain non-siblings unless a later source-backed
+  policy adds an exact family rule; current region-local singleton rows must
+  be marked explicitly as intentional singletons.
+- Legal-reference role names remain non-siblings unless a later source-backed
+  policy adds an exact family rule; current article, transitional-provision,
+  RDLeg, and LIS singletons must be marked explicitly as intentional
+  singletons.
+- The legacy optional/numeric stripping helper must be reduced only through
+  exact source-backed family policies; each exposed family must have a test
+  proving adjacent legal/year/field concepts remain non-siblings.
+- The first optional/numeric burn-down removes only `sin` from the broad
+  optional-token list. Modelo 200 `con/sin mantenimiento de empleo` roles are
+  legally distinct because the AEAT Sociedades manual separates the `RDL
+  6/2010` employment-maintenance regime from the `RDL 13/2010` no-maintenance
+  regime. Current correction rows must be explicit `intentional_singleton`
+  entries rather than hidden by generic negation stripping.
+- `coti`, generated/pending years, line numbers, cadastral slot numbers,
+  `agr`, `aav`, `b`, `anio`, and `precio` remain broad optional/numeric debt.
+  They must not be promoted without a family-local source map and tests proving
+  adjacent legal, year, branch, and detail fields remain distinct.
+- The second optional/numeric burn-down removes only `coti` from the broad
+  optional-token list. Modelo 100 2025 `gp_fondos_coti` roles are a separate
+  quoted-fund source family, grounded in the Modelo 100 2025 order and
+  committed registry sectioning. Current warning-exposed rows are explicit
+  `intentional_singleton` entries rather than hidden by generic token
+  stripping.
+- The legacy axis-token group helper must be reviewed token group by token
+  group; `interna`/`internacional`, `i`/`ii`/`iii`/`iv`, and
+  `detalle`/`otras` are not automatically safe outside their source context.
+- The Anexo C warning-sidecar guard suppresses only same-basket state axes and
+  keeps separate baskets distinct.
+- The deferred-imputation warning-sidecar guard suppresses only same-branch
+  slot axes and keeps branch and gain/loss polarity distinct.
+- Cadastral reference text fields and no-reference logical marker fields remain
+  non-siblings unless a later exact-ID policy explicitly authorizes a
+  family-local extractor.
 
 ## Reviewer checklist
 

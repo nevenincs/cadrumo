@@ -19,9 +19,9 @@ decides whether that is a refusal.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal, Protocol
 
 from .....core.config import Settings
 from .....core.logging import get_logger
@@ -44,10 +44,34 @@ G313_LAUNCHER_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.ce
 operator-facing projection of the operator's 036 census record)."""
 
 
+class G313PageLike(Protocol):
+    async def goto(
+        self,
+        url: str,
+        *,
+        wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None,
+    ) -> object | None: ...
+    async def content(self) -> str: ...
+
+
+class G313BrowserContextLike(Protocol):
+    async def new_page(self) -> G313PageLike: ...
+    async def close(self) -> None: ...
+
+
+class G313BrowserSessionLike(Protocol):
+    async def create_context(self, *, storage_state: Mapping[str, object]) -> G313BrowserContextLike: ...
+    async def close(self) -> None: ...
+
+
+G313BrowserSessionFactory = Callable[[Settings], Awaitable[G313BrowserSessionLike]]
+
+
 async def fetch_g313_census(
     session: AeatSession,
     *,
     settings: Settings | None = None,
+    browser_session_factory: G313BrowserSessionFactory | None = None,
 ) -> CensoFactSet:
     """Live-fetch the G313 page under the authenticated session.
 
@@ -68,14 +92,30 @@ async def fetch_g313_census(
     """
 
     settings = settings or Settings()
-    storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
             "AeatSession has no persisted auth session; "
             "run `aeat config auth configure` to acquire one",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         )
-    browser_session = await default_browser_session_factory(settings)
+    storage_state = storage_state_for_session(session)
+    return await _fetch_g313_census_with_storage_state(
+        storage_state,
+        settings=settings,
+        browser_session_factory=browser_session_factory,
+    )
+
+
+async def _fetch_g313_census_with_storage_state(
+    storage_state: Mapping[str, object],
+    *,
+    settings: Settings,
+    browser_session_factory: G313BrowserSessionFactory | None = None,
+) -> CensoFactSet:
+    if browser_session_factory is None:
+        browser_session = await _default_g313_browser_session_factory(settings)
+    else:
+        browser_session = await browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
         try:
@@ -102,6 +142,10 @@ async def fetch_g313_census(
                 log.debug("fetch_g313_census: context.close suppressed: %s", exc, exc_info=True)
     finally:
         await browser_session.close()
+
+
+async def _default_g313_browser_session_factory(settings: Settings) -> G313BrowserSessionLike:
+    return await default_browser_session_factory(settings)
 
 
 def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:

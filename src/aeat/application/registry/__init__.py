@@ -168,6 +168,49 @@ class RegistryOracleAuditReport(BaseModel):
     orphan_oracle_ids: tuple[str, ...]
 
 
+class RegistryLegalReferenceReport(BaseModel):
+    """One reviewed legal reference from the calculation registry catalogue."""
+
+    model_config = ConfigDict(frozen=True)
+
+    legal_ref: str
+    evidence_tier: str
+    authority: str
+    kind: str
+    corpus_ref: str
+    document_id: str
+    article: str | None
+    section: str | None
+    permalink: str
+    effective_from: str
+    effective_to: str | None
+    review_status: str
+    reviewed_at: str | None
+    reviewed_by: str | None
+    notes: str | None
+    required_text: tuple[str, ...]
+
+
+class RegistrySourceReferenceReport(BaseModel):
+    """One reviewed source reference from the calculation registry catalogue."""
+
+    model_config = ConfigDict(frozen=True)
+
+    source_ref: str
+    evidence_tier: str
+    authority: str
+    kind: str
+    corpus_path: str
+    sha256: str
+    bytes: int
+    retrieved_at: str
+    published_at: str | None
+    applies_from: str | None
+    applies_to: str | None
+    source_url: str
+    review_status: str
+
+
 class RegistryRevisionInventory(NamedTuple):
     casilla_count: int
     formula_count: int
@@ -292,6 +335,59 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
         failures=tuple(failures),
         applicability_declarations=applicability_declarations,
         orphan_oracle_ids=tuple(orphan_oracle_ids),
+    )
+
+
+def show_registry_legal_reference(registry_root: Path, legal_ref: str) -> RegistryLegalReferenceReport:
+    """Return one reviewed legal reference from the central calculation registry."""
+
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+    try:
+        reference = authority.catalogues.legal[legal_ref]
+    except KeyError as exc:
+        raise RegistryApplicationInputError(f"unknown legal reference: {legal_ref}") from exc
+    return RegistryLegalReferenceReport(
+        legal_ref=str(reference.id),
+        evidence_tier=str(reference.evidence_tier),
+        authority=str(reference.authority),
+        kind=str(reference.kind),
+        corpus_ref=reference.corpus_ref,
+        document_id=reference.document_id,
+        article=reference.article,
+        section=reference.section,
+        permalink=reference.permalink,
+        effective_from=reference.effective_from.isoformat(),
+        effective_to=reference.effective_to.isoformat() if reference.effective_to is not None else None,
+        review_status=str(reference.review_status),
+        reviewed_at=reference.reviewed_at.isoformat() if reference.reviewed_at is not None else None,
+        reviewed_by=reference.reviewed_by,
+        notes=reference.notes,
+        required_text=reference.required_text,
+    )
+
+
+def show_registry_source_reference(registry_root: Path, source_ref: str) -> RegistrySourceReferenceReport:
+    """Return one reviewed source reference from the central calculation registry."""
+
+    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+    try:
+        reference = authority.catalogues.sources[source_ref]
+    except KeyError as exc:
+        raise RegistryApplicationInputError(f"unknown source reference: {source_ref}") from exc
+    return RegistrySourceReferenceReport(
+        source_ref=str(reference.id),
+        evidence_tier=str(reference.evidence_tier),
+        authority=str(reference.authority),
+        kind=str(reference.kind),
+        corpus_path=reference.corpus_path,
+        sha256=reference.sha256,
+        bytes=reference.bytes,
+        retrieved_at=reference.retrieved_at.isoformat(),
+        published_at=reference.published_at.isoformat() if reference.published_at is not None else None,
+        applies_from=reference.applies_from.isoformat() if reference.applies_from is not None else None,
+        applies_to=reference.applies_to.isoformat() if reference.applies_to is not None else None,
+        source_url=reference.source_url,
+        review_status=str(reference.review_status),
     )
 
 
@@ -512,6 +608,7 @@ __all__ = [
     "RegistryCitationsListReport",
     "RegistryCitationsVerificationReport",
     "RegistryCorpusIssueProjection",
+    "RegistryLegalReferenceReport",
     "RegistryManualId",
     "RegistryManualPartProjection",
     "RegistryManualRuleProjection",
@@ -525,6 +622,7 @@ __all__ = [
     "RegistryManualsListCommand",
     "RegistryManualsListReport",
     "RegistryOracleAuditReport",
+    "RegistrySourceReferenceReport",
     "RegistryTopicProjection",
     "RegistryTreeReport",
     "audit_registry_oracles",
@@ -536,7 +634,9 @@ __all__ = [
     "replay_registry_parity",
     "run_registry_parity",
     "show_registry_citation",
+    "show_registry_legal_reference",
     "show_registry_manual",
+    "show_registry_source_reference",
     "verify_filed_state",
     "verify_registry_citations",
     "verify_registry_manual",

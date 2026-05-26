@@ -12,6 +12,8 @@ from ...application.registry import (
     inspect_registry_tree,
     replay_registry_parity,
     run_registry_parity,
+    show_registry_legal_reference,
+    show_registry_source_reference,
     verify_filed_state,
     verify_registry_tree,
     verify_registry_workbooks,
@@ -39,8 +41,22 @@ parity_app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+legal_app = typer.Typer(
+    name="legal",
+    help=tr("cli.registry.legal_app_help", default="Inspect calculation-registry legal references"),
+    no_args_is_help=True,
+    add_completion=False,
+)
+sources_app = typer.Typer(
+    name="sources",
+    help=tr("cli.registry.sources_app_help", default="Inspect calculation-registry source references"),
+    no_args_is_help=True,
+    add_completion=False,
+)
 app.add_typer(workbooks_app, name="workbooks")
 app.add_typer(parity_app, name="parity")
+app.add_typer(legal_app, name="legal")
+app.add_typer(sources_app, name="sources")
 app.add_typer(citations_app, name="citations")
 app.add_typer(manuals_app, name="manuals")
 
@@ -70,6 +86,93 @@ def _resolve_source_root(value: Path | None) -> Path:
     current working directory.
     """
     return value if value is not None else bundled_path()
+
+
+@legal_app.command("view", help=tr("cli.registry.legal.view_help", default="Show one legal reference by id"))
+def legal_reference_view_cmd(
+    ctx: typer.Context,
+    legal_ref: Annotated[
+        str,
+        typer.Argument(
+            help=tr("cli.registry.legal.legal_ref_help", default="Legal reference id, e.g. ley-37-1992:art-99")
+        ),
+    ],
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = None,
+) -> None:
+    """Show a reviewed legal reference from the calculation registry."""
+
+    report = show_registry_legal_reference(_resolve_registry_root(registry_root), legal_ref)
+    lines = [
+        "operation\tregistry.legal.show",
+        f"legal_ref\t{report.legal_ref}",
+        f"evidence_tier\t{report.evidence_tier}",
+        f"authority\t{report.authority}",
+        f"kind\t{report.kind}",
+        f"document_id\t{report.document_id}",
+        f"article\t{report.article or ''}",
+        f"section\t{report.section or ''}",
+        f"corpus_ref\t{report.corpus_ref}",
+        f"permalink\t{report.permalink}",
+        f"effective_from\t{report.effective_from}",
+        f"effective_to\t{report.effective_to or ''}",
+        f"review_status\t{report.review_status}",
+        f"reviewed_at\t{report.reviewed_at or ''}",
+        f"reviewed_by\t{report.reviewed_by or ''}",
+        f"notes\t{report.notes or ''}",
+    ]
+    lines.extend(f"required_text[{index}]\t{text}" for index, text in enumerate(report.required_text))
+    _emit(ctx, report, lines)
+
+
+@sources_app.command("view", help=tr("cli.registry.sources.view_help", default="Show one source reference by id"))
+def source_reference_view_cmd(
+    ctx: typer.Context,
+    source_ref: Annotated[
+        str,
+        typer.Argument(
+            help=tr("cli.registry.sources.source_ref_help", default="Source reference id, e.g. aeat-dr-303-2025")
+        ),
+    ],
+    registry_root: Annotated[
+        Path | None,
+        typer.Option(
+            "--registry-root",
+            file_okay=False,
+            dir_okay=True,
+            readable=True,
+            help=tr("cli.registry.inspect_registry_root_help"),
+        ),
+    ] = None,
+) -> None:
+    """Show a reviewed source reference from the calculation registry."""
+
+    report = show_registry_source_reference(_resolve_registry_root(registry_root), source_ref)
+    lines = [
+        "operation\tregistry.sources.show",
+        f"source_ref\t{report.source_ref}",
+        f"evidence_tier\t{report.evidence_tier}",
+        f"authority\t{report.authority}",
+        f"kind\t{report.kind}",
+        f"corpus_path\t{report.corpus_path}",
+        f"sha256\t{report.sha256}",
+        f"bytes\t{report.bytes}",
+        f"retrieved_at\t{report.retrieved_at}",
+        f"published_at\t{report.published_at or ''}",
+        f"applies_from\t{report.applies_from or ''}",
+        f"applies_to\t{report.applies_to or ''}",
+        f"source_url\t{report.source_url}",
+        f"review_status\t{report.review_status}",
+    ]
+    _emit(ctx, report, lines)
 
 
 @app.command("inspect", help=tr("cli.registry.inspect_help"))

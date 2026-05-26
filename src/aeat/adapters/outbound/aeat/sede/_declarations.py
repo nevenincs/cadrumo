@@ -1275,12 +1275,21 @@ def _observed_casillas_from_submitted_file(
         if snapshot.modelo.id == "303" and "has no exports" in str(exc):
             return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
         raise
-    parsed = parse_export_payload(
-        resolved.layout,
-        body,
-        source_root=bundled_path(),
-        sources=snapshot.sources,
-    )
+    try:
+        parsed = parse_export_payload(
+            resolved.layout,
+            body,
+            source_root=bundled_path(),
+            sources=snapshot.sources,
+        )
+    except RegistryValidationError:
+        if snapshot.modelo.id == "303" and _is_modelo_303_page_03_fragment(body):
+            log.debug(
+                "falling back to Modelo 303 page-03 submitted-file parser after export layout parse failed",
+                exc_info=True,
+            )
+            return _observed_modelo_303_casillas_from_submitted_file(declaration=declaration, body=body)
+        raise
     _verify_submitted_file_context(resolved.fields_by_id, parsed.fields, declaration=declaration)
     observations: list[ObservedCasillaValue] = []
     for casilla in parsed.casillas:
@@ -1319,6 +1328,10 @@ _MODELO_303_PAGE_03_MONEY_FIELDS_BY_YEAR: Final[Mapping[int, Mapping[str, tuple[
         "71": (357, 17),
     },
 }
+
+
+def _is_modelo_303_page_03_fragment(body: bytes) -> bool:
+    return body.decode("latin-1", errors="replace").startswith(_MODELO_303_PAGE_03_TAG)
 
 
 def _observed_modelo_303_casillas_from_submitted_file(

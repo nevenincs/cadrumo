@@ -247,6 +247,27 @@ def test_registry_inspect_cli_workbook_reference_resolves_against_revision(
     assert workbook_reference.runner_required is False or workbook_reference.output_cell_count > 0
 
 
+def test_registry_legal_view_resolves_formula_legal_ref() -> None:
+    """Formula ``legal_refs`` should have a direct CLI drill-down path."""
+
+    result = invoke_cached_cli(["app", "registry", "legal", "view", "ley-37-1992:art-99"])
+    assert result.exit_code == 0, result.output
+    assert "operation\tregistry.legal.show" in result.output
+    assert "legal_ref\tley-37-1992:art-99" in result.output
+    assert "corpus_ref\tcorpus/normatives/html/ley-37-1992-art-99.html#a99" in result.output
+
+
+def test_registry_sources_view_resolves_formula_source_ref() -> None:
+    """Formula ``source_refs`` should have a direct CLI drill-down path."""
+
+    result = invoke_cached_cli(["app", "registry", "sources", "view", "aeat-dr-303-2025"])
+    assert result.exit_code == 0, result.output
+    assert "operation\tregistry.sources.show" in result.output
+    assert "source_ref\taeat-dr-303-2025" in result.output
+    assert "kind\trecord_design" in result.output
+    assert "source_url\thttps://" in result.output
+
+
 def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     result = invoke_cached_cli(
         [
@@ -674,8 +695,9 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         ),
     )
 
-    lines = _iva_wallet_history_lines(report)
+    lines = _iva_wallet_history_lines(report, include_private_details=True)
 
+    assert "privacy_mode=details" in lines
     assert "carry_forward_lot_count=1" in lines
     assert any(
         line.startswith("carry_forward_lot=")
@@ -691,6 +713,73 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
+
+
+def test_live_iva_wallet_history_summary_hides_private_rows_by_default() -> None:
+    report = IvaCompensationHistoryReport(
+        row_count=1,
+        rows=(
+            IvaCompensationHistoryRow(
+                year=2024,
+                period="1T",
+                status="ALTA",
+                presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                prior_pending_amount="100.00",
+                applied_amount="40.00",
+                pending_for_later_amount="60.00",
+                period_result_amount="0.00",
+                final_result_amount="0.00",
+                generated_amount="0",
+                available_end_amount="60.00",
+            ),
+        ),
+        as_of_year=2026,
+        carry_forward_lot_count=1,
+        carry_forward_lots=(
+            IvaCompensationCarryForwardLotRow(
+                taxpayer_ref="sha256:abc123",
+                source_filing_year=2022,
+                source_period="4T",
+                generated_amount="100.00",
+                applied_amount="40.00",
+                remaining_amount="60.00",
+                age_years=4,
+                expiry_review_state="expiry_review_due",
+                source_observation_key="303:2022:4T:EXP",
+            ),
+        ),
+        unallocated_applied_amount="0",
+        authority_decision_count=1,
+        authority_decisions=(
+            IvaWalletAuthorityDecisionRow(
+                taxpayer_ref="sha256:abc123",
+                target_year=2026,
+                target_period="2T",
+                selected_authority="aeat_wallet",
+                selected_amount="60.00",
+                wallet_amount="60.00",
+                local_recurrence_amount="60.00",
+                override_amount=None,
+                divergence="match",
+                blocked=False,
+                stale_wallet=False,
+                reason="matched",
+                wallet_captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                decided_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+                authority_sources=("aeat_wallet amount=60.00 ref=wallet:2026:2T",),
+            ),
+        ),
+    )
+
+    lines = _iva_wallet_history_lines(report)
+
+    assert "privacy_mode=summary" in lines
+    assert "row_count=1" in lines
+    assert "carry_forward_lot_count=1" in lines
+    assert "details_available=use --details to print private rows and amounts" in lines
+    assert not any(line.startswith("row=") for line in lines)
+    assert not any(line.startswith("carry_forward_lot=") for line in lines)
+    assert not any(line.startswith("authority_decision=") for line in lines)
 
 
 def test_list_filed_data_cli_requires_live_gate_before_remote_read(tmp_path: Path) -> None:

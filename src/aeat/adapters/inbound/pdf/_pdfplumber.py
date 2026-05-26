@@ -39,6 +39,8 @@ from pathlib import Path
 
 import pdfplumber
 
+from ....core.i18n import tr
+
 
 @contextmanager
 def suppress_pdfminer_debug_logging() -> Iterator[None]:
@@ -92,15 +94,15 @@ def extract_pages_text_from_path(
     """
 
     if not pdf_path.is_file():
-        raise error_class(f"{not_found_label}: {pdf_path}")
+        raise error_class(tr("adapters.inbound.pdf.errors.not_found", label=not_found_label, path=pdf_path))
     try:
         with suppress_pdfminer_debug_logging(), pdfplumber.open(pdf_path) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:  # pragma: no cover — defensive; pdfplumber surface
-        raise error_class(f"pdfplumber could not open {pdf_path}: {exc}") from exc
+        raise error_class(tr("adapters.inbound.pdf.errors.open_failed", source=pdf_path, error=exc)) from exc
 
     if not any(pages):
-        raise error_class(f"no text extracted from {pdf_path}; {pdf_label} may be scan-only or XFA")
+        raise error_class(tr("adapters.inbound.pdf.errors.no_text", source=pdf_path, label=pdf_label))
     return pages
 
 
@@ -117,10 +119,10 @@ def extract_pages_text_from_bytes(
         with suppress_pdfminer_debug_logging(), pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:  # pragma: no cover — defensive; pdfplumber surface
-        raise error_class(f"pdfplumber could not open {source_label}: {exc}") from exc
+        raise error_class(tr("adapters.inbound.pdf.errors.open_failed", source=source_label, error=exc)) from exc
 
     if not any(pages):
-        raise error_class(f"no text extracted from {source_label}; {pdf_label} may be scan-only or XFA")
+        raise error_class(tr("adapters.inbound.pdf.errors.no_text", source=source_label, label=pdf_label))
     return pages
 
 
@@ -161,7 +163,7 @@ def extract_pages_text_concatenated(
     except error_class:
         raise
     except Exception as exc:  # pragma: no cover - defensive
-        raise error_class(f"pdfplumber failed to open {pdf_path}: {exc}") from exc
+        raise error_class(tr("adapters.inbound.pdf.errors.open_failed", source=pdf_path, error=exc)) from exc
 
 
 def extract_pages_text_with_fast_path(

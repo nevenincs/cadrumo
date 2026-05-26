@@ -23,11 +23,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from .....core.config import Settings
+from .....core.config import Settings, override_settings
 from ....persistence.storage import EphemeralMasterKeyProvider
 from ....persistence.storage.sql.engine import dispose_engine
 from . import _session_store
 from ._clave_movil import (
+    CLAVE_MOVIL_OPERATOR_PHONE_STATES,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
@@ -35,10 +36,12 @@ from ._clave_movil import (
     _classify_identity,
     _ClaveMovilSessionMetadata,
     _extract_verification_code_from_html,
+    _operator_phone_state_report_commands,
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_BUCKET_ID = "clave-movil"
 
 if TYPE_CHECKING:
     from ._authenticator import BrowserResponseLike
@@ -54,14 +57,14 @@ def _aeat_url(origin: str, path: str) -> str:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _isolated_secure_session_backend(tmp_path: Path):
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 # ── Browser-session stand-ins ────────────────────────────────────────────────
@@ -141,6 +144,16 @@ class _RecordingPage:
 
     async def close(self) -> None:
         self.closed = True
+
+
+class _CheckRecordingPage(_RecordingPage):
+    def __init__(self, *, target_path: str) -> None:
+        super().__init__(target_path=target_path)
+        self.checks: list[tuple[str, bool]] = []
+
+    async def check(self, selector: str, *, timeout: float | None = None, force: bool = False) -> None:
+        del timeout
+        self.checks.append((selector, force))
 
 
 class _SelectorDispatchPage(_RecordingPage):
@@ -300,7 +313,8 @@ def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -
     for name in Settings.env_var_names():
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_ACTIVE_PROFILE", _BUCKET_ID)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
 
@@ -653,6 +667,23 @@ class TestPostAuthLanding:
             _PRE303_SURFACE.representation_submit_selector,
         ]
 
+    def test_representation_dispatcher_prefers_direct_radio_check(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        provider = ClaveMovilAuthProvider(settings)
+        page = _CheckRecordingPage(target_path=settings.aeat_sede_expedientes_path)
+        page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
+
+        async def run() -> None:
+            await provider._wait_for_post_auth_landing(page, settings.aeat_sede_expedientes_path, timeout_ms=1_000)
+
+        asyncio.run(run())
+        assert page.checks == [(_PRE303_SURFACE.representation_own_name_selector, True)]
+        assert page.clicks == [_PRE303_SURFACE.representation_submit_selector]
+
 
 class TestPendingPetitionRefusal:
     def test_pending_petition_page_fails_fast_with_actionable_mode(
@@ -728,6 +759,13 @@ class TestPendingPetitionRefusal:
 
 
 class TestClaveWaitState:
+    def test_operator_phone_state_report_commands_cover_every_allowed_state(self) -> None:
+        commands = _operator_phone_state_report_commands("20260521T123456Z")
+
+        assert len(commands) == len(CLAVE_MOVIL_OPERATOR_PHONE_STATES)
+        for phone_state, command in zip(CLAVE_MOVIL_OPERATOR_PHONE_STATES, commands, strict=True):
+            assert command == f"aeat config auth diagnostics report 20260521T123456Z --phone-state {phone_state}"
+
     def test_extracts_verification_code_from_rendered_non_qr_html(self) -> None:
         html = """
         <div class="negrita codigoVerificacion">Código de verificación</div>

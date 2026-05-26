@@ -15,8 +15,9 @@ fully decoupled mutable label carried in the bucket manifest.
 from __future__ import annotations
 
 import secrets
-from collections.abc import Iterable
-from datetime import date
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
+from datetime import UTC, date, datetime
 
 from ...adapters.persistence.storage.bucket._layout import bucket_paths
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -24,6 +25,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSchemaDefinition,
@@ -43,6 +45,7 @@ from ._profile_repository import ProfileRepository
 
 _SHARED_SCHEMA: ProfileSchemaDefinition | None = None
 _SENTINEL_DATE = date.min
+_log = get_logger(__name__)
 
 
 def _shared_schema() -> ProfileSchemaDefinition:
@@ -126,6 +129,131 @@ def _clear_active_profile_pointer() -> None:
         target.unlink()
 
 
+def logout_active_profile() -> str | None:
+    """Clear the active-profile pointer and return the prior active bucket id."""
+
+    from ..workflow._models import resolve_active_bucket_id
+
+    prior = resolve_active_bucket_id()
+    _clear_active_profile_pointer()
+    return prior
+
+
+@contextmanager
+def profile_create_storage_span(profile_id: str) -> Iterator[str]:
+    """Open the storage span needed to create and enroll ``profile_id``.
+
+    The active-profile pointer is written before opening the per-bucket
+    engine so settings can derive the bucket route, but this span owns
+    the rollback for failures before or around ``ProfileRepository``.
+    Master-key provisioning and bucket-DEK enrollment are likewise
+    centralized here so CLI and wizard callers do not duplicate custody
+    setup.
+    """
+
+    from ...adapters.persistence.storage import (
+        SecretAlreadyExistsError,
+        activate_master_key_provider,
+        get_master_key_provider,
+    )
+    from ...core.config import override_settings
+
+    try:
+        provider = get_master_key_provider()
+        try:
+            provider.provision_master_key()
+        except SecretAlreadyExistsError:
+            _log.debug("profile lifecycle create: master key already provisioned for profile %s", profile_id)
+        with (
+            override_settings(aeat_active_profile=profile_id),
+            activate_master_key_provider(
+                provider,
+                fallback_bucket_id=profile_id,
+                allow_bucket_dek_enrollment=True,
+            ),
+        ):
+            yield profile_id
+    except Exception:
+        raise
+
+
+@contextmanager
+def profile_storage_session(profile_id: str) -> Iterator[None]:
+    """Open a bucket session scoped to an existing profile lifecycle operation."""
+
+    from ...adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
+    from ...core.config import override_settings
+
+    with (
+        override_settings(aeat_active_profile=profile_id),
+        activate_master_key_provider(get_master_key_provider(), fallback_bucket_id=profile_id),
+    ):
+        yield
+
+
+def select_profile_with_lifecycle_span(profile_id: str) -> None:
+    """Select ``profile_id`` and append the activation event inside one lifecycle span."""
+
+    with profile_storage_session(profile_id):
+        repository = ProfileRepository()
+        repository.select(profile_id)
+        _append_profile_activated_event(profile_id=profile_id, active_profile=profile_id)
+
+
+def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
+    """Tombstone ``profile_id`` through the repository inside its storage span."""
+
+    with profile_storage_session(profile_id):
+        return ProfileRepository().delete(profile_id).record
+
+
+def _append_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
+    """Append a PROFILE_ACTIVATED event to the bucket-event-history catalogue."""
+
+    from ...domain.buckets import (
+        BucketEvent,
+        BucketEventHistoryRepository,
+        BucketEventObjectType,
+        BucketEventType,
+        append_bucket_event,
+        derive_bucket_event_id,
+    )
+
+    if active_profile is None:
+        return
+
+    occurred_at = datetime.now(UTC)
+    payload = {"profile_id": profile_id, "active_profile": active_profile}
+    actor = "operator"
+    bucket_id = active_profile
+    event_id = derive_bucket_event_id(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.PROFILE_ACTIVATED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.PROFILE,
+        object_id=profile_id,
+        payload=payload,
+    )
+    repo = BucketEventHistoryRepository()
+    repo.save(
+        append_bucket_event(
+            repo.load(),
+            BucketEvent(
+                event_id=event_id,
+                bucket_id=bucket_id,
+                event_type=BucketEventType.PROFILE_ACTIVATED,
+                occurred_at=occurred_at,
+                actor=actor,
+                object_type=BucketEventObjectType.PROFILE,
+                object_id=profile_id,
+                payload_version=1,
+                payload=payload,
+            ),
+        )
+    )
+
+
 class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     """Raised when ``profile create`` targets a name that already has a manifest.
 
@@ -145,6 +273,7 @@ def register_active_profile(
     secure_objects: SecureObjectRepository | None = None,
     schema: ProfileSchemaDefinition | None = None,
     enforce_unique_tax_id: bool = True,
+    routing_profile_id: str | None = None,
 ) -> WorkflowState:
     """Atomically register a new profile and make it the active one.
 
@@ -178,6 +307,7 @@ def register_active_profile(
         facts=facts,
         profile_id=profile_id,
         enforce_unique_tax_id=enforce_unique_tax_id,
+        routing_profile_id=routing_profile_id,
     )
     updated = state.model_copy(update={"updated_at": utc_now()})
     updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
@@ -494,12 +624,17 @@ def rename_profile(
 
 __all__ = [
     "build_lifecycle_service",
+    "delete_profile_with_lifecycle_span",
     "fact_value",
+    "logout_active_profile",
+    "profile_create_storage_span",
+    "profile_storage_session",
     "read_active_profile",
     "register_active_profile",
     "remove_active_profile",
     "rename_profile",
     "select_profile",
+    "select_profile_with_lifecycle_span",
     "set_active_field",
     "set_active_fields",
 ]

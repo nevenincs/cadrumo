@@ -892,27 +892,6 @@ cli:
         push_namespace_help: Namespace to push (repeatable; defaults to every namespace)
         root_folder_id_unset: No Google Drive root folder is configured; run `aeat
           config google folder set <id>` first
-    init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
-      certificate_path_help: Path to the .p12 or .pfx certificate file
-      drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
-      from_help: Source profile ID to import settings from
-      help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
-      output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
-      quiet_help: Skip the success message after init
-      submissions_dir_help: Directory to store submitted filing receipts
-      success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
-      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
     profile:
@@ -1815,6 +1794,7 @@ cli:
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
     language_help: Output language for this command (overrides the active profile)
+    profile_help: AEAT profile name or bucket id to use for this command
     quiet_help: Show only errors on stderr
     startup_import_error: 'Cannot start the AEAT command surface: missing dependency
       {dependency}. Run `aeat config repair`.'

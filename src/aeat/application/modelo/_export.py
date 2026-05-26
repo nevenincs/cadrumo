@@ -14,8 +14,7 @@ The service is local-only: it never contacts AEAT and never invokes
 that produces a file the operator presents through sede.agenciatributaria.gob.es
 themselves.
 
-The CLI verb ``aeat app modelo export`` (per the app-modelo-shape ADR
-canonical tree) is a thin delegate over this service.
+The CLI verb ``aeat app modelo export`` is a thin delegate over this service.
 """
 
 from __future__ import annotations
@@ -90,8 +89,7 @@ class ModeloExportCrossBucketRefusedError(ModeloError):
 
     Bucket events must scope to the active bucket; allowing the service
     to emit into a foreign bucket would let any caller pollute another
-    operator's history. Locks the safety gate from the
-    bucket-event-history ADR.
+    operator's history.
     """
 
 
@@ -360,17 +358,17 @@ def export_modelo_revision(
     byte size, and file digest captured in the payload.
     """
 
-    from ..workflow._persistence import workflow_state_repository
+    from ...core._bucket_pointer_io import resolve_active_bucket_id
 
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-
-    active_bucket_id = workflow_state_repository().load().active_profile_bucket_id()
+    active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
         raise ModeloExportNoActiveBucketError(
             tr("application.modelo.errors.export_no_active_bucket"),
         )
+
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
     work_unit = wu_repo.load().get(revision.work_unit_id)

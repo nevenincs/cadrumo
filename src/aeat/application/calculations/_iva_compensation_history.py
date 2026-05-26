@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
 from ...adapters.persistence.storage import SensitivityClass, safe_repository_id
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...core.errors import AeatError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _ZERO = Decimal("0")
@@ -80,7 +81,7 @@ class IvaCompensationCarryForwardReport(BaseModel):
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
 
 
-class IvaCompensationCarryForwardPolicyError(ValueError):
+class IvaCompensationCarryForwardPolicyError(AeatError, ValueError):
     """Raised when IVA compensation carry-forward lots violate policy."""
 
 

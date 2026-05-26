@@ -105,6 +105,10 @@ def test_ca_hu_values_differ_from_en_unless_allowlisted(locale_code: str) -> Non
         locale_value = locale_keys.get(key)
         if locale_value is None:
             continue
+        # A value equal to its dotted key is an unresolved scaffold
+        # placeholder, not English prose copied into another locale.
+        if locale_value == key and en_value == key:
+            continue
         if locale_value == en_value and key not in locale_allows:
             offenders.append(key)
 

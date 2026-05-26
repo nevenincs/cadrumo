@@ -257,7 +257,7 @@ class RegistryQueryService:
             for casilla in revision.casillas
             if (input_kind is None or casilla.input_kind == input_kind)
             and (required is None or casilla.required is required)
-            and (form_number is None or casilla.form_number == form_number)
+            and (form_number is None or casilla.form_number == form_number or casilla.number == form_number)
         ]
         return ModeloCasillasReport(
             code=str(definition.id),

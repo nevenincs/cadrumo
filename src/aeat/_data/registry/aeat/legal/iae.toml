@@ -109,6 +109,18 @@ applies_from = 2003-09-19
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr840.pdf"
 review_status = "reviewed"
 
+[sources."aeat-modelo-840-printed-form"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/forms/modelo_840/files/01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf"
+sha256 = "cf3cd1a77f92d38d2668d30b378a8eca922d6a262fe82ba86f5008074001ece0"
+bytes = 555817
+retrieved_at = 2026-05-26
+applies_from = 2003-09-19
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G323/mod840e_es_es.pdf"
+review_status = "reviewed"
+
 [sources."boe-modelo-840-2003-form"]
 evidence_tier = "official_source_guidance"
 authority = "boe"

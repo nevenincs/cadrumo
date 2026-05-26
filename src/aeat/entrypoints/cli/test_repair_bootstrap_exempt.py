@@ -41,6 +41,8 @@ _FAST_REPAIR_VERBS: tuple[tuple[str, ...], ...] = (
     ("config", "repair", "profile"),
     ("config", "repair", "connectivity"),
     ("config", "repair", "integrity", "objects"),
+    ("config", "repair", "integrity", "attribution"),
+    ("config", "repair", "list", "aeat.workflow"),
 )
 
 

@@ -15,23 +15,25 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import override_settings
 from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
 from ..storage import EphemeralMasterKeyProvider
 from ..storage.sql import dispose_engine
 from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "profile-assets"
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _ephemeral_master_key(tmp_path: Path) -> Iterator[None]:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00") -> AssetRecord:
@@ -68,7 +70,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
     )
 
     path = save_assets((asset,))
-    db_bytes = (tmp_path / "aeat.db").read_bytes()
+    db_bytes = (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").read_bytes()
 
     assert not path.exists()
     assert b"LEAK-CANARY-NAS" not in db_bytes

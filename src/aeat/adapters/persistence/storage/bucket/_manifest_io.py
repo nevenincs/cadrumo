@@ -65,6 +65,9 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
     else:
         lines.append(f"last_unlocked_at = {_format_scalar(manifest.last_unlocked_at)}")
     lines.append(f"recovery_enrolled = {_format_scalar(manifest.recovery_enrolled)}")
+    if manifest.idle_lock_minutes is not None:
+        lines.append(f"idle_lock_minutes = {_format_scalar(manifest.idle_lock_minutes)}")
+    lines.append(f"key_schedule = {_format_scalar(manifest.key_schedule.value)}")
     lines.append(f"schema_version = {_format_scalar(manifest.schema_version)}")
     lines.append(f"status = {_format_scalar(manifest.status.value)}")
     lines.append("")

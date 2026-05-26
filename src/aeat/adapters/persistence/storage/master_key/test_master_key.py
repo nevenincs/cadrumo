@@ -11,6 +11,8 @@ from pathlib import Path
 
 import pytest
 
+from aeat.tests.secure_sql import dev_test_database_password
+
 from .....core.config import SecretStoreBackend, Settings, override_settings
 from ..bucket._layout import provision_bucket_directory
 from ..bucket._manifest import (
@@ -47,6 +49,14 @@ from ._master_key import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+
+def _test_database_password() -> str:
+    return dev_test_database_password()
+
+
+def _wrong_test_database_password() -> str:
+    return f"{dev_test_database_password()}-wrong"
 
 
 class _InMemoryKeyringClient:
@@ -159,7 +169,7 @@ class TestFileFallbackProvider:
     def test_get_master_key_refuses_unprovisioned_store(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
             provider.get_master_key()
@@ -168,7 +178,7 @@ class TestFileFallbackProvider:
     def test_explicit_provision_mints_and_persists(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
@@ -180,7 +190,7 @@ class TestFileFallbackProvider:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         master_key = provider.provision_master_key()
         bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "alpha" / "bucket.dek.json"
@@ -209,7 +219,7 @@ class TestFileFallbackProvider:
 
         second = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         with (
             override_settings(
@@ -227,7 +237,7 @@ class TestFileFallbackProvider:
         _write_registered_bucket(settings.aeat_local_storage_root, "legacy")
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         master_key = provider.provision_master_key()
 
@@ -253,7 +263,7 @@ class TestFileFallbackProvider:
         )
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "current" / "bucket.dek.json"
@@ -275,7 +285,7 @@ class TestFileFallbackProvider:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         bucket_dek_path = settings.aeat_local_storage_root / "keystore" / "missing" / "bucket.dek.json"
@@ -297,7 +307,7 @@ class TestFileFallbackProvider:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         with (
@@ -317,7 +327,7 @@ class TestFileFallbackProvider:
 
         second = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         with (
             override_settings(
@@ -337,7 +347,7 @@ class TestFileFallbackProvider:
         _write_registered_bucket(settings.aeat_local_storage_root, "short-idle", idle_lock_minutes=3)
         provider = FileFallbackMasterKeyProvider(
             store_dir=settings.aeat_secret_store_dir,
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
 
@@ -358,13 +368,13 @@ class TestFileFallbackProvider:
         """A second provider over the same dir + passphrase recovers the same key."""
         first = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         first_key = first.provision_master_key()
 
         second = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "correct horse battery staple",
+            passphrase_callback=_test_database_password,
         )
         second_key = second.get_master_key()
         assert first_key == second_key
@@ -372,7 +382,7 @@ class TestFileFallbackProvider:
     def test_wrong_passphrase_raises(self, tmp_path: Path) -> None:
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "right-passphrase",
+            passphrase_callback=_test_database_password,
         ).provision_master_key()
 
         # Distinguish passphrase-mismatch from material-missing. Both
@@ -384,25 +394,25 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyPassphraseMismatchError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "wrong-passphrase",
+                passphrase_callback=_wrong_test_database_password,
             ).get_master_key()
 
     def test_wrong_passphrase_inherits_from_master_key_unavailable(self, tmp_path: Path) -> None:
         """Pre-existing `pytest.raises(MasterKeyUnavailableError)` catchers continue to work via inheritance."""
         FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "right-passphrase",
+            passphrase_callback=_test_database_password,
         ).provision_master_key()
 
         # The narrowed subclass still satisfies the parent type.
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "wrong-passphrase",
+                passphrase_callback=_wrong_test_database_password,
             ).get_master_key()
 
     def test_passphrase_via_env_var(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "from-env-var")
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
         provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
         key = provider.provision_master_key()
         assert len(key) == KEY_SIZE
@@ -417,7 +427,7 @@ class TestFileFallbackProvider:
     def test_kdf_params_are_human_readable(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         params_text = (tmp_path / "secrets" / "master.kdf").read_text(encoding="utf-8")
@@ -433,7 +443,7 @@ class TestFileFallbackProvider:
         """The persisted master.key MUST not contain the plaintext key bytes."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         plaintext_key = provider.provision_master_key()
         wrapped = base64.b64decode(
@@ -445,7 +455,7 @@ class TestFileFallbackProvider:
     def test_tampered_master_key_file_raises(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         master_key_path = tmp_path / "secrets" / "master.key"
@@ -456,13 +466,13 @@ class TestFileFallbackProvider:
         with pytest.raises(MasterKeyUnavailableError):
             FileFallbackMasterKeyProvider(
                 store_dir=tmp_path / "secrets",
-                passphrase_callback=lambda: "test-passphrase",
+                passphrase_callback=_test_database_password,
             ).get_master_key()
 
     def test_satisfies_protocol(self, tmp_path: Path) -> None:
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         assert isinstance(provider, MasterKeyProvider)
 
@@ -534,7 +544,7 @@ class TestTornStateGate:
     def store_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         store = tmp_path / "secrets"
         store.mkdir()
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "torn-state-passphrase")
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
         return store
 
     def test_torn_state_master_key_only_raises(
@@ -624,12 +634,13 @@ class TestSecurityHardening:
         """
         from ._master_key import _default_passphrase_callback
 
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "smoke-passphrase")
-        assert _default_passphrase_callback() == "smoke-passphrase"
+        password = dev_test_database_password()
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, password)
+        assert _default_passphrase_callback() == password
         # The env var must survive — subsequent callbacks resolve
         # consistently against the same value.
-        assert os.environ.get(PASSPHRASE_ENV_VAR) == "smoke-passphrase"
-        assert _default_passphrase_callback() == "smoke-passphrase"
+        assert os.environ.get(PASSPHRASE_ENV_VAR) == password
+        assert _default_passphrase_callback() == password
 
     def test_passphrase_env_var_strips_trailing_crlf(
         self,
@@ -637,8 +648,9 @@ class TestSecurityHardening:
     ) -> None:
         from ._master_key import _default_passphrase_callback
 
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "value-with-newline\n")
-        assert _default_passphrase_callback() == "value-with-newline"
+        password = dev_test_database_password()
+        monkeypatch.setenv(PASSPHRASE_ENV_VAR, f"{password}\n")
+        assert _default_passphrase_callback() == password
 
     def test_passphrase_env_var_whitespace_only_rejected(
         self,
@@ -654,7 +666,7 @@ class TestSecurityHardening:
         """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""
         provider = FileFallbackMasterKeyProvider(
             store_dir=tmp_path / "secrets",
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         provider.provision_master_key()
         for name in ("master.key", "master.kdf", "salt"):
@@ -710,7 +722,7 @@ class TestFactory:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         provider = get_master_key_provider(
             settings_override=settings,
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
         with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
@@ -757,7 +769,7 @@ class TestFactory:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
-            passphrase_callback=lambda: "test-passphrase",
+            passphrase_callback=_test_database_password,
             keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)
@@ -787,7 +799,7 @@ class TestFactory:
         with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
             get_master_key_provider(
                 settings_override=settings,
-                passphrase_callback=lambda: "test-passphrase",
+                passphrase_callback=_test_database_password,
                 keyring_client=client,
             )
 
@@ -813,14 +825,14 @@ class TestFactory:
         store_dir = tmp_path / "secrets"
         seed_provider = FileFallbackMasterKeyProvider(
             store_dir=store_dir,
-            passphrase_callback=lambda: "seed-passphrase",
+            passphrase_callback=_test_database_password,
         )
         seed_provider.provision_master_key()
         client = _InMemoryKeyringClient(get=_locked, set_=_locked)
         settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
         provider = get_master_key_provider(
             settings_override=settings,
-            passphrase_callback=lambda: "seed-passphrase",
+            passphrase_callback=_test_database_password,
             keyring_client=client,
         )
         assert isinstance(provider, FileFallbackMasterKeyProvider)

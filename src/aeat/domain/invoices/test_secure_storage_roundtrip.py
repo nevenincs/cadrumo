@@ -75,7 +75,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             invoice_a = _populated_invoice(invoice_number="F-2025-001")
             invoice_b = _populated_invoice(invoice_number="F-2025-002")
@@ -86,7 +86,7 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
                 },
             )
 
-            repo = InvoiceCatalogueRepository()
+            repo = InvoiceCatalogueRepository(objects=objects)
             repo.save(original)
             loaded = repo.load()
 
@@ -114,7 +114,6 @@ def test_invoice_catalogue_survives_encrypted_storage_roundtrip(
 
 def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: mutating an identity-bearing invoice field must surface.
 
@@ -147,16 +146,15 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "invoice-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         engine = create_engine_from_settings(
             Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
             invoice = _populated_invoice(invoice_number="F-2025-001")
             catalogue = InvoiceCatalogue(invoices={invoice.invoice_id: invoice})
-            repo = InvoiceCatalogueRepository()
+            repo = InvoiceCatalogueRepository(objects=objects)
             repo.save(catalogue)
 
             with session_scope(engine) as session:
@@ -179,7 +177,7 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(
             regression_caught = False
             try:
                 repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: mutating invoice_number "

@@ -16,10 +16,12 @@ from ...domain.deadlines import (
     TaxpayerProfile,
 )
 from . import (
+    ApplicabilityVerdict,
     OverviewCalendar,
     OverviewCalendarEntry,
     OverviewCalendarRange,
     OverviewPeriodState,
+    TaxRoute,
     build_overview_calendar,
     user_state_for,
 )
@@ -774,6 +776,61 @@ def test_calendar_natural_person_shows_irpf_not_corporate() -> None:
     assert surfaced.isdisjoint({"200", "202"})
 
 
+def test_calendar_derivation_selects_irpf_calculations_and_rate_schedules() -> None:
+    """A natural-person route exposes IRPF calculations and tariff refs."""
+
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2025, 7, 1))
+
+    assert cal.tax_route is TaxRoute.IRPF
+    selected_modelos = {selection.modelo for selection in cal.calculation_selections}
+    assert {"100", "130", "303"} <= selected_modelos
+    assert selected_modelos.isdisjoint({"200", "202"})
+    for selection in cal.calculation_selections:
+        assert selection.verdict is ApplicabilityVerdict.APPLICABLE
+        assert selection.legal_refs
+        assert selection.source_refs
+
+    rate_parameters = {resolution.parameter_id: resolution for resolution in cal.rate_schedule_resolutions}
+    for parameter_id in (
+        "renta-2025-escala-estatal-base-general",
+        "renta-2025-escala-estatal-base-ahorro",
+        "renta-2025-escala-autonomica-base-ahorro",
+    ):
+        resolution = rate_parameters[parameter_id]
+        assert resolution.filing_year == 2025
+        assert resolution.modelo == "100"
+        assert resolution.data_type == "bracket_table"
+        assert resolution.legal_refs
+        assert resolution.source_refs
+    assert any(
+        resolution.selector == "renta-profile-tax-residence-ccaa"
+        for resolution in cal.rate_schedule_resolutions
+    )
+
+
+def test_calendar_derivation_selects_is_rate_for_legal_entity_form() -> None:
+    """A legal-entity route selects IS calculations and the LIS rate parameter."""
+
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 7, 1))
+
+    assert cal.tax_route is TaxRoute.IMPUESTO_SOCIEDADES
+    selected_modelos = {selection.modelo for selection in cal.calculation_selections}
+    assert {"200", "202"} <= selected_modelos
+    assert selected_modelos.isdisjoint({"100", "130", "131"})
+
+    assert len(cal.rate_schedule_resolutions) == 1
+    resolution = cal.rate_schedule_resolutions[0]
+    assert resolution.filing_year == 2025
+    assert resolution.modelo == "200"
+    assert resolution.parameter_id == "is.modelo-200.tipo-gravamen-general"
+    assert resolution.selector == "legal_entity_form"
+    assert resolution.selector_value == "sl"
+    assert "ley-27-2014:art-29" in resolution.legal_refs
+    assert resolution.source_refs
+
+
 def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     """An attribution entity's calendar lists no IS and no IRPF cuota.
 
@@ -794,6 +851,38 @@ def test_calendar_attribution_entity_is_shown_no_cuota_obligation() -> None:
     # not refuse with an INCOMPLETE.
     assert cal.taxpayer_model_declared is True
     assert cal.incomplete_reason is None
+    assert cal.tax_route is TaxRoute.ATTRIBUTION_PASS_THROUGH
+    assert {selection.modelo for selection in cal.calculation_selections}.isdisjoint(
+        {"100", "130", "131", "200", "202"}
+    )
+    assert cal.rate_schedule_resolutions == ()
+
+
+def test_calendar_derivation_resolves_rate_schedules_for_each_covered_year() -> None:
+    """A multi-year window carries unambiguous per-year rate refs."""
+
+    rng = OverviewCalendarRange(from_date=date(2024, 10, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_profile(), rng, today=date(2025, 7, 1))
+
+    years = {resolution.filing_year for resolution in cal.rate_schedule_resolutions}
+    assert {2024, 2025} <= years
+    by_year = {
+        (resolution.filing_year, resolution.parameter_id)
+        for resolution in cal.rate_schedule_resolutions
+    }
+    assert (2024, "renta-2024-escala-estatal-base-general") in by_year
+    assert (2025, "renta-2025-escala-estatal-base-general") in by_year
+
+
+def test_calendar_derivation_undeclared_profile_never_defaults_tax_route() -> None:
+    """An undeclared model has no calculation selection or rate refs."""
+
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_undeclared_profile(), rng, today=date(2025, 7, 1))
+
+    assert cal.tax_route is TaxRoute.INCOMPLETE
+    assert cal.calculation_selections == ()
+    assert cal.rate_schedule_resolutions == ()
 
 
 # ---------------------------------------------------------------------

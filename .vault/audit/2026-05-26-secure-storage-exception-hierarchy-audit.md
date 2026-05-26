@@ -30,6 +30,7 @@ Audited secure-storage exception classes for derivation from the central AEAT ex
 - Pass: `StorageError`, `PersistenceError`, `RepositoryError`, bucket lifecycle errors, master-key errors, blob errors, crypto errors, retention errors, and validation errors derive through AEAT base classes rather than bare `Exception`.
 - Pass: `StorageValidationError` and `PathContainmentError` retain `ValueError` compatibility while also deriving from AEAT storage bases.
 - Review: the only direct `Exception` class found under the storage tree is a test-local helper in `src/aeat/adapters/persistence/storage/blob_store/test_materialisation.py`; it is not a production exception type.
+- Pass: central registry enforcement later exposed an adjacent bucket event-history domain gap. The bucket domain error family is now registry-bound with locale-backed keys, and no new deprecated `aeat config init` or `aeat security` surface was introduced.
 
 ## Remaining Work
 
@@ -38,5 +39,7 @@ No base-class remediation is required from this audit. `W11.P18.S72` remains ope
 ## Validation
 
 `uv run pytest src/aeat/core/errors/test_registry_enforcement.py -q` reported 4 passed.
+
+`uv run python -m aeat.locales scaffold --check` and `uv run python -m aeat.locales audit` reported `ok` for every locale after the bucket-domain registry repair.
 
 The audit also enumerated secure-storage `AeatError` subclasses and confirmed each has a bound registry code.

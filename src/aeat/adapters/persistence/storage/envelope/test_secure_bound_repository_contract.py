@@ -24,16 +24,12 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 
 from .. import SensitivityClass
-from ..sql import SecureObjectRepository
-from ..sql._orm import Base
-from ..sql.engine import create_engine_from_settings
 from ._repository_test_suite import (
     EXPECTED_CHECK_COUNT,
     SecureRepositoryContractCase,
     assert_secure_repository_contract,
 )
 from ._secure_repository import SecureBoundRepository
-from .....core.config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -66,7 +62,6 @@ class _DummyRepository(SecureBoundRepository[_DummyPayload]):
 
 def test_dummy_repository_satisfies_secure_contract(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The dummy ``SecureBoundRepository`` honours every contract check."""
 
@@ -87,7 +82,6 @@ def test_dummy_repository_satisfies_secure_contract(
     executed = assert_secure_repository_contract(
         case,
         tmp_path=tmp_path,
-        monkeypatch=monkeypatch,
     )
     assert executed == EXPECTED_CHECK_COUNT, (
         f"contract suite executed {executed} checks; expected "
@@ -113,20 +107,30 @@ def test_expected_check_count_matches_published_canon() -> None:
 def test_dummy_repository_engine_is_real_sqlite(tmp_path: Path) -> None:
     """Sanity gate: the contract harness builds a real SQLite engine.
 
-    No mocks, no fakes; if this ever returns something other than a
-    SQLAlchemy engine wired to the on-disk file, every contract
-    check above becomes suspect.
+    No mocks, no fakes: the repository writes through the active
+    profile-bucket route and the on-disk database file appears under
+    the bucket hierarchy.
     """
 
     from sqlalchemy.engine import Engine
 
-    db_path = tmp_path / "sanity.db"
-    engine = create_engine_from_settings(
-        Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-    )
-    try:
-        assert isinstance(engine, Engine)
-        Base.metadata.create_all(engine)
-        assert SecureObjectRepository(engine=engine) is not None
-    finally:
-        engine.dispose()
+    from .....core.config import override_settings
+    from .. import EphemeralMasterKeyProvider
+    from ..sql.engine import create_engine_from_settings, dispose_engine
+
+    bucket_id = "contract-sanity"
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=bucket_id) as settings,
+        EphemeralMasterKeyProvider(),
+    ):
+        engine = create_engine_from_settings(settings)
+        try:
+            assert isinstance(engine, Engine)
+            repo = _DummyRepository()
+            payload = _DummyPayload(id="sanity", value=1, label="active-bucket")
+            repo.save(payload)
+            assert repo.load("sanity") == payload
+            assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").exists()
+        finally:
+            engine.dispose()
+            dispose_engine(settings)

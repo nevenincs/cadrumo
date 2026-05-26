@@ -70,6 +70,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._operator.AuthProviderReservedError",
+        ErrorCode(
+            code="REFUSED_AUTH_PROVIDER_RESERVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_provider_reserved",
+            default_suggestion="aeat config auth providers",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._operator.AuthConfigureDanglingActiveProfileError",
+        ErrorCode(
+            code="REFUSED_AUTH_CONFIGURE_DANGLING_ACTIVE_PROFILE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_configure_dangling_active_profile",
+            default_suggestion="aeat config repair profile",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._acquisition_lock.AuthAcquisitionLockedError",
         ErrorCode(
             code="LOCKED_AUTH_ACQUISITION",
@@ -77,6 +99,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             message_key="errors.locked.locked_auth_acquisition",
             default_suggestion="aeat config status --format json",
             retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_wallet_reconciliation.IvaCompensationReconciliationInputError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_RECONCILIATION_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_compensation_reconciliation_input",
+            default_suggestion="aeat app live iva-wallet history",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_compensation_carry_forward_policy",
+            default_suggestion="aeat app modelo history list --modelo 303",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.storage.calc_sheets._translator.TranslationError",
+        ErrorCode(
+            code="ERROR_CALC_SHEETS_TRANSLATION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calc_sheets_translation",
+            default_suggestion="aeat app registry verify",
+            retryable=False,
             runbook_id=None,
         ),
     ),
@@ -328,7 +383,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_SESSION_CORRUPT",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_session_corrupt",
-            default_suggestion="aeat config auth test --provider certificate",
+            default_suggestion="aeat config auth clear --sessions",
             retryable=False,
             runbook_id=None,
         ),

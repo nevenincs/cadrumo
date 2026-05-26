@@ -93,6 +93,20 @@ class LocaleManager:
                     keys.add(path)
         return keys
 
+    def get_parity_keys(self) -> set[str]:
+        """Return the locale-key set required for inter-locale parity."""
+
+        keys = self.get_codebase_keys()
+        namespace_prefixes = tuple(
+            marker.rstrip("*").rstrip(".")
+            for marker in self.get_codebase_namespaces()
+            if marker.rstrip("*").rstrip(".")
+        )
+        for locale_path in self.locales_dir.glob("*.yml"):
+            data = self.load_locale(locale_path)
+            keys.update(key for key in self.get_yaml_keys(data) if _covered_by_namespace(key, namespace_prefixes))
+        return keys
+
     def load_locale(self, path: Path) -> dict[str, LocaleNode]:
         """Load a locale YAML file strictly, failing on duplicates."""
         with open(path, encoding="utf-8") as f:
@@ -126,9 +140,9 @@ class LocaleManager:
             _set_nested_leaf(new_data, key, existing_flat[key])
         return new_data
 
-    def scaffold(self) -> None:
+    def scaffold(self, *, sync_locale_parity: bool = False) -> None:
         """Parse codebase, generate locale files, auto-sort, and prune extra keys."""
-        codebase_keys = self.get_codebase_keys()
+        codebase_keys = self.get_parity_keys() if sync_locale_parity else self.get_codebase_keys()
         namespace_prefixes = tuple(
             marker.rstrip("*").rstrip(".")
             for marker in self.get_codebase_namespaces()

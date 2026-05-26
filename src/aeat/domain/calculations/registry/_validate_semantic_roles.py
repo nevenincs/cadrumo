@@ -245,6 +245,8 @@ _SEMANTIC_ROLE_AXIS_SUFFIXES: tuple[tuple[str, ...], ...] = (
     ("temporaria", "ejercicio", "disminucion"),
     ("temporaria", "anteriores", "aumento"),
     ("temporaria", "anteriores", "disminucion"),
+    ("saldo", "inicial"),
+    ("saldo", "final"),
     ("saldo", "inicial", "aumento"),
     ("saldo", "final", "aumento"),
 )
@@ -260,9 +262,11 @@ def _semantic_roles_are_axis_siblings(left: str, right: str) -> bool:
         and left_axis != right_axis
     ):
         return True
-    if _semantic_roles_are_legal_reference_siblings(left, right):
+    if _semantic_roles_are_anexo_c_carryforward_siblings(left, right):
         return True
-    if _semantic_roles_are_ccaa_siblings(left, right):
+    if _semantic_roles_are_deferred_imputation_slot_siblings(left, right):
+        return True
+    if _semantic_roles_are_family_local_generated_pending_siblings(left, right):
         return True
     return _semantic_roles_are_axis_token_siblings(left, right)
 
@@ -292,7 +296,7 @@ _SEMANTIC_ROLE_AXIS_TOKEN_GROUPS: tuple[frozenset[str], ...] = (
 )
 
 _SEMANTIC_ROLE_OPTIONAL_AXIS_TOKENS: frozenset[str] = frozenset(
-    {"sin", "agr", "pub", "coti", "aav", "b", "anio", "precio"}
+    {"agr", "pub", "aav", "b", "anio", "precio"}
 )
 
 
@@ -331,83 +335,124 @@ def _strip_semantic_role_optional_axis_tokens(parts: tuple[str, ...]) -> tuple[s
     )
 
 
-_SEMANTIC_ROLE_CCAA_TOKENS: frozenset[str] = frozenset(
+_ANEXO_C_CARRYFORWARD_STATE_SUFFIXES: tuple[tuple[str, ...], ...] = (
+    ("pendiente", "inicio"),
+    ("pendiente", "fin"),
+    ("aplicado",),
+    ("generado",),
+)
+
+_ANEXO_C_CARRYFORWARD_BASKETS: frozenset[tuple[str, ...]] = frozenset(
     {
-        "andalucia",
-        "aragon",
-        "asturias",
-        "baleares",
-        "canarias",
-        "cantabria",
-        "galicia",
-        "madrid",
-        "murcia",
+        ("saldo", "neg", "gyp", "general"),
+        ("saldo", "neg", "gyp", "ahorro"),
+        ("rdto", "cm", "negativo"),
+        ("exceso", "sps", "rt"),
+        ("exceso", "scd"),
+        ("exceso", "sps", "disc", "propias"),
+        ("exceso", "sps", "disc", "parientes"),
+        ("exceso", "patrim", "protegido"),
+        ("exceso", "deportistas"),
+        ("base", "liq", "neg"),
+        ("exceso", "eeficiencia"),
     }
 )
 
 
-def _semantic_roles_are_ccaa_siblings(left: str, right: str) -> bool:
-    left_parts = tuple(left.split("_"))
-    right_parts = tuple(right.split("_"))
-    left_normalised = _normalise_semantic_role_ccaa_tokens(left_parts)
-    right_normalised = _normalise_semantic_role_ccaa_tokens(right_parts)
-    return (
-        left_normalised == right_normalised
-        and (left_normalised != left_parts or right_normalised != right_parts)
-        and left_parts != right_parts
-    )
+def _semantic_roles_are_anexo_c_carryforward_siblings(left: str, right: str) -> bool:
+    left_stem = _normalise_anexo_c_carryforward_role(left)
+    right_stem = _normalise_anexo_c_carryforward_role(right)
+    return left_stem is not None and left_stem == right_stem and left != right
 
 
-def _normalise_semantic_role_ccaa_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
-    normalised: list[str] = []
-    index = 0
-    while index < len(parts):
-        part = parts[index]
-        if part == "c" and index + 1 < len(parts) and parts[index + 1] == "valenciana":
-            normalised.append("ccaa")
-            index += 2
+def _normalise_anexo_c_carryforward_role(role: str) -> tuple[str, ...] | None:
+    parts = tuple(role.split("_"))
+    if len(parts) < 5 or parts[:3] != ("irpf", "anexo", "c"):
+        return None
+    for suffix in _ANEXO_C_CARRYFORWARD_STATE_SUFFIXES:
+        if len(parts) <= len(suffix):
             continue
-        if part == "la" and index + 1 < len(parts) and parts[index + 1] == "rioja":
-            normalised.append("ccaa")
-            index += 2
+        if parts[-len(suffix):] != suffix:
             continue
-        if part in _SEMANTIC_ROLE_CCAA_TOKENS:
-            normalised.append("ccaa")
-            index += 1
-            continue
-        normalised.append(part)
-        index += 1
-    return tuple(normalised)
+        basket = parts[3 : -len(suffix)]
+        if basket in _ANEXO_C_CARRYFORWARD_BASKETS:
+            return parts[: -len(suffix)]
+    return None
 
 
-def _semantic_roles_are_legal_reference_siblings(left: str, right: str) -> bool:
-    left_parts = tuple(left.split("_"))
-    right_parts = tuple(right.split("_"))
-    left_stripped = _strip_semantic_role_legal_reference_tokens(left_parts)
-    right_stripped = _strip_semantic_role_legal_reference_tokens(right_parts)
-    return (
-        left_stripped == right_stripped
-        and (left_stripped != left_parts or right_stripped != right_parts)
-        and left_parts != right_parts
-    )
+_DEFERRED_IMPUTATION_BRANCH_PREFIXES: frozenset[tuple[str, ...]] = frozenset(
+    {
+        ("irpf", "ganancia", "otros"),
+        ("irpf", "perdida", "otros"),
+        ("irpf", "ganancia", "cripto"),
+        ("irpf", "perdida", "cripto"),
+        ("irpf", "ganancia", "inmueble"),
+        ("irpf", "perdida", "inmueble"),
+    }
+)
+
+_DEFERRED_IMPUTATION_FIELD_SUFFIXES: frozenset[tuple[str, ...]] = frozenset(
+    {
+        ("anio", "imputacion"),
+        ("importe", "percibir"),
+        ("ganancia", "pendiente"),
+        ("pendiente",),
+    }
+)
 
 
-def _strip_semantic_role_legal_reference_tokens(parts: tuple[str, ...]) -> tuple[str, ...]:
-    stripped: list[str] = []
-    index = 0
-    while index < len(parts):
-        part = parts[index]
-        if part.startswith("art"):
-            index += 1
-            while index < len(parts) and parts[index].isdigit():
-                index += 1
+def _semantic_roles_are_deferred_imputation_slot_siblings(left: str, right: str) -> bool:
+    left_stem = _normalise_deferred_imputation_slot_role(left)
+    right_stem = _normalise_deferred_imputation_slot_role(right)
+    return left_stem is not None and left_stem == right_stem and left != right
+
+
+def _normalise_deferred_imputation_slot_role(role: str) -> tuple[str, ...] | None:
+    parts = tuple(role.split("_"))
+    if len(parts) < 4 or parts[:3] not in _DEFERRED_IMPUTATION_BRANCH_PREFIXES:
+        return None
+    normalised = parts
+    if normalised[-1].isdigit() or normalised[-1] == "resto":
+        normalised = normalised[:-1]
+    if len(normalised) >= 5 and normalised[-2:] == ("pendiente", "imputacion"):
+        normalised = normalised[:-1]
+    return normalised if normalised[3:] in _DEFERRED_IMPUTATION_FIELD_SUFFIXES else None
+
+
+_FAMILY_LOCAL_GENERATED_PENDING_BASES: frozenset[tuple[str, ...]] = frozenset(
+    {
+        ("irpf", "deduccion", "c", "valenciana", "autoconsumo"),
+        ("irpf", "deduccion", "murcia", "infraestructuras"),
+        ("irpf", "deduccion", "madrid", "nuevos", "contribuyentes"),
+    }
+)
+
+_FAMILY_LOCAL_GENERATED_PENDING_SUFFIXES: tuple[tuple[str, ...], ...] = (
+    ("generado",),
+    ("pendiente",),
+    ("2025", "generado"),
+    ("2025", "pendiente"),
+    ("2024", "pendiente"),
+)
+
+
+def _semantic_roles_are_family_local_generated_pending_siblings(left: str, right: str) -> bool:
+    left_base = _normalise_family_local_generated_pending_role(left)
+    right_base = _normalise_family_local_generated_pending_role(right)
+    return left_base is not None and left_base == right_base and left != right
+
+
+def _normalise_family_local_generated_pending_role(role: str) -> tuple[str, ...] | None:
+    parts = tuple(role.split("_"))
+    for suffix in _FAMILY_LOCAL_GENERATED_PENDING_SUFFIXES:
+        if len(parts) <= len(suffix):
             continue
-        if part.startswith("dt") or part in {"rdleg", "lis"}:
-            index += 1
+        if parts[-len(suffix):] != suffix:
             continue
-        stripped.append(part)
-        index += 1
-    return tuple(stripped)
+        base = parts[: -len(suffix)]
+        if base in _FAMILY_LOCAL_GENERATED_PENDING_BASES:
+            return base
+    return None
 
 
 # Plan C W05 validator hard-flip surface (semantic_role requirement).

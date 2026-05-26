@@ -172,6 +172,25 @@ def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path
     assert "work revision" in confirmation
 
 
+def test_modelo_export_unverified_work_unit_points_to_work_verify(_isolated_cli_backend: Path) -> None:
+    """Export recovery must name the real verification command.
+
+    The export verb lives at ``app modelo export`` but verification is
+    under ``app modelo work verify``. The old hint named a non-existent
+    ``app modelo verify`` command and sent operators into a dead end.
+    """
+
+    _create_profile()
+    work_unit_id = _create_calculable_work_unit()
+
+    result = _invoke(["app", "modelo", "export", work_unit_id, "--output", "modelo-303.txt"])
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "aeat app modelo work verify" in result.output
+    assert "aeat app modelo verify" not in result.output
+
+
 def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Path) -> None:
     """`work revision <id>` shows a stored revision's persisted casilla
     values without recomputing - the operator can re-inspect a saved

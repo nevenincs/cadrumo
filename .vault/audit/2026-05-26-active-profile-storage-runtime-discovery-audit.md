@@ -2,7 +2,6 @@
 tags:
   - '#audit'
   - '#secure-storage-production-hardening'
-  - '#profile-lifecycle'
 date: '2026-05-26'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'

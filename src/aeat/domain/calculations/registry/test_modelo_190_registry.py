@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -57,6 +58,44 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         "portal",
         "workflow",
     } <= linked_surfaces
+
+
+def test_modelo_190_2024_revision_resolves_against_2024_legal_sources() -> None:
+    modelo, catalogues = _load_modelo("190")
+
+    snapshot = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2024,
+        period="0A",
+    )
+
+    assert snapshot.revision.id == "2024"
+    assert "orden-hac-1432-2024:df-unica" in snapshot.revision.legal_refs
+    assert "orden-hac-1431-2025:art-2" not in snapshot.revision.legal_refs
+    assert "aeat-dr-190-2024" in snapshot.revision.source_refs
+    assert "boe-modelo-190-2024-amendment" in snapshot.revision.source_refs
+    assert {casilla.number for casilla in snapshot.revision.casillas} == {"136-144", "145-160", "161-175"}
+    assert snapshot.revision.period_selector.years == (2024,)
+    assert snapshot.revision.period_selector.periods == ("0A",)
+
+
+def test_modelo_190_2024_record_design_contains_registered_summary_fields() -> None:
+    _, catalogues = _load_modelo("190")
+    source = catalogues.sources["aeat-dr-190-2024"]
+    source_path = Path(bundled_path()) / source.corpus_path
+
+    text = _extract_pdf_text(source_path)
+
+    assert "Modelo 190 (2024)" in text
+    assert "136-144" in text
+    assert "NÚMERO TOTAL DE PERCEPCIONES" in text
+    assert "145-160" in text
+    assert "IMPORTE TOTAL DE LAS PERCEPCIONES" in text
+    assert "161-175" in text
+    assert "IMPORTE TOTAL DE LAS RETENCIONES E" in text
+    assert "INGRESOS A CUENTA" in text
 
 
 def test_modelo_190_relations_resolve_against_modelo_111_registry() -> None:
@@ -158,3 +197,24 @@ def _value_for(data_type: str, input_kind: str, period_index: int) -> Decimal:
     if data_type == "integer":
         return quarter
     return Decimal("10") * quarter
+
+
+def _extract_pdf_text(path: Path) -> str:
+    import pypdfium2 as pdfium
+
+    pdf = pdfium.PdfDocument(str(path))
+    pages: list[str] = []
+    try:
+        for index in range(min(len(pdf), 8)):
+            page = pdf[index]
+            try:
+                text_page = page.get_textpage()
+                try:
+                    pages.append(text_page.get_text_range())
+                finally:
+                    text_page.close()
+            finally:
+                page.close()
+    finally:
+        pdf.close()
+    return "\n".join(pages)

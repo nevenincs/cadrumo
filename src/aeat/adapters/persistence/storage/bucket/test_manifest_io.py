@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage.bucket._layout import provision_bucket_directory
 from aeat.adapters.persistence.storage.bucket._manifest import (
+    BucketKeySchedule,
     BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
@@ -76,6 +77,28 @@ def test_round_trip_preserves_absent_last_unlocked(tmp_path: Path) -> None:
     loaded = read_manifest(paths)
 
     assert loaded.last_unlocked_at is None
+    assert loaded == manifest
+
+
+def test_round_trip_preserves_bucket_idle_lock_override(tmp_path: Path) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    manifest = _fixture_manifest().model_copy(update={"idle_lock_minutes": 3})
+
+    write_manifest(paths, manifest)
+    loaded = read_manifest(paths)
+
+    assert loaded.idle_lock_minutes == 3
+    assert loaded == manifest
+
+
+def test_round_trip_preserves_bucket_key_schedule_marker(tmp_path: Path) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    manifest = _fixture_manifest().model_copy(update={"key_schedule": BucketKeySchedule.BUCKET_DEK_V1})
+
+    write_manifest(paths, manifest)
+    loaded = read_manifest(paths)
+
+    assert loaded.key_schedule is BucketKeySchedule.BUCKET_DEK_V1
     assert loaded == manifest
 
 

@@ -20,41 +20,54 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.application.modelo import calculate_modelo_revision, create_work_unit
+from aeat.application.modelo._actions import _resolve_declaration_period_inputs
 from aeat.core.config import override_settings
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
+from aeat.domain.calculations.registry import CasillaDefinition, ModeloRevision
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _CLOCK = datetime(2026, 5, 21, 9, 0, 0, tzinfo=UTC)
+_BUCKET_ID = "operator"
+_KEK = b"d" * 32
+_DEK = b"p" * 32
 
 
 @contextmanager
-def _secure_backend(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    with provider, override_settings(
-        aeat_database_url=f"sqlite:///{(tmp_path / 'declaration-period.db').as_posix()}",
-        aeat_active_profile="operator",
-    ) as settings:
-        engine = get_engine(settings)
-        SecureObjectRepository(engine=engine)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+def _secure_backend(tmp_path: Path) -> Iterator:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with activate_session(_session()):
+            try:
+                yield settings
+            finally:
+                dispose_engine(settings)
 
 
-def _repositories():
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _repositories(settings):
+    objects = SecureObjectRepository(engine=get_engine(settings))
     return (
-        WorkUnitCatalogueRepository(),
-        CalculationRevisionCatalogueRepository(),
-        BucketEventHistoryRepository(),
+        WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID),
+        CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID),
+        BucketEventHistoryRepository(objects=objects),
     )
 
 
@@ -69,11 +82,11 @@ def _modelo_303_engine_inputs() -> dict[str, Decimal]:
 
 
 def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path: Path):
-    with _secure_backend(tmp_path):
+    with _secure_backend(tmp_path) as settings:
         snapshot = resources().modelos.authority.snapshot("303", filing_year=filing_year, period=period)
-        work_repo, calc_repo, event_repo = _repositories()
+        work_repo, calc_repo, event_repo = _repositories(settings)
         work_unit = create_work_unit(
-            bucket_id="operator",
+            bucket_id=_BUCKET_ID,
             modelo="303",
             filing_year=filing_year,
             period=period,
@@ -177,3 +190,64 @@ def test_modelo_303_declaration_year_distinguishes_two_filing_years(tmp_path: Pa
         revision_2024.casilla_values["decl.ejercicio"]
         != revision_2026.casilla_values["decl.ejercicio"]
     )
+
+
+@pytest.mark.parametrize(
+    ("modelo", "filing_year", "period", "expected_year", "expected_period"),
+    [
+        ("111", 2026, "03", Decimal("2026"), Decimal("3")),
+        ("100", 2025, "0A", Decimal("2025"), Decimal("0")),
+    ],
+)
+def test_declaration_period_resolution_covers_non_303_period_families(
+    modelo: str,
+    filing_year: int,
+    period: str,
+    expected_year: Decimal,
+    expected_period: Decimal,
+) -> None:
+    """The period resolver is not coupled to Modelo 303's quarterly graph."""
+
+    snapshot = resources().modelos.authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+    )
+    revision = _revision_with_declaration_period_casillas(snapshot.revision)
+
+    resolved = _resolve_declaration_period_inputs(
+        revision,
+        filing_year=filing_year,
+        period=period,
+    )
+
+    assert resolved["decl.test.ejercicio"] == expected_year
+    assert resolved["decl.test.periodo"] == expected_period
+
+
+def _revision_with_declaration_period_casillas(revision: ModeloRevision) -> ModeloRevision:
+    declaration_casillas = (
+        CasillaDefinition(
+            id="decl.test.ejercicio",
+            number="9998",
+            label="Synthetic declaration year",
+            section=("synthetic",),
+            data_type="year",
+            input_kind="informational",
+            semantic_role="filing_year",
+            legal_refs=revision.legal_refs,
+            source_refs=revision.source_refs,
+        ),
+        CasillaDefinition(
+            id="decl.test.periodo",
+            number="9999",
+            label="Synthetic declaration period",
+            section=("synthetic",),
+            data_type="period_code",
+            input_kind="informational",
+            semantic_role="filing_period",
+            legal_refs=revision.legal_refs,
+            source_refs=revision.source_refs,
+        ),
+    )
+    return revision.model_copy(update={"casillas": (*revision.casillas, *declaration_casillas)})

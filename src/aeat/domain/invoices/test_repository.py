@@ -16,6 +16,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy.engine import Engine
 
 from aeat.adapters.persistence.storage import (
     EncryptedBlobStore,
@@ -23,6 +24,8 @@ from aeat.adapters.persistence.storage import (
     SecretStore,
     override_secret_store,
 )
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
+from aeat.core.config import Settings
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
 from aeat.domain.invoices._repository import InvoiceCatalogueRepository
@@ -39,10 +42,13 @@ from aeat.domain.transactions._repository import TransactionCatalogueRepository
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
-@pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
+@pytest.fixture
+def secure_engine(tmp_path: Path) -> Iterator[Engine]:
     provider = EphemeralMasterKeyProvider()
     with provider:
+        engine = create_engine_from_settings(
+            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+        )
         blob_store = EncryptedBlobStore(
             root_dir=tmp_path / "blobs",
             master_key_provider=provider,
@@ -54,9 +60,27 @@ def _patch_master_key(tmp_path: Path) -> Iterator[None]:
         )
         override_secret_store(secret_store)
         try:
-            yield
+            yield engine
         finally:
             override_secret_store(None)
+            engine.dispose()
+
+
+@pytest.fixture
+def secure_objects(secure_engine: Engine) -> SecureObjectRepository:
+    return SecureObjectRepository(engine=secure_engine)
+
+
+def _invoice_repo(objects: SecureObjectRepository) -> InvoiceCatalogueRepository:
+    return InvoiceCatalogueRepository(objects=objects)
+
+
+def _transaction_repo(
+    objects: SecureObjectRepository,
+    *,
+    bucket_id: str = "test",
+) -> TransactionCatalogueRepository:
+    return TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
 
 
 def _invoice(invoice_number: str = "INV-001") -> Invoice:
@@ -116,42 +140,42 @@ def _transaction(provider_id: str = "row-1") -> Transaction:
 class TestInvoiceCatalogueRoundTrip:
     """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
 
-    def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
-        catalogue = InvoiceCatalogueRepository().load()
+    def test_empty_catalogue_loads_when_nothing_persisted(self, secure_objects: SecureObjectRepository) -> None:
+        catalogue = _invoice_repo(secure_objects).load()
         assert len(catalogue) == 0
 
-    def test_exists_is_false_when_nothing_persisted(self) -> None:
-        assert InvoiceCatalogueRepository().exists() is False
+    def test_exists_is_false_when_nothing_persisted(self, secure_objects: SecureObjectRepository) -> None:
+        assert _invoice_repo(secure_objects).exists() is False
 
-    def test_single_invoice_round_trip_preserves_model(self) -> None:
+    def test_single_invoice_round_trip_preserves_model(self, secure_objects: SecureObjectRepository) -> None:
         invoice = _invoice()
         original = InvoiceCatalogue.from_invoices([invoice])
-        InvoiceCatalogueRepository().save(original)
+        _invoice_repo(secure_objects).save(original)
 
-        reloaded = InvoiceCatalogueRepository().load()
+        reloaded = _invoice_repo(secure_objects).load()
         assert reloaded == original
 
-    def test_multi_invoice_round_trip_preserves_order_and_values(self) -> None:
+    def test_multi_invoice_round_trip_preserves_order_and_values(self, secure_objects: SecureObjectRepository) -> None:
         invoices = [
             _invoice(invoice_number="INV-001"),
             _invoice(invoice_number="INV-002"),
             _invoice(invoice_number="INV-003"),
         ]
         original = InvoiceCatalogue.from_invoices(invoices)
-        InvoiceCatalogueRepository().save(original)
+        _invoice_repo(secure_objects).save(original)
 
-        reloaded = InvoiceCatalogueRepository().load()
+        reloaded = _invoice_repo(secure_objects).load()
         assert reloaded == original
         assert tuple(reloaded.values()) == tuple(original.values())
 
-    def test_resave_overwrites_atomically(self) -> None:
+    def test_resave_overwrites_atomically(self, secure_objects: SecureObjectRepository) -> None:
         first = InvoiceCatalogue.from_invoices([_invoice("INV-A")])
         second = InvoiceCatalogue.from_invoices([_invoice("INV-B")])
-        repo = InvoiceCatalogueRepository()
+        repo = _invoice_repo(secure_objects)
         repo.save(first)
         repo.save(second)
 
-        reloaded = InvoiceCatalogueRepository().load()
+        reloaded = _invoice_repo(secure_objects).load()
         invoice_numbers = {invoice.invoice_number for invoice in reloaded.values()}
         assert invoice_numbers == {"INV-B"}
 
@@ -159,22 +183,22 @@ class TestInvoiceCatalogueRoundTrip:
 class TestTransactionCatalogueRoundTrip:
     """Save ÔåÆ fresh repository ÔåÆ load must yield a value-equal catalogue."""
 
-    def test_empty_catalogue_loads_when_nothing_persisted(self) -> None:
-        catalogue = TransactionCatalogueRepository(bucket_id="test").load()
+    def test_empty_catalogue_loads_when_nothing_persisted(self, secure_objects: SecureObjectRepository) -> None:
+        catalogue = _transaction_repo(secure_objects).load()
         assert len(catalogue) == 0
 
-    def test_single_transaction_round_trip_preserves_model(self) -> None:
+    def test_single_transaction_round_trip_preserves_model(self, secure_objects: SecureObjectRepository) -> None:
         transaction = _transaction()
         original = TransactionCatalogue.from_transactions([transaction])
-        TransactionCatalogueRepository(bucket_id="test").save(original)
+        _transaction_repo(secure_objects).save(original)
 
-        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
+        reloaded = _transaction_repo(secure_objects).load()
         assert reloaded == original
 
-    def test_multi_transaction_round_trip_preserves_values(self) -> None:
+    def test_multi_transaction_round_trip_preserves_values(self, secure_objects: SecureObjectRepository) -> None:
         transactions = [_transaction(provider_id=f"row-{i}") for i in range(3)]
         original = TransactionCatalogue.from_transactions(transactions)
-        TransactionCatalogueRepository(bucket_id="test").save(original)
+        _transaction_repo(secure_objects).save(original)
 
-        reloaded = TransactionCatalogueRepository(bucket_id="test").load()
+        reloaded = _transaction_repo(secure_objects).load()
         assert reloaded == original

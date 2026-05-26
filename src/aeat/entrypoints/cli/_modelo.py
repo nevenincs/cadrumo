@@ -256,6 +256,7 @@ def modelo_readiness(
         f"revision_id\t{revision_id}",
         f"filing_year\t{filing_year}",
         f"period\t{period or ''}",
+        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
         f"missing\t{len(report.missing)}",
@@ -366,6 +367,7 @@ def casillas(
                 f"{row.casilla_id}\t{row.number}\t{row.input_kind}\t{str(row.required).lower()}\t{row.label}"
                 for row in report.rows
             ],
+            *_manual_input_guidance(modelo, required=required, rows_present=bool(report.rows)),
         ],
     )
 
@@ -389,6 +391,7 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "ledger_iva_aggregation": "ledger source",
     "ledger_oss_aggregation": "ledger source",
     "ledger_renta_expense_aggregation": "ledger source",
+    "profile": "profile fact",
     "profile_fact": "profile fact",
     "bucket_state": "bucket",
     "waiver": "waiver",
@@ -399,10 +402,9 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
 def _readiness_for_source(source: str) -> str:
     """Return the readiness category for ``source``.
 
-    Unknown sources fall back to ``"ledger source"`` because every
-    registered source kind today is bucket / ledger-derived. If a
-    new source is added without a readiness mapping the fallback is
-    still operator-readable; stricter exhaustiveness belongs in the
+    Unknown sources fall back to ``"ledger source"`` to preserve the
+    legacy text-mode display for source kinds that predate this CLI
+    vocabulary. Stricter exhaustiveness belongs in the
     bindings-resolution layer.
     """
     return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
@@ -942,6 +944,24 @@ def formulas(
 ) -> None:
     report = _run_query(lambda: _service().formulas(modelo, period=period, as_of=_as_of(as_of)))
     if explain:
+        legal_commands = tuple(
+            dict.fromkeys(
+                command
+                for row in report.rows
+                for ref in row.legal_refs
+                for command in [_legal_ref_command(ref)]
+                if command is not None
+            )
+        )
+        source_commands = tuple(
+            dict.fromkeys(
+                command
+                for row in report.rows
+                for ref in row.source_refs
+                for command in [_source_ref_command(ref)]
+                if command is not None
+            )
+        )
         lines = [
             "formula_id\ttarget\tinputs\tlegal_refs\tsource_refs",
             *[
@@ -951,6 +971,8 @@ def formulas(
                 f"{', '.join(row.source_refs)}"
                 for row in report.rows
             ],
+            *legal_commands,
+            *source_commands,
         ]
     else:
         lines = [
@@ -962,6 +984,52 @@ def formulas(
             ],
         ]
     _emit(ctx, report, lines)
+
+
+def _manual_input_guidance(modelo: str, *, required: bool, rows_present: bool) -> tuple[str, ...]:
+    """Return practical operator guidance for manual-only modelos.
+
+    Modelo 111 has no structurally required casillas because the valid
+    bucket set depends on the employer's real retention activity. When
+    an operator asks for ``--required`` and sees only a header, explain
+    that the empty table is structural, not a filing-safety verdict.
+    """
+
+    if not required or rows_present or modelo.strip() != "111":
+        return ()
+    return (
+        (
+            "guidance\tModelo 111 has no always-required casilla set; "
+            "supply the retention buckets that apply to your payroll or professional payments."
+        ),
+        "guidance\temployees: casillas 01-03; professionals: casillas 07-09; prior self-assessments: casilla 29.",
+    )
+
+
+def _legal_ref_command(ref: str) -> str | None:
+    """Build a registry legal-reference drill-down command for a legal ref id."""
+
+    if not ref.strip():
+        return None
+    return f"legal_ref_command\t{ref}\taeat app registry legal view {ref}"
+
+
+def _source_ref_command(ref: str) -> str | None:
+    """Build a manual/source drill-down command for known source ref ids."""
+
+    if not ref.strip():
+        return None
+    renta_prefix = "aeat-renta-"
+    if ref.startswith(renta_prefix) and "-manual-" in ref:
+        remainder = ref[len(renta_prefix) :]
+        year, _, tail = remainder.partition("-manual-")
+        if year.isdigit() and tail:
+            part = "part2-deducciones-autonomicas" if "deducciones-autonomicas" in tail else "part1"
+            return (
+                f"source_ref_command\t{ref}\t"
+                f"aeat app registry manuals view --manual renta --year {year} --part {part}"
+            )
+    return f"source_ref_command\t{ref}\taeat app registry sources view {ref}"
 
 
 def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
@@ -3334,10 +3402,10 @@ def modelo_export_verb(
         if not exportable:
             raise typer.BadParameter(
                 tr(
-                    "cli.app.modelo.export.errors.no_exportable_revision",
+                    "cli.app.modelo.export.errors.no_exportable_revision_work_verify",
                     default=(
                         "Work unit has no verified-complete or filed calculation "
-                        "revision to export. Run `aeat app modelo verify` first."
+                        "revision to export. Run `aeat app modelo work verify` first."
                     ),
                 ),
             )

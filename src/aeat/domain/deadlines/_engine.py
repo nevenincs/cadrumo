@@ -360,7 +360,7 @@ def _overdue_recovery_or_none(
 def _window_registry_period(window: DeadlineWindowDefinition) -> str:
     if window.period_kind == "quarterly" and "Q" in window.period:
         return f"{window.period.rsplit('Q', 1)[1]}T"
-    if window.period_kind == "quarterly" and window.period.endswith("T"):
+    if window.period_kind == "quarterly" and window.period.endswith(("T", "P")):
         return window.period.rsplit("-", 1)[-1]
     if window.period_kind == "monthly" and "-" in window.period:
         return window.period.rsplit("-", 1)[1]

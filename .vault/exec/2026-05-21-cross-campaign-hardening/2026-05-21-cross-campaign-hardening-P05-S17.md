@@ -39,3 +39,15 @@ were introduced.
 `uv run pytest -q src/aeat/application/modelo/test_import_flow.py` passed with 21 tests in 32.05s.
 
 `uv run pytest -q src/aeat/application/modelo/test_amend_flow.py::test_amend_revision_carries_casilla_observations` passed with 1 test in 22.10s.
+
+`uv run vaultspec-core vault plan step check .vault/plan/2026-05-21-cross-campaign-hardening-plan.md S17` closed the row.
+
+`uv run vaultspec-core vault plan check .vault/plan/2026-05-21-cross-campaign-hardening-plan.md` passed.
+
+The first locale gate run found existing parity drift. Per the locale-work constraint, this was repaired with `uv run python -m aeat.locales scaffold`.
+
+`uv run python -m aeat.locales audit` then passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
+
+`uv run python -m aeat.locales scaffold --check` then passed for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
+
+`git diff --check -- .vault/plan/2026-05-21-cross-campaign-hardening-plan.md .vault/exec/2026-05-21-cross-campaign-hardening/2026-05-21-cross-campaign-hardening-P05-S17.md src/aeat/application/modelo/_actions.py src/aeat/application/modelo/test_import_flow.py` passed.

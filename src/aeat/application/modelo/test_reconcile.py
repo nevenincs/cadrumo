@@ -36,15 +36,22 @@ MODELO_130_FIXTURE = FIXTURES_DIR / "justificantes" / "modelo_130_2026Q1.pdf"
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reconcile.db').as_posix()}")
-    dispose_engine()
-    with EphemeralMasterKeyProvider():
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    from aeat.core.config import load_settings, override_settings
+
+    bucket_id = "operator"
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=bucket_id,
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
         try:
-            workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
-            yield
+            with EphemeralMasterKeyProvider():
+                workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id=bucket_id))
+                yield
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def _seed_work_unit(*, modelo: str, filing_year: int, period: str) -> str:

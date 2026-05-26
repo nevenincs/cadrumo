@@ -37,6 +37,13 @@ Audited broad exception handlers and fallback branches in secure-storage-adjacen
 - Medium: `src/aeat/application/modelo/_result_summary.py` catches broad `Exception` twice and returns `None`, causing headline calculation summaries to disappear without debug diagnostics.
 - Low: `src/aeat/entrypoints/cli/_modelo.py` returns an empty known-period set when registry lookup fails, with no debug log. This is likely only help/hint degradation, but it is still opaque.
 - Low: storage cleanup paths intentionally suppress cleanup failures, for example best-effort close and cleanup blocks. These should either keep explicit `noqa` rationale plus debug logging or be documented as deliberately non-observable where logging could leak sensitive context.
+- Medium: `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py` suppresses import/setup failures during engine eviction and then suppresses `dispose_engine(...)` failures with `pass`. The cleanup must not raise from `close()`, but the branch should still emit debug diagnostics or a deliberate typed degradation marker so production shutdown and bucket switching failures remain observable.
+
+## Repairs
+
+- `W11.P18.S73` repaired `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py` so import/setup defects remain outside the cleanup catch and surface normally.
+- `W11.P18.S73` replaced silent engine-disposal suppression with warning-level cleanup telemetry. The message records only the exception type and intentionally omits bucket identifiers, local paths, SQLAlchemy URLs, tracebacks, and key material.
+- `W11.P18.S73` did not add `noqa` suppressions or coverage pragmas to the cleanup path; the residual catch is scoped to runtime cleanup after zeroisation has already run.
 
 ## Disposition
 
@@ -46,3 +53,5 @@ Audited broad exception handlers and fallback branches in secure-storage-adjacen
 ## Validation
 
 The audit used targeted `rg` scans for `except` branches returning `None`, empty tuples, empty lists, empty dicts, `continue`, or `pass`, then inspected representative storage-adjacent call sites.
+
+Follow-up validation for `W11.P18.S73` included focused ruff checks, bucket-session/master-key tests, central error-registry enforcement, runtime tests, state-projection tests, and a targeted code review of the cleanup observability boundary.

@@ -198,7 +198,7 @@ class CensoSyncService:
                 handler to surface.
         """
 
-        from ...adapters.outbound.aeat.sede._censo_live import (
+        from ...adapters.outbound.aeat.sede import (
             G313_LAUNCHER_URL,
             census_fact_set_to_mapping,
             fetch_g313_census,

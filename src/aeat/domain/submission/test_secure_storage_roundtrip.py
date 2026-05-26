@@ -27,9 +27,9 @@ from ...adapters.persistence.storage.sql._orm import Base
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...core.config import Settings
 from ._models import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
 from ._repository import SubmissionRepository
@@ -82,23 +82,21 @@ def _populated_filing() -> ModeloPresentado:
 
 def test_submitted_filing_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated ModeloPresentado roundtrips strictly across AUDIT-class storage."""
 
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "submission-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         engine = create_engine_from_settings(
             Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_filing()
-            repo = SubmissionRepository()
+            repo = SubmissionRepository(objects=objects)
             repo.save(original)
             loaded = repo.load(original.submission_id)
 
@@ -127,7 +125,6 @@ def test_submitted_filing_survives_encrypted_storage_roundtrip(
 
 def test_submission_dropped_justificante_csv_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: deleting ``justificante_csv`` on ACEPTADA must surface.
 
@@ -150,26 +147,26 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
 
     from ...adapters.persistence.storage.sql._orm import SecureObjectRow
     from ...adapters.persistence.storage.sql.session import session_scope
-    _SUBMISSION_NAMESPACE = SubmissionRepository.namespace
+
+    submission_namespace = SubmissionRepository.namespace
 
     provider = EphemeralMasterKeyProvider()
     with provider:
         db_path = tmp_path / "submission-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
         engine = create_engine_from_settings(
             Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
         )
         Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
+            objects = SecureObjectRepository(engine=engine)
 
             original = _populated_filing()
-            repo = SubmissionRepository()
+            repo = SubmissionRepository(objects=objects)
             repo.save(original)
 
             with session_scope(engine) as session:
                 stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _SUBMISSION_NAMESPACE,
+                    SecureObjectRow.namespace == submission_namespace,
                     SecureObjectRow.object_key == original.submission_id,
                 )
                 row = session.execute(stmt).scalar_one()
@@ -185,7 +182,7 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
             regression_caught = False
             try:
                 mutated = repo.load(original.submission_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+            except Exception:
                 regression_caught = True
             else:
                 if mutated != original:

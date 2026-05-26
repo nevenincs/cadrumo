@@ -13,9 +13,11 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...core.config import load_settings, override_settings
 from . import (
     WorkflowResult,
     WorkflowStage,
@@ -30,18 +32,22 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _runtime_secure_backend(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="workflow-test",
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        with EphemeralMasterKeyProvider():
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+    return (tmp_path / "buckets" / "workflow-test" / "db" / "aeat.db").read_bytes()
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
@@ -119,36 +125,43 @@ class TestPersistenceRoundTrip:
         assert list(runs_dir.iterdir()) == []
 
 
-class _EmitError(RuntimeError):
-    """Real exception injected to simulate a downstream emit failure."""
-
-
 def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     """When event emit fails, the secure-object row must remain present.
 
     The reset routine emits the ``workflow_state.reset`` event before
     discarding the secure-object row. If the emit raises, the delete
     must not execute -- the row stays, the next reset attempt picks
-    up where this one left off, and no plaintext is leaked. The
-    failure path is exercised by injecting a real failing emitter
-    through the repository's ``emit_reset`` constructor seam -- no
-    module monkeypatching, no test double or Mock.
+    up where this one left off, and no plaintext is leaked.
     """
 
+    from ...core.classification import SensitivityClass
+    from ...domain.buckets import BucketEventHistoryRepository
+    from ...domain.buckets._event_repository import _CATALOGUE_VERSION, _NAMESPACE, _OBJECT_KEY
     from ._models import WorkflowState
     from ._persistence import WorkflowStateRepository
 
-    def _raise(**_: object) -> None:
-        raise _EmitError("simulated downstream emit failure")
-
-    repository = WorkflowStateRepository(emit_reset=_raise)
+    repository = WorkflowStateRepository()
     repository.save(WorkflowState())
-    assert repository._objects.exists("aeat.workflow", "state")
+    before = repository.fingerprint_state()
+    assert before.reason_class == "readable"
 
-    with pytest.raises(_EmitError):
+    event_history = BucketEventHistoryRepository().secure_object_repository
+    event_history.save(
+        namespace=_NAMESPACE,
+        object_key=_OBJECT_KEY,
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=_CATALOGUE_VERSION,
+        written_at=datetime.now(UTC),
+        payload=b"not-json",
+    )
+
+    with pytest.raises(ValidationError, match="Invalid JSON"):
         repository.reset_workflow_state()
 
-    assert repository._objects.exists("aeat.workflow", "state"), (
+    after = repository.fingerprint_state()
+    assert after.reason_class == "readable"
+    assert after.byte_length == before.byte_length
+    assert after.schema_version == before.schema_version, (
         "emit-first contract violated: secure-object row was deleted before the "
         "audit event landed; the recovery route lost its trail."
     )

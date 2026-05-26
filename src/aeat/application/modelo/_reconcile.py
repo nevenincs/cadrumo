@@ -158,7 +158,6 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
     from datetime import UTC, datetime
 
     from ...adapters.inbound.justificante import parse_justificante
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -268,7 +267,7 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
             payload=event_payload,
         ),
     )
-    SecureObjectRepository().save_many((catalogue_repo.to_secure_object_write(next_catalogue),))
+    catalogue_repo.secure_object_repository.save_many((catalogue_repo.to_secure_object_write(next_catalogue),))
 
     return report
 

@@ -378,6 +378,38 @@ def test_profile_backend_schema_deleted_package_has_no_surviving_imports() -> No
     assert offenders == [], "retired application-profile references survive:\n  " + "\n  ".join(offenders)
 
 
+def test_discovery_swarm_ignored_path_shims_stay_removed() -> None:
+    """The May 13 discovery inventory's ignored path-parameter rows stay closed."""
+
+    scanned = (
+        PROJECT_ROOT / "src" / "aeat" / "domain" / "usage_ratios" / "_service.py",
+        PROJECT_ROOT / "src" / "aeat" / "application" / "filing" / "_review.py",
+    )
+    forbidden_tokens = (
+        "def load_usage_ratios(*, path",
+        "def save_usage_ratios(\n    path",
+        "def _load_transaction_catalogue(path",
+        "def _read_transaction_catalogue(path",
+        "del path",
+    )
+    offenders: list[str] = []
+    for path in scanned:
+        text = path.read_text(encoding="utf-8")
+        for token in forbidden_tokens:
+            if token in text:
+                offenders.append(f"{path.relative_to(PROJECT_ROOT).as_posix()}: {token!r}")
+    assert offenders == []
+
+
+def test_discovery_swarm_llm_provider_private_aliases_are_not_public() -> None:
+    """Internal provider aliases may remain importable, but not exported through __all__."""
+
+    from aeat.adapters.outbound.llm import _providers
+
+    assert "_ProviderAdapter" not in _providers.__all__
+    assert "_DeterministicAdapter" not in _providers.__all__
+
+
 def test_per_modelo_aggregation_placeholder_paths_stay_removed() -> None:
     """Per-modelo aggregation must fail through registered backend errors."""
 

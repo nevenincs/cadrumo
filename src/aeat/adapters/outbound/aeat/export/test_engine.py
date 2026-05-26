@@ -14,17 +14,18 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....adapters.persistence.storage import EphemeralMasterKeyProvider
+from .....adapters.persistence.storage.master_key._active_session import activate_session
+from .....adapters.persistence.storage.master_key._bucket_session import BucketSession
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....application.auth import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings, override_settings
 from .....domain.submission import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionEngine,
     SubmissionError,
     SubmissionRepository,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
 from . import (
@@ -33,6 +34,10 @@ from . import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound, pytest.mark.domain_export]
+
+_BUCKET_ID = "submission-history"
+_KEK = b"s" * 32
+_DEK = b"h" * 32
 
 
 @pytest.fixture(autouse=True)
@@ -44,13 +49,23 @@ def _secure_database(tmp_path: Path) -> Iterator[None]:
     canonical roundtrip-test fixture pattern.
     """
 
-    dispose_engine()
-    db_path = tmp_path / "aeat.db"
-    with EphemeralMasterKeyProvider(), override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"):
-        try:
-            yield
-        finally:
-            dispose_engine()
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings:
+        dispose_engine(settings)
+        with activate_session(_session()):
+            try:
+                yield
+            finally:
+                dispose_engine(settings)
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 class _Draft(BaseModel):

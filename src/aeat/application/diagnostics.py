@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import shutil
+import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from sqlalchemy.exc import SQLAlchemyError
 
 from aeat import __version__
 
 from ..core.config import PROJECT_ROOT, Settings
-from ..core.errors import SiteHealthError
+from ..core.errors import AeatError, SiteHealthError
 from ..core.i18n import tr
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
@@ -191,11 +194,12 @@ def _ensure_models_rebuilt() -> None:
     global _models_rebuilt
     if _models_rebuilt:
         return
-    from ..adapters.persistence.storage.sql.secure_objects import (  # noqa: F401
+    from ..adapters.persistence.storage.sql.secure_objects import (
         SecureObjectNamespaceIntegrity,
     )
-    from .wizard._status import WizardStatusReport  # noqa: F401
+    from .wizard._status import WizardStatusReport
 
+    _ = (SecureObjectNamespaceIntegrity, WizardStatusReport)
     SecureObjectIntegrityReport.model_rebuild(_types_namespace=locals())
     ConfigRepairReport.model_rebuild(_types_namespace={**globals(), **locals()})
     _models_rebuilt = True
@@ -285,6 +289,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             audience="operator" if registry.available else "internal",
         ),
     ]
+    checks.append(_relational_database_integrity_check())
 
     setup_report: WizardStatusReport | None = None
     provider_context: object | None = None
@@ -312,7 +317,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             setup_report = build_wizard_status(state)
             checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
-        except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+        except (AeatError, SQLAlchemyError, ValidationError) as exc:
             from .workflow._profile_health import assess_active_profile_health
 
             _log.debug("config repair secure state probe failed", exc_info=True)
@@ -360,7 +365,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         python_version=sys.version.split()[0],
         log_file=str(default_log_file_path()),
         registry=registry,
-        setup=setup_report,
+        setup=_redacted_setup_report(setup_report),
         secure_objects=secure_objects,
         checks=tuple(checks),
     )
@@ -414,22 +419,26 @@ async def _probe_browser_connectivity(settings: Settings) -> SiteHealthStatus:
         if context is not None:
             try:
                 await context.close()
-            except Exception:
+            except (AeatError, RuntimeError, OSError):
                 _log.warning("config repair connectivity context close failed", exc_info=True)
         try:
             await session.close()
-        except Exception:
+        except (AeatError, RuntimeError, OSError):
             _log.warning("config repair connectivity browser close failed", exc_info=True)
 
 
 def _ok_site_health_status(url: str) -> SiteHealthStatus:
-    from ..adapters.outbound.aeat.browser import SiteHealthEvidence, SiteHealthState, SiteHealthStatus
-    from ..adapters.outbound.aeat.browser._site_health import _URL_ADAPTER
+    from ..adapters.outbound.aeat.browser import (
+        SiteHealthEvidence,
+        SiteHealthState,
+        SiteHealthStatus,
+        validate_site_health_url,
+    )
 
     return SiteHealthStatus(
         state=SiteHealthState.OK,
         evidence=SiteHealthEvidence(
-            url=_URL_ADAPTER.validate_python(url),
+            url=validate_site_health_url(url),
             http_status=200,
             html_fragment="",
             detected_markers=("healthy",),
@@ -451,7 +460,8 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
     ]
     if report.setup is not None:
         lines.append(
-            f"{tr('cli.diagnostics.repair.profile_label', default='Profile')}\t{report.setup.active_profile or '-'} "
+            f"{tr('cli.diagnostics.repair.profile_label', default='Profile')}\t"
+            f"{_active_profile_display(report.setup.active_profile)} "
             f"({report.setup.profile_present_keys}/{report.setup.profile_total_keys})"
         )
         lines.append(f"{tr('cli.diagnostics.repair.auth_label', default='Auth')}\t{report.setup.auth_provider or '-'}")
@@ -498,7 +508,7 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
 
     try:
         authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
-    except Exception as exc:  # pragma: no cover - covered by later repair diagnostics.
+    except (AeatError, OSError, ValueError, ValidationError) as exc:
         _log.debug("registry version summary load failed for %s", registry_root, exc_info=True)
         return RegistryVersionSummary(
             available=False,
@@ -519,6 +529,265 @@ def _build_registry_version_summary(registry_root: Path) -> RegistryVersionSumma
     )
 
 
+def _relational_database_integrity_check() -> DiagnosticCheck:
+    """Inspect relational SQL state without invoking ORM auto-create paths."""
+
+    from ..adapters.persistence.storage.sql.engine import create_engine_from_settings
+    from ..core.config import load_settings
+
+    try:
+        engine = create_engine_from_settings(load_settings())
+    except AeatError as exc:
+        return DiagnosticCheck(
+            name="relational_database.integrity",
+            status="fail",
+            summary="Relational database engine unavailable",
+            detail=_compact_exception(exc),
+            dead_end="Relational database integrity could not be inspected; fix the database configuration first.",
+            audience="internal",
+        )
+    try:
+        if engine.dialect.name.startswith("sqlite") and _sqlite_database_file_missing(engine):
+            try:
+                from .workflow._models import resolve_active_bucket_id
+
+                active_bucket_id = resolve_active_bucket_id()
+            except (AeatError, OSError, ValueError):
+                active_bucket_id = None
+            if active_bucket_id is not None:
+                return DiagnosticCheck(
+                    name="relational_database.integrity",
+                    status="fail",
+                    summary="Relational database file missing for active profile",
+                    dead_end=(
+                        "The active profile points at state whose SQL database file is absent; restore the "
+                        "database from backup before using stored calculation state."
+                    ),
+                    audience="internal",
+                )
+        return _relational_database_integrity_check_for_engine(engine)
+    finally:
+        engine.dispose()
+
+
+def _relational_database_integrity_check_for_engine(engine: object) -> DiagnosticCheck:
+    """Return a sanitized schema and SQLite-integrity verdict for ``engine``."""
+
+    from sqlalchemy import inspect, text
+    from sqlalchemy.engine import Engine
+
+    from ..adapters.persistence.storage.sql._orm import Base
+
+    if not isinstance(engine, Engine):
+        raise TypeError("engine must be a SQLAlchemy Engine")
+
+    if _sqlite_database_file_missing(engine):
+        return DiagnosticCheck(
+            name="relational_database.integrity",
+            status="ok",
+            summary="Relational database not initialised",
+        )
+
+    expected_table_map = {
+        table.name: table
+        for table in Base.metadata.sorted_tables
+        if table.name not in _SECURE_OBJECT_TABLE_NAMES
+    }
+    expected_tables = set(expected_table_map)
+    try:
+        with engine.connect() as connection:
+            inspector = inspect(connection)
+            actual_tables = set(inspector.get_table_names())
+            missing_tables = sorted(expected_tables - actual_tables)
+            if missing_tables:
+                return DiagnosticCheck(
+                    name="relational_database.integrity",
+                    status="fail",
+                    summary=f"Relational database missing {len(missing_tables)} table(s)",
+                    detail=", ".join(missing_tables),
+                    findings=(
+                        DiagnosticFinding(
+                            summary="Relational table missing",
+                            detail=", ".join(missing_tables),
+                            requirement="required",
+                        ),
+                    ),
+                    dead_end=(
+                        "Relational database schema drift detected; restore from backup or run an "
+                        "engineer-led migration before using stored calculation state."
+                    ),
+                    audience="internal",
+                )
+            schema_findings = _relational_schema_findings(
+                inspector=inspector,
+                expected_table_map=expected_table_map,
+                actual_tables=actual_tables,
+            )
+            if schema_findings:
+                return DiagnosticCheck(
+                    name="relational_database.integrity",
+                    status="fail",
+                    summary=f"Relational database has {len(schema_findings)} schema drift finding(s)",
+                    detail=_limited_schema_detail(schema_findings),
+                    findings=schema_findings,
+                    dead_end=(
+                        "Relational database schema drift detected; restore from backup or run an "
+                        "engineer-led migration before using stored calculation state."
+                    ),
+                    audience="internal",
+                )
+            if engine.dialect.name.startswith("sqlite"):
+                integrity_rows = connection.execute(text("PRAGMA integrity_check")).fetchall()
+                integrity_messages = [str(row[0]) for row in integrity_rows]
+                if integrity_messages != ["ok"]:
+                    return DiagnosticCheck(
+                        name="relational_database.integrity",
+                        status="fail",
+                        summary="SQLite file integrity check failed",
+                        detail=_limited_integrity_detail(integrity_messages),
+                        dead_end=(
+                            "SQLite reported low-level database corruption; restore from backup before "
+                            "using stored calculation state."
+                        ),
+                        audience="internal",
+                    )
+
+                foreign_key_rows = connection.execute(text("PRAGMA foreign_key_check")).fetchall()
+                if foreign_key_rows:
+                    foreign_key_findings = _foreign_key_findings(foreign_key_rows)
+                    return DiagnosticCheck(
+                        name="relational_database.integrity",
+                        status="fail",
+                        summary=f"Relational database has {len(foreign_key_rows)} foreign-key violation(s)",
+                        detail=_limited_foreign_key_detail(foreign_key_rows),
+                        findings=foreign_key_findings,
+                        dead_end=(
+                            "Relational database referential integrity drift detected; restore from "
+                            "backup or run an engineer-led migration before using stored calculation state."
+                        ),
+                        audience="internal",
+                    )
+    except SQLAlchemyError as exc:
+        return DiagnosticCheck(
+            name="relational_database.integrity",
+            status="fail",
+            summary="Relational database integrity inspection failed",
+            detail=_compact_exception(exc),
+            dead_end=(
+                "Relational database integrity could not be inspected; restore from backup or run an "
+                "engineer-led migration before using stored calculation state."
+            ),
+            audience="internal",
+        )
+
+    return DiagnosticCheck(
+        name="relational_database.integrity",
+        status="ok",
+        summary=f"{len(expected_tables)} relational table(s) present with expected columns",
+    )
+
+
+def _sqlite_database_file_missing(engine: object) -> bool:
+    from sqlalchemy.engine import Engine
+
+    if not isinstance(engine, Engine) or not engine.dialect.name.startswith("sqlite"):
+        return False
+    database = engine.url.database
+    return bool(database and database != ":memory:" and not Path(database).is_file())
+
+
+_SECURE_OBJECT_TABLE_NAMES = frozenset({"secure_objects", "secure_objects_quarantine"})
+
+
+def _limited_integrity_detail(messages: list[str]) -> str:
+    """Limit SQLite diagnostic output to schema-level facts, not row payloads."""
+
+    shown = messages[:5]
+    suffix = "" if len(messages) <= len(shown) else f"; +{len(messages) - len(shown)} more"
+    return "; ".join(shown) + suffix
+
+
+def _limited_foreign_key_detail(rows: list[object]) -> str:
+    """Render ``PRAGMA foreign_key_check`` rows without exposing payload values."""
+
+    rendered: list[str] = []
+    for row in rows[:5]:
+        table = str(row[0])
+        rowid = str(row[1])
+        parent = str(row[2])
+        rendered.append(f"{table}:rowid={rowid}->parent={parent}")
+    suffix = "" if len(rows) <= len(rendered) else f"; +{len(rows) - len(rendered)} more"
+    return "; ".join(rendered) + suffix
+
+
+def _relational_schema_findings(
+    *,
+    inspector: object,
+    expected_table_map: dict[str, object],
+    actual_tables: set[str],
+) -> tuple[DiagnosticFinding, ...]:
+    """Return schema drift findings without reading row payload values."""
+
+    from sqlalchemy import Table
+    from sqlalchemy.engine.reflection import Inspector
+
+    if not isinstance(inspector, Inspector):
+        raise TypeError("inspector must be a SQLAlchemy Inspector")
+
+    findings: list[DiagnosticFinding] = []
+    for table_name in sorted(expected_table_map):
+        if table_name not in actual_tables:
+            continue
+        expected_table = expected_table_map[table_name]
+        if not isinstance(expected_table, Table):
+            continue
+        actual_columns = {str(column["name"]) for column in inspector.get_columns(table_name)}
+        expected_columns = {column.name for column in expected_table.columns}
+        missing_columns = sorted(expected_columns - actual_columns)
+        if missing_columns:
+            findings.append(
+                DiagnosticFinding(
+                    summary=f"Relational table `{table_name}` is missing required column(s)",
+                    detail=", ".join(missing_columns),
+                    requirement="required",
+                )
+            )
+    return tuple(findings)
+
+
+def _limited_schema_detail(findings: tuple[DiagnosticFinding, ...]) -> str:
+    """Render relational schema findings without row contents."""
+
+    shown = findings[:5]
+    rendered = [
+        f"{finding.summary}: {finding.detail}"
+        if finding.detail
+        else finding.summary
+        for finding in shown
+    ]
+    suffix = "" if len(findings) <= len(shown) else f"; +{len(findings) - len(shown)} more"
+    return "; ".join(rendered) + suffix
+
+
+def _foreign_key_findings(rows: list[object]) -> tuple[DiagnosticFinding, ...]:
+    """Render foreign-key drift findings with table and rowid metadata only."""
+
+    findings: list[DiagnosticFinding] = []
+    for row in rows[:20]:
+        table = str(row[0])
+        rowid = str(row[1])
+        parent = str(row[2])
+        fkid = str(row[3]) if len(row) > 3 else ""
+        findings.append(
+            DiagnosticFinding(
+                summary=f"Foreign-key violation in `{table}`",
+                detail=f"rowid={rowid}; parent={parent}; fkid={fkid}",
+                requirement="required",
+            )
+        )
+    return tuple(findings)
+
+
 def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     """Iterate every populated secure-objects namespace and aggregate counts.
 
@@ -528,15 +797,18 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     rotated master-key generation.
     """
     _ensure_models_rebuilt()
+    from sqlalchemy.exc import SQLAlchemyError
+
+    from ..adapters.persistence.storage.errors import StorageError
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ..adapters.persistence.storage.sql.secure_objects import (
         SecureObjectNamespaceIntegrity,
-        SecureObjectRepository,
     )
 
     try:
-        repo = SecureObjectRepository()
+        repo = secure_object_repository_for_active_bucket()
         namespaces = repo.list_namespaces()
-    except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
+    except (StorageError, SQLAlchemyError) as exc:
         _log.debug(
             "secure objects engine unreachable for repair probe: %s: %s",
             type(exc).__name__,
@@ -548,7 +820,7 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     for ns in namespaces:
         try:
             integrity_items.append(repo.probe_namespace_integrity(ns))
-        except Exception:
+        except (StorageError, SQLAlchemyError):
             _log.debug("secure objects integrity probe failed for namespace=%s", ns, exc_info=True)
             integrity_items.append(
                 SecureObjectNamespaceIntegrity(
@@ -600,8 +872,17 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             readable=report.readable_total,
         ),
         detail=affected,
-        next_action="aeat config repair quarantine --yes",
+        next_action=_secure_objects_inventory_next_action(report),
     )
+
+
+def _secure_objects_inventory_next_action(report: SecureObjectIntegrityReport) -> str:
+    """Route undecryptable rows to read-only inventory before quarantine."""
+
+    for item in report.namespaces:
+        if item.unreadable > 0:
+            return f"aeat config repair list {item.namespace} --unreadable"
+    return "aeat config repair integrity objects"
 
 
 def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticCheck:
@@ -641,7 +922,7 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             next_action=tr("cli.diagnostics.next_action.inspect_registry_toml"),
             audience="internal",
         )
-    except Exception as exc:  # pragma: no cover - defensive: registry not loadable
+    except (AeatError, OSError, ValueError, ValidationError) as exc:
         return DiagnosticCheck(
             name="registry.integrity",
             status="warn",
@@ -679,7 +960,7 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
 
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
-        active_profile=health.active_profile or "-",
+        active_profile=_active_profile_display(health.active_profile),
         source=health.source,
         status=health.status,
     )
@@ -697,6 +978,20 @@ def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticChec
         detail=detail,
         next_action=health.next_action,
     )
+
+
+def _redacted_setup_report(report: WizardStatusReport | None) -> WizardStatusReport | None:
+    """Return the setup report with active profile identifiers redacted."""
+
+    if report is None or report.active_profile is None:
+        return report
+    return report.model_copy(update={"active_profile": _active_profile_display(report.active_profile)})
+
+
+def _active_profile_display(active_profile: str | None) -> str:
+    """Render active-profile presence without exposing the bucket id."""
+
+    return "active_profile" if active_profile else "-"
 
 
 def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
@@ -739,7 +1034,7 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
         return ()
     try:
         record = state.active_profile_record()
-    except Exception:  # pragma: no cover - record unreadability handled by storage checks
+    except (AeatError, ValidationError):
         _log.debug("config repair profile-key finding probe could not read record", exc_info=True)
         return ()
     if record is None:
@@ -913,12 +1208,43 @@ def _windows_stale_sync_check() -> DiagnosticCheck | None:
             status="ok",
             summary=tr("cli.diagnostics.summary.venv_in_sync"),
         )
+    dry_run = _uv_sync_dry_run_probe()
+    if dry_run == "clean":
+        return DiagnosticCheck(
+            name="runtime.dependency_sync",
+            status="ok",
+            summary=tr("cli.diagnostics.summary.venv_in_sync"),
+            detail="uv sync --frozen --dry-run would make no changes",
+        )
     return DiagnosticCheck(
         name="runtime.dependency_sync",
         status="warn",
         summary=tr("cli.diagnostics.summary.venv_stale"),
         next_action="uv sync",
     )
+
+
+def _uv_sync_dry_run_probe() -> str:
+    """Return whether uv's authoritative dry-run sees a dependency delta."""
+
+    uv_executable = shutil.which("uv")
+    if uv_executable is None:
+        return "unknown"
+    try:
+        result = subprocess.run(  # noqa: S603 - trusted local uv executable; no user-controlled args.
+            [uv_executable, "sync", "--frozen", "--dry-run"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "unknown"
+    output = f"{result.stdout}\n{result.stderr}"
+    if result.returncode == 0 and "Would make no changes" in output:
+        return "clean"
+    return "stale"
 
 
 def _overall_status(checks: tuple[DiagnosticCheck, ...]) -> DiagnosticStatus:
@@ -991,36 +1317,20 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
 
 
 def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
-    """Move every undecryptable secure-object row into the quarantine table.
+    """Fail closed for destructive secure-object quarantine.
 
-    Delegates to :meth:`SecureObjectRepository.quarantine_unreadable_rows`,
-    which creates the ``secure_objects_quarantine`` archive table on
-    first use, copies each undecryptable row's metadata and (still
-    encrypted) payload into the archive, then deletes the row from the
-    active ``secure_objects`` table. Decryptable rows are not touched.
-
-    The user's ciphertext is preserved in the archive; nothing is
-    auto-deleted. If a missing master key is later recovered (e.g.
-    restored from a recovery-key backup), the operator can manually
-    re-import rows from the quarantine table.
-
-    Returns:
-        A :class:`SecureObjectIntegrityReport` whose ``namespaces``
-        report carries per-namespace ``unreadable`` counts (= rows
-        moved to quarantine) and ``readable`` counts (= rows retained
-        in ``secure_objects``).
+    The current repair policy is preserve-first: active secure-object
+    rows may contain tax evidence, receipts, filing history, or recovery
+    context. Until a replacement-evidence and restore workflow exists,
+    the application layer refuses the destructive archive-and-delete path.
+    Use :func:`preview_quarantine_unreadable_secure_objects` and the
+    attribution report for read-only inventory instead.
     """
-    _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 
-    repo = SecureObjectRepository()
-    namespaces = repo.quarantine_unreadable_rows()
-    quarantined_total = sum(item.unreadable for item in namespaces)
-    retained_total = sum(item.readable for item in namespaces)
-    return SecureObjectIntegrityReport(
-        namespaces=namespaces,
-        readable_total=retained_total,
-        unreadable_total=quarantined_total,
+    raise RuntimeError(
+        "secure-object quarantine is disabled by preserve-first repair policy; "
+        "run `aeat config repair quarantine --dry-run` and "
+        "`aeat config repair integrity attribution` instead."
     )
 
 

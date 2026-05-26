@@ -978,27 +978,6 @@ cli:
         push_namespace_help: Espacio de datos que quieres subir; se puede repetir
         root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
           `aeat config google folder set <id>` primero
-    init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
-      certificate_path_help: Path to the .p12 or .pfx certificate file
-      drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
-      from_help: Source profile ID to import settings from
-      help: Initialize a new active profile and config bucket.
-      iva_regime_help: VAT regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
-      output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
-      quiet_help: Oculta el mensaje de éxito después de inicializar
-      submissions_dir_help: Directory to store submitted filing receipts
-      success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
-      tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
-      tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     profile:
@@ -1912,6 +1891,7 @@ cli:
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
     language_help: Idioma de salida para este comando (sustituye al perfil activo)
+    profile_help: Nombre de perfil AEAT o id de bucket que usar para este comando
     quiet_help: Mostrar solo errores en stderr
     startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta
       la dependencia {dependency}. Ejecuta `aeat config repair`.'

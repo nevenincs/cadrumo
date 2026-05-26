@@ -16,7 +16,7 @@ related:
 Implemented the legally grounded singleton `semantic_role` policy for
 the typo-twin warning surface.
 
-- Modified: `src/aeat/domain/calculations/registry/_validate.py`
+- Modified: `src/aeat/domain/calculations/registry/_validate_semantic_roles.py`
 - Modified: `src/aeat/domain/calculations/registry/test_semantic_role.py`
 - Updated: `.vault/plan/2026-05-20-registry-casilla-identity-plan.md`
 
@@ -39,7 +39,7 @@ noise.
 
 ## Tests
 
-`uv run ruff check src/aeat/domain/calculations/registry/_validate.py src/aeat/domain/calculations/registry/test_semantic_role.py` passes.
+`uv run ruff check src/aeat/domain/calculations/registry/_validate_semantic_roles.py src/aeat/domain/calculations/registry/test_semantic_role.py` passes.
 
 `uv run pytest src/aeat/domain/calculations/registry/test_semantic_role.py` passes: 35 tests.
 
@@ -53,7 +53,7 @@ noise.
 
 Feature-surface gate:
 
-- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/_validate.py src/aeat/domain/calculations/registry/test_semantic_role.py` passes.
+- `uv run --no-sync ruff check src/aeat/domain/calculations/registry/_validate_semantic_roles.py src/aeat/domain/calculations/registry/test_semantic_role.py` passes.
 - `uv run --no-sync pytest -x src/aeat/domain/calculations/registry/test_semantic_role.py` passes: 35 tests.
 - `uv run --no-sync vaultspec-core vault feature index -f registry-casilla-identity` refreshed `.vault/index/registry-casilla-identity.index.md`.
 - `uv run --no-sync vaultspec-core vault check all --feature registry-casilla-identity` now reports `features: clean`, but still fails on vault-wide pre-existing structure filename violations.

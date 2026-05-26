@@ -12,14 +12,12 @@ import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
 from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
     EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
 )
 from aeat.adapters.persistence.storage.errors import ClassificationError
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from aeat.core.config import load_settings, override_settings
 from aeat.domain.justificante._repository import JustificanteRepository
 from aeat.domain.justificante._schema import Justificante
 
@@ -47,30 +45,23 @@ def _make_justificante(tmp_path: Path, *, csv: str = "ABCD1234EFGH5678") -> Just
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
+def _active_runtime(tmp_path: Path) -> Iterator[None]:
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="justificante-test",
+        aeat_secret_passphrase=load_settings().aeat_dev_test_database_password,
+    ) as settings:
+        dispose_engine(settings)
+        provider = EphemeralMasterKeyProvider()
         try:
-            yield
+            with provider:
+                yield
         finally:
-            override_secret_store(None)
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+    return (tmp_path / "buckets" / "justificante-test" / "db" / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
@@ -146,7 +137,7 @@ class TestClassificationGate:
             payload=record,
         )
         repo = JustificanteRepository()
-        SecureObjectRepository().save(
+        secure_object_repository_for_bucket("justificante-test").save(
             namespace="aeat.domain.justificante.metadata",
             object_key=record.csv,
             classification=SensitivityClass.OPERATIONAL,
