@@ -27,22 +27,21 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 
 import pytest
+from pydantic import SecretStr
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.user_profile._orchestration import (
-    _write_active_profile_pointer,
-    capture_active_profile_pointer,
+    profile_create_storage_span,
     register_active_profile,
-    restore_active_profile_pointer,
 )
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.application.workflow._profile_bucket_scan import read_profile_bucket
 from aeat.core._bucket_pointer_io import read_pointer
-from aeat.core.config import load_settings
+from aeat.core.config import SecretStoreBackend, load_settings, override_settings
 from aeat.domain.user_profile import ProfileSchemaValidationError, UserProfileFact
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -58,24 +57,24 @@ _VALID_FACTS: Mapping[str, str] = {
 # An incomplete fact set (a required field dropped) makes the schema
 # validator reject the record at the encrypted-record-write step of
 # the atomic create.
-_INCOMPLETE_FACTS: Mapping[str, str] = {
-    key: value for key, value in _VALID_FACTS.items() if key != "iva.regime"
-}
+_INCOMPLETE_FACTS: Mapping[str, str] = {key: value for key, value in _VALID_FACTS.items() if key != "iva.regime"}
 
 
 @pytest.fixture
-def _backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Per-bucket storage root on the unsecured backend."""
+def _backend(tmp_path: Path) -> Iterator[Path]:
+    """Per-bucket storage root with file-backed custody."""
 
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with override_settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=SecretStr(dev_test_database_password()),
+    ) as settings:
+        dispose_engine(settings)
+        try:
+            yield tmp_path
+        finally:
+            dispose_engine(settings)
 
 
 def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
@@ -92,21 +91,16 @@ def _register(profile_id: str, *, facts: Mapping[str, str]) -> None:
     """
 
     fact_tuple = tuple(UserProfileFact(path=path, value=value) for path, value in facts.items())
-    prior_pointer = capture_active_profile_pointer()
-    _write_active_profile_pointer(profile_id)
-    try:
-        with EphemeralMasterKeyProvider():
-            workflow_state_repository().update(
-                lambda state: register_active_profile(
-                    state,
-                    profile_id=profile_id,
-                    display_name=profile_id.capitalize(),
-                    facts=fact_tuple,
-                )
+    with profile_create_storage_span(profile_id) as routing_profile_id:
+        workflow_state_repository().update(
+            lambda state: register_active_profile(
+                state,
+                profile_id=profile_id,
+                display_name=profile_id.capitalize(),
+                facts=fact_tuple,
+                routing_profile_id=routing_profile_id,
             )
-    except Exception:
-        restore_active_profile_pointer(prior_pointer)
-        raise
+        )
 
 
 def test_failed_atomic_create_raises_and_leaves_no_profile(_backend: Path) -> None:
