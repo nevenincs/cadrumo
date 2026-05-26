@@ -36,7 +36,7 @@ def _make_history(*, modelo: str = "130", n_entries: int = 2) -> ModeloHistory:
 
 
 def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
+    return (tmp_path / "aeat-storage" / "buckets" / "filing-test" / "db" / "aeat.db").read_bytes()
 
 
 class TestEmptyState:
