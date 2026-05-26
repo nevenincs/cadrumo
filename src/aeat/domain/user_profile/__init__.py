@@ -14,6 +14,7 @@ from ._errors import (
     ProfileSchemaValidationError,
     ProfileSnapshotHashMismatchError,
     ProfileSnapshotNotFoundError,
+    StoredProfileDriftError,
     UserProfileSchemaLoadError,
 )
 from ._loader import load_user_profile_schema
@@ -47,6 +48,7 @@ from ._values import (
 
 __all__ = [
     "ProfileAlreadyExistsError",
+    "StoredProfileDriftError",
     "ProfileFactValue",
     "ProfileFieldDefinition",
     "ProfileFieldType",

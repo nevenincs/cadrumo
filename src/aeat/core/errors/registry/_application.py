@@ -811,4 +811,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.domain.user_profile._errors.StoredProfileDriftError",
+        ErrorCode(
+            code="INTEGRITY_STORED_PROFILE_DRIFT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.storage.stored_data_validation_boundary",
+            default_suggestion="aeat config repair",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
