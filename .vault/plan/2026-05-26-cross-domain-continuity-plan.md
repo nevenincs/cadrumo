@@ -78,9 +78,9 @@ Wizard persistence emits lowercase true and false; binding-side Decimal coercion
 
 Two parallel CIF validators disagree on whether K is a valid leading letter. Unify to a single canonical constant in a single module.
 
-- [ ] `W01.P06.S22` - add a module-level cross-reference comment in _tax_id.py documenting that _CIF_LEADERS is a historical-tolerance superset of _documents._CIF_KIND_LETTERS K L M accepted only on the legacy NIF validator path not the IdentityDocument shape gate; `src/aeat/core/identity/_tax_id.py`.
-- [ ] `W01.P06.S23` - add a paired comment at _CIF_KIND_LETTERS in _documents.py explaining the 17-char set is the AEAT current-spec closed catalogue and K L M are deliberately excluded as historical-only forms tolerated by the legacy path; `src/aeat/core/identity/_documents.py`.
-- [ ] `W01.P06.S24` - pin the intentional split with a regression test asserting K L M are not in _CIF_KIND_LETTERS while validate_spanish_tax_id still accepts a K-led valid CIF; `prevents future consolidation from silently collapsing the two sets; `src/aeat/core/identity/test_documents.py`.
+- [x] `W01.P06.S22` - add a module-level cross-reference comment in _tax_id.py documenting that _CIF_LEADERS is a historical-tolerance superset of _documents._CIF_KIND_LETTERS K L M accepted only on the legacy NIF validator path not the IdentityDocument shape gate; `src/aeat/core/identity/_tax_id.py`.
+- [x] `W01.P06.S23` - add a paired comment at _CIF_KIND_LETTERS in _documents.py explaining the 17-char set is the AEAT current-spec closed catalogue and K L M are deliberately excluded as historical-only forms tolerated by the legacy path; `src/aeat/core/identity/_documents.py`.
+- [x] `W01.P06.S24` - pin the intentional split with a regression test asserting K L M are not in _CIF_KIND_LETTERS while validate_spanish_tax_id still accepts a K-led valid CIF; `prevents future consolidation from silently collapsing the two sets; `src/aeat/core/identity/test_documents.py`.
 
 ### Phase `W01.P07` - period normalisation unification
 
