@@ -31,10 +31,10 @@ and asserts existence in the snapshot at every registry load. Closes
 T-09 (0 / 21 coverage) and most of T-03 in one implementation. The
 single highest-leverage change in the entire taxonomy.
 
-- [ ] `P01.S01` - declare ID-to-collection mapping and the validator function; `src/aeat/domain/calculations/registry/_validate.py`.
-- [ ] `P01.S02` - wire validator into RegistrySnapshot constructor; `src/aeat/domain/calculations/registry/_snapshot.py`.
-- [ ] `P01.S03` - add `aeat config repair` cross-domain integrity diagnostic; `src/aeat/application/diagnostics.py`.
-- [ ] `P01.S04` - add structural pytest exercising the validator against the committed registry; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
+- [x] `P01.S01` - declare ID-to-collection mapping and the validator function — verified already-satisfied: `_validate.py` carries the `RegistryValidator` class plus the cross-domain `_validate_references.py:_check_all_id_references` companion; together they own the ID-to-collection mapping and the per-snapshot validation entrypoint; `src/aeat/domain/calculations/registry/_validate.py`.
+- [x] `P01.S02` - wire validator into RegistrySnapshot constructor — verified already-satisfied: `_snapshot.py` imports `RegistryValidator` (line 12) and `_check_all_id_references` (line 13), installs cross-domain snapshot checks idempotently, and runs them at snapshot build; `src/aeat/domain/calculations/registry/_snapshot.py`.
+- [x] `P01.S03` - add `aeat config repair` cross-domain integrity diagnostic — verified already-satisfied: `application/diagnostics.py:252` defines `build_config_repair_report` + `render_config_repair_text` (line 449); the CLI `_config/__init__.py` imports them (wired into the `aeat config repair` surface); `src/aeat/application/diagnostics.py`.
+- [x] `P01.S04` - add structural pytest exercising the validator against the committed registry — verified already-satisfied: `test_referential_integrity.py` carries 49 tests exercising the referential-integrity validator against the committed registry; 49 green in this session's run; `src/aeat/domain/calculations/registry/test_referential_integrity.py`.
 
 ### Phase `P02` - typed cross-boundary value envelope
 
