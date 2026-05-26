@@ -749,7 +749,28 @@ class AeatAuthenticator:
             )
 
     def describe(self) -> AuthProviderDescription:
-        """Return a safe summary of the configured auth provider."""
+        """Return a safe summary of the configured auth provider.
+
+        Three distinct certificate states surface here, each with its
+        own ``health_summary`` and ``health_severity`` so a downstream
+        consumer can render them differently and so the loudest
+        severity is reserved for genuine faults (round-5 B1 + minor):
+
+        - **no path set** — ``configured=False``, severity ``info``,
+          summary ``application.auth.certificate.health.path_unset``.
+          An undeclared state, not a fault.
+        - **path set, file missing** — ``configured=False``, severity
+          ``warning``, summary
+          ``application.auth.certificate.health.file_missing``. The
+          operator persisted a path that no longer resolves; the slot
+          is operationally unusable until the file returns or a new
+          path is supplied.
+        - **path set, file present** — proceeds into the password +
+          load + health-check chain below; ``configured`` becomes
+          ``True`` and severity reflects the certificate's expiry
+          health.
+        """
+        from .....core.i18n import tr
 
         if self._settings.aeat_certificate_path is None:
             return AuthProviderDescription(
@@ -757,7 +778,20 @@ class AeatAuthenticator:
                 label="AEAT certificate",
                 configured=False,
                 available=False,
-                health_summary="certificate path not configured",
+                health_severity="info",
+                health_summary=tr("application.auth.certificate.health.path_unset"),
+            )
+        if not self._settings.aeat_certificate_path.is_file():
+            return AuthProviderDescription(
+                kind=self.kind,
+                label="AEAT certificate",
+                configured=False,
+                available=False,
+                health_severity="warning",
+                health_summary=tr(
+                    "application.auth.certificate.health.file_missing",
+                    path=str(self._settings.aeat_certificate_path),
+                ),
             )
         if self._settings.aeat_certificate_password_secret is None:
             return AuthProviderDescription(

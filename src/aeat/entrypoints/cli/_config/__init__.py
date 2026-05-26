@@ -25,7 +25,7 @@ from ....application.wizard._catalogue import SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket
-from ....core.i18n import tr
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....core.logging import default_log_file_path
 from .._command_suggestions import AeatTyperGroup
 from .._common import _emit
@@ -1482,6 +1482,28 @@ def config_reset(
     )
 
 
+def _activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
+    """Apply a subcommand-supplied ``--output-language`` to the render path.
+
+    ``--output-language`` on a subcommand short-circuits the root
+    callback's ``--language`` flow; rather than re-parsing, override the
+    Settings field directly and drop the cached language so any ``tr()``
+    fired during the verb body resolves to the requested locale
+    (round-5 B3).
+    """
+
+    if language is None:
+        return
+    from ....core.config import override_settings
+    from ....core.i18n._render import clear_output_language_cache
+
+    ctx.with_resource(override_settings(aeat_output_language=language))
+    clear_output_language_cache()
+
+
+_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
+
+
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
 def auth_providers(ctx: typer.Context) -> None:
     """List supported authentication providers from the backend catalogue."""
@@ -1490,14 +1512,20 @@ def auth_providers(ctx: typer.Context) -> None:
 
     report = list_operator_auth_providers()
     payload = report.model_dump(mode="json")
-    _emit(
-        ctx,
-        payload,
-        tuple(
-            f"{provider.id}\t{'implemented' if provider.implemented else 'reserved'}\t{tr(str(provider.label))}"
-            for provider in report.providers
-        ),
-    )
+    rows: list[str] = []
+    for provider in report.providers:
+        if provider.implemented:
+            status_token = tr("cli.config.auth.providers.status_implemented")
+        else:
+            # Render "no disponible aún" alongside ``reserved`` so a
+            # layperson does not read "reserved" as "reserved for me"
+            # (round-5 minor).
+            status_token = (
+                f"{tr('cli.config.auth.providers.status_reserved')}"
+                f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
+            )
+        rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
+    _emit(ctx, payload, tuple(rows))
 
 
 @auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
@@ -1555,9 +1583,17 @@ def auth_configure(
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Show the configured local authentication state."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import inspect_operator_auth
 
     try:
@@ -1572,9 +1608,17 @@ def auth_status(
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, test_operator_auth
 
     try:
@@ -1593,10 +1637,22 @@ def auth_login(
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(known_auth_provider_ids())),
     fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
     reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, login_operator_auth
+    from ....application.auth._operator import (
+        AuthLoginNotEnabledError,
+        AuthLoginPreconditionError,
+    )
 
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
@@ -1604,6 +1660,8 @@ def auth_login(
         raise CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     except AuthProviderReservedError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+    except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 

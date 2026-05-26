@@ -342,7 +342,12 @@ class TestDescribe:
         description = provider.describe()
         assert description.configured is False
         assert description.available is False
-        assert "AEAT_CLAVE_MOVIL_DNI_NIE" in (description.health_summary or "")
+        # Round-5 B2: refusal text is user prose, never the raw
+        # env-var name; severity is ``info`` for an undeclared state,
+        # not the loudest ``error`` token.
+        assert "AEAT_CLAVE_MOVIL_DNI_NIE" not in (description.health_summary or "")
+        assert description.health_severity == "info"
+        assert "DNI" in (description.health_summary or "") or "NIE" in (description.health_summary or "")
 
     def test_describe_configured(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")

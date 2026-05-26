@@ -271,16 +271,19 @@ def test_inspect_operator_auth_configured_is_true_with_certificate_path(
     )
 
 
-def test_inspect_operator_auth_configured_false_when_backend_path_unset(tmp_path: Path) -> None:
-    """``configured`` must stay coherent with ``health_summary``.
+def test_inspect_operator_auth_configured_true_when_path_persisted_to_workflow_state(
+    tmp_path: Path,
+) -> None:
+    """``auth configure`` and ``auth status`` must agree on ``configured``.
 
-    Regression for the self-contradictory ``auth status`` output where
-    ``configured: True`` co-existed with ``health_summary: certificate
-    path not configured``. A certificate path recorded only in workflow
-    state, while the live backend probe (sourced from
-    ``Settings.aeat_certificate_path``) sees no path, must NOT report
-    ``configured: True`` — that contradicts the health summary the same
-    probe produces.
+    Round-5 B1: ``auth configure --provider certificate --file PATH``
+    persists the path to workflow state. Without an env-var override,
+    ``auth status`` previously contradicted itself because the live
+    backend probe read ``Settings.aeat_certificate_path`` (env-driven)
+    and reported ``certificate path not configured`` even though the
+    workflow-state record carried the path. The state projection now
+    folds the workflow-state path into the Settings the backend sees,
+    so the two surfaces cannot disagree.
     """
 
     workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
@@ -292,11 +295,53 @@ def test_inspect_operator_auth_configured_false_when_backend_path_unset(tmp_path
     result = inspect_operator_auth()
 
     assert result.provider == "certificate"
-    assert result.health_summary == "certificate path not configured"
-    assert result.configured is False, (
-        "configured must be False when the health probe reports the path is not "
-        f"configured — got configured={result.configured!r}, "
-        f"health_summary={result.health_summary!r}"
+    assert result.certificate_path == str(cert_path), (
+        f"workflow-state certificate path must surface on status — got {result.certificate_path!r}"
+    )
+    # The backend may still report a parse error on a fake PKCS#12
+    # body, but it must NEVER claim the path is unconfigured when one
+    # is persisted in workflow state and the file exists.
+    assert "not configured" not in result.health_summary.lower(), (
+        "health_summary must not claim the certificate path is unconfigured "
+        f"when one is persisted and the file exists — got {result.health_summary!r}"
+    )
+
+
+def test_inspect_operator_auth_distinguishes_no_path_set_from_file_missing(
+    tmp_path: Path,
+) -> None:
+    """Three distinct certificate states must produce three distinct messages.
+
+    Round-5 minor: ``no path set``, ``path set + file missing``, and
+    ``path set + file present`` are three different operator failure
+    modes and must surface as three different ``health_summary``
+    strings. The ``info`` severity is reserved for "no path set" (an
+    undeclared state); ``warning`` for "path set, file missing" (a
+    degraded state); ``error`` only for genuine faults reported by the
+    health classifier (round-5 M5).
+    """
+
+    workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
+
+    # 1) no path set
+    configure_operator_auth("certificate")  # no --file
+    no_path = inspect_operator_auth()
+    assert no_path.configured is False
+    assert no_path.health_severity == "info", (
+        f"no-path-set must be info, not error — got {no_path.health_severity!r}"
+    )
+    no_path_summary = no_path.health_summary
+
+    # 2) path set + file missing
+    ghost = tmp_path / "missing.p12"
+    configure_operator_auth("certificate", certificate_path=ghost)
+    missing_file = inspect_operator_auth()
+    assert missing_file.configured is False
+    assert missing_file.health_severity == "warning", (
+        f"path-set + file-missing must be warning — got {missing_file.health_severity!r}"
+    )
+    assert missing_file.health_summary != no_path_summary, (
+        "no-path-set and path-set+file-missing must produce distinct summaries"
     )
 
 
