@@ -18,7 +18,6 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql.engine import get_engine
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
@@ -151,7 +150,6 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     observation_namespace = CalculationObservationRepository.namespace
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        engine = get_engine(profile.settings)
         original = _populated_observation()
         captured_at = datetime.now(UTC).replace(microsecond=0)
         repo = CalculationObservationRepository()
@@ -162,7 +160,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
         )
 
         object_key = observation_key("303", 2025, "1T")
-        with session_scope(engine) as session:
+        with session_scope(profile.repository._engine) as session:
             stmt = select(SecureObjectRow).where(
                 SecureObjectRow.namespace == observation_namespace,
                 SecureObjectRow.object_key == object_key,
@@ -171,8 +169,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             envelope = _json.loads(row.payload.decode("utf-8"))
             casillas = envelope["payload"]["observation"]["observations"]
             assert casillas and casillas[1]["legal_refs"], (
-                "fixture must serialise legal_refs onto the computed "
-                "casilla for this proof test to be meaningful"
+                "fixture must serialise legal_refs onto the computed casilla for this proof test to be meaningful"
             )
             casillas[1]["legal_refs"] = []
             row.payload = _json.dumps(envelope).encode("utf-8")
