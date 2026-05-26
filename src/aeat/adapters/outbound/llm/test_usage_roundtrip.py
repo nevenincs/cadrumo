@@ -19,15 +19,25 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ....core.config import override_settings
+from ...persistence.storage.master_key._active_session import activate_session
+from ...persistence.storage.master_key._bucket_session import BucketSession
+from ...persistence.storage.sql.engine import dispose_engine
 from ._models import LLMProvider, UsageRecord
 from ._usage import UsageRecorder
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "llm-usage"
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 def _record(when: datetime, *, caller: str, prompt_id: str, request_id: str) -> UsageRecord:
@@ -48,21 +58,14 @@ def _record(when: datetime, *, caller: str, prompt_id: str, request_id: str) -> 
 
 def test_llm_usage_records_survive_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Two UsageRecord rows survive the encrypted append-only sink with date filtering."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "llm-usage-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
         try:
-            SecureObjectRepository(engine=engine)
-
             recorder = UsageRecorder(root_dir=tmp_path / "llm-usage")
             today = datetime.now(UTC).replace(microsecond=0)
             yesterday = today - timedelta(days=1)
@@ -104,4 +107,4 @@ def test_llm_usage_records_survive_encrypted_storage_roundtrip(
             assert summary.total_output_tokens == 128
             assert summary.total_cost_estimate_usd == Decimal("0.0290")
         finally:
-            engine.dispose()
+            dispose_engine(settings)

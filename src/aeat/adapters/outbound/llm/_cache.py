@@ -76,11 +76,11 @@ class LLMCache:
             Cached response when present, otherwise `None`.
         """
 
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         key = self.build_key(request, provider, model)
-        record = SecureObjectRepository().load(
+        record = secure_object_repository_for_active_bucket().load(
             _CACHE_NAMESPACE,
             self._object_key_for(key),
             expected_class=SensitivityClass.DIAGNOSTIC,
@@ -126,7 +126,7 @@ class LLMCache:
         Returns:
             Persisted cache entry model.
         """
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
         from ....core.redaction import default_rules_for_class, redact_structured
 
@@ -153,7 +153,7 @@ class LLMCache:
         redacted_entry: Mapping[str, object] = {str(k): v for k, v in redacted.items()}
         payload = self._payload_for_entry(redacted_entry)
         try:
-            SecureObjectRepository().save(
+            secure_object_repository_for_active_bucket().save(
                 namespace=_CACHE_NAMESPACE,
                 object_key=self._object_key_for(key),
                 classification=SensitivityClass.DIAGNOSTIC,
@@ -161,7 +161,7 @@ class LLMCache:
                 written_at=datetime.now(UTC),
                 payload=payload,
             )
-        except OSError as exc:  # pragma: no cover - defensive storage path
+        except OSError as exc:
             msg = f"Failed to write LLM cache entry for {response.provider.value}/{response.model}"
             raise LLMCacheError(msg) from exc
         return entry
@@ -173,12 +173,12 @@ class LLMCache:
             Aggregate entry count and total decrypted JSON byte size for this
             logical cache partition.
         """
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         records = tuple(
             record
-            for record in SecureObjectRepository().list_records(
+            for record in secure_object_repository_for_active_bucket().list_records(
                 _CACHE_NAMESPACE,
                 expected_class=SensitivityClass.DIAGNOSTIC,
                 max_supported_version=_CACHE_VERSION,
@@ -193,11 +193,11 @@ class LLMCache:
         Returns:
             Number of removed cache objects.
         """
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         removed = 0
-        repository = SecureObjectRepository()
+        repository = secure_object_repository_for_active_bucket()
         for record in repository.list_records(
             _CACHE_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
@@ -290,6 +290,7 @@ class LLMCache:
         try:
             decoded = json.loads(payload.decode("utf-8"))
         except (ValueError, TypeError):
+            _log.debug("ignoring malformed LLM cache payload while filtering logical root", exc_info=True)
             return False
         return decoded.get("logical_root") == self._logical_root()
 

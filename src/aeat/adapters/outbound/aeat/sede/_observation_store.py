@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Iterator
-from contextlib import contextmanager, nullcontext
+from contextlib import nullcontext
 from datetime import UTC, datetime
 from pathlib import Path
 
 from ....persistence.storage import Envelope, MasterKeyProvider, SensitivityClass
 from ....persistence.storage.errors import ClassificationError, EnvelopeVersionError
-from ....persistence.storage.master_key._active_session import activate_session
-from ....persistence.storage.master_key._bucket_session import BucketSession
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
@@ -30,10 +28,22 @@ _STORAGE_REF_PREFIX = "secure-object:financial:"
 class FiledDeclaracionObservationStore:
     """Persist captured AEAT filed data through the encrypted SQL backend."""
 
-    def __init__(self, root: Path, *, master_key_provider: MasterKeyProvider | None = None) -> None:
+    def __init__(
+        self,
+        root: Path,
+        *,
+        master_key_provider: MasterKeyProvider | None = None,
+        objects: SecureObjectRepository | None = None,
+    ) -> None:
+        del master_key_provider
         self._root = Path(root)
-        self._master_key_provider = master_key_provider
-        self._objects = SecureObjectRepository()
+        self._objects = objects
+
+    @property
+    def _repository(self) -> SecureObjectRepository:
+        if self._objects is None:
+            self._objects = secure_object_repository_for_active_bucket()
+        return self._objects
 
     def persist_artefact(
         self,
@@ -53,7 +63,7 @@ class FiledDeclaracionObservationStore:
             raise SedeValidationError("filed-declaration artefact SHA-256 does not match its body")
         digest = hashlib.sha256(body).hexdigest()
         with self._crypto_scope():
-            self._objects.save(
+            self._repository.save(
                 namespace=_ARTEFACT_NAMESPACE,
                 object_key=digest,
                 classification=_ARTEFACT_CLASSIFICATION,
@@ -68,7 +78,7 @@ class FiledDeclaracionObservationStore:
 
         digest = _parse_storage_ref(storage_ref)
         with self._crypto_scope():
-            record = self._objects.load(
+            record = self._repository.load(
                 _ARTEFACT_NAMESPACE,
                 digest,
                 expected_class=_ARTEFACT_CLASSIFICATION,
@@ -94,7 +104,7 @@ class FiledDeclaracionObservationStore:
             payload=observation,
         )
         with self._crypto_scope():
-            self._objects.save(
+            self._repository.save(
                 namespace=_OBSERVATION_NAMESPACE,
                 object_key=object_key,
                 classification=_OBSERVATION_CLASSIFICATION,
@@ -109,7 +119,7 @@ class FiledDeclaracionObservationStore:
 
         object_key = Path(path).name
         with self._crypto_scope():
-            record = self._objects.load(
+            record = self._repository.load(
                 _OBSERVATION_NAMESPACE,
                 object_key,
                 expected_class=_OBSERVATION_CLASSIFICATION,
@@ -146,7 +156,7 @@ class FiledDeclaracionObservationStore:
             payload=observation,
         )
         with self._crypto_scope():
-            self._objects.save(
+            self._repository.save(
                 namespace=_IVA_WALLET_OBSERVATION_NAMESPACE,
                 object_key=object_key,
                 classification=_OBSERVATION_CLASSIFICATION,
@@ -161,7 +171,7 @@ class FiledDeclaracionObservationStore:
 
         object_key = Path(path).name
         with self._crypto_scope():
-            record = self._objects.load(
+            record = self._repository.load(
                 _IVA_WALLET_OBSERVATION_NAMESPACE,
                 object_key,
                 expected_class=_OBSERVATION_CLASSIFICATION,
@@ -199,26 +209,8 @@ class FiledDeclaracionObservationStore:
         )
         return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
-    @contextmanager
-    def _crypto_scope(self) -> Iterator[None]:
-        provider = self._master_key_provider
-        if provider is None:
-            with nullcontext():
-                yield
-            return
-        key = provider.get_master_key()
-        session = BucketSession.open(
-            bucket_id=f"filed-declaration-store:{self._root.as_posix()}",
-            kek=key,
-            dek=key,
-            idle_minutes=60,
-            opened_at=datetime.now(UTC),
-        )
-        try:
-            with activate_session(session):
-                yield
-        finally:
-            session.close()
+    def _crypto_scope(self):
+        return nullcontext()
 
     def _iva_wallet_observation_key(
         self,

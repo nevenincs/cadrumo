@@ -25,9 +25,8 @@ import pytest
 from pydantic import AnyHttpUrl
 
 from .....core.config import override_settings
-from ....persistence.storage import EphemeralMasterKeyProvider
-from ....persistence.storage.sql import SecureObjectRepository
-from ....persistence.storage.sql._orm import Base
+from ....persistence.storage.master_key._active_session import activate_session
+from ....persistence.storage.master_key._bucket_session import BucketSession
 from ....persistence.storage.sql.engine import dispose_engine, get_engine
 from ._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ._observation_store import FiledDeclaracionObservationStore
@@ -40,6 +39,17 @@ from ._schema import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "sede-observation"
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
@@ -72,13 +82,11 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
 ) -> None:
     """A populated observation + artefact round-trips through the encrypted store."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "sede-observation-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
         try:
-            SecureObjectRepository(engine=engine)
             store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
             body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
@@ -151,13 +159,12 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     from ....persistence.storage.sql.session import session_scope
     from ._observation_store import _OBSERVATION_NAMESPACE
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "sede-observation-anti-tautology.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
         engine = get_engine(settings)
-        Base.metadata.create_all(engine)
         try:
-            SecureObjectRepository(engine=engine)
             store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
             body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
@@ -193,17 +200,10 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
                 payload["artefacts"] = []
                 row.payload = _json.dumps(envelope).encode("utf-8")
 
-            regression_caught = False
-            try:
+            from pydantic import ValidationError
+
+            with pytest.raises(ValidationError):
                 store.load_observation(logical_path)
-            except Exception:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: stripping artefacts to empty "
-                "did NOT surface on load. The observation store's evidence-"
-                "of-AEAT-serve contract is tautological and the boundary "
-                "cannot be trusted as a filed-observation audit trail."
-            )
         finally:
             dispose_engine(settings)
 
@@ -213,13 +213,11 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
 ) -> None:
     """An AEAT IVA wallet observation round-trips as financial evidence."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "iva-wallet-observation-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
         try:
-            SecureObjectRepository(engine=engine)
             store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
             captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
             observation = IvaCompensationWalletObservation(

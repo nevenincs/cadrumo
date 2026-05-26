@@ -18,7 +18,9 @@ from aeat.adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
 )
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.auth import AuthProviderKind
 from aeat.application.live import (
     IvaCompensationCarryForwardLotRow,
@@ -35,6 +37,7 @@ from aeat.application.registry import (
     verify_filed_state,
 )
 from aeat.core.access_gate import AeatLiveReadNotEnabledError
+from aeat.core.config import override_settings
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.entrypoints.cli._app_live import _iva_wallet_history_lines, _iva_wallet_pull_lines
@@ -44,6 +47,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _WORKBOOK_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro")
+_BUCKET_ID = "registry-cli"
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 def _registry_modelos() -> tuple[str, ...]:
@@ -64,19 +78,24 @@ def _first_registry_modelo() -> str:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """Point the encrypted SQL engine at a per-test SQLite database.
+def _isolated_secure_backend(tmp_path: Path) -> None:
+    """Point encrypted SQL runtime at a per-test active bucket.
 
     The filed-state verification tests construct a
     :class:`FiledDeclaracionObservationStore`, which opens a
-    :class:`SecureObjectRepository` and therefore needs a resolvable
-    ``aeat_database_url``. Registry-only tests are unaffected.
+    runtime-routed secure-object repository. Registry-only tests are
+    unaffected.
     """
 
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'registry-cli.db').as_posix()}")
-    dispose_engine()
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
 
 
 @pytest.fixture(scope="module")
@@ -462,8 +481,7 @@ def test_filed_data_listing_row_reports_available_read_surfaces() -> None:
 
 
 def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(tmp_path: Path) -> None:
-    provider = EphemeralMasterKeyProvider()
-    store = FiledDeclaracionObservationStore(tmp_path / "observations", master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
     primary, source = _modelo_130_filed_state_observations()
     primary_path = store.persist_observation(primary)
     source_path = store.persist_observation(source)
@@ -473,7 +491,6 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
         source_observation_paths=(source_path,),
         registry_root=_REGISTRY_ROOT,
         source_root=bundled_path(),
-        master_key_provider=provider,
     )
 
     assert report.comparison.status == "satisfied"
@@ -483,8 +500,7 @@ def test_verify_filed_state_compares_local_calculation_to_encrypted_observation(
 
 
 def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: Path) -> None:
-    provider = EphemeralMasterKeyProvider()
-    store = FiledDeclaracionObservationStore(tmp_path / "observations", master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
     primary, source = _modelo_130_filed_state_observations()
     casillas = tuple(
         item.model_copy(update={"value": str(Decimal(item.value) + Decimal("0.01"))})
@@ -501,7 +517,6 @@ def test_verify_filed_state_reports_drift_from_encrypted_observation(tmp_path: P
         registry_root=_REGISTRY_ROOT,
         source_root=bundled_path(),
         required_casillas=("19",),
-        master_key_provider=provider,
     )
 
     assert report.comparison.status == "failed"
