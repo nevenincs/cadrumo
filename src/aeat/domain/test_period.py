@@ -101,3 +101,34 @@ class TestBoundaryRefusals:
             period_end_date(2026, "ZZ")
         with pytest.raises(PeriodValidationError, match=r"invalid registry period"):
             period_start_date(2026, "ZZ")
+
+
+class TestParseCanonicalPeriodPagoFraccionado:
+    """parse_canonical_period recognises the year-qualified pago-fraccionado tokens.
+
+    The canonical input form for the CLI / workflow layer is ``"YYYYPn"``
+    (e.g. ``"2026P1"``); the registry-native form is the short token
+    ``"nP"`` (e.g. ``"1P"``). This class verifies the S25 arms.
+    """
+
+    @pytest.mark.parametrize(
+        ("token", "expected"),
+        [
+            ("2026P1", (2026, "1P")),
+            ("2026P2", (2026, "2P")),
+            ("2026P3", (2026, "3P")),
+            ("2024P1", (2024, "1P")),
+        ],
+    )
+    def test_pago_fraccionado_tokens_resolve(self, token: str, expected: tuple[int, str]) -> None:
+        assert parse_canonical_period(token) == expected
+
+    @pytest.mark.parametrize("token", ["2026P1", "2026P2", "2026P3"])
+    def test_registry_period_accepted_by_boundary_helpers(self, token: str) -> None:
+        """Every token parse_canonical_period accepts must also be accepted by the
+        period boundary helpers — the three surfaces are consistent."""
+        year, registry_period = parse_canonical_period(token)
+        # Neither boundary helper raises; the result is non-None.
+        start = period_start_date(year, registry_period)
+        end = period_end_date(year, registry_period)
+        assert start <= end
