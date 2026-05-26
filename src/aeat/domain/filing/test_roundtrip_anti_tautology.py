@@ -38,6 +38,8 @@ from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
+    ModeloApprovalBasis,
+    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloDraftStatus,
     ModeloValue,
@@ -78,10 +80,28 @@ def _populated_draft() -> ModeloDraft:
             ),
         ),
         binding_values=(),
+        casilla_provenance=(
+            ModeloCasillaProvenance(
+                casilla_id="iva.devengado",
+                legal_refs=("LIVA.art-92",),
+                source_refs=("AEAT.IVA.2025.casilla-01",),
+            ),
+        ),
         findings=(),
         created_at=now,
         updated_at=now,
         schema_version="schema-2025-1",
+        notes="Draft pending operator review",
+        approved_at=datetime(2026, 5, 25, 14, 30, tzinfo=UTC),
+        approved_by="operator-reviewer-1",
+        review_checksum="a" * 64,
+        approval_basis=ModeloApprovalBasis(
+            draft_payload_fingerprint="b" * 64,
+            draft_review_fingerprint="c" * 64,
+            transaction_catalogue_fingerprint="d" * 64,
+            category_profiles_fingerprint="e" * 64,
+            schema_formula_fingerprint="f" * 64,
+        ),
     )
 
 
@@ -162,6 +182,88 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             assert regression_caught, (
                 "boundary did not detect a deliberate field drop — every "
                 "roundtrip test in the suite is suspect and must be re-audited"
+            )
+        finally:
+            engine.dispose()
+
+
+# ---------------------------------------------------------------------------
+# Parametrized field-drop proofs for the 6 optional fields that previously
+# used pydantic defaults in the fixture (casilla_provenance, notes,
+# approved_at, approved_by, review_checksum, approval_basis).
+#
+# Each case deletes the field's JSON key from the envelope payload on disk
+# and confirms the load either raises ValidationError or returns a value
+# that is strictly unequal to the original (i.e. the boundary surfaces the
+# data-loss rather than silently re-defaulting the field to match).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "casilla_provenance",
+        "notes",
+        "approved_at",
+        "approved_by",
+        "review_checksum",
+        "approval_basis",
+    ],
+)
+def test_boundary_catches_optional_field_drop(
+    field_name: str,
+    tmp_path: Path,
+) -> None:
+    """Drop an optional field from the on-disk envelope; boundary must surface the loss.
+
+    For each of the six optional fields that carry non-default values in the
+    populated fixture, this test:
+
+      1. Saves the draft through the real encrypted boundary.
+      2. Surgically deletes the target field from the JSON envelope.
+      3. Reloads and asserts either ``ValidationError`` or strict inequality
+         against the original.
+
+    If a field is silently re-defaulted on load and the test fixture used
+    the default, equality would pass vacuously — which is the tautology this
+    suite guards against.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        engine = _runtime_engine(profile)
+        try:
+            original = _populated_draft()
+            repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
+            repo.save(original)
+
+            with session_scope(engine) as session:
+                stmt = select(SecureObjectRow).limit(1)
+                row = session.execute(stmt).scalar_one()
+                decoded = json.loads(row.payload.decode("utf-8"))
+                assert field_name in decoded["payload"], (
+                    f"fixture must serialise {field_name!r} into the envelope payload "
+                    "for this parametrize case to be a meaningful proof"
+                )
+                del decoded["payload"][field_name]
+                row.payload = json.dumps(decoded).encode("utf-8")
+
+            regression_caught = False
+            try:
+                mutated = ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
+            except ValidationError:
+                regression_caught = True
+            else:
+                assert mutated is not None
+                assert mutated != original, (
+                    f"field {field_name!r} was dropped from the envelope but the loaded "
+                    "model is still equal to the original — the fixture used the pydantic "
+                    "default for this field and the boundary regression is invisible"
+                )
+                regression_caught = True
+
+            assert regression_caught, (
+                f"boundary did not detect deliberate drop of field {field_name!r} — "
+                "re-audit every roundtrip test in the suite"
             )
         finally:
             engine.dispose()

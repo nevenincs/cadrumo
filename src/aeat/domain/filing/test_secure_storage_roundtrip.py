@@ -26,6 +26,8 @@ from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
+    ModeloApprovalBasis,
+    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloDraftStatus,
     ModeloValue,
@@ -76,10 +78,28 @@ def _populated_draft() -> ModeloDraft:
             ),
         ),
         binding_values=(),
+        casilla_provenance=(
+            ModeloCasillaProvenance(
+                casilla_id="iva.devengado",
+                legal_refs=("LIVA.art-92",),
+                source_refs=("AEAT.IVA.2025.casilla-01",),
+            ),
+        ),
         findings=(),
         created_at=now,
         updated_at=now,
         schema_version="schema-2025-1",
+        notes="Draft pending operator review",
+        approved_at=datetime(2026, 5, 25, 14, 30, tzinfo=UTC),
+        approved_by="operator-reviewer-1",
+        review_checksum="a" * 64,
+        approval_basis=ModeloApprovalBasis(
+            draft_payload_fingerprint="b" * 64,
+            draft_review_fingerprint="c" * 64,
+            transaction_catalogue_fingerprint="d" * 64,
+            category_profiles_fingerprint="e" * 64,
+            schema_formula_fingerprint="f" * 64,
+        ),
     )
 
 
@@ -120,6 +140,14 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.snapshot_ref.period == "1T"
     computed = next(v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED)
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+    assert len(loaded.casilla_provenance) == 1
+    assert loaded.casilla_provenance[0].casilla_id == "iva.devengado"
+    assert loaded.notes == "Draft pending operator review"
+    assert loaded.approved_at == datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
+    assert loaded.approved_by == "operator-reviewer-1"
+    assert loaded.review_checksum == "a" * 64
+    assert loaded.approval_basis is not None
+    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 64
 
 
 def test_calculation_revision_observations_survive_encrypted_storage(
