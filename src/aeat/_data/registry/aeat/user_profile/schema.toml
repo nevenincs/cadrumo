@@ -265,6 +265,26 @@ model_selectors = ["taxpayer.legal_entity_form"]
 legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
 
 [[sections.fields]]
+key = "incn_prior_12_months"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Importe neto de la cifra de negocios (INCN) of the prior 12 months. Gates the Modelo 202 pago-fraccionado modality split at the 6.000.000 EUR threshold (LIS Art. 40.3): above the threshold Art. 40.3 is mandatory, below it both Art. 40.2 and Art. 40.3 are reachable. An undeclared value means the engine cannot decide modality and returns INCOMPLETE rather than guessing."
+model_selectors = ["taxpayer.incn_prior_12_months"]
+legal_refs = ["LIS Art. 40.3 (BOE-A-2014-12328)"]
+
+[[sections.fields]]
+key = "new_entity_first_two_profit_periods"
+type = "boolean"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether a newly-created legal entity is in one of its first two profit-making tax periods. Opts the entity into the LIS Art. 29 15 percent micro-empresa-style rate override. The override is opt-in: an undeclared value leaves the entity on the otherwise-applicable sub-form rate."
+model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
+
+[[sections.fields]]
 key = "irpf_income_categories"
 type = "string"
 required = false

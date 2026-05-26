@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from ..workflow._persistence import WorkflowStateRepository
 
 
-class AuthProviderReservedError(ValueError):
+class AuthProviderReservedError(AeatError, ValueError):
     """Raised when a known provider slot is reserved but not implemented."""
 
 
@@ -160,7 +160,7 @@ class AuthConfigureNoActiveBucketError(AeatError):
     """
 
 
-class AuthConfigureDanglingActiveProfileError(ValueError):
+class AuthConfigureDanglingActiveProfileError(AeatError, ValueError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
 
 
@@ -184,7 +184,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     from datetime import UTC, datetime
 
-    from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...domain.buckets import (
         BucketEvent,
         BucketEventHistoryRepository,
@@ -272,7 +272,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     state_write = state_repo.to_secure_object_write(next_state)
     catalogue_write = catalogue_repo.to_secure_object_write(next_catalogue)
-    SecureObjectRepository().save_many((state_write, catalogue_write))
+    secure_object_repository_for_active_bucket().save_many((state_write, catalogue_write))
 
     return _auth_configure_result(
         state=next_state,
@@ -299,6 +299,8 @@ def inspect_operator_auth(provider: str | None = None) -> AuthStatusResult:
     projection = build_operator_state_projection(
         requested_provider=provider,
         probe_live_backend=True,
+        include_workspace_summary=False,
+        include_pending_obligations=False,
     )
     return _auth_status_from_projection(projection)
 
@@ -517,6 +519,8 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
     projection = build_operator_state_projection(
         requested_provider=requested_provider,
         probe_live_backend=True,
+        include_workspace_summary=False,
+        include_pending_obligations=False,
     )
     status = _auth_status_from_projection(projection)
     probe = _probe_local_session(status.provider)

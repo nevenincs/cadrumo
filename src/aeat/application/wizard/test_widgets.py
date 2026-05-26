@@ -100,6 +100,50 @@ def test_confirm_rejects_unknown_token() -> None:
         validate_widget_answer(question, "maybe")
 
 
+def test_confirm_rejects_blank_when_unconditionally_required() -> None:
+    """A required CONFIRM with no visible_when gate must refuse blank.
+
+    The default ``_question`` fixture marks the question required and
+    leaves ``visible_when`` unset; blank must raise so the operator
+    cannot silently leave a required boolean unanswered.
+    """
+
+    question = _question(WizardWidget.CONFIRM, answer_type=bool)
+    with pytest.raises(WizardValidationError, match=r"invalid_confirm"):
+        validate_widget_answer(question, "")
+
+
+def test_confirm_accepts_blank_when_optional() -> None:
+    """An optional CONFIRM must accept blank and project to the empty
+    canonical, the undeclared three-state arm.
+
+    The persistence-layer ``if value`` filter then drops the fact, so a
+    profile that never positively declared the boolean reloads with the
+    typed projection at ``None`` rather than collapsing onto a stored
+    ``"false"`` token.
+    """
+
+    question = _question(WizardWidget.CONFIRM, required=False, answer_type=bool)
+    assert validate_widget_answer(question, "") == ""
+    assert validate_widget_answer(question, "   ") == ""
+
+
+def test_confirm_accepts_blank_when_conditionally_gated() -> None:
+    """A conditionally-gated CONFIRM accepts blank regardless of its
+    ``required`` flag, matching the select-widget contract: a gated
+    question represents an undeclared closed-set fact when its
+    visibility predicate is false.
+    """
+
+    question = _question(
+        WizardWidget.CONFIRM,
+        required=True,
+        visible_when=_CONDITION,
+        answer_type=bool,
+    )
+    assert validate_widget_answer(question, "") == ""
+
+
 def test_select_accepts_declared_choice() -> None:
     choices = (
         WizardChoice(value="general", label=tr("wizard.choices.general")),

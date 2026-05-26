@@ -290,6 +290,14 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=click.Choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-income-categories.help"),
     ),
+    "incn-prior-12-months": typer.Option(
+        "--incn-prior-12-months",
+        help=tr("wizard.setup.flags.incn-prior-12-months.help"),
+    ),
+    "new-entity-first-two-profit-periods": typer.Option(
+        "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
+        help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
+    ),
     "irpf-estimation-regime": typer.Option(
         "--irpf-estimation-regime",
         click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),

@@ -97,7 +97,7 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     classification="integration_test_service",
     allowed_hosts=(_GROI_HOST,),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
-    synthetic_data_allowed=True,
+    synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=False,
 )

@@ -33,3 +33,45 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
+
+# Calculation-only Decimal binding: carries the newly-created-entity
+# 15 % rate eligibility (LIS Art. 29: first two profit-making tax
+# periods). Sourced from the boolean profile fact
+# `new_entity_first_two_profit_periods`, coerced 1 / 0 by the
+# profile-binding resolver. Consumed as the predicate of the
+# `modelo-200-cuota-integra` `if_then_else` so the override layers on
+# top of the sub-form rate dispatch rather than replacing it.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-new-entity-flag"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "new_entity_first_two_profit_periods" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]
+
+# Calculation-only Decimal binding: carries the importe neto de la
+# cifra de negocios of the prior 12 months. Gates the LIS Art. 29.1
+# micro-empresa scale: when INCN < 1.000.000 EUR the cuota-integra
+# formula routes the post-nivelacion base 01330 through the
+# `is.modelo-200.tipo-gravamen-pyme` two-tranche bracket scale
+# (17 / 20 in 2025, 19 / 21 in 2026) via
+# `lookup_bracket_by_entity_type`; otherwise the sub-form dispatch
+# applies the general / cooperative-protected / non-profit rate.
+# Sourced from the Decimal profile fact `incn_prior_12_months`. An
+# undeclared INCN raises `binding has no supplied value` so the
+# engine refuses to guess micro-empresa identification.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-incn-prior-12-months"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "incn_prior_12_months" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-29"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["tipo de gravamen"]

@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
+from ._ids import CasillaId
 from ._workbook_parity import (
     SyntheticInputSet,
     WorkbookArtefactReport,
@@ -42,7 +43,12 @@ class ParityScenario(ParityTapeModel):
     workbook_path: Path
     synthetic_input: SyntheticInputSet
     output_cells: dict[str, WorkbookCellRef] = Field(min_length=1)
-    registry_outputs: dict[str, str] = Field(min_length=1)
+    # registry-driven shape: the value is a CasillaId (the registry's
+    # typed casilla identifier), not a free-form string. The pattern on
+    # CasillaId rejects whitespace, empty strings, and unsupported
+    # punctuation at validation time, lifting the constraint out of
+    # ad-hoc downstream checks.
+    registry_outputs: dict[str, CasillaId] = Field(min_length=1)
     date_context: dict[str, date] = Field(default_factory=dict)
     relation_values: dict[str, Decimal] = Field(default_factory=dict)
     tolerance: Decimal = Decimal("0")

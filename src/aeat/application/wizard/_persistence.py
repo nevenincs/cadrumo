@@ -207,10 +207,22 @@ def _resolve_canonical(question: WizardQuestion, values: Mapping[str, str]) -> s
 
 
 def _parse_canonical(question: WizardQuestion, raw: str) -> object:
-    """Parse a canonical token into the question's declared answer type."""
+    """Parse a canonical token into the question's declared answer type.
+
+    For an optional CONFIRM, a blank canonical projects to the empty
+    string (the undeclared three-state arm of the answers-model union),
+    never to ``False``. Collapsing blank onto ``False`` here would
+    erase the distinction between "the operator did not declare this
+    fact" and "the operator positively declined", and would defeat the
+    persistence-layer's drop-blank filter — the projected ``False``
+    would round-trip to a stored ``"false"`` token and reload as a
+    declared decline.
+    """
 
     answer_type = question.answer_type
     if answer_type is bool:
+        if raw == "" and not (question.required and question.visible_when is None):
+            return ""
         return raw == "true"
     if answer_type is int:
         return int(raw) if raw else 0

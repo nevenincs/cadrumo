@@ -53,7 +53,7 @@ def _decision(
         allowed_hosts=("www2.agenciatributaria.gob.es",),
         allowed_methods=("GET", "POST"),
         forbidden_actions=AEAT_WRITE_FORBIDDEN_ACTIONS,
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=False,
         legal_refs=("orden-hac-174-2020:art-1",),

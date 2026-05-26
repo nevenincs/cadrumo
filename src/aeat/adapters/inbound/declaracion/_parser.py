@@ -8,6 +8,7 @@ from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
 
+from ....core.i18n import tr
 from ....core.logging import get_logger
 from ....core.paths import PROJECT_ROOT
 from ....core.resources import bundled_path
@@ -30,7 +31,13 @@ from ._schema import DeclaracionObservation, TemplateRevision
 _logger = get_logger(__name__)
 
 _TAX_ID_RE = re.compile(
-    r"\bNIF\s*[:\-]?\s*(?P<tax_id>[A-Z0-9][A-Z0-9 .\-]{3,31}?)(?=\s+(?:CSV|Fecha)\b|\s*$)",
+    r"\bNIF(?:\s+Presentador)?\s*[:\-]\s*(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))\b",
+    re.IGNORECASE,
+)
+# 2021-2022 corpus PDFs use an inverted layout where the tax ID appears on the
+# line immediately before the "NIF Presentador:" label rather than after it.
+_TAX_ID_BEFORE_LABEL_RE = re.compile(
+    r"(?P<tax_id>(?:[A-Z][0-9]{7}[0-9A-Z]|[0-9]{8}[A-Z]))\s*\n\s*NIF\s+Presentador\s*:",
     re.IGNORECASE,
 )
 _PERIOD_RE = re.compile(
@@ -244,9 +251,7 @@ def _resolve_template(
 
     detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
     if detected is None and not (modelo_override and año_override):
-        raise TemplateNotDetectedError(
-            f"could not auto-detect template for {path}; pass --modelo and --año to override"
-        )
+        raise TemplateNotDetectedError(tr("adapters.inbound.declaracion.errors.template_not_detected", path=path))
 
     if detected is None:
         assert modelo_override and año_override  # narrowed by the check above
@@ -258,9 +263,17 @@ def _resolve_template(
         )
 
     if modelo_override and modelo_override != detected.modelo:
-        raise DeclaracionParseError(f"--modelo {modelo_override!r} conflicts with detected {detected.modelo!r}")
+        raise DeclaracionParseError(
+            tr(
+                "adapters.inbound.declaracion.errors.modelo_conflict",
+                modelo=modelo_override,
+                detected=detected.modelo,
+            )
+        )
     if año_override and año_override != detected.año:
-        raise DeclaracionParseError(f"--año {año_override} conflicts with detected {detected.año}")
+        raise DeclaracionParseError(
+            tr("adapters.inbound.declaracion.errors.year_conflict", year=año_override, detected=detected.año)
+        )
 
     if template_revision_override:
         return TemplateRevision(
@@ -277,7 +290,7 @@ def _resolve_period(text: str, *, period_override: str | None) -> str:
         return period_override.upper()
     match = _PERIOD_RE.search(text)
     if match is None:
-        raise DeclaracionParseError("declaracion period could not be resolved from the PDF text")
+        raise DeclaracionParseError(tr("adapters.inbound.declaracion.errors.period_unresolved"))
     return match.group("period").upper()
 
 
@@ -285,10 +298,13 @@ def _extract_tax_id(text: str) -> str:
     match = _TAX_ID_RE.search(text)
     if match is not None:
         return re.sub(r"\s+", "", match.group("tax_id").strip().rstrip("."))
+    before_match = _TAX_ID_BEFORE_LABEL_RE.search(text)
+    if before_match is not None:
+        return before_match.group("tax_id").upper()
     row_match = _DECLARANT_ROW_RE.search(text)
     if row_match is not None:
         return row_match.group("tax_id").upper()
-    raise DeclaracionParseError("declaracion tax id could not be resolved from the PDF text")
+    raise DeclaracionParseError(tr("adapters.inbound.declaracion.errors.tax_id_unresolved"))
 
 
 def _load_registry_snapshot(
@@ -308,15 +324,24 @@ def _load_registry_snapshot(
         )
     except RegistrySnapshotError as exc:
         raise DeclaracionParseError(
-            "declaracion extraction requires a validated registry snapshot "
-            f"for modelo={template.modelo} año={template.año} period={period}: {exc}"
+            tr(
+                "adapters.inbound.declaracion.errors.registry_snapshot_required",
+                modelo=template.modelo,
+                year=template.año,
+                period=period,
+                error=exc,
+            )
         ) from exc
 
 
 def _validate_snapshot_matches_template(snapshot: RegistrySnapshot, template: TemplateRevision) -> None:
     if snapshot.modelo.id != template.modelo:
         raise DeclaracionParseError(
-            f"registry snapshot modelo {snapshot.modelo.id!r} conflicts with detected {template.modelo!r}"
+            tr(
+                "adapters.inbound.declaracion.errors.snapshot_modelo_conflict",
+                snapshot_modelo=snapshot.modelo.id,
+                detected=template.modelo,
+            )
         )
 
 
@@ -335,13 +360,20 @@ def _select_extraction_profile(
             if profile.id == extraction_profile_id:
                 return profile
         raise DeclaracionParseError(
-            f"declaracion extraction profile {extraction_profile_id!r} is not available for modelo={snapshot.modelo.id}"
+            tr(
+                "adapters.inbound.declaracion.errors.profile_unavailable",
+                profile=extraction_profile_id,
+                modelo=snapshot.modelo.id,
+            )
         )
     if len(profiles) != 1:
         available = ", ".join(sorted(profile.id for profile in profiles)) or "none"
         raise DeclaracionParseError(
-            f"expected exactly one declaration PDF extraction profile for modelo={snapshot.modelo.id}; "
-            f"available: {available}"
+            tr(
+                "adapters.inbound.declaracion.errors.profile_count_invalid",
+                modelo=snapshot.modelo.id,
+                available=available,
+            )
         )
     return profiles[0]
 
@@ -393,7 +425,13 @@ def _extract_profile_values(
         if ambiguous:
             details.append(f"ambiguous={','.join(ambiguous)}")
         details.append(f"coverage={coverage}")
-        raise DeclaracionParseError(f"declaracion extraction failed profile {profile.id}: {'; '.join(details)}")
+        raise DeclaracionParseError(
+            tr(
+                "adapters.inbound.declaracion.errors.extraction_failed",
+                profile=profile.id,
+                details="; ".join(details),
+            )
+        )
     return tuple(values)
 
 

@@ -106,8 +106,18 @@ def _profile_fact_index(record: object, schema: ProfileSchemaDefinition) -> dict
 
 
 def _decimal_value(binding_id: str, value: str) -> Decimal:
+    # A boolean-typed profile fact renders as ``"True"`` / ``"False"``
+    # (pydantic ``str(bool)``); the LIS Art. 29 new-entity override
+    # consumes it as a 1/0 indicator on the Decimal channel for use
+    # inside an ``if_then_else`` predicate. Coerce booleans before the
+    # numeric parse so the engine receives a real Decimal operand.
+    stripped = value.strip()
+    if stripped == "True":
+        return Decimal("1")
+    if stripped == "False":
+        return Decimal("0")
     try:
-        return Decimal(value.strip())
+        return Decimal(stripped)
     except (InvalidOperation, ValueError) as exc:
         raise ProfileBindingResolutionError(
             f"profile fact for Decimal-channel binding {binding_id!r} is not decimal-compatible; "

@@ -20,15 +20,25 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import SecureObjectRepository
-from ...persistence.storage.sql._orm import Base
-from ...persistence.storage.sql.engine import create_engine_from_settings
+from ....core.config import override_settings
+from ...persistence.storage.master_key._active_session import activate_session
+from ...persistence.storage.master_key._bucket_session import BucketSession
+from ...persistence.storage.sql.engine import dispose_engine, get_engine
 from ._cache import LLMCache
 from ._models import LLMProvider, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+_BUCKET_ID = "llm-cache"
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 def _populated_request() -> LLMRequest:
@@ -60,21 +70,14 @@ def _populated_response(created_at: datetime) -> LLMResponse:
 
 def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated CachedEntry round-trips through the encrypted LLM cache."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "llm-cache-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
         try:
-            SecureObjectRepository(engine=engine)
-
             created_at = datetime.now(UTC).replace(microsecond=0)
             request = _populated_request()
             response = _populated_response(created_at)
@@ -106,12 +109,11 @@ def test_llm_cache_entry_survives_encrypted_storage_roundtrip(
             assert stats.entries == 1
             assert stats.total_bytes > 0
         finally:
-            engine.dispose()
+            dispose_engine(settings)
 
 
 def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: deleting ``response.text`` from the persisted entry must surface.
 
@@ -135,17 +137,12 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     from ._cache import _CACHE_NAMESPACE
     from ._errors import LLMCacheError
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "llm-cache-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
+        engine = get_engine(settings)
         try:
-            SecureObjectRepository(engine=engine)
-
             created_at = datetime.now(UTC).replace(microsecond=0)
             request = _populated_request()
             response = _populated_response(created_at)
@@ -175,16 +172,7 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
             # is required (no default), so the strict pydantic re-parse
             # must raise. The cache wraps re-parse failures in
             # LLMCacheError.
-            regression_caught = False
-            try:
+            with pytest.raises(LLMCacheError):
                 cache.read(request, response.provider, response.model)
-            except LLMCacheError:
-                regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: deleting LLMResponse.text from "
-                "the persisted cache entry did NOT surface as LLMCacheError. "
-                "The cache boundary is tautological and every LLM cache "
-                "roundtrip in the suite is suspect."
-            )
         finally:
-            engine.dispose()
+            dispose_engine(settings)

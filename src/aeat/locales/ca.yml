@@ -1485,7 +1485,18 @@ cli:
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -2788,8 +2799,8 @@ errors:
       no_active_session: No hi ha cap sessió de bucket activa. Executa `aeat config
         profile switch NAME` per desbloquejar un perfil.
       no_detail: No s'ha informat cap detall de preparació.
-      not_ready: "El runtime d'emmagatzematge no està preparat per a emmagatzematge
-        vinculat al perfil: %{details}"
+      not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
+        vinculat al perfil: %{details}'
       route_bucket_mismatch: La ruta de base de dades no coincideix amb la sessió
         de bucket activa.
       route_not_active_bucket: La ruta de base de dades no està associada a un bucket
@@ -3051,6 +3062,10 @@ wizard:
         help: Fills menors en unitat familiar
       has-employees:
         help: Té empleats i paga salaris amb retenció
+      incn-prior-12-months:
+        help: Import net de la xifra de negocis dels darrers 12 mesos, en euros. Per
+          sobre de 6.000.000 EUR el Model 202 obliga a la modalitat de l'article
+          40.3 LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-estimation-regime:
         help: Règim d'estimació IRPF per a la renda d'activitat econòmica
       irpf-income-categories:
@@ -3072,6 +3087,11 @@ wizard:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       name:
         help: Nom visible mostrat en revisions locals
+      new-entity-first-two-profit-periods:
+        help: Marca-ho si l'entitat de nova creació es troba en un dels dos primers
+          períodes impositius amb beneficis (art. 29 LIS), per aplicar el tipus
+          reduït del 15 per cent. Opcional; sense marcar no s'aplica el tipus
+          reduït.
       notes:
         help: Notes per al teu propi record (opcional)
       output-language:
@@ -3348,6 +3368,11 @@ wizard:
         help: Selecciona cada categoria de renda IRPF que tinguis; només l'activitat
           econòmica obliga al Model 130/131
         prompt: Categories de renda IRPF
+      incn-prior-12-months:
+        help: Ens cal per saber si el Model 202 t'obliga a la modalitat de l'article
+          40.3 LIS (a partir de 6.000.000 EUR). Deixa-ho en blanc si no ho saps.
+        prompt: Quin va ser el teu import net de la xifra de negocis durant els
+          darrers 12 mesos? (en euros, opcional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3363,6 +3388,11 @@ wizard:
           sociedad-civil-mercantil:
             label: Societat civil amb objecte mercantil
         prompt: Forma jurídica
+      new-entity-first-two-profit-periods:
+        help: S'aplica només a persones jurídiques. Si ho marques, l'entitat
+          tributa al tipus reduït del 15 per cent durant aquests dos períodes.
+        prompt: És una entitat de nova creació en un dels seus dos primers
+          períodes impositius amb beneficis?
       title: Tipus de contribuent
     title: Auxiliar de configuració
     verifier:

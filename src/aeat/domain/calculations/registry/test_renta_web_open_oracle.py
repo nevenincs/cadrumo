@@ -51,7 +51,7 @@ def _open_simulator_policy() -> RemoteStateGuardPolicy:
             "document-submission",
             "declaration-submission",
         ),
-        synthetic_data_allowed=True,
+        synthetic_data_allowed=False,
         requires_authentication=False,
         requires_aeat_authorization=False,
         legal_refs=("ley-35-2006:art-99",),

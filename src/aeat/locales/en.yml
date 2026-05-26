@@ -1415,7 +1415,18 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: Report drift without writing locale files
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -2639,17 +2650,16 @@ errors:
     unsupported_currency: The currency code provided is not supported.
   storage:
     engine:
-      create_failed: The storage database engine could not be created. Check the
-        configured storage route and try again.
-      empty_database_url: The configured database URL is empty. Select a profile
-        or configure storage before trying again.
+      create_failed: The storage database engine could not be created. Check the configured
+        storage route and try again.
+      empty_database_url: The configured database URL is empty. Select a profile or
+        configure storage before trying again.
     runtime:
       no_active_session: No active bucket session is open. Run `aeat config profile
         switch NAME` to unlock a profile.
       no_detail: No detailed readiness issue was reported.
       not_ready: 'Storage runtime is not ready for profile-bound storage: %{details}'
-      route_bucket_mismatch: The database route does not match the active bucket
-        session.
+      route_bucket_mismatch: The database route does not match the active bucket session.
       route_not_active_bucket: The database route is not attached to an active profile
         bucket.
       session_changed: The active bucket session changed. Unlock the target profile
@@ -2906,6 +2916,10 @@ wizard:
         help: Minor children in family unit
       has-employees:
         help: Has employees and pays salaries with retención
+      incn-prior-12-months:
+        help: Net turnover (importe neto de la cifra de negocios) over the prior
+          12 months, in euros. Above 6,000,000 EUR Modelo 202 mandates the
+          Art. 40.3 LIS modality; below it both modalities are available. Optional.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
@@ -2926,6 +2940,11 @@ wizard:
         help: Recognised legal form when the entity type is a legal entity
       name:
         help: Display name shown in local reviews
+      new-entity-first-two-profit-periods:
+        help: Mark this when a newly-created legal entity is in one of its first two
+          profit-making tax periods (LIS Art. 29) to opt into the 15 percent
+          reduced rate. Optional; unset leaves the entity on its otherwise-applicable
+          rate.
       notes:
         help: Notes for your own records (optional)
       output-language:
@@ -3200,6 +3219,11 @@ wizard:
         help: Select every IRPF income category you have; only economic activity triggers
           Modelo 130/131
         prompt: IRPF income categories
+      incn-prior-12-months:
+        help: We need this to decide whether Modelo 202 forces the Art. 40.3 LIS
+          modality (above 6,000,000 EUR). Leave it blank if you do not know.
+        prompt: What was your net turnover over the past 12 months? (in euros,
+          optional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3215,6 +3239,11 @@ wizard:
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
+      new-entity-first-two-profit-periods:
+        help: Applies only to legal entities. When set, the entity is taxed at the
+          15 percent reduced rate during those two periods.
+        prompt: Is this a newly-created legal entity in one of its first two
+          profit-making tax periods?
       title: Taxpayer type
     title: Setup wizard
     verifier:

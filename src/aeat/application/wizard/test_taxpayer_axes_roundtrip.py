@@ -177,3 +177,157 @@ class TestTaxpayerProfileProjection:
         assert profile.irpf_estimation_regime is None
         assert profile.iva.sii_enrolled is False
         assert profile.iva.redeme_enrolled is False
+
+
+class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
+    """The LIS Art. 29 new-entity-first-two-profit-periods state survives
+    the full wizard → persistence → reload → projection cycle as a
+    three-state value.
+
+    These tests exist because BLOCKER 1 demonstrated that a descriptor
+    default of ``"false"`` collapsed the three-state down to a binary
+    declared-False, silently corrupting every quiet-create legal entity
+    profile. The contract under test: a profile that has not declared
+    the fact projects to ``None`` (undeclared); a positively-declared
+    True projects to ``True``; a positively-declared False projects to
+    ``False``.
+    """
+
+    def _legal_entity_answers(
+        self,
+        *,
+        new_entity: bool | str = "",
+    ) -> SetupAnswers:
+        return SetupAnswers(
+            tax_id="B66012345",
+            activity="Software development",
+            entity_type=EntityType.LEGAL_ENTITY,
+            legal_entity_form=LegalEntityForm.SL,
+            new_entity_first_two_profit_periods=new_entity,
+        )
+
+    def test_undeclared_new_entity_state_drops_from_canonical_dict(self) -> None:
+        """Blank ``new_entity_first_two_profit_periods`` produces an empty
+        canonical token; the persistence-layer ``if value`` filter then
+        drops the fact, so a profile that never positively declared the
+        override does not carry the fact in storage."""
+
+        answers = self._legal_entity_answers(new_entity="")
+        canonical = serialise_answers(SETUP_FLOW, answers)
+        assert canonical.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
+
+    def test_declared_true_round_trips_through_canonical_dict(self) -> None:
+        answers = self._legal_entity_answers(new_entity=True)
+        canonical = serialise_answers(SETUP_FLOW, answers)
+        assert canonical["taxpayer_type.new_entity_first_two_profit_periods"] == "true"
+
+        rebuilt = project_answers(SETUP_FLOW, canonical)
+        assert isinstance(rebuilt, SetupAnswers)
+        assert rebuilt.new_entity_first_two_profit_periods is True
+
+    def test_declared_false_round_trips_through_canonical_dict(self) -> None:
+        answers = self._legal_entity_answers(new_entity=False)
+        canonical = serialise_answers(SETUP_FLOW, answers)
+        assert canonical["taxpayer_type.new_entity_first_two_profit_periods"] == "false"
+
+        rebuilt = project_answers(SETUP_FLOW, canonical)
+        assert isinstance(rebuilt, SetupAnswers)
+        assert rebuilt.new_entity_first_two_profit_periods is False
+
+    def test_taxpayer_profile_projects_absent_fact_to_none(self) -> None:
+        """The downstream TaxpayerProfile projection treats an absent
+        fact as the undeclared three-state, not as declared-False.
+
+        This is the assertion that would have surfaced BLOCKER 1: the
+        scripted ``--quiet`` legal-entity create with no flag must
+        not materialise a ``"false"`` token in the canonical dict, and
+        the projection must read absent → ``None``.
+        """
+
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "B66012345",
+                "activities.description": "Software development",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+            },
+            tax_id_default="00000000T",
+        )
+        assert profile.new_entity_first_two_profit_periods is None
+
+    def test_taxpayer_profile_projects_declared_true_to_true(self) -> None:
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "B66012345",
+                "activities.description": "Software development",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+                "taxpayer_type.new_entity_first_two_profit_periods": "true",
+            },
+            tax_id_default="00000000T",
+        )
+        assert profile.new_entity_first_two_profit_periods is True
+
+    def test_taxpayer_profile_projects_declared_false_to_false(self) -> None:
+        profile = taxpayer_profile_from_mapping(
+            {
+                "identity.tax_id": "B66012345",
+                "activities.description": "Software development",
+                "taxpayer_type.entity_type": "legal_entity",
+                "taxpayer_type.legal_entity_form": "sl",
+                "taxpayer_type.new_entity_first_two_profit_periods": "false",
+            },
+            tax_id_default="00000000T",
+        )
+        assert profile.new_entity_first_two_profit_periods is False
+
+    def test_full_wizard_runtime_quiet_path_preserves_undeclared(self) -> None:
+        """End-to-end through ``run_flow`` with the scripted prompter and
+        no positively-declared CONFIRM answer for the new-entity flag.
+
+        Exercises the exact code path that BLOCKER 1 broke: the
+        ``--quiet`` scripted prompter feeds ``question.default or ""``
+        for any question the operator did not name. With the
+        descriptor's stale ``default="false"`` removed and
+        ``validate_confirm`` accepting blank for optional questions,
+        the canonical dict must not carry the new-entity key at all,
+        and the projection must reload at ``None``.
+        """
+
+        from ._commands import _scripted_from_canonical
+        from ._runner import run_flow
+
+        # The scripted prompter is driven by an empty canonical dict;
+        # every visible question falls back to its descriptor default
+        # (or blank). The required-flag tax-id and activity must be
+        # seeded explicitly — they are unconditionally required.
+        canonical: dict[str, str] = {
+            "tax-id": "B66012345",
+            "activity": "Software development",
+            "entity-type": "legal_entity",
+            "legal-entity-form": "sl",
+        }
+        prompter = _scripted_from_canonical(SETUP_FLOW, canonical)
+        answers = run_flow(SETUP_FLOW, prompter)
+        assert isinstance(answers, SetupAnswers)
+
+        # The new-entity field stays at the undeclared sentinel; never
+        # collapses onto False because the operator never declared it.
+        assert answers.new_entity_first_two_profit_periods == ""
+
+        # Serialise; the canonical dict drops the undeclared field at
+        # the ``if value`` persistence filter ⇒ blank canonical token.
+        serialised = serialise_answers(SETUP_FLOW, answers)
+        assert serialised.get(
+            "taxpayer_type.new_entity_first_two_profit_periods"
+        ) == ""
+
+        # Filter blanks the way ``persist_answers`` does for create,
+        # then project the deadline-layer TaxpayerProfile.
+        persisted = {key: value for key, value in serialised.items() if value}
+        assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
+        profile = taxpayer_profile_from_mapping(
+            persisted,
+            tax_id_default="00000000T",
+        )
+        assert profile.new_entity_first_two_profit_periods is None

@@ -192,6 +192,10 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             _snapshot(),
             inputs=base_inputs,
             enum_binding_values={_DISPATCH_BINDING: form},
+            binding_values={
+                "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+                "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+            },
             relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )
@@ -237,6 +241,10 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
                 "DP200014B:01784": Decimal("0"),
                 "DP200026:00625": Decimal("100"),
             },
+            binding_values={
+                "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+                "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+            },
             relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )
@@ -263,6 +271,10 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
                 "DP200026:00625": Decimal("100"),
             },
             enum_binding_values={_DISPATCH_BINDING: "unknown_form"},
+            binding_values={
+                "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+                "modelo-200-2024-profile-incn-prior-12-months": Decimal("10000000"),
+            },
             relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
             date_context={"filing_period": date(2024, 12, 31)},
         )

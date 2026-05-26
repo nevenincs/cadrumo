@@ -1024,7 +1024,18 @@ cli:
       transaction_id_help: cli.ledger.view.transaction_id_help
   locales:
     app_help: cli.locales.app_help
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: cli.locales.scaffold_check_help
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: cli.log_levels.errors.flags_mutually_exclusive
@@ -1896,8 +1907,8 @@ errors:
     engine:
       create_failed: Nem sikerült létrehozni a tárolási adatbázismotort. Ellenőrizd
         a beállított tárolási útvonalat, majd próbáld újra.
-      empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy
-        állítsd be a tárolást, mielőtt újra próbálkozol.
+      empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy állítsd
+        be a tárolást, mielőtt újra próbálkozol.
     runtime:
       no_active_session: Nincs aktív bucket-munkamenet. Futtasd az `aeat config profile
         switch NAME` parancsot egy profil feloldásához.
@@ -1906,8 +1917,8 @@ errors:
       route_bucket_mismatch: Az adatbázisútvonal nem egyezik az aktív bucket-munkamenettel.
       route_not_active_bucket: Az adatbázisútvonal nincs aktív profil-buckethez kötve.
       session_changed: Az aktív bucket-munkamenet megváltozott. Oldd fel újra a célprofilt.
-      session_expired: Az aktív bucket-munkamenet lejárt. Futtasd az `aeat config profile
-        switch NAME` parancsot a profil újraaktiválásához.
+      session_expired: Az aktív bucket-munkamenet lejárt. Futtasd az `aeat config
+        profile switch NAME` parancsot a profil újraaktiválásához.
       session_sealed: Az aktív bucket-munkamenet le van zárva. Futtasd az `aeat config
         profile switch NAME` parancsot a profil újraaktiválásához.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
@@ -1990,8 +2001,17 @@ wizard:
     flags:
       activity:
         help: wizard.setup.flags.activity.help
+      incn-prior-12-months:
+        help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR
+          küszöb felett a 202-es modell a LIS 40.3 cikk szerinti módozatot
+          írja elő; alatta mindkét módozat választható. Opcionális.
       name:
         help: wizard.setup.flags.name.help
+      new-entity-first-two-profit-periods:
+        help: Jelölje be, ha az újonnan alapított jogi személy a nyereséges
+          első két adóévének valamelyikében van (LIS 29. cikk), a 15
+          százalékos kedvezményes adókulcs alkalmazásához. Opcionális;
+          jelölés hiányában a kedvezményes kulcs nem érvényesül.
       notes:
         help: wizard.setup.flags.notes.help
       surnames:
@@ -2020,6 +2040,20 @@ wizard:
       title: wizard.setup.spouse.title
     taxpayer:
       title: wizard.setup.taxpayer.title
+    taxpayer-type:
+      incn-prior-12-months:
+        help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e
+          Önt a 202-es modell a LIS 40. cikk 3. bekezdése szerinti
+          módozatra (6 000 000 EUR felett). Hagyja üresen, ha nem
+          ismeri az adatot.
+        prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban?
+          (euróban, opcionális)
+      new-entity-first-two-profit-periods:
+        help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás
+          a 15 százalékos kedvezményes adókulccsal adózik az említett
+          két adóévben.
+        prompt: Újonnan alapított jogi személyként az első két nyereséges
+          adóévének valamelyikében van?
     title: wizard.setup.title
     verifier:
       activity_present: wizard.setup.verifier.activity_present

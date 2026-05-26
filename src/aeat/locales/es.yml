@@ -1504,7 +1504,18 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -2811,8 +2822,8 @@ errors:
         bucket activa.
       route_not_active_bucket: La ruta de base de datos no está asociada a un bucket
         de perfil activo.
-      session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el
-        perfil de destino.
+      session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
+        de destino.
       session_expired: La sesión de bucket activa ha caducado. Ejecuta `aeat config
         profile switch NAME` para reactivar el perfil.
       session_sealed: La sesión de bucket activa está sellada. Ejecuta `aeat config
@@ -3081,6 +3092,10 @@ wizard:
         help: Si el contribuyente está inscrito en REDEME
       iva-regime:
         help: Régimen IVA
+      incn-prior-12-months:
+        help: Importe neto de la cifra de negocios de los últimos 12 meses, en euros.
+          Por encima de 6.000.000 EUR el Modelo 202 obliga a la modalidad del art.
+          40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
       iva-roi-enrolled:
         help: Alta en ROI
       iva-sii-enrolled:
@@ -3089,6 +3104,11 @@ wizard:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
       name:
         help: Nombre visible mostrado en revisiones locales
+      new-entity-first-two-profit-periods:
+        help: Marca si la entidad de nueva creación se encuentra en uno de los dos
+          primeros periodos impositivos con beneficios (art. 29 LIS), para aplicar
+          el tipo reducido del 15 por ciento. Opcional; sin marcar no se aplica el
+          tipo reducido.
       notes:
         help: Notas para tu propio recuerdo (opcional)
       output-language:
@@ -3365,6 +3385,12 @@ wizard:
         help: Selecciona cada categoría de renta IRPF que tengas; solo la actividad
           económica obliga al Modelo 130/131
         prompt: Categorías de renta IRPF
+      incn-prior-12-months:
+        help: Lo necesitamos para saber si el Modelo 202 te obliga a la modalidad
+          del artículo 40.3 LIS (a partir de 6.000.000 EUR). Déjalo en blanco si
+          no lo conoces.
+        prompt: ¿Cuál fue su importe neto de la cifra de negocios en los últimos
+          12 meses? (en euros, opcional)
       legal-entity-form:
         choices:
           cooperativa:
@@ -3380,6 +3406,11 @@ wizard:
           sociedad-civil-mercantil:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
+      new-entity-first-two-profit-periods:
+        help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
+          tipo reducido del 15 por ciento durante esos dos periodos.
+        prompt: ¿Es una entidad de nueva creación en uno de sus dos primeros periodos
+          impositivos con beneficios?
       title: Tipo de contribuyente
     title: Asistente de configuración
     verifier:
