@@ -28,9 +28,9 @@ Land the two regulated profile facts and the BOE-grounded legal entry
 they cite, with anti-tautology persistence-boundary roundtrip coverage.
 
 - [x] `P01.S01` - Transcribe LIS Art. 40.3 against the BOE-A-2014-12328 corpus and register `ley-27-2014:art-40-3` as a resolvable scoped registry legal entry carrying the 6.000.000 EUR threshold text; `src/aeat/_data/registry/aeat/legal/is.toml`.
-- [ ] `P01.S02` - Add an `incn_prior_12_months` typed Decimal profile fact, project it onto `TaxpayerProfile`, collect it in the wizard with operator-language prompt, and bind a `--incn-prior-12-months` CLI flag on `config profile create` and `edit`; `src/aeat/domain/deadlines`.
-- [ ] `P01.S03` - Add a `new_entity_first_two_profit_periods` typed boolean profile fact, project it onto `TaxpayerProfile`, collect it in the wizard with operator-language prompt, and bind a CLI flag on `config profile create` and `edit`; `src/aeat/domain/deadlines`.
-- [ ] `P01.S04` - Roundtrip and anti-tautology tests for both new optional facts through the real encrypted SQL persistence boundary, populating non-default values and asserting strict equality on reload; `src/aeat/application/user_profile`.
+- [x] `P01.S02` - Add an `incn_prior_12_months` typed Decimal profile fact, project it onto `TaxpayerProfile`, collect it in the wizard with operator-language prompt, and bind a `--incn-prior-12-months` CLI flag on `config profile create` and `edit`; `src/aeat/domain/deadlines`.
+- [x] `P01.S03` - Add a `new_entity_first_two_profit_periods` typed boolean profile fact, project it onto `TaxpayerProfile`, collect it in the wizard with operator-language prompt, and bind a CLI flag on `config profile create` and `edit`; `src/aeat/domain/deadlines`.
+- [x] `P01.S04` - Roundtrip and anti-tautology tests for both new optional facts through the real encrypted SQL persistence boundary, populating non-default values and asserting strict equality on reload; `src/aeat/application/user_profile`.
 
 ### Phase `P02` - runtime, formula, and Modelo 202 modality
 
