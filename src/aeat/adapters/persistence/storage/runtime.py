@@ -117,7 +117,6 @@ class StorageRuntime(BaseModel):
         settings = Settings(
             aeat_local_storage_root=self.storage_root,
             aeat_active_profile=self.bucket_id,
-            aeat_database_url="",
         )
         engine = create_engine_from_settings(settings)
         return SecureObjectRepository(engine=engine)
@@ -251,11 +250,46 @@ def inspect_storage_runtime(
     )
 
 
+def inspect_bucket_storage_runtime(
+    bucket_id: str,
+    settings: Settings | None = None,
+    *,
+    now: datetime | None = None,
+) -> StorageRuntime:
+    """Return runtime readiness for a named profile bucket.
+
+    Explicit database URLs remain fail-closed: when the live settings
+    carry an explicit primary database route, the runtime reports that
+    route as unready instead of synthesizing a clean bucket route.
+    """
+
+    trimmed = bucket_id.strip()
+    if not trimmed:
+        raise ValueError("bucket_id must not be blank")
+    resolved = settings or load_settings()
+    current_route = classify_storage_route(resolved)
+    if (
+        "aeat_database_url" in resolved.model_fields_set
+        and current_route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
+    ):
+        return inspect_storage_runtime(resolved, now=now)
+    bucket_settings = Settings(
+        aeat_local_storage_root=resolved.aeat_local_storage_root,
+        aeat_active_profile=trimmed,
+        aeat_database_url="",
+    )
+    explicit_fields = set(bucket_settings.model_fields_set)
+    explicit_fields.discard("aeat_database_url")
+    object.__setattr__(bucket_settings, "__pydantic_fields_set__", explicit_fields)
+    return inspect_storage_runtime(bucket_settings, now=now)
+
+
 __all__ = [
     "StorageRuntime",
     "StorageRuntimeReadiness",
     "StorageRuntimeReadinessCode",
     "StorageRuntimeReadinessIssue",
     "StorageRuntimeSession",
+    "inspect_bucket_storage_runtime",
     "inspect_storage_runtime",
 ]
