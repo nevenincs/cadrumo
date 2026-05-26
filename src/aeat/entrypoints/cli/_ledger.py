@@ -444,27 +444,34 @@ def ledger_update(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    result = update_manual_transaction_fields(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        patch=_patch_from_options(
-            booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
-            value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-            amount=_parse_decimal(amount, label="amount"),
-            direction=direction,
-            currency=currency,
-            counterparty=counterparty,
-            description=description,
-            taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
-            iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
-            iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
-            irpf_category=irpf_category,
-            notes=notes,
-        ),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger update",
-        transaction_repository=transaction_repository,
-    )
+    # A leaked `pydantic.ValidationError` (negative amount, illegal field
+    # combination) would be swallowed by the generic CLI boundary into an
+    # opaque "config repair" hint. Catch it here and surface the real
+    # validator cause, mirroring the `ledger classify` treatment.
+    try:
+        result = update_manual_transaction_fields(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            patch=_patch_from_options(
+                booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
+                value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
+                amount=_parse_decimal(amount, label="amount"),
+                direction=direction,
+                currency=currency,
+                counterparty=counterparty,
+                description=description,
+                taxable_base=_parse_decimal(taxable_base, label="taxable-base"),
+                iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
+                iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
+                irpf_category=irpf_category,
+                notes=notes,
+            ),
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger update",
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
 
 
@@ -626,20 +633,26 @@ def ledger_allocate(
         allocation_classification = BusinessClassification.PERSONAL
     else:
         allocation_classification = BusinessClassification.MIXED
-    result = update_manual_transaction_fields(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        patch=_patch_from_options(
-            business_classification=allocation_classification,
-            business_pct=parsed_business_pct,
-            category_id=validated_category_id,
-            usage_ratio_id=usage_ratio_id,
-            prorrata_reference=prorrata_reference,
-        ),
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger allocate",
-        transaction_repository=transaction_repository,
-    )
+    # A leaked `pydantic.ValidationError` (business_pct out of range, illegal
+    # field combination) is caught here and surfaced as the real validator
+    # cause, mirroring the `ledger classify` treatment.
+    try:
+        result = update_manual_transaction_fields(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            patch=_patch_from_options(
+                business_classification=allocation_classification,
+                business_pct=parsed_business_pct,
+                category_id=validated_category_id,
+                usage_ratio_id=usage_ratio_id,
+                prorrata_reference=prorrata_reference,
+            ),
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger allocate",
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     _emit_update_result(ctx, result.transaction, result.ref.bucket_id, result.bucket_event_ids)
 
 
@@ -824,22 +837,28 @@ def ledger_split(
     state = _state()
     transaction_repository = _tx_repo(state)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
-    children = tuple(
-        SplitChildCommand(
-            amount=_parse_required_decimal(amount_raw, label="child-amount"),
-            description=description_raw,
+    # A leaked `pydantic.ValidationError` (negative child amount, zero-sum
+    # split) is caught here and surfaced as the real validator cause,
+    # mirroring the `ledger classify` treatment.
+    try:
+        children = tuple(
+            SplitChildCommand(
+                amount=_parse_required_decimal(amount_raw, label="child-amount"),
+                description=description_raw,
+            )
+            for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
         )
-        for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
-    )
-    result = split_transaction(
-        bucket_id=transaction_repository.bucket_id,
-        transaction_id=resolved_id,
-        children=children,
-        actor=actor or resolve_active_bucket_id() or "operator",
-        source_command="aeat app ledger split",
-        reason=reason,
-        transaction_repository=transaction_repository,
-    )
+        result = split_transaction(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            children=children,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger split",
+            reason=reason,
+            transaction_repository=transaction_repository,
+        )
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
     payload = {
         "bucket_id": result.bucket_id,
         "parent_transaction_id": result.parent_transaction_id,
@@ -1325,6 +1344,10 @@ def ledger_export(
 @app.command("list", help=tr("cli.ledger.list.help"))
 def ledger_list(ctx: typer.Context) -> None:
     """List bucket-scoped ledger transactions through the backend read service."""
+    # S09 doc-note: `ledger list` is a read-only query; ValidationError cannot
+    # originate here from operator input. Stored-data drift (a persisted record
+    # that no longer deserialises) surfaces as a CliStoredDataValidationBoundaryError
+    # raised by _state() / _tx_repo() — handled by S05, not this verb.
     state = _state()
     transaction_repository = _tx_repo(state)
     results = list_manual_transactions(
@@ -1359,6 +1382,9 @@ def ledger_view(
     transaction_id: str = typer.Argument(..., help=tr("cli.ledger.view.transaction_id_help")),
 ) -> None:
     """Read one bucket-scoped ledger transaction through the backend read service."""
+    # S10 doc-note: `ledger view` is a read-only query; ValidationError cannot
+    # originate here from operator input. Stored-data drift surfaces via S05
+    # (CliStoredDataValidationBoundaryError at _state() / _tx_repo()), not here.
     transaction_repository = _tx_repo(_state())
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     result = get_manual_transaction(
