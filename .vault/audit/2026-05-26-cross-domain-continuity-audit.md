@@ -725,13 +725,411 @@ The epic plan will be authored separately under
 `tier: L4` and an explicit project-management association per the
 plan-hardening ADR.
 
-## Outstanding inputs (this audit is iterative)
+## Round-2 expansion — Pere persona + Joan grounding + 10 Haiku sweeps
 
-- Pere Roselló persona testimonial (in flight).
-- Joan corporate-tax-runtime grounding agent (in flight).
-- Seven Haiku drift sweeps in flight (domain registry, domain rest,
-  ledger + aggregation, modelo + filing, overview + workflow,
-  adapters, entrypoints/cli, registry data).
+This section folds in the remaining round-6 inputs that landed
+after the initial commit. The cluster structure above is preserved;
+this expansion adds Pere's findings, the Joan corporate-tax-runtime
+deep grounding, and the systemic drift catalogue from all ten Haiku
+slice sweeps.
 
-Each will be appended to the relevant cluster as it lands. The
-audit's structure is stable.
+### Pere Roselló — pensioner + landlord (round-6 fifth persona)
+
+| Pere finding | Class | Note |
+|---|---|---|
+| IRPF tarifa returns `0.00` cuota for base liquidable 35.400 EUR + minimo 5.550 EUR (expected ~3.500–4.500 EUR) | BLOCKER | `cuota estatal`, `cuota autonómica`, `cuota autoliquidación`, `cuota diferencial`, `resultado declaración` all zero. **The IRPF tarifa is not applied to the Renta calculation.** New Cluster P. |
+| 2024 calculation blocked: `registry validation failed: modelo 100 revision 2023: extraction profile 'modelo-100-2023-declaracion-pdf' ... corpus_round_trip_verified is False` | BLOCKER | Fixture/audit-state error exposed as a user-facing message. Blocks the cross-period 2024-vs-2025 grounding check against the gestor's 1.250 EUR figure. |
+| Profile-fact bindings all show `missing` despite being on the profile (NIFDLG, DNIASDLG, FNACDLG, every `renta-2025-profile-*` left at 0) | BLOCKER | Independent confirmation of a profile→binding resolution failure DIFFERENT from the bool/Decimal mismatch — these are string/date facts left unresolved. New Cluster T. |
+| Same generic `aeat config repair` validation refusal on `ledger classify --classification BUSINESS|MIXED|PROCESSED_UNCLASSIFIED` and `ledger list` | BLOCKER | Independent confirmation of Cluster A across a fifth persona. |
+| Calculate gate demands `renta-2025-rel-130-pagos-fraccionados=0` and 131 / `estimacion-directa-es-normal` bindings despite `explain 130/131` saying `not_applicable` | MAJOR | Cross-domain inconsistency — the applicability layer marks 130/131 not-applicable for a pensioner-landlord, but the calculate gate still demands their relations. Update to Cluster B (the two-source-of-truth pattern). |
+| CCAA defaults to `madrid` when postcode is 25001 Lleida | MAJOR | Independent confirmation of Laia's postcode→CCAA mis-inference. Catalan IRPF cuota differs materially from Madrid's — silent wrong-CCAA defaults produce wrong Renta. |
+| Modelo 100 2024-0A not in calendar despite `applicable=true` | MAJOR | Confirms Cluster C across one more modelo+year. |
+| Calendar still shows `100 2023-0A late opens=2024-04-03` even though activity-start-date 2024-03-01 should suppress it; backlog correctly hides it; agenda correctly hides it | MAJOR | activity-start-date gate (round-4 #41) is wired in backlog + agenda but NOT in `build_overview_calendar`. New finding in Cluster C area. |
+| `corpus_round_trip_verified is False and provisional_pending_specimen is False` surfaced to operator | MINOR | Developer-language fixture-state leak. Should never reach a user. |
+| Transient registry-validation error on `agenda` for an unrelated modelo (390) after a failed 2024 calculate | MINOR | Possible cache-state corruption; auto-resolves on profile switch. Worth a guard. |
+| Suggestion text `Run aeat app ledger preflight --mode modelo` is wrong (`--mode` does not exist, real flag is `--period`) | MINOR | Stale CLI suggestion. |
+| Top-level `aeat --help` menu in Spanish despite `--output-language ca`; sub-menus switch correctly | MINOR | Top-level help missing locale plumbing. |
+| Activity-start-date gate in backlog + agenda PASS; profile-switching isolation PASS; NIF validation gold-standard | POLISH | Confirmed positives. |
+
+### Joan corporate-tax-runtime grounding — deep root-cause map
+
+The Joan grounding agent located every B-JOAN-N regression to file:line.
+The findings collapse into four NEW clusters that warrant explicit
+identity in this audit:
+
+**Cluster Q — Modality gate orphaned in domain, never wired into the registry.**
+`derive_modelo_202_modality` exists at `src/aeat/domain/calculations/registry/_applicability.py:1239-1282`
+and correctly implements the INCN threshold (above 6.000.000 EUR →
+Art. 40.3 mandatory; below → Art. 40.2 optional). The function is
+NEVER called by any formula, binding, or casilla applicability
+condition in `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/`.
+Both casilla `03` (Art. 40.2 a ingresar) at
+`src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/0003-03.toml`
+and casilla `32` (Art. 40.3 resultado) at
+`src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/0048-32.toml`
+are `input_kind = "computed"` with NO applicability conditions —
+they compute unconditionally. The revision has only ONE binding
+file in `bindings/`; there is no INCN binding at all.
+
+This is the deepest defect uncovered in round 6: a `domain` function
+was added, unit-tested in isolation, and never integrated. The CLI
+never calls it during calculation routing.
+
+**Cluster R — Temporal coverage mismatch within a single revision.**
+At `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`,
+`is.modelo-200.tipo-gravamen-pyme` is declared `data_type = "bracket_table"`
+with `bracket_axis = "filing_period"`. The brackets have
+`valid_from = 2025-01-01` — there is NO bracket with
+`valid_from = 2024-01-01` or earlier. The revision is named
+`2024-y-siguientes` but its pyme bracket coverage starts at 2025.
+For a 2024 filing period the lookup raises `bracket_no_window`.
+The sibling `is.modelo-200.cuota-integra-bracket-general` parameter
+does have a 2024 bracket — so the temporal coverage is inconsistent
+across sibling parameters in the same revision.
+
+**Cluster S — i18n template/context key mismatch silently swallowed.**
+At `src/aeat/domain/calculations/registry/_formula_runtime.py:759-763`
+the `bracket_no_window` error is raised with
+`context={"parameter_id": parameter.id, "filing_date": selected.isoformat()}`.
+At `src/aeat/locales/es.yml:2170-2171` the template is
+`bracket_no_window: Bracket parameter {parameter_id} has no bracket valid for {as_of}.`
+The placeholder is `{as_of}`; the context key is `"filing_date"`.
+`src/aeat/core/i18n/_render.py:243-247` performs regex
+substitution followed by `.format(**values)`; the `except
+(KeyError, IndexError, ValueError)` catches the mismatch silently
+and returns the half-interpolated string with `{as_of}` still
+literal. The i18n stack has no validation that context keys match
+template placeholders, and the silent fallback actively hides the
+mismatch at runtime.
+
+**Cluster T — Profile-fact bindings show `missing` despite the
+fact existing on the profile.** Pere confirms this is distinct from
+the bool/Decimal mismatch (Cluster I). Every `renta-2025-profile-*`
+binding (tax_id, display-name, birth-date, sex, marital-status)
+shows as `missing` even though the profile carries those facts.
+Likely root cause is in `src/aeat/application/modelo/_profile_binding.py`
+profile-fact-key resolution path — the selector keys the bindings
+declare may not match the canonical profile-fact paths the profile
+store exposes. Pere's calculation persisted NIFDLG=0, DNIASDLG=0,
+FNACDLG=0 — the contribuyente identity surfaces as blank on the
+draft. The grounding agent's hypothesis (B-JOAN-1's underlying
+class) is plausible but the symptom is broader than booleans.
+
+### Cluster D — round-2 expansion (Joan grounding details)
+
+Adding precise file:line citations from the Joan grounding to the
+already-described Cluster D regressions:
+
+- **D.1 (bool/Decimal mismatch)** confirmed at
+  `src/aeat/application/wizard/_persistence.py:38-39` (lowercase
+  emit), `src/aeat/domain/user_profile/_values.py:55-78` (no bool
+  promotion arm), `src/aeat/application/modelo/_profile_binding.py:109-126`
+  (`"True"`/`"False"` sentinels). Test bypass at
+  `src/aeat/domain/calculations/registry/test_modelo_200_cuota_integra_lanes.py`
+  passes Decimal bindings directly, never exercising `_profile_binding.py`.
+- **D.2a (unrendered template)** = Cluster S (above).
+- **D.2b (missing tramo for SL above-pyme)** = Cluster R (above).
+- **D.3 (no input casilla for base imponible)** — at
+  `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00552-base-imponible.toml`
+  the casilla `DP200014:00552` is `input_kind = "manual"` — it IS
+  manually inputable. Joan supplied bare `552` rather than
+  `DP200014:00552`. The CLI accepts bare numeric syntax but the
+  registry lookup needs the qualified `PREFIX:NNNNN` key, producing
+  the misleading "unknown casilla" error. Root cause is a CLI
+  normalisation gap, not a missing casilla.
+- **D.4 (Modelo 202 modality inverted)** = Cluster Q (above).
+- **D.5 (verify-path period resolver)** — confirmed at
+  `src/aeat/domain/period.py:57-88` `parse_canonical_period` has NO
+  `1P/2P/3P` arm; `period_start_date` and `period_end_date` (lines
+  121-166) DO. Three sibling functions in `domain/period.py` should
+  remain in sync; the round-4 #40 update touched only two. Plus
+  `workflow_period_for_work_unit` at
+  `src/aeat/application/modelo/_actions.py:335-352` falls through
+  to `parse_canonical_period` for unrecognised tokens. Plus
+  `_registry_period_token` at `src/aeat/application/workflow/_engine.py:76-90`
+  handles the `YYYY-nP` form but is called only on file/verify; the
+  calculate path uses the bare `nP` form directly. Four
+  uncoordinated period-normalisation sites.
+
+### Cluster O — systemic drift catalogue (filled from all ten Haiku sweeps)
+
+#### Slice: `src/aeat/core/` + `src/aeat/locales/` (71 files; 2 flagged)
+
+- **drift**: `src/aeat/core/identity/_documents.py:32` `_CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"` (missing K) vs `src/aeat/core/identity/_tax_id.py:23` `_CIF_LEADERS = "ABCDEFGHJKLMNPQRSUVW"` (with K). Two parallel CIF validators with divergent acceptable-letter sets. Same CIF accepted by `validate_spanish_tax_id` and rejected by `validate_identity`. This is **Cluster M** in the round-1 list.
+- **duplication**: `src/aeat/locales/cli.py:65` `_covered_by_namespace()` redeclared identically at `src/aeat/locales/manager.py:210`. Two definitions of the same private helper.
+
+#### Slice: `src/aeat/domain/calculations/registry/` (60+ files; 3 hotspots)
+
+- **re-export of private symbols**: `src/aeat/domain/calculations/registry/applicability.py:27-47` `__all__` exports `_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS`, `_INCOMPLETE_LEGAL_REFS`, `_INCOMPLETE_UNDECLARED_REASON`, `_INCOMPLETE_UNDETERMINED_REASON`, `_INCOMPLETE_UNRULED_REASON`, `_MODELO_APPLICABILITY_RULES`. Source-hygiene rule explicitly forbids private-symbol `__all__`. Updates Cluster B.
+- **duplication (constants)**: `src/aeat/domain/calculations/registry/_applicability.py:385-446` defines `_INCOMPLETE_LEGAL_REFS`, `_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS`, `_ATTRIBUTION_PASS_THROUGH_REASON`, `_INCOMPLETE_UNDECLARED_REASON`, `_INCOMPLETE_UNRULED_REASON`, `_INCOMPLETE_UNDETERMINED_REASON` — all identical copies at `src/aeat/application/overview/_applicability.py:385-437`. Updates Cluster B.
+- **utility duplication**: `_missing_refs()` private helper duplicated identically across 7 validate modules at `_validate_algorithms.py:55`, `_validate_constructs.py:111`, `_validate_dependency_sections.py:175`, `_validate_exports.py:149`, `_validate_record_sections.py:233`, `_validate_revision_sections.py:245`, `_validate_surfaces.py:135`. Code smell rather than a rule violation, but candidate for `_validate_helpers.py` extraction.
+
+#### Slice: `src/aeat/domain/{deadlines,modelos,transactions,user_profile,filing,profile}/` (79 files; CLEAN)
+
+- One EXPECTED compat-shim mapping at `src/aeat/domain/deadlines/_profiles.py:75` (bare-key `does_intracomunitario` → canonical `iva.does_intracomunitario`). Documented; not a hygiene violation.
+- Three ID-mint paths confirmed distinct (UUID `new_profile_id`, SHA-256 `make_amendment_id`, SHA-256 `compute_modelo_draft_id`) — no shadow.
+- Three `Profile` types (`UserProfileRecord`, `TaxpayerProfile`, `TaxResidenceProfile`) confirmed orthogonal — no name collision.
+- No dead code, no stubs, no shadows in 79 files.
+
+#### Slice: `src/aeat/application/{auth,user_profile,wizard,state_projection.py}` (56 files)
+
+- **drift (critical)**: bool canonical mismatch at `src/aeat/application/wizard/_persistence.py:38-39` (lowercase) vs `src/aeat/application/modelo/_profile_binding.py:115` (capital). `src/aeat/application/wizard/test_persistence_canonical.py:118` explicitly asserts `_parse_canonical(question, "True") is False` to lock the wizard canonical. Updates Cluster I.
+- **dead stored data**: `src/aeat/application/wizard/_setup_answers.py:41` `address_postcode` field — collected, serialised under `contact.postcode`, never consumed downstream. Updates Cluster L.
+- **dual default**: `IVARegime.GENERAL` declared at `src/aeat/application/wizard/_setup_answers.py:106` AND at `src/aeat/application/wizard/_catalogue.py:569`. Updates Cluster L.
+- **dual default**: `CCAA.MADRID` declared at `src/aeat/application/wizard/_setup_answers.py:130` AND at `src/aeat/application/wizard/_catalogue.py:661`. Updates Cluster L.
+- **ghost comment**: `src/aeat/application/user_profile/__init__.py:275` references removed `ProfileExportBundle` class.
+- **side-effect re-export**: `src/aeat/application/user_profile/__init__.py:33` `from . import _language_resolver as _language_resolver`. Fragile pattern.
+- **hard-coded set**: `src/aeat/application/state_projection.py:610-615` `_LEDGER_PREFLIGHT_BINDING_SOURCES` is a frozenset of binding-source identifiers; no registry-side verification.
+
+#### Slice: `src/aeat/application/{ledger,aggregation}/` (~50 files)
+
+- **structurally identical guards (duplication pair)**: `src/aeat/application/aggregation/_iva_ledger.py:394-401` and `src/aeat/application/aggregation/_renta_ledger.py:271-278` both implement `currency != "EUR"` rejection with identical structure (different detail strings, shared `_shared_issue_reasons.UNSUPPORTED_CURRENCY` code). Updates Cluster H.
+- **structurally identical classification branches**: `src/aeat/application/aggregation/_iva_ledger.py:411-427` and `src/aeat/application/aggregation/_renta_ledger.py:279-299` reproduce the same `PERSONAL_TRANSACTION` vs `UNCLASSIFIED_BUSINESS_STATE` dispatch.
+- **structurally identical business-proportion extraction**: `src/aeat/application/aggregation/_iva_ledger.py:526-532` `_business_proportionality()` and `src/aeat/application/aggregation/_renta_ledger.py:422-433` `_business_amount()` share the same `BUSINESS → full / MIXED → pct / else → None` dispatch with different scaling targets.
+- **architectural gap (confirmed)**: `src/aeat/application/aggregation/_modelo_bindings.py:100-207` defines `LedgerIvaAggregationSourceResolver` and `LedgerRentaExpenseAggregationSourceResolver`. NO `LedgerRentaIncomeAggregationSourceResolver`. Updates Cluster H (Modelo 130 income side).
+- **path-specific zeroing**: `src/aeat/application/ledger/_actions.py:2195-2207` zeroes classification-adjacent fields in `_command_from_patch`; the import path `import_ledger_transactions` does NOT zero. Inconsistent invariant maintenance.
+
+#### Slice: `src/aeat/application/{modelo,filing,calculations,verification}/` (71 files)
+
+- **HIGH: hard-coded error f-strings**: 17 occurrences in `src/aeat/application/modelo/_actions.py` raise exceptions with hard-coded f-string messages, bypassing `tr()`. Updates Cluster K. Examples: lines 1282-1285 (`ledger preflight blocks modelo calculation: ...`), 1713-1714 + 1720-1721 (`caller binding values cannot override ...`), 2228-2231 (`registry snapshot for modelo=... missing`). Sibling files `_borrador_binding.py` and `_profile_binding.py` correctly use `tr()` — drift isolated to `_actions.py`.
+- **boolean coercion**: confirmed at `src/aeat/application/modelo/_profile_binding.py:115-118`. Updates Cluster I.
+- **verification boundary confusion**: two `verify` paths — `src/aeat/application/modelo/_actions.py:verify_modelo_revision` (work-unit gate) and `src/aeat/application/verification/_verify.py:verify_declaracion` (PDF cross-check). Distinct responsibilities but the naming overlap is a future-confusion risk.
+
+#### Slice: `src/aeat/application/{overview,workflow,review,diagnostics,repair_integrity}/` (~50 files)
+
+- **CRITICAL stale-copy applicability** — confirmed: `src/aeat/application/overview/_applicability.py:534-963` lacks the 179-line superset present at `src/aeat/domain/calculations/registry/_applicability.py:536-1121`. Missing from the application copy: `iter_modelo_applicability_rules`, `taxpayer_model_is_declared`, `Modelo202Modality` + `Modelo202ModalityVerdict` + `derive_modelo_202_modality`, reason constants `_MODELO_202_ART_40_3_*`, threshold `_MODELO_202_ART_40_3_INCN_THRESHOLD = Decimal("6000000")`. Updates Cluster B.
+- **active CLI consumer is the stale copy**: `src/aeat/entrypoints/cli/_modelo.py` imports `derive_modelo_applicability` and `ApplicabilityVerdict` from the application-layer (stale) version, not the canonical domain version.
+- **twin functions with identical bodies**: `src/aeat/application/workflow/_models.py:227` `active_bucket_id_or_raise()` and `:242` `require_active_bucket_id()` have identical bodies; docstrings document "audience" without behavioural difference. Updates Cluster L.
+- **stub-gating gap**: `src/aeat/application/overview/__init__.py:365-393` `_GATING_FIELDS` is a hard-coded dict missing `professional_income_withholding_ge_70pct → ("130",)`. Updates Cluster C (the two-source-of-truth pattern).
+- **silent obligation drop**: `src/aeat/application/overview/__init__.py:506-526` `build_overview_calendar` drops non-APPLICABLE verdicts silently with no diagnostic API. Updates Cluster C.
+
+#### Slice: `src/aeat/adapters/{outbound,inbound,persistence}/` (~80 files)
+
+- Confirmed CLEAN. No mechanical drift repairs needed in the
+  adapter layer.
+- **Documented compat-shim (gated)**: `src/aeat/adapters/persistence/storage/runtime.py:42,66,147-259` and `master_key/_master_key.py:1118-1537` carry the `unsecured_backend` field + `UnsecuredMasterKeyProvider`. Gated via `aeat_secret_store_backend='unsecured'` + `AEAT_ALLOW_UNENCRYPTED=1` + NIF-canary refusal. **Intentional hardening-campaign infrastructure, not drift.** Keep until ADR deprecation.
+- **Versioned coexistence**: round-5 `describe()` / `probe_persisted_session()` paths at `src/aeat/adapters/outbound/aeat/auth/_authenticator.py:751` and `_clave_movil.py:361,556` coexist with the older session-detail records — by design, schemas are explicitly versioned.
+
+#### Slice: `src/aeat/entrypoints/cli/` (80+ files)
+
+- **HIGH validation-handler asymmetry**: `_ledger.py` has local `_ledger_validation_bad` catches on `ledger_add` (line 396) and `ledger_classify` (line 535). `ledger_update` (422), `ledger_list` (1322), `ledger_view` (1352), `ledger_allocate` (591), `ledger_split` (795) DO NOT — they fall through to the generic `command_error_boundary` and emit the misleading "config repair" message. Updates Cluster A.
+- **MEDIUM `--verbose` silently ignored**: `_ledger.py:1627-1677` `ledger_review` registers `--verbose` but only echoes it into the JSON payload, no branching. `_overview.py:33-70` `overview_status` only consumes `--verbose` inside the `if period is not None:` branch (Marc M-MARC-5). Updates Cluster L.
+- **`--output-language` parity gap**: `auth_clear` (line 1669) does NOT register `--output-language` even though `auth_status`, `auth_test`, `auth_login` do (round-5 fix). `config profile show` and `modelo work calculate` likewise do not. Updates Cluster K.
+- **LOW unneeded re-exports**: `src/aeat/entrypoints/cli/_errors.py:402-409` `__all__` re-exports `build_error_envelope` (from `core.errors`) and `json_output_requested` (from `core.click_context`). Zero CLI consumers import them via `_errors`. Updates Cluster L.
+- **MEDIUM unhandled storage errors in bootstrap**: `src/aeat/entrypoints/cli/_common.py:78` `_state()` has no local catch for `StorageError` / `BucketSessionError`. Falls through to the generic boundary.
+
+#### Slice: `src/aeat/_data/registry/aeat/` (14,943 TOMLs)
+
+Modelo deadline-window coverage matrix (round-2 ground truth):
+
+| Modelo | Format | Revisions | deadline_window filing_years |
+|---|---|---|---|
+| 100 | dir | 6 (2020–2025) | **NONE — all 6 revisions empty** |
+| 111 | dir | 1 | **NONE** |
+| 123 | dir | 2 | 2026 only |
+| 130 | single-file | n/a | 2026 only — **2025 ABSENT** |
+| 131 | dir | 0 revisions | empty |
+| 180 | dir | 2 | **NONE** |
+| 200 | dir | 1 (2024-y-siguientes) | 2024 only — **no 2025** |
+| 202 | dir | 3 | 2025-y-siguientes: 2025+2026 |
+| 232 | dir | 2 | **NONE** |
+| 303 | dir | 2 | 2023-y-siguientes: 2025+2026 |
+| 349 | dir | 1 | **NONE** |
+| 369 | dir | 3 schemas | 2025+2026 across all three |
+| 390 | single-file | n/a | **NONE** |
+
+Updates Cluster C — far broader than initially recognised. Eight
+modelos have ZERO deadline_windows registered across ALL revisions
+(100, 111, 180, 232, 349, 390 entirely; 131 has no revisions; 123
+only 2026; 130 only 2026; 200 only 2024). The remediation epic
+must backfill years AND a single-source-of-truth integrity guard.
+
+Other registry findings:
+- **Modelo 303 casilla 61 structurally absent** from both revisions
+  (confirmed). Casillas 59, 60, 62, 120 are informacion-adicional
+  `manual` by AEAT design.
+- **Modelo 131 directory empty** — no revisions populated. WIP /
+  placeholder.
+- **52 unresolvable `legal_refs`** are intentional `aeat-dr-*` /
+  `aeat-modelo-*` / `boe-modelo-*` external-document references
+  scoped for citation/provenance only — NOT errors.
+- **Modelo 200 `previous_filing` binding** to Modelo 202 declares
+  `source_modelo = "202"` but no explicit `source_output` casilla
+  reference — implicit aggregation target, not declared. Cluster J.
+
+## Round-2 cluster index update
+
+Adding new clusters from the round-2 expansion:
+
+| Cluster | Theme |
+|---|---|
+| P | IRPF tarifa not applied — Renta cuota returns 0 |
+| Q | Modality gate orphaned in domain, never wired into registry |
+| R | Temporal coverage mismatch within a single revision (pyme 2025+ inside `2024-y-siguientes`) |
+| S | i18n template/context key mismatch silently swallowed |
+| T | Profile-fact bindings show `missing` despite being on the profile |
+
+## Cluster P — IRPF tarifa not applied (Pere)
+
+A Modelo 100 calculation for a pensioner-landlord profile with
+base liquidable general 35.400 EUR and minimo personal 5.550 EUR
+returns `0.00` across casillas `0585` (cuota estatal), `0586`
+(cuota autonómica), `0595` (cuota autoliquidación), `0610` (cuota
+diferencial), and `0670` (resultado declaración). Expected
+~3.500–4.500 EUR.
+
+The defect is broader than the registry-side IRPF tarifa data —
+it manifests in the Modelo 100 cuota formula composition.
+Possible root causes (to be confirmed by remediation):
+
+1. The IRPF tarifa scale (`renta-2025-modelo-100-tarifa-estatal` /
+   `renta-2025-modelo-100-tarifa-autonomica`) may not be wired into
+   the cuota-integra formula at all — i.e. the formula computes
+   correctly when the rate is supplied but the rate-lookup is
+   gated on a profile fact that is not satisfied by Pere's profile
+   (Cluster T overlap).
+2. The CCAA fact may default to `madrid` (Pere's confirmed
+   mis-inference) and the `lookup_bracket_by_ccaa` may resolve to a
+   bracket the formula's input dependency does not provide.
+3. Profile-fact bindings (`renta-2025-profile-tax-id`, etc.)
+   resolving to `missing` may cascade — formulas with these inputs
+   fall back to safe defaults that produce zero output.
+
+**Remediation scope.** Trace the Modelo 100 cuota path end-to-end
+with a realistic pensioner+landlord profile and identify where the
+tarifa application is silently zeroed. Document the dependency
+chain `profile facts → CCAA → tarifa lookup → cuota`. This may
+overlap with Cluster T's profile-fact resolution defect.
+
+## Cluster Q — Modelo 202 modality gate orphaned in domain
+
+`src/aeat/domain/calculations/registry/_applicability.py:1239-1282`
+defines `derive_modelo_202_modality` correctly. It is NEVER called
+by any registry formula, binding, or casilla applicability
+condition. Both casilla `03` and casilla `32` in the 2025-y-siguientes
+revision compute unconditionally.
+
+**Remediation scope.** Wire the modality gate into the registry as
+a per-casilla applicability condition OR as a guard in the cuota
+formulas (`modelo-202-modalidad-40-2-resultado` and
+`modelo-202-modalidad-40-3-resultado`). Add an end-to-end test that
+runs `aeat app modelo work calculate` for an SL with
+INCN-above-threshold and asserts casilla 03 is suppressed; and the
+inverse for below-threshold.
+
+## Cluster R — Temporal coverage mismatch (pyme 2025+ in 2024-y-siguientes revision)
+
+At `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`,
+`is.modelo-200.tipo-gravamen-pyme` covers 2025+ only. Inconsistent
+with the revision name and with the sibling parameter
+`is.modelo-200.cuota-integra-bracket-general` (which has a 2024
+bracket).
+
+**Remediation scope.** Either add 2024 pyme brackets to the
+parameter (the LIS Art. 29 2024 SME rate is the standard 23 %) OR
+revisit the revision identity so 2024 fiscal years are routed to a
+different revision. Add a registry-validation check that every
+`bracket_table` parameter's brackets cover the revision's declared
+date range.
+
+## Cluster S — i18n placeholder swallow
+
+`src/aeat/domain/calculations/registry/_formula_runtime.py:759-763`
+emits a `RegistryValidationError` whose translated message references
+`{as_of}` but whose context dict declares `"filing_date"`. The
+i18n layer at `src/aeat/core/i18n/_render.py:243-247` catches the
+resulting `KeyError` and returns the half-rendered string with the
+placeholder literal.
+
+**Remediation scope.** (a) Fix the immediate `bracket_no_window`
+key mismatch by either renaming the context key to `as_of` or the
+template placeholder to `filing_date`. (b) Strengthen
+`_interpolate` to fail loudly on unmatched placeholders (or at
+minimum emit a developer-visible warning) rather than silently
+returning partial text. (c) Add an i18n-stack validation step that
+asserts every locale template's placeholders match the context keys
+of every `tr()` call site that uses that template.
+
+## Cluster T — Profile-fact bindings show `missing` despite the fact existing on the profile
+
+Pere's calculation for Modelo 100 has every `renta-2025-profile-*`
+binding (tax_id, display-name, birth-date, sex, marital-status,
+family records) reported as `missing` even though the profile
+carries those facts. The persisted draft has NIFDLG=0, DNIASDLG=0,
+FNACDLG=0. The contribuyente identity is blank.
+
+Possible root causes (remediation must triangulate):
+1. The binding's `selector.field` declares a key that does not
+   match the canonical profile-fact path emitted by the wizard
+   persistence layer (similar to the bare-key vs canonical-key
+   compat shim in `domain/deadlines/_profiles.py:75`).
+2. The profile-fact-key path uses a different namespace (e.g.
+   `renta` vs `contact` vs `taxpayer`) and the binding's selector
+   is in the wrong one.
+3. A new schema-version split exists between the profile store and
+   the registry's expected key set.
+
+**Remediation scope.** Audit every `renta-2025-profile-*` binding's
+selector vs the corresponding profile-fact path on a real profile.
+Identify whether the gap is a key-namespace mismatch, a missing
+projection arm, or a schema-version drift. Add a regression test
+that constructs a realistic profile and asserts every
+`renta-2025-profile-*` binding resolves to the stored fact.
+
+## Updated remediation outline
+
+The round-1 outline (Waves 1-9) is broadly preserved. Adjustments
+based on round-2 findings:
+
+- **Wave 1** (Stabilisation) now also includes Cluster S (i18n
+  placeholder swallow) — small, mechanical, removes a class of
+  silently-misleading messages.
+- **Wave 2** (Applicability + calendar) now incorporates the
+  finding that `derive_modelo_202_modality` (Cluster Q) is one of
+  the orphans the consolidation removes — the canonical domain
+  applicability is the single source of truth, including the
+  modality gate.
+- **Wave 3** (Corporate-tax-runtime hardening) explicitly closes
+  Cluster R (temporal coverage) and rewires Cluster Q. Adds a
+  registry-validation step: every `bracket_table` parameter must
+  cover the revision's declared date range.
+- **Wave 4** (Verification semantics) unchanged.
+- **Wave 5** (Ledger surface completion) unchanged.
+- **Wave 6** (Profile portability) unchanged.
+- **Wave 7** (Cross-period surfaces) gains Cluster P (IRPF tarifa
+  not applied) as a sub-wave — root cause overlap with Cluster T,
+  so address jointly.
+- **Wave 8** (Localisation parity + hygiene) absorbs Cluster S and
+  Cluster K's full list (the 17 hard-coded f-strings in
+  `application/modelo/_actions.py`, the `--output-language` parity
+  gap on `auth_clear`, the unneeded `_errors.py:402` re-exports).
+- **Wave 9** (Systemic drift cleanup) now has a precise file:line
+  catalogue (Cluster O above). Mechanical fixes:
+  - Unify the two `_applicability.py` copies (Cluster B).
+  - Unify the two CIF letter constants (Cluster M).
+  - Merge `active_bucket_id_or_raise` and `require_active_bucket_id`
+    (Cluster L).
+  - Extract `_missing_refs()` to `_validate_helpers.py`.
+  - Remove ghost comments and dead aliases (Cluster L).
+  - Unify the four period-normalisation sites (Cluster N).
+  - Replace the duplicated `currency != "EUR"` guards with a shared
+    predicate (Cluster H).
+- **New Wave 10** — Cluster T profile-fact resolution audit.
+  Triage which `renta-2025-profile-*` bindings actually resolve;
+  fix the selectors; backfill missing projection arms; add the
+  regression test.
+
+## Audit closure status
+
+All round-6 inputs received and consolidated.
+
+- 5/5 persona testimonials received.
+- 4/4 per-persona groundings received.
+- 10/10 Haiku drift sweeps received.
+- 15 root-cause clusters identified (A–T, excluding the placeholder
+  O which is now fully filled).
+
+The audit is the substrate for an L4 epic plan
+(`<date>-cross-domain-continuity-plan.md`) with explicit
+project-management association. The plan's authoring is the next
+deliverable in the campaign.
