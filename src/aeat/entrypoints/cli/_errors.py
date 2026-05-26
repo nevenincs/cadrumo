@@ -132,6 +132,41 @@ class CliUnexpectedBoundaryError(AeatError):
         self.original_exception: Exception = error
 
 
+class CliStoredDataValidationBoundaryError(AeatError):
+    """Raised when a CLI callback loads stored profile data that fails validation.
+
+    Distinct from :exc:`CliValidationBoundaryError` (which wraps input-time
+    validation failures) so downstream handlers and tests can discriminate
+    between malformed user input and drifted stored profile data.  The stored
+    record was valid when it was written; schema evolution or an out-of-band
+    edit caused the drift.
+
+    The original exception is preserved on :attr:`original_exception` so
+    renderers and tests can inspect the typed pydantic detail.
+
+    Attributes:
+        original_exception: The underlying :exc:`pydantic.ValidationError`
+            raised while deserialising a stored record.
+    """
+
+    def __init__(self, error: ValidationError) -> None:
+        """Wrap ``error`` in the stored-data validation boundary contract.
+
+        Args:
+            error: The pydantic validation error raised while loading a
+                stored profile record.
+        """
+
+        super().__init__(
+            translated_message="errors.storage.stored_data_validation_boundary",
+            context={
+                "recovery": "aeat config repair",
+            },
+            suggestion="aeat config repair",
+        )
+        self.original_exception: ValidationError = error
+
+
 class CliRefusedBoundaryError(AeatError):
     """Raised when JSON-mode CLI must refuse a request with stderr-only output.
 
@@ -401,6 +436,8 @@ def _is_click_control_flow(error: Exception) -> bool:
 
 __all__ = [
     "CliRefusedBoundaryError",
+    "CliStoredDataValidationBoundaryError",
+    "CliValidationBoundaryError",
     "build_error_envelope",
     "decorate_typer_app",
     "error_boundary_under_test",
