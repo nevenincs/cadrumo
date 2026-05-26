@@ -1855,18 +1855,21 @@ cli:
       bucket: Bucket
       id: ID
       kind: Tipus
+      legal_refs: cli.review.labels.legal_refs
       next: Següent
       period: Període
       severity: Severitat
       source_kind: Tipus d'origen
     queue:
       empty: No hi ha elements de revisió
+      explain_help: cli.review.queue.explain_help
       help: Llistar files de la cua de revisió
       kind_help: Filtrar per tipus d'origen
       modelo_help: Filtrar per model
       source_kind_help: Filtrar per tipus d'origen
       state_help: Filtrar estat (pending o all)
     show:
+      explain_help: cli.review.show.explain_help
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
@@ -2138,6 +2141,9 @@ errors:
       seguretat.
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
+    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
+    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
@@ -2164,6 +2170,8 @@ errors:
     parameter_unknown: El paràmetre {parameter_id} no està registrat.
     relation_value_missing: La relació {relation_id} no té cap valor assignat.
     unknown_input_casillas: 'Identificadors de casella d''entrada desconeguts: {casilla_ids}.'
+    unsupported_comparison_op: errors.calc.unsupported_comparison_op
+    unsupported_op: errors.calc.unsupported_op
   censo:
     no_snapshot_captured: No s'ha capturat cap instantània del cens per al perfil
       {profile_id}.
@@ -2653,6 +2661,9 @@ errors:
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
     refused_cli_non_tty: Aquesta ordre necessita una entrada interactiva, però l'entrada
       estàndard està redirigida. Executa-la en una terminal interactiva.
+    refused_cli_stored_data_validation_boundary: Un registre de perfil o flux de treball
+      emmagatzemat ja no coincideix amb l'esquema esperat — les dades al disc han divergit
+      del format actual. Executa `aeat config repair` per diagnosticar i recuperar.
     refused_cli_validation_boundary: L'entrada de l'ordre no ha superat la validació.
       Executa `aeat config repair` o restableix l'estat del perfil.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
@@ -2799,6 +2810,8 @@ errors:
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+  snapshot:
+    modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
     engine:
       create_failed: No s'ha pogut crear el motor de base de dades d'emmagatzematge.

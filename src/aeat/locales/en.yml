@@ -1781,18 +1781,21 @@ cli:
       bucket: Bucket
       id: ID
       kind: Kind
+      legal_refs: cli.review.labels.legal_refs
       next: Next
       period: Period
       severity: Severity
       source_kind: Source kind
     queue:
       empty: No items pending review.
+      explain_help: cli.review.queue.explain_help
       help: List items waiting for operator review
       kind_help: Restrict the queue to one item kind
       modelo_help: Restrict the queue to one modelo
       source_kind_help: Restrict the queue to one source kind
       state_help: Restrict the queue to one review state
     show:
+      explain_help: cli.review.show.explain_help
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
@@ -2058,6 +2061,9 @@ errors:
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
+    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_missing_binding: errors.calc.bound_casilla_missing_binding
+    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
@@ -2082,6 +2088,8 @@ errors:
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+    unsupported_comparison_op: errors.calc.unsupported_comparison_op
+    unsupported_op: errors.calc.unsupported_op
   censo:
     no_snapshot_captured: No census snapshot has been captured for profile {profile_id}.
     profile_not_found: Profile {profile_id} does not exist; create it before applying
@@ -2521,6 +2529,9 @@ errors:
       Use only one of --quiet, --verbose or --debug.
     refused_cli_non_tty: This command needs interactive input, but standard input
       is piped. Run it in an interactive terminal.
+    refused_cli_stored_data_validation_boundary: A stored profile or workflow record
+      no longer matches the expected schema — the data on disk has drifted from the
+      current format. Run `aeat config repair` to diagnose and recover.
     refused_cli_validation_boundary: The command input failed validation. Run `aeat
       config repair` or reset the profile state.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
@@ -2656,6 +2667,8 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+  snapshot:
+    modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
     engine:
       create_failed: The storage database engine could not be created. Check the configured
