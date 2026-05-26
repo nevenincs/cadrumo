@@ -20,6 +20,13 @@ from ._documents import IdentityError
 
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_LEADERS = {"X": "0", "Y": "1", "Z": "2"}
+# ``_CIF_LEADERS`` (20 characters) is a historical-tolerance superset of
+# ``aeat.core.identity._documents._CIF_KIND_LETTERS`` (17 characters).
+# K, L, and M are included here so that ``validate_spanish_tax_id`` accepts
+# K/L/M-led CIFs that AEAT's own validator tolerates for legacy entities.
+# Those three letters are deliberately absent from ``_CIF_KIND_LETTERS``,
+# which is the AEAT current-spec closed catalogue used by ``validate_identity``
+# and ``_CIF_PATTERN`` — the authoritative shape gate for new documents.
 _CIF_LEADERS = "ABCDEFGHJKLMNPQRSUVW"
 _CIF_LETTER_CONTROL_LEADERS = set("KPQRSNW")
 _CIF_CONTROL_LETTERS = "JABCDEFGHI"
