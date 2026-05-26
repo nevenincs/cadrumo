@@ -19,13 +19,12 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.sql._orm import SecureObjectRow
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql.session import session_scope
+from ...core.config import Settings, override_settings
 from ._codes import ModeloCode
 from ._repository import WorkUnitCatalogueRepository
 from ._work_unit import (
@@ -36,6 +35,26 @@ from ._work_unit import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "modelo-runtime"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _runtime_engine(tmp_path: Path):
+    return create_engine_from_settings(
+        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+    )
 
 
 def _populated_work_unit(*, name_suffix: str = "default") -> WorkUnit:
@@ -95,56 +114,45 @@ def test_work_unit_catalogue_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A WorkUnitCatalogue with one typed WorkUnit roundtrips strictly."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "work-unit-catalogue-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        work_unit = _populated_work_unit()
+        original = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
 
-            work_unit = _populated_work_unit()
-            original = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
+        repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(original)
+        loaded = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
-            repo = WorkUnitCatalogueRepository()
-            repo.save(original)
-            loaded = repo.load()
-
-            assert loaded == original
-            loaded_unit = loaded.work_units[work_unit.work_unit_id]
-            # Per-field witnesses: ModeloCode preservation, year/period
-            # round-trip, state enum identity, content-addressed
-            # work_unit_id, and the discard metadata triple (which were
-            # the test's main anti-tautology guard — every defaultable
-            # field carries a real non-default value).
-            assert loaded_unit.modelo == "303"
-            assert loaded_unit.filing_year == 2025
-            assert loaded_unit.period == "1T"
-            assert loaded_unit.revision_id == "2025-y-siguientes"
-            assert loaded_unit.state is WorkUnitState.DESCARTADO
-            assert loaded_unit.work_unit_id == work_unit.work_unit_id
-            # Discard metadata survives the cycle; a regression that
-            # dropped any of these three on save would leave them as
-            # None on load and fail the strict-equality check above,
-            # but also fail these explicit witnesses.
-            assert loaded_unit.discarded_at == work_unit.discarded_at
-            assert loaded_unit.discarded_by == "cli/aeat"
-            assert loaded_unit.discard_reason is not None
-            assert "superseded" in loaded_unit.discard_reason
-            # Census-stale marker pair survives — protects against the
-            # save-drops / load-re-defaults regression on either field.
-            assert loaded_unit.census_stamped_stale_at == work_unit.census_stamped_stale_at
-            assert loaded_unit.census_stale_reason is not None
-            assert "snapshot abc123" in loaded_unit.census_stale_reason
-        finally:
-            engine.dispose()
+    assert repo.bucket_id == _BUCKET_ID
+    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
+    assert loaded == original
+    loaded_unit = loaded.work_units[work_unit.work_unit_id]
+    # Per-field witnesses: ModeloCode preservation, year/period
+    # round-trip, state enum identity, content-addressed work_unit_id,
+    # and the discard metadata triple (which were the test's main
+    # anti-tautology guard: every defaultable field carries a real
+    # non-default value).
+    assert loaded_unit.modelo == "303"
+    assert loaded_unit.filing_year == 2025
+    assert loaded_unit.period == "1T"
+    assert loaded_unit.revision_id == "2025-y-siguientes"
+    assert loaded_unit.state is WorkUnitState.DESCARTADO
+    assert loaded_unit.work_unit_id == work_unit.work_unit_id
+    # Discard metadata survives the cycle; a regression that dropped any
+    # of these three on save would leave them as None on load and fail
+    # the strict-equality check above, but also fail these witnesses.
+    assert loaded_unit.discarded_at == work_unit.discarded_at
+    assert loaded_unit.discarded_by == "cli/aeat"
+    assert loaded_unit.discard_reason is not None
+    assert "superseded" in loaded_unit.discard_reason
+    # Census-stale marker pair survives - protects against the
+    # save-drops / load-re-defaults regression on either field.
+    assert loaded_unit.census_stamped_stale_at == work_unit.census_stamped_stale_at
+    assert loaded_unit.census_stale_reason is not None
+    assert "snapshot abc123" in loaded_unit.census_stale_reason
 
 
 def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: flipping DISCARDED to DRAFT while retaining metadata must surface.
 
@@ -169,23 +177,14 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
 
     from sqlalchemy import select
 
-    from ...adapters.persistence.storage.sql._orm import SecureObjectRow
-    from ...adapters.persistence.storage.sql.session import session_scope
     from ._repository import _WORK_UNIT_NAMESPACE, _WORK_UNIT_OBJECT_KEY
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "work-unit-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        engine = _runtime_engine(tmp_path)
         try:
-            SecureObjectRepository(engine=engine)
             work_unit = _populated_work_unit()
             catalogue = WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit})
-            repo = WorkUnitCatalogueRepository()
+            repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
             repo.save(catalogue)
 
             with session_scope(engine) as session:
@@ -208,8 +207,8 @@ def test_work_unit_catalogue_lifecycle_drift_surfaces_at_load(
 
             regression_caught = False
             try:
-                repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+                WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            except Exception:
                 regression_caught = True
             assert regression_caught, (
                 "anti-tautology proof failed: flipping state from "

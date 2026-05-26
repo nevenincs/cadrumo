@@ -10,6 +10,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ._calculation_revision import CalculationRevision, CalculationRevisionCatalogue
 from ._errors import ModeloError
+from ._runtime_repository import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = "aeat.domain.modelos.calculation_revisions"
@@ -24,8 +25,20 @@ class CalculationRevisionPersistenceError(ModeloError):
 class CalculationRevisionCatalogueRepository:
     """Read / write the calculation-revision catalogue in encrypted storage."""
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if objects is not None:
+            self._objects = objects
+            return
+        self._bucket_id = resolve_modelo_repository_bucket_id(
+            bucket_id,
+            error_type=CalculationRevisionPersistenceError,
+        )
+        self._objects = secure_objects_for_modelo_bucket(self._bucket_id)
+
+    @property
+    def bucket_id(self) -> str | None:
+        return self._bucket_id
 
     def exists(self) -> bool:
         return self._objects.exists(_CALCULATION_NAMESPACE, _CALCULATION_OBJECT_KEY)

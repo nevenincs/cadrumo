@@ -31,14 +31,12 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base, SecureObjectRow
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
+from ...adapters.persistence.storage.sql._orm import SecureObjectRow
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
 from ...adapters.persistence.storage.sql.session import session_scope
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
@@ -49,6 +47,26 @@ from ._schema import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "filing-runtime"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _runtime_engine(tmp_path: Path):
+    return create_engine_from_settings(
+        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+    )
 
 
 def _populated_draft() -> ModeloDraft:
@@ -85,7 +103,6 @@ def _populated_draft() -> ModeloDraft:
 
 def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Drop a typed field from the on-disk JSON envelope; load must refuse.
 
@@ -111,24 +128,11 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
     re-auditing. Without this test, that conclusion could not be drawn.
     """
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "anti-tautology.db"
-        # ``ModeloDraftRepository()`` constructs its own
-        # ``SecureObjectRepository()`` which falls back to the
-        # process-default engine. Setting the env var here ensures the
-        # default engine and the explicit engine in this test point at
-        # the same SQLite file.
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        engine = _runtime_engine(tmp_path)
         try:
-            SecureObjectRepository(engine=engine)
-
             original = _populated_draft()
-            repo = ModeloDraftRepository()
+            repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
             repo.save(original)
 
             # Sanity check: a normal load yields strict equality.
@@ -159,7 +163,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             #       it strictly unequal to the original.
             regression_caught = False
             try:
-                mutated = repo.load(original.draft_id)
+                mutated = ModeloDraftRepository(bucket_id=_BUCKET_ID).load(original.draft_id)
             except ValidationError:
                 regression_caught = True
             else:

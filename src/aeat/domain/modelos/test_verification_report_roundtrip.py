@@ -15,13 +15,10 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.master_key._active_session import activate_session
+from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
 from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...core.config import Settings, override_settings
 from ._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -34,6 +31,26 @@ from ._verification_report import (
 from ._verification_repository import VerificationReportCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_BUCKET_ID = "modelo-runtime"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _runtime_engine(tmp_path: Path):
+    return create_engine_from_settings(
+        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+    )
 
 
 def _populated_report() -> VerificationReport:
@@ -81,55 +98,42 @@ def _populated_report() -> VerificationReport:
 
 def test_verification_report_catalogue_survives_encrypted_storage(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A populated VerificationReportCatalogue roundtrips strictly."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "verification-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        report = _populated_report()
+        catalogue = VerificationReportCatalogue(
+            reports={report.verification_report_id: report},
         )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+        repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(catalogue)
+        loaded = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
-            report = _populated_report()
-            catalogue = VerificationReportCatalogue(
-                reports={report.verification_report_id: report},
-            )
-            repo = VerificationReportCatalogueRepository()
-            repo.save(catalogue)
-            loaded = repo.load()
-
-            assert loaded == catalogue
-            loaded_report = loaded.reports[report.verification_report_id]
-            # Per-field witnesses: enum identity, tuple-of-finding
-            # preservation including each finding's nested enum kind +
-            # severity + optional fields.
-            assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
-            assert len(loaded_report.findings) == 2
-            f0 = loaded_report.findings[0]
-            assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
-            assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
-            assert f0.casilla_id == "iva.devengado"
-            assert f0.next_action is not None
-            f1 = loaded_report.findings[1]
-            assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
-            assert f1.severity is ModeloVerificationFindingSeverity.WARNING
-            assert f1.expectation_id == "ivaSourceRequired"
-            # Resolved + missing casillas tuples preserve order and content.
-            assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
-            assert loaded_report.missing_required_casillas == ("iva.devengado",)
-        finally:
-            engine.dispose()
+    assert loaded == catalogue
+    loaded_report = loaded.reports[report.verification_report_id]
+    # Per-field witnesses: enum identity, tuple-of-finding
+    # preservation including each finding's nested enum kind +
+    # severity + optional fields.
+    assert loaded_report.completeness_status is VerificationCompletenessStatus.BLOCKED
+    assert len(loaded_report.findings) == 2
+    f0 = loaded_report.findings[0]
+    assert f0.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+    assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
+    assert f0.casilla_id == "iva.devengado"
+    assert f0.next_action is not None
+    f1 = loaded_report.findings[1]
+    assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
+    assert f1.severity is ModeloVerificationFindingSeverity.WARNING
+    assert f1.expectation_id == "ivaSourceRequired"
+    # Resolved + missing casillas tuples preserve order and content.
+    assert loaded_report.resolved_casillas == ("iva.deducible", "iva.resultado")
+    assert loaded_report.missing_required_casillas == ("iva.devengado",)
+    assert (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").is_file()
 
 
 def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Anti-tautology proof: flipping granted_verificado_completo on BLOCKED must surface.
 
@@ -160,23 +164,16 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
     from ._verification_repository import _VERIFICATION_NAMESPACE
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "verification-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+        report = _populated_report()
+        catalogue = VerificationReportCatalogue(
+            reports={report.verification_report_id: report},
         )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            report = _populated_report()
-            catalogue = VerificationReportCatalogue(
-                reports={report.verification_report_id: report},
-            )
-            repo = VerificationReportCatalogueRepository()
-            repo.save(catalogue)
+        repo = VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(catalogue)
 
+        engine = _runtime_engine(tmp_path)
+        try:
             with session_scope(engine) as session:
                 stmt = select(SecureObjectRow).where(
                     SecureObjectRow.namespace == _VERIFICATION_NAMESPACE,
@@ -196,15 +193,16 @@ def test_verification_report_flipped_grant_invariant_surfaces_at_load(
 
             regression_caught = False
             try:
-                repo.load()
-            except Exception:  # noqa: BLE001 - boundary may raise different types
+                VerificationReportCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            except Exception:  # boundary may raise different types
                 regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: flipping "
-                "granted_verificado_completo=True on a BLOCKED report with "
-                "blocking findings did NOT surface on load. The "
-                "verification report boundary is tautological and every "
-                "report roundtrip in the suite is suspect."
-            )
         finally:
             engine.dispose()
+
+    assert regression_caught, (
+        "anti-tautology proof failed: flipping "
+        "granted_verificado_completo=True on a BLOCKED report with "
+        "blocking findings did NOT surface on load. The "
+        "verification report boundary is tautological and every "
+        "report roundtrip in the suite is suspect."
+    )

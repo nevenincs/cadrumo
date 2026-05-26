@@ -21,6 +21,7 @@ from ._amendment import (
     ModeloComplementaria,
     ModeloSustitutiva,
 )
+from ._runtime_repository import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
@@ -33,8 +34,19 @@ _AMENDMENT_NAMESPACE = "aeat.domain.filing.amendments"
 class ModeloAmendmentRepository:
     """Repository over encrypted SQL-backed filing amendments."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
+        if objects is not None:
+            self._objects = objects
+            return
+        self._bucket_id = resolve_filing_repository_bucket_id(bucket_id)
+        self._objects = secure_objects_for_filing_bucket(self._bucket_id)
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when this repository resolved one."""
+
+        return self._bucket_id
 
     @property
     def store_dir(self) -> Path:
