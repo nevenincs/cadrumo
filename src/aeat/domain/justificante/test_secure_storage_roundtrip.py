@@ -6,8 +6,8 @@ This test asserts the save / load cycle preserves every typed field of
 the record across the column-encryption boundary with byte-identical
 fidelity.
 
-Real :class:`EphemeralMasterKeyProvider`, real SQLite, no mocks. A
-regression in the audit-class column-encryption hook, the
+Real active-profile runtime, real SQLite, no mocks. A regression in
+the audit-class column-encryption hook, the
 ``Envelope[Justificante]`` schema, or the repository load path
 surfaces as a strict pydantic inequality.
 """
@@ -21,13 +21,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...tests.secure_sql import isolated_runtime_profile
 from ._repository import JustificanteRepository
 from ._schema import Justificante
 
@@ -80,27 +74,16 @@ def test_justificante_survives_encrypted_storage_roundtrip(
       here as inequality on a fractional value.
     """
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "justificante-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_justificante()
+        repo = JustificanteRepository()
+        repo.save(original)
+        loaded = repo.load(original.csv)
 
-            original = _populated_justificante()
-            repo = JustificanteRepository()
-            repo.save(original)
-            loaded = repo.load(original.csv)
-
-            assert loaded is not None
-            assert loaded == original
-            assert loaded.total_a_ingresar == Decimal("12345.67")
-            assert loaded.total_a_devolver is None
-            assert str(loaded.verification_url).endswith("/ABCD12345678EFGH")
-            assert loaded.source_pdf_path == Path("justificantes/303-2025-1T-ABCD.pdf")
-            assert loaded.presentation_id == "PRES-2025-001-XYZ"
-        finally:
-            engine.dispose()
+        assert loaded is not None
+        assert loaded == original
+        assert loaded.total_a_ingresar == Decimal("12345.67")
+        assert loaded.total_a_devolver is None
+        assert str(loaded.verification_url).endswith("/ABCD12345678EFGH")
+        assert loaded.source_pdf_path == Path("justificantes/303-2025-1T-ABCD.pdf")
+        assert loaded.presentation_id == "PRES-2025-001-XYZ"

@@ -17,6 +17,7 @@ from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
+    validate_declaracion_pdf_round_trip_gate,
     validate_declaracion_pdf_specimen_gate,
     validate_dotted_callable,
     validate_extraction_profile_artefacts,
@@ -226,6 +227,7 @@ def validate_extraction_profile_section(
         failures.extend(validate_extraction_profile_artefacts(prefix, profile))
         if corpus_root is not None:
             failures.extend(validate_declaracion_pdf_specimen_gate(prefix, modelo_id, profile, corpus_root))
+            failures.extend(validate_declaracion_pdf_round_trip_gate(prefix, modelo_id, profile, corpus_root))
 
 
 def _missing_refs(

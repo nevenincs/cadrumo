@@ -7,18 +7,22 @@ from pathlib import Path
 
 import pytest
 
-from ...persistence.storage import EphemeralMasterKeyProvider
-from ...persistence.storage.sql import dispose_engine
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+
+_BUCKET_ID = "llm-test-runtime"
 
 
 @pytest.fixture(autouse=True)
-def _secure_object_test_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+def _secure_object_test_backend(
+    secure_object_test_profile: TestRuntimeProfile,
+) -> Iterator[None]:
     """Route LLM cache and usage persistence through a per-test encrypted DB."""
 
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+    _ = secure_object_test_profile
+    yield
+
+
+@pytest.fixture
+def secure_object_test_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        yield profile

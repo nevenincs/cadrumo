@@ -16,12 +16,6 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentOverrideCasillaError,
@@ -35,7 +29,6 @@ from aeat.application.modelo import (
     get_work_unit,
     mark_revision_verificado_completo,
 )
-from aeat.core.config import Settings
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventType,
@@ -66,6 +59,7 @@ from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
 from aeat.domain.modelos._work_unit import WorkUnit
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 from .test_file_flow import _file_revision
 
@@ -83,21 +77,14 @@ _T4 = datetime(2026, 4, 16, 12, 0, 0, tzinfo=UTC)
 def repos(tmp_path):
     """Yield the five catalogue repositories over an encrypted SQLite db."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "modelo_amend_flow.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            wu = WorkUnitCatalogueRepository(objects=objects)
-            cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = ModeloRecordCatalogueRepository(objects=objects)
-            vr = VerificationReportCatalogueRepository(objects=objects)
-            bv = BucketEventHistoryRepository(objects=objects)
-            yield wu, cr, fr, vr, bv
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        objects = profile.repository
+        wu = WorkUnitCatalogueRepository(objects=objects)
+        cr = CalculationRevisionCatalogueRepository(objects=objects)
+        fr = ModeloRecordCatalogueRepository(objects=objects)
+        vr = VerificationReportCatalogueRepository(objects=objects)
+        bv = BucketEventHistoryRepository(objects=objects)
+        yield wu, cr, fr, vr, bv
 
 
 def _seed_work_unit(wu_repo):
@@ -330,9 +317,7 @@ def test_amend_baseline_is_superseded_by_new_filing(repos) -> None:
 def test_amend_new_revision_is_filed_complementaria(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(
-        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.state is CalculationRevisionState.PRESENTADO
     assert new_revision.amendment_kind is CalculationRevisionAmendmentKind.COMPLEMENTARIA
     assert new_revision.amends_filing_record_id == outcome.baseline.filing_record_id
@@ -342,18 +327,14 @@ def test_amend_new_revision_is_filed_complementaria(repos) -> None:
 def test_amend_overridden_casilla_takes_new_value(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(
-        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.casilla_values["01"] == Decimal("1100")
 
 
 def test_amend_unoverridden_casilla_inherits_baseline_value(repos) -> None:
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(
-        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
     assert new_revision.casilla_values["02"] == outcome.baseline_revision.casilla_values["02"]
 
 
@@ -464,9 +445,7 @@ def test_amend_revision_carries_casilla_observations(repos) -> None:
 
     outcome = _drive_amend_creates_complementaria(repos)
     _, cr_repo, _, _, _ = repos
-    new_revision = get_calculation_revision(
-        outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo
-    )
+    new_revision = get_calculation_revision(outcome.new_filing.calculation_revision_id, calculation_repository=cr_repo)
 
     observed = {obs.casilla_id: obs for obs in new_revision.observations}
     assert observed, "amendment revision persisted zero observations — provenance lost"

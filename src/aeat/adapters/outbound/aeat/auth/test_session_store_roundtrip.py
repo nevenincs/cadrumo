@@ -15,45 +15,18 @@ equality failures.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from .....core.config import Settings, override_settings
-from ....persistence.storage.master_key._active_session import activate_session
-from ....persistence.storage.master_key._bucket_session import BucketSession
-from ....persistence.storage.sql.engine import dispose_engine
+from .....tests.secure_sql import isolated_runtime_profile
 from . import _session_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "session-roundtrip"
-
-
-@contextmanager
-def _active_runtime(tmp_path: Path, bucket_id: str) -> Iterator[Settings]:
-    with override_settings(
-        aeat_local_storage_root=tmp_path,
-        aeat_active_profile=bucket_id,
-    ) as settings:
-        dispose_engine(settings)
-        try:
-            yield settings
-        finally:
-            dispose_engine(settings)
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _playwright_shaped_storage_state() -> dict[str, object]:
@@ -93,7 +66,7 @@ def test_persisted_browser_session_roundtrips_under_real_encryption(
 ) -> None:
     """A saved browser session loads back with every key + SHA preserved."""
 
-    with _active_runtime(tmp_path, _BUCKET_ID), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         logical_path = Path("/profile/active/aeat-session")
         storage_state = _playwright_shaped_storage_state()
         metadata = {

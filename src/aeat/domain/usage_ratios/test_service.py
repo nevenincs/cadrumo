@@ -2,7 +2,7 @@
 
 Post-USAGE-001 the service routes through the substrate's encrypted-
 object backend; every test here exercises the round-trip against a
-real SQLite database under an :class:`EphemeralMasterKeyProvider`.
+real active-profile SQLite runtime.
 """
 
 from __future__ import annotations
@@ -13,17 +13,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    Envelope,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    SensitivityClass,
-    override_secret_store,
-)
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from aeat.adapters.persistence.storage import Envelope, SensitivityClass
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     UsageRatioPersistenceError,
@@ -32,35 +24,19 @@ from aeat.domain.usage_ratios import (
     save_usage_ratios,
     usage_ratios_object_key,
 )
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs-secret",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        try:
-            yield
-        finally:
-            override_secret_store(None)
-            dispose_engine()
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile
 
 
-def _database_bytes(tmp_path: Path) -> bytes:
-    return (tmp_path / "aeat.db").read_bytes()
+def _database_bytes(profile: TestRuntimeProfile) -> bytes:
+    return (profile.paths.db_dir / "aeat.db").read_bytes()
 
 
 def test_load_missing_returns_empty(tmp_path: Path) -> None:
@@ -70,13 +46,16 @@ def test_load_missing_returns_empty(tmp_path: Path) -> None:
     assert load_usage_ratios(bucket_id="bucket-a") == UsageRatioProfile()
 
 
-def test_save_does_not_create_requested_plaintext_file(tmp_path: Path) -> None:
+def test_save_does_not_create_requested_plaintext_file(
+    tmp_path: Path,
+    _runtime_profile: TestRuntimeProfile,
+) -> None:
     """``save_usage_ratios`` stores in the secure database, not at ``path``."""
     target = tmp_path / "a" / "b" / "ratios.json"
     profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     save_usage_ratios(profile, bucket_id="bucket-a")
     assert not target.exists()
-    assert (tmp_path / "aeat.db").exists()
+    assert (_runtime_profile.paths.db_dir / "aeat.db").exists()
 
 
 def test_save_round_trips(tmp_path: Path) -> None:
@@ -112,14 +91,13 @@ def test_save_replaces_previous_payload(tmp_path: Path) -> None:
     assert list(tmp_path.glob("*.tmp")) == []
 
 
-def test_save_writes_encrypted_database_object(tmp_path: Path) -> None:
+def test_save_writes_encrypted_database_object(_runtime_profile: TestRuntimeProfile) -> None:
     """The database record is encrypted at FINANCIAL class."""
-    tmp_path / "ratios.json"
     profile = UsageRatioProfile(
         ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")},
     )
     save_usage_ratios(profile, bucket_id="bucket-a")
-    on_disk = _database_bytes(tmp_path)
+    on_disk = _database_bytes(_runtime_profile)
     assert b"secure_objects" in on_disk
     assert b"financial" in on_disk
     assert b"0.21" not in on_disk
@@ -127,10 +105,9 @@ def test_save_writes_encrypted_database_object(tmp_path: Path) -> None:
     assert b"profile" not in on_disk
 
 
-def test_load_corrupt_secure_object_raises_persistence_error(tmp_path: Path) -> None:
+def test_load_corrupt_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
     """A malformed encrypted payload surfaces as :class:`UsageRatioPersistenceError`."""
-    tmp_path / "bad.json"
-    SecureObjectRepository().save(
+    _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
         object_key=usage_ratios_object_key("bucket-a"),
         classification=SensitivityClass.FINANCIAL,
@@ -138,18 +115,22 @@ def test_load_corrupt_secure_object_raises_persistence_error(tmp_path: Path) -> 
         written_at=datetime.now(UTC),
         payload=b"{not-json",
     )
-    with pytest.raises(UsageRatioPersistenceError):
+    with pytest.raises(UsageRatioPersistenceError) as exc_info:
         load_usage_ratios(bucket_id="bucket-a")
+    assert isinstance(exc_info.value.__cause__, ValidationError)
+    assert "Invalid JSON" in str(exc_info.value)
 
 
-def test_load_inner_classification_mismatch_raises_persistence_error(tmp_path: Path) -> None:
+def test_load_inner_classification_mismatch_raises_persistence_error(
+    _runtime_profile: TestRuntimeProfile,
+) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=1,
         written_at=datetime.now(UTC),
         classification=SensitivityClass.CACHE,
         payload=UsageRatioProfile(),
     )
-    SecureObjectRepository().save(
+    _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
         object_key=usage_ratios_object_key("bucket-a"),
         classification=SensitivityClass.FINANCIAL,
@@ -161,14 +142,16 @@ def test_load_inner_classification_mismatch_raises_persistence_error(tmp_path: P
         load_usage_ratios(bucket_id="bucket-a")
 
 
-def test_load_inner_schema_version_mismatch_raises_persistence_error(tmp_path: Path) -> None:
+def test_load_inner_schema_version_mismatch_raises_persistence_error(
+    _runtime_profile: TestRuntimeProfile,
+) -> None:
     envelope = Envelope[UsageRatioProfile](
         schema_version=2,
         written_at=datetime.now(UTC),
         classification=SensitivityClass.FINANCIAL,
         payload=UsageRatioProfile(),
     )
-    SecureObjectRepository().save(
+    _runtime_profile.repository.save(
         namespace="aeat.domain.usage_ratios",
         object_key=usage_ratios_object_key("bucket-a"),
         classification=SensitivityClass.FINANCIAL,

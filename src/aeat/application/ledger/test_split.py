@@ -26,13 +26,9 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...adapters.persistence.storage.sql.engine import dispose_engine
-from ...core.config import Settings
 from ...domain.buckets import BucketEventHistoryRepository, BucketEventType
 from ...domain.transactions import (
     BusinessClassification,
@@ -42,6 +38,7 @@ from ...domain.transactions import (
     TransactionLifecycleState,
     TransactionValidationError,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     ManualLedgerTransactionCommand,
     SplitChildCommand,
@@ -54,23 +51,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
-    database_url = f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"
-    monkeypatch.setenv("AEAT_DATABASE_URL", database_url)
-    dispose_engine()
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(Settings(aeat_database_url=database_url))
-        Base.metadata.create_all(engine)
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         try:
-            yield engine
+            yield profile.repository
         finally:
-            engine.dispose()
-            dispose_engine()
+            dispose_engine(profile.settings)
 
 
-def _repositories(engine: Engine, *, bucket_id: str = "bucket-a"):
-    objects = SecureObjectRepository(engine=engine)
+def _repositories(objects: SecureObjectRepository, *, bucket_id: str = "bucket-a"):
     return (
         TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         BucketEventHistoryRepository(objects=objects),
@@ -96,8 +85,8 @@ def _create_parent(transaction_repository, event_repository, *, amount: Decimal 
     )
 
 
-def test_split_transitions_parent_to_split_and_creates_children(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_transitions_parent_to_split_and_creates_children(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
 
     result = split_transaction(
@@ -136,8 +125,8 @@ def test_split_transitions_parent_to_split_and_creates_children(secure_engine: E
         assert child.business_classification is BusinessClassification.NOT_YET_PROCESSED
 
 
-def test_split_emits_single_event_anchored_on_parent(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_emits_single_event_anchored_on_parent(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
 
     result = split_transaction(
@@ -165,8 +154,8 @@ def test_split_emits_single_event_anchored_on_parent(secure_engine: Engine) -> N
     assert event.payload["child_count"] == "2"
 
 
-def test_split_group_id_is_deterministic(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_group_id_is_deterministic(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
 
     first = split_transaction(
@@ -228,8 +217,8 @@ def test_split_group_id_is_deterministic(secure_engine: Engine) -> None:
     assert first.split_group_id != second.split_group_id
 
 
-def test_split_refuses_non_active_parent(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_refuses_non_active_parent(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     archive_manual_transaction(
         bucket_id="bucket-a",
@@ -253,8 +242,8 @@ def test_split_refuses_non_active_parent(secure_engine: Engine) -> None:
         )
 
 
-def test_split_refuses_sum_mismatch(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_refuses_sum_mismatch(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     with pytest.raises(TransactionValidationError, match="sum to the parent amount exactly"):
         split_transaction(
@@ -270,8 +259,8 @@ def test_split_refuses_sum_mismatch(secure_engine: Engine) -> None:
         )
 
 
-def test_split_refuses_single_child(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_refuses_single_child(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     with pytest.raises(TransactionValidationError, match="at least two children"):
         split_transaction(
@@ -284,8 +273,8 @@ def test_split_refuses_single_child(secure_engine: Engine) -> None:
         )
 
 
-def test_split_refuses_mixed_signs(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_refuses_mixed_signs(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     # parent is -100; one child positive flips sign
     with pytest.raises(TransactionValidationError, match="share the parent's sign"):
@@ -302,8 +291,8 @@ def test_split_refuses_mixed_signs(secure_engine: Engine) -> None:
         )
 
 
-def test_split_refuses_zero_child_amount(secure_engine: Engine) -> None:
-    transaction_repository, event_repository = _repositories(secure_engine)
+def test_split_refuses_zero_child_amount(secure_objects: SecureObjectRepository) -> None:
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     with pytest.raises(TransactionValidationError, match="must not be zero"):
         split_transaction(
@@ -319,14 +308,14 @@ def test_split_refuses_zero_child_amount(secure_engine: Engine) -> None:
         )
 
 
-def test_split_preserves_parent_amount_as_persisted_child_sum(secure_engine: Engine) -> None:
+def test_split_preserves_parent_amount_as_persisted_child_sum(secure_objects: SecureObjectRepository) -> None:
     """Identity passthrough: every persisted child carries exactly the amount the test passed.
 
     This is not a tautological calculation test — it asserts the
     backend persists the operator-supplied amount verbatim, not that
     a hand-computed Decimal matches a runtime-computed Decimal.
     """
-    transaction_repository, event_repository = _repositories(secure_engine)
+    transaction_repository, event_repository = _repositories(secure_objects)
     parent_result = _create_parent(transaction_repository, event_repository)
     amounts = (Decimal("-45.50"), Decimal("-54.50"))
     result = split_transaction(

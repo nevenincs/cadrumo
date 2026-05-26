@@ -1,0 +1,118 @@
+"""Tests for shared secure SQL isolation helpers."""
+
+from __future__ import annotations
+
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
+
+import pytest
+
+from aeat.adapters.persistence.storage import has_active_bucket_session
+from aeat.adapters.persistence.storage.bucket._manifest_io import read_manifest
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from aeat.core.classification import SensitivityClass
+from aeat.core.config import StorageRouteKind, override_settings
+from aeat.tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
+
+_CONTROL_BUCKET_ID = "contamination-control"
+_CONTROL_KEK = b"c" * 32
+_CONTROL_DEK = b"p" * 32
+
+
+def test_isolated_ephemeral_secure_sql_routes_default_engine_to_tmp_database(
+    tmp_path: Path,
+) -> None:
+    with isolated_ephemeral_secure_sql(tmp_path=tmp_path):
+        assert has_active_bucket_session()
+        with get_engine().connect() as connection:
+            database_rows = connection.exec_driver_sql("PRAGMA database_list").fetchall()
+
+    database_paths = {Path(str(row[2])).resolve() for row in database_rows if row[2]}
+    assert (tmp_path / "aeat.db").resolve() in database_paths
+    assert not has_active_bucket_session()
+
+
+def test_isolated_ephemeral_secure_sql_does_not_mutate_active_profile_database(tmp_path: Path) -> None:
+    storage_root = tmp_path / "operator-storage"
+    control_database = storage_root / "buckets" / _CONTROL_BUCKET_ID / "db" / "aeat.db"
+    isolated_root = tmp_path / "isolated-storage"
+    isolated_database = isolated_root / "aeat.db"
+
+    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=_CONTROL_BUCKET_ID):
+        dispose_engine()
+        try:
+            with activate_session(_control_session()):
+                SecureObjectRepository().save(
+                    namespace="aeat.tests.contamination.control",
+                    object_key="active-profile-row",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"active-profile-control",
+                )
+            dispose_engine()
+            control_rows_before = _secure_object_row_count(control_database)
+
+            with isolated_ephemeral_secure_sql(tmp_path=isolated_root):
+                SecureObjectRepository().save(
+                    namespace="aeat.tests.contamination.isolated",
+                    object_key="isolated-row",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"isolated-helper-row",
+                )
+
+            control_rows_after = _secure_object_row_count(control_database)
+        finally:
+            dispose_engine()
+
+    assert control_rows_before == 1
+    assert control_rows_after == control_rows_before
+    assert _secure_object_row_count(isolated_database) == 1
+
+
+def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
+        manifest = read_manifest(profile.paths)
+        profile.repository.save(
+            namespace="aeat.tests.runtime.profile",
+            object_key="runtime-row",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"runtime-profile-row",
+        )
+
+        runtime = inspect_storage_runtime(profile.settings)
+
+    assert manifest.bucket_id == _CONTROL_BUCKET_ID
+    assert manifest.label == "Test runtime profile"
+    assert profile.runtime.readiness.code is StorageRuntimeReadinessCode.READY
+    assert runtime.route_kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE
+    assert runtime.route_attached_to_active_bucket
+    assert _secure_object_row_count(profile.paths.db_dir / "aeat.db") == 1
+    assert not (profile.storage_root / "aeat.db").exists()
+    assert not has_active_bucket_session()
+
+
+def _control_session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_CONTROL_BUCKET_ID,
+        kek=_CONTROL_KEK,
+        dek=_CONTROL_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+def _secure_object_row_count(database_path: Path) -> int:
+    with sqlite3.connect(database_path) as connection:
+        return int(connection.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0])

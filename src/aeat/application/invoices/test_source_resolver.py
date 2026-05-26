@@ -8,16 +8,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.resources import resources
 from ...domain.invoices import (
     Invoice,
@@ -29,6 +20,7 @@ from ...domain.invoices import (
     PaymentStatus,
 )
 from ...domain.iva import IvaCategory
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
 from . import InvoiceCatalogueSourceResolver
 
@@ -39,25 +31,9 @@ _OTHER_BUCKET_ID = "bucket-other"
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        engine = create_engine(f"sqlite:///{tmp_path / 'aeat.db'}")
-        try:
-            yield engine
-        finally:
-            engine.dispose()
-            override_secret_store(None)
+def secure_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile
 
 
 def _invoice(
@@ -97,8 +73,10 @@ def _invoice(
     )
 
 
-def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(secure_engine: Engine) -> None:
-    repository = InvoiceCatalogueRepository(objects=SecureObjectRepository(engine=secure_engine))
+def test_invoice_catalogue_source_resolver_emits_scalar_values_and_provenance(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
     declarable = _invoice(
         bucket_id=_BUCKET_ID,
         invoice_number="F-2026-001",

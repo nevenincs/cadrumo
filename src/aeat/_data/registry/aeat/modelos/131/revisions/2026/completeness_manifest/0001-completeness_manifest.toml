@@ -1,0 +1,49 @@
+[revisions."2026".completeness_manifest]
+source_ref = "aeat-dr-131-2026"
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+source_refs = ["aeat-dr-131-2026", "aeat-modelo-131-instructions"]
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "02"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "03"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "04"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "05"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "06"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "07"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "08"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "09"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "10"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "11"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "12"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "13"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "14"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "15"
+
+[[revisions."2026".completeness_manifest.casillas]]
+number = "saldo-negativo-fin-periodo"

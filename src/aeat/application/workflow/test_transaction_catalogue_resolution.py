@@ -9,10 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.transactions import (
     LedgerNoActiveBucketError,
     RawProvenance,
@@ -22,6 +19,7 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import WorkflowState, active_transaction_catalogue_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -29,16 +27,11 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id="transaction-catalogue-resolution-test",
+    ) as profile:
+        yield profile.repository
 
 
 def _state(*, profile: str, bucket_id: str) -> WorkflowState:

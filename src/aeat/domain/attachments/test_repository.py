@@ -9,9 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...adapters.persistence.storage.sql.engine import dispose_engine
+from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentNotFoundError, AttachmentValidationError
 from ._models import Attachment
@@ -20,14 +19,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="attachment-test") as profile:
+        yield profile
 
 
 def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = "bucket-a") -> Attachment:
@@ -49,7 +43,9 @@ def _attachment(body: bytes, *, tx_id: str = "tx-001", bucket_id: str = "bucket-
     )
 
 
-def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) -> None:
+def test_blob_and_manifest_round_trip_without_plaintext_files(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
     store = AttachmentStore()
     body = b"%PDF-1.4\nATTACHMENT_CANARY_00000000T\n%%EOF"
     digest = store.put_bytes(body)
@@ -68,7 +64,7 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) ->
     assert tuple(store.iter_manifests()) == (attachment,)
     store.verify_blob(digest)
 
-    database_bytes = (tmp_path / "aeat.db").read_bytes()
+    database_bytes = (runtime_profile.paths.db_dir / "aeat.db").read_bytes()
     assert b"secure_objects" in database_bytes
     assert body not in database_bytes
     assert b"ATTACHMENT_CANARY_00000000T" not in database_bytes
@@ -76,7 +72,10 @@ def test_blob_and_manifest_round_trip_without_plaintext_files(tmp_path: Path) ->
     assert b"deductible invoice" not in database_bytes
 
 
-def test_put_file_reads_source_but_persists_only_secure_database_object(tmp_path: Path) -> None:
+def test_put_file_reads_source_but_persists_only_secure_database_object(
+    tmp_path: Path,
+    runtime_profile: TestRuntimeProfile,
+) -> None:
     source = tmp_path / "source.pdf"
     body = b"%PDF-1.4\nsource invoice\n%%EOF"
     source.write_bytes(body)
@@ -87,10 +86,10 @@ def test_put_file_reads_source_but_persists_only_secure_database_object(tmp_path
     assert digest == hashlib.sha256(body).hexdigest()
     assert size == len(body)
     assert store.read_bytes(digest) == body
-    assert not (tmp_path / "attachments").exists()
+    assert not (runtime_profile.storage_root / "attachments").exists()
 
 
-def test_missing_blob_and_invalid_digest_fail_closed(tmp_path: Path) -> None:
+def test_missing_blob_and_invalid_digest_fail_closed() -> None:
     store = AttachmentStore()
     missing = "a" * 64
 

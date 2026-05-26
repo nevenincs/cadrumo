@@ -1270,6 +1270,7 @@ id = "modelo-130-declaracion-pdf"
 surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
+provisional_pending_specimen = true
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
     {casilla_id = "01", match_strategy = "numeric_casilla", value_kind = "amount"},

@@ -7,25 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import override_settings
-from ...persistence.storage.master_key._active_session import activate_session
-from ...persistence.storage.master_key._bucket_session import BucketSession
-from ...persistence.storage.sql.engine import dispose_engine
+from ....tests.secure_sql import isolated_runtime_profile
 from . import _session_store
 from ._records import REQUIRED_SCOPES, DriveConfig, OAuthClient, OAuthMetadata, OAuthToken
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 _BUCKET_ID = "google-session"
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: Path) -> None:
@@ -52,25 +39,19 @@ def test_google_oauth_records_roundtrip_through_active_bucket_runtime(tmp_path: 
     )
     drive_config = DriveConfig(root_folder_id="drive-folder-id")
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
-        try:
-            _session_store.save_client(profile, client)
-            _session_store.save_token(profile, token)
-            _session_store.save_metadata(profile, metadata)
-            _session_store.save_drive_config(profile, drive_config)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _session_store.save_client(profile, client)
+        _session_store.save_token(profile, token)
+        _session_store.save_metadata(profile, metadata)
+        _session_store.save_drive_config(profile, drive_config)
 
-            assert _session_store.load_client(profile) == client
-            assert _session_store.load_token(profile) == token
-            assert _session_store.load_metadata(profile) == metadata
-            assert _session_store.load_drive_config(profile) == drive_config
+        assert _session_store.load_client(profile) == client
+        assert _session_store.load_token(profile) == token
+        assert _session_store.load_metadata(profile) == metadata
+        assert _session_store.load_drive_config(profile) == drive_config
 
-            assert _session_store.delete_session(profile) == (True, True)
-            assert _session_store.load_token(profile) is None
-            assert _session_store.load_metadata(profile) is None
-            assert _session_store.load_client(profile) == client
-            assert _session_store.load_drive_config(profile) == drive_config
-        finally:
-            dispose_engine(settings)
+        assert _session_store.delete_session(profile) == (True, True)
+        assert _session_store.load_token(profile) is None
+        assert _session_store.load_metadata(profile) is None
+        assert _session_store.load_client(profile) == client
+        assert _session_store.load_drive_config(profile) == drive_config

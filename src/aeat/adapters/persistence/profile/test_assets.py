@@ -16,22 +16,16 @@ from pathlib import Path
 import pytest
 
 from ....domain.profile.assets import AmortizacionEntry, AmortizacionLedger, AssetClass, AssetRecord
-from ..storage import EphemeralMasterKeyProvider
-from ..storage.sql import dispose_engine
+from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .assets import load_amortizacion_ledger, load_assets, save_amortizacion_ledger, save_assets
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 
 @pytest.fixture(autouse=True)
-def _ephemeral_master_key(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile
 
 
 def _asset(identifier: str, asset_class: AssetClass, cost_basis: str = "10000.00") -> AssetRecord:
@@ -53,7 +47,7 @@ def test_asset_persistence_round_trip() -> None:
     assert loaded == (asset,)
 
 
-def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> None:
+def test_asset_persistence_is_encrypted_financial_secure_object(_runtime_profile: TestRuntimeProfile) -> None:
     asset = AssetRecord(
         identifier="nas",
         description="LEAK-CANARY-NAS",
@@ -68,7 +62,7 @@ def test_asset_persistence_is_encrypted_financial_secure_object(tmp_path) -> Non
     )
 
     path = save_assets((asset,))
-    db_bytes = (tmp_path / "aeat.db").read_bytes()
+    db_bytes = (_runtime_profile.paths.db_dir / "aeat.db").read_bytes()
 
     assert not path.exists()
     assert b"LEAK-CANARY-NAS" not in db_bytes

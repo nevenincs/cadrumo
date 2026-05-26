@@ -1,10 +1,10 @@
 """Round-trip persistence tests for the invoice and transaction catalogues.
 
 These tests exercise the actual encrypted SQL backend end-to-end
-(``save`` ÔåÆ fresh repository instance ÔåÆ ``load``) rather than asserting
+(``save`` -> fresh repository instance -> ``load``) rather than asserting
 against the on-disk envelope shape. They are the regression net that
 catches signature drift between the production repository classes and
-their callers ÔÇö a class of drift that type checkers will flag in tests
+their callers, a class of drift that type checkers will flag in tests
 but only a real round-trip can flag in production.
 """
 
@@ -17,12 +17,6 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
 from aeat.domain.invoices._enums import InvoiceKind, IvaRate, PaymentStatus
 from aeat.domain.invoices._models import Invoice, InvoiceCatalogue, InvoiceLine
 from aeat.domain.invoices._repository import InvoiceCatalogueRepository
@@ -35,28 +29,15 @@ from aeat.domain.transactions import (
     TransactionDirection,
 )
 from aeat.domain.transactions._repository import TransactionCatalogueRepository
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_master_key(tmp_path: Path) -> Iterator[None]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        try:
-            yield
-        finally:
-            override_secret_store(None)
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="test") as profile:
+        yield profile
 
 
 def _invoice(invoice_number: str = "INV-001") -> Invoice:

@@ -14,17 +14,14 @@ model_validator enforces with ``superseded_by_snapshot_id``).
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
-from ...core.config import Settings, override_settings
+from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from ._borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -35,36 +32,6 @@ from ._errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
-_SESSION_BUCKET_ID = "ephemeral"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_SESSION_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
-
-
-@contextmanager
-def _active_runtime(tmp_path: Path):
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
-        dispose_engine()
-        try:
-            yield
-        finally:
-            dispose_engine()
-
-
-def _runtime_engine(tmp_path: Path, bucket_id: str):
-    return create_engine_from_settings(
-        Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=bucket_id),
-    )
-
 
 def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     captured_at = datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC)
@@ -73,9 +40,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         "casilla.0501": Decimal("8750.50"),
         "casilla.identity.declarant_label": "Gergely Wootsch",
     }
-    source_url = (
-        "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522456T"
-    )
+    source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522456T"
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
         period="0A",
@@ -102,13 +67,13 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
     """A populated borrador snapshot round-trips through the encrypted store."""
 
     bucket_id = "renta-2024-bucket"
-    with _active_runtime(tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
         original = _populated_snapshot(bucket_id=bucket_id)
         repo.save(original)
         loaded = repo.load(original.snapshot_id)
 
-        assert (tmp_path / "buckets" / bucket_id / "db" / "aeat.db").is_file()
+        assert (profile.paths.db_dir / "aeat.db").is_file()
         assert loaded == original
         # Witness the Decimal entries survive the union resolution.
         assert loaded.binding_values["casilla.0500"] == Decimal("42500.00")
@@ -134,7 +99,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
     """
 
     bucket_id = "renta-2024-bucket"
-    with _active_runtime(tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
         repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
         # First save the successor so the supersession pointer references
         # a real id; then build and save the superseded predecessor.
@@ -146,9 +111,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
             "casilla.0500": Decimal("39800.00"),
             "casilla.identity.declarant_label": "Gergely Wootsch",
         }
-        source_url = (
-            "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
-        )
+        source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
             period="0A",
@@ -202,72 +165,67 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
     from ...adapters.persistence.storage.sql.session import session_scope
 
     bucket_id = "renta-2024-bucket"
-    with _active_runtime(tmp_path):
-        engine = _runtime_engine(tmp_path, bucket_id)
-        try:
-            repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        engine = get_engine(profile.settings)
+        repo = Borrador100SnapshotRepository(bucket_id=bucket_id)
 
-            successor = _populated_snapshot(bucket_id=bucket_id)
-            repo.save(successor)
+        successor = _populated_snapshot(bucket_id=bucket_id)
+        repo.save(successor)
 
-            captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
-            binding_values = {
-                "casilla.0500": Decimal("39800.00"),
-                "casilla.identity.declarant_label": "Gergely Wootsch",
-            }
-            source_url = (
-                "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+        captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
+        binding_values = {
+            "casilla.0500": Decimal("39800.00"),
+            "casilla.identity.declarant_label": "Gergely Wootsch",
+        }
+        source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
+        snapshot_id = derive_borrador_100_snapshot_id(
+            filing_year=2024,
+            period="0A",
+            captured_at=captured_at,
+            source_url=source_url,
+            binding_values=binding_values,
+        )
+        original = Borrador100Snapshot(
+            snapshot_id=snapshot_id,
+            bucket_id=bucket_id,
+            modelo="100",
+            filing_year=2024,
+            period="0A",
+            captured_at=captured_at,
+            source_url=source_url,
+            state=SnapshotLifecycleState.SUPERSEDED,
+            binding_values=binding_values,
+            superseded_by_snapshot_id=successor.snapshot_id,
+        )
+        repo.save(original)
+
+        # Surgically delete ``superseded_by_snapshot_id`` from the
+        # persisted JSON envelope payload, then attempt to load. The
+        # column accessor handles encrypt/decrypt automatically.
+        from ._borrador_100 import (
+            BORRADOR_100_SNAPSHOT_NAMESPACE,
+            borrador_100_snapshot_object_key,
+        )
+
+        object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
+                SecureObjectRow.object_key == object_key,
             )
-            snapshot_id = derive_borrador_100_snapshot_id(
-                filing_year=2024,
-                period="0A",
-                captured_at=captured_at,
-                source_url=source_url,
-                binding_values=binding_values,
+            row = session.execute(stmt).scalar_one()
+            decoded = _json.loads(row.payload.decode("utf-8"))
+            assert "superseded_by_snapshot_id" in decoded["payload"], (
+                "fixture must serialise superseded_by_snapshot_id into the "
+                "envelope payload for this test to be meaningful"
             )
-            original = Borrador100Snapshot(
-                snapshot_id=snapshot_id,
-                bucket_id=bucket_id,
-                modelo="100",
-                filing_year=2024,
-                period="0A",
-                captured_at=captured_at,
-                source_url=source_url,
-                state=SnapshotLifecycleState.SUPERSEDED,
-                binding_values=binding_values,
-                superseded_by_snapshot_id=successor.snapshot_id,
-            )
-            repo.save(original)
+            del decoded["payload"]["superseded_by_snapshot_id"]
+            row.payload = _json.dumps(decoded).encode("utf-8")
 
-            # Surgically delete ``superseded_by_snapshot_id`` from the
-            # persisted JSON envelope payload, then attempt to load. The
-            # column accessor handles encrypt/decrypt automatically.
-            from ._borrador_100 import (
-                BORRADOR_100_SNAPSHOT_NAMESPACE,
-                borrador_100_snapshot_object_key,
-            )
+        # With the field absent, the model_validator on
+        # Borrador100Snapshot must reject the rehydrated record (the
+        # SUPERSEDED state requires the pointer).
+        from pydantic import ValidationError
 
-            object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
-                    SecureObjectRow.object_key == object_key,
-                )
-                row = session.execute(stmt).scalar_one()
-                decoded = _json.loads(row.payload.decode("utf-8"))
-                assert "superseded_by_snapshot_id" in decoded["payload"], (
-                    "fixture must serialise superseded_by_snapshot_id into the "
-                    "envelope payload for this test to be meaningful"
-                )
-                del decoded["payload"]["superseded_by_snapshot_id"]
-                row.payload = _json.dumps(decoded).encode("utf-8")
-
-            # With the field absent, the model_validator on
-            # Borrador100Snapshot must reject the rehydrated record (the
-            # SUPERSEDED state requires the pointer).
-            from pydantic import ValidationError
-
-            with pytest.raises((ValidationError, LiveApplicationInputError), match="superseded"):
-                repo.load(original.snapshot_id)
-        finally:
-            engine.dispose()
+        with pytest.raises((ValidationError, LiveApplicationInputError), match="superseded"):
+            repo.load(original.snapshot_id)

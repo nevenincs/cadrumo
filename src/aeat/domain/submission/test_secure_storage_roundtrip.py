@@ -18,18 +18,14 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import create_engine_from_settings
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql.engine import get_engine
+from ...tests.secure_sql import isolated_runtime_profile
 from ._models import (
+    ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    ModeloPresentado,
     make_submission_id,
 )
 from ._repository import SubmissionRepository
@@ -80,55 +76,31 @@ def _populated_filing() -> ModeloPresentado:
     )
 
 
-def test_submitted_filing_survives_encrypted_storage_roundtrip(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_submitted_filing_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """A populated ModeloPresentado roundtrips strictly across AUDIT-class storage."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "submission-roundtrip.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_filing()
+        repo = SubmissionRepository()
+        repo.save(original)
+        loaded = repo.load(original.submission_id)
 
-            original = _populated_filing()
-            repo = SubmissionRepository()
-            repo.save(original)
-            loaded = repo.load(original.submission_id)
-
-            assert loaded is not None
-            assert loaded == original
-            # Per-field witnesses for the most fragile pieces:
-            # the SubmissionStatus enum, the nested attempts tuple
-            # with distinct statuses per attempt, and the typed Path
-            # field (browser_trace_path) which serialises as str on
-            # the wire and must reconstitute back to Path on load.
-            assert loaded.status is SubmissionStatus.ACEPTADA
-            assert loaded.justificante_csv == "ABCD12345678EFGH"
-            assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
-            assert len(loaded.attempts) == 2
-            assert loaded.attempts[0].status is SubmissionStatus.FALLIDA
-            assert loaded.attempts[0].error_code == "TLS_HANDSHAKE_TIMEOUT"
-            assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
-            assert loaded.attempts[1].status is SubmissionStatus.ACEPTADA
-            # The first-attempt-ended-before-submitted invariant survives.
-            assert loaded.submitted_at is not None
-            assert loaded.acknowledged_at is not None
-            assert loaded.submitted_at < loaded.acknowledged_at
-        finally:
-            engine.dispose()
+        assert loaded is not None
+        assert loaded == original
+        assert loaded.status is SubmissionStatus.ACEPTADA
+        assert loaded.justificante_csv == "ABCD12345678EFGH"
+        assert loaded.justificante_pdf_path == Path("justificantes/303-2025Q1-ABCD.pdf")
+        assert len(loaded.attempts) == 2
+        assert loaded.attempts[0].status is SubmissionStatus.FALLIDA
+        assert loaded.attempts[0].error_code == "TLS_HANDSHAKE_TIMEOUT"
+        assert loaded.attempts[0].browser_trace_path == Path("traces/attempt-1.zip")
+        assert loaded.attempts[1].status is SubmissionStatus.ACEPTADA
+        assert loaded.submitted_at is not None
+        assert loaded.acknowledged_at is not None
+        assert loaded.submitted_at < loaded.acknowledged_at
 
 
-def test_submission_dropped_justificante_csv_surfaces_at_load(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology proof: deleting ``justificante_csv`` on ACEPTADA must surface.
 
     The :class:`ModeloPresentado` model_validator enforces that an
@@ -150,51 +122,37 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(
 
     from ...adapters.persistence.storage.sql._orm import SecureObjectRow
     from ...adapters.persistence.storage.sql.session import session_scope
-    _SUBMISSION_NAMESPACE = SubmissionRepository.namespace
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "submission-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    submission_namespace = SubmissionRepository.namespace
 
-            original = _populated_filing()
-            repo = SubmissionRepository()
-            repo.save(original)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        original = _populated_filing()
+        repo = SubmissionRepository()
+        repo.save(original)
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _SUBMISSION_NAMESPACE,
-                    SecureObjectRow.object_key == original.submission_id,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                payload = envelope["payload"]
-                assert payload.get("justificante_csv"), (
-                    "fixture must serialise justificante_csv onto the "
-                    "ACEPTADA record for this proof test to be meaningful"
-                )
-                payload["justificante_csv"] = None
-                row.payload = _json.dumps(envelope).encode("utf-8")
-
-            regression_caught = False
-            try:
-                mutated = repo.load(original.submission_id)
-            except Exception:  # noqa: BLE001 - boundary may raise different types
-                regression_caught = True
-            else:
-                if mutated != original:
-                    regression_caught = True
-            assert regression_caught, (
-                "anti-tautology proof failed: deleting justificante_csv "
-                "from an ACEPTADA submission did NOT surface on load. "
-                "The submission boundary is tautological and every "
-                "submission roundtrip in the suite is suspect."
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == submission_namespace,
+                SecureObjectRow.object_key == original.submission_id,
             )
-        finally:
-            engine.dispose()
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload.get("justificante_csv"), (
+                "fixture must serialise justificante_csv onto the "
+                "ACEPTADA record for this proof test to be meaningful"
+            )
+            payload["justificante_csv"] = None
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        try:
+            mutated = repo.load(original.submission_id)
+        except ValidationError:
+            return
+        assert mutated != original, (
+            "anti-tautology proof failed: deleting justificante_csv "
+            "from an ACEPTADA submission did NOT surface on load. "
+            "The submission boundary is tautological and every "
+            "submission roundtrip in the suite is suspect."
+        )

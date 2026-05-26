@@ -1,0 +1,425 @@
+"""Cross-module import resolution gate.
+
+The companion :mod:`test_layout_import_smoke` proves every canonical
+layout package imports cleanly. This gate proves the inverse: every
+``from aeat.X import {name}`` statement under ``src/aeat/`` resolves
+to an attribute that actually exists on ``aeat.X``.
+
+Closes the foreign-WIP failure pattern that surfaced three times in
+the linkage-P02.S08 + M303 session — a sibling agent added an import
+to a caller without adding the matching name to the target package's
+``__init__.py`` imports / ``__all__``. The consumer module then
+raises ``ImportError`` the next time any test collection walks it,
+breaking the whole suite at collection time even though the target
+package itself imports cleanly.
+
+The scan walks every ``.py`` file under ``src/aeat/``, parses each
+via :mod:`ast`, collects every ``ImportFrom`` statement that targets
+the in-repo ``aeat.*`` namespace (absolute or relative), resolves
+the target package, and asserts every imported name is
+attribute-accessible after :func:`importlib.import_module`. Conditional
+imports inside ``if TYPE_CHECKING:`` blocks are skipped because their
+names are never bound at runtime; everything else is in scope.
+"""
+
+from __future__ import annotations
+
+import ast
+import importlib
+from pathlib import Path
+from typing import Iterator
+
+import pytest
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+SRC_AEAT = Path(__file__).resolve().parents[1]
+
+
+def _python_sources() -> Iterator[Path]:
+    """Yield every committed `.py` file under ``src/aeat/`` excluding caches."""
+    for path in SRC_AEAT.rglob("*.py"):
+        if "__pycache__" in path.parts:
+            continue
+        yield path
+
+
+def _is_type_checking_block(node: ast.AST) -> bool:
+    """Return True when ``node`` is an ``if TYPE_CHECKING:`` guard."""
+    if not isinstance(node, ast.If):
+        return False
+    test = node.test
+    if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+        return True
+    if isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING":
+        return True
+    return False
+
+
+def _resolve_relative_module(source: Path, level: int, module: str | None) -> str | None:
+    """Resolve ``from .module import X`` against ``source``'s package path.
+
+    Python's relative-import semantics: ``level=1`` means *the package
+    that contains this module*; ``level=2`` means that package's
+    parent; and so on. For a non-``__init__`` file at
+    ``aeat/sub/mod.py`` the containing package is ``aeat.sub``; for
+    ``aeat/sub/__init__.py`` the file IS the package ``aeat.sub`` and
+    the containing package is still ``aeat.sub``.
+
+    Returns the absolute dotted module name (e.g. ``aeat.domain.modelos``)
+    or ``None`` if the source file lives outside ``src/aeat`` (which
+    would be a project layout violation; not this gate's concern).
+    """
+    try:
+        relative = source.relative_to(SRC_AEAT.parent)
+    except ValueError:
+        return None
+    parts = list(relative.with_suffix("").parts)
+    if parts[-1] == "__init__":
+        # ``__init__.py`` IS the package; trim the marker so the
+        # remaining parts identify the package itself.
+        package_parts = parts[:-1]
+    else:
+        # Non-init module lives inside its containing package; strip
+        # the leaf module name to recover the package's dotted path.
+        package_parts = parts[:-1]
+    # ``level=1`` keeps every element; each additional level walks one
+    # package up.
+    if level - 1 > len(package_parts):
+        return None
+    anchor = package_parts[: len(package_parts) - (level - 1)] if level > 1 else package_parts
+    if module:
+        anchor = anchor + module.split(".")
+    return ".".join(anchor)
+
+
+def _walk_import_from(tree: ast.AST) -> Iterator[ast.ImportFrom]:
+    """Yield every ``ImportFrom`` node not inside an ``if TYPE_CHECKING:`` block."""
+    skip: set[int] = set()
+    for node in ast.walk(tree):
+        if _is_type_checking_block(node):
+            for child in ast.walk(node):
+                skip.add(id(child))
+    for node in ast.walk(tree):
+        if id(node) in skip:
+            continue
+        if isinstance(node, ast.ImportFrom):
+            yield node
+
+
+def _collect_import_pairs() -> list[tuple[Path, str, str]]:
+    """Walk every aeat source and yield ``(source_file, module, name)`` import triples.
+
+    Only ``from aeat.X import Y`` (absolute) and relative imports
+    resolving back into the ``aeat.*`` tree are returned. ``import *``
+    statements are excluded — they don't pin a specific name and the
+    no-wildcard hygiene is a separate concern.
+    """
+    triples: list[tuple[Path, str, str]] = []
+    for source in _python_sources():
+        try:
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        except SyntaxError:
+            # A pre-existing syntax error in the worktree is a separate
+            # diagnostic surface; let other gates report it.
+            continue
+        for node in _walk_import_from(tree):
+            if node.level > 0:
+                resolved = _resolve_relative_module(source, node.level, node.module)
+            else:
+                resolved = node.module
+            if not resolved or not resolved.startswith("aeat"):
+                continue
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                triples.append((source, resolved, alias.name))
+    return triples
+
+
+_IMPORT_TRIPLES: list[tuple[Path, str, str]] = _collect_import_pairs()
+
+
+# Committed-baseline allow-list of broken cross-module imports the gate
+# captured on its first run. Each entry is a known finding tracked as a
+# follow-up (see ``W09.P20`` in the schema-hardening plan). The gate
+# asserts the live set of broken triples equals this baseline exactly:
+# any NEW broken import fails fast (the regression we want to catch),
+# and any allow-list entry that becomes resolvable also fails (so a
+# silent fix can be acknowledged by trimming the baseline). Trim
+# entries as the underlying breakage is fixed; the gate is fully green
+# once this set is empty.
+_BASELINE_BROKEN_IMPORTS: frozenset[tuple[str, str, str]] = frozenset(
+    {
+        # Bucket B — aeat.application.repair_integrity is a single-file
+        # module with no exports for the symbols referenced below.
+        # Backend gap: tests written ahead of implementation.
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "RepairRemediationDecision",
+        ),
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "RepairRemediationDecisionRepository",
+        ),
+        (
+            "aeat/adapters/persistence/storage/test_runtime_migrated_repositories.py",
+            "aeat.application.repair_integrity",
+            "repair_remediation_decision_id",
+        ),
+        (
+            "aeat/entrypoints/cli/test_repair_policy_coverage.py",
+            "aeat.application.repair_integrity",
+            "build_repair_policy_command_surface_catalog",
+        ),
+    }
+)
+
+
+def _check_triple(triple: tuple[Path, str, str]) -> str | None:
+    """Return None when the triple resolves, or a one-line failure description otherwise.
+
+    Two resolution paths: (a) ``name`` is bound as an attribute on the
+    target package (the canonical ``__init__.py`` re-export pattern),
+    or (b) ``name`` is a submodule importable as ``{module}.{name}``
+    (the ``from pkg import mod`` shape Python resolves lazily). The
+    gate must accept both — only a triple that fails both paths is a
+    true broken-import finding.
+    """
+    source, module, name = triple
+    try:
+        target = importlib.import_module(module)
+    except ImportError as exc:
+        return (
+            f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}  "
+            f"(target module raised ImportError: {exc})"
+        )
+    if hasattr(target, name):
+        return None
+    # Submodule import path — ``from pkg import mod`` succeeds if
+    # ``pkg.mod`` is a real importable module, regardless of whether
+    # ``pkg.__init__`` binds ``mod`` as an attribute.
+    try:
+        importlib.import_module(f"{module}.{name}")
+        return None
+    except ImportError:
+        pass
+    return f"{source.relative_to(SRC_AEAT.parent).as_posix()}::{module}::{name}"
+
+
+def test_aeat_cross_module_imports_resolve_against_baseline() -> None:
+    """Every ``from aeat.X import Y`` triple resolves, modulo the committed baseline.
+
+    Walks every parsed import triple, classifies it as resolvable or
+    broken, then asserts the broken set equals ``_BASELINE_BROKEN_IMPORTS``
+    exactly. Fails fast on:
+
+    * **regressions**: a new broken triple not in the baseline (the
+      foreign-WIP-without-export pattern this gate exists to catch).
+    * **silent fixes**: an allow-list entry that no longer fails (so
+      the baseline gets trimmed instead of accruing dead entries).
+
+    Closes ``W09.P20.S139`` (gate definition). ``W09.P20.S140`` extends
+    the gate to fail at ``__init__.py``-modification time, not just
+    when a broken consumer is encountered.
+    """
+    live_breakage: set[tuple[str, str, str]] = set()
+    for triple in _IMPORT_TRIPLES:
+        source, module, name = triple
+        if _check_triple(triple) is None:
+            continue
+        live_breakage.add((source.relative_to(SRC_AEAT.parent).as_posix(), module, name))
+
+    regressions = live_breakage - _BASELINE_BROKEN_IMPORTS
+    silent_fixes = _BASELINE_BROKEN_IMPORTS - live_breakage
+
+    failure_lines: list[str] = []
+    if regressions:
+        failure_lines.append(
+            "New broken cross-module imports detected (regression — fix the import "
+            "or update the target package's __init__.py + __all__):"
+        )
+        failure_lines.extend(f"  + {entry}" for entry in sorted(regressions))
+    if silent_fixes:
+        failure_lines.append(
+            "Allow-list entries are now resolvable (trim _BASELINE_BROKEN_IMPORTS):"
+        )
+        failure_lines.extend(f"  - {entry}" for entry in sorted(silent_fixes))
+    assert not failure_lines, "\n" + "\n".join(failure_lines)
+
+
+def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
+    """Sanity: the AST walk found import triples to validate.
+
+    Guards against a future refactor that silently breaks the source
+    discovery (e.g. renaming ``src/aeat`` or changing the package
+    layout) and turns the gate into a zero-row no-op.
+    """
+    assert len(_IMPORT_TRIPLES) > 100, (
+        f"Cross-module import scan found only {len(_IMPORT_TRIPLES)} import triples — "
+        f"the source-tree walk probably broke. Expected hundreds of "
+        f"``from aeat.X import Y`` statements across the package."
+    )
+
+
+# Per-file count cap for the __init__.py public-import-without-__all__ gate.
+# Mirrors the singleton-warning regression cap idiom (W06.P16.S115):
+# each entry pins the maximum number of public sibling imports an
+# ``__init__.py`` may carry without listing them in ``__all__``. The
+# gate fails when a file's count grows (regression — public surface
+# drifted further off ``__all__``) OR when a file's count shrinks
+# (silent fix — trim the cap so the gain is locked in) OR when a
+# new file enters the set (regression — new ``__init__.py`` skipped
+# the discipline). Trim caps as packages clean up; the W09.P20 close
+# state is an empty mapping.
+_INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
+    "aeat/adapters/inbound/borrador/_extractors/__init__.py": 2,
+    "aeat/adapters/outbound/aeat/auth/__init__.py": 2,
+    "aeat/adapters/outbound/aeat/verify/__init__.py": 8,
+    "aeat/application/filing/__init__.py": 11,
+    "aeat/application/live/__init__.py": 34,
+    "aeat/application/overview/__init__.py": 13,
+    "aeat/application/registry/__init__.py": 27,
+    "aeat/application/topics/__init__.py": 2,
+    "aeat/application/user_profile/__init__.py": 5,
+    "aeat/core/corpus_manifest/__init__.py": 1,
+    "aeat/core/redaction/__init__.py": 5,
+    "aeat/domain/profile/__init__.py": 1,
+    "aeat/domain/profile/assets/__init__.py": 1,
+    "aeat/domain/profile/inventory/__init__.py": 3,
+    "aeat/entrypoints/cli/__init__.py": 10,
+    "aeat/entrypoints/cli/_config/__init__.py": 21,
+}
+
+
+def _collect_init_missing_from_all() -> list[tuple[str, str]]:
+    """For each ``__init__.py`` under src/aeat/, return public-import names absent from ``__all__``.
+
+    The contract: any name (a) imported into the package's
+    ``__init__.py`` from a sibling module via ``from .X import Y``,
+    AND (b) public (no leading underscore), must also appear in
+    ``__all__`` if the file declares one. Leading-underscore names
+    are private and intentionally not re-exported. ``__init__.py``
+    files without ``__all__`` are exempt (nothing to drift against).
+    """
+    findings: list[tuple[str, str]] = []
+    for source in _python_sources():
+        if source.name != "__init__.py":
+            continue
+        try:
+            tree = ast.parse(source.read_text(encoding="utf-8"), filename=str(source))
+        except SyntaxError:
+            continue
+        all_names = _extract_all_assignment(tree)
+        if all_names is None:
+            continue
+        rel = source.relative_to(SRC_AEAT.parent).as_posix()
+        # Only TOP-LEVEL ImportFrom nodes bind on the package's __init__
+        # namespace. Function-body and class-body imports are runtime
+        # locals; they neither bind on the package nor count as
+        # implicit re-exports.
+        for node in ast.iter_child_nodes(tree):
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            # Only the package's OWN siblings count — absolute imports
+            # from elsewhere in aeat or stdlib re-exports are caller's
+            # choice, not a package-public-surface promise.
+            if node.level == 0:
+                continue
+            for alias in node.names:
+                if alias.name == "*":
+                    continue
+                exposed = alias.asname or alias.name
+                if exposed.startswith("_"):
+                    continue
+                if exposed not in all_names:
+                    findings.append((rel, exposed))
+    return findings
+
+
+def _extract_all_assignment(tree: ast.AST) -> set[str] | None:
+    """Return the literal names listed in ``__all__``, or ``None`` if not declared."""
+    for node in ast.iter_child_nodes(tree):
+        target_name: str | None = None
+        value: ast.AST | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            tgt = node.targets[0]
+            if isinstance(tgt, ast.Name) and tgt.id == "__all__":
+                target_name = tgt.id
+                value = node.value
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == "__all__":
+            target_name = node.target.id
+            value = node.value
+        if target_name is None or value is None:
+            continue
+        if not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+            return None
+        names: set[str] = set()
+        for element in value.elts:
+            if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                names.add(element.value)
+        return names
+    return None
+
+
+def test_init_public_imports_appear_in_all_against_baseline() -> None:
+    """Every public name imported into an ``__init__.py`` from a sibling must be in ``__all__``.
+
+    Catches the half-export pattern: a package imports a public name
+    into its ``__init__.py`` (binding it as an attribute on the
+    package) but forgets to add it to ``__all__``. The wildcard
+    consumer ``from pkg import *`` then misses the name, and the
+    public-surface contract drifts off the ``__all__`` source of truth.
+
+    Closes ``W09.P20.S140``. Sibling check to ``S139`` — together
+    they pin every ``__init__.py`` re-export at both ends:
+    ``S139`` proves consumer imports resolve; ``S140`` proves the
+    package's own re-exports are coherent.
+
+    Uses the per-file count-cap idiom established by
+    ``W06.P16.S115`` so 225 historical findings stay tracked without
+    a 225-line inline tuple list. Each cap is a regression boundary:
+    a file's count cannot grow without the gate failing, and any
+    shrink must be locked in by trimming the cap.
+    """
+    live_findings = _collect_init_missing_from_all()
+    live_counts: dict[str, int] = {}
+    for path, _name in live_findings:
+        live_counts[path] = live_counts.get(path, 0) + 1
+
+    failure_lines: list[str] = []
+    for path, live_count in sorted(live_counts.items()):
+        cap = _INIT_MISSING_FROM_ALL_BASELINE.get(path)
+        if cap is None:
+            failure_lines.append(
+                f"  + {path!r}: new __init__.py with {live_count} public "
+                f"sibling import(s) missing from __all__"
+            )
+        elif live_count > cap:
+            failure_lines.append(
+                f"  + {path!r}: grew from {cap} to {live_count} "
+                f"public-import-without-__all__ findings"
+            )
+        elif live_count < cap:
+            failure_lines.append(
+                f"  - {path!r}: cap is {cap} but only {live_count} "
+                f"finding(s) remain — trim _INIT_MISSING_FROM_ALL_BASELINE"
+            )
+
+    # Files in the baseline but absent from live findings are silent
+    # fixes too — the entire cap should be removed.
+    for path, cap in sorted(_INIT_MISSING_FROM_ALL_BASELINE.items()):
+        if path not in live_counts and cap > 0:
+            failure_lines.append(
+                f"  - {path!r}: all {cap} finding(s) resolved — "
+                f"remove the entry from _INIT_MISSING_FROM_ALL_BASELINE"
+            )
+
+    if failure_lines:
+        header = (
+            "Public names imported into __init__.py but missing from __all__ "
+            "(regression caps drifted — fix the underlying drift or update the cap):"
+        )
+        assert False, "\n" + header + "\n" + "\n".join(failure_lines)

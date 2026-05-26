@@ -18,17 +18,15 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
 from aeat.adapters.persistence.storage.bucket._layout import bucket_paths
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
+from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.setup._contracts import InitializeWorkspaceCommand
 from aeat.application.setup._service import initialize_workspace
 from aeat.application.user_profile._orchestration import ProfileAlreadyRegisteredError
-from aeat.core.config import Settings, load_settings
+from aeat.core.config import SecretStoreBackend, load_settings
+from aeat.tests.secure_sql import dev_test_database_password
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -36,21 +34,20 @@ _UUID_RE = r"^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12
 
 
 @pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'init.db').as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+def profile_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
+    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", SecretStoreBackend.FILE.value)
+    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
+    dispose_engine()
+    try:
+        yield tmp_path
+    finally:
+        dispose_engine()
 
 
 def test_initialize_workspace_provisions_bucket_directory_and_manifest(
-    secure_objects: SecureObjectRepository,
+    profile_storage_root: Path,
 ) -> None:
     """A successful init lays out the UUID-named bucket dir and manifest."""
 
@@ -80,7 +77,7 @@ def test_initialize_workspace_provisions_bucket_directory_and_manifest(
 
 
 def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
-    secure_objects: SecureObjectRepository,
+    profile_storage_root: Path,
 ) -> None:
     """The manifest records the UUID identity, the operator label, and KDF params."""
 
@@ -112,7 +109,7 @@ def test_initialize_workspace_writes_manifest_with_uuid_id_and_name_label(
 
 
 def test_initialize_workspace_refuses_a_duplicate_operator_name(
-    secure_objects: SecureObjectRepository,
+    profile_storage_root: Path,
 ) -> None:
     """A second init with the same operator name is refused as a duplicate label.
 
@@ -135,7 +132,7 @@ def test_initialize_workspace_refuses_a_duplicate_operator_name(
 
 
 def test_initialize_workspace_two_distinct_names_get_distinct_uuids(
-    secure_objects: SecureObjectRepository,
+    profile_storage_root: Path,
 ) -> None:
     """Two profiles with different names land in two UUID-named buckets."""
 

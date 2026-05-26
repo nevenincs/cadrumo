@@ -8,12 +8,14 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.resources import bundled_path
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
+    _PreviousModeloSelector,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
@@ -316,6 +318,146 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
             filing_year=2026,
             period="1T",
         )
+
+
+def test_previous_modelo_selector_max_year_delta_unset_preserves_unbounded_anchors() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+    )
+
+    assert selector.max_year_delta is None
+    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_zero_drops_cross_ejercicio_offset_anchor() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=0,
+    )
+
+    assert selector.required_period_anchors_for_target("1T") == ()
+
+
+def test_previous_modelo_selector_max_year_delta_zero_admits_same_ejercicio_offset_anchors() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=0,
+    )
+
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+    assert selector.required_period_anchors_for_target("3T") == ((0, "2T"),)
+    assert selector.required_period_anchors_for_target("4T") == ((0, "3T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_one_admits_one_year_cross_ejercicio_anchor() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=1,
+    )
+
+    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_rejects_negative_values() -> None:
+    with pytest.raises(ValidationError, match="max_year_delta must be non-negative"):
+        _PreviousModeloSelector(
+            source_modelo="130",
+            source_output="saldo-negativo-fin-periodo",
+            source_period_offset_from_target=-1,
+            max_year_delta=-1,
+        )
+
+
+def test_previous_filing_requirements_walker_skips_cap_suppressed_binding(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    capped_binding = base_binding.model_copy(
+        update={
+            "id": "test-cap-suppressed-binding",
+            "selector": {
+                "source": "previous_filing",
+                "source_modelo": "130",
+                "source_output": "saldo-negativo-fin-periodo",
+                "source_period_offset_from_target": -1,
+                "max_year_delta": 0,
+            },
+            "aggregation": {"op": "copy"},
+        }
+    )
+    extended_revision = committed_modelo_130_snapshot.revision.model_copy(
+        update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
+    )
+
+    requirements_first_period = previous_filing_observation_requirements(
+        extended_revision, filing_year=2026, period="1T"
+    )
+    assert all(
+        "test-cap-suppressed-binding" not in requirement.binding_ids
+        for requirement in requirements_first_period
+    )
+
+    requirements_second_period = previous_filing_observation_requirements(
+        extended_revision, filing_year=2026, period="2T"
+    )
+    matching = [
+        requirement
+        for requirement in requirements_second_period
+        if "test-cap-suppressed-binding" in requirement.binding_ids
+    ]
+    assert len(matching) == 1
+    assert matching[0].modelo == "130"
+    assert matching[0].filing_year == 2026
+    assert matching[0].period == "1T"
+
+
+def test_previous_filing_resolver_skips_cap_suppressed_binding(
+    committed_modelo_130_snapshot: RegistrySnapshot,
+) -> None:
+    base_binding = _previous_year_net_income_binding(committed_modelo_130_snapshot)
+    capped_binding = base_binding.model_copy(
+        update={
+            "id": "test-cap-suppressed-binding-resolve",
+            "selector": {
+                "source": "previous_filing",
+                "source_modelo": "130",
+                "source_output": "saldo-negativo-fin-periodo",
+                "source_period_offset_from_target": -1,
+                "max_year_delta": 0,
+            },
+            "aggregation": {"op": "copy"},
+        }
+    )
+    extended_revision = committed_modelo_130_snapshot.revision.model_copy(
+        update={"bindings": (*committed_modelo_130_snapshot.revision.bindings, capped_binding)},
+    )
+
+    m100_observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=2025,
+        period="0A",
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=Decimal("1"))
+            for cid in ("0224", "1479", "1553", "1577")
+        ),
+    )
+
+    resolved = resolve_previous_filing_binding_values(
+        extended_revision, observations=(m100_observation,), filing_year=2026, period="1T"
+    )
+
+    assert "test-cap-suppressed-binding-resolve" not in resolved
+    assert _PREVIOUS_YEAR_NET_INCOME_BINDING in resolved
 
 
 def test_registry_formula_runtime_rejects_non_decimal_input(

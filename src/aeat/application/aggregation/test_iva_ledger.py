@@ -8,12 +8,8 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from sqlalchemy.engine import Engine
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.resources import resources
 from ...domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
@@ -28,6 +24,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from . import (
     AggregationValidationError,
     IvaLedgerAggregationIssueReason,
@@ -44,17 +41,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def secure_engine(tmp_path: Path) -> Iterator[Engine]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield engine
-        finally:
-            engine.dispose()
+def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile.repository
 
 
 def _raw_transaction(
@@ -344,23 +333,25 @@ def test_out_of_period_and_foreign_currency_rows_do_not_project() -> None:
     ]
 
 
-def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(secure_engine: Engine) -> None:
+def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
+    secure_objects: SecureObjectRepository,
+) -> None:
     with pytest.raises(AggregationValidationError, match="bucket_mismatch"):
         aggregate_iva_ledger_observations_from_repositories(
             bucket_id="bucket-a",
             period="2026Q2",
             transaction_repository=TransactionCatalogueRepository(
                 bucket_id="bucket-b",
-                objects=SecureObjectRepository(engine=secure_engine),
+                objects=secure_objects,
             ),
         )
 
 
-def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_engine: Engine) -> None:
+def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_objects: SecureObjectRepository) -> None:
     transaction = _transaction("row-repository")
     repository = TransactionCatalogueRepository(
         bucket_id="bucket-a",
-        objects=SecureObjectRepository(engine=secure_engine),
+        objects=secure_objects,
     )
     repository.save(TransactionCatalogue.from_transactions((transaction,)))
 
@@ -369,7 +360,7 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_en
         period="2026Q2",
         transaction_repository=TransactionCatalogueRepository(
             bucket_id="bucket-a",
-            objects=SecureObjectRepository(engine=secure_engine),
+            objects=secure_objects,
         ),
     )
 

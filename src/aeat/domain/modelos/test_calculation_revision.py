@@ -29,6 +29,58 @@ def test_revision_id_is_stable_across_equal_inputs() -> None:
     assert first == first.lower()
 
 
+def test_revision_id_pinned_against_fully_populated_fixture() -> None:
+    """Anti-tautology proof: pin the exact SHA-256 for a fully-populated
+    derivation against a known-good hex string.
+
+    Staged for linkage P02.S09 (the planned collapse of
+    ``CalculationRevision.casilla_values`` into a derived ``@property``
+    over the typed ``observations`` envelope). The collapse must
+    preserve the hash domain — every already-persisted revision id
+    must still derive identically after the field-shape change, or
+    every catalogue row gets a phantom mismatch and the
+    content-addressing contract breaks.
+
+    The fixture sets every defaultable parameter to a non-default
+    value so the pin exercises every branch of the hash payload:
+    inputs, overrides, outputs, source_transaction_ids,
+    borrador_snapshot_id, and bindings_sourced_from_borrador.
+
+    Update procedure: if a future change to the hash domain is
+    explicitly intended (e.g. a migration-bumping schema rev), update
+    the pinned hex in tandem with the change and document the
+    migration. If this test fails without an explicit hash-domain
+    change, the regression is in the hash derivation itself.
+    """
+    pinned = "5b78dd04e614a50fe448439b7fdb843f1e31afe76f9d424d0276866679dee7ca"
+    derived = derive_calculation_revision_id(
+        work_unit_id="b" * 64,
+        inputs_snapshot={"01": "1000.00", "02": "250.00", "03": "50.00"},
+        binding_overrides={
+            "previous_year_net_income": "13000.00",
+            "profile.iva_regime": "GENERAL",
+        },
+        casilla_values={
+            "04": Decimal("1300.00"),
+            "07": Decimal("-50.50"),
+            "19": Decimal("200.25"),
+        },
+        source_transaction_ids=("a" * 64, "c" * 64),
+        borrador_snapshot_id="borrador-2026-q1-snapshot",
+        bindings_sourced_from_borrador=(
+            "iva.aggregation",
+            "renta.expense.aggregation",
+        ),
+    )
+    assert derived == pinned, (
+        f"Hash domain shifted — derive_calculation_revision_id returned "
+        f"{derived!r} for a fully-populated fixture but the pinned value "
+        f"is {pinned!r}. Every persisted CalculationRevision id now mismatches "
+        f"its derived form; either revert the hash change or run a migration "
+        f"and update the pin."
+    )
+
+
 def test_revision_id_changes_when_input_casilla_value_changes() -> None:
     """A different inputs_snapshot must produce a different id."""
     id_a = derive_calculation_revision_id(
@@ -78,6 +130,107 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
         casilla_values={"002": Decimal("15.00")},
     )
     assert id_a != id_b
+
+
+def test_observations_consistency_validator_accepts_matching_projection() -> None:
+    """Stage one of ADR 2026-05-26: when observations is populated, casilla_values
+    must equal the projection of observations. Matching pair validates clean."""
+    from datetime import UTC, datetime
+
+    from aeat.domain.calculations.registry import CasillaObservation
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "d" * 64
+    casilla_values = {"100": Decimal("250.00"), "200": Decimal("-75.50")}
+    observations = (
+        CasillaObservation(casilla_id="100", value=Decimal("250.00")),
+        CasillaObservation(casilla_id="200", value=Decimal("-75.50")),
+    )
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    rev = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        observations=observations,
+        created_at=created,
+        updated_at=created,
+    )
+    assert rev.observations == observations
+    assert dict(rev.casilla_values) == casilla_values
+
+
+def test_observations_consistency_validator_rejects_drift() -> None:
+    """Stage one of ADR 2026-05-26: when observations diverges from casilla_values,
+    construction must raise ModeloValidationError — save/load drift surfaces at
+    load time rather than at a downstream hash mismatch."""
+    from datetime import UTC, datetime
+
+    import pydantic
+
+    from aeat.domain.calculations.registry import CasillaObservation
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "e" * 64
+    casilla_values = {"100": Decimal("250.00")}
+    # observations encodes a DIFFERENT value for the same casilla — the
+    # validator must refuse to construct.
+    observations = (CasillaObservation(casilla_id="100", value=Decimal("999.99")),)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    with pytest.raises(pydantic.ValidationError, match="inconsistent with the typed observations envelope"):
+        CalculationRevision(
+            calculation_revision_id=revision_id,
+            work_unit_id=work_unit_id,
+            state=CalculationRevisionState.BORRADOR,
+            casilla_values=casilla_values,
+            observations=observations,
+            created_at=created,
+            updated_at=created,
+        )
+
+
+def test_observations_consistency_validator_tolerates_empty_observations() -> None:
+    """Stage one of ADR 2026-05-26: historical revisions persisted before the
+    typed envelope landed carry observations=() — the validator must let them
+    construct (no projection to compare against)."""
+    from datetime import UTC, datetime
+
+    from ._calculation_revision import CalculationRevision, CalculationRevisionState
+
+    work_unit_id = "f" * 64
+    casilla_values = {"100": Decimal("250.00")}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
+    rev = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        # observations omitted — default-factory empty tuple
+        created_at=created,
+        updated_at=created,
+    )
+    assert rev.observations == ()
+    assert dict(rev.casilla_values) == casilla_values
 
 
 def test_revision_id_is_insensitive_to_dict_key_insertion_order() -> None:

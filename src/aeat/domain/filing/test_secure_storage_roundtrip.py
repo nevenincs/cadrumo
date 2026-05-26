@@ -22,12 +22,12 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...core.config import override_settings
+from ...tests.secure_sql import isolated_runtime_profile
 from ..calculations.registry._schema import RegistrySnapshotRef
 from ._repository import ModeloDraftRepository
 from ._schema import (
+    ModeloApprovalBasis,
+    ModeloCasillaProvenance,
     ModeloDraft,
     ModeloDraftStatus,
     ModeloValue,
@@ -37,18 +37,6 @@ from ._schema import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _populated_draft() -> ModeloDraft:
@@ -90,10 +78,28 @@ def _populated_draft() -> ModeloDraft:
             ),
         ),
         binding_values=(),
+        casilla_provenance=(
+            ModeloCasillaProvenance(
+                casilla_id="iva.devengado",
+                legal_refs=("LIVA.art-92",),
+                source_refs=("AEAT.IVA.2025.casilla-01",),
+            ),
+        ),
         findings=(),
         created_at=now,
         updated_at=now,
         schema_version="schema-2025-1",
+        notes="Draft pending operator review",
+        approved_at=datetime(2026, 5, 25, 14, 30, tzinfo=UTC),
+        approved_by="operator-reviewer-1",
+        review_checksum="a" * 64,
+        approval_basis=ModeloApprovalBasis(
+            draft_payload_fingerprint="b" * 64,
+            draft_review_fingerprint="c" * 64,
+            transaction_catalogue_fingerprint="d" * 64,
+            category_profiles_fingerprint="e" * 64,
+            schema_formula_fingerprint="f" * 64,
+        ),
     )
 
 
@@ -115,7 +121,7 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     by the active bucket runtime.
     """
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         original = _populated_draft()
         repo = ModeloDraftRepository(bucket_id=_BUCKET_ID)
         repo.save(original)
@@ -134,6 +140,14 @@ def test_filing_draft_survives_encrypted_storage_roundtrip(
     assert loaded.snapshot_ref.period == "1T"
     computed = next(v for v in loaded.values if v.kind is ModeloValueKind.COMPUTED)
     assert computed.formula_trace == ("iva.devengado", "iva.deducible")
+    assert len(loaded.casilla_provenance) == 1
+    assert loaded.casilla_provenance[0].casilla_id == "iva.devengado"
+    assert loaded.notes == "Draft pending operator review"
+    assert loaded.approved_at == datetime(2026, 5, 25, 14, 30, tzinfo=UTC)
+    assert loaded.approved_by == "operator-reviewer-1"
+    assert loaded.review_checksum == "a" * 64
+    assert loaded.approval_basis is not None
+    assert loaded.approval_basis.draft_payload_fingerprint == "b" * 64
 
 
 def test_calculation_revision_observations_survive_encrypted_storage(
@@ -164,7 +178,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
         derive_calculation_revision_id,
     )
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         now = datetime.now(UTC).replace(microsecond=0)
         observation = CasillaObservation(
             casilla_id="iva.resultado-regimen-general",

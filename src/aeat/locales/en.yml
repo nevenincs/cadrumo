@@ -146,31 +146,39 @@ application:
           the active auth lock.
     certificate:
       health:
-        file_missing: "The configured certificate file (%{path}) does not exist. Restore the file or run 'aeat config auth configure --provider certificate --file PATH' with a valid path."
-        path_unset: "No certificate file has been selected. Run 'aeat config auth configure --provider certificate --file PATH' to set one."
+        file_missing: The configured certificate file (%{path}) does not exist. Restore
+          the file or run 'aeat config auth configure --provider certificate --file
+          PATH' with a valid path.
+        path_unset: No certificate file has been selected. Run 'aeat config auth configure
+          --provider certificate --file PATH' to set one.
     clave_movil:
       health:
-        identity_unset: "No DNI/NIE has been configured for Cl@ve Móvil. Configure one before continuing."
+        identity_unset: No DNI/NIE has been configured for Cl@ve Móvil. Configure
+          one before continuing.
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     operator:
       alignment:
         both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
           nor the active profile tax id is set. Set both to the same DNI/NIE before
           live AEAT auth.
-        both_missing_next_action: "Edit the active profile with 'aeat config profile edit NAME --tax-id DNI/NIE' and set the same DNI/NIE for Cl@ve Móvil."
+        both_missing_next_action: Edit the active profile with 'aeat config profile
+          edit NAME --tax-id DNI/NIE' and set the same DNI/NIE for Cl@ve Móvil.
         clave_identity_missing_detail: The Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
           is not set, so it cannot be compared with the active profile tax id. Set
           it to the DNI/NIE of the active profile.
-        clave_identity_missing_next_action: "Configure the Cl@ve Móvil DNI/NIE to match the active profile's tax identifier."
+        clave_identity_missing_next_action: Configure the Cl@ve Móvil DNI/NIE to match
+          the active profile's tax identifier.
         mismatch_detail: The Cl@ve identity DNI/NIE '%{clave_identity}' does not match
           the active profile tax id '%{profile_tax_id}'. Live AEAT auth would bind
           one taxpayer's session to another profile. Switch to the profile whose tax
           id matches the Cl@ve DNI/NIE, or correct whichever value is wrong.
-        mismatch_next_action: "Switch to the profile whose tax identifier matches the Cl@ve Móvil DNI/NIE, or correct whichever value is wrong."
+        mismatch_next_action: Switch to the profile whose tax identifier matches the
+          Cl@ve Móvil DNI/NIE, or correct whichever value is wrong.
         profile_tax_id_missing_detail: The active profile has no tax id, so it cannot
           be compared with the Cl@ve identity. Set the profile tax id to the DNI/NIE
           used for Cl@ve.
-        profile_tax_id_missing_next_action: "Edit the active profile with 'aeat config profile edit NAME --tax-id DNI/NIE' before authenticating."
+        profile_tax_id_missing_next_action: Edit the active profile with 'aeat config
+          profile edit NAME --tax-id DNI/NIE' before authenticating.
       errors:
         certificate_file_required: The certificate provider requires a certificate
           file. Run `aeat config auth configure --provider certificate --file PATH`
@@ -188,22 +196,34 @@ application:
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
       login:
-        refused_certificate_file_missing: "Cannot log in: the configured certificate file (%{path}) does not exist. Restore the file or reconfigure the path before continuing."
-        refused_certificate_path_unset: "Cannot log in: no certificate file has been selected yet. Run 'aeat config auth configure --provider certificate --file PATH' before continuing."
-        refused_clave_movil_identity_unset: "Cannot log in with Cl@ve Móvil: no DNI/NIE has been configured yet. Configure one before continuing."
-        refused_live_tests_disabled: "Live login is disabled by the safety gate: the tool only builds and verifies locally. Enable live tests if you really intend to connect to AEAT, then re-run this command. Requested provider: %{provider}."
+        refused_certificate_file_missing: 'Cannot log in: the configured certificate
+          file (%{path}) does not exist. Restore the file or reconfigure the path
+          before continuing.'
+        refused_certificate_path_unset: 'Cannot log in: no certificate file has been
+          selected yet. Run ''aeat config auth configure --provider certificate --file
+          PATH'' before continuing.'
+        refused_clave_movil_identity_unset: 'Cannot log in with Cl@ve Móvil: no DNI/NIE
+          has been configured yet. Configure one before continuing.'
+        refused_live_tests_disabled: 'Live login is disabled by the safety gate: the
+          tool only builds and verifies locally. Enable live tests if you really intend
+          to connect to AEAT, then re-run this command. Requested provider: %{provider}.'
       probe:
-        certificate_corrupt: "The certificate file is not a valid PKCS#12 envelope or the password is missing; it cannot be parsed."
-        certificate_corrupt_detail: "The certificate cannot be interpreted: %{error}."
-        certificate_expired: "The certificate expired %{days} days ago. Renew it before authenticating."
-        certificate_expiring: "The certificate expires in %{days} days. Plan the renewal."
-        certificate_file_missing: "The configured certificate file (%{path}) does not exist."
-        certificate_ok: "Certificate valid; expires in %{days} days."
-        certificate_path_unset: "No certificate file has been selected."
-        certificate_unreadable: "The certificate file cannot be read (%{error})."
-        clave_movil_identity_invalid: "The DNI/NIE configured for Cl@ve Móvil is not valid: %{error}."
-        clave_movil_identity_ok: "The DNI/NIE configured for Cl@ve Móvil has a valid shape."
-        clave_movil_identity_unset: "No DNI/NIE has been configured for Cl@ve Móvil."
+        certificate_corrupt: The certificate file is not a valid PKCS#12 envelope
+          or the password is missing; it cannot be parsed.
+        certificate_corrupt_detail: 'The certificate cannot be interpreted: %{error}.'
+        certificate_expired: The certificate expired %{days} days ago. Renew it before
+          authenticating.
+        certificate_expiring: The certificate expires in %{days} days. Plan the renewal.
+        certificate_file_missing: The configured certificate file (%{path}) does not
+          exist.
+        certificate_ok: Certificate valid; expires in %{days} days.
+        certificate_path_unset: No certificate file has been selected.
+        certificate_unreadable: The certificate file cannot be read (%{error}).
+        clave_movil_identity_invalid: 'The DNI/NIE configured for Cl@ve Móvil is not
+          valid: %{error}.'
+        clave_movil_identity_ok: The DNI/NIE configured for Cl@ve Móvil has a valid
+          shape.
+        clave_movil_identity_unset: No DNI/NIE has been configured for Cl@ve Móvil.
         no_provider: No auth provider is configured; nothing to probe locally.
         no_session: No persisted AEAT session token on disk; run `aeat config auth
           login` to acquire one.
@@ -777,12 +797,12 @@ cli:
       login_reset_lock_help: Clear a stale auth acquisition lock before starting
       no_active_bucket: No active profile bucket. Run 'aeat config profile create
         NAME' before configuring authentication.
-      output_language_help: "Output language for the response text (es, en, ca, hu)."
+      output_language_help: Output language for the response text (es, en, ca, hu).
       provider_help: Authentication provider id (e.g. certificado-electronico)
       providers:
-        status_implemented: "available"
-        status_reserved: "reserved"
-        status_unavailable_gloss: "not available yet"
+        status_implemented: available
+        status_reserved: reserved
+        status_unavailable_gloss: not available yet
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
       status_help: Show configured authentication state
@@ -2490,6 +2510,8 @@ errors:
       with the input provided.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
+    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
+    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: The selected authentication provider is reserved
       but not implemented.
     refused_calculations_casilla_constraint: A computed casilla value falls outside

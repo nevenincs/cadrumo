@@ -19,9 +19,9 @@ decides whether that is a refusal.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings
 from .....core.logging import get_logger
@@ -33,6 +33,14 @@ from ._errors import SedeFailureMode, SedeNavigationError
 
 if TYPE_CHECKING:
     from ..auth._authenticator import AeatSession
+
+
+BrowserSessionFactory = Callable[[Settings], Awaitable[Any]]
+"""Async factory returning an object exposing ``create_context(storage_state=...)`` + ``close()``.
+
+Real production code uses :func:`default_browser_session_factory`; tests
+inject a recording double via the same protocol so the storage-state
+plumbing can be exercised without a real Playwright browser."""
 
 
 log = get_logger(__name__)
@@ -68,14 +76,50 @@ async def fetch_g313_census(
     """
 
     settings = settings or Settings()
-    storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
         raise SedeNavigationError(
             "AeatSession has no persisted auth session; "
             "run `aeat config auth configure` to acquire one",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
         )
-    browser_session = await default_browser_session_factory(settings)
+    storage_state = storage_state_for_session(session)
+    return await _fetch_g313_census_with_storage_state(
+        storage_state,
+        settings=settings,
+        browser_session_factory=default_browser_session_factory,
+    )
+
+
+async def _fetch_g313_census_with_storage_state(
+    storage_state: Mapping[str, object],
+    *,
+    settings: Settings,
+    browser_session_factory: BrowserSessionFactory,
+) -> CensoFactSet:
+    """Storage-state-driven core of :func:`fetch_g313_census`.
+
+    Split out so unit tests can drive the Playwright orchestration
+    with a recording double — the public :func:`fetch_g313_census`
+    derives ``storage_state`` from an :class:`AeatSession` then
+    delegates here.
+
+    Args:
+        storage_state: Playwright ``storage_state`` payload carrying
+            the AEAT cookies acquired via certificate or Cl@ve Móvil.
+        settings: Resolved :class:`Settings` instance.
+        browser_session_factory: Async factory returning a browser
+            session exposing ``create_context(storage_state=...)`` and
+            ``close()``. Production passes
+            :func:`default_browser_session_factory`; tests inject a
+            recording double via the same protocol.
+
+    Returns:
+        A :class:`CensoFactSet` parsed from the navigated G313 page.
+
+    Raises:
+        SedeNavigationError: when the goto itself fails.
+    """
+    browser_session = await browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
         try:

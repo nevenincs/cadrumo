@@ -7,9 +7,9 @@ application-layer lifecycle actions (``create_work_unit``,
 ``list_work_units``, ``get_work_unit``, ``rename_work_unit``).
 
 The action-level tests exercise the real
-:class:`WorkUnitCatalogueRepository` against an ephemeral encrypted
-SQLite backend so the production save / load envelope is on the hot
-path; no in-memory fakes, no subclassed test repositories.
+:class:`WorkUnitCatalogueRepository` against an isolated active-profile
+runtime so the production save / load envelope is on the hot path; no
+in-memory fakes, no subclassed test repositories.
 """
 
 from __future__ import annotations
@@ -22,9 +22,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
 from aeat.application.modelo import (
     WorkUnitAlreadyDiscardedError,
     WorkUnitMutationRefusedError,
@@ -35,7 +32,6 @@ from aeat.application.modelo import (
     list_work_units,
     rename_work_unit,
 )
-from aeat.core.config import Settings
 from aeat.domain.modelos._errors import ModeloValidationError
 from aeat.domain.modelos._repository import (
     WorkUnitCatalogueRepository,
@@ -48,6 +44,7 @@ from aeat.domain.modelos._work_unit import (
     WorkUnitState,
     derive_work_unit_id,
 )
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -57,25 +54,10 @@ _T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
 
 @pytest.fixture
 def repo(tmp_path: Path) -> Iterator[WorkUnitCatalogueRepository]:
-    """Yield a real ``WorkUnitCatalogueRepository`` over an encrypted SQLite db.
+    """Yield a real work-unit repository through the active test runtime."""
 
-    The backend exercises the production save / load envelope:
-    SecureObjectRepository → SQLAlchemy → SQLite at
-    ``tmp_path / aeat.db``. The master-key provider is overridden
-    to an ephemeral provider so the test does not require an
-    operator-installed keyring.
-    """
-
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield WorkUnitCatalogueRepository(objects=SecureObjectRepository(engine=engine))
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="work-unit-test") as profile:
+        yield WorkUnitCatalogueRepository(bucket_id=profile.bucket_id)
 
 
 # ---------------------------------------------------------------------------
@@ -213,9 +195,9 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "updated_at": _T0,
                 "unknown_axis": "extra-value",
             }
-        )
+    )
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
-        setattr(unit, "name", "renamed")  # noqa: B010 — exercise frozen-model __setattr__
+        unit.name = "renamed"
 
 
 def test_work_unit_rejects_id_that_does_not_match_derivation() -> None:
@@ -603,60 +585,43 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
 
 
 def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
-    repo: WorkUnitCatalogueRepository,
+    tmp_path: Path,
 ) -> None:
     """rename_work_unit emits a modelo.work_unit.renamed bucket event
     that records the actor who initiated the rename plus the prior and
     new display names so the audit trail captures the full transition.
     """
 
-    from aeat.adapters.persistence.storage import (
-        EphemeralMasterKeyProvider,
-    )
-    from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-    from aeat.adapters.persistence.storage.sql._orm import Base
-    from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
-    from aeat.core.config import Settings
     from aeat.domain.buckets import (
         BucketEventHistoryRepository,
         BucketEventType,
     )
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        try:
-            engine = create_engine_from_settings(Settings(aeat_database_url="sqlite:///:memory:"))
-            Base.metadata.create_all(engine)
-            objects = SecureObjectRepository(engine=engine)
-            wu_repo = WorkUnitCatalogueRepository(objects=objects)
-            bv_repo = BucketEventHistoryRepository(objects=objects)
-            unit = create_work_unit(
-                bucket_id="default",
-                modelo="303",
-                filing_year=2026,
-                period="Q1",
-                revision_id="rev",
-                repository=wu_repo,
-                clock=_T0,
-            )
-            renamed = rename_work_unit(
-                unit.work_unit_id,
-                "renta-q1-renamed",
-                actor="auditor-B",
-                repository=wu_repo,
-                bucket_event_repository=bv_repo,
-                clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
-            )
-            events = bv_repo.load().for_bucket(renamed.bucket_id)
-            rename_events = [
-                event for event in events
-                if event.event_type is BucketEventType.MODELO_WORK_UNIT_RENAMED
-            ]
-            assert len(rename_events) == 1
-            rename_event = rename_events[0]
-            assert rename_event.actor == "auditor-B"
-            assert rename_event.object_id == renamed.work_unit_id
-            assert rename_event.payload["previous_name"] == unit.name
-            assert rename_event.payload["new_name"] == "renta-q1-renamed"
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="work-unit-events-test") as profile:
+        wu_repo = WorkUnitCatalogueRepository(objects=profile.repository)
+        bv_repo = BucketEventHistoryRepository(objects=profile.repository)
+        unit = create_work_unit(
+            bucket_id="default",
+            modelo="303",
+            filing_year=2026,
+            period="Q1",
+            revision_id="rev",
+            repository=wu_repo,
+            clock=_T0,
+        )
+        renamed = rename_work_unit(
+            unit.work_unit_id,
+            "renta-q1-renamed",
+            actor="auditor-B",
+            repository=wu_repo,
+            bucket_event_repository=bv_repo,
+            clock=datetime(2026, 2, 5, 12, 0, 0, tzinfo=UTC),
+        )
+        events = bv_repo.load().for_bucket(renamed.bucket_id)
+        rename_events = [event for event in events if event.event_type is BucketEventType.MODELO_WORK_UNIT_RENAMED]
+        assert len(rename_events) == 1
+        rename_event = rename_events[0]
+        assert rename_event.actor == "auditor-B"
+        assert rename_event.object_id == renamed.work_unit_id
+        assert rename_event.payload["previous_name"] == unit.name
+        assert rename_event.payload["new_name"] == "renta-q1-renamed"

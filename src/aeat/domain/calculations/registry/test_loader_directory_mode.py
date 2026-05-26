@@ -771,6 +771,63 @@ def test_committed_registry_tree_loads_single_file_and_directory_modelos() -> No
     assert any(source.layout == "single_file" for source in sources)
 
 
+def test_discovery_rejects_single_file_and_directory_layout_collision(tmp_path: Path) -> None:
+    """A modelo id cannot be declared by both supported layouts."""
+
+    modelos_dir = tmp_path / "modelos"
+    modelos_dir.mkdir()
+    single_file = modelos_dir / "999.toml"
+    single_file.write_text(
+        """
+[modelo]
+id = "999"
+title = "Collision test"
+official_name = "Collision test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    directory = modelos_dir / "999"
+    (directory / "revisions").mkdir(parents=True)
+    (directory / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Collision test"
+official_name = "Collision test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (directory / "revisions" / "2025.toml").write_text(
+        """
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = { years = [2025], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="also declared"):
+        discover_modelo_sources(modelos_dir)
+
+
 def test_fragmented_modelos_do_not_keep_stale_single_file_siblings() -> None:
     """A fragmented modelo cannot also keep ``modelos/<id>.toml``."""
 
@@ -819,6 +876,32 @@ def test_fragmented_revision_directories_are_schema_owned() -> None:
             assert not (source.path / "revisions" / f"{revision_source.revision_id}.toml").exists()
 
     assert checked, "at least one committed revision must use fragment-directory layout"
+
+
+def test_committed_directory_source_inventory_lists_every_revision_fragment_toml() -> None:
+    """Discovery exposes all TOML fragments that participate in a directory revision."""
+
+    modelos_dir = bundled_path("registry", "aeat", "modelos")
+    checked: list[str] = []
+    for source in discover_modelo_sources(modelos_dir):
+        if source.layout != "directory":
+            continue
+        revisions_dir = source.path / "revisions"
+        expected_paths = set(revisions_dir.rglob("*.toml"))
+        discovered_paths: set[Path] = set()
+        for revision_source in source.revision_sources:
+            if revision_source.layout == "revision_file":
+                assert revision_source.fragment_paths == (revision_source.path,)
+            else:
+                expected_revision_paths = tuple(
+                    sorted(path.resolve() for path in revision_source.path.rglob("*.toml"))
+                )
+                assert tuple(sorted(revision_source.fragment_paths)) == expected_revision_paths
+            discovered_paths.update(path.resolve() for path in revision_source.fragment_paths)
+            checked.append(f"{source.modelo_id}/{revision_source.revision_id}")
+        assert discovered_paths == {path.resolve() for path in expected_paths}
+
+    assert checked, "at least one committed directory revision must be discovered"
 
 
 def test_committed_registry_toml_files_stay_reviewable() -> None:

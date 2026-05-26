@@ -16,13 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     CensoRatioMismatchError,
@@ -30,32 +23,15 @@ from aeat.domain.usage_ratios import (
     load_usage_ratios_with_census_guard,
     save_usage_ratios,
 )
-
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 @pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        blob_store = EncryptedBlobStore(
-            root_dir=tmp_path / "blobs-secret",
-            master_key_provider=provider,
-        )
-        secret_store = SecretStore(
-            store_dir=tmp_path / "secrets",
-            blob_store=blob_store,
-            master_key_provider=provider,
-        )
-        override_secret_store(secret_store)
-        try:
-            yield
-        finally:
-            override_secret_store(None)
-            dispose_engine()
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        yield profile
 
 
 def test_load_returns_profile_when_no_home_office_overrides() -> None:

@@ -162,11 +162,15 @@ application:
           inspeccionar el bloqueig d'autenticació actiu.
     certificate:
       health:
-        file_missing: "El fitxer de certificat configurat (%{path}) no existeix. Recupera el fitxer o executa 'aeat config auth configure --provider certificate --file CAMI' amb un camí vàlid."
-        path_unset: "No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config auth configure --provider certificate --file CAMI' per indicar-lo."
+        file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera
+          el fitxer o executa 'aeat config auth configure --provider certificate --file
+          CAMI' amb un camí vàlid.
+        path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config
+          auth configure --provider certificate --file CAMI' per indicar-lo.
     clave_movil:
       health:
-        identity_unset: "No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n un abans de continuar."
+        identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n
+          un abans de continuar.
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
     operator:
@@ -174,21 +178,25 @@ application:
         both_missing_detail: No estan configurades ni la identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
           DNI/NIE abans de l'autenticació AEAT en directe.
-        both_missing_next_action: "Edita el perfil actiu amb 'aeat config profile edit NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil."
+        both_missing_next_action: Edita el perfil actiu amb 'aeat config profile edit
+          NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil.
         clave_identity_missing_detail: La identitat Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
           no està configurada, de manera que no es pot comparar amb l'identificador
           fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
-        clave_identity_missing_next_action: "Configura el DNI/NIE de Cl@ve Mòbil perquè coincideixi amb l'identificador fiscal del perfil actiu."
+        clave_identity_missing_next_action: Configura el DNI/NIE de Cl@ve Mòbil perquè
+          coincideixi amb l'identificador fiscal del perfil actiu.
         mismatch_detail: El DNI/NIE de la identitat Cl@ve '%{clave_identity}' no coincideix
           amb l'identificador fiscal del perfil actiu '%{profile_tax_id}'. L'autenticació
           AEAT en directe vincularia la sessió d'un contribuent a un altre perfil.
           Canvia al perfil l'identificador fiscal del qual coincideixi amb el DNI/NIE
           de Cl@ve, o corregeix el valor que sigui erroni.
-        mismatch_next_action: "Canvia al perfil l'identificador fiscal del qual coincideixi amb el DNI/NIE de Cl@ve Mòbil, o corregeix el valor erroni."
+        mismatch_next_action: Canvia al perfil l'identificador fiscal del qual coincideixi
+          amb el DNI/NIE de Cl@ve Mòbil, o corregeix el valor erroni.
         profile_tax_id_missing_detail: El perfil actiu no té identificador fiscal,
           de manera que no es pot comparar amb la identitat Cl@ve. Configura l'identificador
           fiscal del perfil amb el DNI/NIE utilitzat per a Cl@ve.
-        profile_tax_id_missing_next_action: "Edita el perfil actiu amb 'aeat config profile edit NOM --tax-id DNI/NIE' abans d'autenticar."
+        profile_tax_id_missing_next_action: Edita el perfil actiu amb 'aeat config
+          profile edit NOM --tax-id DNI/NIE' abans d'autenticar.
       errors:
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
@@ -207,22 +215,37 @@ application:
           Executa `aeat config repair profile --clear-active --yes` i després canvia
           a un perfil vàlid o crea'l abans de configurar l'autenticació.
       login:
-        refused_certificate_file_missing: "No es pot iniciar la sessió: el fitxer de certificat configurat (%{path}) no existeix. Recupera el fitxer o torna a configurar el camí abans de continuar."
-        refused_certificate_path_unset: "No es pot iniciar la sessió: encara no s'ha seleccionat cap fitxer de certificat. Executa 'aeat config auth configure --provider certificate --file CAMI' abans de continuar."
-        refused_clave_movil_identity_unset: "No es pot iniciar la sessió amb Cl@ve Mòbil: encara no s'ha configurat cap DNI/NIE. Configura'n un abans de continuar."
-        refused_live_tests_disabled: "L'inici de sessió en directe està desactivat per seguretat: l'eina només construeix i verifica localment. Activa les proves en directe si realment vols connectar amb l'AEAT i torna a executar aquesta ordre. Proveïdor sol·licitat: %{provider}."
+        refused_certificate_file_missing: 'No es pot iniciar la sessió: el fitxer
+          de certificat configurat (%{path}) no existeix. Recupera el fitxer o torna
+          a configurar el camí abans de continuar.'
+        refused_certificate_path_unset: 'No es pot iniciar la sessió: encara no s''ha
+          seleccionat cap fitxer de certificat. Executa ''aeat config auth configure
+          --provider certificate --file CAMI'' abans de continuar.'
+        refused_clave_movil_identity_unset: 'No es pot iniciar la sessió amb Cl@ve
+          Mòbil: encara no s''ha configurat cap DNI/NIE. Configura''n un abans de
+          continuar.'
+        refused_live_tests_disabled: 'L''inici de sessió en directe està desactivat
+          per seguretat: l''eina només construeix i verifica localment. Activa les
+          proves en directe si realment vols connectar amb l''AEAT i torna a executar
+          aquesta ordre. Proveïdor sol·licitat: %{provider}.'
       probe:
-        certificate_corrupt: "El fitxer de certificat no és un PKCS#12 vàlid o falta la contrasenya; no es pot analitzar."
-        certificate_corrupt_detail: "El certificat no es pot interpretar: %{error}."
-        certificate_expired: "El certificat ha caducat fa %{days} dies. Renova'l abans d'autenticar."
-        certificate_expiring: "El certificat caduca d'aquí a %{days} dies. Programa'n la renovació."
-        certificate_file_missing: "El fitxer de certificat configurat (%{path}) no existeix."
-        certificate_ok: "Certificat vàlid; caduca d'aquí a %{days} dies."
-        certificate_path_unset: "No s'ha seleccionat cap fitxer de certificat."
-        certificate_unreadable: "El fitxer de certificat no es pot llegir (%{error})."
-        clave_movil_identity_invalid: "El DNI/NIE configurat per a Cl@ve Mòbil no és vàlid: %{error}."
-        clave_movil_identity_ok: "El DNI/NIE configurat per a Cl@ve Mòbil té una forma vàlida."
-        clave_movil_identity_unset: "No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil."
+        certificate_corrupt: El fitxer de certificat no és un PKCS#12 vàlid o falta
+          la contrasenya; no es pot analitzar.
+        certificate_corrupt_detail: 'El certificat no es pot interpretar: %{error}.'
+        certificate_expired: El certificat ha caducat fa %{days} dies. Renova'l abans
+          d'autenticar.
+        certificate_expiring: El certificat caduca d'aquí a %{days} dies. Programa'n
+          la renovació.
+        certificate_file_missing: El fitxer de certificat configurat (%{path}) no
+          existeix.
+        certificate_ok: Certificat vàlid; caduca d'aquí a %{days} dies.
+        certificate_path_unset: No s'ha seleccionat cap fitxer de certificat.
+        certificate_unreadable: El fitxer de certificat no es pot llegir (%{error}).
+        clave_movil_identity_invalid: 'El DNI/NIE configurat per a Cl@ve Mòbil no
+          és vàlid: %{error}.'
+        clave_movil_identity_ok: El DNI/NIE configurat per a Cl@ve Mòbil té una forma
+          vàlida.
+        clave_movil_identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil.
         no_provider: No hi ha cap proveïdor d'autenticació configurat; res a comprovar
           localment.
         no_session: No hi ha cap testimoni de sessió AEAT persistit al disc; executa
@@ -838,12 +861,12 @@ cli:
         abans de començar.
       no_active_bucket: No hi ha un bucket de perfil actiu. Executa 'aeat config profile
         create NAME' abans de configurar l'autenticació.
-      output_language_help: "Idioma del text de sortida (es, en, ca, hu)."
+      output_language_help: Idioma del text de sortida (es, en, ca, hu).
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
       providers:
-        status_implemented: "disponible"
-        status_reserved: "reservat"
-        status_unavailable_gloss: "no disponible encara"
+        status_implemented: disponible
+        status_reserved: reservat
+        status_unavailable_gloss: no disponible encara
       providers_help: Llistar proveïdors d'autenticació suportats
       reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
         %{provider}.'
@@ -2618,6 +2641,8 @@ errors:
       pot executar amb les dades indicades.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
       a un bucket registrat.
+    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
+    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
       però no implementat.
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora

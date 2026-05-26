@@ -317,6 +317,23 @@ class _PreviousModeloSelector(BaseModel):
     source_casillas: tuple[str, ...] = ()
     source_output: str | None = Field(default=None, min_length=1)
     relation: str | None = Field(default=None, min_length=1)
+    # Cap on the absolute year-delta of resolved source anchors. When
+    # set, anchors whose implied ``period_year_delta`` is strictly
+    # greater than ``max_year_delta`` are dropped from the resolver's
+    # return tuple, surfacing as absent-by-design (empty anchors).
+    # ``max_year_delta = 0`` admits same-ejercicio anchors only — the
+    # shape required by AEAT's Modelo 130 prior-quarter carry-forward
+    # rule under RD 439/2007 art. 110.5, where 1T has no prior period
+    # within the same ejercicio and must produce no observation
+    # requirement. ``None`` preserves the unbounded behaviour.
+    max_year_delta: int | None = None
+
+    @field_validator("max_year_delta")
+    @classmethod
+    def _max_year_delta_non_negative(cls, value: int | None) -> int | None:
+        if value is not None and value < 0:
+            raise RegistryValidationError("previous-filing max_year_delta must be non-negative")
+        return value
 
     @field_validator("source_periods")
     @classmethod
@@ -336,11 +353,15 @@ class _PreviousModeloSelector(BaseModel):
 
     def required_period_anchors_for_target(self, target_period: str) -> tuple[tuple[int, str], ...]:
         if self.source_period_offset_from_target is None:
-            return tuple((0, period) for period in self.required_periods)
-        derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
-        if derived is None:
-            return ()
-        return (derived,)
+            anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
+        else:
+            derived = _derive_offset_source_anchor(
+                self.source_period_offset_from_target, target_period=target_period
+            )
+            anchors = () if derived is None else (derived,)
+        if self.max_year_delta is None:
+            return anchors
+        return tuple(anchor for anchor in anchors if abs(anchor[0]) <= self.max_year_delta)
 
     @field_validator("period")
     @classmethod

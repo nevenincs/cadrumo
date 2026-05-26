@@ -12,28 +12,14 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.master_key._active_session import activate_session
-from ...adapters.persistence.storage.master_key._bucket_session import BucketSession
-from ...core.config import override_settings
 from ...domain._identifiers import ModeloIdentifier
+from ...tests.secure_sql import isolated_runtime_profile
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 _BUCKET_ID = "filing-runtime"
-_KEK = b"k" * 32
-_DEK = b"d" * 32
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=_KEK,
-        dek=_DEK,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _populated_history() -> ModeloHistory:
@@ -70,7 +56,7 @@ def test_filing_history_survives_encrypted_storage_roundtrip(
 ) -> None:
     """ModeloHistory entries tuple round-trips strictly with non-default statuses."""
 
-    with override_settings(aeat_local_storage_root=tmp_path), activate_session(_session()):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         original = _populated_history()
         repo = ModeloHistoryRepository(bucket_id=_BUCKET_ID)
         repo.save(original)

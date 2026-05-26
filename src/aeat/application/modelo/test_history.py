@@ -7,19 +7,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.modelo import (
     WorkUnitNotFoundError,
     assemble_work_unit_history,
     create_work_unit,
     discard_work_unit,
 )
-from aeat.core.config import Settings
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -31,30 +24,22 @@ from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_repository import (
     VerificationReportCatalogueRepository,
 )
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
 def repos(tmp_path: Path):
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "history.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        objects = profile.repository
+        yield (
+            WorkUnitCatalogueRepository(objects=objects),
+            CalculationRevisionCatalogueRepository(objects=objects),
+            ModeloRecordCatalogueRepository(objects=objects),
+            VerificationReportCatalogueRepository(objects=objects),
+            BucketEventHistoryRepository(objects=objects),
         )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            yield (
-                WorkUnitCatalogueRepository(objects=objects),
-                CalculationRevisionCatalogueRepository(objects=objects),
-                ModeloRecordCatalogueRepository(objects=objects),
-                VerificationReportCatalogueRepository(objects=objects),
-                BucketEventHistoryRepository(objects=objects),
-            )
-        finally:
-            engine.dispose()
 
 
 def test_history_for_missing_work_unit_raises(repos) -> None:

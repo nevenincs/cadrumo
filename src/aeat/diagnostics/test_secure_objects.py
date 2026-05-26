@@ -16,14 +16,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings, dispose_engine
-from aeat.core.config import Settings
 from aeat.diagnostics.__main__ import app
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -34,20 +28,11 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Wire the diagnostics CLI at a fresh per-test SQLite database."""
+def _isolated_storage(tmp_path: Path) -> Iterator[None]:
+    """Wire the diagnostics CLI at a fresh runtime profile database."""
 
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'diag.db'}")
-    with EphemeralMasterKeyProvider():
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{tmp_path / 'diag.db'}"))
-        Base.metadata.create_all(engine)
-        SecureObjectRepository(engine=engine)
-        try:
-            yield
-        finally:
-            engine.dispose()
-            dispose_engine()
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
 def test_secure_objects_list_namespace_argument_required(runner: CliRunner) -> None:

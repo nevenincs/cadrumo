@@ -24,10 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl
 
-from .....core.config import override_settings
-from ....persistence.storage.master_key._active_session import activate_session
-from ....persistence.storage.master_key._bucket_session import BucketSession
-from ....persistence.storage.sql.engine import dispose_engine, get_engine
+from .....tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.sql.engine import get_engine
 from ._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import (
@@ -40,16 +38,6 @@ from ._schema import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 _BUCKET_ID = "sede-observation"
-
-
-def _session() -> BucketSession:
-    return BucketSession.open(
-        bucket_id=_BUCKET_ID,
-        kek=b"k" * 32,
-        dek=b"d" * 32,
-        idle_minutes=15,
-        opened_at=datetime.now(UTC),
-    )
 
 
 def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
@@ -82,49 +70,45 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
 ) -> None:
     """A populated observation + artefact round-trips through the encrypted store."""
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
-        try:
-            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
-            body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
-            artefact = FiledDeclaracionArtefact(
-                kind="declaration_pdf",
-                source_url=AnyHttpUrl("https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"),
-                content_type="application/pdf",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-            )
-            observation_key = (
-                "100",
-                2023,
-                "0A",
-                "202310013522456T",
-            )
+        body = b"%PDF-1.7 sede declaration sample body for roundtrip witness"
+        artefact = FiledDeclaracionArtefact(
+            kind="declaration_pdf",
+            source_url=AnyHttpUrl(
+                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
+            ),
+            content_type="application/pdf",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        )
+        observation_key = (
+            "100",
+            2023,
+            "0A",
+            "202310013522456T",
+        )
 
-            persisted_artefact = store.persist_artefact(observation_key, artefact, body)
-            assert persisted_artefact.storage_ref is not None
-            # The persisted artefact carries the storage-ref the inbound
-            # path will rehydrate from. Round-trip the body too.
-            loaded_body = store.load_artefact(persisted_artefact.storage_ref)
-            assert loaded_body == body
+        persisted_artefact = store.persist_artefact(observation_key, artefact, body)
+        assert persisted_artefact.storage_ref is not None
+        # The persisted artefact carries the storage-ref the inbound
+        # path will rehydrate from. Round-trip the body too.
+        loaded_body = store.load_artefact(persisted_artefact.storage_ref)
+        assert loaded_body == body
 
-            observation = _populated_observation(persisted_artefact)
-            logical_path = store.persist_observation(observation)
-            loaded = store.load_observation(logical_path)
+        observation = _populated_observation(persisted_artefact)
+        logical_path = store.persist_observation(observation)
+        loaded = store.load_observation(logical_path)
 
-            assert loaded == observation
-            # Per-field witnesses on the boundary-attacking optional axes.
-            assert loaded.casillas[0].confidence == 0.87
-            assert loaded.metadata == {"capture_session": "sede-2024-06-30-A"}
-            assert loaded.extraction_coverage == {"declaration_pdf": 0.95}
-            assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
-            assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
-        finally:
-            dispose_engine(settings)
+        assert loaded == observation
+        # Per-field witnesses on the boundary-attacking optional axes.
+        assert loaded.casillas[0].confidence == 0.87
+        assert loaded.metadata == {"capture_session": "sede-2024-06-30-A"}
+        assert loaded.extraction_coverage == {"declaration_pdf": 0.95}
+        assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
+        assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
 
 
 def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
@@ -159,53 +143,46 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     from ....persistence.storage.sql.session import session_scope
     from ._observation_store import _OBSERVATION_NAMESPACE
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
-        engine = get_engine(settings)
-        try:
-            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        engine = get_engine(profile.settings)
+        store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
 
-            body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
-            artefact = FiledDeclaracionArtefact(
-                kind="declaration_pdf",
-                source_url=AnyHttpUrl(
-                    "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
-                ),
-                content_type="application/pdf",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        body = b"%PDF-1.7 sede declaration sample body for anti-tautology"
+        artefact = FiledDeclaracionArtefact(
+            kind="declaration_pdf",
+            source_url=AnyHttpUrl(
+                "https://www.agenciatributaria.gob.es/wlpl/KATA-APLI/cotejo/CotejoDocIdSv?CSV=TUD4V9XAUV7QJ8QV"
+            ),
+            content_type="application/pdf",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        )
+        observation_key = ("100", 2023, "0A", "202310013522456T")
+        persisted_artefact = store.persist_artefact(observation_key, artefact, body)
+        observation = _populated_observation(persisted_artefact)
+        logical_path = store.persist_observation(observation)
+
+        with session_scope(engine) as session:
+            all_rows = session.execute(select(SecureObjectRow)).scalars().all()
+            obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
+            assert len(obs_rows) == 1, (
+                f"expected one observation row, found {len(obs_rows)} "
+                f"(namespaces: {sorted({r.namespace for r in all_rows})})"
             )
-            observation_key = ("100", 2023, "0A", "202310013522456T")
-            persisted_artefact = store.persist_artefact(observation_key, artefact, body)
-            observation = _populated_observation(persisted_artefact)
-            logical_path = store.persist_observation(observation)
+            row = obs_rows[0]
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            payload = envelope["payload"]
+            assert payload.get("artefacts"), (
+                "fixture must serialise a non-empty artefacts tuple for this proof test to be meaningful"
+            )
+            payload["artefacts"] = []
+            row.payload = _json.dumps(envelope).encode("utf-8")
 
-            with session_scope(engine) as session:
-                all_rows = session.execute(select(SecureObjectRow)).scalars().all()
-                obs_rows = [r for r in all_rows if r.namespace == _OBSERVATION_NAMESPACE]
-                assert len(obs_rows) == 1, (
-                    f"expected one observation row, found {len(obs_rows)} "
-                    f"(namespaces: {sorted({r.namespace for r in all_rows})})"
-                )
-                row = obs_rows[0]
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                payload = envelope["payload"]
-                assert payload.get("artefacts"), (
-                    "fixture must serialise a non-empty artefacts tuple for "
-                    "this proof test to be meaningful"
-                )
-                payload["artefacts"] = []
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        from pydantic import ValidationError
 
-            from pydantic import ValidationError
-
-            with pytest.raises(ValidationError):
-                store.load_observation(logical_path)
-        finally:
-            dispose_engine(settings)
+        with pytest.raises(ValidationError):
+            store.load_observation(logical_path)
 
 
 def test_iva_wallet_observation_roundtrips_through_encrypted_store(
@@ -213,40 +190,34 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
 ) -> None:
     """An AEAT IVA wallet observation round-trips as financial evidence."""
 
-    with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
-        activate_session(_session()),
-    ):
-        try:
-            store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
-            captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
-            observation = IvaCompensationWalletObservation(
-                taxpayer_nif="12345678Z",
-                authenticated_identity="12345678Z",
-                target_year=2026,
-                target_period="2T",
-                rows=(
-                    IvaCompensationWalletRow(
-                        generation_year=2026,
-                        generation_period="1T",
-                        generated_amount=Decimal("1200"),
-                        applied_amount=Decimal("0"),
-                        pending_amount=Decimal("1200"),
-                        raw_label="2026 | 1T | 1200 | 0 | 1200",
-                    ),
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
+        captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+        observation = IvaCompensationWalletObservation(
+            taxpayer_nif="12345678Z",
+            authenticated_identity="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            rows=(
+                IvaCompensationWalletRow(
+                    generation_year=2026,
+                    generation_period="1T",
+                    generated_amount=Decimal("1200"),
+                    applied_amount=Decimal("0"),
+                    pending_amount=Decimal("1200"),
+                    raw_label="2026 | 1T | 1200 | 0 | 1200",
                 ),
-                total_pending=Decimal("1200"),
-                source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
-                captured_at=captured_at,
-                raw_sha256="b" * 64,
-            )
+            ),
+            total_pending=Decimal("1200"),
+            source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+            captured_at=captured_at,
+            raw_sha256="b" * 64,
+        )
 
-            logical_path = store.persist_iva_wallet_observation(observation)
-            loaded = store.load_iva_wallet_observation(logical_path)
+        logical_path = store.persist_iva_wallet_observation(observation)
+        loaded = store.load_iva_wallet_observation(logical_path)
 
-            assert loaded == observation
-            assert loaded.rows[0].generation_period == "1T"
-            assert loaded.total_pending == Decimal("1200")
-            assert loaded.raw_sha256 == "b" * 64
-        finally:
-            dispose_engine(settings)
+        assert loaded == observation
+        assert loaded.rows[0].generation_period == "1T"
+        assert loaded.total_pending == Decimal("1200")
+        assert loaded.raw_sha256 == "b" * 64

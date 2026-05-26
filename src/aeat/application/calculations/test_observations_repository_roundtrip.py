@@ -18,17 +18,12 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...adapters.persistence.storage.sql._orm import Base
-from ...adapters.persistence.storage.sql.engine import dispose_engine, get_engine
-from ...core.config import override_settings
+from ...adapters.persistence.storage.sql.engine import get_engine
 from ...domain.calculations.registry._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from ...tests.secure_sql import isolated_runtime_profile
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._observations_repository import (
     CalculationObservationRepository,
@@ -73,45 +68,30 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
 ) -> None:
     """A RegistryModeloObservation roundtrips through the encrypted observation repo."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _populated_observation()
+        captured_at = datetime.now(UTC).replace(microsecond=0)
+        repo = CalculationObservationRepository()
+        repo.save_observation(
+            original,
+            source_kind="aeat_sede_justificante",
+            captured_at=captured_at,
+        )
+        loaded = repo.load_observation("303", 2025, "1T")
 
-            original = _populated_observation()
-            # Non-default source_kind: the audit-sink path that pulls
-            # from the AEAT justificante.
-            captured_at = datetime.now(UTC).replace(microsecond=0)
-            repo = CalculationObservationRepository()
-            repo.save_observation(
-                original,
-                source_kind="aeat_sede_justificante",
-                captured_at=captured_at,
-            )
-            loaded = repo.load_observation("303", 2025, "1T")
-
-            assert loaded is not None
-            # The envelope carries observation + metadata; pin both layers.
-            assert loaded.observation == original
-            assert loaded.source_kind == "aeat_sede_justificante"
-            assert loaded.captured_at == captured_at
-            # Per-field witnesses on the typed observation tuple:
-            # formula_id on the computed casilla, operand_refs +
-            # operand_values, legal_refs + source_refs.
-            assert len(loaded.observation.observations) == 2
-            loaded_computed = loaded.observation.observations[1]
-            assert loaded_computed.formula_id == "iva.formula.resultado"
-            assert loaded_computed.operand_refs == ("iva.devengado", "iva.deducible")
-            assert loaded_computed.operand_values == (
-                Decimal("20000.00"),
-                Decimal("7654.33"),
-            )
-            assert loaded_computed.legal_refs == ("liva.art-94",)
-        finally:
-            dispose_engine(settings)
+        assert loaded is not None
+        assert loaded.observation == original
+        assert loaded.source_kind == "aeat_sede_justificante"
+        assert loaded.captured_at == captured_at
+        assert len(loaded.observation.observations) == 2
+        loaded_computed = loaded.observation.observations[1]
+        assert loaded_computed.formula_id == "iva.formula.resultado"
+        assert loaded_computed.operand_refs == ("iva.devengado", "iva.deducible")
+        assert loaded_computed.operand_values == (
+            Decimal("20000.00"),
+            Decimal("7654.33"),
+        )
+        assert loaded_computed.legal_refs == ("liva.art-94",)
 
 
 def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
@@ -119,33 +99,25 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
 ) -> None:
     """Modelo scans must enumerate through decrypted records, not raw HMAC keys."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-iter-modelo.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            repo = CalculationObservationRepository()
-            target = _populated_observation()
-            other = target.model_copy(update={"modelo": "130", "period": "2T"})
-            repo.save_observation(
-                target,
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
-            )
-            repo.save_observation(
-                other,
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        target = _populated_observation()
+        other = target.model_copy(update={"modelo": "130", "period": "2T"})
+        repo.save_observation(
+            target,
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
+        )
+        repo.save_observation(
+            other,
+            source_kind="aeat_sede_justificante",
+            captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
+        )
 
-            loaded = tuple(repo.iter_modelo("303"))
+        loaded = tuple(repo.iter_modelo("303"))
 
-            assert len(loaded) == 1
-            assert loaded[0].observation == target
-        finally:
-            dispose_engine(settings)
+        assert len(loaded) == 1
+        assert loaded[0].observation == target
 
 
 def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
@@ -178,57 +150,42 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
 
     observation_namespace = CalculationObservationRepository.namespace
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "observations-anti-tautology.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        original = _populated_observation()
+        captured_at = datetime.now(UTC).replace(microsecond=0)
+        repo = CalculationObservationRepository()
+        repo.save_observation(
+            original,
+            source_kind="aeat_sede_justificante",
+            captured_at=captured_at,
+        )
 
-            original = _populated_observation()
-            captured_at = datetime.now(UTC).replace(microsecond=0)
-            repo = CalculationObservationRepository()
-            repo.save_observation(
-                original,
-                source_kind="aeat_sede_justificante",
-                captured_at=captured_at,
+        object_key = observation_key("303", 2025, "1T")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == observation_namespace,
+                SecureObjectRow.object_key == object_key,
             )
-
-            object_key = observation_key("303", 2025, "1T")
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == observation_namespace,
-                    SecureObjectRow.object_key == object_key,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                # The envelope wraps the observation under "payload"; the
-                # observation itself nests the casillas under
-                # "observation" -> "observations".
-                casillas = envelope["payload"]["observation"]["observations"]
-                assert casillas and casillas[1]["legal_refs"], (
-                    "fixture must serialise legal_refs onto the computed "
-                    "casilla for this proof test to be meaningful"
-                )
-                casillas[1]["legal_refs"] = []
-                row.payload = _json.dumps(envelope).encode("utf-8")
-
-            # Reload. Whether the model_validator on CasillaObservation
-            # tolerates an empty legal_refs tuple or the load path surfaces
-            # the dropped grounding as inequality, the boundary must catch
-            # the drift somewhere.
-            loaded = repo.load_observation("303", 2025, "1T")
-            assert loaded is not None
-            assert loaded.observation != original, (
-                "anti-tautology proof failed: deleting legal_refs from a "
-                "persisted casilla did NOT surface as strict inequality "
-                "on the loaded observation. The grounding boundary is "
-                "tautological and every observation roundtrip in the "
-                "suite is suspect."
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            casillas = envelope["payload"]["observation"]["observations"]
+            assert casillas and casillas[1]["legal_refs"], (
+                "fixture must serialise legal_refs onto the computed "
+                "casilla for this proof test to be meaningful"
             )
-        finally:
-            dispose_engine(settings)
+            casillas[1]["legal_refs"] = []
+            row.payload = _json.dumps(envelope).encode("utf-8")
+
+        loaded = repo.load_observation("303", 2025, "1T")
+        assert loaded is not None
+        assert loaded.observation != original, (
+            "anti-tautology proof failed: deleting legal_refs from a "
+            "persisted casilla did NOT surface as strict inequality "
+            "on the loaded observation. The grounding boundary is "
+            "tautological and every observation roundtrip in the "
+            "suite is suspect."
+        )
 
 
 def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip(
@@ -236,48 +193,40 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
 ) -> None:
     """An IVA wallet reconciliation decision round-trips as AUDIT state."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "iva-wallet-decision-roundtrip.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            repo = IvaWalletDecisionRepository()
-            decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
-            decision = IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
-                target_year=2026,
-                target_period="2T",
-                selected_authority="aeat_wallet",
-                selected_amount=Decimal("1200"),
-                wallet_amount=Decimal("1200"),
-                local_recurrence_amount=Decimal("1200"),
-                override_amount=None,
-                divergence="match",
-                blocked=False,
-                stale_wallet=False,
-                reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
-                wallet_captured_at=decided_at,
-                decided_at=decided_at,
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repo = IvaWalletDecisionRepository()
+        decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+        decision = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            selected_authority="aeat_wallet",
+            selected_amount=Decimal("1200"),
+            wallet_amount=Decimal("1200"),
+            local_recurrence_amount=Decimal("1200"),
+            override_amount=None,
+            divergence="match",
+            blocked=False,
+            stale_wallet=False,
+            reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
+            wallet_captured_at=decided_at,
+            decided_at=decided_at,
+        )
 
-            repo.save_decision(decision)
-            loaded = repo.load_decision("12345678Z", 2026, "2T")
+        repo.save_decision(decision)
+        loaded = repo.load_decision("12345678Z", 2026, "2T")
 
-            assert loaded == decision
-            assert loaded is not None
-            assert loaded.selected_authority == "aeat_wallet"
-            assert loaded.selected_amount == Decimal("1200")
-            assert loaded.blocked is False
-            assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
-            assert iva_wallet_decision_key("12345678Z", 2026, "2T").startswith("iva-wallet-decision:")
-            assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
-            database_bytes = db_path.read_bytes()
-            assert b"12345678Z" not in database_bytes
-            assert b"12345678Z:2026:2T" not in database_bytes
-        finally:
-            dispose_engine(settings)
+        assert loaded == decision
+        assert loaded is not None
+        assert loaded.selected_authority == "aeat_wallet"
+        assert loaded.selected_amount == Decimal("1200")
+        assert loaded.blocked is False
+        assert repo.load_decision_history("12345678Z", 2026, "2T") == (decision,)
+        assert iva_wallet_decision_key("12345678Z", 2026, "2T").startswith("iva-wallet-decision:")
+        assert iva_wallet_decision_event_key(decision).startswith("iva-wallet-decision-event:")
+        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        assert b"12345678Z" not in database_bytes
+        assert b"12345678Z:2026:2T" not in database_bytes
 
 
 def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
@@ -285,51 +234,43 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
 ) -> None:
     """Later decisions update latest lookup without deleting prior audit events."""
 
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "iva-wallet-decision-history.db"
-    with provider, override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
-        engine = get_engine(settings)
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            repo = IvaWalletDecisionRepository()
-            first_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
-            second_at = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
-            first = IvaCompensationReconciliationDecision(
-                taxpayer_nif="12345678Z",
-                target_year=2026,
-                target_period="2T",
-                selected_authority="aeat_wallet",
-                selected_amount=Decimal("1200"),
-                wallet_amount=Decimal("1200"),
-                local_recurrence_amount=Decimal("1200"),
-                override_amount=None,
-                divergence="match",
-                blocked=False,
-                stale_wallet=False,
-                reason="Using first valid AEAT wallet observation for Modelo 303 prior compensation.",
-                wallet_captured_at=first_at,
-                decided_at=first_at,
-            )
-            second = first.model_copy(
-                update={
-                    "selected_amount": Decimal("1300"),
-                    "wallet_amount": Decimal("1300"),
-                    "local_recurrence_amount": None,
-                    "divergence": "wallet_only",
-                    "reason": "Using later valid AEAT wallet observation without local recurrence.",
-                    "wallet_captured_at": second_at,
-                    "decided_at": second_at,
-                }
-            )
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repo = IvaWalletDecisionRepository()
+        first_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+        second_at = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
+        first = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="2T",
+            selected_authority="aeat_wallet",
+            selected_amount=Decimal("1200"),
+            wallet_amount=Decimal("1200"),
+            local_recurrence_amount=Decimal("1200"),
+            override_amount=None,
+            divergence="match",
+            blocked=False,
+            stale_wallet=False,
+            reason="Using first valid AEAT wallet observation for Modelo 303 prior compensation.",
+            wallet_captured_at=first_at,
+            decided_at=first_at,
+        )
+        second = first.model_copy(
+            update={
+                "selected_amount": Decimal("1300"),
+                "wallet_amount": Decimal("1300"),
+                "local_recurrence_amount": None,
+                "divergence": "wallet_only",
+                "reason": "Using later valid AEAT wallet observation without local recurrence.",
+                "wallet_captured_at": second_at,
+                "decided_at": second_at,
+            }
+        )
 
-            repo.save_decision(first)
-            repo.save_decision(second)
+        repo.save_decision(first)
+        repo.save_decision(second)
 
-            assert repo.load_decision("12345678Z", 2026, "2T") == second
-            assert repo.load_decision_history("12345678Z", 2026, "2T") == (first, second)
-            database_bytes = db_path.read_bytes()
-            assert b"12345678Z" not in database_bytes
-            assert b"12345678Z:2026:2T" not in database_bytes
-        finally:
-            dispose_engine(settings)
+        assert repo.load_decision("12345678Z", 2026, "2T") == second
+        assert repo.load_decision_history("12345678Z", 2026, "2T") == (first, second)
+        database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
+        assert b"12345678Z" not in database_bytes
+        assert b"12345678Z:2026:2T" not in database_bytes

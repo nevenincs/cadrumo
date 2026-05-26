@@ -8,9 +8,8 @@ user-profile aggregate. The companion wizard test exercises the
 canonical-token JSON cycle; this file closes the remaining boundary
 by pushing those facts through the *real* encrypted-SQL store.
 
-Real adapters only: a real :class:`EphemeralMasterKeyProvider`, a
-real SQLite engine, and a real :class:`SecureObjectRepository`.
-No mocks, fakes, or monkeypatched persistence.
+Real adapters only: a real active-profile SQLite runtime and a real
+:class:`SecureObjectRepository`.
 
 The fixture sets every taxpayer-axis fact to a NON-DEFAULT value so a
 save-drops-fact / load-re-defaults-fact regression surfaces as
@@ -28,13 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import EphemeralMasterKeyProvider
-from ...adapters.persistence.storage.sql import (
-    SecureObjectRepository,
-    create_engine_from_settings,
-)
-from ...adapters.persistence.storage.sql._orm import Base
-from ...core.config import Settings
+from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...core.config import override_settings
 from ...core.resources import resources
 from ...domain.deadlines import (
     EntityType,
@@ -43,6 +37,7 @@ from ...domain.deadlines import (
     IVARegime,
 )
 from ...domain.user_profile import UserProfileFact, UserProfileRecord
+from ...tests.secure_sql import isolated_runtime_profile
 from ..workflow._models import WorkflowState
 from ._orchestration import read_active_profile, register_active_profile
 from ._projections import projection_for_taxpayer
@@ -52,18 +47,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    """A real SecureObjectRepository over a real per-test SQLite engine."""
+    """A real SecureObjectRepository over a real active-profile runtime."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-        )
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with (
+        isolated_runtime_profile(
+            tmp_path=tmp_path,
+            bucket_id="taxpayer-axes-persistence-test",
+        ) as profile,
+        override_settings(aeat_active_profile=None),
+    ):
+        yield profile.repository
 
 
 @pytest.fixture(scope="module")

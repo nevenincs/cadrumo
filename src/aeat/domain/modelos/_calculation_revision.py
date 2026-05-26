@@ -134,7 +134,7 @@ def derive_calculation_revision_id(
         "work_unit_id": work_unit_id.strip(),
         "inputs": dict(sorted((k.strip(), v.strip()) for k, v in inputs_snapshot.items())),
         "overrides": dict(sorted((k.strip(), v.strip()) for k, v in binding_overrides.items())),
-        "outputs": dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items())),
+        "outputs": _outputs_for_hash_from_mapping(casilla_values),
         "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
     }
     normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
@@ -145,6 +145,45 @@ def derive_calculation_revision_id(
         payload["bindings_sourced_from_borrador"] = normalized_borrador_bindings
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _outputs_for_hash_from_mapping(casilla_values: Mapping[str, Decimal]) -> dict[str, str]:
+    """Canonical ``{casilla_id: canonical_decimal_str}`` projection from the flat mapping.
+
+    Pure function — same input → same output, no side effects, no
+    dependence on observation order. Used by
+    :func:`derive_calculation_revision_id` to produce the ``outputs``
+    payload key consumed by the SHA-256 hash, AND by
+    :func:`_outputs_for_hash_from_observations` to project the typed
+    envelope into the same canonical form so the validator's
+    consistency check is byte-exact.
+
+    Trimmed casilla_id keys, ``_canonical_decimal`` values, sorted by
+    casilla_id — matches the original inline projection in
+    :func:`derive_calculation_revision_id` byte-for-byte. The
+    `P08.S35` hash-stability pin guards this contract.
+    """
+    return dict(sorted((k.strip(), _canonical_decimal(v)) for k, v in casilla_values.items()))
+
+
+def _outputs_for_hash_from_observations(
+    observations: Sequence[CasillaObservation],
+) -> dict[str, str]:
+    """Same canonical projection as :func:`_outputs_for_hash_from_mapping`, sourced from observations.
+
+    Stage one of the `casilla-values-collapse-projection-strategy` ADR
+    (2026-05-26): the typed envelope is the logical source of truth for
+    derivation. This helper materialises the same
+    ``{casilla_id: canonical_decimal_str}`` projection the flat-mapping
+    helper produces, sourced from ``CasillaObservation.value``. The
+    validator uses this to assert the persisted ``casilla_values`` field
+    is byte-identical to the projection of ``observations``.
+
+    Stage two of the ADR (future cycle) drops the flat field and routes
+    the hash directly through this helper; stage one keeps both fields
+    and uses this helper for the consistency check only.
+    """
+    return _outputs_for_hash_from_mapping({obs.casilla_id: obs.value for obs in observations})
 
 
 class CalculationRevision(BaseModel):
@@ -239,6 +278,25 @@ class CalculationRevision(BaseModel):
                 f"calculation_revision_id {self.calculation_revision_id!r} does not match "
                 f"the derived id {derived!r} for work_unit_id={self.work_unit_id!r}"
             )
+        # Stage one of the casilla-values-collapse-projection-strategy ADR
+        # (2026-05-26): the typed `observations` envelope is the logical
+        # source of truth; the flat `casilla_values` field is a
+        # denormalised cache enforced equal to the projection of
+        # observations. When observations is populated, the two MUST
+        # agree byte-for-byte (same canonical projection used by the
+        # hash). A mismatch means save/load drift or a caller passed
+        # inconsistent payload — fail at construction time rather than
+        # at the next hash mismatch downstream.
+        if self.observations:
+            projected = _outputs_for_hash_from_observations(self.observations)
+            persisted = _outputs_for_hash_from_mapping(self.casilla_values)
+            if projected != persisted:
+                raise ModeloValidationError(
+                    "casilla_values is inconsistent with the typed observations envelope: "
+                    f"observations project to {projected!r} but casilla_values is {persisted!r}. "
+                    "Both fields must encode the same per-casilla outputs; pass observations "
+                    "as the canonical source and let casilla_values mirror its projection."
+                )
         if self.updated_at < self.created_at:
             raise ModeloValidationError(
                 f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}"

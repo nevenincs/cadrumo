@@ -12,15 +12,12 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from aeat.adapters.persistence.storage import (
     Envelope,
-    EphemeralMasterKeyProvider,
     SensitivityClass,
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
-from aeat.application.live._errors import LiveApplicationInputError
 from aeat.application.live._borrador_100 import BorradorSnapshotNotFoundError
 from aeat.application.live._censo import CensoSnapshotNotFoundError
+from aeat.application.live._errors import LiveApplicationInputError
 from aeat.application.live._snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
@@ -28,8 +25,8 @@ from aeat.application.live._snapshot_base import (
     derive_snapshot_id_from_json,
     enforce_snapshot_state_invariants,
 )
-from aeat.core.config import Settings
 from aeat.core.errors import AeatError
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -160,9 +157,7 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
         super().__init__(bucket_id=bucket_id, repository=repository)
 
     def capture(self, *, axis_label: str, captured_at: datetime, payload_text: str) -> ProbeSnapshot:
-        return self._capture_with_lifecycle(
-            axis_label=axis_label, captured_at=captured_at, payload_text=payload_text
-        )
+        return self._capture_with_lifecycle(axis_label=axis_label, captured_at=captured_at, payload_text=payload_text)
 
     def _derive_snapshot_id(self, **kwargs: Any) -> str:
         return derive_snapshot_id_from_json(
@@ -209,15 +204,8 @@ class ProbeService(SnapshotService[ProbeSnapshot]):
 
 @pytest.fixture
 def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "snapshot_base.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            yield SecureObjectRepository(engine=engine)
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
+        yield profile.repository
 
 
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)

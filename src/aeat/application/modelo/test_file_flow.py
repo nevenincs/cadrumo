@@ -35,12 +35,6 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-)
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import create_engine_from_settings
 from aeat.application.auth import AuthProviderDescription, AuthProviderKind
 from aeat.application.filing import (
     approve_draft,
@@ -100,6 +94,7 @@ from aeat.domain.modelos._work_unit import WorkUnit
 from aeat.domain.period import parse_canonical_period
 from aeat.domain.submission import SubmissionEngine
 from aeat.domain.transactions import TransactionCatalogue
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -146,25 +141,18 @@ _DEFAULT_180_BINDING_VALUES: dict[str, Decimal] = {
 @pytest.fixture
 def repos(tmp_path):
     """Yield the five catalogue repositories over an encrypted SQLite
-    database. Tears down the master-key override on exit. Tuple shape:
+    database through the shared active-profile runtime. Tuple shape:
     ``(work_unit, calculation_revision, filing_record,
     verification_report, bucket_event_history)``."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "modelo_flow.db"
-        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            wu = WorkUnitCatalogueRepository(objects=objects)
-            cr = CalculationRevisionCatalogueRepository(objects=objects)
-            fr = ModeloRecordCatalogueRepository(objects=objects)
-            vr = VerificationReportCatalogueRepository(objects=objects)
-            bv = BucketEventHistoryRepository(objects=objects)
-            yield wu, cr, fr, vr, bv
-        finally:
-            engine.dispose()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        objects = profile.repository
+        wu = WorkUnitCatalogueRepository(objects=objects)
+        cr = CalculationRevisionCatalogueRepository(objects=objects)
+        fr = ModeloRecordCatalogueRepository(objects=objects)
+        vr = VerificationReportCatalogueRepository(objects=objects)
+        bv = BucketEventHistoryRepository(objects=objects)
+        yield wu, cr, fr, vr, bv
 
 
 def _seed_work_unit(
@@ -1522,10 +1510,13 @@ def test_calculate_emits_modelo_calculation_created_event(repos) -> None:
     )
 
     catalogue = bv_repo.load()
-    events = catalogue.for_bucket(work_unit.bucket_id)
+    events = [
+        event
+        for event in catalogue.for_bucket(work_unit.bucket_id)
+        if event.event_type is BucketEventType.MODELO_CALCULATION_CREATED
+    ]
     assert len(events) == 1
     event = events[0]
-    assert event.event_type is BucketEventType.MODELO_CALCULATION_CREATED
     assert event.object_type is BucketEventObjectType.CALCULATION_REVISION
     assert event.object_id == revision.calculation_revision_id
     assert event.actor == "operator-A"
@@ -1764,10 +1755,20 @@ def test_file_supersession_emits_both_filed_and_superseded_events(repos) -> None
     assert new_filed_events[0].event_type is BucketEventType.MODELO_FILED
     assert new_filed_events[0].payload["supersedes_filing_record_id"] == filing_one.filing_record_id
 
-    # Whole chain in chronological order for the bucket:
-    # calc1, filed1, calc2, superseded1+filed2.
+    # Whole calculation/file chain in chronological order for the bucket.
+    # Work-unit creation is also persisted in this catalogue by the
+    # shared runtime path.
     all_events = catalogue.for_bucket(work_unit.bucket_id)
-    type_chain = tuple(e.event_type for e in all_events)
+    type_chain = tuple(
+        e.event_type
+        for e in all_events
+        if e.event_type
+        in {
+            BucketEventType.MODELO_CALCULATION_CREATED,
+            BucketEventType.MODELO_FILED,
+            BucketEventType.MODELO_FILED_SUPERSEDED,
+        }
+    )
     assert type_chain == (
         BucketEventType.MODELO_CALCULATION_CREATED,
         BucketEventType.MODELO_FILED,
@@ -1815,7 +1816,7 @@ def test_calculate_runs_registry_formula_engine(repos) -> None:
     assert revision.inputs_snapshot["02"] == "3000"
     assert "03" not in revision.inputs_snapshot  # 03 is a formula target, not an input
 
-    # Engine output contains BOTH the operator inputs AND every
+    # Calculation output contains BOTH the operator inputs AND every
     # formula target; domain-level registry tests own arithmetic parity.
     assert revision.casilla_values["01"] == casilla_inputs["01"]
     assert revision.casilla_values["02"] == casilla_inputs["02"]
