@@ -8,12 +8,14 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.resources import bundled_path
 from ._authority import ValidatedRegistryAuthority
 from ._bindings import (
     CasillaObservation,
     RegistryModeloObservation,
+    _PreviousModeloSelector,
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
@@ -315,6 +317,64 @@ def test_previous_filing_binding_requires_complete_observed_casillas(
             ),
             filing_year=2026,
             period="1T",
+        )
+
+
+def test_previous_modelo_selector_max_year_delta_unset_preserves_unbounded_anchors() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+    )
+
+    assert selector.max_year_delta is None
+    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_zero_drops_cross_ejercicio_offset_anchor() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=0,
+    )
+
+    assert selector.required_period_anchors_for_target("1T") == ()
+
+
+def test_previous_modelo_selector_max_year_delta_zero_admits_same_ejercicio_offset_anchors() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=0,
+    )
+
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+    assert selector.required_period_anchors_for_target("3T") == ((0, "2T"),)
+    assert selector.required_period_anchors_for_target("4T") == ((0, "3T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_one_admits_one_year_cross_ejercicio_anchor() -> None:
+    selector = _PreviousModeloSelector(
+        source_modelo="130",
+        source_output="saldo-negativo-fin-periodo",
+        source_period_offset_from_target=-1,
+        max_year_delta=1,
+    )
+
+    assert selector.required_period_anchors_for_target("1T") == ((-1, "4T"),)
+    assert selector.required_period_anchors_for_target("2T") == ((0, "1T"),)
+
+
+def test_previous_modelo_selector_max_year_delta_rejects_negative_values() -> None:
+    with pytest.raises(ValidationError, match="max_year_delta must be non-negative"):
+        _PreviousModeloSelector(
+            source_modelo="130",
+            source_output="saldo-negativo-fin-periodo",
+            source_period_offset_from_target=-1,
+            max_year_delta=-1,
         )
 
 
