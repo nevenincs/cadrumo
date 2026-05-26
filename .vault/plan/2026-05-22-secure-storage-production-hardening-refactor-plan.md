@@ -264,6 +264,304 @@ Runtime adoption register rows must use this shape in execution notes:
 | --- | --- | --- | --- | --- | --- |
 | `src/aeat/...` | `SecureObjectRepository()` | `runtime-default` | active bucket session and route match | migrate to test runtime profile | pending |
 
+### Affected-file rollout register
+
+This register is intentionally monotonous. It lists every current production Python file matched by the expanded storage/profile scanner, including direct secure repositories, active-profile resolution, manifest/bucket discovery, master-key custody, SQL routing, plaintext side stores, and remote storage providers. Rows that are later proven to be false positives must still be closed with a disposition instead of silently disappearing from scope.
+
+Current register count: `288` production candidate files.
+
+| ID | Path | Signals | Target type | Owning row | Status |
+| --- | --- | --- | --- | --- | --- |
+| `AFR-001` | `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-002` | `src/aeat/adapters/inbound/borrador/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-003` | `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-004` | `src/aeat/adapters/inbound/declaracion/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-005` | `src/aeat/adapters/inbound/financial/providers/_ofx.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-006` | `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-007` | `src/aeat/adapters/inbound/justificante/_parser.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-008` | `src/aeat/adapters/inbound/justificante/_parsers/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-009` | `src/aeat/adapters/inbound/pdf/_pdfplumber.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-010` | `src/aeat/adapters/inbound/pdf/_utils.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-011` | `src/aeat/adapters/inbound/sanitizer/_errors.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-012` | `src/aeat/adapters/inbound/sanitizer/_pipeline.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-013` | `src/aeat/adapters/outbound/aeat/auth/_authenticator.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-014` | `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-015` | `src/aeat/adapters/outbound/aeat/auth/_session_store.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-016` | `src/aeat/adapters/outbound/aeat/browser/_factory.py` | `active-profile, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-017` | `src/aeat/adapters/outbound/aeat/browser/_site_health.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-018` | `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-019` | `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-020` | `src/aeat/adapters/outbound/aeat/sede/_censo_live.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-021` | `src/aeat/adapters/outbound/aeat/sede/_declarations.py` | `manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-022` | `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-023` | `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` | `secure-object, manifest-bucket, master-key, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-024` | `src/aeat/adapters/outbound/aeat/sede/_parse.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-025` | `src/aeat/adapters/outbound/aeat/sede/_renta_web_open_safety.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-026` | `src/aeat/adapters/outbound/aeat/verify/__init__.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-027` | `src/aeat/adapters/outbound/google/_calc_sheets_apply.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-028` | `src/aeat/adapters/outbound/google/_calc_sheets_pull.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-029` | `src/aeat/adapters/outbound/google/_errors.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-030` | `src/aeat/adapters/outbound/google/_oauth_flow.py` | `secure-object, active-profile, manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-031` | `src/aeat/adapters/outbound/google/_profile_binding.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-032` | `src/aeat/adapters/outbound/google/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-033` | `src/aeat/adapters/outbound/google/_refresh.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-034` | `src/aeat/adapters/outbound/google/_session_store.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-035` | `src/aeat/adapters/outbound/llm/_cache.py` | `secure-object, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-036` | `src/aeat/adapters/outbound/llm/_providers/gemini.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-037` | `src/aeat/adapters/outbound/llm/_usage.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-038` | `src/aeat/adapters/outbound/storage/__init__.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-039` | `src/aeat/adapters/outbound/storage/_errors.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-040` | `src/aeat/adapters/outbound/storage/_factory.py` | `active-profile, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-041` | `src/aeat/adapters/outbound/storage/_google_drive.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-042` | `src/aeat/adapters/outbound/storage/_local.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-043` | `src/aeat/adapters/outbound/storage/_protocol.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-044` | `src/aeat/adapters/outbound/storage/_records.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-045` | `src/aeat/adapters/persistence/profile/assets.py` | `secure-object, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-046` | `src/aeat/adapters/persistence/profile/inventory.py` | `secure-object, sql-route, plain-file` | `retired` | `W12.P21.S86` | pending |
+| `AFR-047` | `src/aeat/adapters/persistence/storage/__init__.py` | `runtime, master-key` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-048` | `src/aeat/adapters/persistence/storage/_path_safety.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-049` | `src/aeat/adapters/persistence/storage/_rotation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-050` | `src/aeat/adapters/persistence/storage/attachment.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-051` | `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-052` | `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-053` | `src/aeat/adapters/persistence/storage/bucket/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-054` | `src/aeat/adapters/persistence/storage/bucket/_errors.py` | `manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-055` | `src/aeat/adapters/persistence/storage/bucket/_export_header.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-056` | `src/aeat/adapters/persistence/storage/bucket/_keystore_paths.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-057` | `src/aeat/adapters/persistence/storage/bucket/_layout.py` | `manifest-bucket, sql-route` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-058` | `src/aeat/adapters/persistence/storage/bucket/_lockfile.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-059` | `src/aeat/adapters/persistence/storage/bucket/_manifest.py` | `manifest-bucket, master-key, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-060` | `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-061` | `src/aeat/adapters/persistence/storage/crypto/__init__.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-062` | `src/aeat/adapters/persistence/storage/crypto/_crypto.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-063` | `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py` | `secure-object, master-key, sql-route` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-064` | `src/aeat/adapters/persistence/storage/envelope/__init__.py` | `secure-bound` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-065` | `src/aeat/adapters/persistence/storage/envelope/_envelope.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-066` | `src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py` | `secure-object, secure-bound, sql-route` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-067` | `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py` | `secure-object, secure-bound, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-068` | `src/aeat/adapters/persistence/storage/errors.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-069` | `src/aeat/adapters/persistence/storage/master_key/__init__.py` | `master-key` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-070` | `src/aeat/adapters/persistence/storage/master_key/_active_session.py` | `manifest-bucket, master-key` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-071` | `src/aeat/adapters/persistence/storage/master_key/_bucket_session.py` | `manifest-bucket, master-key, sql-route, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-072` | `src/aeat/adapters/persistence/storage/master_key/_dek_wrap.py` | `manifest-bucket` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-073` | `src/aeat/adapters/persistence/storage/master_key/_idle_timeout.py` | `manifest-bucket, master-key` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-074` | `src/aeat/adapters/persistence/storage/master_key/_kdf.py` | `master-key` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-075` | `src/aeat/adapters/persistence/storage/master_key/_master_key.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-076` | `src/aeat/adapters/persistence/storage/master_key/_recovery.py` | `master-key, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-077` | `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py` | `manifest-bucket, master-key, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-078` | `src/aeat/adapters/persistence/storage/master_key/_test_no_classvar_state.py` | `master-key, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-079` | `src/aeat/adapters/persistence/storage/master_key/_zeroise.py` | `master-key` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-080` | `src/aeat/adapters/persistence/storage/runtime.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-081` | `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-082` | `src/aeat/adapters/persistence/storage/sql/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-083` | `src/aeat/adapters/persistence/storage/sql/_orm.py` | `secure-object` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-084` | `src/aeat/adapters/persistence/storage/sql/engine.py` | `sql-route, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-085` | `src/aeat/adapters/persistence/storage/sql/secure_objects.py` | `secure-object, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-086` | `src/aeat/adapters/persistence/storage/sql/session.py` | `sql-route` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-087` | `src/aeat/application/aggregation/_iva_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-088` | `src/aeat/application/aggregation/_modelo_bindings.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-089` | `src/aeat/application/aggregation/_renta_ledger.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-090` | `src/aeat/application/aggregation/_source_mesh.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-091` | `src/aeat/application/aggregation/_source_profile.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-092` | `src/aeat/application/auth/_acquisition_lock.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-093` | `src/aeat/application/auth/_apoderado.py` | `secure-object, secure-bound, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-094` | `src/aeat/application/auth/_diagnostics.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-095` | `src/aeat/application/auth/_operator.py` | `secure-object, active-profile, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-096` | `src/aeat/application/auth/_sessions.py` | `active-profile, manifest-bucket, master-key, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-097` | `src/aeat/application/calculations/_iva_compensation_history.py` | `secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-098` | `src/aeat/application/calculations/_observations_repository.py` | `secure-object, secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-099` | `src/aeat/application/config_reset.py` | `secure-object, manifest-bucket, sql-route` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-100` | `src/aeat/application/diagnostics.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-101` | `src/aeat/application/evidence/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-102` | `src/aeat/application/evidence/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-103` | `src/aeat/application/export/_tabular.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-104` | `src/aeat/application/filing/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-105` | `src/aeat/application/filing/_history_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-106` | `src/aeat/application/filing/_review.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-107` | `src/aeat/application/filing/_testing_registry.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-108` | `src/aeat/application/filing/runtime.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-109` | `src/aeat/application/inventory/_service.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-110` | `src/aeat/application/invoices/_importing.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-111` | `src/aeat/application/invoices/_linking.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-112` | `src/aeat/application/invoices/_queries.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-113` | `src/aeat/application/invoices/_reconciliation.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-114` | `src/aeat/application/invoices/_source_resolver.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-115` | `src/aeat/application/ledger/_actions.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-116` | `src/aeat/application/ledger/_business_operation_invoice.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-117` | `src/aeat/application/ledger/_evidence.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-118` | `src/aeat/application/ledger/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-119` | `src/aeat/application/ledger/_preflight.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-120` | `src/aeat/application/ledger/_ratios.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-121` | `src/aeat/application/live/__init__.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-122` | `src/aeat/application/live/_borrador_100.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-123` | `src/aeat/application/live/_censo.py` | `secure-object, manifest-bucket, sql-route, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-124` | `src/aeat/application/live/_expedientes.py` | `manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-125` | `src/aeat/application/live/_notifications.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-126` | `src/aeat/application/live/_snapshot_base.py` | `secure-object, manifest-bucket, plain-file` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-127` | `src/aeat/application/live/_verify.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-128` | `src/aeat/application/modelo/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-129` | `src/aeat/application/modelo/_actions.py` | `secure-object, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-130` | `src/aeat/application/modelo/_binding_readiness.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-131` | `src/aeat/application/modelo/_borrador_binding.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-132` | `src/aeat/application/modelo/_export.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-133` | `src/aeat/application/modelo/_history.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-134` | `src/aeat/application/modelo/_profile_binding.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-135` | `src/aeat/application/modelo/_reconcile.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-136` | `src/aeat/application/operator_surface/_contract.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-137` | `src/aeat/application/operator_surface/_crud_contract.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-138` | `src/aeat/application/operator_surface/_help.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-139` | `src/aeat/application/operator_surface/_models.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-140` | `src/aeat/application/overview/__init__.py` | `active-profile, manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-141` | `src/aeat/application/registry/__init__.py` | `master-key, plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-142` | `src/aeat/application/registry/_corpus.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-143` | `src/aeat/application/repair_integrity.py` | `secure-object, secure-bound, active-profile, manifest-bucket, master-key` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-144` | `src/aeat/application/review/_adapters.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-145` | `src/aeat/application/review/_aggregator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-146` | `src/aeat/application/review/_edit.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-147` | `src/aeat/application/review/_filter.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-148` | `src/aeat/application/review/_operator.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-149` | `src/aeat/application/setup/_contracts.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-150` | `src/aeat/application/setup/_service.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-151` | `src/aeat/application/state_projection.py` | `runtime, active-profile, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-152` | `src/aeat/application/storage/calc_sheets/_engine.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-153` | `src/aeat/application/storage/calc_sheets/_layout.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-154` | `src/aeat/application/storage/calc_sheets/_parity_harness.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-155` | `src/aeat/application/storage/calc_sheets/_records.py` | `secure-object, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-156` | `src/aeat/application/storage/calc_sheets/_translator.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-157` | `src/aeat/application/topics/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-158` | `src/aeat/application/user_profile/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-159` | `src/aeat/application/user_profile/_aggregate.py` | `active-profile, manifest-bucket, sql-route, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-160` | `src/aeat/application/user_profile/_censo_sync.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-161` | `src/aeat/application/user_profile/_integrity.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-162` | `src/aeat/application/user_profile/_language_resolver.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-163` | `src/aeat/application/user_profile/_lifecycle.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-164` | `src/aeat/application/user_profile/_orchestration.py` | `secure-object, active-profile, manifest-bucket, sql-route, plain-file` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-165` | `src/aeat/application/user_profile/_profile_repository.py` | `secure-object, active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-166` | `src/aeat/application/user_profile/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-167` | `src/aeat/application/user_profile/_testing.py` | `secure-object, active-profile` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-168` | `src/aeat/application/verification/_verify.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-169` | `src/aeat/application/wizard/_commands.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-170` | `src/aeat/application/wizard/_persistence.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-171` | `src/aeat/application/wizard/_prompter.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-172` | `src/aeat/application/wizard/_status.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-173` | `src/aeat/application/wizard/_translations.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-174` | `src/aeat/application/wizard/_widgets.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-175` | `src/aeat/application/workflow/__init__.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-176` | `src/aeat/application/workflow/_errors.py` | `active-profile, manifest-bucket, master-key` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-177` | `src/aeat/application/workflow/_events.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-178` | `src/aeat/application/workflow/_models.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-179` | `src/aeat/application/workflow/_persistence.py` | `secure-object, runtime, active-profile, manifest-bucket, master-key, sql-route` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-180` | `src/aeat/application/workflow/_profile_bucket_scan.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-181` | `src/aeat/application/workflow/_profile_health.py` | `active-profile, manifest-bucket, master-key, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-182` | `src/aeat/core/_bucket_pointer.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-183` | `src/aeat/core/_bucket_pointer_io.py` | `active-profile, manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-184` | `src/aeat/core/_toml.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-185` | `src/aeat/core/access_gate/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-186` | `src/aeat/core/config.py` | `active-profile, manifest-bucket, master-key, sql-route, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-187` | `src/aeat/core/corpus_manifest/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-188` | `src/aeat/core/env_io.py` | `master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-189` | `src/aeat/core/errors/registry/_adapters.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-190` | `src/aeat/core/errors/registry/_application.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-191` | `src/aeat/core/errors/registry/_core.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-192` | `src/aeat/core/external_constants.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-193` | `src/aeat/core/file_permissions.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-194` | `src/aeat/core/i18n/_render.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-195` | `src/aeat/core/locks.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-196` | `src/aeat/core/logging.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-197` | `src/aeat/core/observability/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-198` | `src/aeat/core/observability/_context.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-199` | `src/aeat/core/observability/_errors.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-200` | `src/aeat/core/observability/_fingerprint.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-201` | `src/aeat/core/observability/_models.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-202` | `src/aeat/core/observability/_recorder.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-203` | `src/aeat/core/observability/_sink.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-204` | `src/aeat/core/observability/_store.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-205` | `src/aeat/core/output_rendering.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-206` | `src/aeat/core/paths.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-207` | `src/aeat/core/resources/_boundary.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-208` | `src/aeat/core/resources/_repos/legal_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-209` | `src/aeat/core/resources/_repos/modelos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-210` | `src/aeat/diagnostics/__main__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
+| `AFR-211` | `src/aeat/diagnostics/profile.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-212` | `src/aeat/domain/attachments/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-213` | `src/aeat/domain/auth/apoderamientos/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-214` | `src/aeat/domain/buckets/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
+| `AFR-215` | `src/aeat/domain/buckets/_event.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-216` | `src/aeat/domain/buckets/_event_repository.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S83` | pending |
+| `AFR-217` | `src/aeat/domain/calculations/registry/_bindings.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-218` | `src/aeat/domain/calculations/registry/_export_parse.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-219` | `src/aeat/domain/calculations/registry/_formula_runtime.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-220` | `src/aeat/domain/calculations/registry/_legal.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-221` | `src/aeat/domain/calculations/registry/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-222` | `src/aeat/domain/calculations/registry/_parity_tapes.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-223` | `src/aeat/domain/calculations/registry/_record_design.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-224` | `src/aeat/domain/calculations/registry/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-225` | `src/aeat/domain/calculations/registry/_snapshot.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-226` | `src/aeat/domain/calculations/registry/_sources.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-227` | `src/aeat/domain/calculations/registry/_validate_evidence.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-228` | `src/aeat/domain/calculations/registry/_workbook_parity.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-229` | `src/aeat/domain/categories/_registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-230` | `src/aeat/domain/deadlines/_engine.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-231` | `src/aeat/domain/deadlines/_festivos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-232` | `src/aeat/domain/deadlines/_recargo.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-233` | `src/aeat/domain/filing/_complementaria_repository.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-234` | `src/aeat/domain/filing/_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-235` | `src/aeat/domain/fincas/_imputacion_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-236` | `src/aeat/domain/invoices/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-237` | `src/aeat/domain/invoices/_repository.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-238` | `src/aeat/domain/iva/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-239` | `src/aeat/domain/iva/_rates.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-240` | `src/aeat/domain/iva/_recargo_equivalencia.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-241` | `src/aeat/domain/iva/_schema.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-242` | `src/aeat/domain/justificante/_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-243` | `src/aeat/domain/manuals/_fetch.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-244` | `src/aeat/domain/manuals/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-245` | `src/aeat/domain/manuals/_verify.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-246` | `src/aeat/domain/manuals/errors.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-247` | `src/aeat/domain/modelos/_calculation_repository.py` | `secure-object` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-248` | `src/aeat/domain/modelos/_filing_record.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-249` | `src/aeat/domain/modelos/_filing_repository.py` | `secure-object` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-250` | `src/aeat/domain/modelos/_repository.py` | `secure-object` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-251` | `src/aeat/domain/modelos/_verification_repository.py` | `secure-object` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-252` | `src/aeat/domain/modelos/_work_unit.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-253` | `src/aeat/domain/normatives/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-254` | `src/aeat/domain/renta/_substrate.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-255` | `src/aeat/domain/submission/_models.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-256` | `src/aeat/domain/submission/_preflight.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-257` | `src/aeat/domain/submission/_protocols.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-258` | `src/aeat/domain/submission/_repository.py` | `secure-bound` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-259` | `src/aeat/domain/transactions/_errors.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-260` | `src/aeat/domain/transactions/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-261` | `src/aeat/domain/transactions/_raw_transaction.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-262` | `src/aeat/domain/transactions/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-263` | `src/aeat/domain/usage_ratios/_model.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-264` | `src/aeat/domain/usage_ratios/_service.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-265` | `src/aeat/domain/user_profile/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-266` | `src/aeat/domain/user_profile/_values.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-267` | `src/aeat/entrypoints/cli/__init__.py` | `active-profile, manifest-bucket, master-key, sql-route, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-268` | `src/aeat/entrypoints/cli/_app_live.py` | `secure-object, active-profile, manifest-bucket, plain-file` | `runtime-default` | `W12.P21.S83` | pending |
+| `AFR-269` | `src/aeat/entrypoints/cli/_bootstrap_exempt.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-270` | `src/aeat/entrypoints/cli/_common.py` | `active-profile, manifest-bucket, sql-route` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-271` | `src/aeat/entrypoints/cli/_config/__init__.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-272` | `src/aeat/entrypoints/cli/_config/_google.py` | `secure-object, active-profile, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-273` | `src/aeat/entrypoints/cli/_config/_profile_census.py` | `active-profile, manifest-bucket` | `bootstrap-custody` | `W12.P22.S89` | pending |
+| `AFR-274` | `src/aeat/entrypoints/cli/_errors.py` | `master-key` | `runtime-default` | `W12.P20.S78` | pending |
+| `AFR-275` | `src/aeat/entrypoints/cli/_ledger.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-276` | `src/aeat/entrypoints/cli/_modelo.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-277` | `src/aeat/entrypoints/cli/_modelo_payloads.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-278` | `src/aeat/entrypoints/cli/_overview.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-279` | `src/aeat/entrypoints/cli/_overview_rendering.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-280` | `src/aeat/entrypoints/cli/_review.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-281` | `src/aeat/entrypoints/cli/_review_payloads.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-282` | `src/aeat/entrypoints/cli/_root_landing.py` | `active-profile` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-283` | `src/aeat/entrypoints/cli/_schemas.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-284` | `src/aeat/entrypoints/cli/_tty.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-285` | `src/aeat/entrypoints/cli/registry.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-286` | `src/aeat/locales/_ast_scanner.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-287` | `src/aeat/locales/cli.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-288` | `src/aeat/locales/manager.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+
+
 ### Phase `W12.P20` - adoption register and classification
 
 Turn the audit inventory into a repeatable rollout register so implementation agents do not rediscover or re-scope the surface independently.
