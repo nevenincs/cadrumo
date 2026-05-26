@@ -185,8 +185,8 @@ Every renta-2025-profile-* binding shows missing despite the fact existing on th
 
 Corporate-tax-runtime test suite bypassed _profile_binding.py by passing Decimal values directly. Add real-CLI coverage so this regression class cannot recur.
 
-- [ ] `W03.P17.S66` - for every Modelo 200 202 303 130 100 calculation lane add CLI-level test that creates a profile via aeat config profile create flows through wizard persistence and runs calculation asserting cuota matches external oracle; `src/aeat/entrypoints/cli/test_modelo_calculation_through_real_cli.py`.
-- [ ] `W03.P17.S67` - backfill external oracles for cuota assertions: AEAT Manual de Sociedades Modelo 200, AEAT folleto Modelo 130, AEAT Manual de IVA Modelo 303, AEAT Manual de Renta Modelo 100; `src/aeat/entrypoints/cli/test_modelo_calculation_through_real_cli.py`.
+- [x] `W03.P17.S66` - for every Modelo 200 202 303 130 100 calculation lane add CLI-level test that creates a profile via aeat config profile create flows through wizard persistence and runs calculation asserting cuota matches external oracle; `src/aeat/entrypoints/cli/test_modelo_calculation_through_real_cli.py`.
+- [x] `W03.P17.S67` - backfill external oracles for cuota assertions: AEAT Manual de Sociedades Modelo 200, AEAT folleto Modelo 130, AEAT Manual de IVA Modelo 303, AEAT Manual de Renta Modelo 100; `src/aeat/entrypoints/cli/test_modelo_calculation_through_real_cli.py`.
 
 ### Phase `W03.P18` - Wave-3 review and persona re-run and plan expansion BREAKPOINT
 
@@ -208,7 +208,7 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [ ] `W04.P19.S72` - land a new ADR documenting the two-layer verification strategy: layer 1 per-casilla CasillaDefinition.required boolean for single-casilla mandatory gates layer 2 ModeloRevision.verification_predicates tuple for cross-casilla invariants feeding BLOCKING_RULE finding; `minimal DSL all_nonzero any_nonzero in W04; complex DSL deferred to W09; `.vault/adr/`.
 - [ ] `W04.P19.S73` - mark mandatory casillas required=true in Modelo 130 TOML per BOE AEAT form instructions; `layer 1 of hybrid verification strategy; `src/aeat/_data/registry/aeat/modelos/130.toml`.
 - [ ] `W04.P19.S74` - mark mandatory casillas required=true in Modelo 100 303 200 202 TOML per BOE AEAT form instructions; `same layer-1 pattern as S73; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour the new CasillaDefinition.required field plus minimal VerificationPredicateDefinition DSL (all_nonzero any_nonzero); BLOCKING_RULE finding kind; include unit test for predicate evaluator; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour the new CasillaDefinition.required field plus minimal VerificationPredicateDefinition DSL (all_nonzero any_nonzero); `BLOCKING_RULE finding kind; include unit test for predicate evaluator; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W04.P19.S76` - regression test that Modelo 130 with all casillas zero is no longer verificado_completo; `src/aeat/application/modelo/test_verification_substance.py`.
 - [ ] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
@@ -235,8 +235,8 @@ Modelo 130 income side has no ledger aggregation resolver. Non-EUR transactions 
 
 Add the missing LedgerRentaIncomeAggregationSourceResolver and wire it into Modelo 130.
 
-- [ ] `W05.P22.S81` - add LedgerRentaIncomeAggregationSourceResolver covering IRPF actividad-economica income side; `src/aeat/application/aggregation/_modelo_bindings.py`.
-- [ ] `W05.P22.S82` - implement income-side aggregation logic following the expense-side resolver pattern; `src/aeat/application/aggregation/_renta_income_ledger.py`.
+- [x] `W05.P22.S81` - add LedgerRentaIncomeAggregationSourceResolver covering IRPF actividad-economica income side; `src/aeat/application/aggregation/_modelo_bindings.py`.
+- [x] `W05.P22.S82` - implement income-side aggregation logic following the expense-side resolver pattern; `src/aeat/application/aggregation/_renta_income_ledger.py`.
 - [ ] `W05.P22.S83` - register binding modelo-130-actividad-economica-ingresos-cumulative consuming the new resolver; `src/aeat/_data/registry/aeat/modelos/130.toml`.
 - [ ] `W05.P22.S84` - bind Modelo 130 casilla 01 to the new aggregation result; `src/aeat/_data/registry/aeat/modelos/130.toml`.
 - [ ] `W05.P22.S85` - regression test real autonomo ledger imports flow into Modelo 130 casilla 01 with expected cumulative ingresos; `src/aeat/application/aggregation/test_renta_income_aggregation.py`.
