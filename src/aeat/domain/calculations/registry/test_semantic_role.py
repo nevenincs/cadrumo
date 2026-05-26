@@ -220,25 +220,16 @@ class TestTypoTwinWarning:
         reviewed_singletons = (
             ("184", "2015-y-siguientes", "tipo2.clave", "tipo_renta_atribuida_clave"),
             ("184", "2015-y-siguientes", "tipo2.subclave", "tipo_renta_atribuida_subclave"),
-            ("190", "2025-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
-            ("190", "2025-y-siguientes", "decl.percepciones-total", "total_percepciones_amount"),
+            ("190", "2024-y-siguientes", "decl.total-percepciones", "total_percepciones_count"),
+            ("190", "2024-y-siguientes", "decl.percepciones-total", "total_percepciones_amount"),
             ("202", "2025-y-siguientes", "61", "is_pf_mod_40_3_b2_base_tipo_3"),
             ("202", "2025-y-siguientes", "62", "is_pf_mod_40_3_b2_porcentaje_3"),
             ("202", "2025-y-siguientes", "64", "is_pf_mod_40_3_b2_base_tipo_4"),
             ("202", "2025-y-siguientes", "65", "is_pf_mod_40_3_b2_porcentaje_4"),
             ("202", "2025-y-siguientes", "67", "is_pf_mod_40_3_correcciones_impuesto_complementario"),
-            (
-                "303",
-                "2009-y-siguientes",
-                "iva.compensacion-pendiente-periodos-anteriores",
-                "iva_compensacion_pendiente_anteriores",
-            ),
-            (
-                "303",
-                "2009-y-siguientes",
-                "iva.compensacion-pendiente-periodos-posteriores",
-                "iva_compensacion_pendiente_posteriores",
-            ),
+            # M303 compensacion-pendiente roles appear in both 2009-y-siguientes and
+            # 2023-y-siguientes revisions; the validator requires unique occurrence for
+            # intentional_singleton, so they carry semantic_role_cardinality="shared".
             ("369", "esquema-union", "iva.union.de.services-cuota", "iva_oss_union_servicios_destino_de_cuota"),
             ("369", "esquema-union", "iva.union.fr.services-cuota", "iva_oss_union_servicios_destino_fr_cuota"),
         )

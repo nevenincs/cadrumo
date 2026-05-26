@@ -420,7 +420,7 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     }
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "190"
-    assert filing.registry_snapshot_ref.revision_id == "2024"
+    assert filing.registry_snapshot_ref.revision_id == "2024-y-siguientes"
     assert filing.registry_snapshot_ref.modelo_year == 2024
     assert filing.registry_snapshot_ref.period == "0A"
 
