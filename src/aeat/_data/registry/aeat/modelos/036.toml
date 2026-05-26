@@ -222,6 +222,7 @@ target_casillas = [
     {casilla_id = "decl.vigencia-2025", match_strategy = "named_label", value_kind = "text", label_pattern = 'Vigencia\s+normativa\s+desde'},
 ]
 confidence = "strict"
+provisional_pending_specimen = true
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
 legal_refs = [
