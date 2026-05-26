@@ -156,6 +156,8 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
     values = {value.casilla_id: value.printed_value for value in filing.values}
     assert set(values.keys()) == {
         "27",
+        "29",
+        "37",
         "45",
         "iva.resultado-regimen-general",
         "64",
@@ -167,6 +169,8 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
         "71",
     }
     assert values["27"] == Decimal("1000.00")
+    assert values["29"] == Decimal("1000.00")
+    assert values["37"] == Decimal("1000.00")
     assert values["45"] == Decimal("1000.00")
     assert values["iva.resultado-regimen-general"] == Decimal("1000.00")
     assert values["64"] == Decimal("1000.00")
@@ -265,9 +269,11 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 10 profile casillas must be present
+    # All 12 profile casillas must be present
     assert set(values.keys()) == {
         "27",
+        "29",
+        "37",
         "45",
         "iva.resultado-regimen-general",
         "64",
@@ -279,11 +285,19 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(
         "71",
     }
 
-    # These 7 casillas always carry 1.000,00 directly adjacent to their label
+    # These 9 casillas always carry 1.000,00 directly adjacent to their label
     # line in every corpus specimen (confirmed by reading printed PDF text);
     # ground truth is the printed form, not the parser output.
+    # Box 29 (cuota IVA soportado interiores corrientes): the printed label row
+    # always ends with the cuota value 1.000,00 as the last token across all 8
+    # 2023-2024 corpus specimens.
+    # Box 37 (cuota IVA deducible adquisiciones intracomunitarias corrientes):
+    # the printed label row always ends with the cuota value 1.000,00 as the last
+    # token across all 8 2023-2024 corpus specimens.
     for stable_id in (
         "27",
+        "29",
+        "37",
         "45",
         "iva.resultado-regimen-general",
         "64",
@@ -337,11 +351,11 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     ],
 )
 def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse Spanish-language M390 corpus PDFs and verify all 5 closure casillas.
+    """Round-trip: parse Spanish-language M390 corpus PDFs and verify all 6 covered closure casillas.
 
     Ground truth is derived from reading the printed declaracion-resumen anual text
     directly. The sanitised corpus replaces real amounts with 1.000,00 synthetic
-    values; all 5 target casillas carry their value adjacent to the printed label in
+    values; all 6 target casillas carry their value adjacent to the printed label in
     every Spanish-language specimen.
 
     The 2021 corpus PDF is in English (non-standard AEAT account language) and uses
@@ -355,6 +369,9 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
     - iva.anual.compensacion-ultimo-periodo-97 (box 97): "A compensar"
     - iva.anual.compensacion-generada-ejercicio-no-97 (box 662):
       "Cuotas pendientes de compensación generadas en el ejercicio"
+    - iva.anual.soportado.interiores (box 49):
+      "Total bases imponibles y cuotas deducibles en operaciones interiores de bienes
+      y servicios corrientes"
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
 
@@ -381,9 +398,10 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
         "iva.anual.resultado-regimen-general",
         "iva.anual.compensacion-ultimo-periodo-97",
         "iva.anual.compensacion-generada-ejercicio-no-97",
+        "iva.anual.soportado.interiores",
     }
 
-    # All 5 casillas carry 1.000,00 directly adjacent to their label in both corpus
+    # All 6 casillas carry 1.000,00 directly adjacent to their label in both corpus
     # specimens; ground truth derived from reading the printed form text, not from
     # re-running the parser.
     for casilla_id in (
@@ -392,6 +410,7 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
         "iva.anual.resultado-regimen-general",
         "iva.anual.compensacion-ultimo-periodo-97",
         "iva.anual.compensacion-generada-ejercicio-no-97",
+        "iva.anual.soportado.interiores",
     ):
         assert values[casilla_id] == Decimal("1000.00"), (
             f"{pdf_stem}: casilla {casilla_id!r} expected Decimal('1000.00') "
