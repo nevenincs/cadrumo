@@ -91,6 +91,7 @@ Four separate period-resolution sites: parse_canonical_period period_start_date 
 - [x] `W01.P07.S27` - consolidate _registry_period_token to share a normaliser with the calculate path; `src/aeat/application/workflow/_engine.py`.
 - [x] `W01.P07.S28` - property test that for every supported period token all three sibling functions agree; `src/aeat/domain/test_period_property.py`.
 - [x] `W01.P07.S29` - regression test that modelo work verify succeeds on the same 1P token create and calculate accepted; `src/aeat/entrypoints/cli/test_modelo_period_consistency.py`.
+- [ ] `W01.P07.S233` - R7-INES-7 fix period token notation inconsistency in overview backlog; M111 surfaces as 2026Q1 while the rest of the system uses 1T; consolidate period rendering through parse_canonical_period output form so backlog and calendar agree; `src/aeat/application/overview/`.
 
 ### Phase `W01.P08` - i18n placeholder validator silent-swallow elimination
 
@@ -132,6 +133,9 @@ Two parallel mechanisms decide applicability (Python seed table plus per-window 
 - [ ] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; `pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
+- [ ] `W02.P11.S227` - R7-INES-1 CRITICAL fix overview calendar so Modelos 200 and 202 appear for LEGAL_ENTITY profiles; `today applicable=true via explain but calendar entries are absent for IS modelos; only M349 surfaces in the calendar for an SA with INCN 18.4M; calendar applicability gate diverges from explain applicability; `src/aeat/application/overview/`.
+- [ ] `W02.P11.S228` - R7-INES-2 CRITICAL fix profile-fact key-namespace divergence between persistence and calendar lookup; `third_party_transactions_above_347_threshold persists as obligations.third_party_transactions_above_347_threshold via config profile show but calendar reads it as unset and warns the key is not declared; same defect class as W01.P05 boolean canonical drift but in a different namespace; `src/aeat/application/overview/__init__.py`.
+- [ ] `W02.P11.S230` - R7-INES-4 fix Modelo 303 SII monthly cadence; `work create --period 01 accepted but bindings list --period 01 returns no revision for that period; SII-enrolled profiles must have monthly periods 01-12 accepted by the calculate path not just create; `src/aeat/_data/registry/aeat/modelos/303/`.
 
 ### Phase `W02.P12` - Modelo 202 modality gate wiring Cluster Q
 
@@ -481,6 +485,9 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S224` - R7-A fix ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions; `LedgerTransactionPayload currency Field min_length 3 max_length 3 rejects empty or short currency strings; ledger review uses LedgerReviewRow without currency and succeeds; relax currency validation OR default to EUR on CSV import OR provide explicit operator-readable error pointing to the CSV currency column not config repair; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P45.S225` - R7-C pre-profile error language; `when active-profile pointer is malformed the language resolver cannot read output_language and defaults to Spanish; on subsequent runs after restore the message appears in Catalan; either hardcode multi-language critical-error rendering OR cache last-known-language outside the profile envelope OR document the inevitable Spanish-fallback in the error suggestion; `src/aeat/`.
 - [ ] `W09.P45.S226` - R7-D Pere observation calculation-result casilla labels remain in Spanish even with output-language ca; `investigate whether registry casilla.label fields are localised and whether the CLI emitter consults the active profile language when rendering casilla rows; decide whether to translate labels or document the legal-Spanish convention explicitly to operators; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S229` - R7-INES-3 register --output-language option on overview calendar to parity-match other commands; `currently rejected with No such option --output-language; `src/aeat/entrypoints/cli/_overview.py`.
+- [ ] `W09.P45.S231` - R7-INES-5 disambiguate the CLI input-validation refusal message from the stored-data validation refusal message; `a malformed --retencion-observation JSON currently emits the same Catalan-Spanish-text and recommends aeat config repair which is wrong; need a distinct argument-validation message pointing to the expected pydantic field shape; `src/aeat/entrypoints/cli/_errors.py`.
+- [ ] `W09.P45.S232` - R7-INES-6 register --output-language option on config profile subcommand root for parity with other config subcommands; `src/aeat/entrypoints/cli/_config/__init__.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
