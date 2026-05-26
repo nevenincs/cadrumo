@@ -214,3 +214,39 @@ Inventory modified and untracked artifacts that touch secure storage, repair, re
 - [x] `W09.P16.S62` - Classify unrelated dirty slices into existing-plan, new-plan, or deferred dispositions; `.vault/plan`.
 - [x] `W09.P16.S63` - Inventory dirty and untracked secure-storage-related artifacts against current plan coverage; `.vault/exec`.
 - [x] `W09.P16.S64` - Persist coverage audit after plan ownership and research backing are reconciled; `.vault/audit`.
+
+## Wave `W10` - convention regrounding audit
+
+Reground secure-storage hardening against existing codebase conventions before further broad implementation: locale rendering, AEAT error hierarchy, logged exception handling, settings-backed environment handling, real-behavior tests, and shared enum/model reuse are audited before remediation rows execute.
+
+### Phase `W10.P17` - codebase convention evidence review
+
+Inspect existing implementation patterns and current secure-storage changes before assigning repairs; each audit row must cite code evidence and either open implementation rows or record a deferred disposition.
+
+- [ ] `W10.P17.S65` - Audit user-facing secure-storage error messages for tr-backed locale rendering before further repairs; `src/aeat`.
+- [ ] `W10.P17.S66` - Audit secure-storage exceptions for AEAT core error base-class derivation and registry coverage; `src/aeat/adapters/persistence/storage`.
+- [ ] `W10.P17.S67` - Audit exception swallowing and require at-least-debug logging or explicit typed degradation records; `src/aeat`.
+- [ ] `W10.P17.S68` - Audit secure-storage tests for tautological assertions, fake helpers, stubs, patches, skips, xfails, and mirrored business logic; `src/aeat`.
+- [ ] `W10.P17.S69` - Audit environment and storage-route handling for centralized Settings usage and naked env access; `src/aeat`.
+- [ ] `W10.P17.S70` - Audit secure-storage implementations for duplicated enums, duplicated models, and missed shared pydantic model reuse; `src/aeat`.
+
+## Wave `W11` - convention hardening remediation
+
+Execute only the convention repairs justified by the W10 evidence review, keeping user-facing text localized, errors registry-bound, swallowed failures observable, tests real-behavior, environment handling settings-backed, and shared models authoritative.
+
+### Phase `W11.P18` - localized errors and exception observability
+
+Repair secure-storage user-facing errors and exception handling only after W10 identifies concrete gaps, preserving centralized translation and typed error contracts.
+
+- [ ] `W11.P18.S71` - Repair user-facing secure-storage messages to use tr-backed locale keys and validate with aeat.locales CLI; `src/aeat`.
+- [ ] `W11.P18.S72` - Repair secure-storage exception classes to derive from AEAT core bases with registry-backed error codes; `src/aeat/adapters/persistence/storage`.
+- [ ] `W11.P18.S73` - Repair swallowed secure-storage exceptions with debug logging or explicit typed degradation surfaces; `src/aeat`.
+
+### Phase `W11.P19` - settings tests and model reuse hardening
+
+Repair implementation and test gaps where W10 finds naked environment access, tautological tests, or duplicated contracts instead of central Settings, shared enums, and shared pydantic models.
+
+- [ ] `W11.P19.S74` - Repair naked environment handling by routing storage and test configuration through centralized Settings helpers; `src/aeat`.
+- [ ] `W11.P19.S75` - Repair tautological or shortcut tests with real-behavior coverage that imports production code directly; `src/aeat`.
+- [ ] `W11.P19.S76` - Repair duplicated secure-storage enums and models by reusing core enums, shared models, and pydantic contracts; `src/aeat`.
+- [ ] `W11.P19.S77` - Add guard checks for settings-backed environment use, translation coverage, error registry binding, and test-hygiene regressions; `src/aeat`.
