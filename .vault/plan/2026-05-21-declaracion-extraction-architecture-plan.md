@@ -356,3 +356,9 @@ The current PROVISIONAL gate (#34) checks fixture EXISTENCE; the M111/M130 findi
 - [x] `W07.P27.S165` - Tag 8 verified profiles corpus_round_trip_verified=true (M100 x3, M190, M303 x2, M390) and 2 corpus-gap profiles provisional_pending_specimen=true (M111, M130); `all 26 modelos pass registry validation; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `W07.P27.S166` - Author ADR amendment formalising corpus_round_trip_verified gate and M111/M130 corpus-gap finding; `add plan steps S164-S166 under W07.P27 and mark closed; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
 - [x] `W07.P27.S167` - Author parametrized sidecar-manifest roundtrip test asserting parser output matches SANITIZED ground truth for every justificante PDF+JSON pair in tests/fixtures/justificantes/; `41 corpus pairs across 6 modelos all pass; `src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py`.
+
+### Phase `W07.P28` - PROVISIONAL corpus-grounding survey for M036 M180 M232 M349 M369 M720
+
+Survey AEAT instructions corpus for 6 PROVISIONAL modelos, document corpus-availability gap, record verdicts
+
+- [x] `W07.P28.S168` - Survey AEAT instructions corpus for M036 M180 M232 M349 M369 M720: all 6 corpus files are AEAT portal navigation HTML pages loading field instructions via JavaScript/CMS VgnVCM IDs not captured at download time; `no printed-form field label text is available in corpus; all 6 modelos remain PROVISIONAL with provisional_pending_specimen=true; no pattern changes made; grounding verdict: AMBIGUOUS for all 6 modelos pending PDF specimen acquisition; `src/aeat/_data/corpus/aeat_official/instructions/`.
