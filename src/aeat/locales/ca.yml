@@ -1485,7 +1485,18 @@ cli:
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
+    audit:
+      extra: cli.locales.audit.extra
+      missing: cli.locales.audit.missing
+      ok: cli.locales.audit.ok
+      parity_extra: cli.locales.audit.parity_extra
+      parity_missing: cli.locales.audit.parity_missing
+      parity_summary: cli.locales.audit.parity_summary
+      summary: cli.locales.audit.summary
+    scaffold:
+      updated: cli.locales.scaffold.updated
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
+    scaffold_sync_locale_parity_help: cli.locales.scaffold_sync_locale_parity_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -2788,8 +2799,8 @@ errors:
       no_active_session: No hi ha cap sessió de bucket activa. Executa `aeat config
         profile switch NAME` per desbloquejar un perfil.
       no_detail: No s'ha informat cap detall de preparació.
-      not_ready: "El runtime d'emmagatzematge no està preparat per a emmagatzematge
-        vinculat al perfil: %{details}"
+      not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
+        vinculat al perfil: %{details}'
       route_bucket_mismatch: La ruta de base de dades no coincideix amb la sessió
         de bucket activa.
       route_not_active_bucket: La ruta de base de dades no està associada a un bucket

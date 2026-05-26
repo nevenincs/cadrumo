@@ -288,6 +288,8 @@ class TaxpayerProfile(BaseModel):
     fiscal_address_is_habitual_vivienda: bool = False
     activity_start_date: date | None = None
     activity_end_date: date | None = None
+    incn_prior_12_months: Decimal | None = None
+    new_entity_first_two_profit_periods: bool | None = None
     establecimiento_type: str = ""
     elected_withholding_pct: str = ""
     vivienda_office_total_m2: Decimal | None = None

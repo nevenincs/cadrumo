@@ -54,6 +54,26 @@ class SetupAnswers(BaseModel):
     # ── taxpayer type (three-axis taxpayer model) ────────────────────────
     entity_type: EntityType | str = ""
     legal_entity_form: LegalEntityForm | str = ""
+    incn_prior_12_months: str = ""
+    """Optional INCN (importe neto de la cifra de negocios) of the
+    prior 12 months as a canonical decimal string.
+
+    Gates the Modelo 202 pago-fraccionado modality split at the
+    6.000.000 EUR threshold (LIS Art. 40.3). Blank when the operator
+    has not declared the figure; downstream the engine returns
+    INCOMPLETE rather than guessing. The typed ``Decimal`` projection
+    lives on :class:`~aeat.domain.deadlines.TaxpayerProfile`."""
+    new_entity_first_two_profit_periods: bool | str = ""
+    """Optional three-state bool flagging the LIS Art. 29
+    first-two-profit-making-periods state of a newly-created legal
+    entity.
+
+    Opts the entity into the 15 percent new-entity rate override; the
+    override is opt-in, so an undeclared value (blank string) leaves
+    the entity on the otherwise-applicable sub-form rate. Carrying the
+    ``str`` arm of the union preserves the absent-vs-false distinction
+    that a plain ``bool`` field would collapse, mirroring the
+    ``entity_type`` / ``legal_entity_form`` pattern."""
     irpf_income_categories: str = ""
     """Comma-separated set of :class:`IrpfIncomeCategory` tokens, e.g.
     ``"trabajo,pension"``. The CHECKBOX widget produces and the
@@ -222,6 +242,56 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return CCAA(value)
         raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
+
+    @field_validator("incn_prior_12_months")
+    @classmethod
+    def _validate_incn_prior_12_months(cls, value: str) -> str:
+        """Reject a non-decimal INCN at the typed boundary.
+
+        Optional: a blank string is accepted unchanged. A non-blank
+        value must parse as a :class:`~decimal.Decimal` so the downstream
+        Modelo 202 modality gate can compare it against the
+        6.000.000 EUR threshold without re-parsing.
+        """
+
+        from decimal import Decimal, InvalidOperation
+
+        if value == "":
+            return value
+        try:
+            Decimal(value)
+        except InvalidOperation as exc:
+            raise ValueError(
+                f"incn_prior_12_months must be a decimal number, got {value!r}"
+            ) from exc
+        return value
+
+    @field_validator("new_entity_first_two_profit_periods", mode="before")
+    @classmethod
+    def _parse_new_entity_first_two_profit_periods(cls, value: object) -> bool | str:
+        """Coerce raw input into the three-state bool / blank-string union.
+
+        ``""`` represents the undeclared state (no override); ``True``
+        and ``False`` are the positively-declared states. Any other
+        scalar is rejected at the typed boundary.
+        """
+
+        if value == "" or value is None:
+            return ""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            token = value.strip().lower()
+            if token == "":
+                return ""
+            if token in {"true", "1", "yes", "y", "si", "sí"}:
+                return True
+            if token in {"false", "0", "no", "n"}:
+                return False
+        raise ValueError(
+            "new_entity_first_two_profit_periods must be a boolean, blank, "
+            "or a recognised canonical token"
+        )
 
     @field_validator("activity_start_date")
     @classmethod

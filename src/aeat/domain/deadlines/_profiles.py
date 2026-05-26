@@ -132,6 +132,10 @@ def taxpayer_profile_from_mapping(
         fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")),
         activity_start_date=_parse_date(canonical.get("census.activity_start_date")),
         activity_end_date=_parse_date(canonical.get("census.activity_end_date")),
+        incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
+        new_entity_first_two_profit_periods=_parse_optional_bool(
+            canonical.get("taxpayer_type.new_entity_first_two_profit_periods")
+        ),
         establecimiento_type=canonical.get("census.establecimiento_type", ""),
         elected_withholding_pct=canonical.get("census.elected_withholding_pct", ""),
         vivienda_office_total_m2=_parse_decimal(canonical.get("vivienda_office.total_m2")),
@@ -145,6 +149,26 @@ def _parse_bool(raw: str | None) -> bool:
     if not raw:
         return False
     return raw.strip().lower() in {"true", "1", "yes", "y", "si", "sí"}
+
+
+def _parse_optional_bool(raw: str | None) -> bool | None:
+    """Three-state boolean: undeclared (``None``), affirmative, or negative.
+
+    Distinguishes an absent fact from a positively-declared ``False``.
+    The new-entity first-two-profit-periods state is opt-in: a profile
+    that has not declared the fact must remain outside the LIS Art. 29
+    15 percent override, which requires telling ``None`` apart from
+    ``False`` at the typed boundary.
+    """
+
+    if raw is None or raw == "":
+        return None
+    token = raw.strip().lower()
+    if token in {"true", "1", "yes", "y", "si", "sí"}:
+        return True
+    if token in {"false", "0", "no", "n"}:
+        return False
+    return None
 
 
 def _parse_date(raw: str | None) -> date | None:
