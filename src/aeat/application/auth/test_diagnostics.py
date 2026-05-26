@@ -10,6 +10,7 @@ import pytest
 
 from ...adapters.outbound.aeat.auth import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
+from ...core.external_constants import load_external_constants
 from ...tests.secure_sql import isolated_runtime_profile
 from ._diagnostics import list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
 
@@ -19,6 +20,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 def test_auth_diagnostics_list_and_show_redact_page_bodies(
     tmp_path: Path,
 ) -> None:
+    external = load_external_constants().aeat
+    selector_url = external.clave_movil.selector_access_url_template.format(
+        target=f"{external.domains.sede}{external.sede_paths.expedientes_resumen}"
+    )
+    contrast_url = (
+        f"{external.domains.www12}{external.clave_movil.autentica_dni_nie_contraste_path}"
+        "?qAA=2&ref=%2Fprivate-target&storksp=secret&from=aeat&ts=20260521081409392278"
+    )
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = profile.repository
         older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
@@ -33,7 +42,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                 {
                     "diagnostic_id": "diag-old",
                     "reason": "post-auth-landing-timeout",
-                    "url": "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html",
+                    "url": selector_url,
                     "captured_at": older.isoformat(),
                     "html": "<html><body>older captured page</body></html>",
                     "screenshot_png_base64": "aW1hZ2U=",
@@ -50,15 +59,14 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                 {
                     "diagnostic_id": "diag-new",
                     "reason": "push-wait-state-not-reached",
-                    "url": (
-                        "https://www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh"
-                        "?qAA=2&ref=%2Fprivate-target&storksp=secret&from=aeat&ts=20260521081409392278"
-                    ),
+                    "url": contrast_url,
                     "captured_at": newer.isoformat(),
                     "auth_attempt": {
                         "auth_mode": "non_qr",
                         "identity_kind": "NIE",
                         "headless": True,
+                        "prefer_non_qr": True,
+                        "timeout_ms": 120000,
                         "active_profile_id": "profile-123",
                         "active_profile_label": "live-operator",
                         "active_profile_registered": True,
@@ -93,6 +101,9 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].auth_mode == "non_qr"
         assert listed.rows[0].identity_kind == "NIE"
         assert listed.rows[0].headless is True
+        assert listed.rows[0].prefer_non_qr is True
+        assert listed.rows[0].timeout_ms == 120000
+        assert listed.rows[0].route_label == "clave_movil_contrast"
         assert listed.rows[0].active_profile_id == "profile-123"
         assert listed.rows[0].active_profile_label == "live-operator"
         assert listed.rows[0].profile_tax_id_present is True
@@ -101,12 +112,15 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].nie_soporte_configured is True
         assert listed.rows[0].certificate_path_configured is True
         assert listed.rows[0].certificate_backend == "playwright_context"
-        assert listed.rows[0].url == (
-            "www12.agenciatributaria.gob.es/wlpl/MOVI-P24H/AutenticaDniNieContrasteh?keys=qAA,ref,storksp,from,ts"
+        assert listed.rows[0].url.startswith(
+            f"{external.domains.www12.removeprefix('https://')}"
+            f"{external.clave_movil.autentica_dni_nie_contraste_path}"
         )
+        assert listed.rows[0].url.endswith("?keys=qAA,ref,storksp,from,ts")
         assert "%2Fprivate-target" not in listed.rows[0].url
         assert "secret" not in listed.rows[0].url
         assert listed.rows[1].screenshot_captured is True
+        assert listed.rows[1].route_label == "selector_access"
         assert detail is not None
         assert detail.diagnostic_id == "diag-new"
         assert detail.url == listed.rows[0].url
