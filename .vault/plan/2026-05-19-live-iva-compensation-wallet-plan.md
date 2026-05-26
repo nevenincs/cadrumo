@@ -9,6 +9,17 @@ related:
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'
   - '[[2026-05-19-iva-compensation-chain-plan]]'
+  - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
+  - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
+  - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'
+  - '[[2026-05-26-modelo-130-relation-regression-adr]]'
+  - '[[2026-05-26-modelo-130-relation-regression-plan]]'
+  - '[[2026-04-17-aeat-access-gate-adr]]'
+  - '[[2026-04-17-session-persistence-adr]]'
+  - '[[2026-04-16-live-cert-auth-adr]]'
+  - '[[2026-05-26-live-iva-auth-read-acquisition-adr]]'
+  - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
+  - '[[2026-05-26-aeat-sede-constants-centralization-adr]]'
 ---
 
 <!-- LINK RULES:
@@ -22,6 +33,27 @@ related:
        document body. -->
 
 # `live-iva-compensation-wallet` `implementation` plan
+
+## Papertrail Control
+
+This plan is the current binding execution plan for the live IVA compensation
+wallet, filed-history, secure-profile persistence, and multiyear IVA
+reconciliation work. The governing ADR chain is declared in the `related`
+frontmatter. No substantial implementation slice may proceed unless it maps to
+one of the rows below and to an accepted ADR in that chain.
+
+| Work area | Plan rows | Governing ADR basis | Execution gate |
+| --- | --- | --- | --- |
+| Read-only wallet/filed-history authority and source separation | `W01`, `W03`, `W06`, `W07`, `W08` | `2026-05-26-live-iva-auth-read-acquisition-adr`; `2026-05-26-live-iva-remote-evidence-reconciliation-adr`; profile/bucket/repository/binding reconciliation ADR | AEAT evidence, filed-history evidence, local recurrence, and taxpayer override remain separate; persisted non-blocking decisions are required before remote-state values affect outputs. |
+| Live auth diagnostics and identity confirmation | `W05` | `2026-05-26-live-iva-auth-read-acquisition-adr`; AEAT access gate ADR; session persistence ADR; live certificate/auth ADR | Diagnostics must be redacted, must identify configured profile shape, and must never infer operator approval without observable evidence. |
+| No live submission or synthetic AEAT-hosted input | `W02`, `W06.P02`, `W09.P02` | no-synthetic Sede ADR; `2026-05-26-live-iva-auth-read-acquisition-adr` | Drivers may authenticate and read only. Filing, payment, represented-taxpayer choice, confirmation, and synthetic inputs to AEAT-hosted surfaces are prohibited. |
+| Secure profile persistence and reload | `W07`, `W09.P01.S04` | `2026-05-26-live-iva-remote-evidence-reconciliation-adr`; secure-storage production hardening ADR; profile/bucket/repository/binding reconciliation ADR | Remote IVA evidence must persist through active-profile `StorageRuntime` repositories and reload without live login. |
+| Multiyear IVA compensation grounding | `W03`, `W08` | `2026-05-26-live-iva-remote-evidence-reconciliation-adr`; Modelo 303/390 IVA ADRs; IVA compensation chain ADR | Local recurrence is diagnostic/fallback evidence. Available AEAT evidence is binding external state, and unresolved divergence blocks filing-grade output. |
+| Modelo 130 relation-regression coupling | `W08.P01.S03` | Modelo 130 relation-regression ADR and plan | Modelo 130 remains separate IRPF work. Shared infrastructure changes must not treat Modelo 130 carry-forward as IVA compensation authority. |
+| Constants/settings/schema centralization | `W09` | `2026-05-26-aeat-sede-constants-centralization-adr`; secure-storage production hardening ADR; no-synthetic Sede ADR | AEAT/Sede executable constants, Cl@ve waits, live action labels, and test database password constants must live in `Settings`, `external_constants.toml`, registry TOML/YAML, or typed schema models. |
+
+Rows that are not covered by an accepted ADR are blocked. The next valid action
+for an uncovered row is research and an ADR amendment or new ADR, not code.
 
 ## Wave `W01` - live wallet read authority
 
@@ -201,4 +233,127 @@ Discovered implementation tasks from W04.P02 persona evidence:
 - `W04.F09` - MEDIUM - FIXED - wallet safety plan wording must distinguish prohibited AEAT filing/payment/represented-taxpayer submissions from the centrally guarded wallet read-query POST; owner modules: `.vault/plan/2026-05-19-live-iva-compensation-wallet-plan.md`.
 - `W04.F10` - HIGH - FIXED - CLI and Modelo export tests must use active profile-bucket storage routes, file/ephemeral custody sessions, and injected wallet-decision repositories rather than explicit root database URLs; owner modules: `src/aeat/entrypoints/cli/test_workflow_surface.py`, `src/aeat/application/modelo/_export.py`, `src/aeat/application/modelo/test_export.py`, `src/aeat/application/user_profile/_orchestration.py`.
 - `W04.F11` - HIGH - FIXED - split Modelo 303 registry layout must have one authoritative declaration path; owner modules: `src/aeat/_data/registry/aeat/modelos/303.toml`, `src/aeat/_data/registry/aeat/modelos/303/`.
-- `W04.F12` - MEDIUM - OPEN - drain remaining EphemeralMasterKeyProvider default-repository tests now tracked by the storage hygiene guard; owner modules: `src/aeat/adapters/outbound/aeat/export/test_engine.py`, `src/aeat/adapters/persistence/profile/test_assets_roundtrip.py`, `src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py`, `src/aeat/application/calculations/test_binding_prefill.py`, `src/aeat/application/calculations/test_observations_repository_roundtrip.py`, `src/aeat/application/calculations/test_relation_prefill_source_mesh.py`, `src/aeat/application/modelo/test_declaration_period_binding.py`, `src/aeat/application/modelo/test_profile_binding.py`, `src/aeat/application/workflow/test_state_persistence_roundtrip.py`, `src/aeat/domain/buckets/test_event_history_roundtrip.py`, `src/aeat/domain/invoices/test_repository.py`, `src/aeat/domain/invoices/test_secure_storage_roundtrip.py`, `src/aeat/domain/justificante/test_secure_storage_roundtrip.py`, `src/aeat/domain/submission/test_secure_storage_roundtrip.py`.
+- `W04.F12` - MEDIUM - PARTIAL - drain remaining EphemeralMasterKeyProvider default-repository tests now tracked by the storage hygiene guard. Session 2026-05-26 committed the first secure-SQL guard and helper slice in `177f0669a`; remaining owners must still be audited and repaired without fakes, monkeypatching, private taxpayer data, or root-database cross-contamination. Owner modules: `src/aeat/adapters/outbound/aeat/export/test_engine.py`, `src/aeat/adapters/persistence/profile/test_assets_roundtrip.py`, `src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py`, `src/aeat/application/calculations/test_binding_prefill.py`, `src/aeat/application/calculations/test_observations_repository_roundtrip.py`, `src/aeat/application/calculations/test_relation_prefill_source_mesh.py`, `src/aeat/application/modelo/test_declaration_period_binding.py`, `src/aeat/application/modelo/test_profile_binding.py`, `src/aeat/application/workflow/test_state_persistence_roundtrip.py`, `src/aeat/domain/buckets/test_event_history_roundtrip.py`, `src/aeat/domain/invoices/test_repository.py`, `src/aeat/domain/invoices/test_secure_storage_roundtrip.py`, `src/aeat/domain/justificante/test_secure_storage_roundtrip.py`, `src/aeat/domain/submission/test_secure_storage_roundtrip.py`.
+
+## Wave `W05` - live auth diagnostics and identity confirmation
+
+This Wave treats authenticated read access as a production-critical surface, not
+a speculative CLI convenience. The driver must identify which configured
+profile is being authenticated, classify the Cl@ve route that AEAT selected,
+surface QR versus push behavior, expose timeouts within the accepted operator
+window, and never infer that the operator approved a request without explicit
+observable evidence.
+
+### Phase `W05.P01` - configured identity and auth-route diagnostics
+
+Record enough redacted configuration and browser-state evidence for the operator
+to confirm the active profile before waiting on Cl@ve. Diagnostics must redact
+taxpayer identifiers and support number values, but they must make clear whether
+the configured profile has DNI/NIE, support-number, certificate, Cl@ve
+preference, and timeout settings available.
+
+- [ ] `W05.P01.S01` - Add redacted live-auth preflight diagnostics for active profile identity, configured DNI/NIE presence, support-number presence, certificate provider state, Cl@ve preference, and timeout. Partial 2026-05-26: existing Cl@ve diagnostic payload fields for identity/config/certificate state are now exposed through the application diagnostic read model, including `prefer_non_qr` and `timeout_ms`; CLI preflight rendering remains open; `src/aeat/application/auth src/aeat/adapters/outbound/aeat/auth src/aeat/entrypoints/cli/_app_live.py`.
+- [ ] `W05.P01.S02` - Classify and log the selected Cl@ve route as push, QR, non-QR fallback, certificate, or unknown without swallowing browser errors. Partial 2026-05-26: application diagnostics now classify captured AEAT auth URLs against centralized `external_constants.toml` Cl@ve/Sede routes; driver-side start logging already records selected `auth_mode`; richer outcome taxonomy remains open; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W05.P01.S03` - Enforce the operator-facing auth wait window from centralized settings, with a production default not exceeding 120 seconds for Cl@ve approval waits; `src/aeat/core/config.py src/aeat/adapters/outbound/aeat/auth`.
+- [ ] `W05.P01.S04` - Add real-behavior diagnostic tests that use production auth diagnostics and redaction logic without private taxpayer fixtures, fakes, stubs, or monkeypatched browser behavior. Partial 2026-05-26: `src/aeat/application/auth/test_diagnostics.py` now drives the real secure-object diagnostic read model with sanitized payloads and centralized AEAT route constants; live-driver regression coverage remains open; `src/aeat/application/auth src/aeat/adapters/outbound/aeat/auth`.
+
+### Phase `W05.P02` - live-auth regression taxonomy
+
+Convert the current ambiguous live-auth failures into typed outcomes so no 403,
+missing prompt, QR fallback, timeout, wrong identity, or DOM drift is treated as
+a generic unavailable state.
+
+- [ ] `W05.P02.S05` - Introduce typed live-auth acquisition outcomes for no-prompt, operator-timeout, QR-required, certificate-required, wrong-identity, AEAT-403, DOM-drift, and authenticated. Partial 2026-05-26: `LiveIvaAcquisitionFailureMode` and `classify_live_iva_acquisition_failure` now map Cl@ve and Sede adapter exceptions into application-level outcomes; acquisition result wrapping and authenticated-success records remain open; `src/aeat/adapters/outbound/aeat/auth src/aeat/application/live`.
+- [ ] `W05.P02.S06` - Propagate live-auth outcomes through CLI and backend result models using locale keys for operator-facing text; `src/aeat/entrypoints/cli/_app_live.py src/aeat/locales`.
+- [ ] `W05.P02.S07` - Persist redacted live-auth diagnostic events in the current profile's secure storage route when a profile runtime is available; `src/aeat/application/live src/aeat/adapters/persistence/storage`.
+- [ ] `W05.P02.S08` - Add regression tests proving 403 and missing-prompt outcomes are not collapsed into success, zero-balance, or generic unavailable results. Partial 2026-05-26: application-level taxonomy tests now cover no-prompt, operator-timeout, QR-required, wrong-identity, AEAT-403, and DOM-drift classification; end-to-end wallet/history result tests remain open; `src/aeat/adapters/outbound/aeat/auth src/aeat/adapters/outbound/aeat/sede`.
+
+## Wave `W06` - read-only Sede acquisition backend
+
+This Wave makes live AEAT acquisition a backend capability first. CLI commands
+may invoke it, but the authoritative behavior belongs to application services
+and outbound Sede adapters. All live interactions remain read-only and must stop
+before filing, payment, representation, or form-confirmation submission.
+
+### Phase `W06.P01` - filed-history pull and wallet pull services
+
+Implement a single read-only acquisition service that can pull filed-history
+evidence and, where AEAT allows it, wallet/cartera evidence for the authenticated
+profile.
+
+- [ ] `W06.P01.S01` - Build a backend read-only acquisition orchestration that authenticates once, fetches filed Modelo history across requested years, attempts wallet/cartera read, and returns typed evidence plus typed failures; `src/aeat/application/live`.
+- [ ] `W06.P01.S02` - Keep wallet/cartera direct-read failures distinct from filed-history success so a 403 wallet outcome does not discard usable filed-history evidence; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede`.
+- [ ] `W06.P01.S03` - Add multi-year filed-history parsing coverage using sanitized official or committed corpus evidence only, never the operator's private tax history as a fixture; `src/aeat/adapters/outbound/aeat/sede`.
+- [ ] `W06.P01.S04` - Add an opt-in live read-only test path that requires operator authentication and records only redacted diagnostics and aggregate evidence shape, not private taxpayer values; `src/aeat/adapters/outbound/aeat/sede/test_*_live.py`.
+
+### Phase `W06.P02` - representation gate and read-only action boundary
+
+The authenticated user is acting for the authenticated profile unless an
+explicit representative mode is implemented later. Read-only acquisition may
+identify the authenticated taxpayer where AEAT requires that to reach a read
+surface, but it must not submit representation, filing, payment, or confirmation
+intent.
+
+- [ ] `W06.P02.S05` - Rework representation-gate handling so own-profile read-only identity confirmation is allowed only when the guard classifies it as authentication/read navigation, not filing or representative submission; `src/aeat/adapters/outbound/aeat/sede src/aeat/domain/calculations/registry/_remote_state_guard.py`.
+- [ ] `W06.P02.S06` - Add guard tests for own-profile read navigation versus represented-taxpayer, filing, payment, and confirmation submissions; `src/aeat/adapters/outbound/aeat/sede src/aeat/domain/calculations/registry`.
+- [ ] `W06.P02.S07` - Record every allowed read-only browser action in centralized external constants and fail tests on new unclassified AEAT actions; `src/aeat/core/external_constants.toml src/aeat/adapters/outbound/aeat`.
+
+## Wave `W07` - secure profile persistence and reload of remote IVA state
+
+This Wave binds live evidence to the active profile's secure storage, then
+reloads it into calculation and workflow services. Remote evidence must be
+versioned, source-attributed, redacted in diagnostics, and separate from local
+recurrence or taxpayer override values.
+
+### Phase `W07.P01` - secure snapshot storage
+
+- [ ] `W07.P01.S01` - Store filed-history snapshots, wallet observations, auth diagnostics, and acquisition manifests through active-profile `StorageRuntime` repositories; `src/aeat/application/live src/aeat/adapters/persistence/storage`.
+- [ ] `W07.P01.S02` - Add reload APIs that return latest and historical remote IVA evidence for a profile without requiring a live AEAT login; `src/aeat/application/live src/aeat/application/calculations`.
+- [ ] `W07.P01.S03` - Add secure-storage roundtrip tests for persisted remote IVA evidence using `aeat.tests.secure_sql` and `Settings.aeat_dev_test_database_password`; `src/aeat/application/live src/aeat/tests`.
+- [ ] `W07.P01.S04` - Add privacy tests proving private live values are not committed to fixtures, plan files, logs, or test oracles; `src/aeat/tests src/aeat/adapters/outbound/aeat`.
+
+### Phase `W07.P02` - divergence records and operator review
+
+- [ ] `W07.P02.S05` - Persist divergence decisions that compare AEAT evidence, filed-history-derived recurrence, local ledger recurrence, and explicit taxpayer override without merging the source values; `src/aeat/application/calculations`.
+- [ ] `W07.P02.S06` - Surface blocked, stale, missing-wallet, filed-history-only, and override-required states through workflow/modelo readiness before export or verification; `src/aeat/application/modelo src/aeat/application/workflow`.
+- [ ] `W07.P02.S07` - Add tests for every divergence state using synthetic local ledgers and sanitized official/filed-history shapes, not private taxpayer history; `src/aeat/application/calculations src/aeat/application/modelo`.
+
+## Wave `W08` - multiyear IVA calculation grounding
+
+This Wave proves the local IVA engine can reconstruct compensation and pending
+running balances across years, then cross-check those values against persisted
+AEAT read-only evidence. AEAT evidence is the binding external state when it is
+available; local recurrence is a diagnostic and fallback source, never a silent
+replacement for remote state.
+
+### Phase `W08.P01` - multiyear recurrence from production code
+
+- [ ] `W08.P01.S01` - Add production-code multiyear compensation reconstruction from filed Modelo 303 and Modelo 390 records, including generation, application, remaining balance, and expiry review; `src/aeat/application/calculations src/aeat/domain/iva`.
+- [ ] `W08.P01.S02` - Exercise cross-year filing history through repository-backed tests that import production services and do not mirror IVA arithmetic in test code; `src/aeat/application/calculations`.
+- [ ] `W08.P01.S03` - Verify Modelo 130 relation-regression remains tracked separately and cross-linked, because IRPF quarterly calculations share profile/storage/readiness infrastructure but not IVA compensation authority; `.vault/plan/2026-05-26-modelo-130-relation-regression-plan.md src/aeat/application/modelo`.
+
+### Phase `W08.P02` - remote-to-local reconciliation
+
+- [ ] `W08.P02.S04` - Compare persisted AEAT remote evidence against local recurrence and classify exact match, AEAT higher, AEAT lower, stale remote, local incomplete, and override-required outcomes; `src/aeat/application/calculations`.
+- [ ] `W08.P02.S05` - Block Modelo 303 prior-compensation prefill when remote/local divergence is unresolved, and require an explicit persisted decision for any override; `src/aeat/application/modelo src/aeat/application/calculations`.
+- [ ] `W08.P02.S06` - Add focused tests spanning at least three fiscal years and multiple filing periods using sanitized, non-private fixtures and production calculation services; `src/aeat/application/calculations src/aeat/application/modelo`.
+
+## Wave `W09` - settings/schema centralization and regression closeout
+
+This Wave closes the hard mandate that AEAT/Sede URLs, route fragments, action
+markers, Cl@ve waits, and test database passwords live in centralized settings,
+external constants, schemas, or registry TOML/YAML. Tests may assert configured
+values, but they must not introduce new source-of-truth literals.
+
+### Phase `W09.P01` - constants inventory and guard
+
+- [ ] `W09.P01.S01` - Inventory AEAT/Sede host, route, selector, Cl@ve, timeout, wallet, GROI, NIF-IVA, Renta WEB Open, and read-action literals outside centralized settings/config/schema; `src/aeat`.
+- [ ] `W09.P01.S02` - Move remaining source-of-truth literals into `src/aeat/core/external_constants.toml`, `Settings`, registry TOML/YAML, or typed schema models as appropriate. Partial 2026-05-26: status-reader defaults now source from external constants, and portal host resolution no longer falls back to hardcoded subdomain origins; `src/aeat/core src/aeat/_data/registry src/aeat/domain/calculations/registry`.
+- [ ] `W09.P01.S03` - Add static guard tests that fail on newly hardcoded AEAT/Sede constants outside the central surfaces and accepted comments/docstrings. Partial 2026-05-26: the live Sede executable literal guard now includes `src/aeat/core/config.py`; broader portal/path metadata guard remains open; `src/aeat/tests src/aeat/core`.
+- [ ] `W09.P01.S04` - Ensure all database-backed tests use `Settings.aeat_dev_test_database_password` or `aeat.tests.secure_sql`, never ad hoc password literals. Partial 2026-05-26: `AEAT_DEV_TEST_DATABASE_PASSWORD` is enrolled in `env/.env.example` and Settings alignment tests pass; residual database-backed tests still need inventory; `src/aeat/tests`.
+
+### Phase `W09.P02` - validation and review closeout
+
+- [ ] `W09.P02.S05` - Run focused live-auth, Sede read-only, secure-storage, Modelo 303/390, Modelo 130 relation, and constants-guard test gates; `tests`.
+- [ ] `W09.P02.S06` - Persist review findings for any discovered non-IVA problems and keep them in scope until assigned to an owning plan row; `.vault/audit .vault/plan`.
+- [ ] `W09.P02.S07` - Run final code review before treating live IVA grounding as production-ready; `.vault/audit`.
