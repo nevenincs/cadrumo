@@ -356,6 +356,7 @@ The current PROVISIONAL gate (#34) checks fixture EXISTENCE; the M111/M130 findi
 - [x] `W07.P27.S165` - Tag 8 verified profiles corpus_round_trip_verified=true (M100 x3, M190, M303 x2, M390) and 2 corpus-gap profiles provisional_pending_specimen=true (M111, M130); `all 26 modelos pass registry validation; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `W07.P27.S166` - Author ADR amendment formalising corpus_round_trip_verified gate and M111/M130 corpus-gap finding; `add plan steps S164-S166 under W07.P27 and mark closed; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
 - [x] `W07.P27.S167` - Author parametrized sidecar-manifest roundtrip test asserting parser output matches SANITIZED ground truth for every justificante PDF+JSON pair in tests/fixtures/justificantes/; `41 corpus pairs across 6 modelos all pass; `src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py`.
+- [x] `W07.P27.S169` - Ground M840 declaracion_pdf label_patterns against AEAT corpus form PDF; `fix provisional patterns to corpus-published labels (14Ejercicio: and 15Declaracion de:); author sanitized synthetic fixture; add corpus_round_trip_verified=true; add round-trip test asserting both casillas extract; `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/tests/fixtures/justificantes/840/2024-0A.pdf src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 
 ### Phase `W07.P28` - PROVISIONAL corpus-grounding survey for M036 M180 M232 M349 M369 M720
 
