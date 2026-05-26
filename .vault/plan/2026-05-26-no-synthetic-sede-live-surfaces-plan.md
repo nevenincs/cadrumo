@@ -34,8 +34,8 @@ Define the registry and guard invariant that AEAT-hosted live surfaces must not 
 
 Rewrite the committed Modelo 100 and Modelo 349 live-surface declarations and tests to conform to the no-synthetic-Sede rule.
 
-- [ ] `P02.S04` - Rewrite Modelo 100 Renta WEB Open registry and tests to disallow synthetic live input; `src/aeat/_data/registry/aeat/modelos/100/`.
-- [ ] `P02.S05` - Rewrite Modelo 349 GROI and IXVI registry and tests to disallow synthetic live input; `src/aeat/_data/registry/aeat/modelos/349/`.
+- [x] `P02.S04` - Rewrite Modelo 100 Renta WEB Open registry and tests to disallow synthetic live input (7dfcaac94) - flipped `synthetic_data_allowed` to `false` with provenance comment citing the ADR; surface remains `open_simulator`; `src/aeat/_data/registry/aeat/modelos/100/`.
+- [x] `P02.S05` - Rewrite Modelo 349 GROI and IXVI registry and tests to disallow synthetic live input (7dfcaac94) - flipped both `modelo-349-groi-spanish-counterparty-check` and `modelo-349-ixvi-foreign-counterparty-check` to `synthetic_data_allowed = false`; both retain `authenticated_simulator` classification; `src/aeat/_data/registry/aeat/modelos/349/`.
 - [ ] `P02.S06` - Rewrite outbound Sede live-surface tests and drivers to avoid live synthetic input; `src/aeat/adapters/outbound/aeat/sede/`.
 
 ### Phase `P03` - validation and handoff
