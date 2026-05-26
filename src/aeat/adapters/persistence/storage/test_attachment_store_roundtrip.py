@@ -13,7 +13,7 @@ asserts that the full cycle preserves both surfaces:
   ``load_manifest`` with strict pydantic equality, including the
   optional fields and the tuple-typed link lists.
 
-Real :class:`EphemeralMasterKeyProvider`, real SQLite, no mocks.
+Real active-profile runtime, real SQLite, no mocks.
 A regression in the blob-namespace column encryption, the manifest
 envelope schema, or the content-addressed digest pinning surfaces
 as a strict ``bytes`` / pydantic inequality.
@@ -27,15 +27,12 @@ from pathlib import Path
 
 import pytest
 
-from ....core.config import Settings
 from ....domain.attachments._enums import AttachmentKind, AttachmentSource
 from ....domain.attachments._errors import AttachmentValidationError
 from ....domain.attachments._models import Attachment
-from . import EphemeralMasterKeyProvider
+from ....tests.secure_sql import isolated_runtime_profile
 from .attachment import AttachmentStore
-from .sql import SecureObjectRepository
-from .sql._orm import Base
-from .sql.engine import create_engine_from_settings
+from .sql.engine import get_engine
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -72,55 +69,28 @@ def _make_attachment(*, sha256: str, bytes_size: int) -> Attachment:
 def test_attachment_blob_and_manifest_round_trip(tmp_path: Path) -> None:
     """Bytes survive put_bytes -> read_bytes; manifest survives write -> load."""
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "attachment-roundtrip.db"
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            objects = SecureObjectRepository(engine=engine)
-            store = AttachmentStore(objects=objects)
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        store = AttachmentStore()
+        payload = b"%PDF-1.4\n%attachment-store-roundtrip-canary\n" + b"\x00" * 64
+        digest = store.put_bytes(payload)
 
-            # --- Blob round-trip ---------------------------------------------
-            payload = b"%PDF-1.4\n%attachment-store-roundtrip-canary\n" + b"\x00" * 64
-            digest = store.put_bytes(payload)
+        assert digest == hashlib.sha256(payload).hexdigest()
+        assert store.read_bytes(digest) == payload
+        store.verify_blob(digest)
 
-            # Content-addressing invariant: the returned digest is the
-            # SHA-256 of the input bytes. A regression in the put path
-            # would return a digest that did not match.
-            assert digest == hashlib.sha256(payload).hexdigest()
+        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+        store.write_manifest(attachment)
+        loaded = store.load_manifest(attachment.attachment_id)
 
-            read_back = store.read_bytes(digest)
-            assert read_back == payload
-
-            # verify_blob re-hashes the stored bytes; a mangled column
-            # would surface here as a digest mismatch raised by the
-            # store, not as a silent corruption on read.
-            store.verify_blob(digest)
-
-            # --- Manifest round-trip -----------------------------------------
-            attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
-            store.write_manifest(attachment)
-            loaded = store.load_manifest(attachment.attachment_id)
-
-            assert loaded == attachment
-            # Per-field witnesses for the iterable / optional fields most
-            # likely to silently drop in a regression.
-            assert loaded.linked_transaction_ids == ("tx-001", "tx-002")
-            assert loaded.linked_invoice_ids == ("inv-2025-001",)
-            assert loaded.metadata == {"vendor": "ACME SL", "currency": "EUR"}
-            assert loaded.captured_by == "cli/aeat"
-            assert loaded.bytes_size == len(payload)
-        finally:
-            engine.dispose()
+        assert loaded == attachment
+        assert loaded.linked_transaction_ids == ("tx-001", "tx-002")
+        assert loaded.linked_invoice_ids == ("inv-2025-001",)
+        assert loaded.metadata == {"vendor": "ACME SL", "currency": "EUR"}
+        assert loaded.captured_by == "cli/aeat"
+        assert loaded.bytes_size == len(payload)
 
 
-def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) -> None:
     """Anti-tautology proof: corrupting attachment_id vs sha256 must surface.
 
     :class:`Attachment` carries a model_validator enforcing
@@ -147,42 +117,29 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(
     from .sql._orm import SecureObjectRow
     from .sql.session import session_scope
 
-    provider = EphemeralMasterKeyProvider()
-    with provider:
-        db_path = tmp_path / "attachment-anti-tautology.db"
-        monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{db_path.as_posix()}")
-        engine = create_engine_from_settings(
-            Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"),
-        )
-        Base.metadata.create_all(engine)
-        try:
-            SecureObjectRepository(engine=engine)
-            store = AttachmentStore()
-            payload = b"sample attachment body for anti-tautology proof"
-            digest = store.put_bytes(payload)
-            attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
-            store.write_manifest(attachment)
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        engine = get_engine(profile.settings)
+        store = AttachmentStore()
+        payload = b"sample attachment body for anti-tautology proof"
+        digest = store.put_bytes(payload)
+        attachment = _make_attachment(sha256=digest, bytes_size=len(payload))
+        store.write_manifest(attachment)
 
-            with session_scope(engine) as session:
-                stmt = select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                    SecureObjectRow.object_key == attachment.attachment_id,
-                )
-                row = session.execute(stmt).scalar_one()
-                envelope = _json.loads(row.payload.decode("utf-8"))
-                manifest = envelope["payload"]
-                assert manifest["sha256"] == manifest["attachment_id"], (
-                    "fixture must persist matching sha256 + attachment_id "
-                    "for this proof test to be meaningful"
-                )
-                # Flip sha256 to a different digest without touching the
-                # attachment_id. The model_validator must trip on the
-                # content-addressing mismatch.
-                tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
-                manifest["sha256"] = tampered_digest
-                row.payload = _json.dumps(envelope).encode("utf-8")
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.object_key == attachment.attachment_id,
+            )
+            row = session.execute(stmt).scalar_one()
+            envelope = _json.loads(row.payload.decode("utf-8"))
+            manifest = envelope["payload"]
+            assert manifest["sha256"] == manifest["attachment_id"], (
+                "fixture must persist matching sha256 + attachment_id "
+                "for this proof test to be meaningful"
+            )
+            tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
+            manifest["sha256"] = tampered_digest
+            row.payload = _json.dumps(envelope).encode("utf-8")
 
-            with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
-                store.load_manifest(attachment.attachment_id)
-        finally:
-            engine.dispose()
+        with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
+            store.load_manifest(attachment.attachment_id)
