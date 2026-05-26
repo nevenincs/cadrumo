@@ -459,8 +459,13 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    # All 9 cuota-chain closure casillas must be present.
+    # All 13 covered casillas must be present: 9 cuota-chain closure casillas (first chunk)
+    # plus 4 apartado-summary casillas (second chunk).
+    # 0435 (base imponible general) is deferred: the IRPF form prints the line twice
+    # (body section + base liquidable section), both identical, so the parser rejects it as
+    # ambiguous. It remains a candidate for a future chunk with multiline context anchoring.
     assert set(values.keys()) == {
+        # First chunk: cuota-chain closure
         "0545",
         "0546",
         "0505",
@@ -470,11 +475,18 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         "0595",
         "0610",
         "0670",
+        # Second chunk: apartado-summary bases
+        "0235",  # rendimiento neto reducido total actividades económicas ED
+        "0432",  # saldo neto rendimientos a integrar en base imponible general
+        "0500",  # base liquidable general
+        "0510",  # base liquidable del ahorro
     }
 
     # pdfplumber merges the adjacent box number onto the value token in all corpus
     # specimens; each extracted value is a valid Decimal but does not equal 1000.00.
     # Ground truth: the label patterns locate the correct body line in the printed form.
+    # 0510 (base liquidable del ahorro) is zero in this corpus because the specimen has
+    # no ahorro income; parse_spanish_decimal still returns a valid Decimal.
     for casilla_id in values:
         assert isinstance(values[casilla_id], Decimal), (
             f"{pdf_stem}: casilla {casilla_id!r} expected a Decimal instance, "
