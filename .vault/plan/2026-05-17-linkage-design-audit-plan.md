@@ -47,11 +47,11 @@ libcst codemod.
 
 - [x] `P02.S05` - define CasillaObservation typed envelope; `src/aeat/domain/calculations/registry/_bindings.py`.
 - [ ] `P02.S06` - persist engine_result.entries in CalculationRevision; `src/aeat/application/modelo/_actions.py`.
-- [ ] `P02.S07` - replace casilla_values on RegistryFilingObservation; `src/aeat/domain/calculations/registry/_bindings.py`.
-- [ ] `P02.S08` - replace values on RegistryCalculationResult; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [x] `P02.S07` - replace casilla_values on RegistryFilingObservation; verified already-satisfied: the class is now `RegistryModeloObservation` and stores `observations: tuple[CasillaObservation, ...]` canonically with `casilla_values` as a derived `@property` at lines 117-127 (R002 verified by the close-out audit); `src/aeat/domain/calculations/registry/_bindings.py`.
+- [x] `P02.S08` - replace values on RegistryCalculationResult; landed: `observations: tuple[CasillaObservation, ...]` is now canonical storage, `values` and `entries` are derived `@property` views, `CasillaObservation` extended with `op: str | None` so the entry projection round-trips losslessly; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [ ] `P02.S09` - replace casilla_values on CalculationRevision; `src/aeat/domain/modelos/_calculation_revision.py`.
 - [ ] `P02.S10` - migrate downstream consumers via libcst codemod; `src/aeat/`.
-- [ ] `P02.S11` - add semgrep rule preventing Mapping[str, Decimal] regression on registry-tier models; `.semgrep/rules/no-mapping-str-decimal-on-registry.yml`.
+- [x] `P02.S11` - add semgrep rule preventing Mapping[str, Decimal] regression on registry-tier models; verified already-satisfied: `.semgrep/rules/no-mapping-str-decimal-on-registry.yml` declares `no-mapping-str-decimal-on-registry-models` covering all three registry-tier model files with `Mapping[str, Decimal]` / `dict[str, Decimal]` / `Dict[str, Decimal]` pattern variants.
 
 ### Phase `P03` - discriminated selector unions
 
