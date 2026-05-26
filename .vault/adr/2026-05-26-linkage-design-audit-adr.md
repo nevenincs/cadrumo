@@ -10,7 +10,23 @@ related:
   - "[[2026-05-18-linkage-design-audit-audit]]"
 ---
 
-# `linkage-design-audit` ADR: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
+# `linkage-design-audit` ADR: `boundary-typed-contracts` (**status:** `accepted`)
+
+This ADR records two related architectural decisions for the
+`linkage-design-audit` plan, both ratifying the "contract typed
+at the boundary" theme:
+
+1. `casilla-values-collapse-projection-strategy` — collapse
+   `CalculationRevision.casilla_values` into a derived projection
+   over the typed `observations` envelope (authorises plan rows
+   `P02.S09`, `P08.S36`, `P08.S37`).
+2. `registry-error-typed-context-factories` — pin the context
+   payload of `RegistryValidationError` and `RegistrySnapshotError`
+   via classmethod factories so locales and CLI emit consume one
+   named contract per error scenario (authorises plan rows
+   `P05.S25`, `P05.S26`).
+
+## Decision 1: `casilla-values-collapse-projection-strategy` (**status:** `accepted`)
 
 ## Status
 
@@ -179,3 +195,112 @@ This ADR authorises plan steps:
 Stage two is deferred to a separate ADR
 `casilla-values-flat-field-retirement` scheduled after one release
 cycle of stage one running in production.
+
+## Decision 2: `registry-error-typed-context-factories` (**status:** `accepted`)
+
+### Problem Statement
+
+`RegistryValidationError` and `RegistrySnapshotError` are raised
+across 29 production sites in
+`src/aeat/domain/calculations/registry/` each passing an ad-hoc
+`context` dict via the `AeatError` base class. Downstream
+consumers (the `aeat.core.errors._registry.resolve_error_message`
+template renderer, CLI JSON emit via `SchemaEnvelope`, the i18n
+translation layer that references context keys by name in locale
+files) all assume specific keys exist but no contract pins them.
+A key rename today silently breaks one locale per cycle.
+
+The companion research note's key inventory shows 14 distinct
+context keys clustered into roughly six canonical raise scenarios
+(unknown parameter, unknown binding, dispatch-key resolution,
+unsupported op, bracket coverage, casilla referenced-before-eval).
+
+### Decision
+
+Adopt **Strategy R: classmethod factories per canonical raise
+scenario** on `RegistryValidationError` and
+`RegistrySnapshotError`. Each factory takes typed kwargs and
+builds both the error message and the canonical context dict.
+The existing `raise RegistryValidationError(message, context=...)`
+shape stays valid during migration; new raises route through the
+factories. The locale layer and CLI emit gain one named contract
+per error scenario.
+
+Migrate **highest-traffic scenarios first**: the canonical
+factory set covers the unknown-parameter, dispatch-key-unknown,
+unsupported-op, bracket-coverage, and casilla-referenced-before-eval
+families. The 4-key tail (one-off raises with single-use keys
+like `filing_date`, `computed`) stays ad-hoc until a downstream
+consumer pins them — pulling them all up-front would inflate the
+factory surface beyond the actual contract.
+
+Strategy R chosen over:
+- **Strategy P (key constants)** — too weak; constants don't
+  enforce that callers pass them together. A constant for
+  `"casilla_id"` doesn't help if a caller passes `casilla` instead.
+- **Strategy Q (pydantic context model)** — overkill for the
+  current usage; pydantic-validating the context payload at raise
+  time adds runtime cost on the error path (when the system is
+  already failing) without proportional gain over factory methods
+  that name the scenario explicitly.
+
+### Consequences
+
+- `RegistryValidationError.for_unknown_parameter(parameter_id=...)`
+  returns a constructed error with canonical `context={"parameter_id": ..., ...}`
+  and the templated message keyed for the i18n locale layer.
+- Same pattern for `for_dispatch_key_unknown`, `for_unsupported_op`,
+  `for_bracket_no_coverage`, `for_casilla_referenced_before_evaluation`,
+  `for_unknown_input_casillas`, `for_computed_supplied_as_input`,
+  `for_unknown_external_value` (binding / relation variants),
+  `for_lookup_dispatch_arg_kind`, `for_lookup_dispatch_arg_count`.
+- `RegistrySnapshotError.for_modelo_not_registered(modelo_id=...)`
+  covers the single canonical scenario at `_authority.py:51`.
+- Existing raise sites convert to factory calls row by row; an
+  anti-tautology test asserts every committed raise site routes
+  through a factory (no naked `RegistryValidationError(...)`
+  construction with `context=` outside the error module).
+- Locale files (`src/aeat/locales/*.yml`) keep their existing
+  template keys; the factories pin the kwargs that flow into the
+  templates so locale renames are caught by the type checker
+  rather than at user-facing render time.
+
+### Compliance with established mandates
+
+- **AEAT calculation grounding rule**: legal_refs / source_refs
+  flowing through error context now have a named place to live;
+  `RegistryValidationError.for_casilla_constraint_violation`
+  carries them explicitly.
+- **No tautological tests** rule: the factory exercise tests
+  assert against external authorities — locale template render
+  output and the `error.context` dict shape — not against the
+  factory's own internals.
+- **Hexagonal direction**: change confined to
+  `aeat.domain.calculations.registry._errors`; no application or
+  adapter import edges shift.
+
+### Risks accepted
+
+- **Migration churn on 29 raise sites**: row-by-row conversion is
+  mechanical but touches many files in the registry package. The
+  factory shape stays additive (old constructor signature still
+  works) so the migration is non-breaking; out-of-tree consumers
+  unaffected.
+- **Tail of one-off context keys stays ad-hoc**: the four-key tail
+  identified by the research (filing_date, computed, etc.) remains
+  on the bare `context=` path until a downstream consumer pins
+  them. Acceptable — no consumer currently needs them.
+
+### Plan linkage
+
+This decision authorises plan steps:
+
+- `linkage-design-audit P05.S25` (typed factories on
+  `RegistryValidationError`)
+- `linkage-design-audit P05.S26` (typed factories on
+  `RegistrySnapshotError`)
+
+`P05.S27` (`--explain` flag implementation) and `P05.S28`
+(legal_refs on review-queue findings) inherit the existing
+`2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr`
+authority — no new architectural decision required at those rows.
