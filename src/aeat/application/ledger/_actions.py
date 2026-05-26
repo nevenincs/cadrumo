@@ -1286,6 +1286,13 @@ def update_manual_transaction_fields(
         actor=actor,
         source_command=source_command,
     )
+    # Re-affirmation: operator supplied the same ``business_classification`` the record already
+    # carries.  ``_command_from_patch`` produces a command identical to the stored transaction,
+    # which would trigger the mutation-required guard in ``update_manual_transaction``.  Treat
+    # field-for-field-identical commands originating from a ``business_classification`` patch as
+    # confirmed no-ops rather than errors (option b from the S14 architecture verdict).
+    if "business_classification" in patch.model_fields_set and _command_matches_current(command, current):
+        return _result(bucket_id, current, ())
     return update_manual_transaction(
         transaction_id=transaction_id,
         command=command,
@@ -3113,6 +3120,37 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.purchase_invoice_evidence_id,
         transaction.attachment_ids,
         transaction.notes,
+    )
+
+
+def _command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
+    """Return True when a command would produce no observable change against the stored transaction.
+
+    Used to detect re-affirmation patches (operator supplies the same ``business_classification``
+    the record already carries) so the caller can treat them as confirmed no-ops instead of
+    raising a mutation-required error.
+    """
+    raw = current.raw
+    return (
+        command.booked_date == raw.booked_date
+        and command.value_date == raw.value_date
+        and command.amount == raw.amount
+        and command.currency == raw.currency
+        and command.counterparty == raw.counterparty
+        and command.description == raw.description
+        and command.direction == current.direction
+        and command.business_classification == current.business_classification
+        and command.business_pct == current.business_pct
+        and command.category_id == current.category_id
+        and command.taxable_base == current.taxable_base
+        and command.iva_rate == current.iva_rate
+        and command.iva_amount == current.iva_amount
+        and command.irpf_category == current.irpf_category
+        and command.usage_ratio_id == current.usage_ratio_id
+        and command.prorrata_reference == current.prorrata_reference
+        and command.purchase_invoice_evidence_id == current.purchase_invoice_evidence_id
+        and command.attachment_ids == current.attachment_ids
+        and command.notes == current.notes
     )
 
 
