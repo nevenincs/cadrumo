@@ -83,6 +83,34 @@ adapters:
       testing_project_cap_warning: El refresh token de Google OAuth se acerca al límite
         de 7 días del proyecto en modo Testing (quedan unas {hours_remaining}h); vuelve
         a ejecutar `aeat config google login` para prolongar la vida útil de la credencial.
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: 'Falló la extracción de la declaración con el perfil {profile}:
+          {details}'
+        modelo_conflict: --modelo {modelo!r} entra en conflicto con el modelo detectado
+          {detected!r}.
+        period_unresolved: No se pudo resolver el periodo de la declaración a partir
+          del texto del PDF.
+        profile_count_invalid: 'Se esperaba exactamente un perfil de extracción de
+          PDF de declaración para modelo={modelo}; disponibles: {available}.'
+        profile_unavailable: El perfil de extracción de declaración {profile!r} no
+          está disponible para modelo={modelo}.
+        registry_snapshot_required: 'La extracción de declaración requiere un snapshot
+          validado del registro para modelo={modelo} año={year} periodo={period}:
+          {error}'
+        snapshot_modelo_conflict: El modelo del snapshot del registro {snapshot_modelo!r}
+          entra en conflicto con el detectado {detected!r}.
+        tax_id_unresolved: No se pudo resolver el identificador fiscal de la declaración
+          a partir del texto del PDF.
+        template_not_detected: No se pudo detectar automáticamente la plantilla de
+          {path}; indica --modelo y --año para forzarla.
+        year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+    pdf:
+      errors:
+        no_text: No se extrajo texto de {source}; {label} puede ser un escaneo o XFA.
+        not_found: '{label}: {path}'
+        open_failed: 'pdfplumber no pudo abrir {source}: {error}'
 aggregation:
   iva_ledger:
     errors:
@@ -1061,8 +1089,8 @@ cli:
       list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
-      plan_help: Planificación de reparación en seco y preservación primero para
-        filas de objetos seguros no legibles.
+      plan_help: Planificación de reparación en seco y preservación primero para filas
+        de objetos seguros no legibles.
       profile_clear_active_help: Limpiar un perfil activo de archivo-puntero solo
         cuando apunta a estado de perfil ilegible.
       profile_clear_active_mismatch: --clear-active solo puede borrar el puntero del
@@ -2147,6 +2175,11 @@ errors:
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
+    error_bucket_browse: No se pudo consultar el catálogo de buckets.
+    error_bucket_maintenance: Falló una operación de mantenimiento de bucket.
+    error_buckets: Se produjo un error en el historial de eventos de buckets.
+    error_calc_sheets_translation: No se pudo traducir una fórmula del registro a
+      Google Sheets.
     error_calculations_registry: Se produjo un error al cargar, resolver o validar
       el registro de cálculo.
     error_calculations_registry_load: Los archivos del registro de cálculo no se pudieron
@@ -2331,6 +2364,10 @@ errors:
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
+    fail_bucket_event_history_persistence: No se pudo guardar o cargar el historial
+      de eventos de buckets.
+    fail_bucket_export: No se pudo exportar el archivo del bucket.
+    fail_bucket_import: No se pudo importar el archivo del bucket.
     fail_declaracion_parse: No se pudo interpretar el PDF como una declaración.
     fail_export: Se produjo un error al exportar hacia la AEAT.
     fail_export_format: El borrador de la declaración no se pudo serializar al formato
@@ -2591,6 +2628,15 @@ errors:
       puede ejecutar con los datos indicados.
     refused_application_registry_input: La solicitud al registro de modelos no se
       puede ejecutar con los datos indicados.
+    refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
+      resuelve a un bucket registrado.
+    refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
+      reservado pero no implementado.
+    refused_bucket_delete: La puerta de acciones destructivas rechazó el borrado del
+      bucket.
+    refused_bucket_event_validation: Un evento de bucket no superó la validación.
+    refused_bucket_rename: La solicitud de renombrado del bucket viola reglas de unicidad
+      o direccionamiento.
     refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
       de los límites declarados para esa casilla. Revisa los datos de entrada del
       cálculo.
@@ -2641,6 +2687,10 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
+    refused_iva_compensation_carry_forward_policy: Los lotes de compensación de IVA
+      a compensar violan la política activa.
+    refused_iva_compensation_reconciliation_input: La evidencia de la cartera de compensación
+      de IVA no coincide con la unidad de trabajo del Modelo 303 objetivo.
     refused_ledger_business_operation_invoice_input: Un dato indicado infringe el
       contrato de la factura de operación. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_business_operation_invoice_not_found: No existe ninguna factura
@@ -2745,6 +2795,30 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+  storage:
+    engine:
+      create_failed: No se pudo crear el motor de base de datos de almacenamiento.
+        Comprueba la ruta de almacenamiento configurada y vuelve a intentarlo.
+      empty_database_url: La URL de base de datos configurada está vacía. Selecciona
+        un perfil o configura el almacenamiento antes de volver a intentarlo.
+    runtime:
+      no_active_session: No hay una sesión de bucket activa. Ejecuta `aeat config
+        profile switch NAME` para desbloquear un perfil.
+      no_detail: No se informó ningún detalle de preparación.
+      not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
+        a perfil: %{details}'
+      route_bucket_mismatch: La ruta de base de datos no coincide con la sesión de
+        bucket activa.
+      route_not_active_bucket: La ruta de base de datos no está asociada a un bucket
+        de perfil activo.
+      session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el
+        perfil de destino.
+      session_expired: La sesión de bucket activa ha caducado. Ejecuta `aeat config
+        profile switch NAME` para reactivar el perfil.
+      session_sealed: La sesión de bucket activa está sellada. Ejecuta `aeat config
+        profile switch NAME` para reactivar el perfil.
+      unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
+        de producción vinculado a perfil requiere custodia de archivo o llavero.
   transaction:
     import_source_invalid: el origen no es un extracto bancario válido
     ledger_import_failed: 'No se puede importar el extracto bancario: {reason}'

@@ -14,11 +14,13 @@ from aeat.adapters.persistence.storage.master_key._bucket_session import BucketS
 from aeat.adapters.persistence.storage.runtime import (
     StorageRuntime,
     StorageRuntimeReadinessCode,
+    inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings, StorageRouteKind, override_settings
+from aeat.core.errors import resolve_error_message
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -165,6 +167,20 @@ def test_runtime_reports_explicit_database_url_without_public_path_leak(tmp_path
     assert "state-root-private" not in dumped
 
 
+def test_named_bucket_runtime_refuses_live_explicit_database_url(tmp_path: Path) -> None:
+    settings = Settings(
+        aeat_local_storage_root=tmp_path / "state-root-private",
+        aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
+    )
+
+    with activate_session(_session("bucket-a")):
+        runtime = inspect_bucket_storage_runtime("bucket-a", settings, now=_NOW)
+
+    assert runtime.readiness.ready is False
+    assert runtime.route_kind is StorageRouteKind.EXPLICIT_DATABASE_URL
+    assert _issue_codes(runtime) == (StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,)
+
+
 def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path) -> None:
     settings = _settings_for_bucket(tmp_path, "bucket-a")
 
@@ -204,8 +220,15 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
     settings = _settings_for_bucket(tmp_path, "bucket-a")
     runtime = inspect_storage_runtime(settings, now=_NOW)
 
-    with pytest.raises(StorageValidationError, match="storage runtime is not ready"):
-        runtime.secure_object_repository()
+    with override_settings(aeat_output_language="en"):
+        with pytest.raises(StorageValidationError, match="storage runtime is not ready") as raised:
+            runtime.secure_object_repository()
+
+        rendered = resolve_error_message(raised.value)
+
+    assert raised.value.translated_message == "errors.storage.runtime.not_ready"
+    assert "Storage runtime is not ready for profile-bound storage" in rendered
+    assert "unlock a profile" in rendered
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:

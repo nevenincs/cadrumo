@@ -31,7 +31,9 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
+from datetime import UTC, datetime
 
+from ..bucket._errors import BucketLockedError
 from ..errors import SecretStoreError
 from ._bucket_session import BucketSession
 
@@ -48,6 +50,10 @@ class NoActiveBucketSessionError(SecretStoreError):
     canonical remediation verb so operators see how to recover
     without re-parsing the message.
     """
+
+    def __init__(self, detail: str | None = None) -> None:
+        super().__init__(translated_message="errors.refused.refused_storage_master_key_no_active_session")
+        self._detail = detail
 
 
 @contextmanager
@@ -95,6 +101,10 @@ def get_active_master_key() -> bytes:
             "to unlock a profile before invoking commands that decrypt "
             "stored records.",
         )
+    if session.is_expired(datetime.now(UTC)):
+        bucket_id = session.bucket_id
+        session.close()
+        raise BucketLockedError(bucket_id=bucket_id)
     return session.dek
 
 

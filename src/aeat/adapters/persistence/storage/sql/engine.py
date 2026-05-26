@@ -117,13 +117,19 @@ def create_engine_from_settings(settings: Settings) -> Engine:
     """
     url = settings.aeat_database_url
     if not url:
-        raise StorageError("aeat_database_url is empty; set AEAT_DATABASE_URL.")
+        raise StorageError(
+            "configured database URL is empty.",
+            translated_message="errors.storage.engine.empty_database_url",
+        )
     try:
         normalized_url = _normalize_sqlite_url(url)
         _ensure_sqlite_parent(normalized_url)
         engine = create_engine(normalized_url, future=True)
     except Exception as exc:  # pragma: no cover - defensive
-        raise StorageError(f"Failed to create engine for {url!r}: {exc}") from exc
+        raise StorageError(
+            f"Failed to create engine for {url!r}: {exc}",
+            translated_message="errors.storage.engine.create_failed",
+        ) from exc
     _enable_sqlite_foreign_keys(engine)
     _log.debug("created engine for url=%s", url)
     return engine

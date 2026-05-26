@@ -238,7 +238,7 @@ Execute only the convention repairs justified by the W10 evidence review, keepin
 
 Repair secure-storage user-facing errors and exception handling only after W10 identifies concrete gaps, preserving centralized translation and typed error contracts.
 
-- [ ] `W11.P18.S71` - Repair user-facing secure-storage messages to use tr-backed locale keys and validate with aeat.locales CLI; `src/aeat`.
+- [x] `W11.P18.S71` - Repair user-facing secure-storage messages to use tr-backed locale keys and validate with aeat.locales CLI; `src/aeat`.
 - [ ] `W11.P18.S72` - Repair secure-storage exception classes to derive from AEAT core bases with registry-backed error codes; `src/aeat/adapters/persistence/storage`.
 - [ ] `W11.P18.S73` - Repair swallowed secure-storage exceptions with debug logging or explicit typed degradation surfaces; `src/aeat`.
 
