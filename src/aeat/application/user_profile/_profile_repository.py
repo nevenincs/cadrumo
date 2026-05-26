@@ -42,6 +42,7 @@ from ...adapters.persistence.storage.bucket._manifest import (
     ManifestKdfParams,
 )
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from ...adapters.persistence.storage.master_key._kdf_params import KdfParams
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
@@ -110,15 +111,7 @@ def _default_kdf_params() -> ManifestKdfParams:
     non-breaking. The salt is freshly minted per bucket.
     """
 
-    return ManifestKdfParams(
-        algorithm="argon2id",
-        version=0x13,
-        memory_cost=19_456,
-        time_cost=2,
-        parallelism=1,
-        salt=secrets.token_bytes(16),
-        output_length=32,
-    )
+    return KdfParams.default().to_manifest_params()
 
 
 class ProfileSummary(BaseModel):
