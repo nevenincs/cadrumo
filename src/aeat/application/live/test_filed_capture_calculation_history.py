@@ -18,9 +18,9 @@ from aeat.adapters.outbound.aeat.sede import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.calculations import (
     CalculationObservationRepository,
     IvaCompensationHistoryRepository,
@@ -45,22 +45,34 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _CAPTURED_AT = datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC)
 _SYNTHETIC_PROFILE_ID = "SYNTHETIC_PROFILE"
 _SYNTHETIC_EXPEDIENTE_ID = "200030300000000Z"
+_BUCKET_ID = "operator"
+_SESSION_BUCKET_ID = "ephemeral"
+_KEK = b"k" * 32
+_DEK = b"d" * 32
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_SESSION_BUCKET_ID,
+        kek=_KEK,
+        dek=_DEK,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
 
 
 @contextmanager
 def _secure_backend(tmp_path: Path) -> Iterator[Path]:
-    provider = EphemeralMasterKeyProvider()
-    db_path = tmp_path / "filed-calculation-history.db"
-    with provider, override_settings(
-        aeat_database_url=f"sqlite:///{db_path.as_posix()}",
-        aeat_active_profile="operator",
-    ) as settings:
-        engine = get_engine(settings)
-        SecureObjectRepository(engine=engine)
+    db_path = tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db"
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID),
+        activate_session(_session()),
+    ):
+        dispose_engine()
         try:
             yield db_path
         finally:
-            dispose_engine(settings)
+            dispose_engine()
 
 
 def test_filed_observation_capture_promotes_previous_303_into_recurrence_history(tmp_path: Path) -> None:
