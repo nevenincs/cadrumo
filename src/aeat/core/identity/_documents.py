@@ -30,7 +30,16 @@ from ..errors import AeatError
 _NIF_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"
 _NIE_PREFIX_MAP = {"X": "0", "Y": "1", "Z": "2"}
 _CIF_KIND_LETTERS = "ABCDEFGHJNPQRSUVW"
-"""Closed catalogue of CIF leading kind characters per AEAT spec."""
+"""Closed catalogue of CIF leading kind characters per AEAT current spec (17 letters).
+
+K, L, and M are deliberately excluded: they are historical-only forms that
+AEAT's validator tolerates for legacy entities but does not assign to new
+CIFs.  ``aeat.core.identity._tax_id._CIF_LEADERS`` retains all three as a
+historical-tolerance superset so that ``validate_spanish_tax_id`` keeps
+accepting K/L/M-led identifiers; this set is the authoritative shape gate
+for current-spec document classification via ``_CIF_PATTERN`` and
+:func:`validate_identity`.
+"""
 
 # AEAT publishes a small lookup mapping the CIF kind letter to the
 # expected check-character format. Letters that always carry a digit
