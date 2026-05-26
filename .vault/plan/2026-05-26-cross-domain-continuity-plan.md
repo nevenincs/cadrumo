@@ -54,7 +54,7 @@ Two ledger verbs have local _ledger_validation_bad catches; five rely on the gen
 - [x] `W01.P03.S10` - no code change required in ledger_view; `same rationale as S09; ledger_view takes only a transaction-id string not a multi-field patch; record as documentation note and close; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W01.P03.S11` - add _ledger_validation_bad catch to ledger_allocate; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W01.P03.S12` - add _ledger_validation_bad catch to ledger_split; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P03.S13` - real-CLI tests asserting each ledger verb surfaces specific field error not generic boundary; `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
+- [x] `W01.P03.S13` - real-CLI tests asserting each ledger verb surfaces specific field error not generic boundary; `src/aeat/entrypoints/cli/test_ledger_validation_paths.py`.
 
 ### Phase `W01.P04` - confirmable classification patch no-op semantics
 
@@ -62,7 +62,7 @@ _command_from_patch zeroes classification-adjacent fields when classification is
 
 - [x] `W01.P04.S14` - guard the no-op mutation-signature so re-affirming the same business_classification on an already-classified transaction does not raise; `treat field-for-field-identical commands as a confirmed no-op instead of an error; `src/aeat/application/ledger/_actions.py`.
 - [x] `W01.P04.S15` - add --reaffirm flag on ledger classify bypassing the no-op guard for explicit re-application; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P04.S16` - unit tests covering patch-without-zeroing reaffirm semantics and field-by-field no-op surfacing; `src/aeat/application/ledger/test_actions.py`.
+- [x] `W01.P04.S16` - unit tests covering patch-without-zeroing reaffirm semantics and field-by-field no-op surfacing; `src/aeat/application/ledger/test_actions.py`.
 
 ### Phase `W01.P05` - boolean canonical contract unification
 
@@ -98,7 +98,7 @@ _interpolate swallows KeyError on placeholder context mismatches and emits half-
 
 - [x] `W01.P08.S30` - rename context key filing_date to as_of at the bracket_no_window raise site; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
 - [x] `W01.P08.S31` - strengthen _interpolate to emit developer-visible warning on unmatched placeholders; `src/aeat/core/i18n/_render.py`.
-- [ ] `W01.P08.S32` - add project-wide i18n placeholder parity validator over every tr call site; `src/aeat/core/i18n/test_placeholder_parity.py`.
+- [x] `W01.P08.S32` - add project-wide i18n placeholder parity validator over every tr call site; `src/aeat/core/i18n/test_placeholder_parity.py`.
 
 ### Phase `W01.P09` - Wave-1 review and persona re-run and plan expansion BREAKPOINT
 
