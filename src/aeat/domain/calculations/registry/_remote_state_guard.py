@@ -171,6 +171,16 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             raise RegistryValidationError("static official documentation cannot accept synthetic remote data")
         if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
             raise RegistryValidationError("forbidden stateful surface cannot accept synthetic remote data")
+        if self.synthetic_data_allowed:
+            aeat_host = next(
+                (h for h in self.allowed_hosts if _is_aeat_host(h)),
+                None,
+            )
+            if aeat_host is not None:
+                raise RegistryValidationError(
+                    f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
+                    f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces"
+                )
         return self
 
     @field_validator("allowed_hosts")
