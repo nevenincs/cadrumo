@@ -23,14 +23,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.errors import AeatError
-from ...core.resources import bundled_path
+from ...core.errors import AeatError as _AeatError
+from ...core.resources import bundled_path as _bundled_path
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-_TOPIC_REGISTRY_ROOT = bundled_path("registry", "aeat", "topics")
+_TOPIC_REGISTRY_ROOT = _bundled_path("registry", "aeat", "topics")
 
 
-class TopicNotFoundError(AeatError):
+class TopicNotFoundError(_AeatError):
     """Raised when a requested slug is not registered in the catalogue."""
 
 

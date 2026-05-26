@@ -275,14 +275,11 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 # the discipline). Trim caps as packages clean up; the W09.P20 close
 # state is an empty mapping.
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
-    "aeat/adapters/inbound/borrador/_extractors/__init__.py": 2,
-    "aeat/adapters/outbound/aeat/auth/__init__.py": 2,
     "aeat/adapters/outbound/aeat/verify/__init__.py": 8,
     "aeat/application/filing/__init__.py": 11,
     "aeat/application/live/__init__.py": 34,
     "aeat/application/overview/__init__.py": 13,
     "aeat/application/registry/__init__.py": 27,
-    "aeat/application/topics/__init__.py": 2,
     "aeat/application/user_profile/__init__.py": 5,
     "aeat/core/redaction/__init__.py": 5,
     "aeat/domain/profile/inventory/__init__.py": 3,

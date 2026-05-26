@@ -92,6 +92,8 @@ __all__ = [
     "AeatSessionExpiredError",
     "AuthConfigurationError",
     "AuthError",
+    "AuthProvider",
+    "AuthProviderKind",
     "AuthLoginAssertionDetail",
     "AuthSessionDetail",
     "BrowserContextLike",

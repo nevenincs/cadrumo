@@ -7,16 +7,16 @@ Registers the concrete extractor classes (one per tax year) and exposes
 
 from __future__ import annotations
 
-from .._errors import BorradorParseError
+from .._errors import BorradorParseError as _BorradorParseError
 from .._schema import ArtefactKind
-from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor
+from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo100ObservedV2025Extractor
 
 _REGISTRY_BY_AÑO: dict[int, type] = {
-    2025: Modelo100ObservedV2025Extractor,
+    2025: _Modelo100ObservedV2025Extractor,
 }
 
 
-def get_extractor(año: int) -> Modelo100ObservedV2025Extractor:
+def get_extractor(año: int) -> _Modelo100ObservedV2025Extractor:
     """Return a fresh Modelo 100 observed-value extractor for the given tax year.
 
     Args:
@@ -32,7 +32,7 @@ def get_extractor(año: int) -> Modelo100ObservedV2025Extractor:
     cls = _REGISTRY_BY_AÑO.get(año)
     if cls is None:
         known = sorted(_REGISTRY_BY_AÑO.keys())
-        raise BorradorParseError(f"no Modelo 100 observed-value extractor for año={año}; supported: {known}")
+        raise _BorradorParseError(f"no Modelo 100 observed-value extractor for año={año}; supported: {known}")
     return cls()
 
 
