@@ -129,8 +129,8 @@ Scoped discovery sweep of the AEAT Diseno corpus and casilla data for the numeri
 
 Author declaracion_pdf extraction profiles for modelos 303 and 180.
 
-- [ ] `W03.P06.S19` - Author the declaracion_pdf extraction profile for Modelo 303 from the AEAT Diseno and instructions; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W03.P06.S20` - Author the declaracion_pdf extraction profile for Modelo 180 from the AEAT Diseno and instructions; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W03.P06.S19` - Author the declaracion_pdf extraction profile for Modelo 303 from the AEAT Diseno and instructions; `src/aeat/_data/registry/aeat/modelos/303/`.
+- [ ] `W03.P06.S20` - Keep Modelo 180 declaracion_pdf profile authoring blocked until W05.P11.S92 supplies authorised PDF/layout evidence; `src/aeat/_data/registry/aeat/modelos/180/`.
 
 ### Phase `W03.P07` - modelo 190 stub repair and modelo 130 cross-check
 
@@ -150,7 +150,7 @@ Scoped discovery sweep of the named-field modelo corpus and registry presence.
 
 - [x] `W04.P08.S24` - Sweep the named-field modelo corpus and registry presence for modelos 036, 037, 369, 720, and 840 and append any surfaced schema-tweak Steps via the vault plan CLI; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `W04.P08.S80` - Classify per dead-stub modelo 184 193 232 347 349 720 and 840 whether each non-matchable decl slug target resolves to a numeric casilla or a named-field target; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W04.P08.S86` - Decide fetch-versus-defer for the source-blocked Modelo 037 which has no Diseno instructions or fixtures in the corpus and record the fetch-or-descope decision; `src/aeat/_data/registry/aeat/modelos/037/`.
+- [x] `W04.P08.S86` - Decide fetch-versus-defer for the source-blocked Modelo 037 which has no Diseno instructions or fixtures in the corpus and record the fetch-or-descope decision; `src/aeat/_data/registry/aeat/modelos/037/`.
 - [x] `W04.P08.S91` - Record that W02 code-review fix removed the dead declaracion_pdf profiles for Modelo 347 (revision 2008-y-siguientes) and Modelo 840 (revision 2003-y-siguientes) because both carried decl.tipo-declaracion (data_type=text) with match_strategy=numeric_casilla; `W04 P09 and P10 must author real named-field profiles for these two modelos; `src/aeat/_data/registry/aeat/modelos/347.toml src/aeat/_data/registry/aeat/modelos/840.toml`.
 
 ### Phase `W04.P09` - dead-stub repair and modelo 037 registration
@@ -159,7 +159,7 @@ Correct or remove the dead 720/840 stubs and register modelo 037.
 
 - [x] `W04.P09.S25` - Correct or remove the dead Modelo 720 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/720/`.
 - [x] `W04.P09.S26` - Correct or remove the dead Modelo 840 declaracion_pdf stub profile so it no longer loads green; `src/aeat/_data/registry/aeat/modelos/840/`.
-- [ ] `W04.P09.S27` - Register Modelo 037 in the registry which has no registry presence today; `src/aeat/_data/registry/aeat/modelos/037/`.
+- [x] `W04.P09.S27` - Descope current Modelo 037 registry registration after W04.P08.S86 legal suppression decision; `src/aeat/_data/registry/aeat/modelos/037/`.
 
 ### Phase `W04.P14` - newly-surfaced dead-stub repair
 
@@ -176,7 +176,7 @@ Repair the five dead-stub declaracion_pdf profiles W01 discovery surfaced beyond
 Author named-field declaracion_pdf profiles for modelos 036, 037, 369, 720, and 840.
 
 - [x] `W04.P10.S28` - Author the named-field declaracion_pdf profile for Modelo 036 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/036/`.
-- [ ] `W04.P10.S29` - Author the named-field declaracion_pdf profile for Modelo 037 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/037/`.
+- [x] `W04.P10.S29` - Descope current Modelo 037 named-field declaracion_pdf profile after W04.P08.S86 legal suppression decision; `src/aeat/_data/registry/aeat/modelos/037/`.
 - [x] `W04.P10.S30` - Author the named-field declaracion_pdf profile for Modelo 369 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/369/`.
 - [x] `W04.P10.S31` - Author the named-field declaracion_pdf profile for Modelo 720 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/720/`.
 - [x] `W04.P10.S32` - Author the named-field declaracion_pdf profile for Modelo 840 using the W02 named_label primitive; `src/aeat/_data/registry/aeat/modelos/840/`.
@@ -189,21 +189,87 @@ Verification Wave. Adds real per-modelo round-trip parse tests against PDF corpu
 
 Add per-modelo round-trip parse tests and confirm the snapshot-build gate is green.
 
-- [ ] `W05.P11.S33` - Add a real round-trip parse test for Modelo 303 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S34` - Add a real round-trip parse test for Modelo 180 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S35` - Add a real round-trip parse test for Modelo 190 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S36` - Add a real round-trip parse test for Modelo 036 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S37` - Add a real round-trip parse test for Modelo 037 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S38` - Add a real round-trip parse test for Modelo 369 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S39` - Add a real round-trip parse test for Modelo 720 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S40` - Add a real round-trip parse test for Modelo 840 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S41` - Confirm the snapshot-build gate is green and all 26 modelos validate; `src/aeat/domain/calculations/registry/test_committed_registry.py`.
+- [x] `W05.P11.S33` - Add a real round-trip parse test for Modelo 303 against a PDF corpus fixture; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S34` - Keep the Modelo 180 real round-trip parse test blocked by W05.P11.S92 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S92` - Acquire or generate from an authorised source a real Modelo 180 declaration PDF fixture before authoring the Modelo 180 declaracion_pdf profile or round-trip test; `src/aeat/tests/fixtures/justificantes/180/`.
+- [x] `W05.P11.S35` - Add the Modelo 190 real round-trip parse test against the existing sanitized 2024 declaration fixture after W05.P11.S93 supplied a legally grounded 2024 registry revision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W05.P11.S93` - Resolve the Modelo 190 fixture/revision mismatch by sourcing the 2024 registry slice from Orden HAC/1432/2024, AEAT DR 190-2024, and the existing sanitized 2024 fixture; `src/aeat/tests/fixtures/justificantes/190/ src/aeat/_data/registry/aeat/modelos/190.toml`.
+- [ ] `W05.P11.S36` - Keep the Modelo 036 real round-trip parse test blocked by W05.P11.S94 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S94` - Acquire a real Modelo 036 printed-form PDF fixture to verify the provisional named_label patterns before implementing S36; `src/aeat/tests/fixtures/justificantes/036/`.
+- [x] `W05.P11.S37` - Descope current Modelo 037 real round-trip parse test after W04.P08.S86 legal suppression decision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W05.P11.S95` - Convert Modelo 037 source and fixture acquisition into historical-slice backlog only; `src/aeat/_data/registry/aeat/modelos/037/ src/aeat/tests/fixtures/justificantes/037/`.
+- [ ] `W05.P11.S38` - Keep the Modelo 369 real round-trip parse test blocked by W05.P11.S96 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S96` - Acquire a real Modelo 369 printed-form PDF fixture to verify the provisional Esquema Union named_label patterns before implementing S38; `src/aeat/tests/fixtures/justificantes/369/`.
+- [ ] `W05.P11.S39` - Keep the Modelo 720 real round-trip parse test blocked by W05.P11.S97 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S97` - Acquire a real Modelo 720 printed-form PDF fixture before implementing S39; `src/aeat/tests/fixtures/justificantes/720/`.
+- [ ] `W05.P11.S40` - Keep the Modelo 840 real round-trip parse test blocked by W05.P11.S98 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [ ] `W05.P11.S98` - Acquire a real Modelo 840 printed-form PDF fixture to verify the provisional named_label patterns before implementing S40; `src/aeat/tests/fixtures/justificantes/840/`.
+- [x] `W05.P11.S41` - Confirm the snapshot-build gate is green and all 26 modelos validate; `src/aeat/domain/calculations/registry/test_committed_registry.py`.
 
-### Phase `W05.P15` - paper-trail cleanup
+### Phase `W05.P16` - backlog queue for newly identified declaration surfaces
+
+Keep every newly identified declaration-extraction surface explicit until it is either legally descoped, source-acquired, or implemented with a real round-trip test.
+
+- [x] `W05.P16.S99` - Decide whether to open a historical pre-2025 Modelo 037 registry/profile slice after BOE-A-2025-410 suppression; `.vault/adr .vault/plan src/aeat/_data/registry/aeat/modelos/037/`.
+- [x] `W05.P16.S100` - Decide whether Modelo 303 printed boxes 46, 69, 87, and 110 should become registered casillas before any extraction profile expands beyond the currently registered result casillas; `src/aeat/_data/registry/aeat/modelos/303/`.
+- [ ] `W05.P16.S101` - Acquire legally authorised declaration PDF fixtures or official printed-form layouts for the blocked current slices 180, 190, 036, 369, 720, and 840; `src/aeat/tests/fixtures/justificantes/`.
+- [ ] `W05.P16.S102` - Re-run declaration parser boundary tests and committed-registry validation after each fixture-backed profile/test expansion; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/domain/calculations/registry/test_committed_registry.py`.
+
+### Phase `W05.P17` - progress ledger and remaining-work queue
+
+Maintain a single current-state ledger for every completed, descoped, deferred, blocked, or not-yet-tackled declaration-extraction surface discovered during the rollout.
+
+- [x] `W05.P17.S103` - Keep the declaration-extraction progress ledger synchronized with every future profile, fixture, parser, source, or descope decision; `.vault/plan/2026-05-21-declaracion-extraction-architecture-plan.md`.
+
+### Phase `W05.P18` - fixture acquisition classification
+
+Classify the broad `W05.P16.S101` acquisition row into legally grounded per-modelo work items. Record-design layouts and BOE form specifications can ground registry/export surfaces, but they do not by themselves validate declaration-PDF parser labels unless the profile explicitly targets that source surface.
+
+Status note 2026-05-26: `.vault/audit/2026-05-26-declaracion-extraction-auth-gated-acquisition-status.md` records that public AEAT pages found for the remaining acquisition rows describe electronic form, preview, or filed-declaration flows, not taxpayer-free static declaration PDFs. Rows `W05.P18.S105` through `W05.P18.S110` remain open until operator-provided authorised fixtures, taxpayer-free static printed-form layouts, or authenticated read-only filed declarations are available. Synthetic data must not be sent to Sede or AEAT-hosted form surfaces, even for preview/download flows. A later operator-approved read-only Sede listing found one Modelo 190 exercise-2024 filed row for the authenticated profile, but single-row capture failed before artifact download because the local Modelo 190 registry had no 2024 snapshot at that time. Follow-up `W05.P18.S121` closed Modelo 190 through legally grounded 2024 registry authority plus the existing sanitized fixture. The authenticated read returned zero rows for modelos 180, 036, 369, 720, and 840 across 2024-2026; `W05.P18.S122` records a per-modelo evidence matrix and keeps their rows open. Operator context added 2026-05-26: the active profile is not expected to include filed data for the remaining special/current forms, so future auth reads are opportunistic only; the primary unblocker is authorised fixtures or official taxpayer-free static layouts.
+
+- [x] `W05.P18.S104` - Classify the blocked current slices by required acquisition type and verified local authority; `.vault/plan/2026-05-21-declaracion-extraction-architecture-plan.md`.
+- [ ] `W05.P18.S105` - Acquire an authorised Modelo 180 declaration PDF or official printed-form layout before authoring a declaration-PDF extraction profile; `src/aeat/_data/registry/aeat/modelos/180/ src/aeat/tests/fixtures/justificantes/180/`.
+- [x] `W05.P18.S106` - Legally source and implement the 2024 Modelo 190 registry revision before using the existing 2024 fixture; `src/aeat/_data/registry/aeat/modelos/190.toml src/aeat/tests/fixtures/justificantes/190/`.
+- [ ] `W05.P18.S107` - Acquire an authorised Modelo 036 printed-form PDF/declaration fixture before promoting provisional `named_label` patterns; `src/aeat/_data/registry/aeat/modelos/036.toml src/aeat/tests/fixtures/justificantes/036/`.
+- [ ] `W05.P18.S108` - Acquire an authorised Modelo 369 Esquema Union printed-form PDF/declaration fixture before promoting provisional `named_label` patterns; `src/aeat/_data/registry/aeat/modelos/369/ src/aeat/tests/fixtures/justificantes/369/`.
+- [ ] `W05.P18.S109` - Acquire an authorised Modelo 720 declaration PDF fixture before asserting profile round-trip coverage; `src/aeat/_data/registry/aeat/modelos/720.toml src/aeat/tests/fixtures/justificantes/720/`.
+- [ ] `W05.P18.S110` - Complete Modelo 840 value-bearing parser round-trip coverage after obtaining a generated/submitted declaration PDF or an approved filled-form fixture; `src/aeat/tests/fixtures/justificantes/840/ src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W05.P18.S111` - Import the verified AEAT Modelo 840 static printed-form PDF into the official corpus/source registry and re-ground declaration-PDF label patterns against printed labels (`14 Ejercicio`, `15 Declaración de`); `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/_data/registry/aeat/legal/iae.toml`.
+- [x] `W05.P18.S121` - Register reviewed 2024 legal/source authority for Modelo 190 from Orden HAC/1432/2024 and AEAT `DISENOS_LOGICOS_190-2024.pdf`, then implement the 2024 registry revision and sanitized-fixture round-trip parser verification; `src/aeat/_data/registry/aeat/legal/irpf.toml src/aeat/_data/registry/aeat/modelos/190.toml src/aeat/tests/fixtures/justificantes/190/`.
+- [x] `W05.P18.S122` - Record the post-authenticated-read acquisition matrix for modelos 180, 036, 369, 720, and 840, including local official-source coverage, fixture gaps, live-read result, and remaining legal gates; `.vault/audit/2026-05-26-declaracion-extraction-auth-gated-acquisition-status.md`.
+- [x] `W05.P18.S123` - Convert the acquisition policy from "operator-approved synthetic preview/download possible" to "no synthetic data to Sede or AEAT-hosted form surfaces"; `.vault/plan/2026-05-21-declaracion-extraction-architecture-plan.md .vault/audit/2026-05-26-declaracion-extraction-auth-gated-acquisition-status.md`.
+- [x] `W05.P18.S124` - Open and execute the follow-up no-synthetic-Sede ADR/plan slice for AEAT-hosted synthetic live-surface policy conflicts discovered outside this declaration-acquisition slice; `Modelo 100 Renta WEB Open, Modelo 349 GROI/IXVI, and direct GROI/NIF-IVA Sede guard policies now disallow AEAT-hosted synthetic input; `.vault/adr/2026-05-26-no-synthetic-sede-live-surfaces-adr.md .vault/plan/2026-05-26-no-synthetic-sede-live-surfaces-plan.md src/aeat/_data/registry/aeat/modelos/100/ src/aeat/_data/registry/aeat/modelos/349/ src/aeat/domain/calculations/registry/ src/aeat/adapters/outbound/aeat/sede/`.
+- [x] `W05.P18.S125` - Research the no-synthetic-Sede blast radius for accepted live-parity surfaces and persist findings for the S124 ADR; `.vault/research/2026-05-26-no-synthetic-sede-live-surfaces-research.md`.
+- [x] `W05.P18.S126` - Accept the no-synthetic-Sede ADR that supersedes the prior AEAT-hosted synthetic live-surface allowance and preserves replay/static evidence paths; `.vault/adr/2026-05-26-no-synthetic-sede-live-surfaces-adr.md`.
+- [x] `W05.P18.S127` - Backlog the Modelo 303 submitted-file export-layout regression on modelo-303-envelope-marker before treating the broader Sede declarations batch as green; `src/aeat/_data/registry/aeat/modelos/303/ src/aeat/adapters/outbound/aeat/sede/test_declarations.py`.
+- [x] `W05.P18.S128` - Author the Modelo 390 declaracion_pdf extraction profile for the 5 named_label closure casillas (47 64 65 97 662) confirmed in the hybrid corpus PDFs and add parametrised round-trip tests for the 2022 and 2023 Spanish-language fixtures; `src/aeat/_data/registry/aeat/modelos/390.toml src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+
+## Wave `W06` - codebase convention hardening
+
+Re-ground the declaration-extraction implementation and adjacent shared surfaces against codebase conventions before expanding more parser coverage. This wave is source/static only unless a row explicitly asks for authenticated AEAT evidence; authenticated rows must stop for operator login before touching live taxpayer data.
+
+### Phase `W06.P15` - paper-trail cleanup
 
 Correct the four stale documents that still describe the deleted per-modelo extractor classes as if implemented so no surviving document or comment contradicts the registry-profile-driven generic-parser architecture this plan executes.
 
-- [x] `W05.P15.S87` - Correct the modelo-115 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-115-calc-verify-adr.md`.
-- [x] `W05.P15.S88` - Correct the modelo-303 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-303-calc-verify-adr.md`.
-- [x] `W05.P15.S89` - Correct the modelo-111 rule-delta reference prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`.
-- [x] `W05.P15.S90` - Correct the stale declaracion detector module comment that still describes the deleted per-modelo extractor surface; `src/aeat/adapters/inbound/declaracion/_detect.py`.
+- [x] `W06.P15.S87` - Correct the modelo-115 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-115-calc-verify-adr.md`.
+- [x] `W06.P15.S88` - Correct the modelo-303 calc-verify ADR prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/adr/2026-04-27-modelo-303-calc-verify-adr.md`.
+- [x] `W06.P15.S89` - Correct the modelo-111 rule-delta reference prose that still describes the deleted per-modelo extractor classes as implemented; `.vault/reference/2026-04-27-modelo-111-rule-delta-reference.md`.
+- [x] `W06.P15.S90` - Correct the stale declaracion detector module comment that still describes the deleted per-modelo extractor surface; `src/aeat/adapters/inbound/declaracion/_detect.py`.
+
+### Phase `W06.P19` - convention audit and guardrail backlog
+
+Audit and harden the declaration-extraction slice against repo-wide conventions
+before adding further parser coverage. Rows in this phase must preserve localized
+operator messages, the core exception hierarchy, observable exception handling,
+centralized settings, shared model boundaries, and source-grounded tests.
+
+- [x] `W06.P19.S112` - Audit declaration extraction, inbound PDF, registry, core error, core i18n, and core settings surfaces for `tr()` user-facing messages, `AeatError` inheritance, exception swallowing/logging, non-tautological tests, settings centralisation, shared enums/models, pydantic boundaries, and duplication; `.vault/audit/ src/aeat/adapters/inbound/declaracion/ src/aeat/adapters/inbound/pdf/ src/aeat/domain/calculations/registry/ src/aeat/core/`.
+- [x] `W06.P19.S113` - Convert any newly introduced declaration-extraction user-facing error strings to `tr()` keys while preserving structured exception context; `src/aeat/adapters/inbound/declaracion/ src/aeat/locales/`.
+- [x] `W06.P19.S114` - Enforce or extend tests proving declaration/PDF/registry exception classes derive from `aeat.core.errors.AeatError`; `src/aeat/adapters/inbound/declaracion/ src/aeat/adapters/inbound/pdf/ src/aeat/domain/calculations/registry/`.
+- [x] `W06.P19.S115` - Harden exception-swallowing checks so broad handlers either re-raise, convert, or log at least at debug level on the audited surfaces; `src/aeat/adapters/inbound/declaracion/ src/aeat/adapters/inbound/pdf/ src/aeat/domain/calculations/registry/`.
+- [x] `W06.P19.S116` - Re-audit the declaration-extraction tests for tautology and replace any mirror-logic assertions with independent fixture, source, or behavior assertions; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/domain/calculations/registry/test_modelo_840_registry.py`.
+- [x] `W06.P19.S117` - Verify environment handling remains routed through central `Settings` and core access-gate/settings helpers, with no new direct environment wrangling in declaration extraction; `src/aeat/core/config.py src/aeat/adapters/inbound/declaracion/ src/aeat/adapters/inbound/pdf/`.
+- [x] `W06.P19.S118` - Verify declaration extraction uses existing shared enums/models/pydantic records and document or eliminate any duplicated local shape definitions; `src/aeat/adapters/inbound/declaracion/_schema.py src/aeat/adapters/inbound/pdf/_shared.py src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W06.P19.S119` - Harden the Modelo 840 printed-form label grounding test so it pins the official labels and cannot pass solely through an over-broad registry regex; `src/aeat/domain/calculations/registry/test_modelo_840_registry.py`.
+- [x] `W06.P19.S120` - Resolve the remaining direct `JustificanteRepository` storage crypto/sql import cycle exposed while localizing PDF error imports; `src/aeat/domain/justificante/__init__.py src/aeat/domain/justificante/_repository.py src/aeat/adapters/persistence/storage/`.
