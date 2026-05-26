@@ -24,8 +24,11 @@ from cryptography.x509.oid import NameOID
 
 from .....application.auth import AuthProvider, AuthProviderDescription, AuthProviderKind
 from .....core.classification import SensitivityClass
-from ....persistence.storage import EphemeralMasterKeyProvider
-from ....persistence.storage.sql import SecureObjectRepository, dispose_engine
+from .....core.config import override_settings
+from ....persistence.storage.master_key._active_session import activate_session
+from ....persistence.storage.master_key._bucket_session import BucketSession
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.sql import dispose_engine
 from . import (
     AEAT_SESSION_IDLE_TTL,
     CERTIFICATE_CONTEXT_MARKER,
@@ -58,17 +61,27 @@ if TYPE_CHECKING:
     from .....core.config import Settings
 
 SECRET_PASSPHRASE = "correct-horse-battery-staple"
+_BUCKET_ID = "auth-session"
 
 
 @pytest.fixture(autouse=True)
-def _isolated_secure_session_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def _isolated_secure_session_backend(tmp_path: Path):
+    session = BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
     dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    with EphemeralMasterKeyProvider():
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(session),
+    ):
         try:
             yield
         finally:
-            dispose_engine()
+            dispose_engine(settings)
 
 
 def _serialise_pkcs12(
@@ -432,7 +445,6 @@ def _settings_for(
     monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", CertificateBackend.HTTPX_FALLBACK.value)
     monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", verify_url)
     monkeypatch.setenv("AEAT_TOKEN_DIR", str(path.parent / ".tokens"))
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(path.parent / 'aeat.db').as_posix()}")
     return Settings()
 
 
@@ -634,7 +646,7 @@ def _store_test_session(
 
 
 def _store_raw_session_payload(path: Path, payload: bytes) -> None:
-    SecureObjectRepository().save(
+    secure_object_repository_for_active_bucket().save(
         namespace=_session_store._SESSION_NAMESPACE,
         object_key=path.as_posix(),
         classification=SensitivityClass.SESSION,
@@ -727,8 +739,7 @@ async def test_authenticate_falls_back_after_stale_persisted_session(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_for(bundle_path, monkeypatch)
-    monkeypatch.setenv("AEAT_ACTIVE_PROFILE", "operator")
-    storage_state_path = settings.aeat_token_dir / "operator-storage.json"
+    storage_state_path = settings.aeat_token_dir / f"{_BUCKET_ID}-storage.json"
     stale_storage_state: dict[str, object] = {"cookies": [], "origins": []}
     _session_store.save(
         storage_state_path,

@@ -11,6 +11,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....persistence.storage import SensitivityClass
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....persistence.storage.sql import SecureObjectRepository
 
 _SESSION_NAMESPACE = "aeat.outbound.aeat.auth.sessions"
@@ -37,7 +38,7 @@ class PersistedBrowserSession(BaseModel):
 def exists(path: Path) -> bool:
     """Return whether a browser session exists for logical ``path``."""
 
-    return SecureObjectRepository().exists(_SESSION_NAMESPACE, _key(path))
+    return _repository().exists(_SESSION_NAMESPACE, _key(path))
 
 
 def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[str, object]) -> None:
@@ -48,7 +49,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
         metadata=metadata,
         written_at=datetime.now(UTC),
     )
-    SecureObjectRepository().save(
+    _repository().save(
         namespace=_SESSION_NAMESPACE,
         object_key=_key(path),
         classification=SensitivityClass.SESSION,
@@ -61,7 +62,7 @@ def save(path: Path, *, storage_state: Mapping[str, object], metadata: Mapping[s
 def load(path: Path) -> PersistedBrowserSession | None:
     """Load a persisted browser session for logical ``path``."""
 
-    record = SecureObjectRepository().load(
+    record = _repository().load(
         _SESSION_NAMESPACE,
         _key(path),
         expected_class=SensitivityClass.SESSION,
@@ -75,7 +76,7 @@ def load(path: Path) -> PersistedBrowserSession | None:
 def delete(path: Path) -> bool:
     """Delete persisted browser session state for logical ``path``."""
 
-    return SecureObjectRepository().delete(_SESSION_NAMESPACE, _key(path))
+    return _repository().delete(_SESSION_NAMESPACE, _key(path))
 
 
 def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
@@ -86,6 +87,10 @@ def storage_state_sha256(storage_state: Mapping[str, object]) -> str:
 
 def _key(path: Path) -> str:
     return Path(path).as_posix()
+
+
+def _repository() -> SecureObjectRepository:
+    return secure_object_repository_for_active_bucket()
 
 
 def _storage_state_sha256(storage_state: Mapping[str, object]) -> str:

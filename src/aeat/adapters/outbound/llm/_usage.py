@@ -89,7 +89,7 @@ class UsageRecorder:
             :exc:`aeat.adapters.outbound.llm.LLMCacheError`: When the JSONL
                 file cannot be appended to.
         """
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
         from ....core.redaction import default_rules_for_class, redact_structured
 
@@ -103,7 +103,7 @@ class UsageRecorder:
             "record": redacted,
         }
         try:
-            SecureObjectRepository().save(
+            secure_object_repository_for_active_bucket().save(
                 namespace=_USAGE_NAMESPACE,
                 object_key=self._object_key_for(record),
                 classification=SensitivityClass.DIAGNOSTIC,
@@ -111,7 +111,7 @@ class UsageRecorder:
                 written_at=record.created_at,
                 payload=json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8"),
             )
-        except OSError as exc:  # pragma: no cover - defensive storage path
+        except OSError as exc:
             msg = f"Failed to append usage record to logical path {path}"
             raise LLMCacheError(msg) from exc
         return path
@@ -127,11 +127,11 @@ class UsageRecorder:
             Loaded usage records in file-iteration order.
         """
 
-        from ....adapters.persistence.storage.sql import SecureObjectRepository
+        from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
         from ....core.classification import SensitivityClass
 
         records: list[UsageRecord] = []
-        for stored in SecureObjectRepository().list_records(
+        for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,
             expected_class=SensitivityClass.DIAGNOSTIC,
             max_supported_version=_USAGE_VERSION,

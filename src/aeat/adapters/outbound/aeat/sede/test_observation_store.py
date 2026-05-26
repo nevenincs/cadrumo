@@ -5,33 +5,49 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Iterator
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Literal
 
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....persistence.storage import EphemeralMasterKeyProvider
+from .....core.config import Settings, override_settings
+from ....persistence.storage.master_key._active_session import activate_session
+from ....persistence.storage.master_key._bucket_session import BucketSession
 from ....persistence.storage.sql.engine import dispose_engine
 from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_BUCKET_ID = "sede-observation"
 
 
-@pytest.fixture(autouse=True)
-def _patch_secure_backend(tmp_path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{tmp_path / 'aeat.db'}")
-    try:
-        yield
-    finally:
-        dispose_engine()
+@pytest.fixture
+def active_storage(tmp_path: Path) -> Iterator[Settings]:
+    session = BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(session),
+    ):
+        try:
+            yield settings
+        finally:
+            dispose_engine(settings)
 
 
-def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(tmp_path) -> None:
+def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_api(
+    tmp_path: Path,
+    active_storage: Settings,
+) -> None:
+    del active_storage
     root = tmp_path / "observations"
-    provider = EphemeralMasterKeyProvider()
-    store = FiledDeclaracionObservationStore(root, master_key_provider=provider)
+    store = FiledDeclaracionObservationStore(root)
     body = b"1302026-1T-submitted-file"
     artefact = _artefact(kind="submitted_file", body=body, content_type="text/plain")
 
@@ -69,7 +85,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
-    database_bytes = (tmp_path / "aeat.db").read_bytes()
+    database_bytes = (tmp_path / "buckets" / _BUCKET_ID / "db" / "aeat.db").read_bytes()
     assert body not in database_bytes
     assert b"12345678Z" not in database_bytes
     assert b"12.34" not in database_bytes
@@ -80,11 +96,12 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert "130/2026/1T" not in persisted_paths
 
 
-def test_store_rejects_artefact_body_that_does_not_match_metadata(tmp_path) -> None:
-    store = FiledDeclaracionObservationStore(
-        tmp_path / "observations",
-        master_key_provider=EphemeralMasterKeyProvider(),
-    )
+def test_store_rejects_artefact_body_that_does_not_match_metadata(
+    tmp_path: Path,
+    active_storage: Settings,
+) -> None:
+    del active_storage
+    store = FiledDeclaracionObservationStore(tmp_path / "observations")
     artefact = _artefact(kind="register_row", body=b"abc", content_type="application/json")
 
     with pytest.raises(ValueError, match="byte count"):

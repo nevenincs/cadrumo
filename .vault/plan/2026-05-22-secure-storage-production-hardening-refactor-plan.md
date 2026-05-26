@@ -80,7 +80,7 @@ Move profile-bound domain repositories behind runtime construction so applicatio
 - [x] `W02.P04.S15` - enroll ledger and invoice repositories in runtime-created secure storage; `src/aeat/application/ledger`.
 - [x] `W02.P04.S16` - enroll filing and modelo work-unit repositories in runtime-created secure storage; `src/aeat/application/modelo`.
 - [x] `W02.P04.S17` - enroll AEAT pull, wallet, and live snapshot repositories in runtime-created secure storage; `src/aeat/application/live`.
-- [ ] `W02.P04.S18` - enroll auth session and remote provider repositories in runtime-created secure storage; `src/aeat/adapters`.
+- [x] `W02.P04.S18` - enroll auth session and remote provider repositories in runtime-created secure storage; `src/aeat/adapters`.
 - [ ] `W02.P04.S19` - add a policy guard against direct production SecureObjectRepository construction; `src/aeat/adapters/persistence/storage`.
 
 ## Wave `W03` - namespace registry and schema policy

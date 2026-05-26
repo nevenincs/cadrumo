@@ -25,7 +25,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from aeat.adapters.outbound.aeat.browser import Profile, opened_browser_page, shared_playwright_runtime
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage.master_key._active_session import activate_session
+from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.filing import (
     ModeloDraftStatus,
     ModeloOperatorProfile,
@@ -33,7 +35,7 @@ from aeat.application.filing import (
     build_runtime_schema_provider,
     export_draft,
 )
-from aeat.core.config import Settings
+from aeat.core.config import Settings, override_settings
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import (
     RegistryValidationError,
@@ -67,6 +69,32 @@ from ._observation_store import FiledDeclaracionObservationStore
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
+_BUCKET_ID = "sede-declarations"
+
+
+def _session() -> BucketSession:
+    return BucketSession.open(
+        bucket_id=_BUCKET_ID,
+        kek=b"k" * 32,
+        dek=b"d" * 32,
+        idle_minutes=15,
+        opened_at=datetime.now(UTC),
+    )
+
+
+@pytest.fixture(autouse=True)
+def _isolate_secure_object_backend(tmp_path: Path):
+    """Prevent filed-observation store tests from writing into the active profile DB."""
+
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=_BUCKET_ID) as settings,
+        activate_session(_session()),
+    ):
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
@@ -1011,10 +1039,8 @@ class TestSubmittedFileObservation:
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
         )
-        provider = EphemeralMasterKeyProvider()
         store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
-            master_key_provider=provider,
         )
         encrypted_artefact = store.persist_artefact(
             (declaration.modelo, declaration.ejercicio, declaration.period, declaration.expediente_id),
@@ -1208,10 +1234,8 @@ class TestFiledObservationBindings:
         source_casillas = selector["source_casillas"]
         assert isinstance(source_casillas, tuple)
         casilla_values = {str(casilla_id): Decimal(index + 1) for index, casilla_id in enumerate(source_casillas)}
-        provider = EphemeralMasterKeyProvider()
         store = FiledDeclaracionObservationStore(
             tmp_path / "observations",
-            master_key_provider=provider,
         )
         observation = _filed_observation(
             modelo=str(selector["source_modelo"]),
