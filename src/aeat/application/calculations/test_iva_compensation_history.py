@@ -25,6 +25,8 @@ from ._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+_TAXPAYER_REF = "taxpayeralpha"
+
 
 def _state(
     *,
@@ -35,7 +37,7 @@ def _state(
     available: Decimal | None = None,
 ) -> IvaCompensationPeriodState:
     return IvaCompensationPeriodState(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         filing_year=filing_year,
         period=period,
         expediente_id=f"EXP-{filing_year}-{period}",
@@ -54,8 +56,8 @@ def _state(
 
 def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
-        taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
+        authenticated_identity=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         rows=(
@@ -141,7 +143,7 @@ def test_iva_compensation_four_year_window_allows_fully_applied_expired_lot() ->
     assert report.lots[0].remaining_amount == Decimal("0.00")
 
 
-def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_and_local_fallback() -> None:
+def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_and_blocked_local_fallback() -> None:
     report = build_iva_compensation_carry_forward_report(
         (
             _state(filing_year=2022, period="4T", generated=Decimal("100.00")),
@@ -157,7 +159,7 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     assert source_lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRY_REVIEW_DUE
 
     divergent = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("80.00")),
@@ -168,7 +170,7 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     assert divergent.blocked is True
 
     fallback = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=None,
@@ -177,12 +179,13 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
     )
     assert fallback.selected_authority == "local_recurrence"
     assert fallback.selected_amount == Decimal("60.00")
+    assert fallback.blocked is True
 
 
 def test_iva_compensation_carry_forward_lot_rejects_unbalanced_amounts() -> None:
     with pytest.raises(ValidationError, match="must equal generated_amount"):
         IvaCompensationCarryForwardLot(
-            taxpayer_nif="12345678Z",
+            taxpayer_nif=_TAXPAYER_REF,
             source_filing_year=2026,
             source_period="1T",
             generated_amount=Decimal("100.00"),
