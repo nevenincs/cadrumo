@@ -35,7 +35,7 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileStatus,
 )
-from ...domain.user_profile._errors import UserProfileValidationError
+from ...domain.user_profile._values import new_profile_id
 from ...tests.secure_sql import isolated_profile_storage_root
 from ..workflow._profile_bucket_scan import (
     list_profile_buckets,
@@ -43,7 +43,7 @@ from ..workflow._profile_bucket_scan import (
     read_profile_bucket_by_id,
 )
 from ._integrity import ProfileIntegrityError
-from ._orchestration import ProfileAlreadyRegisteredError
+from ._orchestration import ProfileAlreadyRegisteredError, profile_create_storage_span, profile_storage_session
 from ._profile_repository import ProfileRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -62,9 +62,7 @@ _VALID_FACTS: tuple[UserProfileFact, ...] = (
 # second profile alongside one built from ``_VALID_FACTS`` must use a
 # different taxpayer identity.
 _SECOND_FACTS: tuple[UserProfileFact, ...] = tuple(
-    UserProfileFact(path="identity.tax_id", value="00000001R")
-    if fact.path == "identity.tax_id"
-    else fact
+    UserProfileFact(path="identity.tax_id", value="00000001R") if fact.path == "identity.tax_id" else fact
     for fact in _VALID_FACTS
 )
 # An incomplete fact set: the required ``iva.regime`` field is dropped,
@@ -73,9 +71,57 @@ _SECOND_FACTS: tuple[UserProfileFact, ...] = tuple(
 # from ``_SECOND_FACTS`` so its tax id is distinct from a profile
 # registered with ``_VALID_FACTS``; the rejection under test is the
 # schema failure, not the duplicate-tax-id refusal.
-_INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(
-    fact for fact in _SECOND_FACTS if fact.path != "iva.regime"
-)
+_INCOMPLETE_FACTS: tuple[UserProfileFact, ...] = tuple(fact for fact in _SECOND_FACTS if fact.path != "iva.regime")
+
+
+def _create(
+    repository: ProfileRepository,
+    *,
+    label: str,
+    facts: tuple[UserProfileFact, ...],
+    enforce_unique_tax_id: bool = True,
+):
+    """Wrap ``repository.create`` in a ``profile_create_storage_span``.
+
+    ``ProfileRepository.create`` delegates bucket-bound storage to
+    ``_lifecycle_service``, which resolves the active bucket session
+    via the storage runtime. Production callers (CLI, wizard) supply
+    that session through ``profile_create_storage_span`` before
+    calling ``create``; tests must do the same.
+    """
+    profile_id = new_profile_id()
+    with profile_create_storage_span(profile_id):
+        return repository.create(
+            label=label,
+            facts=facts,
+            profile_id=profile_id,
+            routing_profile_id=profile_id,
+            enforce_unique_tax_id=enforce_unique_tax_id,
+        )
+
+
+def _load(repository: ProfileRepository, profile_id: str):
+    """Wrap ``repository.load`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.load(profile_id)
+
+
+def _delete(repository: ProfileRepository, profile_id: str):
+    """Wrap ``repository.delete`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.delete(profile_id)
+
+
+def _select(repository: ProfileRepository, profile_id: str):
+    """Wrap ``repository.select`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.select(profile_id)
+
+
+def _rename(repository: ProfileRepository, profile_id: str, *, new_label: str):
+    """Wrap ``repository.rename`` in a ``profile_storage_session``."""
+    with profile_storage_session(profile_id):
+        return repository.rename(profile_id, new_label=new_label)
 
 
 @pytest.fixture(autouse=True)
@@ -96,9 +142,9 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    created = repository.create(label="Roundtrip Operator", facts=_VALID_FACTS)
+    created = _create(repository, label="Roundtrip Operator", facts=_VALID_FACTS)
 
-    loaded = repository.load(created.profile_id)
+    loaded = _load(repository, created.profile_id)
 
     assert loaded == created
     assert loaded.label == "Roundtrip Operator"
@@ -106,9 +152,7 @@ def test_create_load_roundtrip_preserves_the_aggregate(_backend: Path) -> None:
     assert loaded.record.facts == _VALID_FACTS
     assert loaded.recovery_enrolled is False
     canonical = KdfParams.default()
-    assert loaded.kdf_params.model_dump(exclude={"salt"}) == canonical.to_manifest_params().model_dump(
-        exclude={"salt"}
-    )
+    assert loaded.kdf_params.model_dump(exclude={"salt"}) == canonical.to_manifest_params().model_dump(exclude={"salt"})
     assert KdfParams.model_validate(loaded.kdf_params.model_dump())
 
 
@@ -121,31 +165,38 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    first = repository.create(label="Original", facts=_VALID_FACTS)
+    first = _create(repository, label="Original", facts=_VALID_FACTS)
 
     # `_VALID_FACTS` carries tax id 00000000T; a second create with the
     # same id under a different label must be refused.
     duplicate_facts = tuple(
-        UserProfileFact(path="identity.tax_id", value="00000000T")
-        if fact.path == "identity.tax_id"
-        else fact
+        UserProfileFact(path="identity.tax_id", value="00000000T") if fact.path == "identity.tax_id" else fact
         for fact in _SECOND_FACTS
     )
     with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Original"):
-        repository.create(label="Duplicate", facts=duplicate_facts)
+        _create(repository, label="Duplicate", facts=duplicate_facts)
 
     # The refusal fired before any store write: no half-live profile.
     assert read_profile_bucket("Duplicate", root=_backend) is None
     # The original is untouched and still loads.
-    assert repository.load(first.profile_id).label == "Original"
+    assert _load(repository, first.profile_id).label == "Original"
 
 
-def test_create_fails_closed_when_tax_id_scan_hits_unreadable_profile(_backend: Path) -> None:
-    """An unreadable live profile blocks create before any new store write."""
+def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
+    _backend: Path,
+) -> None:
+    """An unreadable live profile must NOT block creating a profile with a distinct NIF.
+
+    One torn bucket is an operator storage problem; it must not prevent
+    an entirely different taxpayer from being registered. The scan skips
+    the unreadable profile with a warning and continues against the
+    readable ones. The new profile is written and loads correctly.
+    """
 
     repository = ProfileRepository()
-    created = repository.create(label="Drifted Tax Id Holder", facts=_VALID_FACTS)
+    created = _create(repository, label="Torn Tax Id Holder", facts=_VALID_FACTS)
 
+    # Corrupt the manifest so load() raises ProfileIntegrityError for this profile.
     target = manifest_path(bucket_paths(_backend, created.profile_id))
     corrupted = target.read_text(encoding="utf-8").replace(
         f'bucket_id = "{created.profile_id}"',
@@ -154,22 +205,61 @@ def test_create_fails_closed_when_tax_id_scan_hits_unreadable_profile(_backend: 
     assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
-    with pytest.raises(UserProfileValidationError):
-        repository.create(label="Blocked", facts=_SECOND_FACTS)
+    # A distinct NIF must succeed despite the torn profile — the warn-and-continue
+    # path does not let a torn bucket block a new taxpayer registration.
+    new_profile = _create(repository, label="Different NIF", facts=_SECOND_FACTS)
 
-    assert read_profile_bucket("Blocked", root=_backend) is None
+    assert new_profile.label == "Different NIF"
+    loaded = _load(repository, new_profile.profile_id)
+    assert loaded.label == "Different NIF"
+
+
+def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: Path) -> None:
+    """Duplicate NIF detection fires against readable profiles even when another is torn.
+
+    When the scan skips an unreadable profile it must still detect a
+    duplicate NIF in the readable portion of the registry. The
+    anti-tautology proof: corrupting a THIRD profile does not disable
+    detection of a duplicate against a perfectly readable profile.
+    """
+
+    repository = ProfileRepository()
+    readable = _create(repository, label="Readable Holder", facts=_VALID_FACTS)
+    torn = _create(repository, label="Torn Bystander", facts=_SECOND_FACTS)
+
+    # Corrupt the torn profile's manifest.
+    target = manifest_path(bucket_paths(_backend, torn.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        f'bucket_id = "{torn.profile_id}"',
+        'bucket_id = "00000000-0000-4000-8000-000000000000"',
+    )
+    assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    # Attempt to create a profile that duplicates the READABLE profile's NIF.
+    duplicate_facts = tuple(
+        UserProfileFact(path="identity.tax_id", value="00000000T") if fact.path == "identity.tax_id" else fact
+        for fact in _SECOND_FACTS
+    )
+    with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Readable Holder"):
+        _create(repository, label="Duplicate", facts=duplicate_facts)
+
+    # No half-live profile for the refused duplicate.
+    assert read_profile_bucket("Duplicate", root=_backend) is None
+    # The original readable profile is untouched.
+    assert _load(repository, readable.profile_id).label == "Readable Holder"
 
 
 def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
     """Two profiles with distinct tax ids both register cleanly."""
 
     repository = ProfileRepository()
-    first = repository.create(label="First", facts=_VALID_FACTS)
-    second = repository.create(label="Second", facts=_SECOND_FACTS)
+    first = _create(repository, label="First", facts=_VALID_FACTS)
+    second = _create(repository, label="Second", facts=_SECOND_FACTS)
 
     assert first.profile_id != second.profile_id
-    assert repository.load(first.profile_id).label == "First"
-    assert repository.load(second.profile_id).label == "Second"
+    assert _load(repository, first.profile_id).label == "First"
+    assert _load(repository, second.profile_id).label == "Second"
 
 
 def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
@@ -184,7 +274,7 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    created = repository.create(label="Drift Operator", facts=_VALID_FACTS)
+    created = _create(repository, label="Drift Operator", facts=_VALID_FACTS)
 
     # Corrupt the manifest in place: rewrite bucket_id to a foreign UUID.
     target = manifest_path(bucket_paths(_backend, created.profile_id))
@@ -196,7 +286,7 @@ def test_load_surfaces_manifest_uuid_drift(_backend: Path) -> None:
     target.write_text(corrupted, encoding="utf-8")
 
     with pytest.raises(ProfileIntegrityError):
-        repository.load(created.profile_id)
+        _load(repository, created.profile_id)
 
 
 def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
@@ -213,23 +303,21 @@ def test_failed_create_leaves_no_half_live_profile(_backend: Path) -> None:
     # A pre-existing profile so "pointer restored to its prior state"
     # is a non-trivial assertion: the pointer must end at the survivor.
     repository = ProfileRepository()
-    survivor = repository.create(label="Survivor", facts=_VALID_FACTS)
+    survivor = _create(repository, label="Survivor", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=survivor.profile_id, schema_version=1))
     prior_pointer = read_pointer(_backend)
     assert prior_pointer is not None
 
     with pytest.raises(ProfileSchemaValidationError):
-        repository.create(label="Victim", facts=_INCOMPLETE_FACTS)
+        _create(repository, label="Victim", facts=_INCOMPLETE_FACTS)
 
     # No half-live profile: no manifest scan hit, no pointer drift.
     assert read_profile_bucket("Victim", root=_backend) is None
     pointer_after = read_pointer(_backend)
     assert pointer_after is not None
-    assert pointer_after.bucket_id == survivor.profile_id, (
-        "the failed create stranded the active-profile pointer"
-    )
+    assert pointer_after.bucket_id == survivor.profile_id, "the failed create stranded the active-profile pointer"
     # The survivor is untouched and still loads cleanly.
-    reloaded = repository.load(survivor.profile_id)
+    reloaded = _load(repository, survivor.profile_id)
     assert reloaded.label == "Survivor"
 
 
@@ -237,10 +325,10 @@ def test_delete_tombstones_and_clears_the_pointer(_backend: Path) -> None:
     """``delete`` tombstones the record and clears the active pointer."""
 
     repository = ProfileRepository()
-    created = repository.create(label="To Delete", facts=_VALID_FACTS)
+    created = _create(repository, label="To Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
-    deleted = repository.delete(created.profile_id)
+    deleted = _delete(repository, created.profile_id)
 
     assert deleted.status is UserProfileStatus.TOMBSTONED
     assert deleted.record.status is UserProfileStatus.TOMBSTONED
@@ -263,7 +351,7 @@ def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    created = repository.create(label="Torn Delete", facts=_VALID_FACTS)
+    created = _create(repository, label="Torn Delete", facts=_VALID_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=created.profile_id, schema_version=1))
 
     # Corrupt the manifest UUID so delete's internal load fails.
@@ -276,17 +364,15 @@ def test_failed_delete_leaves_no_torn_state(_backend: Path) -> None:
     target.write_text(corrupted, encoding="utf-8")
 
     with pytest.raises(ProfileIntegrityError):
-        repository.delete(created.profile_id)
+        _delete(repository, created.profile_id)
 
     # No torn state: the pointer is untouched and the record is still
     # live. Restore the manifest so the record can be re-loaded.
     pointer_after = read_pointer(_backend)
     assert pointer_after is not None
     assert pointer_after.bucket_id == created.profile_id
-    target.write_text(corrupted.replace(
-        '00000000-0000-4000-8000-000000000000', created.profile_id
-    ), encoding="utf-8")
-    reloaded = repository.load(created.profile_id)
+    target.write_text(corrupted.replace("00000000-0000-4000-8000-000000000000", created.profile_id), encoding="utf-8")
+    reloaded = _load(repository, created.profile_id)
     assert reloaded.status is UserProfileStatus.ACTIVE
 
 
@@ -302,16 +388,16 @@ def test_delete_clears_pointer_before_tombstoning(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    active = repository.create(label="Active One", facts=_VALID_FACTS)
-    other = repository.create(label="Other One", facts=_SECOND_FACTS)
+    active = _create(repository, label="Active One", facts=_VALID_FACTS)
+    other = _create(repository, label="Other One", facts=_SECOND_FACTS)
     write_pointer(_backend, BucketPointer(bucket_id=active.profile_id, schema_version=1))
 
-    repository.delete(active.profile_id)
+    _delete(repository, active.profile_id)
 
     assert read_pointer(_backend) is None
     # Deleting a non-active profile must not clear another profile's pointer.
     write_pointer(_backend, BucketPointer(bucket_id=other.profile_id, schema_version=1))
-    repository.delete(active.profile_id)  # idempotent re-delete of the same id
+    _delete(repository, active.profile_id)  # idempotent re-delete of the same id
     pointer = read_pointer(_backend)
     assert pointer is not None
     assert pointer.bucket_id == other.profile_id
@@ -321,8 +407,8 @@ def test_list_summarises_every_registered_profile(_backend: Path) -> None:
     """``list`` returns one typed summary per registered profile."""
 
     repository = ProfileRepository()
-    first = repository.create(label="First", facts=_VALID_FACTS)
-    second = repository.create(label="Second", facts=_SECOND_FACTS)
+    first = _create(repository, label="First", facts=_VALID_FACTS)
+    second = _create(repository, label="Second", facts=_SECOND_FACTS)
 
     summaries = repository.list()
     by_id = {summary.profile_id: summary for summary in summaries}
@@ -345,9 +431,9 @@ def test_delete_mirrors_the_tombstone_onto_the_manifest(_backend: Path) -> None:
     from ...adapters.persistence.storage.bucket._manifest_io import read_manifest
 
     repository = ProfileRepository()
-    created = repository.create(label="Soft Delete", facts=_VALID_FACTS)
+    created = _create(repository, label="Soft Delete", facts=_VALID_FACTS)
 
-    repository.delete(created.profile_id)
+    _delete(repository, created.profile_id)
 
     manifest = read_manifest(bucket_paths(_backend, created.profile_id))
     assert manifest.status is BucketLifecycleStatus.TOMBSTONED
@@ -366,10 +452,10 @@ def test_tombstoned_profile_is_excluded_from_the_live_scan(_backend: Path) -> No
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 
     repository = ProfileRepository()
-    created = repository.create(label="Vanishing", facts=_VALID_FACTS)
+    created = _create(repository, label="Vanishing", facts=_VALID_FACTS)
     assert read_profile_bucket("Vanishing", root=_backend) is not None
 
-    repository.delete(created.profile_id)
+    _delete(repository, created.profile_id)
 
     # Live scan: gone.
     assert read_profile_bucket("Vanishing", root=_backend) is None
@@ -393,11 +479,11 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    created = repository.create(label="Not Selectable", facts=_VALID_FACTS)
-    repository.delete(created.profile_id)
+    created = _create(repository, label="Not Selectable", facts=_VALID_FACTS)
+    _delete(repository, created.profile_id)
 
     with pytest.raises(ProfileNotFoundError) as excinfo:
-        repository.select(created.profile_id)
+        _select(repository, created.profile_id)
     assert created.profile_id in str(excinfo.value)
 
 
@@ -409,11 +495,11 @@ def test_deleted_profile_name_is_reusable(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    first = repository.create(label="Recyclable", facts=_VALID_FACTS)
-    repository.delete(first.profile_id)
+    first = _create(repository, label="Recyclable", facts=_VALID_FACTS)
+    _delete(repository, first.profile_id)
 
     # The freed name is accepted by a fresh create with a distinct id.
-    recreated = repository.create(label="Recyclable", facts=_SECOND_FACTS)
+    recreated = _create(repository, label="Recyclable", facts=_SECOND_FACTS)
     assert recreated.profile_id != first.profile_id
     assert recreated.label == "Recyclable"
     assert recreated.status is UserProfileStatus.ACTIVE
@@ -427,11 +513,11 @@ def test_deleted_profile_name_is_reusable_by_rename(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    retired = repository.create(label="Old Label", facts=_VALID_FACTS)
-    repository.delete(retired.profile_id)
-    live = repository.create(label="Live Label", facts=_SECOND_FACTS)
+    retired = _create(repository, label="Old Label", facts=_VALID_FACTS)
+    _delete(repository, retired.profile_id)
+    live = _create(repository, label="Live Label", facts=_SECOND_FACTS)
 
-    renamed = repository.rename(live.profile_id, new_label="Old Label")
+    renamed = _rename(repository, live.profile_id, new_label="Old Label")
     assert renamed.label == "Old Label"
 
 
@@ -447,7 +533,7 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
     """
 
     repository = ProfileRepository()
-    created = repository.create(label="Status Drift", facts=_VALID_FACTS)
+    created = _create(repository, label="Status Drift", facts=_VALID_FACTS)
     # The fresh profile's record is ACTIVE and the manifest mirrors it.
     assert created.status is UserProfileStatus.ACTIVE
 
@@ -463,4 +549,4 @@ def test_load_surfaces_manifest_status_drift(_backend: Path) -> None:
     target.write_text(corrupted, encoding="utf-8")
 
     with pytest.raises(ProfileIntegrityError, match="cross-store lifecycle drift"):
-        repository.load(created.profile_id)
+        _load(repository, created.profile_id)

@@ -247,9 +247,7 @@ class ProfileRepository:
             raise ProfileNotFoundError(
                 tr(
                     "application.user_profile.errors.profile_manifest_already_registered",
-                    default=(
-                        "Profile '%{profile}' already has a registered bucket manifest at %{bucket_dir}."
-                    ),
+                    default=("Profile '%{profile}' already has a registered bucket manifest at %{bucket_dir}."),
                     profile=resolved_id,
                     bucket_dir=paths.bucket_dir,
                 )
@@ -645,9 +643,10 @@ class ProfileRepository:
         filing history. The refusal scans every registered profile's
         encrypted record, compares the canonical (upper-cased, trimmed)
         tax id, and fires before any store write so there is nothing to
-        roll back. A torn bucket whose record cannot be loaded blocks
-        creation until repair diagnostics make the uniqueness scan
-        trustworthy again.
+        roll back. An unreadable profile is skipped with an operator-visible
+        warning so one torn bucket does not prevent a different taxpayer from
+        registering. Duplicate detection still fires against all readable
+        profiles in the scan.
         """
 
         new_tax_id = _canonical_tax_id(facts)
@@ -665,26 +664,18 @@ class ProfileRepository:
 
                 with profile_storage_session(summary.profile_id):
                     aggregate = self.load(summary.profile_id)
-            except Exception as exc:
-                # A torn / unreadable bucket may carry the same tax id.
-                # Fail closed rather than silently allowing a duplicate
-                # taxpayer profile while local storage needs repair.
-                _log.debug(
-                    "tax-id uniqueness scan blocked by unreadable profile %s: %s",
+            except Exception:
+                # One torn / unreadable bucket must not prevent an operator
+                # from registering a completely different taxpayer. Emit an
+                # operator-visible warning and continue scanning the remaining
+                # readable profiles so duplicate detection still fires for them.
+                _log.warning(
+                    "tax-id uniqueness scan: skipping unreadable profile %s; "
+                    "proceeding with scan against readable profiles",
                     summary.profile_id,
-                    exc,
                     exc_info=True,
                 )
-                raise UserProfileValidationError(
-                    tr(
-                        "application.user_profile.errors.duplicate_tax_id_scan_unreadable_profile",
-                        default=(
-                            "Cannot verify tax-id uniqueness because profile '%{profile}' is unreadable; "
-                            "run repair diagnostics before creating another profile."
-                        ),
-                        profile=summary.label,
-                    )
-                ) from exc
+                continue
             existing_tax_id = _canonical_tax_id(aggregate.record.facts)
             if existing_tax_id is not None and existing_tax_id == new_tax_id:
                 raise ProfileAlreadyRegisteredError(
