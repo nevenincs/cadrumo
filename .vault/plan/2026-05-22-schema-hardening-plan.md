@@ -77,3 +77,14 @@ Track the remaining structural hardening work after validator modularisation: re
 - [x] `P06.S17` - Add or tighten fragment-schema regression gates for loader directory mode, TOML file-size, row-length, and multi-revision single-file prevention; `src/aeat/domain/calculations/registry/test_loader_directory_mode.py`.
 - [x] `P06.S18` - Audit generic revision-fragment support across M100 and non-fragmented modelos without adding per-modelo schema definitions; `src/aeat/domain/calculations/registry/_loader.py`.
 - [x] `P06.S19` - Identify the next modelo-family fragmentation target using committed line-count and revision-count evidence before touching registry TOMLs; `src/aeat/_data/registry/aeat/modelos`.
+
+### Phase `P07` - Registry hardening pathway tracking
+
+Keep registry-hardening work out of ad-hoc implementation by mapping each
+discovered pathway to its governing ADR, plan, or required follow-up decision
+before any further code or TOML edits land.
+
+- [x] `P07.S20` - Enumerate discovered registry hardening pathways and classify each as already tracked, plan-only follow-up, or ADR-required follow-up; `.vault/exec/2026-05-27-schema-hardening-placeholder-eradication.md`.
+- [ ] `P07.S21` - Refresh the committed-corpus fragmentation target list from current line-count, revision-count, and layout-mode evidence before selecting the next modelo split; `src/aeat/_data/registry/aeat/modelos`.
+- [ ] `P07.S22` - Decide whether M100 needs only physical fragments or a compile-time template authoring layer; create a new ADR before any template support is implemented; `.vault/adr`.
+- [ ] `P07.S23` - Keep validator-module reviewability under the P05 baseline; if a package-level validator boundary is needed, record the public-export compatibility plan before moving modules; `src/aeat/domain/calculations/registry`.
