@@ -72,7 +72,7 @@ type = "enum"
 required = false
 sensitivity = "operational"
 description = "Output language used by CLI rendering and notification copy."
-enum_values = ["es", "en", "ca", "eu", "gl"]
+enum_values = ["es", "en", "ca", "hu"]
 
 [[sections]]
 key = "contact"

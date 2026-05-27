@@ -3698,8 +3698,6 @@ wizard:
             label: Anglès
           es:
             label: Espanyol
-          eu:
-            label: Basc
           hu:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil

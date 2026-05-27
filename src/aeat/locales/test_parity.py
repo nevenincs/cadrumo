@@ -173,6 +173,18 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     )
 
 
+def test_ast_scanner_ignores_dynamic_domain_fact_keys(tmp_path: Path) -> None:
+    """Dynamic profile fact paths are not locale namespaces."""
+
+    (tmp_path / "profile_facts.py").write_text(
+        "def birth_date(fact_index, idx):\n"
+        "    return fact_index.get(f'renta_family.descendiente.{idx}.birth_date')\n",
+        encoding="utf-8",
+    )
+
+    assert "renta_family.descendiente.*" not in scan_namespace_markers(tmp_path)
+
+
 def _namespace_covers(key: str, prefix: str) -> bool:
     """Return True when ``key`` carries ``prefix`` as a dot-bounded sub-path.
 

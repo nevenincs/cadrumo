@@ -2850,8 +2850,6 @@ wizard:
             label: wizard.setup.profile.output-language.choices.en.label
           es:
             label: wizard.setup.profile.output-language.choices.es.label
-          eu:
-            label: wizard.setup.profile.output-language.choices.eu.label
           hu:
             label: wizard.setup.profile.output-language.choices.hu.label
         prompt: wizard.setup.profile.output-language.prompt
