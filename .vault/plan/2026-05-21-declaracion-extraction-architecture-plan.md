@@ -376,3 +376,9 @@ User clarified scope 2026-05-27: even when user does not personally file a model
 Author M180 declaracion_pdf named_label profile grounded against the AEAT-published printed-form layout in 02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf (Tipo 1 register template), author a sanitized synthetic fixture, and add a real round-trip test. Flip M180 from ABSENT to GROUNDED with corpus_round_trip_verified=true.
 
 - [x] `W07.P30.S171` - Ground M180 declaracion_pdf: author named_label profile, synthetic fixture, and round-trip test; `src/aeat/_data/registry/aeat/modelos/180/ src/aeat/tests/fixtures/justificantes/180/ src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+
+### Phase `W07.P31` - Ground M369 from AEAT DR369e21.xlsx and online manual
+
+Ground M369 esquema-union declaracion_pdf extraction profile from AEAT-published DR369e21.xlsx and online manual section headings. Flip provisional_pending_specimen to corpus_round_trip_verified. Author synthetic fixture and round-trip test.
+
+- [x] `W07.P31.S173` - Ground M369 esquema-union declaracion_pdf profile: update label_patterns to AEAT-grounded 'Ejercicio:' and 'Periodo:' (DR369e21.xlsx sheet T36904 rows 14/16 + AEAT manual section 2 heading); `save 5 AEAT corpus files; author synthetic fixture 369/2024-1T.pdf; add round-trip test; flip provisional_pending_specimen to corpus_round_trip_verified; `src/aeat/_data/registry/aeat/modelos/369/revisions/esquema-union/revision.toml src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/ src/aeat/tests/fixtures/justificantes/369/ src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/tests/fixtures/justificantes/_generate.py`.
