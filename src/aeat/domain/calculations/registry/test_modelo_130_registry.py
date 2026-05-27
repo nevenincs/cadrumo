@@ -173,6 +173,80 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
         )
 
 
+@pytest.mark.parametrize(
+    ("target_period", "prior_period", "filing_date_month"),
+    [("3T", "2T", 10), ("4T", "3T", 1)],
+)
+def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarter_saldo(
+    modelo_130_registry, target_period: str, prior_period: str, filing_date_month: int
+) -> None:
+    """P08.S52: extend regression coverage to 3T and 4T quarters.
+
+    P05.S18 covered 2T-resolves-from-1T. Structurally the cap rule is
+    identical for 3T→2T and 4T→3T, but the parametrised coverage
+    locks the full quarterly chain so a future cap regression that
+    only affects 3T or 4T cannot land silently.
+
+    No tautological assertion: expected C15 is the prior period's
+    saldo seed by binding contract (op=copy aggregation), not a
+    re-derivation of any formula under test.
+    """
+
+    snapshot = _snapshot_130(modelo_130_registry, period=target_period)
+    saldo_seed = Decimal("750.00")
+    filing_year = 2026 if target_period in ("2T", "3T") else 2026
+
+    prior_observation = RegistryModeloObservation(
+        modelo="130",
+        filing_year=filing_year,
+        period=prior_period,
+        observations=(
+            CasillaObservation(casilla_id="saldo-negativo-fin-periodo", value=saldo_seed),
+        ),
+    )
+    prior_year_income_observation = RegistryModeloObservation(
+        modelo="100",
+        filing_year=filing_year - 1,
+        period="0A",
+        observations=tuple(
+            CasillaObservation(casilla_id=cid, value=Decimal("0"))
+            for cid in ("0224", "1479", "1553", "1577")
+        ),
+    )
+
+    resolved_bindings = resolve_previous_filing_binding_values(
+        snapshot.revision,
+        (prior_observation, prior_year_income_observation),
+        filing_year=filing_year,
+        period=target_period,
+    )
+
+    assert resolved_bindings["modelo-130-resultados-negativos-anteriores"] == saldo_seed
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            "01": Decimal("20000"),
+            "02": Decimal("8000"),
+            "05": Decimal("500"),
+            "06": Decimal("200"),
+            "08": Decimal("4000"),
+            "10": Decimal("20"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={"filing_period": date(filing_year if target_period != "4T" else filing_year + 1, filing_date_month, 20)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            **resolved_bindings,
+        },
+    )
+
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    assert casilla_15.value == saldo_seed
+    assert casilla_15.absent_by_design is False
+
+
 def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry) -> None:
     """P08.S50 hardening: inputs and binding_values must agree on bound carry-forward values.
 
