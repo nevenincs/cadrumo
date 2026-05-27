@@ -97,6 +97,18 @@ def test_profile_get_explicit_profile_reads_named_bucket_not_active_bucket(runne
     assert "identity.name\tNamed Operator" in result.output
 
 
+def test_profile_get_uses_canonical_case_insensitive_key(runner: CliRunner) -> None:
+    _seed_profile("active")
+    select_profile_with_lifecycle_span("active")
+    dispose_engine()
+
+    result = runner.invoke(app, ["profile", "get", "IDENTITY.NAME"])
+
+    assert result.exit_code == 0, result.output
+    assert "identity.name\tTest Operator" in result.output
+    assert "IDENTITY.NAME" not in result.output
+
+
 def test_profile_unset_explicit_profile_updates_named_bucket_not_active_bucket(runner: CliRunner) -> None:
     _seed_profile("active")
     _seed_profile("named")
@@ -109,3 +121,16 @@ def test_profile_unset_explicit_profile_updates_named_bucket_not_active_bucket(r
     assert "identity.name\t<unset>" in result.output
     assert _read_fact("named", "identity.name") is None
     assert _read_fact("active", "identity.name") == "Test Operator"
+
+
+def test_profile_unset_uses_canonical_case_insensitive_key(runner: CliRunner) -> None:
+    _seed_profile("active")
+    select_profile_with_lifecycle_span("active")
+    dispose_engine()
+
+    result = runner.invoke(app, ["profile", "unset", "IDENTITY.NAME"])
+
+    assert result.exit_code == 0, result.output
+    assert "identity.name\t<unset>" in result.output
+    assert "IDENTITY.NAME" not in result.output
+    assert _read_fact("active", "identity.name") is None
