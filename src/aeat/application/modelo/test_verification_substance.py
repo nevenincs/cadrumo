@@ -168,6 +168,68 @@ def test_unknown_expression_does_not_block() -> None:
     assert _evaluate_predicate_expression('threshold(["01"], 100)', values) is True
 
 
+# ---------------------------------------------------------------------------
+# implies_nonzero — conditional predicate with strictly-positive antecedent
+# Authority: .vault/adr/2026-05-27-dsl-conditional-predicate-adr.md
+# ---------------------------------------------------------------------------
+
+
+def test_predicate_implies_nonzero_holds_when_antecedent_zero() -> None:
+    """Antecedent zero → predicate holds trivially (material implication with false antecedent).
+
+    Mirrors the AEAT phrasing "cuando C01 sea positivo"; a zero antecedent
+    does not engage the implication, regardless of the consequent's value.
+    """
+    values: dict[str, Decimal] = {"01": Decimal("0"), "07": Decimal("0")}
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+
+
+def test_predicate_implies_nonzero_holds_when_antecedent_negative() -> None:
+    """Antecedent negative → predicate holds trivially.
+
+    The antecedent test is strictly-positive (> 0) rather than non-zero;
+    a negative antecedent — even though casillas typically cannot carry
+    negative base imponible — does not engage the implication. This is
+    the defensive contract spelled out in ADR §C (constraints).
+    """
+    values: dict[str, Decimal] = {"01": Decimal("-100"), "07": Decimal("0")}
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+
+
+def test_predicate_implies_nonzero_holds_when_both_positive() -> None:
+    """Antecedent positive AND consequent non-zero → predicate holds (satisfied implication).
+
+    The expected happy path for cuota-mínima invariants: when base is
+    positive and cuota-mínima is also populated, the regulatory rule is
+    satisfied.
+    """
+    values: dict[str, Decimal] = {"01": Decimal("500"), "07": Decimal("200")}
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+
+
+def test_predicate_implies_nonzero_violated_when_consequent_zero() -> None:
+    """Antecedent positive AND consequent zero → predicate violated.
+
+    The canonical M131 EO cuota-mínima miss: base imponible positive but
+    cuota-mínima absent. ADR D2.2 anti-tautology proof: this exact case
+    is what `all_nonzero(["01", "07"])` would mis-flag when C01 is itself
+    zero. The new operator does not have that false-positive surface.
+    """
+    values: dict[str, Decimal] = {"01": Decimal("500"), "07": Decimal("0")}
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is False
+
+
+def test_predicate_implies_nonzero_unknown_consequent_treated_as_zero() -> None:
+    """Antecedent positive AND consequent absent → predicate violated.
+
+    Missing casilla reads as Decimal(0) via the ``.get(id, Decimal(0))``
+    default, same convention as the other operators. The implication
+    therefore fires the BLOCKING finding rather than silently passing.
+    """
+    values: dict[str, Decimal] = {"01": Decimal("500")}
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is False
+
+
 def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:
     """Empty predicate tuple yields empty findings list."""
     findings = _evaluate_verification_predicates((), {})
@@ -420,12 +482,14 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "any_nonzero": 'any_nonzero(["01", "02"])',
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
+        "implies_nonzero": 'implies_nonzero(["01", "07"])',
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
         "any_nonzero": "_PREDICATE_ANY_NONZERO",
         "cap_le_when_positive": "_PREDICATE_CAP_LE_WHEN_POSITIVE",
         "advisory_when_ratio_ge": "_PREDICATE_ADVISORY_WHEN_RATIO_GE",
+        "implies_nonzero": "_PREDICATE_IMPLIES_NONZERO",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
