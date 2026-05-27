@@ -11,8 +11,13 @@ from typing import ClassVar
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.outbound.aeat.sede import FiledDeclaracionObservation
-from ...adapters.persistence.storage import SensitivityClass, safe_repository_id
+from ...adapters.persistence.storage import (
+    IVA_COMPENSATION_HISTORY_NAMESPACE,
+    SensitivityClass,
+    safe_repository_id,
+)
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
+from ...core.errors import AeatError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _ZERO = Decimal("0")
@@ -80,11 +85,11 @@ class IvaCompensationCarryForwardReport(BaseModel):
     unallocated_applied_amount: Decimal = Field(ge=_ZERO)
 
 
-class IvaCompensationCarryForwardPolicyError(ValueError):
+class IvaCompensationCarryForwardPolicyError(AeatError, ValueError):
     """Raised when IVA compensation carry-forward lots violate policy."""
 
 
-class IvaCompensationSeedConflictError(ValueError):
+class IvaCompensationSeedConflictError(AeatError, ValueError):
     """Raised when a seed is attempted for a period that already has a stored state."""
 
 
@@ -199,9 +204,9 @@ def enforce_iva_compensation_four_year_window(
 class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeriodState]):
     """Encrypted profile-local store of Modelo 303 IVA compensation history."""
 
-    namespace: ClassVar[str] = "aeat.calculations.iva_compensation.history"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = IVA_COMPENSATION_HISTORY_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = IVA_COMPENSATION_HISTORY_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = IVA_COMPENSATION_HISTORY_NAMESPACE.schema_version
     payload_type: ClassVar[type[IvaCompensationPeriodState]] = IvaCompensationPeriodState
 
     def extract_identifier(self, payload: IvaCompensationPeriodState) -> str:

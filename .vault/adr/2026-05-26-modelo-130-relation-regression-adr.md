@@ -480,3 +480,75 @@ inputs hazard — the silent-zero hazard in disguise — is gone.
 Amendment 2026-05-27 (A)'s "silent ignore" wording is superseded
 for the smuggle case. The runtime contract for legitimate
 projection (both maps populated with the same value) is unchanged.
+
+## Amendment 2026-05-27 (C) — second honesty-pass hardening (P08)
+
+A second campaign-close honesty review at 2026-05-27 — prompted
+after P07 was declared structurally complete — surfaced 14
+additional items the campaign acquired or assumed-but-did-not-
+verify. The recurrence of the pattern (honesty-pass-only
+disclosure) is itself a process finding tracked at P08.S58.
+
+P08 covers 13 actionable Steps (S47-S59) plus the closing
+verification:
+
+### Regulatory cap-rule defects (highest priority)
+
+- **S47** — M131 C11 ≤ C10 cap rule is documented in AEAT
+  Modelo 131 instructions ("en ningún caso podrá figurar en la
+  casilla 11 un importe superior a la cantidad positiva
+  consignada en la casilla 10") but NOT enforced. The binding
+  aggregation `op = "copy"` straight-copies the prior seed
+  without capping. Either declare a verification predicate or
+  extend the binding-aggregation surface with a clamp-to-
+  casilla operator.
+
+- **S48** — M130 C15 ≤ C14 cap rule (parallel finding from
+  symmetry). Same defect shape, AEAT M130 instructions cited.
+
+### Test contract hardening
+
+- **S50** — `inputs` vs `binding_values` consistency check
+  missing. The P07.S36 gate catches missing-binding-value but
+  silently picks `binding_values` when both maps declare
+  different values. Add an inconsistency rejection.
+
+- **S51** — `CasillaObservation.absent_by_design` has no
+  persistence-roundtrip test.
+
+- **S52** — M130 3T and 4T quarters lack direct regression
+  coverage (only 1T and 2T tested in P05).
+
+### Architectural follow-ups
+
+- **S49** — C03 silent computed→bound conversion (parallel
+  campaign) never audited for AEAT grounding soundness.
+
+- **S55** — S33 refactor was less aggressive than spec'd; the
+  underscore-prefixed applicability constants are still
+  externally consumed through the focused public module.
+
+### Specimen + corpus authenticity
+
+- **S53** — `provisional_pending_specimen = true` specimen
+  authenticity unverified for M111/M130/M131.
+
+- **S54** — M131 AEAT corpus HTML provenance unchecked.
+
+### Process / governance
+
+- **S56** — independent `vaultspec-code-reviewer` agent was
+  never invoked. The vaultspec system rules mandate it.
+
+- **S57** — `vault plan step check` silently drops plan body
+  prose sections; raise upstream.
+
+- **S58** — institutionalise the second honesty-review pass as
+  a campaign-close process gate.
+
+- **S59** — P08 closing verification.
+
+The campaign continues to harden, not weaken. Acceptance
+criterion 8 from Amendment (B) extends: every P08 Step closed
+with a verification gate before the campaign is considered
+structurally complete.
