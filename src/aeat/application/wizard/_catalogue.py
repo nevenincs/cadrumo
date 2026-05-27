@@ -12,12 +12,20 @@ from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
 from ...domain.deadlines._models import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
+from ...domain.profile import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
 from ...domain.profile._ccaa import CCAA
 from ._models import (
     WizardChoice,
@@ -121,6 +129,28 @@ _IRPF_ESTIMATION_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
         label=tr(f"wizard.setup.obligations.irpf-estimation-regime.choices.{member.value.replace('_', '-')}.label"),
     )
     for member in IrpfEstimationRegime
+)
+
+_IRPF_SPECIAL_REGIME_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.obligations.irpf-special-regime.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in IrpfSpecialRegime
+)
+
+_IMPATRIADO_REGIME = WizardCondition(question_id="irpf-special-regime", equals=IrpfSpecialRegime.IMPATRIADO.value)
+
+_FISCAL_RESIDENCY_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(
+        value=member.value,
+        label=tr(f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"),
+    )
+    for member in FiscalResidency
+)
+
+_NON_RESIDENT_IRNR = WizardCondition(
+    question_id="fiscal-residency", equals=FiscalResidency.NON_RESIDENT_IRNR.value
 )
 
 
@@ -688,6 +718,27 @@ _OBLIGATIONS_SECTION = WizardSection(
             required=False,
             answer_type=str,
         ),
+        WizardQuestion(
+            id="irpf-special-regime",
+            profile_key="irpf.special_regime",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.obligations.irpf-special-regime.prompt"),
+            help=tr("wizard.setup.obligations.irpf-special-regime.help"),
+            choices=_IRPF_SPECIAL_REGIME_CHOICES,
+            required=False,
+            visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="irpf-special-regime-start-date",
+            profile_key="irpf.special_regime_start_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.irpf-special-regime-start-date.prompt"),
+            help=tr("wizard.setup.obligations.irpf-special-regime-start-date.help"),
+            required=False,
+            visible_when=_IMPATRIADO_REGIME,
+            answer_type=str,
+        ),
         _confirm("does-intracomunitario", "iva.does_intracomunitario", suffix="obligations"),
         _confirm(
             "third-party-transactions-above-347-threshold",
@@ -707,6 +758,25 @@ _RESIDENCE_SECTION = WizardSection(
     id="residence",
     title=tr("wizard.setup.residence.title"),
     questions=(
+        WizardQuestion(
+            id="fiscal-residency",
+            profile_key="taxpayer_type.fiscal_residency",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.residence.fiscal-residency.prompt"),
+            choices=_FISCAL_RESIDENCY_CHOICES,
+            default=FiscalResidency.RESIDENT_IRPF.value,
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="country-of-fiscal-residence",
+            profile_key="taxpayer_type.country_of_fiscal_residence",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.country-of-fiscal-residence.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
         WizardQuestion(
             id="tax-residence-ccaa",
             profile_key="tax_residence.ccaa",

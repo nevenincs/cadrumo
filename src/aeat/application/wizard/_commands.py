@@ -69,6 +69,17 @@ def _ccaa_choice_values() -> list[str]:
 _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
 
 
+def _fiscal_residency_choice_values() -> list[str]:
+    """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
+
+    from ...domain.deadlines._models import FiscalResidency
+
+    return [member.value for member in FiscalResidency]
+
+
+_FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = _fiscal_residency_choice_values()
+
+
 def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
     """Return choice tokens for the taxpayer-type and IRPF-regime enums.
 
@@ -265,6 +276,15 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "bienes-extranjero-above-threshold": typer.Option(
         "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
         help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
+    ),
+    "fiscal-residency": typer.Option(
+        "--fiscal-residency",
+        click_type=click.Choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.fiscal-residency.help"),
+    ),
+    "country-of-fiscal-residence": typer.Option(
+        "--country-of-fiscal-residence",
+        help=tr("wizard.setup.flags.country-of-fiscal-residence.help"),
     ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",

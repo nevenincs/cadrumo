@@ -16,6 +16,7 @@ from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
 from ._models import (
+    FiscalResidency,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
@@ -150,7 +151,15 @@ def taxpayer_profile_from_mapping(
             # added to the SETUP_FLOW.
             typed.irpf_special_regime or canonical.get("irpf.special_regime", "")
         ),
-        special_regime_start_date=_parse_date(canonical.get("irpf.special_regime_start_date")),
+        special_regime_start_date=_parse_date(
+            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date")
+        ),
+        fiscal_residency=_resolve_fiscal_residency(
+            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", "")
+        ),
+        country_of_fiscal_residence=_coerce_country_code(
+            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", "")
+        ),
     )
 
 
@@ -223,6 +232,28 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
         return default
     canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
+
+
+def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:
+    """Project the SetupAnswers fiscal-residency field to a typed enum or None.
+
+    A blank string means the operator has not declared fiscal residency
+    (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
+    """
+
+    if raw == "" or raw is None:
+        return None
+    if isinstance(raw, FiscalResidency):
+        return raw
+    return FiscalResidency(raw)
+
+
+def _coerce_country_code(raw: str) -> str | None:
+    """Normalise a raw country-code token to upper-case or None when absent."""
+
+    if not raw or raw.strip() == "":
+        return None
+    return raw.strip().upper()
 
 
 def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime | None:
