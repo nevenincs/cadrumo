@@ -26,6 +26,21 @@ from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses (un-migrated commands,
+    error envelopes, etc.) pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
@@ -73,7 +88,7 @@ def _create_303_work_unit() -> dict[str, object]:
         ]
     )
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)
+    return _payload(result.output)
 
 
 def _raw_transaction(
@@ -195,7 +210,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
         ]
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     revision_id = payload["calculation_revision_id"]
 
     with profile_storage_session(bucket_id):
