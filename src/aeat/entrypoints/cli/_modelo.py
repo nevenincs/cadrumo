@@ -189,6 +189,31 @@ def _require_active_profile() -> None:
         raise CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
 
 
+def _guard_foral_profile_ccaa() -> None:
+    """Refuse ``work create`` when the active profile carries a foral CCAA token.
+
+    Defence-in-depth guard: the wizard creation path rejects foral tokens at
+    input time via :func:`parse_tax_region`, but a profile inserted through
+    the persistence layer (migration tool, direct DB write) could carry a raw
+    foral string in the ``tax_residence.ccaa`` fact.  Calling
+    :func:`parse_tax_region` on the stored token here means the same
+    ``ForalRegimeError`` fires before any registry or bucket work begins —
+    the ``command_error_boundary`` decorator then surfaces it cleanly on
+    stderr with the Ley 12/2002 citation.  A missing or blank CCAA fact is
+    not a foral error; :func:`_require_active_profile` handles the
+    unconfigured-profile case separately.
+    """
+
+    from ...application.user_profile._orchestration import fact_value
+    from ...application.workflow._persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    record = state.active_profile_record()
+    raw_ccaa = fact_value(record, "tax_residence.ccaa")
+    if raw_ccaa:
+        parse_tax_region(raw_ccaa)
+
+
 def _run_query[T](call: Callable[[], T]) -> T:
     """Run a registry-query call and translate user-input errors to clean CLI failures.
 
@@ -1787,6 +1812,11 @@ def work_create(
     _validate_registry_target(modelo, revision, year)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
+    # Foral defence-in-depth: rejects profiles whose stored tax_residence.ccaa
+    # fact carries a foral token that bypassed the wizard-layer guard (e.g.
+    # direct persistence insert or migration).  ForalRegimeError surfaces via
+    # command_error_boundary with the Ley 12/2002 redirect message.
+    _guard_foral_profile_ccaa()
     # Round-4 M4: refuse a work unit for a modelo the active profile's
     # taxpayer model positively excludes (a natural person has no
     # Modelo 202; an attribution entity runs no cuota). The guard runs
@@ -2625,9 +2655,12 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     if not _BARE_NUMERIC_RE.fullmatch(key):
         return key
 
-    # Strip leading zeros for numeric equality; "69", "069", "00069" all match.
-    key_numeric = key.lstrip("0") or "0"
-    matches = [c for c in revision.casillas if ((c.number or "").lstrip("0") or "0") == key_numeric]
+    # Numeric equality across zero-padding; "69", "069", "00069" all match.
+    # `_BARE_NUMERIC_RE.fullmatch` upstream guarantees `key` is all digits, so
+    # `int(...)` is total; casilla.number falls back to "0" on a missing token
+    # so the same canonicalisation runs against every catalogued casilla.
+    key_numeric = int(key)
+    matches = [c for c in revision.casillas if int(c.number or "0") == key_numeric]
     if len(matches) == 1:
         return str(matches[0].id)
 

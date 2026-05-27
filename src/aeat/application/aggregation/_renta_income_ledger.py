@@ -83,6 +83,13 @@ class RentaIncomeObservation(BaseModel):
     ``taxable_base_sum`` fact path used by the rendimiento-neto binding
     (casilla 03).  ``None`` when the transaction carries no explicit
     ``taxable_base``.
+
+    ``source_jurisdiction`` propagates the per-transaction ISO 3166-1
+    alpha-2 source-jurisdiction provenance from the originating ledger
+    row.  LIRPF Art. 8 establishes the universal-base presumption for
+    Spanish residents, so M130 / M100 aggregate ALL source jurisdictions
+    into the same base — the field is preserved for audit and for
+    downstream IRNR / Beckham engines that read foreign-source rows.
     """
 
     model_config = _STRICT_FROZEN
@@ -92,6 +99,7 @@ class RentaIncomeObservation(BaseModel):
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     filing_date: date
+    source_jurisdiction: str | None = None
 
 
 class RentaIncomeLedgerAggregation(BaseModel):
@@ -293,6 +301,7 @@ def _classify_income_transaction(
         gross_amount=gross_amount,
         taxable_base_amount=taxable_base_amount,
         filing_date=filing_date,
+        source_jurisdiction=transaction.source_jurisdiction,
     )
 
 

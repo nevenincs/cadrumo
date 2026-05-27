@@ -10,20 +10,15 @@ from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict
 
-# Imported from the defining `_clave_movil` module, not the `auth`
-# package surface: `adapters.outbound.aeat.auth.__init__` imports
-# `application.auth`, and `application.auth.__init__` imports this
-# module — re-entering the package surface here closes a circular
-# import. `_clave_movil` is a leaf module (no application-layer
-# import), so importing the public-named constant from it directly
-# breaks the cycle.
-from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
-from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
+_DIAGNOSTIC_SENSITIVITY = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity
+_DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version
 AUTH_DIAGNOSTIC_PHONE_STATES: tuple[str, ...] = (
     "app_prompted_and_accepted",
     "app_prompted_not_accepted",
@@ -116,10 +111,10 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
 
     record = _secure_objects().load(
-        CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+        _DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
-        expected_class=SensitivityClass.SESSION,
-        max_supported_version=1,
+        expected_class=_DIAGNOSTIC_SENSITIVITY,
+        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
     )
     if record is None:
         return None
@@ -146,10 +141,10 @@ def record_auth_diagnostic_phone_state(
         raise ValueError(phone_state)
     objects = _secure_objects()
     record = objects.load(
-        CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+        _DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
-        expected_class=SensitivityClass.SESSION,
-        max_supported_version=1,
+        expected_class=_DIAGNOSTIC_SENSITIVITY,
+        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
     )
     if record is None:
         return None
@@ -160,10 +155,10 @@ def record_auth_diagnostic_phone_state(
         "reported_at": reported_at.isoformat(),
     }
     objects.save(
-        namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+        namespace=_DIAGNOSTIC_NAMESPACE,
         object_key=diagnostic_id,
-        classification=SensitivityClass.SESSION,
-        schema_version=1,
+        classification=_DIAGNOSTIC_SENSITIVITY,
+        schema_version=_DIAGNOSTIC_SCHEMA_VERSION,
         written_at=reported_at,
         payload=json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"),
     )
@@ -176,9 +171,9 @@ def record_auth_diagnostic_phone_state(
 
 def _diagnostic_records():
     return _secure_objects().list_records(
-        CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
-        expected_class=SensitivityClass.SESSION,
-        max_supported_version=1,
+        _DIAGNOSTIC_NAMESPACE,
+        expected_class=_DIAGNOSTIC_SENSITIVITY,
+        max_supported_version=_DIAGNOSTIC_SCHEMA_VERSION,
     )
 
 

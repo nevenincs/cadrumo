@@ -166,6 +166,7 @@ def taxpayer_profile_from_mapping(
         irpf_pagadores_secondary_income=_parse_decimal(
             canonical.get("irpf.pagadores_secondary_income")
         ),
+        days_in_spain=_parse_days_in_spain(canonical),
     )
 
 
@@ -220,6 +221,27 @@ def _parse_optional_int(raw: str | None) -> int | None:
         return int(raw.strip())
     except ValueError:
         return None
+
+
+def _parse_days_in_spain(canonical: dict[str, str]) -> dict[int, int]:
+    """Extract ``taxpayer_type.days_in_spain_YYYY`` keys from the canonical mapping.
+
+    The profile stores per-year presence counts under keys of the form
+    ``taxpayer_type.days_in_spain_2024``. This helper collects them all
+    into a ``{year: days}`` dict so the deadline engine and profile-health
+    checks can evaluate the Art. 9 LIRPF 183-day residency threshold.
+    """
+
+    result: dict[int, int] = {}
+    prefix = "taxpayer_type.days_in_spain_"
+    for key, raw in canonical.items():
+        if key.startswith(prefix):
+            year_part = key[len(prefix):]
+            if len(year_part) == 4 and year_part.isdigit():
+                days = _parse_optional_int(raw)
+                if days is not None:
+                    result[int(year_part)] = days
+    return result
 
 
 def _stringify(raw: object) -> str:

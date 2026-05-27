@@ -49,7 +49,10 @@ def render_command_output(
     try:
         output_format = OutputFormat(format_name.strip().lower() or OutputFormat.TEXT.value)
     except ValueError as exc:
-        raise OutputFormatRefusedError(f"unsupported output format {format_name!r}; expected 'text' or 'json'") from exc
+        raise OutputFormatRefusedError(
+            context={"format_name": format_name, "expected": "text,json"},
+            translated_message="errors.refused.refused_output_format",
+        ) from exc
     if output_format is OutputFormat.JSON:
         return RenderedCommandOutput(
             format=output_format,
@@ -67,7 +70,10 @@ def _json_default(value: object) -> object:
         return format(value, "f")
     if isinstance(value, set | frozenset):
         return sorted(value)
-    raise OutputRenderingError(f"output rendering cannot JSON-encode {type(value).__name__}")
+    raise OutputRenderingError(
+        context={"type_name": type(value).__name__},
+        translated_message="errors.internal.internal_output_rendering",
+    )
 
 
 def jsonable_output_payload(payload: object) -> object:

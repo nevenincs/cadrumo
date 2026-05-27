@@ -2010,7 +2010,13 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
 # gate test asserts the runtime evaluator recognises every name
 # in this constant.
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
-    {"all_nonzero", "any_nonzero", "cap_le_when_positive", "advisory_when_ratio_ge"}
+    {
+        "all_nonzero",
+        "any_nonzero",
+        "cap_le_when_positive",
+        "advisory_when_ratio_ge",
+        "implies_nonzero",
+    }
 )
 
 
@@ -2036,9 +2042,18 @@ class VerificationPredicateDefinition(RegistryModel):
       figurar... un importe superior a la cantidad positiva consignada").
       Predicate holds when ceiling ≤ 0; the cap applies only when the
       operator's gross liability is positive.
-
-    Complex DSL (conditional, arithmetic, threshold beyond the above) is
-    deferred to W09.
+    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
+      implication with a strictly-positive antecedent test: predicate
+      holds iff ``casilla_values[antecedent] <= 0`` OR
+      ``casilla_values[consequent] != 0``. Authored for AEAT cuota-mínima
+      invariants of the shape "cuando C01 sea positivo, C07 debe ser
+      distinta de cero" (M131 EO cuota mínima, M130/M303 régimen
+      simplificado analogues). The antecedent is strictly-positive rather
+      than non-zero to mirror the regulatory phrasing; a casilla with a
+      negative value does not trigger the implication. A missing
+      consequent value evaluates to ``Decimal(0)`` and therefore
+      violates the predicate when the antecedent is positive. Added by
+      the dsl-conditional-predicate ADR.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)

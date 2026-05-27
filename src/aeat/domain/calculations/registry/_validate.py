@@ -16,6 +16,11 @@ from ._schema import (
     SourceReference,
 )
 from ._sources import verify_source_catalogue
+from ._validate_cache import (
+    _CATALOGUE_FAILURE_CACHE,
+    _MODELO_VALIDATION_CACHE,
+    _REGISTRY_VALIDATION_CACHE,
+)
 from ._validate_evidence import EvidenceValidator
 from ._validate_registry_scope import validate_registry_scope
 from ._validate_revision_rules import (
@@ -27,25 +32,6 @@ from ._validate_revision_sections import validate_revision_definition
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
 
-_CatalogueCacheKey = tuple[int, int, str | None, bool]
-_CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
-_ModeloValidationCacheKey = tuple[int, int, int, str | None, str | None]
-_ModeloValidationCacheValue = tuple[
-    ModeloDefinition,
-    Mapping[str, LegalReference],
-    Mapping[str, SourceReference],
-    tuple[str, ...],
-]
-_RegistryValidationCacheKey = tuple[tuple[int, ...], int, int, str | None, str | None]
-_RegistryValidationCacheValue = tuple[
-    tuple[ModeloDefinition, ...],
-    Mapping[str, LegalReference],
-    Mapping[str, SourceReference],
-    tuple[str, ...],
-]
-_CATALOGUE_FAILURE_CACHE: dict[_CatalogueCacheKey, _CatalogueCacheValue] = {}
-_MODELO_VALIDATION_CACHE: dict[_ModeloValidationCacheKey, _ModeloValidationCacheValue] = {}
-_REGISTRY_VALIDATION_CACHE: dict[_RegistryValidationCacheKey, _RegistryValidationCacheValue] = {}
 
 class RegistryValidator:
     """Validate legal/source closure and calculability for modelos.

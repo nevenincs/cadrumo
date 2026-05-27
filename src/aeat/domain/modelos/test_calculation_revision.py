@@ -268,3 +268,47 @@ def test_revision_id_includes_present_borrador_metadata() -> None:
     )
 
     assert with_borrador != base
+
+
+def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
+    """Regression: sort key must work for all four row types (M184/M232 use nif,
+    M349 uses nif_comunitario, M347 uses nif). This test verifies the sort key
+    accessor correctly extracts the identifier field for each row type."""
+    from ._row_models import (
+        Modelo184MemberRow,
+        Modelo232VinculadaRow,
+        Modelo349OperadorRow,
+        Modelo347ContraparteRow,
+    )
+
+    # Create one row of each type with distinct nif/nif_comunitario values.
+    m184_row = Modelo184MemberRow(
+        nif="12345678A", porcentaje=Decimal("50.00"), importe=Decimal("100.00")
+    )
+    m232_row = Modelo232VinculadaRow(nif="87654321B", importe=Decimal("200.00"))
+    m349_row = Modelo349OperadorRow(
+        codigo_pais="DE",
+        nif_comunitario="DE123456789",
+        clave_operacion="E",
+        importe=Decimal("300.00"),
+    )
+    m347_row = Modelo347ContraparteRow(nif="11223344C", importe_Q1=Decimal("400.00"))
+
+    # All four rows must flow through the hash derivation without AttributeError.
+    # The sort should succeed and the hash should be deterministic.
+    id1 = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values={},
+        detail_rows=(m184_row, m232_row, m349_row, m347_row),
+    )
+    # Same rows in reverse order must produce the same id (sort-insensitive).
+    id2 = derive_calculation_revision_id(
+        work_unit_id="a" * 64,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values={},
+        detail_rows=(m347_row, m349_row, m232_row, m184_row),
+    )
+    assert id1 == id2, "Row sort key must handle all four row types consistently"

@@ -106,7 +106,10 @@ class ApoderadoService:
         settings: Settings | None = None,
         catalogue: ApoderamientosCatalogue | None = None,
     ) -> None:
-        self._settings = settings or Settings()
+        # `load_settings()` honours `override_settings`; bare `Settings()`
+        # bypasses the context-var.
+        from ...core.config import load_settings as _load_settings
+        self._settings = settings or _load_settings()
         self._catalogue = catalogue or load_default_catalogue()
         # Build repositories lazily per requested bucket so catalogue-only
         # verbs never touch storage and a long-lived service cannot route

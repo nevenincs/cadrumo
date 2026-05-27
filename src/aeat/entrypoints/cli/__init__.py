@@ -30,7 +30,7 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
 
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr as _tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._command_suggestions import (
     AeatTyperGroup as _AeatTyperGroup,
     LazySubcommand as _LazySubcommand,
@@ -57,7 +57,7 @@ from ._log_levels import apply_to_root_logger as _apply_to_root_logger, resolve_
 
 app = typer.Typer(
     name="aeat",
-    help=_tr("cli.root.app_help"),
+    help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
@@ -74,42 +74,42 @@ def _root(
         "--language",
         "--lang",
         click_type=click.Choice(_SUPPORTED_OUTPUT_LANGUAGES),
-        help=_tr("cli.root.language_help"),
+        help=tr("cli.root.language_help"),
         is_eager=True,
     ),
     profile: str | None = typer.Option(
         None,
         "--profile",
-        help=_tr("cli.root.profile_help"),
+        help=tr("cli.root.profile_help"),
     ),
     version: bool = typer.Option(
         False,
         "--version",
         "-V",
-        help=_tr("cli.root.version_help"),
+        help=tr("cli.root.version_help"),
         is_eager=True,
     ),
     detail: bool = typer.Option(
         False,
         "--detail",
-        help=_tr("cli.root.detail_help"),
+        help=tr("cli.root.detail_help"),
         is_eager=True,
     ),
     help_: bool = typer.Option(
         False,
         "--help",
         "-h",
-        help=_tr("cli.root.help_help"),
+        help=tr("cli.root.help_help"),
         is_eager=True,
     ),
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
-        help=_tr("cli.root.format_help"),
+        help=tr("cli.root.format_help"),
     ),
-    quiet: bool = typer.Option(False, "--quiet", help=_tr("cli.root.quiet_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=_tr("cli.root.verbose_help")),
-    debug: bool = typer.Option(False, "--debug", help=_tr("cli.root.debug_help")),
+    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
+    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
@@ -189,10 +189,10 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
     requested = profile.strip()
     if not requested:
-        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=profile))
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile))
     pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
     if pointer is None:
-        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=requested))
+        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=requested))
     ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
 
 
@@ -250,7 +250,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
-    # session opens — so any `_tr()` fired during module import or the
+    # session opens — so any `tr()` fired during module import or the
     # root callback cached the settings-default language before the
     # profile preference was readable. Drop the cache here so the verb
     # body re-resolves through the now-readable profile preference.
@@ -302,7 +302,7 @@ def _full_invocation_verb_path() -> str | None:
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
-        help=_tr("cli.root.unavailable_app_help"),
+        help=tr("cli.root.unavailable_app_help"),
         no_args_is_help=False,
         invoke_without_command=True,
     )
@@ -321,7 +321,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _missing_dependency_name(error)
-    return _tr("cli.root.startup_import_error", dependency=dependency) + "\n"
+    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:
@@ -340,7 +340,7 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 
 app_app = typer.Typer(
     name="app",
-    help=_tr("cli.root.app_app_help"),
+    help=tr("cli.root.app_app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
@@ -351,7 +351,7 @@ app_app = typer.Typer(
 @app_app.callback()
 def _app_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=_tr("cli.root.app_help_help"), is_eager=True),
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
 ) -> None:
     """Render app-level workflow help when requested."""
 

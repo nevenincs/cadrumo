@@ -1,8 +1,6 @@
 access_gate:
   errors:
-    default_translatable: l'enviament en viu a l'AEAT està permanentment prohibit;
-      utilitza produce -> verify -> export i puja el fitxer tu mateix al portal de
-      l'AEAT
+    default_translatable: Error de porta d'acces.
 adapters:
   aeat:
     clave_movil:
@@ -111,7 +109,7 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
-      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
+      candidate_outside_period: La candidatura queda fora del periode.
       unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
   modelo_bindings:
     errors:
@@ -544,6 +542,19 @@ cli:
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
+        acquisition:
+          outcome:
+            aeat_403: porta AEAT 403/autenticació
+            authenticated: autenticat
+            certificate_required: certificat requerit
+            dom_drift: la forma de la pàgina AEAT ha canviat
+            live_navigation_failed: navegació en directe fallida
+            no_clave_prompt: sense avís de Cl@ve
+            operator_timeout: temps d'aprovació esgotat
+            pending_clave_request: petició Cl@ve pendent
+            qr_required: aprovació QR requerida
+            unknown: desconegut
+            wrong_identity: identitat incorrecta
         app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura;
           només permet representació en nom propi i la consulta de lectura protegida
           de cartera).
@@ -552,6 +563,9 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
+        capture_remote_state_help: Captura en directe l'historial de Model 303 presentat
+          i intenta la lectura de la cartera d'IVA AEAT com una adquisició tipada
+          de només lectura.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -1336,12 +1350,15 @@ cli:
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
       import_help: Registra un paquet portable de perfil des d'un JSON
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
         amb `--label NOM_NOU` per importar-lo amb un nom diferent.
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
       logout_session_warning: El tancament de sessió ha esborrat el punter del perfil
         actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
@@ -1389,12 +1406,6 @@ cli:
         espai de noms (o en tots).
       integrity_registry_help: Executa la validació completa del registre (la comprovació
         d'integritat opcional entre dominis).
-      list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
-        or neither.
-      list_help: List secure-object keys stored under one namespace.
-      list_namespace_help: Namespace to inventory.
-      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del fitxer de logs i les línies recents
       logs_lines_help: Nombre de línies recents del fitxer de logs a mostrar
       plan_help: Planificació de reparació en sec i amb preservació primer per a files
@@ -1468,6 +1479,7 @@ cli:
       key_help: Clau a netejar
     workflow_help: Mostrar ajuda del flux de configuració
   diagnostics:
+    app_help: cli.diagnostics.app_help
     browser:
       http_status_label: Estat HTTP
       markers_label: Marcadors
@@ -1483,6 +1495,23 @@ cli:
         del teu perfil ni una cosa que puguis corregir tu.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    profile:
+      errors:
+        ambiguous_profile: 'Ambiguous profile label: %{profile}'
+        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
+        invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
+          config profile switch NAME` first.
+        profile_empty: --profile must not be empty when supplied.
+        unknown_profile: 'Unknown profile: %{profile}'
+        unknown_profile_key: 'Unknown profile key: %{key}'
+      get_help: Read one profile key stored value.
+      help: Engineer-only profile field inspection and surgical edits.
+      key_help: Profile key.
+      profile_help: Profile to use; defaults to the active profile.
+      set_help: Write one profile key value, validated against the wizard descriptor.
+      unset_help: Clear one profile key value.
+      value_help: Value to store.
     repair:
       audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
@@ -1498,6 +1527,15 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versió
+    secure_objects:
+      all_help: Return every key, including unreadable rows.
+      errors:
+        conflicting_filters: --all and --unreadable cannot be combined; pass one or
+          neither.
+      help: Inventory the secure-object index by namespace.
+      list_help: List secure-object keys stored under one namespace.
+      namespace_help: Namespace to inventory.
+      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
@@ -1548,6 +1586,12 @@ cli:
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
       purchase_invoice_evidence_help: Id de justificant de factura de compra
+      source_jurisdiction_help: Codi de país ISO 3166-1 alfa-2 (dues lletres) que
+        identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
+        per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
+        Beckham de l'art. 93 LIRPF.
+      source_jurisdiction_required_beckham: 'El règim impatriat (art. 93 LIRPF, Beckham) tracta de forma diferent els rendiments de font espanyola i els de font estrangera; --source-jurisdiction s''ha de declarar explícitament a cada apunt. Un valor per defecte silenciós ES inclouria rendiments de font estrangera a la base de l''IRPF (art. 93.5 segregació).'
+      source_jurisdiction_required_irnr: '--source-jurisdiction es obligatori per a perfils de no resident IRNR.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
@@ -2190,8 +2234,15 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: Volíeu dir '%{command}'?
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
@@ -2223,6 +2274,13 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
@@ -3120,6 +3178,13 @@ errors:
         Comprova la ruta d'emmagatzematge configurada i torna-ho a provar.
       empty_database_url: L'URL de base de dades configurada és buida. Selecciona
         un perfil o configura l'emmagatzematge abans de tornar-ho a provar.
+    namespace:
+      classification_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
+      schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
+        per a l'emmagatzematge runtime.
     runtime:
       cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
         només està disponible abans de seleccionar un bucket de perfil actiu.
@@ -3314,18 +3379,18 @@ wizard:
     blank_path: Path required for %{prompt_key}.
     blank_secret: Secret value required for %{prompt_key}.
     blank_text: Value required for %{prompt_key}.
-    checkbox_required: Select at least one option for %{prompt_key}.
-    checkbox_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+    checkbox_required: Seleccioneu almenys una opcio per a %{prompt_key}.
+    checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides:
       %{choices}.'
-    checkbox_without_choices: Question %{prompt_key} declares no checkbox options.
-    invalid_confirm: 'Invalid boolean answer for %{prompt_key}: %{raw}.'
-    invalid_integer: 'Invalid integer for %{prompt_key}: %{raw}.'
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
+    invalid_confirm: 'Resposta booleana no valida per a %{prompt_key}: %{raw}.'
+    invalid_integer: 'Enter no valid per a %{prompt_key}: %{raw}.'
     invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
       espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
-    invalid_tax_id: 'Invalid NIF/NIE/CIF for %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Unrecognised value for %{prompt_key}: %{raw}. Valid options:
+    invalid_tax_id: 'NIF/NIE/CIF no valid per a %{prompt_key}: %{raw}. %{detail}'
+    select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides:
       %{choices}.'
-    select_without_choices: Question %{prompt_key} declares no select options.
+    select_without_choices: La pregunta %{prompt_key} no declara opcions de seleccio.
     unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
@@ -3339,17 +3404,17 @@ wizard:
       \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
       \ edit %{profile_name}"
   other:
-    description: Other configuration options
+    description: Altres opcions de configuracio
     section:
-      title: Other settings
-    title: Other
+      title: Altres ajustos
+    title: Altres
   progress:
-    question_prefix: Question %{q_n} of %{q_total}
-    section_header: 'Step %{section_n} of %{section_total}: %{title}'
+    question_prefix: Pregunta %{q_n} de %{q_total}
+    section_header: 'Pas %{section_n} de %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: Enter the path to your digital certificate (.p12, .pfx)
+        prompt: Introduiu el cami del certificat digital (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -3470,8 +3535,23 @@ wizard:
       representante-fiscal-nombre:
         help: Nom i cognoms del representant fiscal a Espanya.
       situacion-familiar:
+        choices:
+          casado:
+            description: Persona casada
+            label: Casat/ada
+          pareja-hecho-no-registrada:
+            description: Parella de fet no registrada
+            label: Parella no registrada
+          pareja-hecho-registrada:
+            description: Parella de fet registrada
+            label: Parella registrada
+          separado-divorciado:
+            label: Separat/ada o divorciat/ada
+          soltero:
+            label: Solter/a
         help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
           optar per la declaració conjunta i quina unitat familiar aplica.'
+        prompt: Indiqueu la situacio familiar
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
@@ -3546,7 +3626,7 @@ wizard:
         prompt: Alta en ROI
       iva-sii-enrolled:
         prompt: Inscrit al SII (Subministrament Immediat d'Informació)
-      title: IVA
+      title: IVA configuracio
     notes:
       notes:
         prompt: Notes per al teu propi record (opcional)
@@ -3608,7 +3688,7 @@ wizard:
       iva-regime:
         choices:
           exento:
-            label: Exempt
+            label: Exempt/a
           general:
             label: Règim general
           reagp:
@@ -3627,13 +3707,11 @@ wizard:
             label: Anglès
           es:
             label: Espanyol
-          eu:
-            label: Basc
           hu:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil
       regimes:
-        prompt: Select your applicable tax regimes
+        prompt: Seleccioneu els regims fiscals aplicables
       surnames:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
@@ -3642,7 +3720,7 @@ wizard:
         choices:
           individual:
             description: Useu aquest valor quan presenteu només la declaració individual
-            label: 1 - individual
+            label: 1 - tributacio individual
           joint:
             description: Useu aquest valor només per a tributació conjunta de la unitat
               familiar
@@ -3653,7 +3731,7 @@ wizard:
       ccaa:
         choices:
           andalucia:
-            label: Andalusia
+            label: Andalusia (CA)
           aragon:
             label: Aragó
           asturias:
@@ -3673,13 +3751,13 @@ wizard:
           comunidad_valenciana:
             label: Comunitat Valenciana
           extremadura:
-            label: Extremadura
+            label: Extremadura (CA)
           galicia:
             label: Galícia
           la_rioja:
-            label: La Rioja
+            label: La Rioja (CA)
           madrid:
-            label: Madrid
+            label: Madrid (CA)
           murcia:
             label: Múrcia
       country-of-fiscal-residence:

@@ -519,3 +519,165 @@ class TestModelo347ContraparteRow:
         assert row1.importe_total != row2.importe_total
         # Changing Q2 on row1 does not affect row2 (frozen model)
         assert row2.importe_Q1 == Decimal("8000")
+
+
+# ---------------------------------------------------------------------------
+# Sort-key parity across the full ModeloDetailRow union (M184 / M232 / M349 / M347)
+#
+# Regression coverage for the CRASH-001 defect: the canonical sort key in
+# ``_canonical_detail_rows`` previously read ``row.nif`` unconditionally,
+# which crashed on ``Modelo349OperadorRow`` (whose tax id field is
+# ``nif_comunitario``). The current ``_nif_key`` helper must accept any
+# row in the union without raising.
+# ---------------------------------------------------------------------------
+
+
+class TestRevisionIdAcrossAllFourRowTypes:
+    """``derive_calculation_revision_id`` must accept every row in the union.
+
+    The canonical sort key reads ``nif`` for M184/M232/M347 and
+    ``nif_comunitario`` for M349; this class proves that path is exercised
+    for each row type and that the resulting id is sensitive to the
+    tax-id field that drives the sort.
+    """
+
+    @staticmethod
+    def _member_row() -> Modelo184MemberRow:
+        return Modelo184MemberRow(
+            nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("1000")
+        )
+
+    @staticmethod
+    def _vinculada_row() -> Modelo232VinculadaRow:
+        return Modelo232VinculadaRow(nif="22222222B", importe=Decimal("2000"))
+
+    @staticmethod
+    def _operador_row() -> Modelo349OperadorRow:
+        return Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            clave_operacion="E",
+            importe=Decimal("3000"),
+        )
+
+    @staticmethod
+    def _contraparte_row() -> Modelo347ContraparteRow:
+        return Modelo347ContraparteRow(
+            nif="44444444C", importe_Q1=Decimal("4000")
+        )
+
+    def test_each_row_type_derives_without_crash(self) -> None:
+        """Each of the four row types passes through the hash payload alone.
+
+        Anti-CRASH-001 regression: prior to the ``_nif_key`` fix, the
+        operador case raised ``AttributeError: 'Modelo349OperadorRow'
+        object has no attribute 'nif'``. All four must now derive a
+        64-char hex id without raising.
+        """
+        from ._calculation_revision import derive_calculation_revision_id
+
+        base = {
+            "work_unit_id": "a" * 64,
+            "inputs_snapshot": {},
+            "binding_overrides": {},
+            "casilla_values": {},
+        }
+        for row in (
+            self._member_row(),
+            self._vinculada_row(),
+            self._operador_row(),
+            self._contraparte_row(),
+        ):
+            rev_id = derive_calculation_revision_id(**base, detail_rows=(row,))
+            assert len(rev_id) == 64
+            assert rev_id == rev_id.lower()
+
+    def test_mixed_union_payload_sorts_without_crash(self) -> None:
+        """A single payload containing one row of each type derives cleanly.
+
+        Exercises the sort-key path with heterogeneous ``row_type`` and
+        heterogeneous tax-id field names in the same call.
+        """
+        from ._calculation_revision import derive_calculation_revision_id
+
+        rows = (
+            self._member_row(),
+            self._vinculada_row(),
+            self._operador_row(),
+            self._contraparte_row(),
+        )
+        rev_id = derive_calculation_revision_id(
+            work_unit_id="b" * 64,
+            inputs_snapshot={},
+            binding_overrides={},
+            casilla_values={},
+            detail_rows=rows,
+        )
+        assert len(rev_id) == 64
+
+    def test_operador_nif_comunitario_change_changes_id(self) -> None:
+        """Anti-tautology: changing the M349 ``nif_comunitario`` changes the id.
+
+        Proves the operador path is genuinely participating in the hash
+        (not silently dropped or coerced to a constant) via the sort key
+        that previously crashed.
+        """
+        from ._calculation_revision import derive_calculation_revision_id
+
+        base = {
+            "work_unit_id": "c" * 64,
+            "inputs_snapshot": {},
+            "binding_overrides": {},
+            "casilla_values": {},
+        }
+        id_de = derive_calculation_revision_id(
+            **base,
+            detail_rows=(
+                Modelo349OperadorRow(
+                    codigo_pais="DE",
+                    nif_comunitario="DE123456789",
+                    clave_operacion="E",
+                    importe=Decimal("1000"),
+                ),
+            ),
+        )
+        id_fr = derive_calculation_revision_id(
+            **base,
+            detail_rows=(
+                Modelo349OperadorRow(
+                    codigo_pais="FR",
+                    nif_comunitario="FR12345678901",
+                    clave_operacion="E",
+                    importe=Decimal("1000"),
+                ),
+            ),
+        )
+        assert id_de != id_fr
+
+    def test_sort_canonical_across_all_four_types(self) -> None:
+        """Row insertion order must not affect the id with mixed row types.
+
+        Validates the sort key is stable across the full union: the same
+        four rows submitted in two different orderings yield the same id.
+        """
+        from ._calculation_revision import derive_calculation_revision_id
+
+        base = {
+            "work_unit_id": "d" * 64,
+            "inputs_snapshot": {},
+            "binding_overrides": {},
+            "casilla_values": {},
+        }
+        member = self._member_row()
+        vinculada = self._vinculada_row()
+        operador = self._operador_row()
+        contraparte = self._contraparte_row()
+        id_forward = derive_calculation_revision_id(
+            **base,
+            detail_rows=(member, vinculada, operador, contraparte),
+        )
+        id_reversed = derive_calculation_revision_id(
+            **base,
+            detail_rows=(contraparte, operador, vinculada, member),
+        )
+        assert id_forward == id_reversed

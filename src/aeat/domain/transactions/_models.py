@@ -755,6 +755,14 @@ class Transaction(BaseModel):
             independent of rate changes after the import date.
             ``None`` when the native currency is EUR or when no rate
             was available.
+        source_jurisdiction: ISO 3166-1 alpha-2 uppercase code identifying
+            the regulatory source jurisdiction of the income or expense
+            (``"ES"`` for Spanish-source, foreign two-letter codes for
+            foreign-source). Drives the IRNR scope filter (non-resident
+            profiles only emit Spanish-source rows into AEAT bases) and
+            the Art. 93 LIRPF Beckham filter (impatriado IRPF base
+            excludes foreign-source rows). ``None`` grandfathers rows
+            authored before the axis was introduced.
     """
 
     model_config = _STRICT_FROZEN
@@ -793,6 +801,7 @@ class Transaction(BaseModel):
     counterparty_eu_member_state: EUMemberState | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
+    source_jurisdiction: str | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -885,6 +894,25 @@ class Transaction(BaseModel):
     def _validate_fx_fields(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
         """Reject negative FX rate or converted amounts."""
         return _validate_non_negative_decimal(value, field_name=info.field_name or "")
+
+    @field_validator("source_jurisdiction")
+    @classmethod
+    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
+        """Restrict source_jurisdiction to an ISO 3166-1 alpha-2 uppercase code.
+
+        Carries the regulatory-source axis (Spanish-source vs foreign-source)
+        through every ledger boundary. Required for IRNR scope enforcement and
+        for the Art. 93 LIRPF impatriado base filter; ``None`` grandfathers
+        rows that pre-date the axis.
+        """
+        if value is None:
+            return None
+        normalised = value.strip()
+        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
+            raise TransactionValidationError(
+                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
+            )
+        return normalised
 
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:

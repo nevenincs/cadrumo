@@ -1,0 +1,109 @@
+# TRLIRNR (Impuesto sobre la Renta de no Residentes) legal-catalogue
+# entries supporting M210 Phase 1 (post-stub engine landing).
+#
+# Authoring scope: TRLIRNR Arts 2, 10, 24, 25.1.a, 25.1.f under
+# the consolidated text approved by Real Decreto Legislativo
+# 5/2004 (BOE-A-2004-4527). Required_text patterns are intentionally
+# empty for Phase 1 per the m210-irnr-full-engine ADR D5 hygiene-
+# deferral note; a follow-on hygiene pass will populate them
+# against verified BOE consolidated text once Phase 1 lands and
+# the testimonial replay confirms the right article identifiers
+# are cited. Article 25.1.b (pensiones special tarifa) is reserved
+# for task #229 follow-on authoring and intentionally NOT included
+# here.
+#
+# IMPORTANT: An earlier draft of the M210 ADR mis-cited "TRLIRNR
+# Art 47" for the representante-fiscal mandate. The correct
+# citation is TRLIRNR Art 10 (entry below). TRLIRNR Art 47
+# governs "sucesion en la deuda tributaria" (successor-tax-
+# liability) and is OUT of M210 Phase 1 scope; if a future
+# campaign needs the general-LGT representante surface,
+# ley-58-2003:art-47 (LGT) is the parallel authority.
+
+[legal."trlirnr-rdleg-5-2004:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a2"
+document_id = "BOE-A-2004-4527"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a2"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "TRLIRNR art 2: ambito de aplicacion territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
+
+[legal."trlirnr-rdleg-5-2004:art-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a10"
+document_id = "BOE-A-2004-4527"
+article = "10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a10"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en M210 Phase 1; corregido respecto del borrador previo del ADR que mencionaba Art 47."
+
+[legal."trlirnr-rdleg-5-2004:art-24"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a24"
+document_id = "BOE-A-2004-4527"
+article = "24"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a24"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
+
+[legal."trlirnr-rdleg-5-2004:art-25.1.a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-a"
+document_id = "BOE-A-2004-4527"
+article = "25.1.a"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a25"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
+
+[legal."trlirnr-rdleg-5-2004:art-25.1.f"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/trlirnr-rdleg-5-2004.html#a25-1-f"
+document_id = "BOE-A-2004-4527"
+article = "25.1.f"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527#a25"
+published_at = 2004-03-12
+effective_from = 2004-03-13
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "TRLIRNR art 25.1.f: tipo de gravamen reducido 19 por ciento aplicable a ganancias patrimoniales, transmisiones y rendimientos similares obtenidos por contribuyentes residentes en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion. Soporte legal de la fila tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025 (Phase 1) y precursor de las filas inmobiliaria/pension de Phase 2."
+
+[sources."aeat-modelo-210-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-56-2024.html"
+sha256 = "1adcf839bcda32e2aaf1cd2df49f27ea4925f85095b67b2ae7f035d69c015a3c"
+bytes = 141318
+retrieved_at = 2026-05-27
+published_at = 2024-01-31
+applies_from = 2024-02-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-1772"
+review_status = "reviewed"

@@ -78,8 +78,9 @@ def project_review_queue(
 
     selected = _resolve_internal_kinds((*tuple(kinds), *tuple(source_kinds)))
     bucket_id = _active_bucket_id()
+    from ...core.config import load_settings as _load_settings
     items = ReviewQueue.collect(
-        settings or Settings(),
+        settings or _load_settings(),
         bucket_id=bucket_id,
         kinds=selected,
         state=state,

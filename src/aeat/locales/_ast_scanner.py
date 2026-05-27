@@ -39,11 +39,31 @@ _KEY_LITERAL_RE = re.compile(r"^\w+(?:\.\w+)+$", re.UNICODE)
 dots only, at least two dotted segments, no whitespace, slashes,
 operators, or punctuation."""
 
+_DYNAMIC_TRANSLATION_ROOTS = frozenset(
+    {
+        "application",
+        "cli",
+        "errors",
+        "profile",
+        "sheets",
+        "topic",
+        "wizard",
+    }
+)
+"""Top-level roots that can legitimately identify dynamic i18n namespaces."""
+
 
 def _is_dotted_literal(value: str) -> bool:
     """Return True when ``value`` matches the dot-notation key shape."""
 
     return bool(_KEY_LITERAL_RE.match(value))
+
+
+def _is_dynamic_translation_prefix(prefix: str) -> bool:
+    """Return True when a dynamic dotted prefix belongs to the i18n catalogue."""
+
+    root = prefix.split(".", 1)[0]
+    return root in _DYNAMIC_TRANSLATION_ROOTS
 
 
 def _extract_error_constructor_keys(tree: ast.AST) -> set[str]:
@@ -212,6 +232,8 @@ def _extract_fstring_prefixes(tree: ast.AST) -> set[str]:
         if not _KEY_PREFIX_RE.match(head.value):
             continue
         prefix = head.value.rstrip(".")
+        if not _is_dynamic_translation_prefix(prefix):
+            continue
         findings.add(f"{prefix}.*")
     return findings
 
@@ -248,6 +270,8 @@ def _concat_prefix_marker(argument: ast.expr) -> str | None:
     if not _is_dotted_literal(literal):
         return None
     if len(literal.split(".")) < _KEY_PATTERN_PREFIX_MIN_PARTS:
+        return None
+    if not _is_dynamic_translation_prefix(literal):
         return None
     return f"{literal}.*"
 

@@ -386,3 +386,68 @@ def test_normalise_movement_reference_strips_accents_case_and_noise() -> None:
     """The reference normaliser collapses accents, casing, and punctuation."""
     assert normalise_movement_reference("Compra à material  ÒSCAR!") == "compraamaterialoscar"
     assert normalise_movement_reference("a-b_c") == "abc"
+
+
+# ---------------------------------------------------------------------------
+# source_jurisdiction axis (Spanish-source vs foreign-source)
+# ---------------------------------------------------------------------------
+
+
+def test_source_jurisdiction_roundtrips_es_through_json() -> None:
+    """A Spanish-source value survives JSON model roundtrip with strict equality."""
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": "ES",
+        }
+    )
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.source_jurisdiction == "ES"
+
+
+def test_source_jurisdiction_preserves_none_grandfather_state() -> None:
+    """Rows omitting source_jurisdiction default to None and roundtrip as None.
+
+    The axis is grandfathered: pre-existing rows that never carried a
+    jurisdiction must continue to load as None so the persisted catalogue
+    is not invalidated by introducing the field.
+    """
+    original = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+        }
+    )
+    restored = Transaction.model_validate_json(original.model_dump_json())
+
+    assert restored == original
+    assert restored.source_jurisdiction is None
+
+
+def test_source_jurisdiction_rejects_non_iso_alpha2_codes() -> None:
+    """Anti-tautology: the validator must reject malformed jurisdiction codes."""
+    for invalid in ("INVALID", "es", "E1", "E", "ESP", "  "):
+        with pytest.raises(ValidationError):
+            Transaction.model_validate(
+                {
+                    "raw": _sample_raw(),
+                    "direction": TransactionDirection.INCOMING,
+                    "source_jurisdiction": invalid,
+                }
+            )
+
+
+def test_source_jurisdiction_normalises_surrounding_whitespace() -> None:
+    """Trimming yields the canonical two-letter form."""
+    txn = Transaction.model_validate(
+        {
+            "raw": _sample_raw(),
+            "direction": TransactionDirection.INCOMING,
+            "source_jurisdiction": " FR ",
+        }
+    )
+
+    assert txn.source_jurisdiction == "FR"

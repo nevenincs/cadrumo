@@ -40,7 +40,7 @@ def test_registry_root_is_a_directory() -> None:
         ("corpus", "manuals", "renta", "2025", "part1", "source.pdf"),
         ("corpus", "aeat_official", "disenos_registro", "modelo_100", "manifest.json"),
         ("corpus", "normatives", "html", "ley-27-2014-art-100.html"),
-        ("registry", "aeat", "modelos", "036.toml"),
+        ("registry", "aeat", "modelos", "036", "manifest.toml"),
         ("registry", "aeat", "modelos", "100", "manifest.toml"),
         ("registry", "aeat", "legal", "iva-flow.toml"),
         ("registry", "aeat", "iva", "rates.toml"),
@@ -74,8 +74,8 @@ def test_representative_subtrees_are_directories(parts: tuple[str, ...]) -> None
 def test_joinpath_composition_matches_variadic_call() -> None:
     """Variadic ``packaged_data`` composition matches Traversable.joinpath chaining."""
 
-    variadic = packaged_data("registry", "aeat", "modelos", "036.toml")
-    chained = packaged_data("registry").joinpath("aeat", "modelos", "036.toml")
+    variadic = packaged_data("registry", "aeat", "modelos", "036", "manifest.toml")
+    chained = packaged_data("registry").joinpath("aeat", "modelos", "036", "manifest.toml")
 
     assert variadic.is_file()
     assert chained.is_file()
@@ -84,7 +84,7 @@ def test_joinpath_composition_matches_variadic_call() -> None:
 def test_as_path_yields_a_real_pathlib_path() -> None:
     """:func:`as_path` materialises a Traversable as a usable on-disk path."""
 
-    node = packaged_data("registry", "aeat", "modelos", "036.toml")
+    node = packaged_data("registry", "aeat", "modelos", "036", "manifest.toml")
 
     with as_path(node) as p:
         assert isinstance(p, Path)
@@ -92,14 +92,14 @@ def test_as_path_yields_a_real_pathlib_path() -> None:
         payload = p.read_bytes()
 
     assert len(payload) > 0
-    # 036.toml is a TOML file — it must contain at least one section header.
+    # The Modelo 036 manifest is a TOML file; it must contain at least one section header.
     assert b"[" in payload
 
 
 def test_read_bytes_from_traversable_directly() -> None:
     """A Traversable supports ``read_bytes`` without materialising a temp path."""
 
-    node = packaged_data("registry", "aeat", "modelos", "036.toml")
+    node = packaged_data("registry", "aeat", "modelos", "036", "manifest.toml")
 
     payload = node.read_bytes()
 

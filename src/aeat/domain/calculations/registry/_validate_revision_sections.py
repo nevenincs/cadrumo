@@ -13,6 +13,7 @@ from ._schema import (
 )
 from ._validate_algorithms import validate_algorithm_binding_section, validate_algorithm_provider_section
 from ._validate_application_links import validate_application_link_closure
+from ._validate_completeness import _emit_completeness_gate_failures
 from ._validate_constructs import validate_construct_closure, validate_support_removal_decisions
 from ._validate_dependency_sections import (
     validate_dependency_classification_section,
@@ -34,7 +35,6 @@ from ._validate_revision_context import build_revision_validation_context
 from ._validate_revision_identity import (
     _emit_casilla_identity_failures,
     _emit_combined_primary_id_failures,
-    _emit_completeness_gate_failures,
     _emit_per_kind_duplicate_failures,
     _emit_revision_payload_failures,
 )
@@ -247,4 +247,3 @@ def validate_revision_definition(
     )
     failures.extend(validate_formula_dag(prefix, revision))
     return failures
-

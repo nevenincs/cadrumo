@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
+from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
 from .runtime import inspect_bucket_storage_runtime
 from .sql import SecureObjectRepository
@@ -77,7 +78,7 @@ def secure_object_repository_for_active_bucket_or_default_route(
     if bucket_id is None:
         from .sql.engine import get_engine
 
-        return SecureObjectRepository(engine=get_engine(source))
+        return SecureObjectRepository(engine=get_engine(source), namespace_registry=STORAGE_NAMESPACE_REGISTRY)
     return secure_object_repository_for_bucket(bucket_id, source)
 
 
@@ -120,7 +121,7 @@ def secure_object_repository_for_cold_bootstrap_state(
         )
     from .sql.engine import get_engine
 
-    return SecureObjectRepository(engine=get_engine(source))
+    return SecureObjectRepository(engine=get_engine(source), namespace_registry=STORAGE_NAMESPACE_REGISTRY)
 
 
 __all__ = [

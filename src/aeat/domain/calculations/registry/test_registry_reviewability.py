@@ -12,8 +12,21 @@ from aeat.core.resources import bundled_path
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 _REGISTRY_ROOT = bundled_path("registry", "aeat")
+_REGISTRY_PACKAGE_ROOT = Path(__file__).parent
 _MAX_TOML_LINES = 5_000
 _MAX_TOML_LINE_CHARS = 1_200
+_MAX_NEW_VALIDATOR_MODULE_LINES = 300
+_VALIDATOR_MODULE_LINE_BASELINES = {
+    "_validate.py": 204,
+    "_validate_references.py": 312,
+    "_validate_revision_sections.py": 252,
+    "_validate_semantic_roles.py": 243,
+    "_validate_record_sections.py": 238,
+    "_validate_revision_identity.py": 228,
+    "_validate_relation_periods.py": 198,
+    "_validate_semantic_role_axes.py": 188,
+    "_validate_dependency_sections.py": 182,
+}
 
 
 @dataclass(frozen=True)
@@ -63,3 +76,14 @@ def test_registry_reviewability_baseline_remains_well_below_hard_cap() -> None:
         f"widest registry TOML row grew beyond review baseline: {widest.path} "
         f"has a {widest.max_line_chars}-char line"
     )
+
+
+def test_registry_validator_modules_stay_below_p05_reviewability_baseline() -> None:
+    oversize: list[str] = []
+    for path in sorted(_REGISTRY_PACKAGE_ROOT.glob("_validate*.py")):
+        line_count = len(path.read_text(encoding="utf-8").splitlines())
+        ceiling = _VALIDATOR_MODULE_LINE_BASELINES.get(path.name, _MAX_NEW_VALIDATOR_MODULE_LINES)
+        if line_count > ceiling:
+            oversize.append(f"{path.name}: {line_count} lines exceeds {ceiling}")
+
+    assert oversize == []

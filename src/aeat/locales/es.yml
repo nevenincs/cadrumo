@@ -541,6 +541,19 @@ cli:
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
+        acquisition:
+          outcome:
+            aeat_403: puerta AEAT 403/autenticación
+            authenticated: autenticado
+            certificate_required: certificado requerido
+            dom_drift: la forma de la página AEAT ha cambiado
+            live_navigation_failed: navegación en directo fallida
+            no_clave_prompt: sin aviso de Cl@ve
+            operator_timeout: tiempo de aprobación agotado
+            pending_clave_request: petición Cl@ve pendiente
+            qr_required: aprobación QR requerida
+            unknown: desconocido
+            wrong_identity: identidad incorrecta
         app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura;
           solo permite representación en nombre propio y la consulta de lectura protegida
           de cartera).
@@ -549,6 +562,9 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
+        capture_remote_state_help: Captura en directo el historial de Modelo 303 presentado
+          e intenta la lectura de la cartera de IVA AEAT como una adquisición tipada
+          de solo lectura.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -1352,12 +1368,15 @@ cli:
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
       import_help: Registra un paquete portátil de perfil desde un JSON
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
         con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       logout_session_warning: El cierre de sesión limpió el puntero del perfil activo.
         Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
@@ -1406,12 +1425,6 @@ cli:
         un espacio de nombres (o en todos).
       integrity_registry_help: Ejecuta la validación completa del registro (la comprobación
         de integridad opcional entre dominios).
-      list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
-        or neither.
-      list_help: List secure-object keys stored under one namespace.
-      list_namespace_help: Namespace to inventory.
-      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       plan_help: Planificación de reparación en seco y preservación primero para filas
@@ -1486,6 +1499,7 @@ cli:
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
+    app_help: Diagnósticos internos de AEAT solo para ingeniería.
     browser:
       http_status_label: Estado HTTP
       markers_label: Marcadores
@@ -1501,6 +1515,24 @@ cli:
         de tu perfil ni algo que puedas corregir tú.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    profile:
+      errors:
+        ambiguous_profile: 'Etiqueta de perfil ambigua: %{profile}'
+        invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
+        invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: No hay perfil activo ni se proporcionó --profile NAME;
+          ejecuta `aeat config profile switch NAME` primero.
+        profile_empty: --profile no puede estar vacío cuando se proporciona.
+        unknown_profile: 'Perfil desconocido: %{profile}'
+        unknown_profile_key: 'Clave de perfil desconocida: %{key}'
+      get_help: Lee el valor guardado de una clave de perfil.
+      help: Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.
+      key_help: Clave de perfil.
+      profile_help: Perfil que se va a usar; por defecto, el perfil activo.
+      set_help: Escribe el valor de una clave de perfil, validado con el descriptor
+        del asistente.
+      unset_help: Borra el valor de una clave de perfil.
+      value_help: Valor que se va a guardar.
     repair:
       audience_internal: problema interno de la aplicación
       auth_label: Autenticación
@@ -1516,6 +1548,15 @@ cli:
       profile_label: Perfil
       python_label: Python
       version_label: Versión
+    secure_objects:
+      all_help: Devuelve todas las claves, incluidas las filas no legibles.
+      errors:
+        conflicting_filters: --all y --unreadable no se pueden combinar; pasa uno
+          o ninguno.
+      help: Inventariar el índice de objetos seguros por espacio de nombres.
+      list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
+      namespace_help: Espacio de nombres que se va a inventariar.
+      unreadable_help: Limita el listado a filas no descifrables.
     summary:
       auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
         lista
@@ -1569,6 +1610,12 @@ cli:
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
       purchase_invoice_evidence_help: Id de justificante de factura de compra
+      source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
+        identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
+        para fuente española, FR para fuente francesa). Necesario para IRNR y para
+        el filtro Beckham del art. 93 LIRPF.
+      source_jurisdiction_required_beckham: 'El régimen impatriado (art. 93 LIRPF, Beckham) trata de forma distinta los rendimientos de fuente española y los de fuente extranjera; --source-jurisdiction debe declararse explícitamente en cada apunte. Un valor por defecto silencioso ES incluiría rentas de fuente extranjera en la base del IRPF (art. 93.5 segregación).'
+      source_jurisdiction_required_irnr: 'Los perfiles no residentes (IRNR) deben declarar --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10). Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran en la base del IRNR.'
       taxable_base_help: Importe de base imponible
       usage_ratio_help: Id de proporción de uso profesional proporcional
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
@@ -2220,8 +2267,15 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
@@ -2253,6 +2307,13 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -3142,6 +3203,13 @@ errors:
         Comprueba la ruta de almacenamiento configurada y vuelve a intentarlo.
       empty_database_url: La URL de base de datos configurada está vacía. Selecciona
         un perfil o configura el almacenamiento antes de volver a intentarlo.
+    namespace:
+      classification_mismatch: El espacio de nombres de objeto seguro %{namespace}
+        está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
+      schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
+        con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
+      unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
+        para almacenamiento runtime.
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.
@@ -3671,8 +3739,6 @@ wizard:
             label: Inglés
           es:
             label: Español
-          eu:
-            label: Euskera
           hu:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil

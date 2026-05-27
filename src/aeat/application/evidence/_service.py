@@ -76,7 +76,11 @@ class EvidenceBundleService:
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
-        self._settings = settings or Settings()
+        # `load_settings()` honours `override_settings`; bare `Settings()`
+        # does not, so CLI tests overriding evidence-dir would otherwise
+        # write into the project default.
+        from ...core.config import load_settings as _load_settings
+        self._settings = settings or _load_settings()
 
     def build(
         self,
