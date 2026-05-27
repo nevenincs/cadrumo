@@ -299,10 +299,10 @@ Profile export ships identity only Cluster E. Import mints fresh UUIDs Cluster F
 
 Design and implement a bundled-export schema that carries work units calculation revisions ledger entries and filing records with explicit confidentiality treatment for encrypted material.
 
-- [ ] `W06.P28.S104` - design bundled-export schema with explicit confidentiality treatment for encrypted material; `src/aeat/domain/user_profile/_values.py`.
-- [ ] `W06.P28.S105` - implement bundled serializer with schema-version bumping; `src/aeat/application/user_profile/`.
-- [ ] `W06.P28.S106` - implement bundled deserializer with provenance preservation; `src/aeat/application/user_profile/`.
-- [ ] `W06.P28.S107` - real-CLI roundtrip test export non-trivial profile and re-import to fresh storage root every artefact survives; `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`.
+- [x] `W06.P28.S104` - design bundled-export schema with explicit confidentiality treatment for encrypted material; `src/aeat/domain/user_profile/_values.py`.
+- [x] `W06.P28.S105` - implement bundled serializer with schema-version bumping; `src/aeat/application/user_profile/`.
+- [x] `W06.P28.S106` - implement bundled deserializer with provenance preservation; `src/aeat/application/user_profile/`.
+- [x] `W06.P28.S107` - real-CLI roundtrip test export non-trivial profile and re-import to fresh storage root every artefact survives; `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`.
 - [x] `W06.P28.S260` - author profile-portability ADR formalising the bundle decision space; `strip encrypted material refuse-on-profile-id-collision schema-version 2 bump typed-pydantic-throughout; cite the W75 grounding section as research basis; required before S104 implementation lands; `.vault/adr/`.
 
 ### Phase `W06.P29` - idempotent import
@@ -489,7 +489,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S273` - S253 follow-up: migrate remaining 7 Category B files not covered by cf7775ebe — test_audit_remediation test_command_suggestions test_modelo_202_modality test_modelo_discovery_defects test_modelo_period_consistency test_modelo_work_applicability_guard test_modelo_work_ux; `S253 was marked closed prematurely with only 5 of 12 files migrated; M202 modality file contains S244 must-fix; `src/aeat/entrypoints/cli/`.
 - [ ] `W09.P41.S274` - side-fix landed in cf7775ebe ledger_transaction_payload counterparty=None coerced to empty string; `resolves Pere persona R7-A defect (ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions with absent currency/counterparty); verify the fix is complete OR if a more typed solution (Optional[str] on LedgerTransactionPayload) is preferable; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S275` - FU-S274-A centralise counterparty-None coercion into display_counterparty property on TransactionRaw domain model; `retire two identical call-site counterparty or empty-string coercions in ledger actions; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W09.P41.S276` - FU-S253-A commit message in cf7775ebe says real EphemeralMasterKeyProvider but the helper changed to file backend in cb51d03e7 (S208); update prior commit message note in step record for accuracy; documentation-only; `.vaultspec/`.
+- [ ] `W09.P41.S276` - FU-S253-A commit message in cf7775ebe says real EphemeralMasterKeyProvider but the helper changed to file backend in cb51d03e7 (S208); `update prior commit message note in step record for accuracy; documentation-only; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
