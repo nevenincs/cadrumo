@@ -10,14 +10,12 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import (
+    CasillaObservation,
+    RegistryModeloObservation,
     RegistryValidationError,
     build_snapshot,
     calculate_registry_snapshot,
     load_registry_tree,
-)
-from ._bindings import (
-    CasillaObservation,
-    RegistryModeloObservation,
     resolve_previous_filing_binding_values,
 )
 
