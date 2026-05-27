@@ -314,3 +314,71 @@ def test_verify_legal_catalogue_accepts_required_local_corpus_text(tmp_path: Pat
     assert corpus_path.exists(), "corpus file must be written before verification"
     result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
     assert result is None
+
+
+def test_verify_legal_catalogue_corpus_strict_false_skips_required_text(tmp_path: Path) -> None:
+    """Production authority (corpus_strict=False) must not abort on a pending required_text annotation.
+
+    This guards the forward contract: adding a required_text to any legal reference
+    must not block bindings list, work calculate, or any other user-facing verb until
+    verify_registry_tree (corpus_strict=True) is run explicitly.
+    """
+    # Corpus file exists but does NOT contain the required phrase.
+    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text(
+        '{"articulos": [{"numero": "110", "text_es": "other legal text without the phrase"}]}',
+        encoding="utf-8",
+    )
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
+            "required_text": ("phrase absent from corpus",),
+        }
+    )
+
+    assert reference.required_text, "reference must declare required_text for the check to be meaningful"
+    # Strict mode raises — the pending annotation IS a defect when checked explicitly.
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=True)
+    # Non-strict mode (production authority path) must not raise.
+    result = verify_legal_catalogue({reference.id: reference}, source_root=tmp_path, corpus_strict=False)
+    assert result is None
+
+
+def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -> None:
+    """RegistryValidator(catalogue_corpus_strict=False) must not abort on a pending required_text.
+
+    Mirrors the production authority construction in _load_authority so that a
+    new required_text annotation never breaks bindings list / work calculate.
+    """
+    # Build a minimal corpus tree: one file that exists but lacks the required phrase.
+    corpus_path = tmp_path / "corpus" / "normatives" / "rd-439-2007.json"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text(
+        '{"articulos": [{"numero": "110", "text_es": "other legal text without the phrase"}]}',
+        encoding="utf-8",
+    )
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/rd-439-2007.json#art-110",
+            "required_text": ("phrase absent from corpus",),
+        }
+    )
+    # Wrap in minimal catalogues (no sources needed for this check).
+    from ._schema import RegistryCatalogues
+
+    minimal_catalogues = RegistryCatalogues(
+        legal={reference.id: reference},
+        sources={},
+    )
+
+    # Strict validator returns the corpus failure — gated functions raise from this.
+    strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=True)
+    strict_failures = strict._validate_catalogues()  # noqa: SLF001
+    assert any("corpus text missing required text" in f for f in strict_failures), strict_failures
+
+    # Non-strict validator (production authority path) returns no failures.
+    non_strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=False)
+    failures = non_strict._validate_catalogues()  # noqa: SLF001
+    assert failures == ()

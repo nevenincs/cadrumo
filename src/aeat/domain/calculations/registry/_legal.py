@@ -22,7 +22,12 @@ _SOURCE_BY_KIND: dict[str, CitationSource] = {
 }
 
 
-def verify_legal_reference(reference: LegalReference, *, source_root: Path | None = None) -> None:
+def verify_legal_reference(
+    reference: LegalReference,
+    *,
+    source_root: Path | None = None,
+    corpus_strict: bool = True,
+) -> None:
     """Verify one already parsed legal reference is filing-grade.
 
     Type-system invariants enforced by the Pydantic schema (and thus
@@ -42,6 +47,13 @@ def verify_legal_reference(reference: LegalReference, *, source_root: Path | Non
     This function therefore only checks runtime invariants that the
     type system cannot express: known-bad citation patterns and
     required-text presence against the local corpus.
+
+    When ``corpus_strict=False`` the ``required_text`` check is skipped.
+    Production code paths (``bindings list``, ``work calculate``, etc.)
+    pass ``corpus_strict=False`` so a pending corpus annotation never
+    blocks a user-facing workflow; the strict check is reserved for
+    explicit registry audit calls (``verify_registry_tree``,
+    ``test_catalogue_verification``).
     """
 
     if reference.article is None:
@@ -54,7 +66,7 @@ def verify_legal_reference(reference: LegalReference, *, source_root: Path | Non
         raise RegistryValidationError(
             f"legal reference {reference.id!r} matches known-bad citation: {known_bad.reason}"
         )
-    if reference.required_text and source_root is not None:
+    if corpus_strict and reference.required_text and source_root is not None:
         corpus_text = _legal_corpus_text(source_root, reference)
         for required in reference.required_text:
             if normalise_corpus_text(required) not in corpus_text:
@@ -63,15 +75,25 @@ def verify_legal_reference(reference: LegalReference, *, source_root: Path | Non
                 )
 
 
-def verify_legal_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path | None = None) -> None:
-    """Verify every legal reference in a shared legal catalogue."""
+def verify_legal_catalogue(
+    legal: Mapping[str, LegalReference],
+    *,
+    source_root: Path | None = None,
+    corpus_strict: bool = True,
+) -> None:
+    """Verify every legal reference in a shared legal catalogue.
+
+    When ``corpus_strict=False`` the ``required_text`` corpus check is
+    skipped for all references; key/id alignment and known-bad citation
+    checks still run.
+    """
 
     failures: list[str] = []
     for ref_id, reference in legal.items():
         if ref_id != reference.id:
             failures.append(f"legal catalogue key {ref_id!r} does not match reference id {reference.id!r}")
         try:
-            verify_legal_reference(reference, source_root=source_root)
+            verify_legal_reference(reference, source_root=source_root, corpus_strict=corpus_strict)
         except RegistryValidationError as exc:
             failures.append(str(exc))
     if failures:
