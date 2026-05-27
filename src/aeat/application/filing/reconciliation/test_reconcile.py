@@ -32,10 +32,12 @@ _MODELO_130_INPUTS = {
     "06": Decimal("100"),
     "08": Decimal("2000"),
     "10": Decimal("10"),
-    "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-    "15": Decimal("0"),
     "16": Decimal("0"),
     "18": Decimal("0"),
+}
+_MODELO_130_BINDINGS = {
+    "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+    "modelo-130-resultados-negativos-anteriores": Decimal("0"),
 }
 _MODELO_111_INPUTS = {
     "03": Decimal("180.25"),
@@ -62,14 +64,18 @@ _MODELO_123_INPUTS = {
 }
 
 
-def _provider() -> RegistrySchemaProvider:
-    return build_runtime_schema_provider()
+def _provider_for(draft: ModeloDraft) -> RegistrySchemaProvider:
+    return build_runtime_schema_provider(
+        modelos=(draft.modelo,),
+        filing_year=draft.snapshot_ref.modelo_year,
+        period=draft.snapshot_ref.period,
+    )
 
 
 def _draft_for_130(
     *,
     period: str = "2024Q1",
-    profile_tax_id: str = "taxpayer-alpha",
+    profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
@@ -77,6 +83,7 @@ def _draft_for_130(
         period=period,
         profile_tax_id=profile_tax_id,
         casilla_values=_MODELO_130_INPUTS,
+        binding_values=_MODELO_130_BINDINGS,
         status=status,
     )
 
@@ -84,7 +91,7 @@ def _draft_for_130(
 def _draft_for_111(
     *,
     period: str = "2026Q1",
-    profile_tax_id: str = "taxpayer-alpha",
+    profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
@@ -99,7 +106,7 @@ def _draft_for_111(
 def _draft_for_123(
     *,
     period: str = "2026Q1",
-    profile_tax_id: str = "taxpayer-alpha",
+    profile_tax_id: str = "12345678Z",
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
 ) -> ModeloDraft:
     return build_registry_filing_draft(
@@ -149,7 +156,7 @@ class TestReconcileMatch:
             profile_tax_id=justificante.tax_id,
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.COINCIDE
         assert report.mismatches == ()
@@ -165,7 +172,7 @@ class TestReconcileMatch:
             profile_tax_id=justificante.tax_id,
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.COINCIDE
 
@@ -179,7 +186,7 @@ class TestReconcileMatch:
             total_a_ingresar=Decimal("516.25"),
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.COINCIDE
 
@@ -193,7 +200,7 @@ class TestReconcileMatch:
             total_a_ingresar=Decimal("223.44"),
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.COINCIDE
 
@@ -204,7 +211,7 @@ class TestReconcileMatch:
             profile_tax_id=justificante.tax_id,
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is ModeloDivergenceKind.PERIOD_MISMATCH for mismatch in report.mismatches)
@@ -214,7 +221,7 @@ class TestReconcileNotYetFound:
     def test_none_justificante_reports_not_yet_found(self) -> None:
         draft = _draft_for_130()
 
-        report = reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, None, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.NOT_YET_FOUND
         assert report.justificante is None
@@ -227,7 +234,7 @@ class TestReconcileDivergent:
         justificante = _justificante("100", "2022-0A")
         draft = _draft_for_130(profile_tax_id=justificante.tax_id)
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
         assert report.status is ReconciliationStatus.DIVERGENTE
@@ -235,9 +242,9 @@ class TestReconcileDivergent:
 
     def test_tax_id_mismatch_surfaces(self) -> None:
         justificante = _justificante("130", "2024-1T")
-        draft = _draft_for_130(period="2024Q1", profile_tax_id="taxpayer-beta")
+        draft = _draft_for_130(period="2024Q1", profile_tax_id="12345678Z")
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         kinds = tuple(m.kind for m in report.mismatches)
         assert report.status is ReconciliationStatus.DIVERGENTE
@@ -250,7 +257,7 @@ class TestReconcileDivergent:
             profile_tax_id=justificante.tax_id.lower(),
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.COINCIDE
 
@@ -264,7 +271,7 @@ class TestReconcileDivergent:
             total_a_ingresar=Decimal("516.27"),
         )
 
-        report = reconcile(draft, justificante, schema_provider=_provider(), now=_FIXED_NOW)
+        report = reconcile(draft, justificante, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
         assert report.status is ReconciliationStatus.DIVERGENTE
         assert any(mismatch.kind is ModeloDivergenceKind.TOTAL_INGRESAR_MISMATCH for mismatch in report.mismatches)
@@ -275,10 +282,10 @@ class TestRegistryGate:
         draft = _draft_for_130().model_copy(update={"schema_version": "registry:130:wrong-revision"})
 
         with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
-            reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
+            reconcile(draft, None, schema_provider=_provider_for(draft), now=_FIXED_NOW)
 
     def test_reconcile_requires_period_declared_by_registry_snapshot(self) -> None:
         draft = _draft_for_130().model_copy(update={"period": "2024A"})
 
         with pytest.raises(ModeloBuilderError, match="draft period declared"):
-            reconcile(draft, None, schema_provider=_provider(), now=_FIXED_NOW)
+            reconcile(draft, None, schema_provider=_provider_for(draft), now=_FIXED_NOW)

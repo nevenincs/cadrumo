@@ -22,10 +22,15 @@ def _valid_inputs(*, ingresos: Decimal = Decimal("10000")) -> dict[str, Decimal]
         "06": Decimal("100"),
         "08": Decimal("2000"),
         "10": Decimal("10"),
-        "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-        "15": Decimal("0"),
         "16": Decimal("0"),
         "18": Decimal("0"),
+    }
+
+
+def _valid_bindings() -> dict[str, Decimal]:
+    return {
+        "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+        "modelo-130-resultados-negativos-anteriores": Decimal("0"),
     }
 
 
@@ -34,6 +39,7 @@ def test_builds_frozen_draft_through_registry_runtime() -> None:
         modelo="130",
         period="2026Q1",
         casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
     )
 
     assert isinstance(draft, ModeloDraft)
@@ -47,6 +53,7 @@ def test_approved_status_uses_application_approval_path() -> None:
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
     )
 
     assert draft.status is ModeloDraftStatus.APROBADO
@@ -61,6 +68,7 @@ def test_non_approved_status_clears_approval_fields() -> None:
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -80,17 +88,30 @@ def test_unsupported_modelo_fails_at_registry_boundary() -> None:
         )
 
 
+def test_duplicate_casilla_and_binding_ids_are_rejected() -> None:
+    with pytest.raises(ModeloBuilderError, match="duplicate casilla/binding input ids"):
+        build_registry_filing_draft(
+            modelo="130",
+            period="1T",
+            casilla_values=_valid_inputs(),
+            binding_values={**_valid_bindings(), "01": Decimal("99")},
+        )
+
+
 def test_values_are_registry_projected_and_sorted() -> None:
     draft = build_registry_filing_draft(
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(ingresos=Decimal("12000")),
+        binding_values=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
     )
 
     values = {value.casilla_id: value for value in draft.values}
     assert tuple(values) == tuple(sorted(values))
-    assert values["01"].kind is ModeloValueKind.LITERAL
+    assert values["01"].kind is ModeloValueKind.INHERITED
+    assert values["15"].kind is ModeloValueKind.INHERITED
+    assert values["15"].value == Decimal("0")
     assert values["19"].kind is ModeloValueKind.COMPUTED
     assert values["19"].formula_trace == ("17", "18")
 
@@ -100,11 +121,13 @@ def test_draft_id_is_deterministic_for_same_registry_inputs() -> None:
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
     )
     b = build_registry_filing_draft(
         modelo="130",
         period="1T",
         casilla_values=_valid_inputs(),
+        binding_values=_valid_bindings(),
     )
 
     assert a.draft_id == b.draft_id
@@ -115,6 +138,7 @@ def test_decimal_string_inputs_are_coerced_before_registry_build() -> None:
         modelo="130",
         period="1T",
         casilla_decimals={key: str(value) for key, value in _valid_inputs().items()},
+        binding_decimals={key: str(value) for key, value in _valid_bindings().items()},
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -127,6 +151,7 @@ def test_decimal_passthrough() -> None:
         modelo="130",
         period="1T",
         casilla_decimals=_valid_inputs(ingresos=Decimal("100.50")),
+        binding_decimals=_valid_bindings(),
         status=ModeloDraftStatus.BORRADOR,
     )
 
@@ -143,6 +168,7 @@ def test_invalid_decimal_string_raises() -> None:
             modelo="130",
             period="1T",
             casilla_decimals=bad_inputs,
+            binding_decimals=_valid_bindings(),
         )
 
 
@@ -155,4 +181,5 @@ def test_spanish_thousands_rejected_at_boundary() -> None:
             modelo="130",
             period="1T",
             casilla_decimals=bad_inputs,
+            binding_decimals=_valid_bindings(),
         )
