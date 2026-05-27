@@ -470,6 +470,29 @@ cli:
         unset_category_help: Id de categoría cuya proporción quieres limpiar
         unset_help: Elimina la proporción específica de una categoría
         validate_help: Valida las proporciones contra categorías admitidas y límites
+      rule:
+        actor_help: Identificador del operador registrado en la procedencia de la
+          regla.
+        add_help: Añade una regla de clasificación que clasifica automáticamente las
+          transacciones coincidentes.
+        apply_dry_run_help: Muestra qué se clasificaría sin persistir cambios.
+        apply_dry_run_summary: 'simulacro: %{count} transacción(es) se clasificarían'
+        apply_help: Aplica las reglas de clasificación almacenadas a las transacciones
+          ACTIVE sin clasificar.
+        apply_reaffirm_help: También reclasifica transacciones que ya se clasificaron
+          manualmente.
+        apply_summary: 'reglas: %{rules}, escaneadas: %{scanned}, coincidencias: %{matched},
+          omitidas: %{skipped}, sin_coincidencia: %{no_match}'
+        category_id_help: Categoría de gasto opcional a aplicar.
+        classification_help: Clasificación objetivo para las transacciones coincidentes.
+        description_pattern_help: Patrón regex comparado (sin distinción de mayúsculas)
+          con la descripción de la transacción.
+        group_help: Gestiona y aplica reglas de clasificación del libro.
+        list_empty: (no hay reglas almacenadas)
+        list_header: "prioridad\tclasificación\tpatrón\trule_id"
+        list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
+        priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
+          100).
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:
@@ -1389,6 +1412,8 @@ cli:
         AEAT.
     classify:
       actor_help: Nombre del operador registrado en el evento del bucket
+      bulk_summary: 'clasificación masiva: %{total} filas, %{applied} aplicadas, %{skipped}
+        omitidas, %{fail} fallidas'
       business_pct_help: Porcentaje de uso profesional de 0 a 1; obligatorio con --classification
         MIXED y rechazado para cualquier otra clasificación
       business_pct_requires_mixed: Rechazado. --business-pct solo se aplica a una
@@ -1397,11 +1422,17 @@ cli:
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
+      classification_required: --classification es obligatorio cuando no se usa --from-csv.
       counterparty_eu_member_state_help: Estado miembro de la UE de la contraparte
         (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
         intra_community_supply, prohibido con export_third_country_zero_rated
+      from_csv_exclusive: --from-csv no puede combinarse con --id ni --classification.
+      from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
+        category_id].
+      from_csv_not_found: 'Archivo CSV no encontrado: %{path}'
       help: Clasificar un movimiento del libro en el bucket del perfil activo
       id_help: Id del movimiento del libro a clasificar
+      id_required: --id es obligatorio cuando no se usa --from-csv.
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
@@ -1766,7 +1797,9 @@ cli:
         contacta con AEAT.
       to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
     calendar:
-      all_profiles_help: Mostrar el calendario de todos los perfiles registrados en lugar del activo. Cada bloque va precedido de una línea de cabecera con el nombre del perfil.
+      all_profiles_help: Mostrar el calendario de todos los perfiles registrados en
+        lugar del activo. Cada bloque va precedido de una línea de cabecera con el
+        nombre del perfil.
       allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
         incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
@@ -2880,6 +2913,10 @@ errors:
       empty_database_url: La URL de base de datos configurada está vacía. Selecciona
         un perfil o configura el almacenamiento antes de volver a intentarlo.
     runtime:
+      cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
+        solo está disponible antes de seleccionar un bucket de perfil activo.
+      cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
+        no puede omitir una ruta de base de datos explícita.
       no_active_session: No hay una sesión de bucket activa. Ejecuta `aeat config
         profile switch NAME` para desbloquear un perfil.
       no_detail: No se informó ningún detalle de preparación.

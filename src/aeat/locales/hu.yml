@@ -346,6 +346,24 @@ cli:
         unset_category_help: cli.app.ledger.ratios.unset_category_help
         unset_help: cli.app.ledger.ratios.unset_help
         validate_help: cli.app.ledger.ratios.validate_help
+      rule:
+        actor_help: Operator identifier recorded in the rule provenance.
+        add_help: Add a classification rule that auto-classifies matching transactions.
+        apply_dry_run_help: Show what would be classified without persisting changes.
+        apply_dry_run_summary: 'dry-run: %{count} transaction(s) would be classified'
+        apply_help: Apply stored classification rules to unclassified ACTIVE transactions.
+        apply_reaffirm_help: Also re-classify transactions that were manually classified.
+        apply_summary: 'rules: %{rules}, scanned: %{scanned}, matched: %{matched},
+          skipped: %{skipped}, no_match: %{no_match}'
+        category_id_help: Optional spending category to apply.
+        classification_help: Target classification for matching transactions.
+        description_pattern_help: Regex pattern matched (case-insensitive) against
+          transaction description.
+        group_help: Manage and apply ledger classification rules.
+        list_empty: (no rules stored)
+        list_header: "priority\tclassification\tpattern\trule_id"
+        list_help: List stored classification rules ordered by priority.
+        priority_help: Numeric priority; lower value is evaluated first (default 100).
     live:
       app_help: cli.app.live.app_help
       borrador:
@@ -939,13 +957,22 @@ cli:
       help: cli.ledger.check.help
     classify:
       actor_help: cli.ledger.classify.actor_help
+      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
+        skipped, %{fail} failed'
       business_pct_help: cli.ledger.classify.business_pct_help
       business_pct_requires_mixed: cli.ledger.classify.business_pct_requires_mixed
       category_help: cli.ledger.classify.category_help
       classification_help: cli.ledger.classify.classification_help
+      classification_required: --classification is required when --from-csv is not
+        provided.
       counterparty_eu_member_state_help: cli.ledger.classify.counterparty_eu_member_state_help
+      from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
+      from_csv_help: Path to a CSV file with columns transaction_id, classification[,
+        category_id].
+      from_csv_not_found: 'CSV file not found: %{path}'
       help: cli.ledger.classify.help
       id_help: cli.ledger.classify.id_help
+      id_required: --id is required when --from-csv is not provided.
       irpf_category_help: cli.ledger.classify.irpf_category_help
       iva_amount_help: cli.ledger.classify.iva_amount_help
       iva_category_help: cli.ledger.classify.iva_category_help
@@ -1274,7 +1301,8 @@ cli:
       help: cli.overview.backlog.help
       to_help: cli.overview.backlog.to_help
     calendar:
-      all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív helyett. Minden blokk egy profilfejléc-sorral kezdődik.
+      all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív
+        helyett. Minden blokk egy profilfejléc-sorral kezdődik.
       allow_incomplete_help: cli.overview.calendar.allow_incomplete_help
       from_help: cli.overview.calendar.from_help
       help: cli.overview.calendar.help
@@ -1980,6 +2008,10 @@ errors:
       empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy állítsd
         be a tárolást, mielőtt újra próbálkozol.
     runtime:
+      cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
+        before an active profile bucket is selected.
+      cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
+        an explicit database route.
       no_active_session: Nincs aktív bucket-munkamenet. Futtasd az `aeat config profile
         switch NAME` parancsot egy profil feloldásához.
       no_detail: Nem érkezett részletes készenléti hiba.
