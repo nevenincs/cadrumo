@@ -4,14 +4,22 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _invoke(args: list[str]):
@@ -24,35 +32,17 @@ def _json_output(result: Result) -> str:
 
 
 def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-language.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-    dispose_engine()
 
-
-def _seed_profile() -> None:
-    from aeat.application.user_profile._testing import register_minimal_profile
-    from aeat.application.workflow._persistence import workflow_state_repository
-
-    repository = workflow_state_repository()
-    repository.update(
-        lambda state: register_minimal_profile(
-            state,
-            profile_id="default",
-            overrides={"identity.tax_id": "00000000T", "activities.description": "Servicios"},
-        )
-    )
 
 
 def test_config_profile_create_writes_profile_output_language(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
+    from aeat.core._bucket_pointer_io import resolve_active_bucket_id
+    from aeat.core.config import override_settings
 
     _isolate(monkeypatch, tmp_path)
 
@@ -77,7 +67,12 @@ def test_config_profile_create_writes_profile_output_language(
     assert show_result.exit_code == 0, show_result.output
     facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
     assert facts["preferences.output_language"] == "en"
-    with get_master_key_provider():
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with (
+        override_settings(aeat_active_profile=bucket_id),
+        activate_master_key_provider(get_master_key_provider()),
+    ):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
@@ -101,7 +96,7 @@ def test_config_profile_create_validates_profile_output_language(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.workflow._persistence import workflow_state_repository
 
     _isolate(monkeypatch, tmp_path)
@@ -141,7 +136,7 @@ def test_config_profile_create_validates_profile_output_language(
     assert show_result.exit_code == 0, show_result.output
     facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
     assert facts["preferences.output_language"] == "ca"
-    with get_master_key_provider():
+    with activate_master_key_provider(get_master_key_provider()):
         state = workflow_state_repository().load()
         record = state.active_profile_record()
         assert record is not None
@@ -170,7 +165,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
     left exactly as stored.
     """
 
-    from aeat.adapters.persistence.storage import get_master_key_provider
+    from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
     from aeat.application.user_profile._orchestration import fact_value
     from aeat.application.workflow._persistence import workflow_state_repository
 
@@ -211,7 +206,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite(
     )
     assert edit_result.exit_code == 0, edit_result.output
 
-    with get_master_key_provider():
+    with activate_master_key_provider(get_master_key_provider()):
         record = workflow_state_repository().load().active_profile_record()
         assert record is not None
         # The supplied field is patched.
@@ -228,17 +223,25 @@ def test_global_language_flag_overrides_profile_for_invocation(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
-    from aeat.adapters.persistence.storage import get_master_key_provider
-    from aeat.application.user_profile._orchestration import set_active_field
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.domain.user_profile import UserProfileFact
-
     _isolate(monkeypatch, tmp_path)
-    with get_master_key_provider():
-        _seed_profile()
-        workflow_state_repository().update(
-            lambda state: set_active_field(state, UserProfileFact(path="preferences.output_language", value="ca"))
-        )
+
+    # Seed a profile with output-language "ca" via the canonical CLI path.
+    create_result = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "default",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--output-language",
+            "ca",
+        ]
+    )
+    assert create_result.exit_code == 0, create_result.output
 
     result = _invoke(["--language", "en", "--format", "json"])
 
@@ -250,13 +253,10 @@ def test_global_language_flag_overrides_profile_for_invocation(
     # directly by test_render_override.py in core/i18n.
     assert result.exit_code == 0, result.output
     # The profile language survives the invocation untouched.
-    with get_master_key_provider():
-        state = workflow_state_repository().load()
-        record = state.active_profile_record()
-        assert record is not None
-        from aeat.application.user_profile._orchestration import fact_value
-
-        assert fact_value(record, "preferences.output_language") == "ca"
+    show_result = _invoke(["--format", "json", "config", "profile", "show", "default"])
+    assert show_result.exit_code == 0, show_result.output
+    facts = {row["path"]: row["value"] for row in json.loads(_json_output(show_result))["facts"]}
+    assert facts["preferences.output_language"] == "ca"
 
 
 def test_create_error_renders_in_command_line_output_language(
@@ -321,19 +321,25 @@ def test_config_repair_labels_render_in_profile_output_language(
     language through the active-profile resolver.
     """
 
-    from aeat.adapters.persistence.storage import get_master_key_provider
-    from aeat.application.user_profile._orchestration import set_active_field
-    from aeat.application.workflow._persistence import workflow_state_repository
-    from aeat.domain.user_profile import UserProfileFact
-
     _isolate(monkeypatch, tmp_path)
-    with get_master_key_provider():
-        _seed_profile()
-        workflow_state_repository().update(
-            lambda state: set_active_field(
-                state, UserProfileFact(path="preferences.output_language", value="en")
-            )
-        )
+
+    # Seed a profile with output-language "en" via the canonical CLI path.
+    create_result = _invoke(
+        [
+            "config",
+            "profile",
+            "create",
+            "default",
+            "--quiet",
+            "--tax-id",
+            "00000000T",
+            "--activity",
+            "Servicios",
+            "--output-language",
+            "en",
+        ]
+    )
+    assert create_result.exit_code == 0, create_result.output
 
     result = _invoke(["config", "repair"])
 

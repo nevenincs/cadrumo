@@ -1033,7 +1033,7 @@ def ledger_transaction_payload(transaction: Transaction) -> dict[str, object]:
         amount=_display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
-        counterparty=raw.counterparty,
+        counterparty=raw.counterparty or "",
         description=raw.description,
         business_classification=transaction.business_classification.value,
         business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
