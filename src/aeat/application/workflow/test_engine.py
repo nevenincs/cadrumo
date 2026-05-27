@@ -546,6 +546,28 @@ class TestAbortReasons:
         last = result.steps[-1]
         assert last.stage is WorkflowStage.VALIDATING_DRAFT
 
+    def test_draft_has_errors_surfaces_next_action_pointer(self) -> None:
+        """DRAFT_HAS_ERRORS abort step details must carry a next_action retrieval pointer."""
+        fx = _fixtures()
+        fx.draft = _ConcreteDraft(
+            findings=(
+                ModeloFinding(
+                    severity=BaseSeverity.ERROR,
+                    message="blocking rule violated",
+                ),
+            ),
+        )
+        fx.draft_builder.draft = fx.draft
+        result = asyncio.run(fx.engine().run_next(fx.profile, today=fx.today))
+        assert result.aborted_reason is WorkflowAbortReason.DRAFT_HAS_ERRORS
+        last = result.steps[-1]
+        assert last.stage is WorkflowStage.VALIDATING_DRAFT
+        assert last.details is not None
+        details = dict(last.details)
+        assert details["error_count"] == "1"
+        assert "next_action" in details
+        assert "verification-report list" in details["next_action"]
+
     def test_preflight_failed(self) -> None:
         fx = _fixtures()
         fx.submission_engine.preflight_exc = SubmissionPreflightError("gate-3")
