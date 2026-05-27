@@ -1,11 +1,10 @@
 """Smoke tests for the engineer-only `python -m aeat.diagnostics` entrypoint.
 
-The secure-objects subcommand re-homes the previous
-`aeat config repair list NAMESPACE` operator verb. These tests
-exercise the Typer CLI end-to-end against the real
-`build_repair_list_report` application service so a future
-regression that breaks the diagnostics surface surfaces here, not
-in production.
+The secure-objects subcommand owns secure-object inventory outside
+the operator CLI. These tests exercise the Typer CLI end-to-end
+against the real `build_repair_list_report` application service so
+a future regression that breaks the diagnostics surface surfaces
+here, not in production.
 """
 
 from __future__ import annotations
