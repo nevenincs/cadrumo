@@ -2163,17 +2163,21 @@ def work_revision(
         }
         modality_lines_r = [f"modality\t{_verdict_r.modality.value}"]
 
-    payload = {
-        "operation": "modelo.work.revision",
-        **_calculation_revision_payload(revision),
-        **modality_payload_r,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRevisionResult
+
+    result = WorkRevisionResult.model_validate(
+        {
+            **_calculation_revision_payload(revision),
+            **modality_payload_r,
+        }
+    )
     lines = [
         "operation\tmodelo.work.revision",
         *_calculation_revision_lines(revision),
         *modality_lines_r,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
 
 
 @work_app.command(
@@ -2354,12 +2358,12 @@ def work_verify(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.verify",
-        **_verification_report_payload(report),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkVerifyResult
+
+    result = WorkVerifyResult.model_validate(_verification_report_payload(report))
     lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines)
 
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
@@ -2413,13 +2417,13 @@ def work_file(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.file",
-        **_filing_record_payload(record),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkFileResult
+
+    result = WorkFileResult.model_validate(_filing_record_payload(record))
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
 
 
 _WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
