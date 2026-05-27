@@ -1360,7 +1360,7 @@ cli:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
       requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: Àmbit a reiniciar (all, profile, auth)
+      scope_help: 'Àmbit a reiniciar. profile: esborra tots els buckets de perfil (manifests, DEKs, declaracions, revisions de llibre major i factures). auth: neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica profile, auth i data junts.'
       yes_help: Confirmar explícitament l'operació de reinici
     set:
       help: Assignar un valor a una clau de configuració

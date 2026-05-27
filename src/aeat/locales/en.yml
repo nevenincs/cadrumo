@@ -1267,7 +1267,7 @@ cli:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
       requires_yes: Reset is destructive. Re-run with --yes to confirm.
-      scope_help: Scope to reset (all, profile, auth)
+      scope_help: 'Scope to reset. profile: delete every profile bucket (manifests, DEKs, declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE auth session. data: quarantine unreadable secure-object rows across all namespaces. all: apply profile, auth, and data together.'
       yes_help: Explicitly confirm the reset operation
     set:
       help: Assign a value to one configuration key
