@@ -147,9 +147,13 @@ required_text = [
 [[revisions."2024-y-siguientes".formulas]]
 id = "modelo-200-cuota-ejercicio-a-ingresar-devolver"
 target = "DP200014B:00599"
+# Binding reference for DP200026:00625: the casilla stays manual (export
+# layout writes it) but the formula consumes the profile-sourced binding
+# directly so common-regime SLs (where tributacion_estado_porcentaje = 100
+# in the profile) do not produce a silent zero from an unsupplied casilla.
 expression = { op = "multiply", args = [
     { op = "divide", args = [
-        { casilla = "DP200026:00625" },
+        { binding = "modelo-200-2024-profile-tributacion-estado-porcentaje" },
         { literal = "100" },
     ] },
     { op = "subtract", args = [

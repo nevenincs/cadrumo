@@ -48,6 +48,7 @@ _REGISTRY_ROOT = bundled_path("registry", "aeat")
 _FORM_BINDING = "modelo-200-2024-profile-legal-entity-form"
 _NEW_ENTITY_BINDING = "modelo-200-2024-profile-new-entity-flag"
 _INCN_BINDING = "modelo-200-2024-profile-incn-prior-12-months"
+_ESTADO_PCT_BINDING = "modelo-200-2024-profile-tributacion-estado-porcentaje"
 
 
 @lru_cache(maxsize=1)
@@ -86,12 +87,12 @@ def _cuota_for(
             "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
-            "DP200026:00625": Decimal("100"),
         },
         enum_binding_values={_FORM_BINDING: form},
         binding_values={
             _NEW_ENTITY_BINDING: new_entity,
             _INCN_BINDING: incn,
+            _ESTADO_PCT_BINDING: Decimal("100"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": filing_period},
@@ -388,3 +389,82 @@ def test_modelo_202_modality_is_incomplete_for_non_legal_entity() -> None:
     )
     verdict = derive_modelo_202_modality(natural_person)
     assert verdict.modality is Modelo202Modality.INCOMPLETE
+
+
+# ---------------------------------------------------------------------
+# Task #183 regression: tributacion_estado_porcentaje binding path
+# ---------------------------------------------------------------------
+
+
+def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_supplied() -> None:
+    """DP200014B:00599 is non-zero when tributacion_estado_porcentaje = 100.
+
+    Root cause of Task #183: the formula
+    ``modelo-200-cuota-ejercicio-a-ingresar-devolver`` multiplies the
+    cuota by ``(binding / 100)`` where the binding is
+    ``modelo-200-2024-profile-tributacion-estado-porcentaje``. Without
+    that binding the multiplier was 0/100 = 0, silently zeroing the
+    result regardless of the supplied cuota líquida.
+
+    This test verifies the binding path from the registry formula to
+    the engine result.  The oracle values are derived from the formula
+    specification: for a common-regime entity (100 %) with
+    ``00592 = 20.000``, ``01766 = 0``, ``01784 = 0``, the formula
+    produces ``00599 = (100/100) × 20.000 = 20.000``.  The 20.000
+    figure is the AEAT Manual de Sociedades 2024 (pages 399/401) cuota
+    líquida before the retenciones are netted; using it here as a
+    structural probe (not a netted cuota-ejercicio figure) is
+    non-tautological because the formula multiplier is what this test
+    is grounding, not the cuota líquida arithmetic.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs={
+            "DP200014B:00592": Decimal("20000"),
+            "DP200014B:01766": Decimal("0"),
+            "DP200014B:01784": Decimal("0"),
+        },
+        enum_binding_values={_FORM_BINDING: "sl"},
+        binding_values={
+            _NEW_ENTITY_BINDING: Decimal("0"),
+            _INCN_BINDING: Decimal("10000000"),
+            _ESTADO_PCT_BINDING: Decimal("100"),
+        },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    cuota_ejercicio = result.values["DP200014B:00599"]
+    assert cuota_ejercicio == Decimal("20000.00"), (
+        "DP200014B:00599 must equal 20.000 when tributacion_estado_porcentaje = 100 "
+        "and cuota_liquida 00592 = 20.000; the formula (100/100) × 20.000 = 20.000"
+    )
+
+
+def test_cuota_ejercicio_00599_raises_when_estado_porcentaje_binding_absent() -> None:
+    """DP200014B:00599 raises RegistryValidationError when binding is absent.
+
+    Without ``modelo-200-2024-profile-tributacion-estado-porcentaje``
+    the formula cannot evaluate — the engine raises rather than
+    silently returning zero.  This is the correct fail-loud behaviour
+    after the Task #183 fix: operators see a missing-binding error
+    instead of a borrador with 00599 = 0.
+    """
+    from aeat.domain.calculations.registry._errors import RegistryValidationError
+
+    with pytest.raises(RegistryValidationError, match="has no supplied value"):
+        calculate_registry_snapshot(
+            _snapshot(),
+            inputs={
+                "DP200014B:00592": Decimal("20000"),
+                "DP200014B:01766": Decimal("0"),
+                "DP200014B:01784": Decimal("0"),
+            },
+            enum_binding_values={_FORM_BINDING: "sl"},
+            binding_values={
+                _NEW_ENTITY_BINDING: Decimal("0"),
+                _INCN_BINDING: Decimal("10000000"),
+                # _ESTADO_PCT_BINDING intentionally absent
+            },
+            relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+            date_context={"filing_period": date(2024, 12, 31)},
+        )
