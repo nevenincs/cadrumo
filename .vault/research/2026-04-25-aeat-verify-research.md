@@ -130,7 +130,7 @@ the riskiest new code in the wave plan. Research alternatives:
 - **Token replacement in PDF content streams** (pikepdf-based). Walks
   every content stream of the PDF, finds tokens matching configured
   PII regexes, replaces them in-place with deterministic synthetic
-  values (e.g. `Y4113523X` → `Y0000001Z`, the named taxpayer →
+  values (e.g. a synthetic NIE canary -> `Y0000001S`, the named taxpayer ->
   `APELLIDO APELLIDO NOMBRE`, the NRC and CSV → fixture-stable
   placeholders). Preserves layout, font, page count. Failure mode:
   variable-width replacement (`9.876,54` → `1.000,00`) breaks visual

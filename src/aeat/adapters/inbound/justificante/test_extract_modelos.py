@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 
 # Synthetic PDF text shapes derived from live captures with PII
-# token-replaced (Y4113523X → Y0000001S, real CSVs → SANITIZED…).
+# token-replaced (Y1234567X -> Y0000001S, real CSVs -> SANITIZED...).
 # Each block ends with a verification URL so the URL extractor
 # always succeeds.
 _SHAPE_M130_QUARTERLY = (

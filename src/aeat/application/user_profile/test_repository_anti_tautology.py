@@ -24,10 +24,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from ...adapters.persistence.storage import SensitivityClass
 from ...domain.user_profile import (
+    StoredProfileDriftError,
     UserProfileFact,
     UserProfileRecord,
     UserProfileStatus,
@@ -62,17 +62,17 @@ def _populated_record() -> UserProfileRecord:
         schema_id="aeat.user_profile",
         schema_version=2,
         profile_id=_PROFILE_UUID,
-        display_name="Gergely Wootsch - 2024 IRPF",
+        display_name="Persona Prueba - 2024 IRPF",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(
                 path="identity.given_name",
-                value="Gergely",
+                value="Persona",
                 source="manual_cli",
             ),
             UserProfileFact(
                 path="identity.tax_id",
-                value="12345678Z",
+                value="taxpayer-alpha",
                 source="manual_cli",
             ),
         ),
@@ -97,7 +97,7 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
          envelope, and writes the mutated bytes back.
       3. Loads the record via the repository.
 
-    The load must raise :class:`pydantic.ValidationError`; if it
+    The load must raise :class:`StoredProfileDriftError`; if it
     returns despite the mutation, every roundtrip test against this
     boundary is tautological and must be re-audited.
     """
@@ -134,5 +134,5 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
         payload=json.dumps(decoded).encode("utf-8"),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(StoredProfileDriftError):
         repo.load(original.profile_id)

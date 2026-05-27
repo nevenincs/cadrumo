@@ -71,7 +71,7 @@ captured PDFs (no rewrite, read-only):
   - DocInfo keys: `ModDate`, `CreationDate`, `Producer`. **No** `Title`, `Author`, `Subject`, `Keywords`.
   - Catalog: `Type`, `Pages`, `Version`. No `Metadata` / `OutputIntents` / `Lang` / `MarkInfo` / `StructTreeRoot`. Plain PDF 1.x.
   - Fonts: one Type1 `NimbusSanL-Regu` (no subset prefix).
-  - Content streams encode strings as **literal strings** only: `(Y4113523X)Tj`, `(WOOTSCH GERGELY DOMOKOS)Tj`. Zero hex strings. Zero `TJ` arrays. The taxpayer's NIF and full name appear as plaintext literals at fixed `Tm` matrices.
+  - Content streams encode strings as **literal strings** only: `(Y1234567X)Tj`, `(PERSONA PRUEBA UNO)Tj`. Zero hex strings. Zero `TJ` arrays. The taxpayer's NIF and full name appear as plaintext literals at fixed `Tm` matrices.
 - **2022** (`irpf-2022/justificante.pdf`, 5 pages)
   - Producer: `AEAT OVCT-IPDF/OVCT-XPDF` (modern AEAT renderer).
   - DocInfo: `Title`, `Subject` (both contain the CSV — `Justificante AEAT. CSV=MZRSYDRL5JMPJPRT`), `Creator`, `Author`, `Keywords`, `Producer`.

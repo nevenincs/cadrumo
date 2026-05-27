@@ -24,6 +24,12 @@ from ._streams import apply_token_map_to_pdf
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
+_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NIE_CANARY_PREFIX = "Y1234567"
+_REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
+_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
+
 
 def _pdf_with_content_stream(stream_bytes: bytes) -> pikepdf.Pdf:
     """Construct a one-page PDF carrying ``stream_bytes`` as its content.
@@ -67,13 +73,13 @@ class TestRewriteSingleTj:
 
     def test_replaces_literal_string(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y4113523X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
         )
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
@@ -82,38 +88,37 @@ class TestRewriteSingleTj:
         assert len(edits) == 1
         assert edits[0].surface == "content_stream"
         assert edits[0].surface_index == (0, 3)  # BT, Tf, Td, Tj
-        assert edits[0].synthetic == "Y0000001S"
+        assert edits[0].synthetic == _SYNTHETIC_NIE
         assert edits[0].encoding == "literal"
         # Hash matches the cleartext.
-        expected_sha = hashlib.sha256(b"Y4113523X").hexdigest()
+        expected_sha = hashlib.sha256(_REAL_NIE_CANARY.encode("utf-8")).hexdigest()
         assert edits[0].real_sha256 == expected_sha
         # Cleartext gone, synthetic present.
         flattened = _flatten_content_streams(pdf)
-        assert b"Y4113523X" not in flattened
-        assert b"Y0000001S" in flattened
+        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
+        assert _SYNTHETIC_NIE.encode("utf-8") in flattened
 
     def test_replaces_when_decoded_from_hex(self) -> None:
-        # `<5934313133353233583E>` would actually be `Y4113523X>` —
-        # use the canonical hex of `Y4113523X` (10 ASCII chars).
-        # `Y4113523X` → 59 34 31 31 33 35 32 33 58
+        # Use the canonical ASCII hex of the synthetic NIE canary.
+        # `Y1234567X` -> 59 31 32 33 34 35 36 37 58
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td <593431313335323358> Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td <593132333435363758> Tj ET\n",
         )
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
         )
         edits = apply_token_map_to_pdf(pdf, mapping)
         assert len(edits) == 1
-        assert edits[0].synthetic == "Y0000001S"
+        assert edits[0].synthetic == _SYNTHETIC_NIE
         flattened = _flatten_content_streams(pdf)
-        assert b"Y4113523X" not in flattened
-        assert b"Y0000001S" in flattened
+        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
+        assert _SYNTHETIC_NIE.encode("utf-8") in flattened
 
 
 class TestRewriteTJArray:
@@ -121,23 +126,23 @@ class TestRewriteTJArray:
 
     def test_replaces_one_string_in_array(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td [(WOOTSCH GERGELY DOMOKOS) -100 (filler)] TJ ET\n",
+            b"BT /F1 12 Tf 100 700 Td [(PERSONA PRUEBA UNO) -100 (filler)] TJ ET\n",
         )
         mapping = TokenMap(
             name=(
                 NameReplacement(
-                    real=SecretStr("WOOTSCH GERGELY DOMOKOS"),
-                    synthetic="APELLIDO APELLIDO NOMBRE",
+                    real=SecretStr(_REAL_NAME_CANARY),
+                    synthetic=_SYNTHETIC_NAME,
                     surface_label="taxpayer name",
                 ),
             ),
         )
         edits = apply_token_map_to_pdf(pdf, mapping)
         assert len(edits) == 1
-        assert edits[0].synthetic == "APELLIDO APELLIDO NOMBRE"
+        assert edits[0].synthetic == _SYNTHETIC_NAME
         flattened = _flatten_content_streams(pdf)
-        assert b"WOOTSCH GERGELY DOMOKOS" not in flattened
-        assert b"APELLIDO APELLIDO NOMBRE" in flattened
+        assert _REAL_NAME_CANARY.encode("utf-8") not in flattened
+        assert _SYNTHETIC_NAME.encode("utf-8") in flattened
 
 
 class TestRewriteApostropheOperator:
@@ -145,13 +150,13 @@ class TestRewriteApostropheOperator:
 
     def test_replaces_quote_operand(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y4113523X) ' ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y1234567X) ' ET\n",
         )
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
@@ -159,7 +164,7 @@ class TestRewriteApostropheOperator:
         edits = apply_token_map_to_pdf(pdf, mapping)
         assert len(edits) == 1
         flattened = _flatten_content_streams(pdf)
-        assert b"Y4113523X" not in flattened
+        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
 
 
 class TestRewriteDoubleQuoteOperator:
@@ -167,13 +172,13 @@ class TestRewriteDoubleQuoteOperator:
 
     def test_replaces_doublequote_operand(self) -> None:
         pdf = _pdf_with_content_stream(
-            b'BT /F1 12 Tf 100 700 Td 0 0 (Y4113523X) " ET\n',
+            b'BT /F1 12 Tf 100 700 Td 0 0 (Y1234567X) " ET\n',
         )
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
@@ -181,7 +186,7 @@ class TestRewriteDoubleQuoteOperator:
         edits = apply_token_map_to_pdf(pdf, mapping)
         assert len(edits) == 1
         flattened = _flatten_content_streams(pdf)
-        assert b"Y4113523X" not in flattened
+        assert _REAL_NIE_CANARY.encode("utf-8") not in flattened
 
 
 class TestNoMatch:
@@ -194,8 +199,8 @@ class TestNoMatch:
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
@@ -205,7 +210,7 @@ class TestNoMatch:
 
     def test_no_edits_when_mapping_empty(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y4113523X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
         )
         edits = apply_token_map_to_pdf(pdf, TokenMap())
         assert edits == ()
@@ -216,13 +221,13 @@ class TestMultipleOccurrences:
 
     def test_two_hits_in_one_operand(self) -> None:
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y4113523X and again Y4113523X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y1234567X and again Y1234567X) Tj ET\n",
         )
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
@@ -230,29 +235,29 @@ class TestMultipleOccurrences:
         edits = apply_token_map_to_pdf(pdf, mapping)
         assert len(edits) == 2
         flattened = _flatten_content_streams(pdf)
-        assert flattened.count(b"Y4113523X") == 0
-        assert flattened.count(b"Y0000001S") == 2
+        assert flattened.count(_REAL_NIE_CANARY.encode("utf-8")) == 0
+        assert flattened.count(_SYNTHETIC_NIE.encode("utf-8")) == 2
 
 
 class TestLongestMatchPriority:
     """Longer cleartext values match first, before any shorter prefix."""
 
     def test_longer_real_matches_before_shorter(self) -> None:
-        # If "Y4113523X" replaced first with "X", a later "Y4113523" → "Y" rule
+        # If the full NIE is replaced first with "X", a later prefix rule
         # could leave the synthetic "X" still in the output. Sort by descending
         # real-length to defend against this.
         pdf = _pdf_with_content_stream(
-            b"BT /F1 12 Tf 100 700 Td (Y4113523X) Tj ET\n",
+            b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n",
         )
         mapping = TokenMap(
             arbitrary=(
                 ArbitraryReplacement(
-                    real=SecretStr("Y4113523"),
+                    real=SecretStr(_REAL_NIE_CANARY_PREFIX),
                     synthetic="SHORTER",
                     surface_label="prefix-only",
                 ),
                 ArbitraryReplacement(
-                    real=SecretStr("Y4113523X"),
+                    real=SecretStr(_REAL_NIE_CANARY),
                     synthetic="LONGER",
                     surface_label="full-id",
                 ),
@@ -260,9 +265,9 @@ class TestLongestMatchPriority:
         )
         edits = apply_token_map_to_pdf(pdf, mapping)
         flattened = _flatten_content_streams(pdf)
-        # Longer match should have applied first, leaving no Y4113523-prefix
+        # Longer match should have applied first, leaving no NIE-prefix
         # for the shorter rule to find.
-        assert b"Y4113523" not in flattened
+        assert _REAL_NIE_CANARY_PREFIX.encode("utf-8") not in flattened
         assert b"LONGER" in flattened
         assert b"SHORTER" not in flattened
         assert len(edits) == 1

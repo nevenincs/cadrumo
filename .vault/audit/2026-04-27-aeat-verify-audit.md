@@ -57,7 +57,7 @@ read-only Python code:
   filing register** — the routine quarterly/annual modelos that
   the expediente tree omits.
 
-Cross-wave P1 enumeration against Y4113523X's account, fully
+Cross-wave P1 enumeration against the authenticated operator account, fully
 resolved:
 
 | Wave | Modelo | Status | Captured |
@@ -501,7 +501,7 @@ or a ZK form drive that fetches state, never POSTs / submits.
   M100/2022/0A draft with `profile_tax_id="X9999999Z"` (wrong
   NIE), reconciled against AEAT's real record. Verdict:
   `status: divergent`, `tax_id_mismatch` surfaces:
-  draft=X9999999Z vs AEAT=Y4113523X.
+  draft=X9999999Z vs AEAT=<redacted operator NIE>.
 
 This closes the Kent-observable acceptance criteria for #239:
 > "`aeat filing reconcile <draft-id>` returns MATCH 30 minutes
