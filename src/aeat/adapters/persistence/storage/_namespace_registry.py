@@ -12,6 +12,7 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
+SECURE_OBJECT_DEFAULT_KEY = "default"
 SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 
 BUCKETS_DIRNAME = "buckets"
@@ -202,6 +203,36 @@ USER_PROFILE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="user-profile-snapshot:{profile_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
+PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_inventory_ledger",
+    namespace="aeat.persistence.profile.inventory",
+    owner="aeat.adapters.persistence.profile.inventory",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_assets_ledger",
+    namespace="aeat.persistence.profile.assets",
+    owner="aeat.adapters.persistence.profile.assets",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="profile_assets_amortization_ledger",
+    namespace="aeat.persistence.profile.assets.amortization",
+    owner="aeat.adapters.persistence.profile.assets",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="default",
+    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
 REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
     key="repair_integrity_decisions",
     namespace="aeat.application.repair_integrity.decisions",
@@ -263,6 +294,17 @@ IVA_COMPENSATION_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="303:{filing_year}:{period}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_iva_remote_state_acquisitions",
+    namespace="aeat.application.live.iva_remote_state_acquisitions",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.AUDIT,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar=(
+        "live-iva-acquisition:{target_year}:{target_period}:{timestamp}:{sha256(redacted_manifest_seed)}"
+    ),
     scope=StorageNamespaceScope.PROFILE_LOCAL,
 )
 LEDGER_CLASSIFICATION_RULES_NAMESPACE = SecureObjectNamespaceDefinition(
@@ -506,6 +548,9 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         WORKFLOW_RUN_NAMESPACE,
         USER_PROFILE_VALUE_NAMESPACE,
         USER_PROFILE_SNAPSHOT_NAMESPACE,
+        PROFILE_INVENTORY_LEDGER_NAMESPACE,
+        PROFILE_ASSETS_LEDGER_NAMESPACE,
+        PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
         REPAIR_INTEGRITY_DECISION_NAMESPACE,
         APPLICATION_FILING_HISTORY_NAMESPACE,
         AUTH_APODERADO_CONFIGURATION_NAMESPACE,
@@ -513,6 +558,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
         IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
         IVA_COMPENSATION_HISTORY_NAMESPACE,
+        LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE,
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSUS_SNAPSHOT_NAMESPACE,
@@ -545,9 +591,14 @@ __all__ = [
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
     "LIVE_CENSUS_SNAPSHOT_NAMESPACE",
+    "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
+    "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
+    "PROFILE_ASSETS_LEDGER_NAMESPACE",
+    "PROFILE_INVENTORY_LEDGER_NAMESPACE",
     "REPAIR_INTEGRITY_DECISION_NAMESPACE",
     "SECRET_RECORD_SCHEMA_VERSION",
     "SECURE_OBJECT_CATALOGUE_KEY",
+    "SECURE_OBJECT_DEFAULT_KEY",
     "SECURE_OBJECT_SCHEMA_VERSION_V1",
     "SECURE_OBJECT_WORKFLOW_STATE_KEY",
     "STORAGE_NAMESPACE_REGISTRY",
