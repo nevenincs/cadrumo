@@ -2422,11 +2422,12 @@ def _evaluate_verification_predicates(
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
             if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values):
+                advisory_key = f"application.modelo.findings.{predicate.predicate_id.replace('-', '_')}"
                 findings.append(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.ADVISORY,
                         severity=ModeloVerificationFindingSeverity.WARNING,
-                        message=predicate.predicate_id,
+                        message=tr(advisory_key),
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     )
                 )
