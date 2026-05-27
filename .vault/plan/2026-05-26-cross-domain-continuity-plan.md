@@ -463,6 +463,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S243` - FU-W02-B multi-step co-landing convention note from Wave-2 audit; `commit acea52801 S43+S44+S46; documentation-only no code change; `.vaultspec/`.
 - [ ] `W09.P41.S244` - FU-W02-C MUST-FIX rewrite test_legal_entity_can_create_modelo_202_work_unit with isolated_runtime_profile fixture; `currently uses monkeypatch AEAT_SECRET_STORE_BACKEND=unsecured to work around the storage regression S209; once S209 lands the unsecured workaround in this test must be removed; blocks Wave-2 quality-gate sign-off; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
 - [ ] `W09.P41.S245` - FU-W07-A multi-step co-landing convention note from Wave-7 review of 01ac9d698 S113+S114; `documentation-only; `.vaultspec/`.
+- [ ] `W09.P41.S250` - FU-W07-C add age_at DSL operator so casillas 0513/0515 can auto-derive age supplements from renta_taxpayer.birth_date without manual operator input; `UX enhancement closing the silent-zero footgun for >=65 personas who forget to supply the supplement amount; `src/aeat/domain/calculations/registry/`.
+- [ ] `W09.P41.S251` - FU-S115-CAT investigate Cataluña 2024 autonomic tarifa discrepancy; reviewer reconstruction gives 4522.78 EUR for base 35400 but S115/S249 oracle values use 4650.03; either the bracket table is wrong in S115 or there is a complementary tariff source from Orden HAC 2024 Cataluña not yet ingested; ground against AEAT oracle replay before adjusting; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
 
 ### Phase `W09.P42` - twin function merge
 
