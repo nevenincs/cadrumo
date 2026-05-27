@@ -118,6 +118,11 @@ application:
           --file UTVONAL' parancsot érvényes elérési úttal.
         path_unset: Nincs kiválasztott tanúsítványfájl. Futtasd az 'aeat config auth
           configure --provider certificate --file UTVONAL' parancsot a megadásához.
+      load:
+        password_unset: Nincs tanúsítványjelszó beállítva. Állítsd be a tanúsítványjelszót
+          a folytatás előtt.
+        path_unset: Nincs tanúsítványfájl beállítva. Futtasd az 'aeat config auth
+          configure --provider certificate --file UTVONAL' parancsot a megadásához.
     clave_movil:
       health:
         identity_unset: Nincs DNI/NIE megadva a Cl@ve Móvilhoz. Add meg, mielőtt folytatnád.

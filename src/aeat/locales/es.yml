@@ -169,6 +169,11 @@ application:
           --file RUTA' con una ruta válida.
         path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'aeat
           config auth configure --provider certificate --file RUTA' para indicarlo.
+      load:
+        password_unset: No hay contraseña de certificado configurada. Configura
+          la contraseña del certificado antes de continuar.
+        path_unset: No hay archivo de certificado configurado. Ejecuta 'aeat config
+          auth configure --provider certificate --file RUTA' para indicarlo.
     clave_movil:
       health:
         identity_unset: No se ha configurado un DNI/NIE para Cl@ve Móvil. Configúralo

@@ -153,6 +153,11 @@ application:
           PATH' with a valid path.
         path_unset: No certificate file has been selected. Run 'aeat config auth configure
           --provider certificate --file PATH' to set one.
+      load:
+        password_unset: No certificate password is configured. Set the certificate
+          password before continuing.
+        path_unset: No certificate file is configured. Run 'aeat config auth configure
+          --provider certificate --file PATH' to set one.
     clave_movil:
       health:
         identity_unset: No DNI/NIE has been configured for Cl@ve Móvil. Configure

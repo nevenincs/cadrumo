@@ -1200,17 +1200,25 @@ class AeatAuthenticator:
     def _require_bundle(self) -> CertificateBundle:
         """Assemble a :class:`CertificateBundle` from ``settings``.
 
-        Raises :class:`CertificateLoadError` if the mandatory env-driven
-        fields are not configured. This is a structural precondition
-        — callers should have verified env var presence before
-        calling the authenticator.
+        Raises :class:`CertificateLoadError` if the mandatory cert fields
+        are not configured. Live auth requires AEAT_LIVE_TESTS_ENABLED; this
+        is a structural precondition — callers should have verified presence
+        before calling the authenticator.
         """
+        from .....core.i18n import tr
+
         path = self._settings.aeat_certificate_path
         if path is None:
-            raise CertificateLoadError("AEAT_CERTIFICATE_PATH is not set; cannot build CertificateBundle")
+            raise CertificateLoadError(tr(
+                "application.auth.certificate.load.path_unset",
+                default="No certificate file is configured. Run 'aeat config auth configure --provider certificate --file PATH' to set one.",
+            ))
         password = self._settings.aeat_certificate_password_secret
         if password is None:
-            raise CertificateLoadError("AEAT_CERTIFICATE_PASSWORD_SECRET is not set; cannot build CertificateBundle")
+            raise CertificateLoadError(tr(
+                "application.auth.certificate.load.password_unset",
+                default="No certificate password is configured. Set the certificate password before continuing.",
+            ))
         return CertificateBundle(
             path=path,
             password=password,
