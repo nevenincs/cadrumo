@@ -16,6 +16,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage import Envelope, SensitivityClass
+from aeat.adapters.persistence.storage.errors import StorageValidationError
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.usage_ratios import (
     UsageRatioPersistenceError,
@@ -31,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a") as profile:
         yield profile
 
 
@@ -75,9 +76,22 @@ def test_profiles_are_scoped_by_bucket(tmp_path: Path) -> None:
     first = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
     second = UsageRatioProfile(ratios={SpendingCategory.TELEFONIA_MOVIL: Decimal("0.6")})
     save_usage_ratios(first, bucket_id="bucket-a")
-    save_usage_ratios(second, bucket_id="bucket-b")
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-b"):
+        save_usage_ratios(second, bucket_id="bucket-b")
+        assert load_usage_ratios(bucket_id="bucket-b") == second
+
     assert load_usage_ratios(bucket_id="bucket-a") == first
-    assert load_usage_ratios(bucket_id="bucket-b") == second
+
+
+def test_default_repository_refuses_bucket_route_mismatch() -> None:
+    profile = UsageRatioProfile(ratios={SpendingCategory.SUMINISTROS_HOME_OFFICE_LUZ: Decimal("0.21")})
+
+    with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+        save_usage_ratios(profile, bucket_id="bucket-b")
+
+    with pytest.raises(StorageValidationError, match=r"route does not match|storage runtime is not ready"):
+        load_usage_ratios(bucket_id="bucket-b")
 
 
 def test_save_replaces_previous_payload(tmp_path: Path) -> None:
@@ -119,6 +133,21 @@ def test_load_corrupt_secure_object_raises_persistence_error(_runtime_profile: T
         load_usage_ratios(bucket_id="bucket-a")
     assert isinstance(exc_info.value.__cause__, ValidationError)
     assert "Invalid JSON" in str(exc_info.value)
+
+
+def test_load_non_utf8_secure_object_raises_persistence_error(_runtime_profile: TestRuntimeProfile) -> None:
+    """Non-UTF-8 encrypted payload bytes stay on the domain persistence surface."""
+    _runtime_profile.repository.save(
+        namespace="aeat.domain.usage_ratios",
+        object_key=usage_ratios_object_key("bucket-a"),
+        classification=SensitivityClass.FINANCIAL,
+        schema_version=1,
+        written_at=datetime.now(UTC),
+        payload=b"\xff",
+    )
+    with pytest.raises(UsageRatioPersistenceError, match="invalid UTF-8") as exc_info:
+        load_usage_ratios(bucket_id="bucket-a")
+    assert isinstance(exc_info.value.__cause__, UnicodeDecodeError)
 
 
 def test_load_inner_classification_mismatch_raises_persistence_error(
