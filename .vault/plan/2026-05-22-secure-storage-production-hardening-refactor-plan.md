@@ -22,6 +22,10 @@ related:
   - '[[2026-05-21-fresh-cli-persona-findings-inventory]]'
   - '[[2026-05-21-fresh-cli-persona-capability-gap-design]]'
   - '[[2026-05-26-active-profile-storage-runtime-discovery-audit]]'
+  - '[[2026-05-26-secure-storage-settings-env-audit]]'
+  - '[[2026-05-26-secure-storage-migration-review]]'
+  - '[[2026-05-26-secure-storage-convention-regrounding-plan-expansion]]'
+  - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
 ---
 
 <!-- LINK RULES:
@@ -942,3 +946,46 @@ This Wave records late roundtrip-fixture hardening work that was originally graf
 Populate all optional ModeloDraft fields with non-default values in roundtrip fixtures so a save-drops-field / load-re-defaults-field regression cannot pass vacuously. Extend the anti-tautology companion with parametrized field-drop proofs for each previously-defaulted optional field.
 
 - [x] `W14.P29.S402` - Populate 6 optional ModeloDraft fields (casilla_provenance, notes, approved_at, approved_by, review_checksum, approval_basis) with non-default values in both roundtrip fixtures; `extend anti-tautology suite with 6 parametrized field-drop cases; all 9 tests pass, ruff clean; `src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py`.
+
+## Wave `W15` - post-migration stabilization and guard closeout
+
+This Wave converts the post-migration findings into executable work before more broad storage refactoring proceeds. It stabilizes the current Modelo validation boundary, reconciles repair privacy contracts, turns residual string scans into enforceable guards, inventories storage hierarchy constants and namespace ownership, and closes vaultspec traceability for the pushed migration waves.
+
+### Phase `W15.P30` - Modelo validation boundary stabilization
+
+Restore the current shared HEAD to a trustworthy baseline before further secure-storage work by isolating and repairing the Modelo work-create validation refusal that blocks focused CLI verification.
+
+- [ ] `W15.P30.S403` - Reproduce the current Modelo work-create validation refusal and isolate the rejecting boundary; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W15.P30.S404` - Repair the Modelo validation boundary so valid work-create inputs are not masked by generic CLI validation refusal; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W15.P30.S405` - Run the affected Modelo CLI suites through the centralized runtime helper and record any non-storage registry blockers; `src/aeat/entrypoints/cli`.
+
+### Phase `W15.P31` - repair privacy contract reconciliation
+
+Reconcile the repair CLI command surface with the privacy contract so diagnostics remain useful while row context, logs, and operator output do not leak active profile identifiers or secure-storage internals.
+
+- [ ] `W15.P31.S406` - Reconcile current repair CLI verbs with the privacy-contract tests and remove obsolete command assumptions; `src/aeat/entrypoints/cli/test_repair_privacy_contract.py`.
+- [ ] `W15.P31.S407` - Harden repair diagnostics so row context and diagnostic logs redact profile identifiers and object-key hints; `src/aeat/application/repair_integrity.py`.
+- [ ] `W15.P31.S408` - Add real-custody CLI privacy roundtrips for repair list, quarantine, bootstrap, and log surfaces; `src/aeat/entrypoints/cli`.
+
+### Phase `W15.P32` - residual storage-surface guard hardening
+
+Turn the residual deprecated-token scan into durable guard coverage so intentional explicit-route tests remain allowed while new low-level env, passphrase, or repository shortcuts are rejected.
+
+- [ ] `W15.P32.S409` - Add guard coverage against direct passphrase-env imports and unapproved explicit database-url test setup; `src/aeat/adapters/persistence/storage`.
+- [ ] `W15.P32.S410` - Require CLI storage tests to use centralized Settings or secure-sql runtime helpers instead of naked AEAT env wrangling; `src/aeat/tests`.
+- [ ] `W15.P32.S411` - Persist an approved residual-hit inventory for cold-start leak guards and explicit-route refusal tests; `.vault/audit`.
+
+### Phase `W15.P33` - storage hierarchy constants and namespace inventory
+
+Make storage hierarchy and namespace shape auditable before deeper refactors by inventorying constants, object-key grammar, manifest versions, repair classifications, and duplicated local values.
+
+- [ ] `W15.P33.S412` - Inventory bucket paths, object-key grammar, namespace strings, manifest schema versions, and repair classifications; `.vault/audit`.
+- [ ] `W15.P33.S413` - Promote storage hierarchy constants and namespace identities into typed registry models; `src/aeat/adapters/persistence/storage`.
+- [ ] `W15.P33.S414` - Replace duplicated local storage namespace and key constants with the typed registry entries; `src/aeat/application`.
+
+### Phase `W15.P34` - vaultspec traceability closeout
+
+Close the process gap left by fast shared-worktree execution by recording the pushed storage-migration commits, validation caveats, residual blockers, and review requirements in durable vault artifacts.
+
+- [ ] `W15.P34.S415` - Persist step records for the pushed storage test-enrollment commits and their validation results; `.vault/exec`.
+- [ ] `W15.P34.S416` - Persist closeout audit for residual storage blockers, intentional guard hits, and required code-review follow-up; `.vault/audit`.
