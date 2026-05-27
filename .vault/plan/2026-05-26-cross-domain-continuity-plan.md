@@ -388,10 +388,10 @@ Seventeen raise error f-string sites; each gets a locale key plus tr. One Step p
 
 Register --output-language on every Typer command that emits user-facing text. auth_clear config profile show modelo work calculate and others still missing it.
 
-- [ ] `W08.P36.S141` - register --output-language on auth_clear; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W08.P36.S142` - register --output-language on config profile show; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W08.P36.S143` - register --output-language on modelo work calculate verify file; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W08.P36.S144` - sweep every Typer command for --output-language presence; `regression test asserts every command accepts the flag; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
+- [x] `W08.P36.S141` - register --output-language on auth_clear; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W08.P36.S142` - register --output-language on config profile show; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W08.P36.S143` - register --output-language on modelo work calculate verify file; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W08.P36.S144` - sweep every Typer command for --output-language presence; `regression test asserts every command accepts the flag; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
 
 ### Phase `W08.P37` - unneeded re-export removal
 
@@ -472,6 +472,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S256` - FU-W07-D surface legal_refs and source_refs on projected M100 casilla values in modelo project verb output payload; `calculation-grounding rule requires every casilla observation to carry its provenance; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer; `extract snapshot acquisition + engine call into a thin application.modelo service function and have the verb call only that service; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S258` - FU-W07-F document or test that resources().modelos.authority and _service()._authority yield identical RegistrySnapshots; `the modelo project verb test asserts via two distinct paths but the equivalence is currently implicit; `src/aeat/application/modelo/`.
+- [ ] `W09.P41.S259` - FU-W07-G S118 + S118-fix co-landing convention note: 604bf217d and f4108869d both touch the S118 scope without an intervening Step record; documentation-only note for W09; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
