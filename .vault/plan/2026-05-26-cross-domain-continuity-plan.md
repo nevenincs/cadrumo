@@ -91,7 +91,7 @@ Four separate period-resolution sites: parse_canonical_period period_start_date 
 - [x] `W01.P07.S27` - consolidate _registry_period_token to share a normaliser with the calculate path; `src/aeat/application/workflow/_engine.py`.
 - [x] `W01.P07.S28` - property test that for every supported period token all three sibling functions agree; `src/aeat/domain/test_period_property.py`.
 - [x] `W01.P07.S29` - regression test that modelo work verify succeeds on the same 1P token create and calculate accepted; `src/aeat/entrypoints/cli/test_modelo_period_consistency.py`.
-- [ ] `W01.P07.S233` - R7-INES-7 fix period token notation inconsistency in overview backlog; M111 surfaces as 2026Q1 while the rest of the system uses 1T; consolidate period rendering through parse_canonical_period output form so backlog and calendar agree; `src/aeat/application/overview/`.
+- [ ] `W01.P07.S233` - R7-INES-7 fix period token notation inconsistency in overview backlog; `M111 surfaces as 2026Q1 while the rest of the system uses 1T; consolidate period rendering through parse_canonical_period output form so backlog and calendar agree; `src/aeat/application/overview/`.
 
 ### Phase `W01.P08` - i18n placeholder validator silent-swallow elimination
 
@@ -168,7 +168,7 @@ is.modelo-200.tipo-gravamen-pyme brackets cover 2025+ only inside a revision nam
 - [x] `W03.P14.S56` - apply the chosen fix to the parameter; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/records/parameters.toml`.
 - [x] `W03.P14.S57` - add registry-validation check that every bracket_table parameter brackets cover the revision declared date range; `src/aeat/domain/calculations/registry/_validate_revision_rules.py`.
 - [x] `W03.P14.S58` - regression test: Modelo 200 work unit with 2024 filing_period and micro-empresa profile calculates without bracket_no_window; `src/aeat/domain/calculations/registry/test_modelo_200_temporal_coverage.py`.
-- [ ] `W03.P14.S218` - CRITICAL BLOCKER R7-001 fix M200 verify path ModeloBuilderError: legal_entity_form binding is a string enum sl/sa but _decimal_inputs_for_ids tries to convert to Decimal; `M200 verify completely broken for corporate profiles; investigate _decimal_inputs_for_ids in application filing to type-discriminate enum bindings from decimal bindings; verify path must support all binding kinds not only Decimal; `src/aeat/application/filing/__init__.py`.
+- [x] `W03.P14.S218` - CRITICAL BLOCKER R7-001 fix M200 verify path ModeloBuilderError: legal_entity_form binding is a string enum sl/sa but _decimal_inputs_for_ids tries to convert to Decimal; `M200 verify completely broken for corporate profiles; investigate _decimal_inputs_for_ids in application filing to type-discriminate enum bindings from decimal bindings; verify path must support all binding kinds not only Decimal; `src/aeat/application/filing/__init__.py`.
 - [ ] `W03.P14.S223` - R7-B variant of S218 covers tax-residence-ccaa enum binding in M100 verify path; `fix is the same _decimal_inputs_for_ids type-discrimination from S218; this Step pins regression coverage explicitly for the M100 CCAA case so a future M200-only fix does not regress M100; `src/aeat/application/filing/__init__.py`.
 
 ### Phase `W03.P15` - Modelo 200 base imponible input casilla resolution Cluster D.3

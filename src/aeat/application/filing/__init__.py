@@ -16,6 +16,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshotRef,
     RegistryValidationError,
     calculate_registry_snapshot,
+    enum_consumed_binding_ids,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -137,15 +138,19 @@ def build_draft(
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
+    enum_binding_ids = enum_consumed_binding_ids(snapshot.revision)
+    decimal_binding_ids = calculation_binding_ids - enum_binding_ids
     casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
-    binding_inputs = _decimal_inputs_for_ids(inputs, calculation_binding_ids)
-    filing_binding_values = _filing_binding_values(inputs, bindings)
+    binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
+    enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
+    filing_binding_values = _filing_binding_values(inputs, bindings, enum_binding_ids)
     try:
         result = calculate_registry_snapshot(
             snapshot,
             inputs=casilla_inputs,
             date_context={"filing_period": _filing_period_date(period)},
             binding_values=binding_inputs,
+            enum_binding_values=enum_binding_inputs or None,
         )
     except RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -303,9 +308,32 @@ def _decimal_inputs_for_ids(inputs: ModeloInputs, input_ids: set[str]) -> dict[s
     return decimal_inputs
 
 
-def _filing_binding_values(inputs: ModeloInputs, bindings: Mapping[str, object]) -> list[ModeloBindingValue]:
+def _string_inputs_for_ids(inputs: ModeloInputs, input_ids: frozenset[str]) -> dict[str, str]:
+    # Enum-channel bindings carry string values; skip None and non-string entries.
+    string_inputs: dict[str, str] = {}
+    for binding_id, value in inputs.items():
+        if binding_id not in input_ids:
+            continue
+        if value is None:
+            continue
+        if not isinstance(value, str):
+            continue
+        string_inputs[binding_id] = value
+    return string_inputs
+
+
+def _filing_binding_values(
+    inputs: ModeloInputs,
+    bindings: Mapping[str, object],
+    enum_binding_ids: frozenset[str] = frozenset(),
+) -> list[ModeloBindingValue]:
     values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
+        if binding_id in enum_binding_ids:
+            # Enum-channel bindings flow through calculate_registry_snapshot's
+            # enum_binding_values parameter; they carry no fichero-BOE addressing
+            # and must not be coerced to Decimal here.
+            continue
         if binding_id not in inputs or inputs[binding_id] is None:
             continue
         raw_value = inputs[binding_id]
