@@ -1,0 +1,2075 @@
+access_gate:
+  errors:
+    default_translatable: access_gate.errors.default_translatable
+adapters:
+  aeat:
+    clave_movil:
+      errors:
+        pending_petition_blocked: adapters.aeat.clave_movil.errors.pending_petition_blocked
+      suggestions:
+        reject_pending_request: adapters.aeat.clave_movil.suggestions.reject_pending_request
+    sede:
+      groi:
+        suggestions:
+          shape_change: adapters.aeat.sede.groi.suggestions.shape_change
+      nif_iva:
+        suggestions:
+          shape_change: adapters.aeat.sede.nif_iva.suggestions.shape_change
+      renta_web_open:
+        suggestions:
+          shape_change: adapters.aeat.sede.renta_web_open.suggestions.shape_change
+  google:
+    calc_sheets:
+      errors:
+        api_call_failed: adapters.google.calc_sheets.errors.api_call_failed
+        api_call_refused: adapters.google.calc_sheets.errors.api_call_refused
+        api_target_not_found: adapters.google.calc_sheets.errors.api_target_not_found
+        googleapiclient_not_importable: adapters.google.calc_sheets.errors.googleapiclient_not_importable
+    oauth_flow:
+      errors:
+        browser_launcher_refused: adapters.google.oauth_flow.errors.browser_launcher_refused
+        client_config_refused: adapters.google.oauth_flow.errors.client_config_refused
+        email_claim_missing: adapters.google.oauth_flow.errors.email_claim_missing
+        endpoint_unreachable: adapters.google.oauth_flow.errors.endpoint_unreachable
+        id_token_missing: adapters.google.oauth_flow.errors.id_token_missing
+        id_token_module_not_importable: adapters.google.oauth_flow.errors.id_token_module_not_importable
+        id_token_verification_failed: adapters.google.oauth_flow.errors.id_token_verification_failed
+        loopback_bind_failed: adapters.google.oauth_flow.errors.loopback_bind_failed
+        oauthlib_not_importable: adapters.google.oauth_flow.errors.oauthlib_not_importable
+        scope_missing: adapters.google.oauth_flow.errors.scope_missing
+        unsecured_mode_refused: adapters.google.oauth_flow.errors.unsecured_mode_refused
+      suggestions:
+        close_loopback_port: adapters.google.oauth_flow.suggestions.close_loopback_port
+        open_consent_url_manually: adapters.google.oauth_flow.suggestions.open_consent_url_manually
+        use_keyring_or_synthetic: adapters.google.oauth_flow.suggestions.use_keyring_or_synthetic
+    profile_binding:
+      errors:
+        no_active_profile: adapters.google.profile_binding.errors.no_active_profile
+    refresh:
+      errors:
+        google_auth_not_importable: adapters.google.refresh.errors.google_auth_not_importable
+        reauth_required: adapters.google.refresh.errors.reauth_required
+        refresh_failed: adapters.google.refresh.errors.refresh_failed
+        refresh_refused: adapters.google.refresh.errors.refresh_refused
+        token_endpoint_unreachable: adapters.google.refresh.errors.token_endpoint_unreachable
+      suggestions:
+        check_network: adapters.google.refresh.suggestions.check_network
+      testing_project_cap_warning: adapters.google.refresh.testing_project_cap_warning
+  inbound:
+    declaracion:
+      errors:
+        extraction_failed: adapters.inbound.declaracion.errors.extraction_failed
+        modelo_conflict: adapters.inbound.declaracion.errors.modelo_conflict
+        period_unresolved: adapters.inbound.declaracion.errors.period_unresolved
+        profile_count_invalid: adapters.inbound.declaracion.errors.profile_count_invalid
+        profile_unavailable: adapters.inbound.declaracion.errors.profile_unavailable
+        registry_snapshot_required: adapters.inbound.declaracion.errors.registry_snapshot_required
+        snapshot_modelo_conflict: adapters.inbound.declaracion.errors.snapshot_modelo_conflict
+        tax_id_unresolved: adapters.inbound.declaracion.errors.tax_id_unresolved
+        template_not_detected: adapters.inbound.declaracion.errors.template_not_detected
+        year_conflict: adapters.inbound.declaracion.errors.year_conflict
+aggregation:
+  iva_ledger:
+    errors:
+      bucket_mismatch: aggregation.iva_ledger.errors.bucket_mismatch
+      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
+      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
+  modelo_bindings:
+    errors:
+      unsupported_period: aggregation.modelo_bindings.errors.unsupported_period
+  models:
+    errors:
+      annual_period_mixed: aggregation.models.errors.annual_period_mixed
+      month_required: aggregation.models.errors.month_required
+      period_type_ambiguous: aggregation.models.errors.period_type_ambiguous
+      quarter_required: aggregation.models.errors.quarter_required
+  per_modelo:
+    errors:
+      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+    registry:
+      errors:
+        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
+        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
+  period:
+    parse_error: aggregation.period.parse_error
+  renta_ledger:
+    errors:
+      annual_period_required: aggregation.renta_ledger.errors.annual_period_required
+      bucket_mismatch: aggregation.renta_ledger.errors.bucket_mismatch
+      modelo_mismatch: aggregation.renta_ledger.errors.modelo_mismatch
+      period_mismatch: aggregation.renta_ledger.errors.period_mismatch
+      quarterly_period_required: aggregation.renta_ledger.errors.quarterly_period_required
+  source_mesh:
+    errors:
+      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
+      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
+      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
+application:
+  auth:
+    acquisition_lock:
+      errors:
+        acquire_failed: application.auth.acquisition_lock.errors.acquire_failed
+        lock_held: application.auth.acquisition_lock.errors.lock_held
+        lock_held_suggestion: application.auth.acquisition_lock.errors.lock_held_suggestion
+    certificate:
+      health:
+        file_missing: application.auth.certificate.health.file_missing
+        path_unset: application.auth.certificate.health.path_unset
+      load:
+        password_unset: application.auth.certificate.load.password_unset
+        path_unset: application.auth.certificate.load.path_unset
+    clave_movil:
+      health:
+        identity_unset: application.auth.clave_movil.health.identity_unset
+        operator_completion_required: application.auth.clave_movil.health.operator_completion_required
+    operator:
+      alignment:
+        both_missing_detail: application.auth.operator.alignment.both_missing_detail
+        both_missing_next_action: application.auth.operator.alignment.both_missing_next_action
+        clave_identity_missing_detail: application.auth.operator.alignment.clave_identity_missing_detail
+        clave_identity_missing_next_action: application.auth.operator.alignment.clave_identity_missing_next_action
+        mismatch_detail: application.auth.operator.alignment.mismatch_detail
+        mismatch_next_action: application.auth.operator.alignment.mismatch_next_action
+        profile_tax_id_missing_detail: application.auth.operator.alignment.profile_tax_id_missing_detail
+        profile_tax_id_missing_next_action: application.auth.operator.alignment.profile_tax_id_missing_next_action
+      errors:
+        certificate_file_required: application.auth.operator.errors.certificate_file_required
+        certificate_file_unresolved: application.auth.operator.errors.certificate_file_unresolved
+        dangling_active_profile: application.auth.operator.errors.dangling_active_profile
+        no_active_bucket: application.auth.operator.errors.no_active_bucket
+        unreadable_active_profile: application.auth.operator.errors.unreadable_active_profile
+      login:
+        refused_certificate_file_missing: application.auth.operator.login.refused_certificate_file_missing
+        refused_certificate_path_unset: application.auth.operator.login.refused_certificate_path_unset
+        refused_clave_movil_identity_unset: application.auth.operator.login.refused_clave_movil_identity_unset
+        refused_live_tests_disabled: application.auth.operator.login.refused_live_tests_disabled
+      probe:
+        certificate_corrupt: application.auth.operator.probe.certificate_corrupt
+        certificate_corrupt_detail: application.auth.operator.probe.certificate_corrupt_detail
+        certificate_expired: application.auth.operator.probe.certificate_expired
+        certificate_expiring: application.auth.operator.probe.certificate_expiring
+        certificate_file_missing: application.auth.operator.probe.certificate_file_missing
+        certificate_ok: application.auth.operator.probe.certificate_ok
+        certificate_path_unset: application.auth.operator.probe.certificate_path_unset
+        certificate_unreadable: application.auth.operator.probe.certificate_unreadable
+        clave_movil_identity_invalid: application.auth.operator.probe.clave_movil_identity_invalid
+        clave_movil_identity_ok: application.auth.operator.probe.clave_movil_identity_ok
+        clave_movil_identity_unset: application.auth.operator.probe.clave_movil_identity_unset
+        no_provider: application.auth.operator.probe.no_provider
+        no_session: application.auth.operator.probe.no_session
+        session_expired: application.auth.operator.probe.session_expired
+        session_live: application.auth.operator.probe.session_live
+    provider_impact:
+      certificate_ready: application.auth.provider_impact.certificate_ready
+      generic_ready: application.auth.provider_impact.generic_ready
+      unavailable: application.auth.provider_impact.unavailable
+      unconfigured: application.auth.provider_impact.unconfigured
+    sessions:
+      errors:
+        clave_identity_missing: application.auth.sessions.errors.clave_identity_missing
+        clave_identity_profile_mismatch: application.auth.sessions.errors.clave_identity_profile_mismatch
+        corrupt_session: application.auth.sessions.errors.corrupt_session
+        no_session: application.auth.sessions.errors.no_session
+        profile_tax_id_missing: application.auth.sessions.errors.profile_tax_id_missing
+        sede_rejected: application.auth.sessions.errors.sede_rejected
+        session_expired: application.auth.sessions.errors.session_expired
+        session_identity_profile_mismatch: application.auth.sessions.errors.session_identity_profile_mismatch
+        state_missing: application.auth.sessions.errors.state_missing
+        verify_failed: application.auth.sessions.errors.verify_failed
+  modelo:
+    borrador_binding:
+      errors:
+        caller_binding_keys_blank: application.modelo.borrador_binding.errors.caller_binding_keys_blank
+        snapshot_id_required: application.modelo.borrador_binding.errors.snapshot_id_required
+        snapshot_not_active: application.modelo.borrador_binding.errors.snapshot_not_active
+        source_trace_mismatch: application.modelo.borrador_binding.errors.source_trace_mismatch
+    errors:
+      calculation_revision_not_found: application.modelo.errors.calculation_revision_not_found
+      computed_casilla_binding_conflict: application.modelo.errors.computed_casilla_binding_conflict
+      export_no_active_bucket: application.modelo.errors.export_no_active_bucket
+      external_filing_evidence_reference_blank: application.modelo.errors.external_filing_evidence_reference_blank
+      external_filing_no_casilla_values: application.modelo.errors.external_filing_no_casilla_values
+      filing_record_not_found: application.modelo.errors.filing_record_not_found
+      iva_wallet_not_seeded: application.modelo.errors.iva_wallet_not_seeded
+      reconcile_declaration_unsupported: application.modelo.errors.reconcile_declaration_unsupported
+      reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
+      verification_report_not_found: application.modelo.errors.verification_report_not_found
+      work_unit_discarded_cannot_calculate: application.modelo.errors.work_unit_discarded_cannot_calculate
+      work_unit_discarded_cannot_import: application.modelo.errors.work_unit_discarded_cannot_import
+      work_unit_not_found: application.modelo.errors.work_unit_not_found
+    findings:
+      modelo_130_art110_3b_exencion_alta_retencion: application.modelo.findings.modelo_130_art110_3b_exencion_alta_retencion
+  overview:
+    explain:
+      errors:
+        modelo_blank: application.overview.explain.errors.modelo_blank
+  user_profile:
+    errors:
+      duplicate_tax_id: application.user_profile.errors.duplicate_tax_id
+      no_active_profile_selected: application.user_profile.errors.no_active_profile_selected
+      profile_already_exists: application.user_profile.errors.profile_already_exists
+      profile_create_route_mismatch: application.user_profile.errors.profile_create_route_mismatch
+      profile_label_blank: application.user_profile.errors.profile_label_blank
+      profile_manifest_already_registered: application.user_profile.errors.profile_manifest_already_registered
+      profile_manifest_missing: application.user_profile.errors.profile_manifest_missing
+      profile_not_registered: application.user_profile.errors.profile_not_registered
+      profile_tombstoned_not_selectable: application.user_profile.errors.profile_tombstoned_not_selectable
+  wizard:
+    errors:
+      profile_flag_required: application.wizard.errors.profile_flag_required
+      quiet_missing_flags: application.wizard.errors.quiet_missing_flags
+    status:
+      errors:
+        missing_tax_id: application.wizard.status.errors.missing_tax_id
+        no_active_profile: application.wizard.status.errors.no_active_profile
+        projection_failed: application.wizard.status.errors.projection_failed
+        unexpected_projection_type: application.wizard.status.errors.unexpected_projection_type
+  workflow:
+    errors:
+      no_active_profile_bucket: application.workflow.errors.no_active_profile_bucket
+      state_unreadable: application.workflow.errors.state_unreadable
+auth:
+  catalogue:
+    certificate_description: auth.catalogue.certificate_description
+    certificate_label: auth.catalogue.certificate_label
+    clave_movil_description: auth.catalogue.clave_movil_description
+    clave_movil_label: auth.catalogue.clave_movil_label
+    clave_permanente_description: auth.catalogue.clave_permanente_description
+    clave_permanente_label: auth.catalogue.clave_permanente_label
+    clave_pin_description: auth.catalogue.clave_pin_description
+    clave_pin_label: auth.catalogue.clave_pin_label
+    dnie_pkcs_description: auth.catalogue.dnie_pkcs_description
+    dnie_pkcs_label: auth.catalogue.dnie_pkcs_label
+categories:
+  test_profile:
+    display_label_851219: categories.test_profile.display_label_851219
+cli:
+  app:
+    ledger:
+      collectible_invoice:
+        add_help: cli.app.ledger.collectible_invoice.add_help
+        country_code_help: cli.app.ledger.collectible_invoice.country_code_help
+        eu_vat_id_help: cli.app.ledger.collectible_invoice.eu_vat_id_help
+        group_help: cli.app.ledger.collectible_invoice.group_help
+        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
+        list_help: cli.app.ledger.collectible_invoice.list_help
+        operation_type_help: cli.app.ledger.collectible_invoice.operation_type_help
+        operation_type_invalid: cli.app.ledger.collectible_invoice.operation_type_invalid
+        remove_help: cli.app.ledger.collectible_invoice.remove_help
+        update_help: cli.app.ledger.collectible_invoice.update_help
+        view_help: cli.app.ledger.collectible_invoice.view_help
+        yes_help: cli.app.ledger.collectible_invoice.yes_help
+        yes_required: cli.app.ledger.collectible_invoice.yes_required
+      evidence:
+        add_help: cli.app.ledger.evidence.add_help
+        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
+        group_help: cli.app.ledger.evidence.group_help
+        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
+        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
+        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
+        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
+        list_help: cli.app.ledger.evidence.list_help
+        notes_help: cli.app.ledger.evidence.notes_help
+        remove_help: cli.app.ledger.evidence.remove_help
+        source_path_help: cli.app.ledger.evidence.source_path_help
+        supplier_help: cli.app.ledger.evidence.supplier_help
+        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
+        update_help: cli.app.ledger.evidence.update_help
+        view_help: cli.app.ledger.evidence.view_help
+        yes_help: cli.app.ledger.evidence.yes_help
+        yes_required: cli.app.ledger.evidence.yes_required
+      inventory:
+        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
+        create_help: cli.app.ledger.inventory.create_help
+        group_help: cli.app.ledger.inventory.group_help
+        list_help: cli.app.ledger.inventory.list_help
+        movement_add_help: cli.app.ledger.inventory.movement_add_help
+        movement_date_help: cli.app.ledger.inventory.movement_date_help
+        movement_group_help: cli.app.ledger.inventory.movement_group_help
+        movement_id_help: cli.app.ledger.inventory.movement_id_help
+        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
+        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
+        quantity_help: cli.app.ledger.inventory.quantity_help
+        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
+        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
+        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
+        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
+        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
+        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
+        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
+        year_help: cli.app.ledger.inventory.year_help
+      payable_invoice:
+        add_help: cli.app.ledger.payable_invoice.add_help
+        country_code_help: cli.app.ledger.payable_invoice.country_code_help
+        eu_vat_id_help: cli.app.ledger.payable_invoice.eu_vat_id_help
+        group_help: cli.app.ledger.payable_invoice.group_help
+        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
+        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
+        list_help: cli.app.ledger.payable_invoice.list_help
+        operation_type_help: cli.app.ledger.payable_invoice.operation_type_help
+        operation_type_invalid: cli.app.ledger.payable_invoice.operation_type_invalid
+        remove_help: cli.app.ledger.payable_invoice.remove_help
+        update_help: cli.app.ledger.payable_invoice.update_help
+        view_help: cli.app.ledger.payable_invoice.view_help
+        yes_help: cli.app.ledger.payable_invoice.yes_help
+        yes_required: cli.app.ledger.payable_invoice.yes_required
+      ratios:
+        category_help: cli.app.ledger.ratios.category_help
+        eligible_help: cli.app.ledger.ratios.eligible_help
+        group_help: cli.app.ledger.ratios.group_help
+        list_help: cli.app.ledger.ratios.list_help
+        no_override_error: cli.app.ledger.ratios.no_override_error
+        ratio_help: cli.app.ledger.ratios.ratio_help
+        set_help: cli.app.ledger.ratios.set_help
+        unknown_category: cli.app.ledger.ratios.unknown_category
+        unset_category_help: cli.app.ledger.ratios.unset_category_help
+        unset_help: cli.app.ledger.ratios.unset_help
+        validate_help: cli.app.ledger.ratios.validate_help
+      rule:
+        actor_help: cli.app.ledger.rule.actor_help
+        add_help: cli.app.ledger.rule.add_help
+        apply_dry_run_help: cli.app.ledger.rule.apply_dry_run_help
+        apply_dry_run_summary: cli.app.ledger.rule.apply_dry_run_summary
+        apply_help: cli.app.ledger.rule.apply_help
+        apply_reaffirm_help: cli.app.ledger.rule.apply_reaffirm_help
+        apply_summary: cli.app.ledger.rule.apply_summary
+        category_id_help: cli.app.ledger.rule.category_id_help
+        classification_help: cli.app.ledger.rule.classification_help
+        description_pattern_help: cli.app.ledger.rule.description_pattern_help
+        group_help: cli.app.ledger.rule.group_help
+        list_empty: cli.app.ledger.rule.list_empty
+        list_header: cli.app.ledger.rule.list_header
+        list_help: cli.app.ledger.rule.list_help
+        priority_help: cli.app.ledger.rule.priority_help
+    live:
+      app_help: cli.app.live.app_help
+      borrador:
+        app_help: cli.app.live.borrador.app_help
+        filing_year_help: cli.app.live.borrador.filing_year_help
+        invalid_state: cli.app.live.borrador.invalid_state
+        latest_help: cli.app.live.borrador.latest_help
+        list_help: cli.app.live.borrador.list_help
+        modelo_100_help: cli.app.live.borrador.modelo_100_help
+        snapshot_id_help: cli.app.live.borrador.snapshot_id_help
+        state_help: cli.app.live.borrador.state_help
+        view_help: cli.app.live.borrador.view_help
+      expediente_help: cli.app.live.expediente_help
+      expedientes:
+        app_help: cli.app.live.expedientes.app_help
+        capture_help: cli.app.live.expedientes.capture_help
+        latest_help: cli.app.live.expedientes.latest_help
+        list_help: cli.app.live.expedientes.list_help
+        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
+        view_help: cli.app.live.expedientes.view_help
+      filed:
+        capture_help: cli.app.live.filed.capture_help
+        capture_sources_help: cli.app.live.filed.capture_sources_help
+        list_help: cli.app.live.filed.list_help
+      filed_app_help: cli.app.live.filed_app_help
+      from_year_help: cli.app.live.from_year_help
+      iva_wallet:
+        app_help: cli.app.live.iva_wallet.app_help
+        as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
+        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        history_help: cli.app.live.iva_wallet.history_help
+        pull_help: cli.app.live.iva_wallet.pull_help
+        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
+      limit_help: cli.app.live.limit_help
+      modelo_help: cli.app.live.modelo_help
+      notifications:
+        app_help: cli.app.live.notifications.app_help
+        capture_help: cli.app.live.notifications.capture_help
+        list_help: cli.app.live.notifications.list_help
+        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
+        view_help: cli.app.live.notifications.view_help
+      output_root_help: cli.app.live.output_root_help
+      period_help: cli.app.live.period_help
+      portals:
+        app_help: cli.app.live.portals.app_help
+        category_help: cli.app.live.portals.category_help
+        category_modelo_exclusive: cli.app.live.portals.category_modelo_exclusive
+        list_help: cli.app.live.portals.list_help
+        modelo_help: cli.app.live.portals.modelo_help
+        portal_id_help: cli.app.live.portals.portal_id_help
+        unknown_category: cli.app.live.portals.unknown_category
+        view_help: cli.app.live.portals.view_help
+      registry_root_help: cli.app.live.registry_root_help
+      source_root_help: cli.app.live.source_root_help
+      to_year_help: cli.app.live.to_year_help
+      verify:
+        app_help: cli.app.live.verify.app_help
+        expected_help: cli.app.live.verify.expected_help
+        expected_values_error: cli.app.live.verify.expected_values_error
+        latest_help: cli.app.live.verify.latest_help
+        latest_nif_help: cli.app.live.verify.latest_nif_help
+        latest_surface_help: cli.app.live.verify.latest_surface_help
+        list_help: cli.app.live.verify.list_help
+        nif_help: cli.app.live.verify.nif_help
+        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
+        nif_iva_help: cli.app.live.verify.nif_iva_help
+        no_observation_for_nif: cli.app.live.verify.no_observation_for_nif
+        observation_id_help: cli.app.live.verify.observation_id_help
+        surface_help: cli.app.live.verify.surface_help
+        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
+        tgvi_help: cli.app.live.verify.tgvi_help
+        unknown_surface: cli.app.live.verify.unknown_surface
+        view_help: cli.app.live.verify.view_help
+      year_help: cli.app.live.year_help
+    modelo:
+      aggregate:
+        counterpart_observation_help: cli.app.modelo.aggregate.counterpart_observation_help
+        foreign_asset_observation_help: cli.app.modelo.aggregate.foreign_asset_observation_help
+        json_not_object: cli.app.modelo.aggregate.json_not_object
+        json_parse_error: cli.app.modelo.aggregate.json_parse_error
+        json_validation_error: cli.app.modelo.aggregate.json_validation_error
+        modelo_help: cli.app.modelo.aggregate.modelo_help
+        period_help: cli.app.modelo.aggregate.period_help
+        retencion_observation_help: cli.app.modelo.aggregate.retencion_observation_help
+      aggregate_help: cli.app.modelo.aggregate_help
+      app_help: cli.app.modelo.app_help
+      audit:
+        bundle_id_help: cli.app.modelo.audit.bundle_id_help
+        check_help: cli.app.modelo.audit.check_help
+        export_help: cli.app.modelo.audit.export_help
+        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
+        group_help: cli.app.modelo.audit.group_help
+        output_help: cli.app.modelo.audit.output_help
+        replay_help: cli.app.modelo.audit.replay_help
+        show_help: cli.app.modelo.audit.show_help
+      bindings:
+        app_help: cli.app.modelo.bindings.app_help
+        as_of_help: cli.app.modelo.bindings.as_of_help
+        list_help: cli.app.modelo.bindings.list_help
+        missing_help: cli.app.modelo.bindings.missing_help
+        missing_required_options: cli.app.modelo.bindings.missing_required_options
+        modelo_help: cli.app.modelo.bindings.modelo_help
+        override_help: cli.app.modelo.bindings.override_help
+        period_help: cli.app.modelo.bindings.period_help
+        preview_help: cli.app.modelo.bindings.preview_help
+        unknown_keys: cli.app.modelo.bindings.unknown_keys
+        year_help: cli.app.modelo.bindings.year_help
+      casillas:
+        as_of_help: cli.app.modelo.casillas.as_of_help
+        form_number_help: cli.app.modelo.casillas.form_number_help
+        input_kind_help: cli.app.modelo.casillas.input_kind_help
+        modelo_help: cli.app.modelo.casillas.modelo_help
+        period_help: cli.app.modelo.casillas.period_help
+        required_help: cli.app.modelo.casillas.required_help
+      compare:
+        modelo_help: cli.app.modelo.compare.modelo_help
+        need_two_years: cli.app.modelo.compare.need_two_years
+        no_revisions: cli.app.modelo.compare.no_revisions
+        no_usable_revisions: cli.app.modelo.compare.no_usable_revisions
+        no_work_units: cli.app.modelo.compare.no_work_units
+        year_help: cli.app.modelo.compare.year_help
+      compare_help: cli.app.modelo.compare_help
+      describe:
+        as_of_help: cli.app.modelo.describe.as_of_help
+        modelo_help: cli.app.modelo.describe.modelo_help
+        period_help: cli.app.modelo.describe.period_help
+        period_token_invalid: cli.app.modelo.describe.period_token_invalid
+      export:
+        actor_help: cli.app.modelo.export.actor_help
+        errors:
+          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
+        help: cli.app.modelo.export.help
+        output_help: cli.app.modelo.export.output_help
+        revision_help: cli.app.modelo.export.revision_help
+        work_unit_id_help: cli.app.modelo.export.work_unit_id_help
+      filing_record:
+        app_help: cli.app.modelo.filing_record.app_help
+        bucket_id_help: cli.app.modelo.filing_record.bucket_id_help
+        evidence_kind_help: cli.app.modelo.filing_record.evidence_kind_help
+        evidence_reference_id_help: cli.app.modelo.filing_record.evidence_reference_id_help
+        filing_record_id_help: cli.app.modelo.filing_record.filing_record_id_help
+        import_casilla_help: cli.app.modelo.filing_record.import_casilla_help
+        import_help: cli.app.modelo.filing_record.import_help
+        import_set_required: cli.app.modelo.filing_record.import_set_required
+        include_superseded_help: cli.app.modelo.filing_record.include_superseded_help
+        invalid_evidence_kind: cli.app.modelo.filing_record.invalid_evidence_kind
+        list_help: cli.app.modelo.filing_record.list_help
+        view_help: cli.app.modelo.filing_record.view_help
+      formulas:
+        as_of_help: cli.app.modelo.formulas.as_of_help
+        explain_help: cli.app.modelo.formulas.explain_help
+        modelo_help: cli.app.modelo.formulas.modelo_help
+        period_help: cli.app.modelo.formulas.period_help
+      history:
+        modelo_help: cli.app.modelo.history.modelo_help
+        period_help: cli.app.modelo.history.period_help
+        year_help: cli.app.modelo.history.year_help
+      history_help: cli.app.modelo.history_help
+      iva_wallet:
+        as_of_year_help: cli.app.modelo.iva_wallet.as_of_year_help
+        balance_help: cli.app.modelo.iva_wallet.balance_help
+        group_help: cli.app.modelo.iva_wallet.group_help
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
+      list:
+        year_help: cli.app.modelo.list.year_help
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
+      readiness:
+        modelo_help: cli.app.modelo.readiness.modelo_help
+        period_help: cli.app.modelo.readiness.period_help
+        revision_help: cli.app.modelo.readiness.revision_help
+        year_help: cli.app.modelo.readiness.year_help
+      readiness_help: cli.app.modelo.readiness_help
+      reconcile:
+        errors:
+          exclusive_source: cli.app.modelo.reconcile.errors.exclusive_source
+          missing_source: cli.app.modelo.reconcile.errors.missing_source
+        from_declaration_help: cli.app.modelo.reconcile.from_declaration_help
+        from_justificante_help: cli.app.modelo.reconcile.from_justificante_help
+        help: cli.app.modelo.reconcile.help
+        work_unit_id_help: cli.app.modelo.reconcile.work_unit_id_help
+      reconcile_from_justificante:
+        help: cli.app.modelo.reconcile_from_justificante.help
+        justificante_path_help: cli.app.modelo.reconcile_from_justificante.justificante_path_help
+        work_unit_id_help: cli.app.modelo.reconcile_from_justificante.work_unit_id_help
+      verification_report:
+        app_help: cli.app.modelo.verification_report.app_help
+        list_help: cli.app.modelo.verification_report.list_help
+        verification_report_id_help: cli.app.modelo.verification_report.verification_report_id_help
+        view_help: cli.app.modelo.verification_report.view_help
+      work:
+        actor_help: cli.app.modelo.work.actor_help
+        allow_not_applicable_help: cli.app.modelo.work.allow_not_applicable_help
+        amend_help: cli.app.modelo.work.amend_help
+        amend_missing_options: cli.app.modelo.work.amend_missing_options
+        amend_set_required: cli.app.modelo.work.amend_set_required
+        amendment_kind_help: cli.app.modelo.work.amendment_kind_help
+        amendment_reason_help: cli.app.modelo.work.amendment_reason_help
+        app_help: cli.app.modelo.work.app_help
+        autoconsumo_promotor_base_help: cli.app.modelo.work.autoconsumo_promotor_base_help
+        autoconsumo_promotor_base_not_decimal: cli.app.modelo.work.autoconsumo_promotor_base_not_decimal
+        borrador_help: cli.app.modelo.work.borrador_help
+        bucket_id_help: cli.app.modelo.work.bucket_id_help
+        calculate_help: cli.app.modelo.work.calculate_help
+        calculate_saved: cli.app.modelo.work.calculate_saved
+        calculation_revision_id_help: cli.app.modelo.work.calculation_revision_id_help
+        casilla_bare_numeric_ambiguous: cli.app.modelo.work.casilla_bare_numeric_ambiguous
+        casilla_bare_numeric_unknown: cli.app.modelo.work.casilla_bare_numeric_unknown
+        casilla_help: cli.app.modelo.work.casilla_help
+        casilla_non_numeric_data_type: cli.app.modelo.work.casilla_non_numeric_data_type
+        casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
+        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
+        compare_taxation_error: cli.app.modelo.work.compare_taxation_error
+        compare_taxation_help: cli.app.modelo.work.compare_taxation_help
+        compare_taxation_recommendation_line: cli.app.modelo.work.compare_taxation_recommendation_line
+        compare_taxation_work_unit_not_found: cli.app.modelo.work.compare_taxation_work_unit_not_found
+        create_created: cli.app.modelo.work.create_created
+        create_help: cli.app.modelo.work.create_help
+        create_not_applicable_refused: cli.app.modelo.work.create_not_applicable_refused
+        create_reused: cli.app.modelo.work.create_reused
+        create_reused_name_match: cli.app.modelo.work.create_reused_name_match
+        create_reused_renamed: cli.app.modelo.work.create_reused_renamed
+        create_stub_modelo_151_refused: cli.app.modelo.work.create_stub_modelo_151_refused
+        create_stub_modelo_210_refused: cli.app.modelo.work.create_stub_modelo_210_refused
+        create_stub_modelo_600_refused: cli.app.modelo.work.create_stub_modelo_600_refused
+        create_stub_modelo_620_refused: cli.app.modelo.work.create_stub_modelo_620_refused
+        create_stub_modelo_650_refused: cli.app.modelo.work.create_stub_modelo_650_refused
+        create_stub_modelo_660_refused: cli.app.modelo.work.create_stub_modelo_660_refused
+        create_stub_modelo_714_refused: cli.app.modelo.work.create_stub_modelo_714_refused
+        create_stub_modelo_refused: cli.app.modelo.work.create_stub_modelo_refused
+        deduccion_maternidad_casilla_not_found: cli.app.modelo.work.deduccion_maternidad_casilla_not_found
+        discard_help: cli.app.modelo.work.discard_help
+        discard_requires_yes: cli.app.modelo.work.discard_requires_yes
+        discard_yes_help: cli.app.modelo.work.discard_yes_help
+        file_help: cli.app.modelo.work.file_help
+        from_filing_record_help: cli.app.modelo.work.from_filing_record_help
+        history_help: cli.app.modelo.work.history_help
+        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
+        include_discarded_help: cli.app.modelo.work.include_discarded_help
+        invalid_amendment_kind: cli.app.modelo.work.invalid_amendment_kind
+        invalid_binding_key: cli.app.modelo.work.invalid_binding_key
+        invalid_calculation_revision_id: cli.app.modelo.work.invalid_calculation_revision_id
+        invalid_casilla_key: cli.app.modelo.work.invalid_casilla_key
+        invalid_work_unit_id: cli.app.modelo.work.invalid_work_unit_id
+        kv_empty_key_error: cli.app.modelo.work.kv_empty_key_error
+        kv_format_error: cli.app.modelo.work.kv_format_error
+        list_help: cli.app.modelo.work.list_help
+        meses_trabajo_con_hijo_menor_3_help: cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help
+        meses_trabajo_hijo_bad_format: cli.app.modelo.work.meses_trabajo_hijo_bad_format
+        meses_trabajo_hijo_not_integer: cli.app.modelo.work.meses_trabajo_hijo_not_integer
+        meses_trabajo_hijo_out_of_range: cli.app.modelo.work.meses_trabajo_hijo_out_of_range
+        missing_binding_guidance: cli.app.modelo.work.missing_binding_guidance
+        modelo_help: cli.app.modelo.work.modelo_help
+        name_help: cli.app.modelo.work.name_help
+        notes_help: cli.app.modelo.work.notes_help
+        output_language_help: cli.app.modelo.work.output_language_help
+        override_help: cli.app.modelo.work.override_help
+        period_help: cli.app.modelo.work.period_help
+        period_token_invalid: cli.app.modelo.work.period_token_invalid
+        period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
+        plazo_days_remaining: cli.app.modelo.work.plazo_days_remaining
+        plazo_vencido_warning: cli.app.modelo.work.plazo_vencido_warning
+        prestacion_inss_exenta_casilla_not_found: cli.app.modelo.work.prestacion_inss_exenta_casilla_not_found
+        prestacion_inss_exenta_help: cli.app.modelo.work.prestacion_inss_exenta_help
+        prestacion_inss_exenta_not_decimal: cli.app.modelo.work.prestacion_inss_exenta_not_decimal
+        reason_help: cli.app.modelo.work.reason_help
+        relation_help: cli.app.modelo.work.relation_help
+        relation_not_decimal: cli.app.modelo.work.relation_not_decimal
+        rename_help: cli.app.modelo.work.rename_help
+        rescate_plan_pensiones_aportaciones_pre_2007_help: cli.app.modelo.work.rescate_plan_pensiones_aportaciones_pre_2007_help
+        rescate_plan_pensiones_aportaciones_totales_help: cli.app.modelo.work.rescate_plan_pensiones_aportaciones_totales_help
+        rescate_plan_pensiones_capital_help: cli.app.modelo.work.rescate_plan_pensiones_capital_help
+        rescate_plan_pensiones_casilla_not_found: cli.app.modelo.work.rescate_plan_pensiones_casilla_not_found
+        rescate_plan_pensiones_incomplete: cli.app.modelo.work.rescate_plan_pensiones_incomplete
+        rescate_plan_pensiones_not_decimal: cli.app.modelo.work.rescate_plan_pensiones_not_decimal
+        result_summary_header: cli.app.modelo.work.result_summary_header
+        resume_help: cli.app.modelo.work.resume_help
+        resume_invalid_target: cli.app.modelo.work.resume_invalid_target
+        resume_target_help: cli.app.modelo.work.resume_target_help
+        revision_help: cli.app.modelo.work.revision_help
+        revision_show_help: cli.app.modelo.work.revision_show_help
+        revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
+        revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
+        revisions_help: cli.app.modelo.work.revisions_help
+        row_empty_key: cli.app.modelo.work.row_empty_key
+        row_empty_spec: cli.app.modelo.work.row_empty_spec
+        row_help: cli.app.modelo.work.row_help
+        row_kv_format_error: cli.app.modelo.work.row_kv_format_error
+        row_m184_shares_not_100: cli.app.modelo.work.row_m184_shares_not_100
+        row_m347_below_threshold: cli.app.modelo.work.row_m347_below_threshold
+        row_m349_invalid_nif: cli.app.modelo.work.row_m349_invalid_nif
+        row_unknown_type: cli.app.modelo.work.row_unknown_type
+        row_validation_error: cli.app.modelo.work.row_validation_error
+        runs_help: cli.app.modelo.work.runs_help
+        sal_beneficio_neto_help: cli.app.modelo.work.sal_beneficio_neto_help
+        sal_capital_social_help: cli.app.modelo.work.sal_capital_social_help
+        sal_reserva_casilla_not_found: cli.app.modelo.work.sal_reserva_casilla_not_found
+        sal_reserva_dotada_help: cli.app.modelo.work.sal_reserva_dotada_help
+        sal_reserva_incomplete: cli.app.modelo.work.sal_reserva_incomplete
+        sal_reserva_not_decimal: cli.app.modelo.work.sal_reserva_not_decimal
+        set_not_decimal: cli.app.modelo.work.set_not_decimal
+        set_override_help: cli.app.modelo.work.set_override_help
+        status_help: cli.app.modelo.work.status_help
+        unknown_modelo: cli.app.modelo.work.unknown_modelo
+        unknown_revision: cli.app.modelo.work.unknown_revision
+        verify_help: cli.app.modelo.work.verify_help
+        work_unit_id_help: cli.app.modelo.work.work_unit_id_help
+        year_help: cli.app.modelo.work.year_help
+        year_out_of_range: cli.app.modelo.work.year_out_of_range
+  common:
+    errors:
+      invalid_iso_date: cli.common.errors.invalid_iso_date
+      period_empty: cli.common.errors.period_empty
+      period_unrecognised: cli.common.errors.period_unrecognised
+  config:
+    auth:
+      output_language_help: cli.config.auth.output_language_help
+    errors:
+      no_active_profile: cli.config.errors.no_active_profile
+    google:
+      client_json_help: cli.config.google.client_json_help
+      detail:
+        client_json_bad_wrapper: cli.config.google.detail.client_json_bad_wrapper
+        client_json_invalid: cli.config.google.detail.client_json_invalid
+        client_json_not_desktop: cli.config.google.detail.client_json_not_desktop
+        client_json_schema_invalid: cli.config.google.detail.client_json_schema_invalid
+        client_json_unreadable: cli.config.google.detail.client_json_unreadable
+        client_unregistered: cli.config.google.detail.client_unregistered
+        no_metadata_for_refresh: cli.config.google.detail.no_metadata_for_refresh
+      errors:
+        auth_failed: cli.config.google.errors.auth_failed
+      folder:
+        folder_id_help: cli.config.google.folder.folder_id_help
+        get_help: cli.config.google.folder.get_help
+        help: cli.config.google.folder.help
+        set_help: cli.config.google.folder.set_help
+      help: cli.config.google.help
+      login_help: cli.config.google.login_help
+      logout_help: cli.config.google.logout_help
+      refresh_only_help: cli.config.google.refresh_only_help
+      register_help: cli.config.google.register_help
+      status_help: cli.config.google.status_help
+      sync:
+        calc:
+          export:
+            modelo_help: cli.config.google.sync.calc.export.modelo_help
+            period_help: cli.config.google.sync.calc.export.period_help
+            prefill_relations_help: cli.config.google.sync.calc.export.prefill_relations_help
+            root_folder_required: cli.config.google.sync.calc.export.root_folder_required
+            snapshot_failure: cli.config.google.sync.calc.export.snapshot_failure
+            unknown_modelo: cli.config.google.sync.calc.export.unknown_modelo
+            year_help: cli.config.google.sync.calc.export.year_help
+          export_help: cli.config.google.sync.calc.export_help
+          help: cli.config.google.sync.calc.help
+          pull:
+            assemble_observations_help: cli.config.google.sync.calc.pull.assemble_observations_help
+            compute_help: cli.config.google.sync.calc.pull.compute_help
+            compute_refused_stale: cli.config.google.sync.calc.pull.compute_refused_stale
+            spreadsheet_id_help: cli.config.google.sync.calc.pull.spreadsheet_id_help
+          pull_help: cli.config.google.sync.calc.pull_help
+          verify:
+            scenario_help: cli.config.google.sync.calc.verify.scenario_help
+          verify_help: cli.config.google.sync.calc.verify_help
+        help: cli.config.google.sync.help
+        probe_help: cli.config.google.sync.probe_help
+        probe_read_only_help: cli.config.google.sync.probe_read_only_help
+        push_dry_run_help: cli.config.google.sync.push_dry_run_help
+        push_help: cli.config.google.sync.push_help
+        push_limit_help: cli.config.google.sync.push_limit_help
+        push_namespace_help: cli.config.google.sync.push_namespace_help
+    profile:
+      census:
+        apply_help: cli.config.profile.census.apply_help
+        compare_help: cli.config.profile.census.compare_help
+        help: cli.config.profile.census.help
+        refresh_help: cli.config.profile.census.refresh_help
+        show_help: cli.config.profile.census.show_help
+        snapshot_id_help: cli.config.profile.census.snapshot_id_help
+    setup:
+      accept_defaults_help: cli.config.setup.accept_defaults_help
+      profile_name_help: cli.config.setup.profile_name_help
+      quiet_help: cli.config.setup.quiet_help
+  diagnostics:
+    browser:
+      http_status_label: cli.diagnostics.browser.http_status_label
+      markers_label: cli.diagnostics.browser.markers_label
+      markers_none: cli.diagnostics.browser.markers_none
+      observed_at_label: cli.diagnostics.browser.observed_at_label
+      retry_after_label: cli.diagnostics.browser.retry_after_label
+      state_label: cli.diagnostics.browser.state_label
+      target_browser: cli.diagnostics.browser.target_browser
+      target_label: cli.diagnostics.browser.target_label
+    dead_end:
+      registry_bundled: cli.diagnostics.dead_end.registry_bundled
+      registry_integrity_internal: cli.diagnostics.dead_end.registry_integrity_internal
+    next_action:
+      inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    repair:
+      audience_internal: cli.diagnostics.repair.audience_internal
+      auth_label: cli.diagnostics.repair.auth_label
+      checks_heading: cli.diagnostics.repair.checks_heading
+      detail_label: cli.diagnostics.repair.detail_label
+      finding_label: cli.diagnostics.repair.finding_label
+      finding_optional: cli.diagnostics.repair.finding_optional
+      finding_required: cli.diagnostics.repair.finding_required
+      logs_label: cli.diagnostics.repair.logs_label
+      next_label: cli.diagnostics.repair.next_label
+      note_label: cli.diagnostics.repair.note_label
+      overall_label: cli.diagnostics.repair.overall_label
+      profile_label: cli.diagnostics.repair.profile_label
+      python_label: cli.diagnostics.repair.python_label
+      version_label: cli.diagnostics.repair.version_label
+    summary:
+      auth_no_session: cli.diagnostics.summary.auth_no_session
+      auth_none: cli.diagnostics.summary.auth_none
+      auth_session_ready: cli.diagnostics.summary.auth_session_ready
+      auth_state_unreadable: cli.diagnostics.summary.auth_state_unreadable
+      profile_keys_set: cli.diagnostics.summary.profile_keys_set
+      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_none: cli.diagnostics.summary.profile_none
+      profile_storage: cli.diagnostics.summary.profile_storage
+      profile_unreadable: cli.diagnostics.summary.profile_unreadable
+      registry_counts: cli.diagnostics.summary.registry_counts
+      registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
+      registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
+      registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
+      registry_unavailable: cli.diagnostics.summary.registry_unavailable
+      secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
+      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      secure_objects_unreadable: cli.diagnostics.summary.secure_objects_unreadable
+      state_backend_readable: cli.diagnostics.summary.state_backend_readable
+      state_backend_unreadable: cli.diagnostics.summary.state_backend_unreadable
+      venv_in_sync: cli.diagnostics.summary.venv_in_sync
+      venv_stale: cli.diagnostics.summary.venv_stale
+    version:
+      no_revisions: cli.diagnostics.version.no_revisions
+      registry_summary: cli.diagnostics.version.registry_summary
+      registry_unavailable: cli.diagnostics.version.registry_unavailable
+  ledger:
+    add:
+      actor_help: cli.ledger.add.actor_help
+      amount_help: cli.ledger.add.amount_help
+      attachment_help: cli.ledger.add.attachment_help
+      business_pct_help: cli.ledger.add.business_pct_help
+      category_help: cli.ledger.add.category_help
+      classification_help: cli.ledger.add.classification_help
+      counterparty_help: cli.ledger.add.counterparty_help
+      currency_help: cli.ledger.add.currency_help
+      date_help: cli.ledger.add.date_help
+      description_help: cli.ledger.add.description_help
+      direction_help: cli.ledger.add.direction_help
+      help: cli.ledger.add.help
+      idempotency_key_help: cli.ledger.add.idempotency_key_help
+      irpf_category_help: cli.ledger.add.irpf_category_help
+      iva_amount_help: cli.ledger.add.iva_amount_help
+      iva_rate_help: cli.ledger.add.iva_rate_help
+      notes_help: cli.ledger.add.notes_help
+      prorrata_reference_help: cli.ledger.add.prorrata_reference_help
+      purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      taxable_base_help: cli.ledger.add.taxable_base_help
+      usage_ratio_help: cli.ledger.add.usage_ratio_help
+      value_date_help: cli.ledger.add.value_date_help
+    allocate:
+      actor_help: cli.ledger.allocate.actor_help
+      business_pct_help: cli.ledger.allocate.business_pct_help
+      category_help: cli.ledger.allocate.category_help
+      help: cli.ledger.allocate.help
+      id_help: cli.ledger.allocate.id_help
+      prorrata_reference_help: cli.ledger.allocate.prorrata_reference_help
+      usage_ratio_help: cli.ledger.allocate.usage_ratio_help
+    app_help: cli.ledger.app_help
+    archive:
+      actor_help: cli.ledger.archive.actor_help
+      help: cli.ledger.archive.help
+      id_help: cli.ledger.archive.id_help
+      reason_help: cli.ledger.archive.reason_help
+      yes_help: cli.ledger.archive.yes_help
+    attach:
+      actor_help: cli.ledger.attach.actor_help
+      attachment_help: cli.ledger.attach.attachment_help
+      help: cli.ledger.attach.help
+      id_help: cli.ledger.attach.id_help
+      purchase_invoice_evidence_help: cli.ledger.attach.purchase_invoice_evidence_help
+    categories:
+      family_column: cli.ledger.categories.family_column
+      header: cli.ledger.categories.header
+      help: cli.ledger.categories.help
+      id_column: cli.ledger.categories.id_column
+      income_note: cli.ledger.categories.income_note
+      usage_example: cli.ledger.categories.usage_example
+    check:
+      bucket_id_help: cli.ledger.check.bucket_id_help
+      help: cli.ledger.check.help
+    classify:
+      actor_help: cli.ledger.classify.actor_help
+      bulk_summary: cli.ledger.classify.bulk_summary
+      business_pct_help: cli.ledger.classify.business_pct_help
+      business_pct_requires_mixed: cli.ledger.classify.business_pct_requires_mixed
+      category_help: cli.ledger.classify.category_help
+      classification_help: cli.ledger.classify.classification_help
+      classification_required: cli.ledger.classify.classification_required
+      counterparty_eu_member_state_help: cli.ledger.classify.counterparty_eu_member_state_help
+      from_csv_exclusive: cli.ledger.classify.from_csv_exclusive
+      from_csv_help: cli.ledger.classify.from_csv_help
+      from_csv_not_found: cli.ledger.classify.from_csv_not_found
+      help: cli.ledger.classify.help
+      id_help: cli.ledger.classify.id_help
+      id_required: cli.ledger.classify.id_required
+      irpf_category_help: cli.ledger.classify.irpf_category_help
+      iva_amount_help: cli.ledger.classify.iva_amount_help
+      iva_category_help: cli.ledger.classify.iva_category_help
+      iva_rate_help: cli.ledger.classify.iva_rate_help
+      mixed_requires_business_pct: cli.ledger.classify.mixed_requires_business_pct
+      reaffirm_help: cli.ledger.classify.reaffirm_help
+      reaffirmed: cli.ledger.classify.reaffirmed
+      taxable_base_help: cli.ledger.classify.taxable_base_help
+    errors:
+      command_input_invalid: cli.ledger.errors.command_input_invalid
+      command_input_invalid_fallback: cli.ledger.errors.command_input_invalid_fallback
+      confirm_required: cli.ledger.errors.confirm_required
+      filter_parse_error: cli.ledger.errors.filter_parse_error
+      id_prefix_collision: cli.ledger.errors.id_prefix_collision
+      id_prefix_empty: cli.ledger.errors.id_prefix_empty
+      id_prefix_not_found: cli.ledger.errors.id_prefix_not_found
+      id_prefix_not_hex: cli.ledger.errors.id_prefix_not_hex
+      id_prefix_too_long: cli.ledger.errors.id_prefix_too_long
+      invalid_decimal: cli.ledger.errors.invalid_decimal
+      unknown_category: cli.ledger.errors.unknown_category
+      unknown_provider: cli.ledger.errors.unknown_provider
+    export:
+      actor_help: cli.ledger.export.actor_help
+      format_help: cli.ledger.export.format_help
+      help: cli.ledger.export.help
+      include_inactive_help: cli.ledger.export.include_inactive_help
+      output_help: cli.ledger.export.output_help
+    history:
+      help: cli.ledger.history.help
+      id_help: cli.ledger.history.id_help
+      include_split_siblings_help: cli.ledger.history.include_split_siblings_help
+    import:
+      all_rows_skipped: cli.ledger.import.all_rows_skipped
+      dry_run_help: cli.ledger.import.dry_run_help
+      dry_run_preview: cli.ledger.import.dry_run_preview
+      help: cli.ledger.import.help
+      likely_duplicates: cli.ledger.import.likely_duplicates
+      no_rows_imported: cli.ledger.import.no_rows_imported
+      path_help: cli.ledger.import.path_help
+      period_help: cli.ledger.import.period_help
+      provider_help: cli.ledger.import.provider_help
+      source_help: cli.ledger.import.source_help
+      verbose_help: cli.ledger.import.verbose_help
+      verify_help: cli.ledger.import.verify_help
+    labels:
+      active: cli.ledger.labels.active
+      amount: cli.ledger.labels.amount
+      archived: cli.ledger.labels.archived
+      bucket: cli.ledger.labels.bucket
+      business_classification: cli.ledger.labels.business_classification
+      business_pct: cli.ledger.labels.business_pct
+      category_id: cli.ledger.labels.category_id
+      checked: cli.ledger.labels.checked
+      children: cli.ledger.labels.children
+      counterparty: cli.ledger.labels.counterparty
+      created_event_id: cli.ledger.labels.created_event_id
+      currency: cli.ledger.labels.currency
+      date: cli.ledger.labels.date
+      description: cli.ledger.labels.description
+      dialect: cli.ledger.labels.dialect
+      direction: cli.ledger.labels.direction
+      dry_run: cli.ledger.labels.dry_run
+      event_count: cli.ledger.labels.event_count
+      event_id: cli.ledger.labels.event_id
+      export_id: cli.ledger.labels.export_id
+      id: cli.ledger.labels.id
+      imported: cli.ledger.labels.imported
+      irpf_category: cli.ledger.labels.irpf_category
+      iva_amount: cli.ledger.labels.iva_amount
+      iva_rate: cli.ledger.labels.iva_rate
+      lifecycle_state: cli.ledger.labels.lifecycle_state
+      merged_id: cli.ledger.labels.merged_id
+      'no': cli.ledger.labels.no
+      notes: cli.ledger.labels.notes
+      notice: cli.ledger.labels.notice
+      output: cli.ledger.labels.output
+      parent_id: cli.ledger.labels.parent_id
+      pending: cli.ledger.labels.pending
+      period: cli.ledger.labels.period
+      readiness_issues: cli.ledger.labels.readiness_issues
+      ready: cli.ledger.labels.ready
+      removed: cli.ledger.labels.removed
+      reset: cli.ledger.labels.reset
+      review_status: cli.ledger.labels.review_status
+      reviewed: cli.ledger.labels.reviewed
+      rows: cli.ledger.labels.rows
+      sha256: cli.ledger.labels.sha256
+      skipped: cli.ledger.labels.skipped
+      source: cli.ledger.labels.source
+      split_group_id: cli.ledger.labels.split_group_id
+      stashed: cli.ledger.labels.stashed
+      taxable_base: cli.ledger.labels.taxable_base
+      valid: cli.ledger.labels.valid
+      value_date: cli.ledger.labels.value_date
+      warning: cli.ledger.labels.warning
+      warnings: cli.ledger.labels.warnings
+      'yes': cli.ledger.labels.yes
+    link:
+      actor_help: cli.ledger.link.actor_help
+      errors:
+        cross_bucket_invoice: cli.ledger.link.errors.cross_bucket_invoice
+        invoice_not_found: cli.ledger.link.errors.invoice_not_found
+        missing_target: cli.ledger.link.errors.missing_target
+      evidence_id_help: cli.ledger.link.evidence_id_help
+      help: cli.ledger.link.help
+      id_help: cli.ledger.link.id_help
+      invoice_id_help: cli.ledger.link.invoice_id_help
+    list:
+      header: cli.ledger.list.header
+      help: cli.ledger.list.help
+    merge:
+      actor_help: cli.ledger.merge.actor_help
+      child_id_help: cli.ledger.merge.child_id_help
+      errors:
+        min_two_children: cli.ledger.merge.errors.min_two_children
+      help: cli.ledger.merge.help
+      reason_help: cli.ledger.merge.reason_help
+      yes_help: cli.ledger.merge.yes_help
+    preflight:
+      help: cli.ledger.preflight.help
+      period_help: cli.ledger.preflight.period_help
+    remove:
+      actor_help: cli.ledger.remove.actor_help
+      dry_run_help: cli.ledger.remove.dry_run_help
+      help: cli.ledger.remove.help
+      id_help: cli.ledger.remove.id_help
+      reason_help: cli.ledger.remove.reason_help
+      yes_help: cli.ledger.remove.yes_help
+    reset:
+      actor_help: cli.ledger.reset.actor_help
+      dry_run_help: cli.ledger.reset.dry_run_help
+      help: cli.ledger.reset.help
+      reason_help: cli.ledger.reset.reason_help
+      yes_help: cli.ledger.reset.yes_help
+    review:
+      filter_help: cli.ledger.review.filter_help
+      header: cli.ledger.review.header
+      help: cli.ledger.review.help
+      id_help: cli.ledger.review.id_help
+      no_rows: cli.ledger.review.no_rows
+      verbose_help: cli.ledger.review.verbose_help
+    split:
+      actor_help: cli.ledger.split.actor_help
+      child_amount_help: cli.ledger.split.child_amount_help
+      child_description_help: cli.ledger.split.child_description_help
+      errors:
+        child_args_mismatch: cli.ledger.split.errors.child_args_mismatch
+        min_two_children: cli.ledger.split.errors.min_two_children
+      help: cli.ledger.split.help
+      id_help: cli.ledger.split.id_help
+      reason_help: cli.ledger.split.reason_help
+      yes_help: cli.ledger.split.yes_help
+    stash:
+      actor_help: cli.ledger.stash.actor_help
+      help: cli.ledger.stash.help
+      id_help: cli.ledger.stash.id_help
+      reason_help: cli.ledger.stash.reason_help
+      yes_help: cli.ledger.stash.yes_help
+    status:
+      help: cli.ledger.status.help
+      period_help: cli.ledger.status.period_help
+    track:
+      help: cli.ledger.track.help
+      transaction_id_help: cli.ledger.track.transaction_id_help
+    update:
+      actor_help: cli.ledger.update.actor_help
+      amount_help: cli.ledger.update.amount_help
+      counterparty_help: cli.ledger.update.counterparty_help
+      currency_help: cli.ledger.update.currency_help
+      date_help: cli.ledger.update.date_help
+      description_help: cli.ledger.update.description_help
+      direction_help: cli.ledger.update.direction_help
+      help: cli.ledger.update.help
+      id_help: cli.ledger.update.id_help
+      irpf_category_help: cli.ledger.update.irpf_category_help
+      iva_amount_help: cli.ledger.update.iva_amount_help
+      iva_rate_help: cli.ledger.update.iva_rate_help
+      notes_help: cli.ledger.update.notes_help
+      taxable_base_help: cli.ledger.update.taxable_base_help
+      value_date_help: cli.ledger.update.value_date_help
+    view:
+      help: cli.ledger.view.help
+      transaction_id_help: cli.ledger.view.transaction_id_help
+  locales:
+    app_help: cli.locales.app_help
+    remove_key_help: cli.locales.remove_key_help
+    remove_locale_help: cli.locales.remove_locale_help
+    scaffold_check_help: cli.locales.scaffold_check_help
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
+  log_levels:
+    errors:
+      flags_mutually_exclusive: cli.log_levels.errors.flags_mutually_exclusive
+      invalid_env_value: cli.log_levels.errors.invalid_env_value
+  operator_surface:
+    errors:
+      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
+      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
+      source_kind_options: cli.operator_surface.errors.source_kind_options
+      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+    help:
+      app:
+        footer: cli.operator_surface.help.app.footer
+        heading: cli.operator_surface.help.app.heading
+        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
+        ledger_archive: cli.operator_surface.help.app.ledger_archive
+        ledger_attach: cli.operator_surface.help.app.ledger_attach
+        ledger_classify: cli.operator_surface.help.app.ledger_classify
+        ledger_export: cli.operator_surface.help.app.ledger_export
+        ledger_import: cli.operator_surface.help.app.ledger_import
+        ledger_list: cli.operator_surface.help.app.ledger_list
+        ledger_remove: cli.operator_surface.help.app.ledger_remove
+        ledger_reset: cli.operator_surface.help.app.ledger_reset
+        ledger_review: cli.operator_surface.help.app.ledger_review
+        ledger_stash: cli.operator_surface.help.app.ledger_stash
+        ledger_status: cli.operator_surface.help.app.ledger_status
+        ledger_update: cli.operator_surface.help.app.ledger_update
+        ledger_view: cli.operator_surface.help.app.ledger_view
+        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
+        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
+        live_filed_list: cli.operator_surface.help.app.live_filed_list
+        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
+        modelo_describe: cli.operator_surface.help.app.modelo_describe
+        modelo_list: cli.operator_surface.help.app.modelo_list
+        modelo_work: cli.operator_surface.help.app.modelo_work
+        overview_status: cli.operator_surface.help.app.overview_status
+        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
+        registry_inspect: cli.operator_surface.help.app.registry_inspect
+        registry_verify: cli.operator_surface.help.app.registry_verify
+        review_queue: cli.operator_surface.help.app.review_queue
+        review_view: cli.operator_surface.help.app.review_view
+        section_ledger: cli.operator_surface.help.app.section_ledger
+        section_live_reads: cli.operator_surface.help.app.section_live_reads
+        section_modelo: cli.operator_surface.help.app.section_modelo
+        section_overview: cli.operator_surface.help.app.section_overview
+        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+      config:
+        auth_clear: cli.operator_surface.help.config.auth_clear
+        auth_configure: cli.operator_surface.help.config.auth_configure
+        auth_providers: cli.operator_surface.help.config.auth_providers
+        auth_status: cli.operator_surface.help.config.auth_status
+        auth_test: cli.operator_surface.help.config.auth_test
+        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
+        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
+        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
+        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
+        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
+        first_run_edit: cli.operator_surface.help.config.first_run_edit
+        footer: cli.operator_surface.help.config.footer
+        heading: cli.operator_surface.help.config.heading
+        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
+        profile_census: cli.operator_surface.help.config.profile_census
+        profile_delete: cli.operator_surface.help.config.profile_delete
+        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
+        profile_list: cli.operator_surface.help.config.profile_list
+        profile_rename: cli.operator_surface.help.config.profile_rename
+        profile_show: cli.operator_surface.help.config.profile_show
+        profile_status: cli.operator_surface.help.config.profile_status
+        profile_switch: cli.operator_surface.help.config.profile_switch
+        section_authentication: cli.operator_surface.help.config.section_authentication
+        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
+        section_first_run: cli.operator_surface.help.config.section_first_run
+        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
+        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+      root:
+        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
+        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
+        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
+        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
+        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
+        footer: cli.operator_surface.help.root.footer
+        heading: cli.operator_surface.help.root.heading
+        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
+        ledger_archive: cli.operator_surface.help.root.ledger_archive
+        ledger_attach: cli.operator_surface.help.root.ledger_attach
+        ledger_classify: cli.operator_surface.help.root.ledger_classify
+        ledger_export: cli.operator_surface.help.root.ledger_export
+        ledger_import: cli.operator_surface.help.root.ledger_import
+        ledger_list: cli.operator_surface.help.root.ledger_list
+        ledger_remove: cli.operator_surface.help.root.ledger_remove
+        ledger_reset: cli.operator_surface.help.root.ledger_reset
+        ledger_review: cli.operator_surface.help.root.ledger_review
+        ledger_stash: cli.operator_surface.help.root.ledger_stash
+        ledger_status: cli.operator_surface.help.root.ledger_status
+        ledger_update: cli.operator_surface.help.root.ledger_update
+        ledger_view: cli.operator_surface.help.root.ledger_view
+        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
+        modelo_list: cli.operator_surface.help.root.modelo_list
+        modelo_work: cli.operator_surface.help.root.modelo_work
+        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
+        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
+        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
+        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
+        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
+        section_setup: cli.operator_surface.help.root.section_setup
+        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
+        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
+        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+    landing:
+      active_profile_message: cli.operator_surface.landing.active_profile_message
+      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
+      text_template: cli.operator_surface.landing.text_template
+    retired:
+      archive_reason: cli.operator_surface.retired.archive_reason
+      data_reason: cli.operator_surface.retired.data_reason
+      declaration_reason: cli.operator_surface.retired.declaration_reason
+      filing_reason: cli.operator_surface.retired.filing_reason
+      financial_reason: cli.operator_surface.retired.financial_reason
+      invoice_reason: cli.operator_surface.retired.invoice_reason
+      llm_reason: cli.operator_surface.retired.llm_reason
+      preflight_reason: cli.operator_surface.retired.preflight_reason
+      presentation_reason: cli.operator_surface.retired.presentation_reason
+      sanitize_reason: cli.operator_surface.retired.sanitize_reason
+      setup_reason: cli.operator_surface.retired.setup_reason
+      submit_reason: cli.operator_surface.retired.submit_reason
+      topic_reason: cli.operator_surface.retired.topic_reason
+      workflow_reason: cli.operator_surface.retired.workflow_reason
+  overview:
+    agenda:
+      allow_incomplete_help: cli.overview.agenda.allow_incomplete_help
+      date_help: cli.overview.agenda.date_help
+      errors:
+        invalid_horizon: cli.overview.agenda.errors.invalid_horizon
+      help: cli.overview.agenda.help
+      horizon_help: cli.overview.agenda.horizon_help
+    app_help: cli.overview.app_help
+    backlog:
+      allow_incomplete_help: cli.overview.backlog.allow_incomplete_help
+      from_help: cli.overview.backlog.from_help
+      help: cli.overview.backlog.help
+      to_help: cli.overview.backlog.to_help
+    calendar:
+      all_profiles_help: cli.overview.calendar.all_profiles_help
+      allow_incomplete_help: cli.overview.calendar.allow_incomplete_help
+      from_help: cli.overview.calendar.from_help
+      help: cli.overview.calendar.help
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
+      to_help: cli.overview.calendar.to_help
+    calendar_refused_incomplete: cli.overview.calendar_refused_incomplete
+    drafts: cli.overview.drafts
+    explain:
+      help: cli.overview.explain.help
+      modelo_help: cli.overview.explain.modelo_help
+      year_help: cli.overview.explain.year_help
+    period: cli.overview.period
+    period_help: cli.overview.period_help
+    status:
+      drafts_empty: cli.overview.status.drafts_empty
+      drafts_empty_with_work_units: cli.overview.status.drafts_empty_with_work_units
+      drafts_present: cli.overview.status.drafts_present
+      integrity_next: cli.overview.status.integrity_next
+      invoices_empty: cli.overview.status.invoices_empty
+      invoices_present: cli.overview.status.invoices_present
+      next_heading: cli.overview.status.next_heading
+      next_import_command: cli.overview.status.next_import_command
+      next_landing_command: cli.overview.status.next_landing_command
+      next_modelo_work_command: cli.overview.status.next_modelo_work_command
+      next_review_command: cli.overview.status.next_review_command
+      next_work_calculate_command: cli.overview.status.next_work_calculate_command
+      next_work_create_command: cli.overview.status.next_work_create_command
+      profile_active: cli.overview.status.profile_active
+      profile_missing: cli.overview.status.profile_missing
+      storage_ok: cli.overview.status.storage_ok
+      storage_warning: cli.overview.status.storage_warning
+      title: cli.overview.status.title
+      transactions_empty: cli.overview.status.transactions_empty
+      transactions_present: cli.overview.status.transactions_present
+      work_units_empty: cli.overview.status.work_units_empty
+      work_units_present: cli.overview.status.work_units_present
+      work_units_present_with_discarded: cli.overview.status.work_units_present_with_discarded
+    status_help: cli.overview.status_help
+    taxpayer_model_undeclared: cli.overview.taxpayer_model_undeclared
+    verbose_help: cli.overview.verbose_help
+  registry:
+    app_help: cli.registry.app_help
+    audit_oracles_environment_help: cli.registry.audit_oracles_environment_help
+    audit_oracles_help: cli.registry.audit_oracles_help
+    casilla_help: cli.registry.casilla_help
+    citations:
+      app_help: cli.registry.citations.app_help
+      articulo_help: cli.registry.citations.articulo_help
+      list_help: cli.registry.citations.list_help
+      normative_id_help: cli.registry.citations.normative_id_help
+      tag_help: cli.registry.citations.tag_help
+      verify_help: cli.registry.citations.verify_help
+      view_help: cli.registry.citations.view_help
+    inspect_help: cli.registry.inspect_help
+    inspect_registry_root_help: cli.registry.inspect_registry_root_help
+    manuals:
+      app_help: cli.registry.manuals.app_help
+      kind_help: cli.registry.manuals.kind_help
+      list_help: cli.registry.manuals.list_help
+      manual_help: cli.registry.manuals.manual_help
+      part_help: cli.registry.manuals.part_help
+      rules_help: cli.registry.manuals.rules_help
+      section_help: cli.registry.manuals.section_help
+      verify_dangling_rule_section_ref: cli.registry.manuals.verify_dangling_rule_section_ref
+      verify_dangling_section_ref: cli.registry.manuals.verify_dangling_section_ref
+      verify_failed: cli.registry.manuals.verify_failed
+      verify_help: cli.registry.manuals.verify_help
+      verify_missing_manifest: cli.registry.manuals.verify_missing_manifest
+      verify_missing_translation: cli.registry.manuals.verify_missing_translation
+      view_help: cli.registry.manuals.view_help
+      year_help: cli.registry.manuals.year_help
+    observation_help: cli.registry.observation_help
+    parity_app_help: cli.registry.parity_app_help
+    parity_output_help: cli.registry.parity_output_help
+    parity_replay_help: cli.registry.parity_replay_help
+    parity_run_help: cli.registry.parity_run_help
+    parity_scenario_help: cli.registry.parity_scenario_help
+    parity_store_root_help: cli.registry.parity_store_root_help
+    parity_tape_help: cli.registry.parity_tape_help
+    source_observation_help: cli.registry.source_observation_help
+    verify_filed_state_help: cli.registry.verify_filed_state_help
+    verify_help: cli.registry.verify_help
+    verify_source_root_help: cli.registry.verify_source_root_help
+    workbooks_app_help: cli.registry.workbooks_app_help
+    workbooks_limit_help: cli.registry.workbooks_limit_help
+    workbooks_output_help: cli.registry.workbooks_output_help
+    workbooks_resume_help: cli.registry.workbooks_resume_help
+    workbooks_root_help: cli.registry.workbooks_root_help
+    workbooks_timeout_help: cli.registry.workbooks_timeout_help
+    workbooks_verify_help: cli.registry.workbooks_verify_help
+  review:
+    app_help: cli.review.app_help
+    errors:
+      invalid_state: cli.review.errors.invalid_state
+    labels:
+      affected_object_id: cli.review.labels.affected_object_id
+      bucket: cli.review.labels.bucket
+      id: cli.review.labels.id
+      kind: cli.review.labels.kind
+      legal_refs: cli.review.labels.legal_refs
+      next: cli.review.labels.next
+      period: cli.review.labels.period
+      severity: cli.review.labels.severity
+      source_kind: cli.review.labels.source_kind
+    queue:
+      empty: cli.review.queue.empty
+      explain_help: cli.review.queue.explain_help
+      help: cli.review.queue.help
+      kind_help: cli.review.queue.kind_help
+      modelo_help: cli.review.queue.modelo_help
+      source_kind_help: cli.review.queue.source_kind_help
+      state_help: cli.review.queue.state_help
+    show:
+      explain_help: cli.review.show.explain_help
+      help: cli.review.show.help
+      id_help: cli.review.show.id_help
+  root:
+    errors:
+      did_you_mean_command: cli.root.errors.did_you_mean_command
+    landing:
+      headline: cli.root.landing.headline
+      help_line: cli.root.landing.help_line
+      quick_start_heading: cli.root.landing.quick_start_heading
+      quick_start_import: cli.root.landing.quick_start_import
+      quick_start_repair: cli.root.landing.quick_start_repair
+      quick_start_review: cli.root.landing.quick_start_review
+      quick_start_setup_done: cli.root.landing.quick_start_setup_done
+      quick_start_setup_needed: cli.root.landing.quick_start_setup_needed
+      quick_start_status: cli.root.landing.quick_start_status
+      section_config: cli.root.landing.section_config
+      section_ledger: cli.root.landing.section_ledger
+      section_modelo: cli.root.landing.section_modelo
+      section_overview: cli.root.landing.section_overview
+      section_registry: cli.root.landing.section_registry
+      section_review: cli.root.landing.section_review
+      sections_heading: cli.root.landing.sections_heading
+      tagline: cli.root.landing.tagline
+      welcome_no_profile: cli.root.landing.welcome_no_profile
+      welcome_profile: cli.root.landing.welcome_profile
+dotted:
+  key: dotted.key
+entries:
+  portal_calendario_contribuyente:
+    label: entries.portal_calendario_contribuyente.label
+    purpose: entries.portal_calendario_contribuyente.purpose
+  portal_cert_selection:
+    label: entries.portal_cert_selection.label
+    notes:
+      '0': entries.portal_cert_selection.notes.0
+    purpose: entries.portal_cert_selection.purpose
+  portal_cert_validation_rest:
+    label: entries.portal_cert_validation_rest.label
+    purpose: entries.portal_cert_validation_rest.purpose
+  portal_clave_gestiones:
+    label: entries.portal_clave_gestiones.label
+    purpose: entries.portal_clave_gestiones.purpose
+  portal_clave_idp_root:
+    label: entries.portal_clave_idp_root.label
+    purpose: entries.portal_clave_idp_root.purpose
+  portal_clave_sede_entry:
+    label: entries.portal_clave_sede_entry.label
+    purpose: entries.portal_clave_sede_entry.purpose
+  portal_consulta_pagos:
+    label: entries.portal_consulta_pagos.label
+    purpose: entries.portal_consulta_pagos.purpose
+  portal_dnie_sede_entry:
+    label: entries.portal_dnie_sede_entry.label
+    purpose: entries.portal_dnie_sede_entry.purpose
+  portal_domiciliacion_bancaria:
+    label: entries.portal_domiciliacion_bancaria.label
+    purpose: entries.portal_domiciliacion_bancaria.purpose
+  portal_m036_censal:
+    label: entries.portal_m036_censal.label
+    purpose: entries.portal_m036_censal.purpose
+  portal_m037_censal_simplificada:
+    label: entries.portal_m037_censal_simplificada.label
+    notes:
+      '0': entries.portal_m037_censal_simplificada.notes.0
+      '1': entries.portal_m037_censal_simplificada.notes.1
+    purpose: entries.portal_m037_censal_simplificada.purpose
+  portal_m100_renta:
+    label: entries.portal_m100_renta.label
+    purpose: entries.portal_m100_renta.purpose
+  portal_m111_retenciones_trabajo:
+    label: entries.portal_m111_retenciones_trabajo.label
+    purpose: entries.portal_m111_retenciones_trabajo.purpose
+  portal_m115_retenciones_arrendamientos:
+    label: entries.portal_m115_retenciones_arrendamientos.label
+    purpose: entries.portal_m115_retenciones_arrendamientos.purpose
+  portal_m123_retenciones_capital:
+    label: entries.portal_m123_retenciones_capital.label
+    purpose: entries.portal_m123_retenciones_capital.purpose
+  portal_m130_pago_fraccionado_ed:
+    label: entries.portal_m130_pago_fraccionado_ed.label
+    purpose: entries.portal_m130_pago_fraccionado_ed.purpose
+  portal_m131_pago_fraccionado_eo:
+    label: entries.portal_m131_pago_fraccionado_eo.label
+    purpose: entries.portal_m131_pago_fraccionado_eo.purpose
+  portal_m180_resumen_arrendamientos:
+    label: entries.portal_m180_resumen_arrendamientos.label
+    purpose: entries.portal_m180_resumen_arrendamientos.purpose
+  portal_m190_resumen_trabajo:
+    label: entries.portal_m190_resumen_trabajo.label
+    purpose: entries.portal_m190_resumen_trabajo.purpose
+  portal_m193_resumen_capital:
+    label: entries.portal_m193_resumen_capital.label
+    purpose: entries.portal_m193_resumen_capital.purpose
+  portal_m200_sociedades_anual:
+    label: entries.portal_m200_sociedades_anual.label
+    purpose: entries.portal_m200_sociedades_anual.purpose
+  portal_m202_sociedades_fraccionado:
+    label: entries.portal_m202_sociedades_fraccionado.label
+    purpose: entries.portal_m202_sociedades_fraccionado.purpose
+  portal_m232_vinculadas:
+    label: entries.portal_m232_vinculadas.label
+    purpose: entries.portal_m232_vinculadas.purpose
+  portal_m303_iva_autoliquidacion:
+    label: entries.portal_m303_iva_autoliquidacion.label
+    purpose: entries.portal_m303_iva_autoliquidacion.purpose
+  portal_m347_operaciones_terceros:
+    label: entries.portal_m347_operaciones_terceros.label
+    purpose: entries.portal_m347_operaciones_terceros.purpose
+  portal_m349_intracomunitarias:
+    label: entries.portal_m349_intracomunitarias.label
+    purpose: entries.portal_m349_intracomunitarias.purpose
+  portal_m369_oss_ioss:
+    label: entries.portal_m369_oss_ioss.label
+    purpose: entries.portal_m369_oss_ioss.purpose
+  portal_m390_resumen_iva:
+    label: entries.portal_m390_resumen_iva.label
+    purpose: entries.portal_m390_resumen_iva.purpose
+  portal_m720_bienes_extranjero:
+    label: entries.portal_m720_bienes_extranjero.label
+    purpose: entries.portal_m720_bienes_extranjero.purpose
+  portal_m840_iae:
+    label: entries.portal_m840_iae.label
+    purpose: entries.portal_m840_iae.purpose
+  portal_mi_area_personal:
+    label: entries.portal_mi_area_personal.label
+    purpose: entries.portal_mi_area_personal.purpose
+  portal_mis_datos_censales:
+    label: entries.portal_mis_datos_censales.label
+    purpose: entries.portal_mis_datos_censales.purpose
+  portal_mis_documentos_pendientes_firma:
+    label: entries.portal_mis_documentos_pendientes_firma.label
+    purpose: entries.portal_mis_documentos_pendientes_firma.purpose
+  portal_mis_expedientes:
+    label: entries.portal_mis_expedientes.label
+    purpose: entries.portal_mis_expedientes.purpose
+  portal_mis_notificaciones:
+    label: entries.portal_mis_notificaciones.label
+    purpose: entries.portal_mis_notificaciones.purpose
+  portal_pago_autoliquidacion_cuenta:
+    label: entries.portal_pago_autoliquidacion_cuenta.label
+    purpose: entries.portal_pago_autoliquidacion_cuenta.purpose
+  portal_pago_autoliquidacion_tarjeta_bizum:
+    label: entries.portal_pago_autoliquidacion_tarjeta_bizum.label
+    purpose: entries.portal_pago_autoliquidacion_tarjeta_bizum.purpose
+  portal_pago_liquidaciones_deudas:
+    label: entries.portal_pago_liquidaciones_deudas.label
+    purpose: entries.portal_pago_liquidaciones_deudas.purpose
+  portal_pre303_ayuda:
+    label: entries.portal_pre303_ayuda.label
+    purpose: entries.portal_pre303_ayuda.purpose
+  portal_presentar_consultar_index:
+    label: entries.portal_presentar_consultar_index.label
+    purpose: entries.portal_presentar_consultar_index.purpose
+  portal_renta_web_borrador:
+    label: entries.portal_renta_web_borrador.label
+    notes:
+      '0': entries.portal_renta_web_borrador.notes.0
+    purpose: entries.portal_renta_web_borrador.purpose
+  portal_sede_root:
+    label: entries.portal_sede_root.label
+    purpose: entries.portal_sede_root.purpose
+errors:
+  auth:
+    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
+    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
+    auth_auth: errors.auth.auth_auth
+    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
+    auth_auth_certificate: errors.auth.auth_auth_certificate
+    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
+    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
+    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
+    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
+    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
+    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
+    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
+    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
+    auth_auth_configuration: errors.auth.auth_auth_configuration
+    auth_auth_validation: errors.auth.auth_auth_validation
+    auth_google: errors.auth.auth_google
+    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
+    auth_google_client_revoked: errors.auth.auth_google_client_revoked
+    auth_google_expired: errors.auth.auth_google_expired
+    auth_google_revoked: errors.auth.auth_google_revoked
+    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
+    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
+    auth_session_corrupt: errors.auth.auth_session_corrupt
+    auth_session_unavailable: errors.auth.auth_session_unavailable
+    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
+    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
+    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
+    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
+    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
+    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
+    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+  calc:
+    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
+    binding_value_missing: errors.calc.binding_value_missing
+    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
+    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
+    bracket_negative_base: errors.calc.bracket_negative_base
+    bracket_no_coverage: errors.calc.bracket_no_coverage
+    bracket_no_window: errors.calc.bracket_no_window
+    casilla_constraint_violation: errors.calc.casilla_constraint_violation
+    casilla_referenced_before_evaluation: errors.calc.casilla_referenced_before_evaluation
+    computed_supplied_as_input: errors.calc.computed_supplied_as_input
+    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
+    date_binding_value_missing: errors.calc.date_binding_value_missing
+    dispatch_key_unknown: errors.calc.dispatch_key_unknown
+    dispatch_parameter_kind: errors.calc.dispatch_parameter_kind
+    divide_by_zero: errors.calc.divide_by_zero
+    empty_expression: errors.calc.empty_expression
+    enum_binding_value_missing: errors.calc.enum_binding_value_missing
+    lookup_dispatch_arg_count: errors.calc.lookup_dispatch_arg_count
+    lookup_dispatch_arg_kind: errors.calc.lookup_dispatch_arg_kind
+    parameter_unknown: errors.calc.parameter_unknown
+    relation_value_missing: errors.calc.relation_value_missing
+    unknown_input_casillas: errors.calc.unknown_input_casillas
+    unsupported_comparison_op: errors.calc.unsupported_comparison_op
+    unsupported_op: errors.calc.unsupported_op
+  censo:
+    no_snapshot_captured: errors.censo.no_snapshot_captured
+    profile_not_found: errors.censo.profile_not_found
+    sede_g313_no_census: errors.censo.sede_g313_no_census
+    sede_no_census: errors.censo.sede_no_census
+  error:
+    error_access_gate_submission: errors.error.error_access_gate_submission
+    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
+    error_aeat_core: errors.error.error_aeat_core
+    error_aeat_observability: errors.error.error_aeat_observability
+    error_application_live: errors.error.error_application_live
+    error_application_registry: errors.error.error_application_registry
+    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
+    error_calculations_registry: errors.error.error_calculations_registry
+    error_calculations_registry_load: errors.error.error_calculations_registry_load
+    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
+    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
+    error_categories: errors.error.error_categories
+    error_categories_validation: errors.error.error_categories_validation
+    error_deadlines_deadline: errors.error.error_deadlines_deadline
+    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
+    error_deadlines_profile: errors.error.error_deadlines_profile
+    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
+    error_deadlines_validation: errors.error.error_deadlines_validation
+    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
+    error_domain: errors.error.error_domain
+    error_domain_submission: errors.error.error_domain_submission
+    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
+    error_domain_validation: errors.error.error_domain_validation
+    error_filing_amendment: errors.error.error_filing_amendment
+    error_filing_application: errors.error.error_filing_application
+    error_filing_builder: errors.error.error_filing_builder
+    error_filing_computation: errors.error.error_filing_computation
+    error_filing_draft: errors.error.error_filing_draft
+    error_filing_export: errors.error.error_filing_export
+    error_filing_export_validation: errors.error.error_filing_export_validation
+    error_financial_aggregation: errors.error.error_financial_aggregation
+    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
+    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
+    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
+    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
+    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
+    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
+    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
+    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
+    error_financial_provider: errors.error.error_financial_provider
+    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
+    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
+    error_financial_vat: errors.error.error_financial_vat
+    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
+    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
+    error_financial_vat_classification: errors.error.error_financial_vat_classification
+    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
+    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
+    error_fixture_provisioning: errors.error.error_fixture_provisioning
+    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
+    error_invoice_validation: errors.error.error_invoice_validation
+    error_justificante: errors.error.error_justificante
+    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
+    error_llm: errors.error.error_llm
+    error_manuals_manual: errors.error.error_manuals_manual
+    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
+    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
+    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
+    error_manuals_validation: errors.error.error_manuals_validation
+    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
+    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
+    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
+    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
+    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
+    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
+    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
+    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
+    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
+    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
+    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
+    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
+    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
+    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
+    error_modelos: errors.error.error_modelos
+    error_modelos_validation: errors.error.error_modelos_validation
+    error_normatives_normative: errors.error.error_normatives_normative
+    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
+    error_normatives_validation: errors.error.error_normatives_validation
+    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
+    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
+    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
+    error_period: errors.error.error_period
+    error_period_validation: errors.error.error_period_validation
+    error_portals_portal_registry: errors.error.error_portals_portal_registry
+    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
+    error_portals_validation: errors.error.error_portals_validation
+    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
+    error_profile_asset_record: errors.error.error_profile_asset_record
+    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
+    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
+    error_profile_tax_residence: errors.error.error_profile_tax_residence
+    error_profile_validation: errors.error.error_profile_validation
+    error_renta: errors.error.error_renta
+    error_renta_validation: errors.error.error_renta_validation
+    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
+    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
+    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
+    error_rental_register: errors.error.error_rental_register
+    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
+    error_rental_validation: errors.error.error_rental_validation
+    error_resources_backend: errors.error.error_resources_backend
+    error_resources_load: errors.error.error_resources_load
+    error_resources_not_found: errors.error.error_resources_not_found
+    error_resources_validation: errors.error.error_resources_validation
+    error_review: errors.error.error_review
+    error_sanitization: errors.error.error_sanitization
+    error_sede: errors.error.error_sede
+    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
+    error_sede_navigation: errors.error.error_sede_navigation
+    error_storage_bucket: errors.error.error_storage_bucket
+    error_submission_validation: errors.error.error_submission_validation
+    error_transaction_catalogue: errors.error.error_transaction_catalogue
+    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
+    error_transaction_not_found: errors.error.error_transaction_not_found
+    error_transaction_persistence: errors.error.error_transaction_persistence
+    error_transaction_validation: errors.error.error_transaction_validation
+    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
+    error_user_profile: errors.error.error_user_profile
+    error_vat_prorrata: errors.error.error_vat_prorrata
+    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
+    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
+    error_vat_validation: errors.error.error_vat_validation
+    error_wizard: errors.error.error_wizard
+    error_wizard_compile: errors.error.error_wizard_compile
+    error_workflow: errors.error.error_workflow
+    error_workflow_component: errors.error.error_workflow_component
+  fail:
+    census_sync: errors.fail.census_sync
+    currency_error: errors.fail.currency_error
+    declaration_parse: errors.fail.declaration_parse
+    exchange_rate_provider: errors.fail.exchange_rate_provider
+    fail_borrador_parse: errors.fail.fail_borrador_parse
+    fail_browser_evasion: errors.fail.fail_browser_evasion
+    fail_browser_session_browser: errors.fail.fail_browser_session_browser
+    fail_browser_validation: errors.fail.fail_browser_validation
+    fail_declaracion_parse: errors.fail.fail_declaracion_parse
+    fail_export: errors.fail.fail_export
+    fail_export_format: errors.fail.fail_export_format
+    fail_filing_import: errors.fail.fail_filing_import
+    fail_financial_attachments_attachment_persistence: errors.fail.fail_financial_attachments_attachment_persistence
+    fail_financial_invoices_invoice_persistence: errors.fail.fail_financial_invoices_invoice_persistence
+    fail_financial_ledger_storage: errors.fail.fail_financial_ledger_storage
+    fail_financial_usage_ratios_usage_ratio_persistence: errors.fail.fail_financial_usage_ratios_usage_ratio_persistence
+    fail_google_browser_open: errors.fail.fail_google_browser_open
+    fail_google_loopback_bind: errors.fail.fail_google_loopback_bind
+    fail_google_network: errors.fail.fail_google_network
+    fail_justificante_parse: errors.fail.fail_justificante_parse
+    fail_llm_cache: errors.fail.fail_llm_cache
+    fail_llm_provider: errors.fail.fail_llm_provider
+    fail_llm_rate_limit: errors.fail.fail_llm_rate_limit
+    fail_locale_manager: errors.fail.fail_locale_manager
+    fail_manuals_manual_parse: errors.fail.fail_manuals_manual_parse
+    fail_mcp_launch: errors.fail.fail_mcp_launch
+    fail_modelo_calculation_revision_persistence: errors.fail.fail_modelo_calculation_revision_persistence
+    fail_modelo_filing_record_persistence: errors.fail.fail_modelo_filing_record_persistence
+    fail_modelo_verification_report_persistence: errors.fail.fail_modelo_verification_report_persistence
+    fail_modelo_work_unit_persistence: errors.fail.fail_modelo_work_unit_persistence
+    fail_normatives_normative_parse: errors.fail.fail_normatives_normative_parse
+    fail_observability_run_trace_persistence: errors.fail.fail_observability_run_trace_persistence
+    fail_outbound_storage: errors.fail.fail_outbound_storage
+    fail_outbound_storage_network: errors.fail.fail_outbound_storage_network
+    fail_outbound_storage_unavailable: errors.fail.fail_outbound_storage_unavailable
+    fail_review_source_load: errors.fail.fail_review_source_load
+    fail_sanitization_source_parse: errors.fail.fail_sanitization_source_parse
+    fail_secure_storage: errors.fail.fail_secure_storage
+    fail_sede_census_parse: errors.fail.fail_sede_census_parse
+    fail_sede_justificante_fetch: errors.fail.fail_sede_justificante_fetch
+    fail_sede_parse: errors.fail.fail_sede_parse
+    fail_sede_validation: errors.fail.fail_sede_validation
+    fail_site_health: errors.fail.fail_site_health
+    fail_storage: errors.fail.fail_storage
+    fail_storage_blob_not_found: errors.fail.fail_storage_blob_not_found
+    fail_storage_bucket_recovery_unavailable: errors.fail.fail_storage_bucket_recovery_unavailable
+    fail_storage_persistence: errors.fail.fail_storage_persistence
+    fail_storage_repository: errors.fail.fail_storage_repository
+    fail_storage_secret_not_found: errors.fail.fail_storage_secret_not_found
+    fail_storage_secret_store: errors.fail.fail_storage_secret_store
+    fail_user_profile_not_found: errors.fail.fail_user_profile_not_found
+    fail_user_profile_schema_load: errors.fail.fail_user_profile_schema_load
+    ledger_check: errors.fail.ledger_check
+    ledger_link: errors.fail.ledger_link
+    missing_exchange_rate: errors.fail.missing_exchange_rate
+    modelo_036_lifecycle: errors.fail.modelo_036_lifecycle
+    modelo_export: errors.fail.modelo_export
+    modelo_export_manifest: errors.fail.modelo_export_manifest
+    overview: errors.fail.overview
+    overview_agenda: errors.fail.overview_agenda
+    overview_backlog: errors.fail.overview_backlog
+    overview_calendar: errors.fail.overview_calendar
+    overview_explain: errors.fail.overview_explain
+    profile_export: errors.fail.profile_export
+    profile_import: errors.fail.profile_import
+    reconciliation: errors.fail.reconciliation
+    stale_exchange_rate: errors.fail.stale_exchange_rate
+  financial:
+    source_file_not_found: errors.financial.source_file_not_found
+  identity:
+    cif_check_char_mismatch_mixed: errors.identity.cif_check_char_mismatch_mixed
+    cif_check_digit_mismatch: errors.identity.cif_check_digit_mismatch
+    cif_check_letter_mismatch_kind: errors.identity.cif_check_letter_mismatch_kind
+    cif_invalid_shape: errors.identity.cif_invalid_shape
+    document_empty: errors.identity.document_empty
+    nie_check_letter_mismatch: errors.identity.nie_check_letter_mismatch
+    nie_invalid_shape: errors.identity.nie_invalid_shape
+    nif_check_letter_mismatch: errors.identity.nif_check_letter_mismatch
+    nif_invalid_shape: errors.identity.nif_invalid_shape
+    validate_expects_str: errors.identity.validate_expects_str
+  integrity:
+    integrity_aeat_core_validation: errors.integrity.integrity_aeat_core_validation
+    integrity_cli_output_schema: errors.integrity.integrity_cli_output_schema
+    integrity_filing_amendment_validation: errors.integrity.integrity_filing_amendment_validation
+    integrity_filing_fixture: errors.integrity.integrity_filing_fixture
+    integrity_filing_validation: errors.integrity.integrity_filing_validation
+    integrity_financial_attachments_attachment_validation: errors.integrity.integrity_financial_attachments_attachment_validation
+    integrity_identity_document: errors.integrity.integrity_identity_document
+    integrity_justificante_verification: errors.integrity.integrity_justificante_verification
+    integrity_manuals_manifest: errors.integrity.integrity_manuals_manifest
+    integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
+    integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
+    integrity_outbound_storage: errors.integrity.integrity_outbound_storage
+    integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
+    integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
+    integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
+    integrity_storage_blob: errors.integrity.integrity_storage_blob
+    integrity_storage_classification: errors.integrity.integrity_storage_classification
+    integrity_storage_corpus_manifest: errors.integrity.integrity_storage_corpus_manifest
+    integrity_storage_corpus_manifest_drift: errors.integrity.integrity_storage_corpus_manifest_drift
+    integrity_storage_corpus_manifest_tamper: errors.integrity.integrity_storage_corpus_manifest_tamper
+    integrity_storage_decryption: errors.integrity.integrity_storage_decryption
+    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
+    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
+    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
+    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
+    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
+    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
+    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
+    integrity_storage_validation: errors.integrity.integrity_storage_validation
+    integrity_verification: errors.integrity.integrity_verification
+    profile_import_signature: errors.integrity.profile_import_signature
+  internal:
+    internal_cli_unexpected_boundary: errors.internal.internal_cli_unexpected_boundary
+    internal_observability_run_context_missing: errors.internal.internal_observability_run_context_missing
+    internal_output_rendering: errors.internal.internal_output_rendering
+    internal_wizard_script_overflow: errors.internal.internal_wizard_script_overflow
+    internal_wizard_script_underflow: errors.internal.internal_wizard_script_underflow
+    internal_workflow_abort_signal: errors.internal.internal_workflow_abort_signal
+  locked:
+    locked_access_gate_live_submit_forbidden: errors.locked.locked_access_gate_live_submit_forbidden
+    locked_auth_acquisition: errors.locked.locked_auth_acquisition
+    locked_google_keychain: errors.locked.locked_google_keychain
+    locked_storage_bucket_busy: errors.locked.locked_storage_bucket_busy
+    locked_storage_bucket_session: errors.locked.locked_storage_bucket_session
+    locked_storage_lock_acquisition: errors.locked.locked_storage_lock_acquisition
+  refused:
+    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
+    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
+    bootstrap_already_complete: errors.refused.bootstrap_already_complete
+    census_apply_conflict: errors.refused.census_apply_conflict
+    census_field_validation: errors.refused.census_field_validation
+    census_not_available: errors.refused.census_not_available
+    ledger_preflight: errors.refused.ledger_preflight
+    modelo_036_prior_alta_required: errors.refused.modelo_036_prior_alta_required
+    modelo_036_terminal_state: errors.refused.modelo_036_terminal_state
+    modelo_census_stale: errors.refused.modelo_census_stale
+    modelo_export_cross_bucket: errors.refused.modelo_export_cross_bucket
+    modelo_export_no_active_bucket: errors.refused.modelo_export_no_active_bucket
+    profile_already_registered: errors.refused.profile_already_registered
+    profile_import_collision: errors.refused.profile_import_collision
+    profile_locked: errors.refused.profile_locked
+    profile_name_collision: errors.refused.profile_name_collision
+    reconciliation_cross_bucket: errors.refused.reconciliation_cross_bucket
+    reconciliation_declaration_source_unsupported: errors.refused.reconciliation_declaration_source_unsupported
+    reconciliation_drift: errors.refused.reconciliation_drift
+    reconciliation_evidence_invalid: errors.refused.reconciliation_evidence_invalid
+    refused_access_gate_live_read_not_enabled: errors.refused.refused_access_gate_live_read_not_enabled
+    refused_apoderado_live_check_unavailable: errors.refused.refused_apoderado_live_check_unavailable
+    refused_apoderado_not_configured: errors.refused.refused_apoderado_not_configured
+    refused_apoderado_unknown_scope: errors.refused.refused_apoderado_unknown_scope
+    refused_application_live_input: errors.refused.refused_application_live_input
+    refused_application_registry_input: errors.refused.refused_application_registry_input
+    refused_auth_configure_dangling_active_profile: errors.refused.refused_auth_configure_dangling_active_profile
+    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
+    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
+    refused_auth_provider_reserved: errors.refused.refused_auth_provider_reserved
+    refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
+    refused_cli_boundary: errors.refused.refused_cli_boundary
+    refused_cli_log_level_resolution: errors.refused.refused_cli_log_level_resolution
+    refused_cli_non_tty: errors.refused.refused_cli_non_tty
+    refused_cli_validation_boundary: errors.refused.refused_cli_validation_boundary
+    refused_config_reset_unconfirmed: errors.refused.refused_config_reset_unconfirmed
+    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
+    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
+    refused_filing_calculate: errors.refused.refused_filing_calculate
+    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
+    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
+    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
+    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
+    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
+    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
+    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
+    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
+    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
+    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
+    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
+    refused_google_validation: errors.refused.refused_google_validation
+    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
+    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
+    refused_inventory_service_input: errors.refused.refused_inventory_service_input
+    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
+    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
+    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
+    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
+    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
+    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
+    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
+    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
+    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
+    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
+    refused_llm_config: errors.refused.refused_llm_config
+    refused_llm_validation: errors.refused.refused_llm_validation
+    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
+    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
+    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
+    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
+    refused_no_active_profile: errors.refused.refused_no_active_profile
+    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
+    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
+    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
+    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
+    refused_output_format: errors.refused.refused_output_format
+    refused_profile_already_exists: errors.refused.refused_profile_already_exists
+    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
+    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
+    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
+    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
+    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
+    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
+    refused_profile_not_configured: errors.refused.refused_profile_not_configured
+    refused_profile_not_found: errors.refused.refused_profile_not_found
+    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
+    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
+    refused_review_edit_parse: errors.refused.refused_review_edit_parse
+    refused_review_filter_parse: errors.refused.refused_review_filter_parse
+    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
+    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
+    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
+    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
+    refused_sanitization_validation: errors.refused.refused_sanitization_validation
+    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
+    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
+    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
+    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
+    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
+    refused_storage_session_expired: errors.refused.refused_storage_session_expired
+    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
+    refused_topic_not_found: errors.refused.refused_topic_not_found
+    refused_user_profile_validation: errors.refused.refused_user_profile_validation
+    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
+    refused_wizard_status: errors.refused.refused_wizard_status
+    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
+    refused_wizard_validation: errors.refused.refused_wizard_validation
+    refused_workflow_aborted: errors.refused.refused_workflow_aborted
+    refused_workflow_resume: errors.refused.refused_workflow_resume
+    unsupported_currency: errors.refused.unsupported_currency
+  snapshot:
+    modelo_not_registered: errors.snapshot.modelo_not_registered
+  storage:
+    engine:
+      create_failed: errors.storage.engine.create_failed
+      empty_database_url: errors.storage.engine.empty_database_url
+    runtime:
+      cold_bootstrap_active_profile_refused: errors.storage.runtime.cold_bootstrap_active_profile_refused
+      cold_bootstrap_explicit_database_refused: errors.storage.runtime.cold_bootstrap_explicit_database_refused
+      no_active_session: errors.storage.runtime.no_active_session
+      no_detail: errors.storage.runtime.no_detail
+      not_ready: errors.storage.runtime.not_ready
+      route_bucket_mismatch: errors.storage.runtime.route_bucket_mismatch
+      route_not_active_bucket: errors.storage.runtime.route_not_active_bucket
+      session_changed: errors.storage.runtime.session_changed
+      session_expired: errors.storage.runtime.session_expired
+      session_sealed: errors.storage.runtime.session_sealed
+      unsecured_backend: errors.storage.runtime.unsecured_backend
+    stored_data_validation_boundary: errors.storage.stored_data_validation_boundary
+  transaction:
+    import_source_invalid: errors.transaction.import_source_invalid
+    ledger_import_failed: errors.transaction.ledger_import_failed
+    ledger_import_requires_bucket: errors.transaction.ledger_import_requires_bucket
+    unknown_ledger_provider: errors.transaction.unknown_ledger_provider
+filing:
+  validation:
+    deadline_missed: filing.validation.deadline_missed
+    formula_divergence: filing.validation.formula_divergence
+    out_of_range: filing.validation.out_of_range
+    required_missing: filing.validation.required_missing
+    schema_mismatch: filing.validation.schema_mismatch
+profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: profile.descendiente.custodia_compartida_prorrata_applied
+    deduccion_maternidad_applied: profile.descendiente.deduccion_maternidad_applied
+    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
+  errors:
+    foral_regime: profile.errors.foral_regime
+    not_configured: profile.errors.not_configured
+  keys:
+    description: profile.keys.description
+review:
+  filing:
+    draft_placeholder_summary: review.filing.draft_placeholder_summary
+    finding_summary: review.filing.finding_summary
+    stale_approval_summary: review.filing.stale_approval_summary
+  invoice:
+    summary: review.invoice.summary
+  transaction:
+    summary: review.transaction.summary
+transactions:
+  import:
+    message_053465: transactions.import.message_053465
+    message_082074: transactions.import.message_082074
+    message_185962: transactions.import.message_185962
+    message_829073: transactions.import.message_829073
+    unreadable: transactions.import.unreadable
+    verified: transactions.import.verified
+  test_diagnostics:
+    message: transactions.test_diagnostics.message
+wizard:
+  choices:
+    general: wizard.choices.general
+    irpf: wizard.choices.irpf
+    iva: wizard.choices.iva
+    simplificado: wizard.choices.simplificado
+  demo:
+    description: wizard.demo.description
+    section:
+      title: wizard.demo.section.title
+    title: wizard.demo.title
+  errors:
+    unsupported_console: wizard.errors.unsupported_console
+    unsupported_console_edit: wizard.errors.unsupported_console_edit
+  other:
+    description: wizard.other.description
+    section:
+      title: wizard.other.section.title
+    title: wizard.other.title
+  progress:
+    question_prefix: wizard.progress.question_prefix
+    section_header: wizard.progress.section_header
+  setup:
+    certificate:
+      path:
+        prompt: wizard.setup.certificate.path.prompt
+    codes:
+      sex:
+        choices:
+          h:
+            label: wizard.setup.codes.sex.choices.h.label
+          m:
+            label: wizard.setup.codes.sex.choices.m.label
+    description: wizard.setup.description
+    enrollment:
+      title: wizard.setup.enrollment.title
+    family:
+      title: wizard.setup.family.title
+    flags:
+      activity:
+        help: wizard.setup.flags.activity.help
+      name:
+        help: wizard.setup.flags.name.help
+      notes:
+        help: wizard.setup.flags.notes.help
+      surnames:
+        help: wizard.setup.flags.surnames.help
+    iva:
+      title: wizard.setup.iva.title
+    notes:
+      notes:
+        prompt: wizard.setup.notes.notes.prompt
+      title: wizard.setup.notes.title
+    obligations:
+      title: wizard.setup.obligations.title
+    profile:
+      activity:
+        prompt: wizard.setup.profile.activity.prompt
+      name:
+        prompt: wizard.setup.profile.name.prompt
+      output-language:
+        choices:
+          ca:
+            label: wizard.setup.profile.output-language.choices.ca.label
+          en:
+            label: wizard.setup.profile.output-language.choices.en.label
+          es:
+            label: wizard.setup.profile.output-language.choices.es.label
+          eu:
+            label: wizard.setup.profile.output-language.choices.eu.label
+          hu:
+            label: wizard.setup.profile.output-language.choices.hu.label
+      regimes:
+        prompt: wizard.setup.profile.regimes.prompt
+      surnames:
+        prompt: wizard.setup.profile.surnames.prompt
+      title: wizard.setup.profile.title
+    residence:
+      title: wizard.setup.residence.title
+    spouse:
+      title: wizard.setup.spouse.title
+    taxpayer:
+      title: wizard.setup.taxpayer.title
+    title: wizard.setup.title
+    verifier:
+      activity_present: wizard.setup.verifier.activity_present
+      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
+      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
+      joint_taxation_situacion_familiar_ok: wizard.setup.verifier.joint_taxation_situacion_familiar_ok
+      joint_taxation_situacion_familiar_refused: wizard.setup.verifier.joint_taxation_situacion_familiar_refused
+      monoparental_requires_hijos_ok: wizard.setup.verifier.monoparental_requires_hijos_ok
+      monoparental_requires_hijos_warning: wizard.setup.verifier.monoparental_requires_hijos_warning
+      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
+      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
+      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
+      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
+      tax_id_present: wizard.setup.verifier.tax_id_present
+  test:
+    description: wizard.test.description
+    example:
+      choices:
+        'yes':
+          description: wizard.test.example.choices.yes.description
+          label: wizard.test.example.choices.yes.label
+      help: wizard.test.example.help
+      prompt: wizard.test.example.prompt
+    main:
+      title: wizard.test.main.title
+    title: wizard.test.title
