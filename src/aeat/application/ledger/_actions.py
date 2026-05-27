@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import csv
 import hashlib
+import io
 import json
 from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
+
+if TYPE_CHECKING:
+    from ...domain.transactions._classification_rule import LedgerClassificationRule
 
 from ...adapters.inbound.financial.providers import (
     CsvProvider,
@@ -33,6 +38,11 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
     derive_bucket_event_id,
+)
+from ...domain.currency import (
+    CurrencyNormalizationService,
+    CurrencyNormalizationStatus,
+    MonetaryAmount,
 )
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
@@ -63,11 +73,6 @@ from ...domain.transactions import (
     derive_split_group_id,
     derive_transaction_id,
 )
-from ...domain.currency import (
-    CurrencyNormalizationService,
-    CurrencyNormalizationStatus,
-    MonetaryAmount,
-)
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
@@ -78,6 +83,12 @@ from ..aggregation import Period
 from ..export import serialize_tabular_rows
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._models import (
+    BULK_CLASSIFY_ALLOWED_COLUMNS,
+    ApplyRulesAppliedRow,
+    ApplyRulesResult,
+    BulkClassifyFailure,
+    BulkClassifyResult,
+    BulkClassifyRow,
     LedgerCatalogueResetReport,
     LedgerExportCommand,
     LedgerExportResult,
@@ -95,6 +106,9 @@ from ._models import (
     LedgerStatusReport,
     LedgerTransactionPayload,
     LedgerTransactionRemovalReport,
+    LedgerTransactionResultPayload,
+    LedgerTransactionReviewPayload,
+    LedgerTransactionTrackingPayload,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -286,9 +300,7 @@ def _apply_fx_conversion(
     if raw.currency == "EUR" or currency_normalizer is None:
         return (None, None)
     rate_date = raw.value_date or raw.booked_date
-    result = currency_normalizer.normalize(
-        MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date
-    )
+    result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)
     if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
         return (None, None)
     return (result.rate, result.eur_amount)
@@ -311,9 +323,7 @@ def _evaluate_import_rows(
     the ``--dry-run`` preview, so the preview count is exact.
     """
 
-    existing_fingerprints = {
-        _transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()
-    }
+    existing_fingerprints = {_transaction_dedup_fingerprint(transaction) for transaction in catalogue.values()}
     existing_day_keys = {derive_movement_day_key(transaction.raw) for transaction in catalogue.values()}
     imported: list[Transaction] = []
     skipped_refs: list[BucketTransactionRef] = []
@@ -322,9 +332,7 @@ def _evaluate_import_rows(
     for raw in raw_rows:
         fingerprint = derive_import_fingerprint(raw)
         if fingerprint in existing_fingerprints or fingerprint in batch_fingerprints:
-            skipped_refs.append(
-                BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw))
-            )
+            skipped_refs.append(BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw)))
             continue
         fx_rate, value_in_eur = _apply_fx_conversion(raw, currency_normalizer)
         transaction = Transaction.model_validate(
@@ -1053,11 +1061,11 @@ def ledger_transaction_review_status(transaction: Transaction) -> str:
     return "pending"
 
 
-def ledger_transaction_payload(transaction: Transaction) -> dict[str, object]:
+def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
     """Return the canonical CLI/API projection for one ledger transaction."""
 
     raw = transaction.raw
-    payload = LedgerTransactionPayload(
+    return LedgerTransactionPayload(
         transaction_id=transaction.transaction_id,
         date=(raw.value_date or raw.booked_date).isoformat(),
         booked_date=raw.booked_date.isoformat(),
@@ -1081,40 +1089,61 @@ def ledger_transaction_payload(transaction: Transaction) -> dict[str, object]:
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
     )
-    return payload.model_dump(mode="python")
 
 
-def ledger_transaction_review_payload(transaction: Transaction) -> dict[str, object]:
+def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransactionReviewPayload:
     """Return one ledger transaction projection plus derived operator review status."""
 
-    return {
-        **ledger_transaction_payload(transaction),
-        "review_status": ledger_transaction_review_status(transaction),
-    }
+    raw = transaction.raw
+    return LedgerTransactionReviewPayload(
+        transaction_id=transaction.transaction_id,
+        date=(raw.value_date or raw.booked_date).isoformat(),
+        booked_date=raw.booked_date.isoformat(),
+        value_date=raw.value_date.isoformat() if raw.value_date else None,
+        amount=_display_decimal(raw.amount),
+        currency=raw.currency,
+        direction=transaction.direction.value,
+        counterparty=raw.counterparty or "",
+        description=raw.description,
+        business_classification=transaction.business_classification.value,
+        business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
+        category_id=transaction.category_id,
+        taxable_base=_display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
+        iva_rate=_display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
+        iva_amount=_display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
+        irpf_category=transaction.irpf_category,
+        usage_ratio_id=transaction.usage_ratio_id,
+        prorrata_reference=transaction.prorrata_reference,
+        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
+        attachment_ids=transaction.attachment_ids,
+        notes=transaction.notes,
+        lifecycle_state=transaction.lifecycle_state.value,
+        review_status=ledger_transaction_review_status(transaction),
+    )
 
 
-def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> dict[str, object]:
+def ledger_transaction_result_payload(result: ManualLedgerTransactionResult) -> LedgerTransactionResultPayload:
     """Return the canonical projection for a single ledger mutation/read result."""
 
-    return {
-        "bucket_id": result.ref.bucket_id,
-        "transaction_id": result.ref.transaction_id,
-        "review_status": ledger_transaction_review_status(result.transaction),
-        "transaction": ledger_transaction_payload(result.transaction),
-    }
+    return LedgerTransactionResultPayload(
+        bucket_id=result.ref.bucket_id,
+        transaction_id=result.ref.transaction_id,
+        review_status=ledger_transaction_review_status(result.transaction),
+        transaction=ledger_transaction_payload(result.transaction),
+    )
 
 
-def ledger_transaction_tracking_payload(transaction: Transaction) -> dict[str, object]:
+def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTransactionTrackingPayload:
     """Return durable event lineage fields for one ledger transaction."""
 
-    return {
-        "transaction_id": transaction.transaction_id,
-        "created_event_id": transaction.created_event_id,
-        "evidence_provenance": [item.model_dump(mode="json") for item in transaction.evidence_provenance],
-        "edit_lineage": [item.model_dump(mode="json") for item in transaction.edit_lineage],
-        "lifecycle_state": transaction.lifecycle_state.value,
-        "lifecycle_lineage": [item.model_dump(mode="json") for item in transaction.lifecycle_lineage],
-    }
+    return LedgerTransactionTrackingPayload(
+        transaction_id=transaction.transaction_id,
+        created_event_id=transaction.created_event_id,
+        evidence_provenance=transaction.evidence_provenance,
+        edit_lineage=transaction.edit_lineage,
+        lifecycle_state=transaction.lifecycle_state.value,
+        lifecycle_lineage=transaction.lifecycle_lineage,
+    )
 
 
 def _ledger_review_row(transaction: Transaction, *, include_transaction: bool) -> LedgerReviewRow:
@@ -1298,6 +1327,7 @@ def update_manual_transaction_fields(
     patch: ManualLedgerTransactionPatch,
     actor: str,
     source_command: str,
+    classified_by_override: str | None = None,
     reaffirm: bool = False,
     transaction_repository: TransactionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
@@ -1324,6 +1354,7 @@ def update_manual_transaction_fields(
         patch=patch,
         actor=actor,
         source_command=source_command,
+        classified_by_override=classified_by_override,
     )
     # Re-affirmation: operator supplied the same ``business_classification`` the record already
     # carries.  ``_command_from_patch`` produces a command identical to the stored transaction,
@@ -1331,7 +1362,11 @@ def update_manual_transaction_fields(
     # field-for-field-identical commands originating from a ``business_classification`` patch as
     # confirmed no-ops rather than errors (option b from the S14 architecture verdict).
     # When ``reaffirm`` is True the operator explicitly requests re-application; skip the guard.
-    if not reaffirm and "business_classification" in patch.model_fields_set and _command_matches_current(command, current):
+    if (
+        not reaffirm
+        and "business_classification" in patch.model_fields_set
+        and _command_matches_current(command, current)
+    ):
         return _result(bucket_id, current, ())
     return update_manual_transaction(
         transaction_id=transaction_id,
@@ -2220,6 +2255,7 @@ def _command_from_patch(
     patch: ManualLedgerTransactionPatch,
     actor: str,
     source_command: str,
+    classified_by_override: str | None = None,
 ) -> ManualLedgerTransactionCommand:
     raw = current.raw
     patch_fields = patch.model_fields_set
@@ -2287,6 +2323,7 @@ def _command_from_patch(
         counterparty_eu_member_state=counterparty_eu_member_state,
         actor=actor,
         source_command=source_command,
+        classified_by_override=classified_by_override,
     )
 
 
@@ -3013,7 +3050,7 @@ def _transaction_from_command(
         payload.update(
             {
                 "classified_at": occurred_at,
-                "classified_by": "manual",
+                "classified_by": command.classified_by_override if command.classified_by_override else "manual",
                 "classification_reason": command.source_command,
                 "classification_confidence": Decimal("1"),
             }
@@ -3203,6 +3240,267 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
     )
 
 
+def bulk_classify_from_csv(
+    *,
+    bucket_id: str,
+    csv_text: str,
+    actor: str,
+    source_command: str = "aeat app ledger classify",
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+) -> BulkClassifyResult:
+    """Apply batch classifications from a CSV string.
+
+    The CSV must contain ``transaction_id`` and ``classification`` columns;
+    ``category_id`` is optional. Unknown columns are rejected before
+    any writes. Rows that fail validation (unknown transaction id, invalid
+    classification value, pydantic error) are collected in ``failures``
+    and the remaining valid rows are applied (partial-success semantics
+    matching the ledger import pattern).
+    """
+
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repo = bucket_event_repository or BucketEventHistoryRepository()
+
+    # Parse the CSV header to detect unknown columns before touching storage.
+    reader = csv.DictReader(io.StringIO(csv_text))
+    if reader.fieldnames is None:
+        return BulkClassifyResult(total=0, applied=0, skipped=0)
+    unknown = frozenset(reader.fieldnames) - BULK_CLASSIFY_ALLOWED_COLUMNS
+    if unknown:
+        raise TransactionValidationError(
+            f"bulk classify CSV contains unknown columns: {', '.join(sorted(unknown))}",
+            context={"unknown_columns": sorted(unknown)},
+        )
+    if "transaction_id" not in reader.fieldnames or "classification" not in reader.fieldnames:
+        raise TransactionValidationError(
+            "bulk classify CSV must include 'transaction_id' and 'classification' columns",
+        )
+
+    parsed_rows: list[BulkClassifyRow] = []
+    parse_failures: list[BulkClassifyFailure] = []
+    for idx, raw_row in enumerate(reader):
+        try:
+            parsed_rows.append(
+                BulkClassifyRow.model_validate(
+                    {k: (v.strip() if v else v) for k, v in raw_row.items()},
+                    strict=False,
+                )
+            )
+        except Exception as exc:
+            parse_failures.append(
+                BulkClassifyFailure(
+                    row_index=idx,
+                    transaction_id=raw_row.get("transaction_id", ""),
+                    reason=str(exc),
+                )
+            )
+
+    apply_failures: list[BulkClassifyFailure] = []
+    all_event_ids: list[str] = []
+    applied = 0
+    skipped = 0
+
+    for idx, row in enumerate(parsed_rows):
+        patch = ManualLedgerTransactionPatch(
+            business_classification=row.classification,
+            category_id=row.category_id,
+        )
+        try:
+            result = update_manual_transaction_fields(
+                bucket_id=bucket_id,
+                transaction_id=row.transaction_id,
+                patch=patch,
+                actor=actor,
+                source_command=source_command,
+                reaffirm=False,
+                transaction_repository=repository,
+                bucket_event_repository=event_repo,
+            )
+            all_event_ids.extend(result.bucket_event_ids)
+            if result.bucket_event_ids:
+                applied += 1
+            else:
+                # update_manual_transaction_fields returned without events:
+                # classification was already identical — treat as skipped.
+                skipped += 1
+        except Exception as exc:
+            apply_failures.append(
+                BulkClassifyFailure(
+                    row_index=idx,
+                    transaction_id=row.transaction_id,
+                    reason=str(exc),
+                )
+            )
+
+    all_failures = parse_failures + apply_failures
+    return BulkClassifyResult(
+        total=len(parsed_rows) + len(parse_failures),
+        applied=applied,
+        skipped=skipped,
+        failures=tuple(all_failures),
+        bucket_event_ids=tuple(all_event_ids),
+    )
+
+
+def add_classification_rule(
+    *,
+    bucket_id: str,
+    description_pattern: str,
+    classification: BusinessClassification,
+    category_id: str | None = None,
+    priority: int = 100,
+    actor: str,
+    rule_repository: object | None = None,
+) -> LedgerClassificationRule:
+    """Persist a new ledger classification rule and return it.
+
+    ``rule_id`` is content-addressed: adding the same
+    ``description_pattern + classification + category_id`` combination
+    twice produces the same id and the repository save overwrites the
+    prior entry (idempotent creation).
+
+    Raises :class:`ValueError` when ``description_pattern`` is not a
+    valid regex (validated by :class:`~aeat.domain.transactions._classification_rule.LedgerClassificationRule`).
+    """
+
+    from typing import cast
+
+    from ...domain.transactions._classification_rule import LedgerClassificationRule
+    from ._rule_repository import LedgerClassificationRuleRepository
+
+    repo: LedgerClassificationRuleRepository = (
+        cast(LedgerClassificationRuleRepository, rule_repository)
+        if rule_repository is not None
+        else LedgerClassificationRuleRepository()
+    )
+    rule = LedgerClassificationRule.create(
+        description_pattern=description_pattern,
+        classification=classification,
+        category_id=category_id,
+        priority=priority,
+        actor=actor,
+    )
+    repo.save(rule)
+    return rule
+
+
+def apply_classification_rules(
+    *,
+    bucket_id: str,
+    reaffirm: bool = False,
+    actor: str,
+    source_command: str = "aeat app ledger rule apply",
+    transaction_repository: TransactionCatalogueRepository | None = None,
+    bucket_event_repository: BucketEventHistoryRepository | None = None,
+    rule_repository: object | None = None,
+) -> ApplyRulesResult:
+    """Apply stored classification rules to unclassified ACTIVE transactions.
+
+    Scope: ACTIVE transactions in ``NOT_YET_PROCESSED`` state.
+    When ``reaffirm=True``, also includes ACTIVE transactions where
+    ``classified_by == "manual"`` so the operator can explicitly
+    re-run the rule engine over manually classified rows.
+
+    Rules are evaluated in priority order (lower number = higher priority);
+    the first matching rule wins. Match is ``re.search(pattern, description,
+    re.IGNORECASE)``.
+    """
+
+    from typing import cast
+
+    from ._rule_repository import LedgerClassificationRuleRepository
+
+    tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    event_repo = bucket_event_repository or BucketEventHistoryRepository()
+    rule_repo: LedgerClassificationRuleRepository = (
+        cast(LedgerClassificationRuleRepository, rule_repository)
+        if rule_repository is not None
+        else LedgerClassificationRuleRepository()
+    )
+
+    rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
+    catalogue = tx_repo.load()
+
+    all_event_ids: list[str] = []
+    applied_rows: list[ApplyRulesAppliedRow] = []
+
+    def _in_scope(tx: Transaction) -> bool:
+        if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            return False
+        if tx.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+            return True
+        return reaffirm and tx.classified_by == "manual"
+
+    active_txs = [tx for tx in catalogue.transactions.values() if _in_scope(tx)]
+    transactions_scanned = len(active_txs)
+    skipped_already_classified = sum(
+        1
+        for tx in catalogue.transactions.values()
+        if tx.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and not _in_scope(tx)
+        and tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED
+    )
+
+    no_match = 0
+    for tx in active_txs:
+        rule_matched: LedgerClassificationRule | None = None
+        for rule in rules:
+            if rule.matches(tx.raw.description or ""):
+                rule_matched = rule
+                break
+        if rule_matched is None:
+            no_match += 1
+            continue
+
+        patch = ManualLedgerTransactionPatch(
+            business_classification=rule_matched.classification,
+            category_id=rule_matched.category_id,
+        )
+        try:
+            result = update_manual_transaction_fields(
+                bucket_id=bucket_id,
+                transaction_id=tx.transaction_id,
+                patch=patch,
+                actor=actor,
+                classified_by_override=f"rule:{rule_matched.rule_id}",
+                source_command=source_command,
+                reaffirm=reaffirm,
+                transaction_repository=tx_repo,
+                bucket_event_repository=event_repo,
+            )
+            all_event_ids.extend(result.bucket_event_ids)
+            applied_rows.append(
+                ApplyRulesAppliedRow(
+                    transaction_id=tx.transaction_id,
+                    matched_rule_id=rule_matched.rule_id,
+                    classification=rule_matched.classification,
+                )
+            )
+        except Exception:
+            no_match += 1
+
+    return ApplyRulesResult(
+        rules_evaluated=len(rules),
+        transactions_scanned=transactions_scanned,
+        matched=len(applied_rows),
+        skipped_already_classified=skipped_already_classified,
+        no_match=no_match,
+        applied=tuple(applied_rows),
+        bucket_event_ids=tuple(all_event_ids),
+    )
+
+
+def _result(
+    bucket_id: str,
+    transaction: Transaction,
+    bucket_event_ids: tuple[str, ...],
+) -> ManualLedgerTransactionResult:
+    return ManualLedgerTransactionResult(
+        ref=BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
+        transaction=transaction,
+        bucket_event_ids=bucket_event_ids,
+    )
 def _build_bucket_event(
     *,
     bucket_id: str,
@@ -3319,15 +3617,3 @@ def _import_batch_id(
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
-
-
-def _result(
-    bucket_id: str,
-    transaction: Transaction,
-    bucket_event_ids: tuple[str, ...],
-) -> ManualLedgerTransactionResult:
-    return ManualLedgerTransactionResult(
-        ref=BucketTransactionRef(bucket_id=bucket_id, transaction_id=transaction.transaction_id),
-        transaction=transaction,
-        bucket_event_ids=bucket_event_ids,
-    )
