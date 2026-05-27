@@ -301,3 +301,185 @@ def test_casilla_01_target_matches_expected_binding_contract() -> None:
 
     assert all(o.target_casilla == "01" for o in result.observations)
     assert result.casilla_aggregation.modelo == "130"
+
+
+# ---------------------------------------------------------------------------
+# S342: irpf_category filter + taxable_base_sum fact
+# Grounded in RD 439/2007 art. 110.2 — only actividades económicas feed M130.
+# ---------------------------------------------------------------------------
+
+
+def _actividad_transaction(
+    provider_id: str,
+    *,
+    value_date: date,
+    amount: Decimal = Decimal("1000.00"),
+    taxable_base: Decimal | None = None,
+    irpf_category: str | None = "actividad_economica",
+    business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
+    business_pct: Decimal | None = None,
+) -> Transaction:
+    """Build a transaction tagged for actividad económica.
+
+    Defaults to UNCLASSIFIED business_classification to exercise the
+    irpf_category override path (the bug Andrea reported).
+    """
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                provider_id,
+                booked_date=value_date,
+                value_date=value_date,
+                amount=amount,
+            ),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": business_classification,
+            "business_pct": business_pct,
+            "purchase_invoice_evidence_id": None,
+            "category_id": None,
+            "taxable_base": taxable_base,
+            "iva_rate": None,
+            "iva_amount": None,
+            "irpf_category": irpf_category,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+        }
+    )
+
+
+def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
+    """irpf_category='actividad_economica' is the M130 eligibility gate.
+
+    RD 439/2007 art. 110.2: pagos fraccionados apply to rendimientos de
+    actividades económicas.  A transaction explicitly tagged as
+    irpf_category='actividad_economica' must flow to casilla 01 even when
+    business_classification has not yet been resolved (UNCLASSIFIED).
+
+    This is the root-cause regression: Andrea's transactions had
+    irpf_category set but business_classification=UNCLASSIFIED, causing
+    _income_business_amount to return None and casilla 01 to be 0.
+    """
+    # Amount matches the AEAT professional-services income example: a single
+    # quarterly invoice of 3000 EUR from estimación directa simplified.
+    amount = Decimal("3000.00")
+    tx = _actividad_transaction(
+        "ae-001",
+        value_date=date(2024, 2, 1),
+        amount=amount,
+        business_classification=BusinessClassification.NOT_YET_PROCESSED,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+
+    assert len(result.observations) == 1, result
+    assert result.observations[0].gross_amount == amount
+    assert result.casilla_aggregation.casilla_values["01"] == amount
+    assert result.issues == ()
+
+
+def test_trabajo_income_excluded_from_m130() -> None:
+    """irpf_category='trabajo' transactions are excluded from M130 casillas.
+
+    Rendimientos del trabajo (nóminas) are never subject to M130 pagos
+    fraccionados — only actividades económicas trigger M130 (RD 439/2007
+    art. 110.1). The pipeline must reject trabajo entries with TRABAJO_INCOME
+    reason so they do not inflate casilla 01.
+    """
+    nomina = _actividad_transaction(
+        "nomina-001",
+        value_date=date(2024, 1, 31),
+        amount=Decimal("2500.00"),
+        irpf_category="trabajo",
+        business_classification=BusinessClassification.BUSINESS,
+    )
+    actividad = _actividad_transaction(
+        "ae-002",
+        value_date=date(2024, 1, 15),
+        amount=Decimal("1800.00"),
+    )
+    catalogue = TransactionCatalogue.from_transactions((nomina, actividad))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+
+    assert len(result.observations) == 1
+    assert result.observations[0].transaction_id == actividad.transaction_id
+    assert len(result.issues) == 1
+    assert result.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME
+    assert result.issues[0].transaction_id == nomina.transaction_id
+    # casilla 01 only reflects the actividad transaction
+    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1800.00")
+
+
+def test_taxable_base_amount_populated_when_set() -> None:
+    """RentaIncomeObservation carries taxable_base_amount when transaction has taxable_base.
+
+    The taxable_base_sum fact path lets the registry resolver sum the
+    VAT-exclusive base imponible rather than gross_amount.  When a transaction
+    carries taxable_base, the observation's taxable_base_amount must equal it.
+    """
+    # Professional invoice: 1000 EUR net + 210 EUR IVA = 1210 EUR gross.
+    # The IRPF base (taxable_base) is the VAT-exclusive 1000 EUR.
+    gross = Decimal("1210.00")
+    taxable = Decimal("1000.00")
+    tx = _actividad_transaction(
+        "ae-inv-001",
+        value_date=date(2024, 3, 15),
+        amount=gross,
+        taxable_base=taxable,
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+
+    assert len(result.observations) == 1
+    obs = result.observations[0]
+    assert obs.gross_amount == gross
+    assert obs.taxable_base_amount == taxable
+
+
+def test_anti_tautology_irpf_category_controls_flow() -> None:
+    """Anti-tautology: changing irpf_category changes which transactions flow.
+
+    If the irpf_category filter were ignored, both test scenarios would
+    produce the same casilla 01 total.  The inequality below fails if the
+    filter has no effect.
+    """
+    amount = Decimal("5000.00")
+
+    # Scenario A: one actividad + one trabajo — only actividad should flow
+    actividad = _actividad_transaction(
+        "ae-a", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+    )
+    trabajo = _actividad_transaction(
+        "trab-a",
+        value_date=date(2024, 2, 15),
+        amount=amount,
+        irpf_category="trabajo",
+        business_classification=BusinessClassification.BUSINESS,
+    )
+    catalogue_a = TransactionCatalogue.from_transactions((actividad, trabajo))
+    result_a = aggregate_renta_income_ledger(catalogue_a, bucket_id="test", period="2024Q1")
+
+    # Scenario B: both transactions as actividad — both should flow
+    actividad_b1 = _actividad_transaction(
+        "ae-b1", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+    )
+    actividad_b2 = _actividad_transaction(
+        "ae-b2", value_date=date(2024, 2, 15), amount=amount, irpf_category="actividad_economica"
+    )
+    catalogue_b = TransactionCatalogue.from_transactions((actividad_b1, actividad_b2))
+    result_b = aggregate_renta_income_ledger(catalogue_b, bucket_id="test", period="2024Q1")
+
+    casilla_a = result_a.casilla_aggregation.casilla_values.get("01", Decimal("0"))
+    casilla_b = result_b.casilla_aggregation.casilla_values.get("01", Decimal("0"))
+
+    assert casilla_a != casilla_b, (
+        f"Anti-tautology failure: both scenarios produced casilla_01={casilla_a}; "
+        "irpf_category filter has no effect"
+    )
+    # Scenario A: only actividad flows
+    assert casilla_a == amount
+    # Scenario B: both flow
+    assert casilla_b == amount * 2
