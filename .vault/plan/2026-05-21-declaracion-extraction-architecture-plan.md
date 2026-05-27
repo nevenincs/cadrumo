@@ -421,7 +421,7 @@ cross-campaign sweeps audit + M193 reversal verify + M190 rename ADR amendment +
 - [x] `W08.P35.S186` - Re-audit M193 _total suffix conclusion against M180 real-corpus extraction behaviour or document remaining uncertainty inline; `src/aeat/_data/registry/aeat/modelos/193.toml`.
 - [x] `W08.P35.S187` - Audit select_revision callers for case-sensitive period expectations regressed by _temporal.py case-insensitive comparison fix; `src/aeat/domain/calculations/registry/_temporal.py`.
 - [x] `W08.P35.S188` - Author ADR amendment recording M190 revision rename rationale 2025-y-siguientes to 2024-y-siguientes year_from=2024; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
-- [ ] `W08.P35.S189` - Document cross-campaign plan-doc attribution scatter and consolidate where reasonable; `.vault/plan/`.
+- [x] `W08.P35.S189` - DOCUMENTED in audit .vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md M5 finding — plan-doc attribution scatter (#39 to secure-storage plan, #40 to schema-hardening plan, #36 bonus to schema-hardening) is operationally acceptable given factory-direct shared-worktree mode; `consolidation not warranted because the work is correctly tracked where the canonical step records live and cross-plan linking via wiki-links provides traceability; `.vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md`.
 
 ### Phase `W08.P36` - LOW-severity housekeeping
 
