@@ -536,13 +536,15 @@ def _probe_secure_objects_integrity() -> SecureObjectIntegrityReport:
     rotated master-key generation.
     """
     _ensure_models_rebuilt()
+    from ..adapters.persistence.storage.runtime_repository import (
+        secure_object_repository_for_active_bucket_or_default_route,
+    )
     from ..adapters.persistence.storage.sql.secure_objects import (
         SecureObjectNamespaceIntegrity,
-        SecureObjectRepository,
     )
 
     try:
-        repo = SecureObjectRepository()
+        repo = secure_object_repository_for_active_bucket_or_default_route()
         namespaces = repo.list_namespaces()
     except Exception as exc:  # pragma: no cover - engine resolution depends on local backend.
         _log.debug(
@@ -996,7 +998,10 @@ def preview_quarantine_unreadable_secure_objects() -> SecureObjectIntegrityRepor
     preview shape ``reset-state --dry-run`` already offers.
     """
 
-    return _probe_secure_objects_integrity()
+    from .repair_integrity import active_bucket_repair_session
+
+    with active_bucket_repair_session():
+        return _probe_secure_objects_integrity()
 
 
 def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
@@ -1020,10 +1025,14 @@ def quarantine_unreadable_secure_objects() -> SecureObjectIntegrityReport:
         in ``secure_objects``).
     """
     _ensure_models_rebuilt()
-    from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+    from ..adapters.persistence.storage.runtime_repository import (
+        secure_object_repository_for_active_bucket_or_default_route,
+    )
+    from .repair_integrity import active_bucket_repair_session
 
-    repo = SecureObjectRepository()
-    namespaces = repo.quarantine_unreadable_rows()
+    with active_bucket_repair_session():
+        repo = secure_object_repository_for_active_bucket_or_default_route()
+        namespaces = repo.quarantine_unreadable_rows()
     quarantined_total = sum(item.unreadable for item in namespaces)
     retained_total = sum(item.readable for item in namespaces)
     return SecureObjectIntegrityReport(

@@ -971,9 +971,9 @@ Reconcile the repair CLI command surface with the privacy contract so diagnostic
 
 Turn the residual deprecated-token scan into durable guard coverage so intentional explicit-route tests remain allowed while new low-level env, passphrase, or repository shortcuts are rejected.
 
-- [ ] `W15.P32.S409` - Add guard coverage against direct passphrase-env imports and unapproved explicit database-url test setup; `src/aeat/adapters/persistence/storage`.
-- [ ] `W15.P32.S410` - Require CLI storage tests to use centralized Settings or secure-sql runtime helpers instead of naked AEAT env wrangling; `src/aeat/tests`.
-- [ ] `W15.P32.S411` - Persist an approved residual-hit inventory for cold-start leak guards and explicit-route refusal tests; `.vault/audit`.
+- [x] `W15.P32.S409` - Add guard coverage against direct passphrase-env imports and unapproved explicit database-url test setup; `src/aeat/adapters/persistence/storage`.
+- [x] `W15.P32.S410` - Require CLI storage tests to use centralized Settings or secure-sql runtime helpers instead of naked AEAT env wrangling; `src/aeat/tests`.
+- [x] `W15.P32.S411` - Persist an approved residual-hit inventory for cold-start leak guards and explicit-route refusal tests; `.vault/audit`.
 
 ### Phase `W15.P33` - storage hierarchy constants and namespace inventory
 

@@ -12,7 +12,10 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from aeat.adapters.persistence.storage import (
     EphemeralMasterKeyProvider,
+    has_active_bucket_session,
 )
+from aeat.adapters.persistence.storage.master_key._active_session import _active_session
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.core.classification import SensitivityClass
@@ -33,6 +36,19 @@ from .diagnostics import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+@pytest.fixture(autouse=True)
+def _isolated_default_secure_sql(tmp_path: Path) -> Iterator[None]:
+    """Bind diagnostics tests to an isolated storage root by default."""
+
+    storage_root = tmp_path / "diagnostics-storage"
+    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
 
 
 @contextmanager
@@ -427,6 +443,50 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
         ).fetchone()
     assert active == 3, f"preview must not delete rows; got {active} left"
     assert archive_exists is None, "preview must not create the quarantine table"
+
+
+def test_quarantine_preview_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
+    namespace = "aeat.workflow"
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        secure_object_repository_for_active_bucket().save(
+            namespace=namespace,
+            object_key="workflow:repair-preview",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"repair-preview-sessionless",
+        )
+        token = _active_session.set(None)
+        assert not has_active_bucket_session()
+        try:
+            report = preview_quarantine_unreadable_secure_objects()
+        finally:
+            _active_session.reset(token)
+
+    assert report.readable_total + report.unreadable_total >= 1
+    assert any(item.namespace == namespace for item in report.namespaces)
+
+
+def test_quarantine_opens_session_for_bootstrap_exempt_repair(tmp_path: Path) -> None:
+    namespace = "aeat.workflow"
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        secure_object_repository_for_active_bucket().save(
+            namespace=namespace,
+            object_key="workflow:repair-quarantine",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime.now(UTC),
+            payload=b"repair-quarantine-sessionless",
+        )
+        token = _active_session.set(None)
+        assert not has_active_bucket_session()
+        try:
+            report = quarantine_unreadable_secure_objects()
+        finally:
+            _active_session.reset(token)
+
+    assert report.readable_total + report.unreadable_total >= 1
+    assert any(item.namespace == namespace for item in report.namespaces)
 
 
 def test_importing_diagnostics_does_not_pull_the_browser_or_registry_subtree() -> None:
