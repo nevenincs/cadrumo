@@ -942,9 +942,15 @@ cli:
         sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped by the 50% share-capital threshold. Use it with --sal-reserva-dotada and --sal-capital-social.'
         sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has already reached 50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
         sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Denominator for the 50% test: the allocation is zero once accumulated reserve reaches 50% of share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
+        autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties converted to the rental estate. The assistant automatically applies 21% (Art. 90 LISIVA) to compute the VAT charge. Applicable to Modelo 303 only.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be a decimal amount; received: {value}'
         sal_reserva_casilla_not_found: '--sal-beneficio-neto is not supported for this modelo revision; no worker-owned company special reserve casilla is declared. Use --casilla to supply inputs directly.'
         sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.'
         sal_reserva_not_decimal: '--sal-* values must be decimal amounts.'
+        compare_taxation_help: 'Compare IRPF cuota under joint (conjunta, Art. 82-84 LIRPF) vs. individual filing for an existing Modelo 100 work unit. Runs the registry engine twice — once with declaration_type=2 (conjunta) and once with declaration_type=1 (individual) — over identical profile bindings, and outputs the cuota differential and a recommendation. Ephemeral: no revision is persisted.'
+        compare_taxation_work_unit_not_found: 'Work unit {work_unit_id} not found; check active units with ''aeat app modelo work list''.'
+        compare_taxation_error: 'Conjunta vs. individual comparison not available: {detail}'
+        compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} — {reason}'
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -1932,6 +1938,11 @@ cli:
       verify_help: Verify the manual integrity against its contract
       view_help: Show a manual structure and, optionally, one section
       year_help: Tax year of the manual (e.g. 2024)
+      verify_missing_translation: 'section %{section_id}: %{field_name} missing translation key'
+      verify_dangling_section_ref: 'section %{section_id} references unknown section %{target}'
+      verify_dangling_rule_section_ref: 'rule %{rule_id} references unknown section %{target}'
+      verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch'' to materialise it'
+      verify_failed: 'verification failed for %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: Applicability declaration count
       application_link_count: Application link count

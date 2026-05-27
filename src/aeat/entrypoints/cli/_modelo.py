@@ -2798,6 +2798,22 @@ def work_calculate(
             ),
         ),
     ] = None,
+    autoconsumo_promotor_base: Annotated[
+        str | None,
+        typer.Option(
+            "--autoconsumo-promotor-base",
+            help=tr(
+                "cli.app.modelo.work.autoconsumo_promotor_base_help",
+                default=(
+                    "Base imponible del autoconsumo del promotor inmobiliario "
+                    "(Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o "
+                    "rehabilitación de inmuebles afectados al patrimonio de arrendamiento. "
+                    "El asistente aplica automáticamente el 21% (Art. 90 LISIVA) para "
+                    "calcular la cuota devengada. Sólo aplicable a Modelo 303."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2950,6 +2966,23 @@ def work_calculate(
         sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
         casilla_inputs[sal_casilla_id] = sal_dotacion
 
+    # --autoconsumo-promotor-base injects the Art. 9.1.c LISIVA construction-cost
+    # base directly into the profile binding for M303.  The registry formula
+    # modelo-303-autoconsumo-promotor-cuota multiplies it by 0.21 (Art. 90 LISIVA).
+    _AUTOCONSUMO_PROMOTOR_BINDING = "modelo-303-autoconsumo-promotor-base"
+    autoconsumo_decimal: Decimal | None = None
+    if autoconsumo_promotor_base is not None:
+        try:
+            autoconsumo_decimal = Decimal(autoconsumo_promotor_base)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
+                    value=autoconsumo_promotor_base,
+                    default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
+                )
+            ) from exc
+
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -2960,6 +2993,8 @@ def work_calculate(
             # Non-decimal binding overrides flow into the enum-binding
             # channel (e.g. profile-sourced enums like CCAA).
             enum_binding_values[k] = v
+    if autoconsumo_decimal is not None:
+        binding_values[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_decimal
     relation_values: dict[str, Decimal] = {}
     for spec in relation or ():
         key, raw_value = _parse_kv_spec(spec, flag="--relation", transform=lambda value: value)
@@ -3055,6 +3090,101 @@ def work_calculate(
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
+
+
+@work_app.command(
+    "compare-taxation",
+    help=tr("cli.app.modelo.work.compare_taxation_help"),
+)
+def work_compare_taxation(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        help=tr(
+            "cli.app.modelo.work.output_language_help",
+            default="Override the output language (e.g. es, en, ca).",
+        ),
+    ),
+) -> None:
+    """Compare conjunta vs. individual IRPF cuota for an existing Modelo 100 work unit.
+
+    Runs the registry formula engine twice — once with
+    ``declaration_type=2`` (tributación conjunta) and once with
+    ``declaration_type=1`` (tributación individual) — over the
+    same casilla inputs and profile bindings derived from the stored
+    work unit. Outputs the cuota resultante autoliquidación (0595)
+    and cuota diferencial (0610) for each mode plus the delta and a
+    recommendation.
+
+    This is an ephemeral operation: no revision is persisted.
+    """
+    from ._common import _emit_envelope, activate_subcommand_output_language
+
+    activate_subcommand_output_language(ctx, output_language)
+
+    from ...application.modelo import (
+        TaxationComparisonError,
+        WorkUnitNotFoundError,
+        compare_taxation_for_work_unit,
+    )
+
+    try:
+        comparison = compare_taxation_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.compare_taxation_work_unit_not_found",
+                work_unit_id=work_unit_id,
+                default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
+            )
+        ) from exc
+    except TaxationComparisonError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.compare_taxation_error",
+                detail=str(exc),
+                default="Taxation comparison failed: {detail}",
+            )
+        ) from exc
+
+    from ._modelo_payloads import WorkCompareTaxationResult
+
+    result = WorkCompareTaxationResult(
+        filing_year=comparison.filing_year,
+        modelo=comparison.modelo,
+        revision=comparison.revision,
+        conjunta_cuota_resultante=str(comparison.conjunta_cuota_resultante),
+        individual_cuota_resultante=str(comparison.individual_cuota_resultante),
+        conjunta_resultado=str(comparison.conjunta_resultado),
+        individual_resultado=str(comparison.individual_resultado),
+        delta_resultado=str(comparison.delta_resultado),
+        recommendation=comparison.recommendation.value,
+        recommendation_reason=comparison.recommendation_reason,
+    )
+    lines = [
+        "operation\tmodelo.work.compare_taxation",
+        f"filing_year\t{comparison.filing_year}",
+        f"modelo\t{comparison.modelo}",
+        f"revision\t{comparison.revision}",
+        f"conjunta_cuota_resultante\t{comparison.conjunta_cuota_resultante}",
+        f"individual_cuota_resultante\t{comparison.individual_cuota_resultante}",
+        f"conjunta_resultado\t{comparison.conjunta_resultado}",
+        f"individual_resultado\t{comparison.individual_resultado}",
+        f"delta_resultado\t{comparison.delta_resultado}",
+        f"recommendation\t{comparison.recommendation.value}",
+        tr(
+            "cli.app.modelo.work.compare_taxation_recommendation_line",
+            recommendation=comparison.recommendation.value,
+            reason=comparison.recommendation_reason,
+            default="RECOMENDACIÓN: {recommendation} — {reason}",
+        ),
+    ]
+    _emit_envelope(ctx, command="modelo.work.compare_taxation", result=result, lines=lines)
 
 
 @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))

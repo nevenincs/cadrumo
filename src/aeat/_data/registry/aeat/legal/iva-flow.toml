@@ -1,3 +1,43 @@
+[legal."ley-37-1992:art-9"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a9"
+document_id = "BOE-A-1992-28740"
+article = "9"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a9"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIVA art 9: operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construccion o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
+required_text = [
+    "autoconsumo",
+    "afectación",
+    "patrimonio empresarial",
+]
+
+[legal."ley-37-1992:art-79"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a79"
+document_id = "BOE-A-1992-28740"
+article = "79"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a79"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIVA art 79 apartado 4: reglas especiales de base imponible para las operaciones asimiladas a entregas de bienes (autoconsumo). La base imponible del autoconsumo es el coste de los bienes o servicios utilizados, incluidos los gastos de personal, con exclusion del beneficio industrial."
+required_text = [
+    "coste",
+    "autoconsumo",
+    "gastos de personal",
+]
+
 [legal."ley-37-1992:art-84"]
 evidence_tier = "legal_authority"
 authority = "boe"
