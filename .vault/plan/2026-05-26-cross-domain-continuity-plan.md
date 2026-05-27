@@ -262,12 +262,13 @@ _iva_ledger.py and _renta_ledger.py silently drop non-EUR. Adopt single FX-conve
 
 ledger classify accepts BUSINESS PERSONAL MIXED but no enums for entrega intracom export non-EU or ingreso con retencion suffered.
 
-- [ ] `W05.P24.S91` - extend BusinessClassification with intracom-supply intracom-acquisition export-non-EU retained-income variants; `src/aeat/domain/transactions/_models.py`.
+- [ ] `W05.P24.S91` - add iva_category IvaCategory and counterparty_eu_member_state EUMemberState fields directly on Transaction in domain transactions _models.py; `do NOT extend BusinessClassification with intracom export values per architect verdict; IvaCategory already exists in domain iva _schema.py; blocked on FU-W05-B ADR acceptance; `src/aeat/domain/transactions/_models.py`.
 - [ ] `W05.P24.S92` - add counterparty_country field on Transaction currently only on Invoice; `src/aeat/domain/transactions/_models.py`.
 - [ ] `W05.P24.S93` - extend ledger classify CLI to accept new axes; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W05.P24.S94` - wire new axes into IVA aggregation so Modelo 303 boxes 59 60 62 receive their bases; `src/aeat/application/aggregation/_iva_ledger.py`.
-- [ ] `W05.P24.S95` - regression test autonomo with EU sales has box 59 populated correctly; `src/aeat/application/aggregation/test_intracom_export.py`.
+- [ ] `W05.P24.S94` - wire new iva_category and counterparty_eu_member_state axes into IVA aggregation so Modelo 303 casillas 59 and 60 receive their bases; `casilla 62 EXCLUDED from scope (it is the criterio de caja box per art 75 LIVA not an intracom box); also handle the R12 nuance where B2B services to EU customers resolve to DOMESTIC_NOT_SUBJECT not INTRA_COMMUNITY_SUPPLY; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [ ] `W05.P24.S95` - regression test autonomo with EU sales has casilla 59 populated; `cover BOTH INTRA_COMMUNITY_SUPPLY (R10 goods) AND DOMESTIC_NOT_SUBJECT (R12 services to EU customer with counterparty_eu_member_state) routing the same casilla; Marc autonomo IT B2B services to German client is the R12 fit; `src/aeat/application/aggregation/test_intracom_export.py`.
 - [ ] `W05.P24.S281` - Criterio de caja ledger axis: add criterio_caja IvaCategory variant and wire casilla 62; `separate from intracom/export S94 scope; `src/aeat/application/aggregation/_iva_ledger.py`.
+- [ ] `W05.P24.S287` - FU-W05-B author IVA-category-and-counterparty ADR formalising the architect's four decisions: D1 field placement on Transaction not BusinessClassification, D2 no BusinessClassification extension, D3 casilla-62 criterio-de-caja scope exclusion, D4 R12 routing for B2B services to EU customer; `cite Ley 37/1992 articles 25 21 163 quinquies 75; blocks S91 implementation; `.vault/adr/`.
 
 ### Phase `W05.P25` - bulk classify CSV-driven and rule-engine
 
@@ -496,7 +497,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S279` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 10 application service payload functions returning dict[str, object] with typed pydantic models; `sites auth _diagnostics.py lines 178 185; auth _acquisition_lock.py line 217; filing _review.py line 408; aggregation _service.py line 105; operator_surface _models.py line 225; ledger _actions.py lines 1024 1055 1064 1075; complements coder1 R7-A side-fix work; `src/aeat/application/`.
 - [ ] `W09.P41.S280` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 14 cast() type-erasure operations with typed alternatives or document third-party API boundary inline per aeat-calculation-grounding; `sites workflow _adapters.py lines 107 112 141 147 203 204; registry _schema.py lines 1219 1231; registry _loader.py line 104; plus 3 pydantic Any/object field declarations at review _actions.py line 18 schedules.py line 86 workflow _models.py line 408; `src/aeat/`.
 - [ ] `W09.P41.S285` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: refactor test_cross_dependency_calculations.py M180 and M190 tests to derive expected values from AEAT workbook or grounded fixture instead of synthetic Decimal hand-computed oracles; `per no-tautological-calculation-tests rule; `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`.
-- [ ] `W09.P41.S286` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: replace monkeypatch.setenv abuse in application/auth/test_operator.py lines 230-260 and 477-521 with Settings override fixture; AEAT_CERTIFICATE_PATH and AEAT_CLAVE_MOVIL_DNI_NIE injection in application-layer tests should not use env-var monkeypatch; `src/aeat/application/auth/test_operator.py`.
+- [ ] `W09.P41.S286` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: replace monkeypatch.setenv abuse in application/auth/test_operator.py lines 230-260 and 477-521 with Settings override fixture; `AEAT_CERTIFICATE_PATH and AEAT_CLAVE_MOVIL_DNI_NIE injection in application-layer tests should not use env-var monkeypatch; `src/aeat/application/auth/test_operator.py`.
+- [ ] `W09.P41.S288` - criterio de caja casilla 62 work split out from S94; model the Ley 37/1992 art 163 quinquies cash-accounting regime; separate from the intracom axes work; out-of-scope for W05.P24 — surface as W09 or future-wave candidate; `src/aeat/application/aggregation/`.
 
 ### Phase `W09.P42` - twin function merge
 
