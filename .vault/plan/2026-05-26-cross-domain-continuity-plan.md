@@ -454,6 +454,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S216` - add test coverage for _id_resolution.py 95 LOC module; `currently has no dedicated test file; identify callers and write test_id_resolution.py; `src/aeat/application/ledger/_id_resolution.py`.
 - [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; `potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S240` - convention note FU-W04-A: commit d8bec8bd9 co-landed multiple Steps plus exec records plus new test files plus __init__.py changes in a single commit; `future executors should land Step content separately from exec records and from __init__ changes; documentation-only no code change; `.vaultspec/`.
+- [ ] `W09.P41.S241` - FU-W05-A multi-step co-landing convention note from Wave-5 audit; commit 03be9b6f4 bundled exec records and step closures; same pattern as FU-W04-A; documentation-only no code change; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
