@@ -1,0 +1,16 @@
+# Art. 110.3.b RIRPF: when retenciones e ingresos a cuenta acumulados en
+# el año natural (casilla 06) represent >= 70% of rendimientos íntegros
+# (casilla 01) the autónomo is exempt from presenting M130 that quarter.
+#
+# This advisory fires a WARNING-severity finding when the ratio condition
+# IS met. It does not block VERIFICADO_COMPLETO; it informs the operator
+# that the filing obligation is suspended for this period.
+#
+# The formula for casilla 17 (modelo-130-diferencia) already applies the
+# zero-result branch for this condition; this predicate surfaces the
+# reason in the verification report for audit-trail purposes.
+[[revisions."2019-y-siguientes".verification_predicates]]
+predicate_id = "modelo-130-art110-3b-exencion-alta-retencion"
+expression = 'advisory_when_ratio_ge(["06", "01", "0.70"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-110-3-b"]
