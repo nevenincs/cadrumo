@@ -56,6 +56,7 @@ from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
+from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
@@ -686,6 +687,111 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
         transform=lambda value: value,
         key_validator=_validate_binding_key,
     )
+
+
+# ---------------------------------------------------------------------------
+# --row TYPE FIELD=value FIELD=value parsing helpers
+#
+# Supports multi-row entry for informational modelos whose filing
+# content is a list of records rather than scalar casilla values.
+# Supported types: miembro (M184 atribución member), vinculada (M232
+# operación vinculada).  Each ``--row`` flag takes a string of the
+# form ``TYPE FIELD=value [FIELD=value ...]``.
+# ---------------------------------------------------------------------------
+
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada"})
+
+
+def _parse_row_spec(spec: str) -> ModeloDetailRow:
+    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model.
+
+    The first whitespace-separated token is the row type (``miembro`` or
+    ``vinculada``). Remaining tokens are ``KEY=VALUE`` pairs.  Raises
+    :class:`typer.BadParameter` on any parse or validation error.
+    """
+
+    parts = spec.split()
+    if not parts:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_empty_spec",
+                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
+            )
+        )
+    row_type = parts[0].lower()
+    if row_type not in _ROW_TYPES_SUPPORTED:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_unknown_type",
+                default=(
+                    f"--row type {row_type!r} is not recognised; "
+                    f"supported types: {sorted(_ROW_TYPES_SUPPORTED)}"
+                ),
+                row_type=row_type,
+                supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
+            )
+        )
+    kv_pairs: dict[str, str] = {}
+    for token in parts[1:]:
+        if "=" not in token:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_kv_format_error",
+                    default=f"--row field {token!r} must be in KEY=VALUE format",
+                    token=token,
+                )
+            )
+        key, _, value = token.partition("=")
+        if not key:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_empty_key",
+                    default=f"--row field key cannot be empty in {token!r}",
+                    token=token,
+                )
+            )
+        kv_pairs[key] = value
+    try:
+        if row_type == "miembro":
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
+        else:
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+    except (ValidationError, TypeError, ValueError) as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row {row_type!r} failed validation: {exc}",
+                row_type=row_type,
+                error=str(exc),
+            )
+        ) from exc
+
+
+def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
+    """Raise BadParameter when M184 member shares do not sum to 100%.
+
+    Only checked when at least one miembro row is present and all
+    miembro rows have been supplied (cannot check partial sets).
+    The AEAT rule: the sum of all member share_percentages MUST equal
+    exactly 100% per filing.
+    """
+
+    member_rows = [r for r in rows if isinstance(r, Modelo184MemberRow)]
+    if not member_rows:
+        return
+    total = sum(r.porcentaje for r in member_rows)
+    if total != Decimal("100"):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_m184_shares_not_100",
+                default=(
+                    f"M184 miembro rows: share percentages must sum to exactly 100%; "
+                    f"got {total} across {len(member_rows)} rows"
+                ),
+                total=str(total),
+                count=str(len(member_rows)),
+            )
+        )
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
@@ -2132,6 +2238,24 @@ def work_calculate(
             ),
         ),
     ] = None,
+    row: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--row",
+            help=tr(
+                "cli.app.modelo.work.row_help",
+                default=(
+                    "Typed detail row for multi-record informational modelos. "
+                    "Format: TYPE FIELD=value [FIELD=value ...]. "
+                    "TYPE is 'miembro' (M184 atribución member) or "
+                    "'vinculada' (M232 operación vinculada). "
+                    "Repeat to add multiple rows. "
+                    "M184 example: --row 'miembro nif=12345678A porcentaje=40 importe=10000'. "
+                    "M232 example: --row 'vinculada nif=A12345678 tipo_operacion=01 importe=50000'."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2187,6 +2311,9 @@ def work_calculate(
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)) from exc
+    detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
+    if detail_rows:
+        _validate_m184_share_sum(detail_rows)
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
@@ -2197,6 +2324,7 @@ def work_calculate(
             enum_binding_values=enum_binding_values or None,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
             relation_values=relation_values or None,
+            detail_rows=detail_rows,
         )
     except RegistryValidationError as exc:
         # A formula that consumes an unsatisfied binding / enum-binding /
@@ -2662,9 +2790,10 @@ def _resolve_workflow_run_id(target: str) -> str:
             "cli.app.modelo.work.resume_invalid_target",
             default=(
                 "resume target must be a 16-character workflow run id or a "
-                f"64-character work-unit id; got {target!r}. "
+                "64-character work-unit id; got {target!r}. "
                 "Run `aeat app modelo work runs` to list run ids."
             ),
+            target=target,
         )
     )
 
