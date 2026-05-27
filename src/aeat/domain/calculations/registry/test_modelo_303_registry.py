@@ -480,7 +480,7 @@ def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
 def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
     """The monthly schedule must fire for SII-enrolled profiles and be excluded
     for standard quarterly profiles."""
-    from aeat.domain.calculations.registry._schedules import applicable_filing_schedules
+    from aeat.domain.calculations.registry import applicable_filing_schedules
     from aeat.domain.deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
 
     modelo, catalogues = _load_modelo_303()

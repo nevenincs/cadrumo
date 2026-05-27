@@ -1384,8 +1384,13 @@ cli:
       classification_help: Estat de classificació professional del moviment
       help: Classificar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a classificar
+      counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
+        3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
+        prohibit amb export_third_country_zero_rated
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
+      iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
+        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la

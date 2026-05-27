@@ -9,6 +9,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
@@ -55,6 +56,8 @@ class ManualLedgerTransactionCommand(BaseModel):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
+    iva_category: IvaCategory | None = None
+    counterparty_eu_member_state: EUMemberState | None = None
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
@@ -181,6 +184,8 @@ class ManualLedgerTransactionPatch(BaseModel):
     purchase_invoice_evidence_id: str | None = None
     attachment_ids: tuple[str, ...] | None = None
     notes: str | None = None
+    iva_category: IvaCategory | None = None
+    counterparty_eu_member_state: EUMemberState | None = None
 
     @field_validator(
         "counterparty",

@@ -77,6 +77,9 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     UNSUPPORTED_IVA_RATE = "unsupported_iva_rate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
+    MISSING_COUNTERPARTY_EU_MEMBER_STATE = "missing_counterparty_eu_member_state"
+    DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_counterparty_on_intra_community_transaction"
+    EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
 
 
 class IvaLedgerAggregationIssue(BaseModel):
@@ -448,6 +451,22 @@ def _classify_iva_transaction(
         )
     base_amount = transaction.taxable_base * proportionality
     iva_amount = transaction.iva_amount * proportionality
+
+    # Resolve the effective IVA category: explicit override takes priority over
+    # the rate-kind-derived domestic category (D5 decision from ADR).
+    explicit_category = transaction.iva_category
+    if explicit_category is not None:
+        d5_issue = _validate_intracom_export_counterparty(
+            transaction_id=transaction_id,
+            category=explicit_category,
+            eu_member_state=transaction.counterparty_eu_member_state,
+        )
+        if d5_issue is not None:
+            return _IvaTransactionOutcome(gate_issue=d5_issue)
+        effective_category = explicit_category
+    else:
+        effective_category = _RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]
+
     prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
         transaction,
         flow_direction=flow_direction,
@@ -458,7 +477,7 @@ def _classify_iva_transaction(
     observation = IvaLedgerObservation(
         ledger_id=transaction.transaction_id,
         transaction_date=operation_date,
-        category=_RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind],
+        category=effective_category,
         rate_kind=rate_kind,
         flow_direction=flow_direction,
         base_amount=base_amount,
@@ -513,6 +532,40 @@ def _resolve_iva_prorrata_attachment(
         None,
         transaction.transaction_id,
     )
+
+
+def _validate_intracom_export_counterparty(
+    *,
+    transaction_id: str,
+    category: IvaCategory,
+    eu_member_state: EUMemberState | None,
+) -> IvaLedgerAggregationIssue | None:
+    """Return a gate issue when the D5 counterparty/category coupling is violated.
+
+    Rules (ADR D5):
+    - ``INTRA_COMMUNITY_SUPPLY`` requires a non-ES ``EUMemberState``.
+    - ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` must carry no ``EUMemberState``.
+    """
+    if category is IvaCategory.INTRA_COMMUNITY_SUPPLY:
+        if eu_member_state is None:
+            return IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_EU_MEMBER_STATE,
+                detail="intra-community supply requires a non-ES counterparty EU member state",
+            )
+        if eu_member_state is EUMemberState.ES:
+            return IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION,
+                detail=f"counterparty EU member state {eu_member_state.value!r} is Spain — not a valid intra-community counterparty",
+            )
+    if category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED and eu_member_state is not None:
+        return IvaLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+            detail=f"export to third country must not carry an EU member state; got {eu_member_state.value!r}",
+        )
+    return None
 
 
 def _flow_direction_for(direction: LedgerTransactionDirection) -> IvaFlowDirection | None:
@@ -586,6 +639,45 @@ def _iva_rate_kind_for(rate: Decimal, *, on_date: date) -> IvaRateKind | None:
     return None
 
 
+def casilla_59_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
+    """Return the casilla 59 base imponible from a completed IVA ledger aggregation.
+
+    Casilla 59 ("Entregas intracomunitarias de bienes y servicios") is the
+    sum of base amounts for ``INTRA_COMMUNITY_SUPPLY`` repercutido observations
+    (Ley 37/1992 arts. 25 and 88).  The registry binding in S94 will supersede
+    this helper when the TOML annotation is confirmed; until then this
+    function is the authoritative application-tier projection.
+    """
+    return sum(
+        (
+            obs.base_amount
+            for obs in aggregation.observations
+            if obs.category is IvaCategory.INTRA_COMMUNITY_SUPPLY
+            and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
+        ),
+        Decimal("0"),
+    )
+
+
+def casilla_60_base_imponible(aggregation: IvaLedgerAggregation) -> Decimal:
+    """Return the casilla 60 base imponible from a completed IVA ledger aggregation.
+
+    Casilla 60 ("Exportaciones y operaciones asimiladas") is the sum of base
+    amounts for ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` repercutido observations
+    (Ley 37/1992 art. 21).  The registry binding in S94 will supersede this
+    helper when the TOML annotation is confirmed.
+    """
+    return sum(
+        (
+            obs.base_amount
+            for obs in aggregation.observations
+            if obs.category is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+            and obs.flow_direction is IvaFlowDirection.REPERCUTIDO
+        ),
+        Decimal("0"),
+    )
+
+
 __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
@@ -597,6 +689,8 @@ __all__ = [
     "aggregate_iva_ledger_candidates",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
+    "casilla_59_base_imponible",
+    "casilla_60_base_imponible",
     "iva_ledger_missing_fact_reasons",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",

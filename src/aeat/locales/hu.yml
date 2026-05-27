@@ -945,8 +945,10 @@ cli:
       classification_help: cli.ledger.classify.classification_help
       help: cli.ledger.classify.help
       id_help: cli.ledger.classify.id_help
+      counterparty_eu_member_state_help: cli.ledger.classify.counterparty_eu_member_state_help
       irpf_category_help: cli.ledger.classify.irpf_category_help
       iva_amount_help: cli.ledger.classify.iva_amount_help
+      iva_category_help: cli.ledger.classify.iva_category_help
       iva_rate_help: cli.ledger.classify.iva_rate_help
       mixed_requires_business_pct: cli.ledger.classify.mixed_requires_business_pct
       reaffirm_help: cli.ledger.classify.reaffirm_help

@@ -2222,6 +2222,10 @@ def _command_from_patch(
         prorrata_reference = None
     notes = _required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
+    iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
+    counterparty_eu_member_state = _optional_patched(
+        patch, patch_fields, "counterparty_eu_member_state", current.counterparty_eu_member_state
+    )
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
         booked_date=booked_date,
@@ -2247,6 +2251,8 @@ def _command_from_patch(
         ),
         attachment_ids=attachment_ids,
         notes=notes,
+        iva_category=iva_category,
+        counterparty_eu_member_state=counterparty_eu_member_state,
         actor=actor,
         source_command=source_command,
     )
@@ -2968,6 +2974,8 @@ def _transaction_from_command(
         ),
         "import_fingerprint": import_fingerprint,
         "notes": command.notes,
+        "iva_category": command.iva_category,
+        "counterparty_eu_member_state": command.counterparty_eu_member_state,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
         payload.update(

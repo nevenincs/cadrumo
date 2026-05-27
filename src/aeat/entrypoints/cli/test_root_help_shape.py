@@ -15,6 +15,7 @@ from aeat.application.operator_surface import build_help_document
 from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow import workflow_state_repository
+from aeat.core.config import SecretStoreBackend, Settings
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 
@@ -34,18 +35,21 @@ def _invoke(args: list[str]):
 
 
 def _console_env(tmp_path: Path) -> dict[str, str]:
-    env = dict(os.environ)
+    base_settings = Settings(_env_file=None)
+    env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
+    setting_env = str.upper
     env.update(
         {
-            "AEAT_SECRET_STORE_BACKEND": "unsecured",
-            "AEAT_ALLOW_UNENCRYPTED": "1",
-            "AEAT_DATABASE_URL": f"sqlite:///{(tmp_path / 'console.db').as_posix()}",
-            "AEAT_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
-            "AEAT_TOKEN_DIR": str(tmp_path / "tokens"),
-            "AEAT_RUNS_DIR": str(tmp_path / "runs"),
-            "AEAT_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
-            "AEAT_INVOICES_DIR": str(tmp_path / "invoices"),
-            "AEAT_DRAFTS_DIR": str(tmp_path / "drafts"),
+            setting_env("aeat_secret_store_backend"): SecretStoreBackend.FILE.value,
+            setting_env("aeat_secret_passphrase"): (
+                base_settings.aeat_dev_test_database_password.get_secret_value()
+            ),
+            setting_env("aeat_local_storage_root"): str(tmp_path / "storage"),
+            setting_env("aeat_token_dir"): str(tmp_path / "tokens"),
+            setting_env("aeat_runs_dir"): str(tmp_path / "runs"),
+            setting_env("aeat_financial_txs_dir"): str(tmp_path / "txs"),
+            setting_env("aeat_invoices_dir"): str(tmp_path / "invoices"),
+            setting_env("aeat_drafts_dir"): str(tmp_path / "drafts"),
         }
     )
     return env

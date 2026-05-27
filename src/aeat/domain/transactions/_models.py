@@ -31,6 +31,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serial
 from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
+from ..iva._schema import EUMemberState, IvaCategory
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -279,6 +280,8 @@ def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
         ("direction", TransactionDirection),
         ("business_classification", BusinessClassification),
         ("lifecycle_state", TransactionLifecycleState),
+        ("iva_category", IvaCategory),
+        ("counterparty_eu_member_state", EUMemberState),
     )
     for key, enum_cls in enum_coercers:
         value = payload.get(key)
@@ -723,6 +726,20 @@ class Transaction(BaseModel):
             the active decision.
         classification_history: Tuple of historical
             :class:`ClassificationHistoryEntry` records, oldest first.
+        iva_category: Explicit IVA category override.  When set the
+            aggregation layer uses this value in place of the
+            rate-kind-derived domestic category, enabling non-domestic
+            categories (intra-community, export, non-subject) to be
+            expressed without a synthetic rate.  ``None`` for
+            transactions where the standard domestic rate derivation
+            is sufficient.
+        counterparty_eu_member_state: ISO 3166-1 alpha-2 EU member
+            state of the counterparty.  Required by the aggregation
+            gate when ``iva_category`` is
+            :attr:`IvaCategory.INTRA_COMMUNITY_SUPPLY`; rejected
+            when the category is
+            :attr:`IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED`.
+            ``None`` otherwise.
     """
 
     model_config = _STRICT_FROZEN
@@ -757,6 +774,8 @@ class Transaction(BaseModel):
     classification_reason: str = ""
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
+    iva_category: IvaCategory | None = None
+    counterparty_eu_member_state: EUMemberState | None = None
 
     @model_validator(mode="before")
     @classmethod
