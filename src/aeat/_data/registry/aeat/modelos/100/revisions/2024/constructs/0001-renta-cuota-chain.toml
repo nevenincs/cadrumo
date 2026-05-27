@@ -35,6 +35,7 @@ legal_refs = [
     "rd-439-2007:art-109",
 ]
 source_refs = [
+    "aeat-dr-100-2024-dictionary",
     "aeat-renta-2024-manual-parte1",
     "boe-modelo-100-2024-form",
     "lirpf-cuota-chain-authority",
