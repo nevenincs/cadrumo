@@ -24,6 +24,15 @@ def select_revision(
             continue
         if not revision.period_selector.includes_year(filing_year):
             continue
+        # Case-insensitive comparison is intentional: _resolve_period() in the
+        # declaracion parser calls .upper() on every period string before it
+        # reaches the registry, producing "ALTA"/"MODIFICACION"/"BAJA" for M036
+        # whose canonical registry periods are lowercase.  All other period
+        # formats ("0A", "1T".."4T", "01".."12") are case-invariant, so the
+        # normalisation is harmless for them.  Downstream consumers receive the
+        # caller-supplied period (the RegistrySnapshot stores it verbatim), not
+        # the registry's canonical form, so no case-sensitive downstream
+        # regression is possible from this comparison.
         if period.lower() not in {p.lower() for p in revision.period_selector.periods}:
             continue
         if on is not None and (revision.valid_from > on or (revision.valid_to is not None and revision.valid_to < on)):
