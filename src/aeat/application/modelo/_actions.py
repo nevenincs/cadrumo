@@ -2073,13 +2073,26 @@ def _verification_predicates_for_revision(
 
 def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
     """Raise StoredCalculationDriftError when the revision's stored payload
-    does not match its content-addressed id.
+    does not match its content-addressed id or has internal observation drift.
 
-    The ``calculation_revision_id`` is a SHA-256 hash of the revision's
-    ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``
-    payload at creation time.  Re-deriving the hash from the stored fields
-    and comparing it to the stored id detects tampering or storage corruption
-    without re-running the formula engine.
+    Two checks run:
+
+    1. Content-hash check: the ``calculation_revision_id`` is a SHA-256
+       hash of ``(work_unit_id, inputs_snapshot, binding_overrides,
+       casilla_values)``.  Re-deriving the hash and comparing it to the
+       stored id detects tampering or corruption of the primary payload.
+
+    2. Observation provenance cross-check: for each typed
+       ``CasillaObservation`` in ``revision.observations``, the
+       ``observation.value`` must match ``revision.casilla_values``
+       for the same casilla.  A mismatch means the typed provenance
+       envelope (which carries ``formula_id``, ``legal_refs``,
+       ``source_refs``) and the flat casilla-values mapping are no
+       longer consistent — either observations or casilla_values was
+       mutated after creation.
+
+    Older revisions where ``observations == ()`` skip check 2 so the
+    legacy-payload path remains loadable.
     """
     expected = derive_calculation_revision_id(
         work_unit_id=revision.work_unit_id,
@@ -2096,6 +2109,23 @@ def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
             f"stored id does not match re-derived hash of its payload; "
             f"the record may have been tampered with or corrupted"
         )
+
+    # Observation provenance cross-check (S210).
+    for obs in revision.observations:
+        stored = revision.casilla_values.get(obs.casilla_id)
+        if stored is None:
+            raise StoredCalculationDriftError(
+                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
+                f"observation for casilla {obs.casilla_id!r} is present but casilla_values "
+                f"has no entry for it; the provenance envelope may have been tampered with"
+            )
+        if obs.value != stored:
+            raise StoredCalculationDriftError(
+                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
+                f"observation value for casilla {obs.casilla_id!r} is {obs.value!r} "
+                f"but casilla_values holds {stored!r}; "
+                f"the record may have been tampered with or corrupted"
+            )
 
 
 _PREDICATE_ALL_NONZERO = _re.compile(r'^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
