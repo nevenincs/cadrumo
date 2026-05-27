@@ -384,6 +384,39 @@ class TaxpayerProfile(BaseModel):
     €1,500. Only meaningful when ``irpf_pagadores_count >= 2``; ``None``
     when not declared.
     """
+    days_in_spain: dict[int, int] = Field(default_factory=dict)
+    """Days of physical presence in Spain per calendar year.
+
+    Maps year (e.g. 2024) to number of days. Used to assess proximity to
+    the Art. 9 LIRPF habitual residence threshold (183 days). The advisory
+    ``RESIDENCY_BOUNDARY_NEAR`` is triggered when any declared year falls
+    in the 150-215 day range -- close enough to the threshold that the
+    operator should verify the actual count carefully.
+
+    Recorded via ``--days-in-spain YYYY=NDAYS`` on the profile.
+    """
+
+    @field_validator("days_in_spain", mode="before")
+    @classmethod
+    def _coerce_days_in_spain_keys(cls, value: object) -> object:
+        """Accept JSON-serialised ``dict[int, int]`` where keys arrive as strings.
+
+        ``model_dump_json()`` serialises integer dict keys as JSON string keys
+        (e.g. ``{"2024": 165}``). Without this coercion,
+        ``model_validate_json`` would reject those string keys against the
+        ``dict[int, int]`` annotation. Numeric-string keys are cast to ``int``
+        here; non-numeric keys are left unchanged so the subsequent validation
+        step reports them cleanly.
+        """
+        if not isinstance(value, dict):
+            return value
+        coerced: dict[object, object] = {}
+        for k, v in value.items():
+            if isinstance(k, str) and k.isdigit():
+                coerced[int(k)] = v
+            else:
+                coerced[k] = v
+        return coerced
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod
@@ -580,11 +613,28 @@ class TaxpayerProfile(BaseModel):
         - España-Francia: BOE-A-1997-21331
         - España-EE.UU.: BOE-A-1990-28246
         - España-Países Bajos: BOE-A-1972-674
+        - España-Marruecos: BOE-A-1985-13340
         """
 
         if self.country_of_fiscal_residence is None:
             return None
         return _CONVENIO_BY_COUNTRY.get(self.country_of_fiscal_residence.upper())
+
+    @property
+    def residency_boundary_near(self) -> bool:
+        """True when any declared year's presence count falls in the 150-215 day window.
+
+        Art. 9 LIRPF: habitual residence in Spain is presumed when the
+        taxpayer is present for more than 183 days in a calendar year.
+        Days 150-215 form a boundary zone where the actual residency
+        determination requires careful verification -- either because the
+        taxpayer may cross the threshold (150-182) or because they already
+        exceed it but by a modest margin (184-215) that could be disputed.
+
+        Returns ``False`` when ``days_in_spain`` is empty.
+        """
+
+        return any(150 <= days <= 215 for days in self.days_in_spain.values())
 
 
 _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
@@ -627,6 +677,7 @@ _CONVENIO_BY_COUNTRY: dict[str, str] = {
     "FR": "BOE-A-1997-21331 España-Francia",
     "US": "BOE-A-1990-28246 España-EE.UU.",
     "NL": "BOE-A-1972-674 España-Países Bajos",
+    "MA": "BOE-A-1985-13340 España-Marruecos",
 }
 
 

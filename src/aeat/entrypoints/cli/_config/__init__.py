@@ -1216,6 +1216,71 @@ def config_profile_rename(
 
 
 @profile_app.command(
+    "set",
+    help=_tr(
+        "cli.config.profile.set_help",
+        default="Set one or more profile key-value pairs on the active profile.",
+    ),
+)
+def config_profile_set(
+    ctx: typer.Context,
+    assignments: list[str] = typer.Argument(
+        ...,
+        help=_tr(
+            "cli.config.profile.set_assignments_help",
+            default="KEY=VALUE pairs to write (e.g. taxpayer_type.days_in_spain_2024=165).",
+        ),
+    ),
+) -> None:
+    """Write one or more profile fact key-value pairs on the active profile.
+
+    Each assignment must be a ``KEY=VALUE`` string where ``KEY`` is a
+    dotted profile path (e.g. ``taxpayer_type.days_in_spain_2024``) and
+    ``VALUE`` is the string representation of the value to store.
+
+    Useful for per-year and other dynamic-key axes that cannot be
+    expressed as wizard questions:
+
+        aeat config profile set taxpayer_type.days_in_spain_2024=165
+        aeat config profile set taxpayer_type.days_in_spain_2023=340
+    """
+
+    from ....application.user_profile._orchestration import set_active_fields
+    from ....domain.user_profile import UserProfileFact
+
+    if _resolve_active_bucket_id() is None:
+        raise _CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+
+    facts: list[UserProfileFact] = []
+    for raw in assignments:
+        if "=" not in raw:
+            raise _CliRefusedBoundaryError(
+                _tr(
+                    "cli.config.profile.set_invalid_assignment",
+                    assignment=raw,
+                    default=f"Assignment must be KEY=VALUE; got: {raw!r}",
+                )
+            )
+        key, _, value = raw.partition("=")
+        key = key.strip()
+        if not key:
+            raise _CliRefusedBoundaryError(
+                _tr(
+                    "cli.config.profile.set_empty_key",
+                    default=f"Assignment key must not be empty; got: {raw!r}",
+                )
+            )
+        facts.append(UserProfileFact(path=key, value=value))
+
+    repository = _profile_state()
+    repository.update(lambda state: set_active_fields(state, facts))
+
+    emitted = [{"key": fact.path, "value": fact.value} for fact in facts]
+    lines = [f"{fact.path}\t{fact.value}" for fact in facts]
+    _emit(ctx, {"assignments": emitted}, lines)
+
+
+@profile_app.command(
     "export",
     help=_tr(
         "cli.config.profile.export_help",
