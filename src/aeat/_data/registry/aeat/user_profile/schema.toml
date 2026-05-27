@@ -367,6 +367,16 @@ description = "NIF of the representante fiscal designated in Spain when fiscal_r
 model_selectors = ["taxpayer.representante_fiscal_nif"]
 legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
 
+[[sections.fields]]
+key = "representante_fiscal_nombre"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents."
+model_selectors = ["taxpayer.representante_fiscal_nombre"]
+legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
+
 [[sections]]
 key = "vivienda_office"
 title = "Vivienda habitual office afectacion"
