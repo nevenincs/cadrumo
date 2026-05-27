@@ -30,6 +30,7 @@ the four IVA tiers per LIVA art. 161:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
@@ -86,14 +87,24 @@ def _load_rates() -> LivaArt161RecargoRates:
     # load_registry_tree path pulls in registry._bindings which imports
     # from aeat.domain.iva, triggering a circular import at this very
     # module's import time.
+    from ..calculations.registry._errors import RegistryError
     from ..calculations.registry._loader import load_legal_parameters_only
 
-    parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
     try:
-        general_raw = parameters[_GENERAL_PARAM_ID].value
-        reducido_raw = parameters[_REDUCIDO_PARAM_ID].value
-        super_reducido_raw = parameters[_SUPER_REDUCIDO_PARAM_ID].value
-        tabaco_raw = parameters[_TABACO_PARAM_ID].value
+        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
+    except RegistryError as exc:
+        raise IvaCatalogueError(f"failed to load IVA recargo-equivalencia legal parameters: {exc}") from exc
+    return _rates_from_catalogue(parameters)
+
+
+def _rates_from_catalogue(parameters: Mapping[str, object]) -> LivaArt161RecargoRates:
+    """Build the typed LIVA art. 161 rate record from validated registry entries."""
+
+    try:
+        general_raw = _parameter_value(parameters, _GENERAL_PARAM_ID)
+        reducido_raw = _parameter_value(parameters, _REDUCIDO_PARAM_ID)
+        super_reducido_raw = _parameter_value(parameters, _SUPER_REDUCIDO_PARAM_ID)
+        tabaco_raw = _parameter_value(parameters, _TABACO_PARAM_ID)
     except KeyError as exc:
         raise IvaCatalogueError(
             "the IVA recargo-equivalencia legal-parameter catalogue is missing "
@@ -109,6 +120,13 @@ def _load_rates() -> LivaArt161RecargoRates:
         )
     except (ValueError, TypeError) as exc:
         raise IvaValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
+
+
+def _parameter_value(parameters: Mapping[str, object], parameter_id: str) -> str:
+    value = getattr(parameters[parameter_id], "value", None)
+    if not isinstance(value, str):
+        raise IvaValidationError(f"LIVA art. 161 parameter {parameter_id!r} has no string value")
+    return value
 
 
 def load_recargo_rates() -> LivaArt161RecargoRates:

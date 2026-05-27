@@ -12,6 +12,7 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings, load_settings
+from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._loader import iter_sections, load_manual, resolve_part_root
 from ._schema import ManualId, ManualPart, Section
@@ -79,7 +80,12 @@ def _section_multilingual_warnings(section: Section) -> list[ManualVerificationI
                 ManualVerificationIssue(
                     level="warning",
                     code="missing-translation",
-                    message=(f"section {section.section_id!r}: {field_name} missing translation key"),
+                    message=tr(
+                        "cli.registry.manuals.verify_missing_translation",
+                        default="section %{section_id}: %{field_name} missing translation key",
+                        section_id=section.section_id,
+                        field_name=field_name,
+                    ),
                 )
             )
     return issues
@@ -103,7 +109,12 @@ def _cross_reference_issues(
                     ManualVerificationIssue(
                         level="error",
                         code="dangling-section-ref",
-                        message=(f"section {section.section_id!r} references unknown section {target!r}"),
+                        message=tr(
+                            "cli.registry.manuals.verify_dangling_section_ref",
+                            default="section %{section_id} references unknown section %{target}",
+                            section_id=section.section_id,
+                            target=target,
+                        ),
                     )
                 )
         for rule in section.rules:
@@ -113,7 +124,12 @@ def _cross_reference_issues(
                         ManualVerificationIssue(
                             level="error",
                             code="dangling-section-ref",
-                            message=(f"rule {rule.rule_id!r} references unknown section {target!r}"),
+                            message=tr(
+                                "cli.registry.manuals.verify_dangling_rule_section_ref",
+                                default="rule %{rule_id} references unknown section %{target}",
+                                rule_id=rule.rule_id,
+                                target=target,
+                            ),
                         )
                     )
     return issues
@@ -165,7 +181,11 @@ def verify_manual_dir(
             ManualVerificationIssue(
                 level="warning",
                 code="missing-manifest",
-                message=f"{manifest_path} is absent; run 'aeat manual fetch' to materialise it",
+                message=tr(
+                    "cli.registry.manuals.verify_missing_manifest",
+                    default="%{manifest_path} is absent; run 'aeat manual fetch' to materialise it",
+                    manifest_path=manifest_path,
+                ),
             )
         )
 
@@ -244,5 +264,12 @@ def raise_on_errors(report: ManualVerificationReport) -> None:
     if not report.ok:
         messages = "; ".join(issue.message for issue in report.errors)
         raise ManualReviewRequiredError(
-            f"verification failed for {report.manual_id.value}/{report.year}/{report.part.value}: {messages}"
+            tr(
+                "cli.registry.manuals.verify_failed",
+                default="verification failed for %{manual_id}/%{year}/%{part}: %{messages}",
+                manual_id=report.manual_id.value,
+                year=report.year,
+                part=report.part.value,
+                messages=messages,
+            )
         )

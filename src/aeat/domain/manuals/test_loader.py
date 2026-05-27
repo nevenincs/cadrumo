@@ -201,6 +201,16 @@ class TestLoader:
         with pytest.raises(ManualParseError, match="must stay within the owning root"):
             load_section(settings.aeat_manuals_root / "iva" / "2025", bad_ref)
 
+    def test_load_section_wraps_missing_file_as_domain_error(self, tmp_path: Path) -> None:
+        """A dangling section ref fails as ManualNotFoundError, not builtin FileNotFoundError."""
+        settings = _seed_iva(tmp_path)
+        manual = load_manual(ManualId.IVA, 2025, ManualPart.SINGLE, settings=settings)
+        missing_ref = manual.chapters[0].sections[0].model_copy(
+            update={"relative_path": "structure/sections/cap1/missing.json"}
+        )
+        with pytest.raises(ManualNotFoundError, match=r"missing required file"):
+            load_section(settings.aeat_manuals_root / "iva" / "2025", missing_ref)
+
     def test_load_catalogue_and_find_rules(self, tmp_path: Path) -> None:
         """find_rules iterates rules loaded through the catalogue."""
         settings = _seed_iva(tmp_path)

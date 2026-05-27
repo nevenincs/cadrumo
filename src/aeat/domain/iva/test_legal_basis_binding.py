@@ -37,6 +37,7 @@ from aeat.domain.invoices import IvaRate
 from aeat.domain.invoices._enums import iva_rate_percentage
 from aeat.domain.iva import (
     EUMemberState,
+    IvaCatalogueError,
     IvaRateKind,
     load_recargo_rates,
     lookup_rate,
@@ -194,6 +195,17 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
     assert load_recargo_rates().general_rate * Decimal("100") == Decimal("5.200")
     assert load_recargo_rates().reducido_rate * Decimal("100") == Decimal("1.400")
     assert load_recargo_rates().super_reducido_rate * Decimal("100") == Decimal("0.500")
+
+
+def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
+    from aeat.domain.calculations.registry._loader import load_legal_parameters_only
+    from aeat.domain.iva._recargo_equivalencia import _rates_from_catalogue
+
+    parameters = dict(load_legal_parameters_only(bundled_path("registry", "aeat")))
+    del parameters["liva-art-161:recargo-rate-tabaco"]
+
+    with pytest.raises(IvaCatalogueError, match=r"recargo-rate-tabaco"):
+        _rates_from_catalogue(parameters)
 
 
 # ---------------------------------------------------------------------------

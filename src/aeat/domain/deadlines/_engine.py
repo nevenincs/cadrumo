@@ -353,7 +353,14 @@ def _overdue_recovery_or_none(
             modelo=modelo,
             period=window.period,
         )
-    except (FileNotFoundError, ValueError):
+    except (FileNotFoundError, ValueError) as exc:
+        _logger.debug(
+            "no overdue recovery registry entry for modelo=%s period=%s days_late=%d: %s",
+            modelo,
+            window.period,
+            days_late,
+            exc,
+        )
         return None
 
 

@@ -1030,6 +1030,7 @@ cli:
         compare_taxation_work_unit_not_found: 'Unitat de treball {work_unit_id} no trobada; consulta les unitats actives amb ''aeat app modelo work list''.'
         compare_taxation_error: 'La comparació conjunta vs. individual no és disponible: {detail}'
         compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
+        output_language_help: 'Idioma de sortida per als missatges renderitzats.'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -2030,6 +2031,11 @@ cli:
       verify_help: Verificar la integritat del manual contra el seu contracte
       view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
+      verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció de %{field_name}'
+      verify_dangling_section_ref: 'la secció %{section_id} referencia una secció desconeguda %{target}'
+      verify_dangling_rule_section_ref: 'la regla %{rule_id} referencia una secció desconeguda %{target}'
+      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual fetch'' per materialitzar-lo'
+      verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count

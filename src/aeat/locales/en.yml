@@ -951,6 +951,7 @@ cli:
         compare_taxation_work_unit_not_found: 'Work unit {work_unit_id} not found; check active units with ''aeat app modelo work list''.'
         compare_taxation_error: 'Conjunta vs. individual comparison not available: {detail}'
         compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} — {reason}'
+        output_language_help: 'Output language for rendered messages.'
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
