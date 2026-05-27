@@ -1512,13 +1512,13 @@ cli:
         profile_empty: '--profile must not be empty when supplied.'
         unknown_profile: 'Unknown profile: %{profile}'
         unknown_profile_key: 'Unknown profile key: %{key}'
-      get_help: cli.diagnostics.profile.get_help
-      help: cli.diagnostics.profile.help
-      key_help: cli.diagnostics.profile.key_help
-      profile_help: cli.diagnostics.profile.profile_help
-      set_help: cli.diagnostics.profile.set_help
-      unset_help: cli.diagnostics.profile.unset_help
-      value_help: cli.diagnostics.profile.value_help
+      get_help: 'Read one profile key stored value.'
+      help: 'Engineer-only profile field inspection and surgical edits.'
+      key_help: 'Profile key.'
+      profile_help: 'Profile to use; defaults to the active profile.'
+      set_help: 'Write one profile key value, validated against the wizard descriptor.'
+      unset_help: 'Clear one profile key value.'
+      value_help: 'Value to store.'
     repair:
       audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
@@ -1535,13 +1535,13 @@ cli:
       python_label: Python
       version_label: Versió
     secure_objects:
-      all_help: cli.diagnostics.secure_objects.all_help
+      all_help: 'Return every key, including unreadable rows.'
       errors:
-        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
-      help: cli.diagnostics.secure_objects.help
-      list_help: cli.diagnostics.secure_objects.list_help
-      namespace_help: cli.diagnostics.secure_objects.namespace_help
-      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
+        conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
+      help: 'Inventory the secure-object index by namespace.'
+      list_help: 'List secure-object keys stored under one namespace.'
+      namespace_help: 'Namespace to inventory.'
+      unreadable_help: 'Restrict the listing to undecryptable rows.'
     summary:
       auth_no_session: El proveïdor d'autenticació %{provider} no té cap sessió preparada
       auth_none: L'autenticació no està configurada
