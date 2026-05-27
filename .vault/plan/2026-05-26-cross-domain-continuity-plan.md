@@ -280,7 +280,7 @@ Single-id classify unusable for hundreds of movements. Add bulk path.
 - [ ] `W05.P25.S96` - implement ledger classify --from-csv parsing CSV into typed BulkClassifyRow pydantic model; `partial-success semantics matching ledger import pattern; BulkClassifyRow BulkClassifyResult BulkClassifyFailure in _models.py; unknown CSV columns rejected pre-persistence; source_command edit_lineage; per architect #118 grounding; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W05.P25.S97` - implement rule-based classifier surface ledger rule add description-pattern classification BUSINESS; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W05.P25.S98` - regression tests for bulk and rule paths; `src/aeat/entrypoints/cli/test_ledger_bulk_classify.py`.
-- [ ] `W05.P25.S315` - author rule-engine ADR for W05.P25.S97 ledger classification rules — pattern engine choice (regex/substring/glob), storage backend (profile-scoped SecureBoundRepository), conflict policy, rule apply scope (ACTIVE NOT_YET_PROCESSED only), reaffirm interaction; `per architect #118 grounding S97 cannot start until this ADR lands; `.vault/adr/`.
+- [x] `W05.P25.S315` - author rule-engine ADR for W05.P25.S97 ledger classification rules — pattern engine choice (regex/substring/glob), storage backend (profile-scoped SecureBoundRepository), conflict policy, rule apply scope (ACTIVE NOT_YET_PROCESSED only), reaffirm interaction; `per architect #118 grounding S97 cannot start until this ADR lands; `.vault/adr/`.
 
 ### Phase `W05.P26` - IVA-wallet inspector verb
 
@@ -512,7 +512,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S318` - BLOCKER per discovery3 #121: verification provenance chain broken — _verification_report_payload at _modelo.py:2248 does NOT emit legal_refs and source_refs on findings; `operator cannot trace a MISSING_REQUIRED_CASILLA finding back to its legal source; W04.P19 ADR mandates provenance preservation through the verify path; extend _verification_report_payload to include per-finding casilla legal_refs + source_refs lookup; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S320` - G4 retroactive violation in commit c27f35398 — added iva_category_help and counterparty_eu_member_state_help keys by hand to en/es/ca/hu.yml without scaffold evidence; `re-scaffold these four keys via python -m aeat.locales scaffold then verify their structural shape matches the canonical pattern; per architect standing-gate enforcement; `src/aeat/locales/`.
 - [ ] `W09.P41.S321` - FU-W05-E wire effective_eur_amount into amount projection when taxable_base is absent on non-EUR import; `currently exported but unused; non-blocking follow-up from W05.P23 review #122; `src/aeat/domain/transactions/_raw_transaction.py`.
-- [ ] `W09.P41.S322` - FU-W05-F remove dead shadowed CurrencyNormalizationService construction at test_fx_conversion.py:210; minor cleanup from W05.P23 review #122; `src/aeat/application/aggregation/test_fx_conversion.py`.
+- [ ] `W09.P41.S322` - FU-W05-F remove dead shadowed CurrencyNormalizationService construction at test_fx_conversion.py:210; `minor cleanup from W05.P23 review #122; `src/aeat/application/aggregation/test_fx_conversion.py`.
 
 ### Phase `W09.P42` - twin function merge
 

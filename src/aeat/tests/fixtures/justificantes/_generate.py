@@ -621,7 +621,7 @@ def _draw_modelo_115(c: canvas.Canvas, fixture: _Modelo115Fixture) -> None:
     c.drawString(
         20 * mm,
         y,
-        "Retenciones e ingresos a cuenta arrendamientos  Modelo 115",
+        "Autoliquidacion arrendamientos inmuebles urbanos  Modelo 115",
     )
     y -= 12 * mm
     c.setFont("Helvetica", 10)
@@ -1292,8 +1292,11 @@ _MODELO_131_CASILLAS: tuple[tuple[str, str, str], ...] = (
 
 _MODELO_131_FIXTURES: tuple[_Modelo131Fixture, ...] = (
     _Modelo131Fixture(
+        # filename uses 2024 to match the corpus naming convention for the gap test;
+        # ejercicio is 2026 so año_override=2026 resolves the 2026 revision which
+        # carries the declaracion_pdf extraction profile under test.
         filename="131/2024-1T.pdf",
-        ejercicio="2024",
+        ejercicio="2026",
         periodo="1T",
         tax_id="Y0000001S",
         full_name="DEMO AUTONOMO EO",
