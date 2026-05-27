@@ -34,6 +34,20 @@ from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
@@ -64,7 +78,7 @@ def _create_303_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 def _create_111_work_unit() -> str:
@@ -79,7 +93,7 @@ def _create_111_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -240,7 +254,7 @@ def test_work_create_accepts_census_period_tokens(token: str) -> None:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["period"] == token
+    assert _payload(result.output)["period"] == token
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
@@ -283,7 +297,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["period"] == "1T"
+    assert _payload(result.output)["period"] == "1T"
 
 
 # ---------------------------------------------------------------------------
@@ -386,7 +400,7 @@ def test_work_calculate_json_carries_the_result_summary() -> None:
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
-    summary = json.loads(result.output)["result_summary"]
+    summary = _payload(result.output)["result_summary"]
     assert summary, result.output
     assert all({"role", "casilla_id", "value", "label"} <= set(row) for row in summary)
     assert any(row["casilla_id"] == "30" for row in summary)
@@ -409,7 +423,7 @@ def _create_202_work_unit(period: str) -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["period"] == period
     return payload["work_unit_id"]
 
@@ -438,7 +452,7 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     )
     assert result.exit_code == 0, result.output
     assert "invalid registry period" not in result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     # The engine ran and persisted a draft calculation revision —
     # the same end stage Modelo 200 / 303 reach.
     assert payload["state"] == "borrador"
@@ -474,4 +488,4 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
             ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
-        assert json.loads(calculated.output)["state"] == "borrador"
+        assert _payload(calculated.output)["state"] == "borrador"

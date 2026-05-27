@@ -23,6 +23,20 @@ from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
@@ -53,7 +67,7 @@ def _create_202_work_unit(period: str) -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["period"] == period
     return payload["work_unit_id"]
 
@@ -87,7 +101,7 @@ def test_work_verify_accepts_modelo_202_pago_fraccionado_periods(period: str) ->
     assert calc_result.exit_code == 0, calc_result.output
     assert "cannot map workflow period" not in calc_result.output
     assert "invalid registry period" not in calc_result.output
-    calculation_revision_id = json.loads(calc_result.output)["calculation_revision_id"]
+    calculation_revision_id = _payload(calc_result.output)["calculation_revision_id"]
 
     # verify must accept the same period token without crashing — exit code 0
     # (fully verified) or 1 (incomplete) are both acceptable; exit code 2
@@ -125,6 +139,6 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
         ["--format", "json", "app", "modelo", "work", "status", work_unit_id],
     )
     assert status_result.exit_code == 0, status_result.output
-    status_payload = json.loads(status_result.output)
+    status_payload = _payload(status_result.output)
     # The work unit period token is preserved end-to-end.
     assert status_payload.get("period") == period, status_payload
