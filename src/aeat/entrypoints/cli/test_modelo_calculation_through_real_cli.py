@@ -36,6 +36,21 @@ from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profi
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses (un-migrated commands,
+    error envelopes, etc.) pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 # ---------------------------------------------------------------------------
 # Fixture helpers
@@ -157,7 +172,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +241,7 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     # casilla DP200014:00562 is the cuota-integra output casilla.
     cuota = payload["casilla_values"]["DP200014:00562"]
     # Oracle: 100.000,00 x 23 % = 23.000,00 EUR
@@ -293,7 +308,7 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     cuota = payload["casilla_values"]["03"]
     # Oracle: 18 % x 10.000,00 = 1.800,00 EUR (LIS Art. 40.2)
     assert Decimal(cuota) == Decimal("1800.00"), (
@@ -366,7 +381,7 @@ def test_modelo_130_resultado_apartado_i_direct_estimation(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     casilla_07 = payload["casilla_values"]["07"]
     # Oracle: 20 % x (12.000 - 4.000) = 1.600,00 EUR (IRPF Art. 99,
     # RD 439/2007 Art. 110, AEAT DR 130 Instrucciones Casilla 07)
@@ -422,7 +437,7 @@ def test_modelo_303_calculate_surface_is_reachable(
     # reachable non-traceback response.  We assert no Python traceback.
     assert "Traceback" not in result.output
     if result.exit_code == 0:
-        payload = json.loads(result.output)
+        payload = _payload(result.output)
         assert "casilla_values" in payload, result.output
         # iva.resultado is the regulatory net IVA output casilla.
         assert "iva.resultado" in payload["casilla_values"], (

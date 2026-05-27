@@ -48,6 +48,21 @@ from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses (un-migrated commands,
+    error envelopes, etc.) pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 _INCN_ABOVE_THRESHOLD = Decimal("6_000_001.00")
 _INCN_AT_THRESHOLD = Decimal("6_000_000.00")
 _INCN_BELOW_THRESHOLD = Decimal("5_999_999.99")
@@ -285,6 +300,6 @@ def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
         ]
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["status"] == "created"
     assert payload["modelo"] == "202"

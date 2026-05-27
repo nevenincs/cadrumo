@@ -35,6 +35,21 @@ from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses (un-migrated commands,
+    error envelopes, etc.) pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
@@ -146,7 +161,7 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
     )  # fmt: skip
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     # The work unit was provisioned, and the bypass is auditable.
     assert payload["status"] == "created"
     assert payload["applicability_guard_bypassed"] is True
@@ -170,7 +185,7 @@ def test_work_create_allows_an_applicable_modelo(
     )  # fmt: skip
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["status"] == "created"
     # The guard was not bypassed — the modelo genuinely applies.
     assert payload["applicability_guard_bypassed"] is False
