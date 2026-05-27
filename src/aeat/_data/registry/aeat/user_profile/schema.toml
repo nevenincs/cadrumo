@@ -497,6 +497,26 @@ description = "Opt-in election date for the IRPF special regime (RIRPF Art. 116)
 model_selectors = ["irpf.special_regime_start_date"]
 legal_refs = ["RIRPF RD 439/2007 Art. 116 (BOE-A-2007-6820)"]
 
+[[sections.fields]]
+key = "pagadores_count"
+type = "integer"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Number of pagadores (income payers) the taxpayer received income from. When >= 2 and irpf_pagadores_secondary_income > 1500, filing Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total income threshold."
+model_selectors = ["irpf.pagadores_count"]
+legal_refs = ["LIRPF Art. 96.3 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "pagadores_secondary_income"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Sum of income received from the 2nd and subsequent pagadores. Art. 96.3 LIRPF: declaración obligatoria when this value exceeds €1,500. Only meaningful when pagadores_count >= 2."
+model_selectors = ["irpf.pagadores_secondary_income"]
+legal_refs = ["LIRPF Art. 96.3 (BOE-A-2006-20764)"]
+
 [[sections]]
 key = "withholding"
 title = "Withholding payer obligations"
