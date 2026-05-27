@@ -57,6 +57,10 @@ def test_committed_user_profile_schema_exposes_profile_lookup_metadata() -> None
     assert large_company.type is ProfileFieldType.BOOLEAN
     assert "enrollment.large_company" in large_company.schedule_predicates
 
+    autoconsumo_promotor_base = schema.field("iva.autoconsumo_promotor_base")
+    assert autoconsumo_promotor_base.type is ProfileFieldType.MONEY
+    assert autoconsumo_promotor_base.sensitivity is SensitivityClass.FINANCIAL
+
     ccaa = schema.field("tax_residence.ccaa")
     assert ccaa.type is ProfileFieldType.ENUM
     assert "cataluna" in ccaa.enum_values

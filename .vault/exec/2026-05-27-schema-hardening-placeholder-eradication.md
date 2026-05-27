@@ -141,3 +141,46 @@ watch that fails if the current largest file crosses 3,500 lines or the widest
 row crosses 1,000 characters. This leaves headroom for small regulatory updates
 while making a return to 100k-line registry artifacts impossible without an
 explicit test failure.
+
+Passing gates:
+
+`uv run --no-sync ruff check src/aeat/domain/calculations/registry/test_registry_reviewability.py`
+
+Result: passed.
+
+`uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_reviewability.py -q`
+
+Result: 2 passed.
+
+## Follow-up: Cross-WIP Registry Gate Repair
+
+The broader registry hardening gate exposed three shared-worktree edges after
+the empty-revision and reviewability commits:
+
+- M100 revisions 2024 and 2025 had a cross-revision drift failure for the
+  prevision-social reduction total casilla data type.
+- The committed M130 snapshot test still expected target `03` as a calculated
+  formula output even though the current registry shape sources it through a
+  binding.
+- The new M303 autoconsumo profile input needed the profile schema `money`
+  field type, construct-level LIVA art. 9/art. 79 propagation, and an
+  official-guidance source citation for the profile-derived binding/formula.
+
+The repair kept the validators strict. The LIVA art. 79 required-text needle was
+aligned with the local BOE corpus phrase `gastos de personal`; the M303 binding
+and formula now cite the official Modelo 303 BOE form source; and the construct
+legal refs include the articles introduced by the autoconsumo casillas.
+
+Passing gates:
+
+`uv run --no-sync pytest src/aeat/domain/user_profile/test_schema.py src/aeat/domain/calculations/registry/test_cross_revision_drift.py::test_backend_registry_validation_accepts_committed_corpus_drift_gate src/aeat/domain/calculations/registry/test_cross_revision_drift.py::test_singleton_semantic_role_warning_count_does_not_regress src/aeat/domain/calculations/registry/test_committed_registry.py::test_committed_modelo_130_registry_snapshot_is_calculable -q`
+
+Result: 8 passed.
+
+`uv run --no-sync ruff check src/aeat/domain/user_profile/_schema.py src/aeat/domain/user_profile/test_schema.py src/aeat/domain/calculations/registry/test_committed_registry.py`
+
+Result: passed.
+
+`uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_schema.py src/aeat/domain/calculations/registry/test_committed_registry.py src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_cross_revision_drift.py src/aeat/domain/calculations/registry/test_registry_reviewability.py -q`
+
+Result: 161 passed.
