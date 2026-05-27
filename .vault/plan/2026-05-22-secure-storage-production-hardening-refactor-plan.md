@@ -468,19 +468,19 @@ Current register count: `293` production candidate files.
 | `AFR-196` | `src/aeat/core/i18n/_render.py` | `active-profile, manifest-bucket, sql-route, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-197` | `src/aeat/core/locks.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-198` | `src/aeat/core/logging.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-199` | `src/aeat/core/observability/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-200` | `src/aeat/core/observability/_context.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-199` | `src/aeat/core/observability/__init__.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-200` | `src/aeat/core/observability/_context.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-201` | `src/aeat/core/observability/_errors.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-202` | `src/aeat/core/observability/_fingerprint.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-203` | `src/aeat/core/observability/_models.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-204` | `src/aeat/core/observability/_recorder.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-203` | `src/aeat/core/observability/_models.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-204` | `src/aeat/core/observability/_recorder.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-205` | `src/aeat/core/observability/_sink.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-206` | `src/aeat/core/observability/_store.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
+| `AFR-206` | `src/aeat/core/observability/_store.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | closed |
 | `AFR-207` | `src/aeat/core/output_rendering.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-208` | `src/aeat/core/paths.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-209` | `src/aeat/core/resources/_boundary.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-210` | `src/aeat/core/resources/_repos/legal_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-211` | `src/aeat/core/resources/_repos/modelos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
+| `AFR-209` | `src/aeat/core/resources/_boundary.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-210` | `src/aeat/core/resources/_repos/legal_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
+| `AFR-211` | `src/aeat/core/resources/_repos/modelos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-212` | `src/aeat/diagnostics/__main__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
 | `AFR-213` | `src/aeat/diagnostics/profile.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-214` | `src/aeat/domain/_secure_storage_runtime.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
@@ -821,19 +821,19 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S298` - Close `AFR-196` for `src/aeat/core/i18n/_render.py` with signals `active-profile, manifest-bucket, sql-route, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/i18n/_render.py`.
 - [x] `W12.P26.S299` - Close `AFR-197` for `src/aeat/core/locks.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/locks.py`.
 - [x] `W12.P26.S300` - Close `AFR-198` for `src/aeat/core/logging.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/logging.py`.
-- [ ] `W12.P26.S301` - Close `AFR-199` for `src/aeat/core/observability/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/__init__.py`.
-- [ ] `W12.P26.S302` - Close `AFR-200` for `src/aeat/core/observability/_context.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/observability/_context.py`.
+- [x] `W12.P26.S301` - Close `AFR-199` for `src/aeat/core/observability/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/__init__.py`.
+- [x] `W12.P26.S302` - Close `AFR-200` for `src/aeat/core/observability/_context.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/observability/_context.py`.
 - [x] `W12.P26.S303` - Close `AFR-201` for `src/aeat/core/observability/_errors.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_errors.py`.
 - [x] `W12.P26.S304` - Close `AFR-202` for `src/aeat/core/observability/_fingerprint.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_fingerprint.py`.
-- [ ] `W12.P26.S305` - Close `AFR-203` for `src/aeat/core/observability/_models.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_models.py`.
-- [ ] `W12.P26.S306` - Close `AFR-204` for `src/aeat/core/observability/_recorder.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_recorder.py`.
+- [x] `W12.P26.S305` - Close `AFR-203` for `src/aeat/core/observability/_models.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_models.py`.
+- [x] `W12.P26.S306` - Close `AFR-204` for `src/aeat/core/observability/_recorder.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_recorder.py`.
 - [x] `W12.P26.S307` - Close `AFR-205` for `src/aeat/core/observability/_sink.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_sink.py`.
-- [ ] `W12.P26.S308` - Close `AFR-206` for `src/aeat/core/observability/_store.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/observability/_store.py`.
+- [x] `W12.P26.S308` - Close `AFR-206` for `src/aeat/core/observability/_store.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/observability/_store.py`.
 - [x] `W12.P26.S309` - Close `AFR-207` for `src/aeat/core/output_rendering.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/output_rendering.py`.
 - [x] `W12.P26.S310` - Close `AFR-208` for `src/aeat/core/paths.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/paths.py`.
-- [ ] `W12.P26.S311` - Close `AFR-209` for `src/aeat/core/resources/_boundary.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_boundary.py`.
-- [ ] `W12.P26.S312` - Close `AFR-210` for `src/aeat/core/resources/_repos/legal_parameters.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/legal_parameters.py`.
-- [ ] `W12.P26.S313` - Close `AFR-211` for `src/aeat/core/resources/_repos/modelos.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/modelos.py`.
+- [x] `W12.P26.S311` - Close `AFR-209` for `src/aeat/core/resources/_boundary.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_boundary.py`.
+- [x] `W12.P26.S312` - Close `AFR-210` for `src/aeat/core/resources/_repos/legal_parameters.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/legal_parameters.py`.
+- [x] `W12.P26.S313` - Close `AFR-211` for `src/aeat/core/resources/_repos/modelos.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/modelos.py`.
 - [ ] `W12.P26.S314` - Close `AFR-212` for `src/aeat/diagnostics/__main__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S83`; `src/aeat/diagnostics/__main__.py`.
 - [ ] `W12.P26.S315` - Close `AFR-213` for `src/aeat/diagnostics/profile.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/diagnostics/profile.py`.
 - [ ] `W12.P26.S316` - Close `AFR-214` for `src/aeat/domain/_secure_storage_runtime.py` with signals `secure-object, runtime, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/_secure_storage_runtime.py`.
