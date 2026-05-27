@@ -4932,3 +4932,119 @@ documented and coherent.
 7/7 pass, 2.74s, real encrypted SQLite via `isolated_runtime_profile`.
 No mocks, no monkeypatches, no skips.
 
+---
+
+## Triage: Tomás round-9 CRITICAL pair — S352 + S353
+
+### S352 — M303 wallet gate locks first-time users
+
+**Root cause analysis.**
+
+The binding `modelo-303-compensacion-pendiente-anteriores` in the M303
+2023-y-siguientes revision declares `source = "previous_filing"` with
+selector `source_period_offset_from_target = -1`. The prefill path in
+`src/aeat/application/calculations/_binding_prefill.py` calls
+`_gather_observations()`, which silently skips (line 153 `continue`)
+when no prior period observation or IVA history record exists. If no
+prior M303 work unit has been filed or imported, neither
+`CalculationObservationRepository` nor `IvaCompensationHistoryRepository`
+holds a prior-period record — the binding resolves to nothing, and
+`resolve_bindings_from_local_store` returns `binding_values = {}` for
+that slot.
+
+Option (c) (`--binding override`) is **BLOCKED by architecture**. It
+would open an uncontrolled escape from the reconciliation invariant,
+letting any operator silently override wallet state with arbitrary values
+at any time. This must remain rejected.
+
+Option (b) (auto-detect first period and emit zero) is architecturally
+dangerous: it silently assumes zero carry-forward, which is wrong for
+any taxpayer with prior-period IVA credit predating the app. Silent
+wrong values in a filed declaration are worse than a blocked first run.
+
+**Correct fix: Option (a) — explicit seed verb.**
+
+`aeat app modelo iva-wallet seed --filing-year <year> --period <period>
+--amount <decimal>` creates an `IvaCompensationPeriodState` record with
+`status = "seeded"` and `available_end_amount = <amount>`. The prefill
+path then finds this record via `IvaCompensationHistoryRepository` and
+resolves the binding correctly. The operator's deliberate choice is
+recorded with full provenance.
+
+The seed verb must require a `--confirm` flag and emit a locale-aware
+(`tr()`) warning: "This declares the IVA compensation carry-forward
+balance from periods prior to app installation. Incorrect seeding
+constitutes a filing error." The warning is not optional.
+
+Before dispatching: the coder must verify whether `--binding override`
+is rejected by the engine or by missing CLI flag registration. If the
+engine silently drops unknown binding keys rather than raising a useful
+error, that is a second gap to surface as a finding in the same step.
+
+Size: **SMALL-MEDIUM.** New CLI verb + `status = "seeded"` variant +
+3 locale keys + 3 tests: seed resolves binding, double-seed rejected,
+seed warning emitted.
+
+### S353 — M100 casilla 0505 manual without formula derivation
+
+**Root cause confirmed.**
+
+`src/aeat/_data/registry/aeat/modelos/100/revisions/2024/casillas/0487-0505.toml`
+declares casilla 0505 (`base liquidable general sometida a gravamen`)
+with **no `input_kind` and no `formula`**. The registry schema defaults
+`input_kind` to `"manual"` (schema line 1615). No formula in any 2024
+revision file targets 0505 as its output — zero hits for `target.*0505`
+across all `formulas/*.toml`. The identical gap exists in the 2025
+revision (`0571-0505.toml`).
+
+Casilla 0500 (`base liquidable general`) is correctly `input_kind =
+"computed"` with `formula = "renta-2024-base-liquidable-general"`. Eight
+downstream formulas consume 0505 as an operand (cuota escala estatal,
+cuota escala autonómica, tipo medio gravamen estatal/autonómico, mínimo
+personal sobre base general estatal/autonómica). All produce zero when
+0505 is zero. This is the Cluster T variant Tomás hit.
+
+**LIRPF relationship (Art. 50, Art. 56):**
+
+`0505 = max(0, 0500 - anualidades_alimentos_hijos_judicial)`. For
+taxpayers with no judicial child-support payments (the overwhelming
+majority, including Tomás), 0505 == 0500 exactly.
+
+**Correct fix: Option (a) — computed formula.**
+
+1. Author formula `renta-2024-base-liquidable-general-sometida-a-gravamen`
+   targeting casilla `0505`. Expression: `max(0, 0500 minus the
+   anualidades-alimentos-hijos sum)`. The anualidades casilla is already
+   an operand of the existing `renta-2024-anualidades-alimentos-hijos-suma`
+   formula; the coder must identify the correct source casilla from the
+   AEAT DR-100-2024 dictionary (`aeat-dr-100-2024-dictionary`), which is
+   already cited in 0505's `source_refs`.
+2. Change casilla 0505 `input_kind` to `"computed"` with
+   `formula = "renta-2024-base-liquidable-general-sometida-a-gravamen"`.
+3. Same change for the 2025 revision (identical gap).
+
+**G6 legal grounding requirement:** The coder must verify the
+`max(0, 0500 - anualidades)` expression against the AEAT Renta 2024
+manual or AEAT workbook oracle. If the exact anualidades operand cannot
+be confirmed from registry sources, fall back to Option (b):
+`input_kind = "manual"` + `required = true` (verify gate fires when
+0505 is missing) as the safe fallback. Option (b) is worse UX but
+correct behaviour. Do not use Option (b) unless the legal grounding
+for Option (a) cannot be confirmed.
+
+Size: **MEDIUM.** Two new formula TOMLs (2024 + 2025), two casilla
+TOML edits, oracle-grounded test asserting `0505 == 0500` when
+anualidades = 0, anti-tautology proof via nonzero anualidades case,
+verify-gate test confirming zero 0505 triggers a finding before the
+formula is wired.
+
+### Dispatch sequencing
+
+S353 has no blocked dependencies — dispatch immediately (coder1,
+MEDIUM, TOML + test). S342 (heavy, ongoing) and S353 (medium, TOML)
+touch different files and can run in parallel.
+
+S352: dispatch after S340 lands (coder2, SMALL-MEDIUM). The
+investigation of `--binding override` rejection is the first task
+in the step brief.
+
