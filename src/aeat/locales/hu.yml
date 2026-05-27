@@ -530,6 +530,11 @@ cli:
         period_help: cli.app.modelo.history.period_help
         year_help: cli.app.modelo.history.year_help
       history_help: cli.app.modelo.history_help
+      iva_wallet:
+        as_of_year_help: Reference year for carry-forward age and expiry calculations.
+        balance_help: Show aggregated IVA compensation carry-forward balance computed from
+          local Modelo 303 history.
+        group_help: Local IVA compensation wallet balance commands.
       list:
         year_help: cli.app.modelo.list.year_help
       project:

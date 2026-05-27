@@ -13,6 +13,11 @@ inputs from authoritative prior filings instead of operator
 hand-entry.
 """
 
+from ._iva_wallet_balance import (
+    IvaWalletBalanceReport,
+    build_iva_wallet_balance_report,
+    query_iva_wallet_balance,
+)
 from ._binding_prefill import (
     BindingPrefillReport,
     LocalIvaCompensationRecurrence,
@@ -63,6 +68,9 @@ from ._row_set_assembly import (
 
 __all__ = [
     "AssembledObservations",
+    "IvaWalletBalanceReport",
+    "build_iva_wallet_balance_report",
+    "query_iva_wallet_balance",
     "BindingPrefillReport",
     "CalculationObservationRepository",
     "IvaCompensationAuthoritySource",

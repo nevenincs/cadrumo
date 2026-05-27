@@ -715,6 +715,12 @@ cli:
         period_help: Filtro opcional de periodo (p. ej. Q1, annual)
         year_help: Filtro opcional de ejercicio de presentación
       history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
+      iva_wallet:
+        as_of_year_help: Año de referencia para los cálculos de antigüedad y caducidad
+          del saldo arrastrado.
+        balance_help: Muestra el saldo acumulado del crédito IVA por compensación calculado
+          a partir del historial local del Modelo 303.
+        group_help: Comandos de saldo local de la cartera de compensación IVA.
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       project:
