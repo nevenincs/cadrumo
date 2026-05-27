@@ -4,9 +4,11 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config.__init__ import app
 from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -17,23 +19,18 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture
-def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """Per-bucket storage with the unsecured backend.
+def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
+    """Per-bucket storage with the production file-backed custody path.
 
     Each profile bucket resolves its own SQLite file from the
     active-profile pointer chain — the production cold-start path.
     """
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        try:
+            yield storage_root
+        finally:
+            dispose_engine()
 
 
 def test_apoderado_status_fails_without_profile(runner: CliRunner) -> None:
