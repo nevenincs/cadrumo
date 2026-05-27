@@ -4934,6 +4934,64 @@ No mocks, no monkeypatches, no skips.
 
 ---
 
+## Verdict: W04.P19.S340 — workflow abort next_action pointer (d898240f9)
+
+**APPROVE with follow-up (FU-S340-A).**
+
+### Gate checks
+
+**G3 (tr() coverage): PARTIAL — follow-up logged.**
+
+Two surfaces carry the `next_action` pointer string:
+
+1. `_stage_validating_draft` in `src/aeat/application/workflow/_engine.py`:
+   `WorkflowStep.details["next_action"]` is a hardcoded English template
+   string. The workflow details dict is not a locale-aware surface today —
+   other details keys (e.g. `error_count`, `status_value`) are also
+   unlocalized English. This is a pre-existing pattern; not a new
+   regression introduced by S340. Acceptable as W09 follow-up.
+
+2. `_verification_report_lines` in `src/aeat/entrypoints/cli/_modelo.py`:
+   the tab-delimited `next_action\t<command>` line is emitted to the
+   terminal directly. The text is a CLI invocation template with an
+   interpolated `calculation_revision_id` — not a prose localisation
+   target. No other `_*_lines` function in this codebase wraps
+   tab-delimited command hints in `tr()`. The current approach is
+   consistent with the existing pattern. Acceptable as a design choice.
+
+FU-S340-A (non-blocking W09): When a future pass localises the
+tab-delimited CLI surface, add `tr()` wrapping to the static prefix
+of `next_action\t`. Consider a typed `WorkflowStepDetails` model if
+the details bag grows further.
+
+**G4 (locale scaffold):** S340 introduced no locale file structural
+changes. `python -m aeat.locales audit` shows one pre-existing missing
+key (`errors.calc.bound_input_smuggled_without_binding_value`) — predates
+S340 and is not introduced by it. **PASS.**
+
+**G6 (anti-tautology + real adapters):**
+
+- `test_draft_has_errors_surfaces_next_action_pointer`: engine unit test
+  with real `ModeloFinding(severity=ERROR)`. Asserts
+  `details["next_action"]` present and contains `"verification-report
+  list"`. **PASS.**
+- `test_verification_report_lines_includes_next_action_when_refused`:
+  real `VerificationReport(granted_verificado_completo=False)` with real
+  finding. Asserts `next_action\t` line present with real
+  `calculation_revision_id`. **PASS.**
+- `test_verification_report_lines_omits_next_action_when_granted`:
+  anti-tautology — `granted=True` report must NOT emit `next_action`.
+  Gate opens and closes. **PASS.**
+
+**Git-discipline gate:** Step record contains no stash, HEAD
+reconstruction, backup-restore, or peer-WIP language. **PASS.**
+
+### Tests
+
+18/18 `TestAbortReasons` pass (no regressions). 2/2 new CLI tests pass.
+
+---
+
 ## Triage: Tomás round-9 CRITICAL pair — S352 + S353
 
 ### S352 — M303 wallet gate locks first-time users
