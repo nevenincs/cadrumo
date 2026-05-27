@@ -89,6 +89,11 @@ def _hash_tree(
             try:
                 sha = _file_sha256(file_path)
             except OSError as exc:
+                _log.debug(
+                    "observability fingerprint: marking %s unreadable (%s)",
+                    file_path,
+                    exc,
+                )
                 sha = f"unreadable:{type(exc).__name__}:{getattr(exc, 'errno', '')}"
             entries.append((rel, sha))
     entries.sort()
