@@ -114,14 +114,14 @@ class StorageRuntime(BaseModel):
 
         self.require_ready()
         self._require_current_active_session()
-        from .sql.engine import create_engine_from_settings
+        from .sql.engine import get_engine
         from .sql.secure_objects import SecureObjectRepository
 
         settings = Settings(
             aeat_local_storage_root=self.storage_root,
             aeat_active_profile=self.bucket_id,
         )
-        engine = create_engine_from_settings(settings)
+        engine = get_engine(settings)
         return SecureObjectRepository(engine=engine)
 
     def _require_current_active_session(self) -> None:
