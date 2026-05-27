@@ -764,6 +764,7 @@ cli:
         compare_taxation_work_unit_not_found: 'A(z) {work_unit_id} munkaegység nem található; ellenőrizd az aktív egységeket az ''aeat app modelo work list'' paranccsal.'
         compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető el: {detail}'
         compare_taxation_recommendation_line: 'JAVASLAT: {recommendation} — {reason}'
+        output_language_help: 'A megjelenített üzenetek kimeneti nyelve.'
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date
@@ -1503,6 +1504,11 @@ cli:
       verify_help: cli.registry.manuals.verify_help
       view_help: cli.registry.manuals.view_help
       year_help: cli.registry.manuals.year_help
+      verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name} fordítási kulcsa'
+      verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik: %{target}'
+      verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik: %{target}'
+      verify_missing_manifest: '%{manifest_path} hiányzik; futtasd az ''aeat manual fetch'' parancsot a létrehozásához'
+      verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}: %{messages}'
     observation_help: cli.registry.observation_help
     parity_app_help: cli.registry.parity_app_help
     parity_output_help: cli.registry.parity_output_help

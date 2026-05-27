@@ -1045,6 +1045,7 @@ cli:
         compare_taxation_work_unit_not_found: 'Unidad de trabajo {work_unit_id} no encontrada; consulta las unidades activas con ''aeat app modelo work list''.'
         compare_taxation_error: 'La comparación conjunta vs. individual no está disponible: {detail}'
         compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
+        output_language_help: 'Idioma de salida para los mensajes renderizados.'
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -2060,6 +2061,10 @@ cli:
       view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       year_help: Año fiscal del manual (p. ej. 2024)
       verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción de %{field_name}'
+      verify_dangling_section_ref: 'la sección %{section_id} referencia una sección desconocida %{target}'
+      verify_dangling_rule_section_ref: 'la regla %{rule_id} referencia una sección desconocida %{target}'
+      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual fetch'' para materializarlo'
+      verify_failed: 'la verificación falló para %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: Nº declaraciones de aplicabilidad
       application_link_count: Nº enlaces de aplicación

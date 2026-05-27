@@ -158,12 +158,15 @@ def write_manifest(manifest_path: Path, manifest: FetchedManualPart) -> None:
         manifest_path: Destination path for the JSON manifest.
         manifest: Manifest record to serialise.
     """
-    manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = manifest.model_dump(mode="json")
-    manifest_path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
+    try:
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        payload = manifest.model_dump(mode="json")
+        manifest_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        raise ManifestError(f"{manifest_path}: cannot write manifest ({exc})") from exc
 
 
 def load_manifest(manifest_path: Path) -> FetchedManualPart:
@@ -219,7 +222,7 @@ def fetch_manual_part(
     _logger.info("fetching %s/%s/%s from %s", manual_id.value, year, part.value, spec.source_pdf_url)
     try:
         sha256, length = _stream_to_file(spec.source_pdf_url, pdf_path)
-    except httpx.HTTPError as exc:
+    except (OSError, httpx.HTTPError) as exc:
         _logger.warning("manual fetch failed %s/%s/%s", manual_id.value, year, part.value, exc_info=True)
         raise ManifestError(f"download failed for {spec.source_pdf_url}: {exc}") from exc
 
@@ -262,13 +265,16 @@ def verify_fetched_pdf(manifest: FetchedManualPart, part_root: Path) -> None:
         raise ManifestError(f"raw PDF not found at {pdf_path}; run 'aeat manual fetch' to materialise it")
     sha = hashlib.sha256()
     length = 0
-    with pdf_path.open("rb") as handle:
-        while True:
-            chunk = handle.read(_CHUNK_SIZE)
-            if not chunk:
-                break
-            sha.update(chunk)
-            length += len(chunk)
+    try:
+        with pdf_path.open("rb") as handle:
+            while True:
+                chunk = handle.read(_CHUNK_SIZE)
+                if not chunk:
+                    break
+                sha.update(chunk)
+                length += len(chunk)
+    except OSError as exc:
+        raise ManifestError(f"{pdf_path}: cannot read raw PDF ({exc})") from exc
     if sha.hexdigest() != manifest.sha256:
         _logger.error(
             "manual pdf sha256 mismatch %s: computed=%s manifest=%s",
