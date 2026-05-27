@@ -225,6 +225,7 @@ from ._schema import (
     SourceReference,
     SupportRemovalDecisionDefinition,
     VerificationExpectationDefinition,
+    VerificationPredicateDefinition,
     WorkbookParityReference,
 )
 from ._snapshot import build_snapshot
@@ -382,6 +383,7 @@ __all__ = [
     "SyntheticInputValue",
     "ValidatedRegistryAuthority",
     "VerificationExpectationDefinition",
+    "VerificationPredicateDefinition",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "WorkbookArtefactReport",

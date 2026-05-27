@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -39,6 +40,7 @@ from ...domain.calculations.registry import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
+    VerificationPredicateDefinition,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -229,6 +231,19 @@ class AmendmentTargetStateError(ModeloError):
     """Raised when the modelo-amend path is asked to amend a filing
     record that is not in ``CURRENT`` status (e.g., it was already
     superseded by a later filing)."""
+
+
+class StoredCalculationDriftError(ModeloError):
+    """Raised when the verify path detects that a persisted calculation revision
+    has drifted from its content-addressed id.
+
+    The ``calculation_revision_id`` is a SHA-256 hash of
+    ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``.
+    When the stored payload re-hashes to a different value the record has been
+    mutated after creation — either by tampering or a storage corruption.  The
+    verify path refuses VERIFICADO_COMPLETO and raises this error so the
+    operator is forced to produce a fresh calculation revision.
+    """
 
 
 class ExternalModeloImportError(ModeloError):
@@ -2026,6 +2041,134 @@ def _required_input_casillas_for_revision(
     return tuple(required), tuple(optional)
 
 
+def _verification_predicates_for_revision(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[VerificationPredicateDefinition, ...]:
+    """Return Layer 2 predicates for the registry revision, or empty tuple.
+
+    Resolves the same snapshot as
+    ``_required_input_casillas_for_revision``; when the registry is
+    unavailable the verification pipeline already blocked on Layer 1, so
+    returning an empty tuple here is safe — the caller never reaches
+    predicate evaluation in that case.
+    """
+
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        authority = _authority_via_resources()
+    except FileNotFoundError:
+        return ()
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError:
+        return ()
+
+    return snapshot.revision.verification_predicates
+
+
+def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
+    """Raise StoredCalculationDriftError when the revision's stored payload
+    does not match its content-addressed id.
+
+    The ``calculation_revision_id`` is a SHA-256 hash of the revision's
+    ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``
+    payload at creation time.  Re-deriving the hash from the stored fields
+    and comparing it to the stored id detects tampering or storage corruption
+    without re-running the formula engine.
+    """
+    expected = derive_calculation_revision_id(
+        work_unit_id=revision.work_unit_id,
+        inputs_snapshot=revision.inputs_snapshot,
+        binding_overrides=revision.binding_overrides,
+        casilla_values=revision.casilla_values,
+        source_transaction_ids=revision.source_transaction_ids,
+        borrador_snapshot_id=revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+    )
+    if expected != revision.calculation_revision_id:
+        raise StoredCalculationDriftError(
+            f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "
+            f"stored id does not match re-derived hash of its payload; "
+            f"the record may have been tampered with or corrupted"
+        )
+
+
+_PREDICATE_ALL_NONZERO = _re.compile(r'^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
+_PREDICATE_ANY_NONZERO = _re.compile(r'^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
+
+
+def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
+    """Parse the comma-separated quoted-id list from a predicate expression."""
+    ids: list[str] = []
+    for token in ids_fragment.split(','):
+        token = token.strip().strip('"').strip("'")
+        if token:
+            ids.append(token)
+    return ids
+
+
+def _evaluate_predicate_expression(
+    expression: str,
+    casilla_values: Mapping[str, Decimal],
+) -> bool:
+    """Return True when the predicate holds, False when it is violated.
+
+    Supports the W04 DSL subset:
+
+    - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
+    - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
+
+    An expression that does not match either pattern is treated as
+    holding (i.e. unknown predicates do not block the operator).
+    """
+    expr = expression.strip()
+
+    m = _PREDICATE_ALL_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_ANY_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    return True
+
+
+def _evaluate_verification_predicates(
+    predicates: tuple[VerificationPredicateDefinition, ...],
+    casilla_values: Mapping[str, Decimal],
+) -> list[ModeloVerificationFinding]:
+    """Evaluate Layer 2 cross-casilla predicates; return BLOCKING_RULE findings for violations."""
+    if not predicates:
+        return []
+
+    findings: list[ModeloVerificationFinding] = []
+    for predicate in predicates:
+        if not _evaluate_predicate_expression(predicate.expression, casilla_values):
+            findings.append(
+                ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message=(
+                        f"cross-casilla invariant {predicate.predicate_id!r} violated: "
+                        f"{predicate.expression}"
+                    ),
+                    next_action=(
+                        f"Ensure all casillas required by predicate "
+                        f"{predicate.predicate_id!r} are non-zero before verifying."
+                    ),
+                )
+            )
+    return findings
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -2097,6 +2240,8 @@ def verify_modelo_revision(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified"
         )
+
+    _assert_revision_content_integrity(target)
 
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
@@ -2249,6 +2394,15 @@ def _collect_revision_verification_findings(
         else:
             missing_required.append(casilla_id)
             findings.append(_missing_required_casilla_finding(casilla_id, target.work_unit_id))
+
+    # Layer 2: cross-casilla predicate gate.
+    predicates = _verification_predicates_for_revision(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    findings.extend(_evaluate_verification_predicates(predicates, target.casilla_values))
+
     return findings, resolved_casillas, missing_required
 
 
