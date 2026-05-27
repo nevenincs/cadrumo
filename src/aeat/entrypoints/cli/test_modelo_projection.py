@@ -76,6 +76,13 @@ _CCAA = "madrid"
 # ---------------------------------------------------------------------------
 
 
+def _payload(output: str) -> dict:
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
@@ -140,7 +147,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -197,7 +204,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert calc_result.exit_code == 0, (
             f"M130 calculate failed for period {period}: {calc_result.output}"
         )
-        quarter_payload = json.loads(calc_result.output)
+        quarter_payload = _payload(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # Verify oracle inputs produce expected per-quarter values.
         assert Decimal(quarter_payload["casilla_values"]["03"]) == Decimal("8000.00"), (
@@ -221,7 +228,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     )  # fmt: skip
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
-    proj_payload = json.loads(project_result.output)
+    proj_payload = _payload(project_result.output)
 
     assert proj_payload["quarters_filed"] == 4
     assert proj_payload["is_extrapolated"] is False

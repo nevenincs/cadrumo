@@ -76,6 +76,13 @@ _TAUTOLOGY_CASILLA = "02"
 # ---------------------------------------------------------------------------
 
 
+def _payload(output: str) -> dict:
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
@@ -137,7 +144,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, str]:
@@ -161,7 +168,7 @@ def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, 
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    return dict(json.loads(result.output)["casilla_values"])
+    return dict(_payload(result.output)["casilla_values"])
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +245,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert compare_result.exit_code == 0, compare_result.output
     assert "Traceback" not in compare_result.output
 
-    payload = json.loads(compare_result.output)
+    payload = _payload(compare_result.output)
     assert payload["year_a"] == 2025
     assert payload["year_b"] == 2026
     assert payload["modelo"] == "130"

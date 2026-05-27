@@ -157,7 +157,7 @@ class WorkCreateResult(OutputSchema):
     operation: str = "modelo.work.create"
     status: str
     status_message: str
-    name_applied: str
+    name_applied: str | None = None
     applicability_guard_bypassed: bool
     work_unit_id: str
     bucket_id: str

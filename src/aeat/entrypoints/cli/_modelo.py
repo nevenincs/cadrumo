@@ -1656,24 +1656,24 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
         # provenance (formula_id, operand_refs, operand_values,
         # legal_refs, source_refs). Without this projection the CLI
         # JSON would strip every regulatory grounding signal.
-        "observations": [
+        "observations": tuple(
             {
                 "casilla_id": obs.casilla_id,
                 "value": str(obs.value),
                 "formula_id": obs.formula_id,
-                "operand_refs": list(obs.operand_refs),
-                "operand_values": [str(v) for v in obs.operand_values],
-                "legal_refs": list(obs.legal_refs),
-                "source_refs": list(obs.source_refs),
+                "operand_refs": tuple(obs.operand_refs),
+                "operand_values": tuple(str(v) for v in obs.operand_values),
+                "legal_refs": tuple(obs.legal_refs),
+                "source_refs": tuple(obs.source_refs),
             }
             for obs in rev.observations
-        ],
+        ),
         # Headline result summary: registry-declared result-to-pay /
         # result-to-refund total plus the modelo's key computed
         # casillas, so the JSON consumer gets the same lead figures the
         # text surface shows.
         "result_summary": _result_summary_payload(rev),
-        "binding_overrides": dict(rev.binding_overrides),
+        "binding_overrides": {key: str(value) for key, value in rev.binding_overrides.items()},
         "inputs_snapshot": dict(rev.inputs_snapshot),
         "created_at": rev.created_at.isoformat(),
         "updated_at": rev.updated_at.isoformat(),
@@ -1715,15 +1715,15 @@ def _result_summary_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _result_summary_payload(rev: CalculationRevision) -> list[dict[str, object]]:
+def _result_summary_payload(rev: CalculationRevision) -> tuple[dict[str, object], ...]:
     """Return the headline-result summary rows for the JSON payload."""
 
     from ...application.modelo import calculation_result_summary
 
     summary = calculation_result_summary(rev)
     if summary is None:
-        return []
-    return [
+        return ()
+    return tuple(
         {
             "role": row.role,
             "casilla_id": row.casilla_id,
@@ -1731,7 +1731,7 @@ def _result_summary_payload(rev: CalculationRevision) -> list[dict[str, object]]
             "label": row.label,
         }
         for row in summary.rows
-    ]
+    )
 
 
 def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
