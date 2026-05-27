@@ -1251,3 +1251,118 @@ any code Steps.
 22. **S250** (age_at DSL operator) — largest scope, requires ADR first; deferred to late W09 or W10.
 
 Total open W09.P41 + W09.P45 Steps: **54** (S198-S251 + S203-S239, excluding already-closed S206/S207/S210/S211/S218/S227/S228/S230).
+
+---
+
+## W07.P32 `aeat app modelo project` verb (Task #70) — S116-S117 commit review
+
+**Scope:** Three commits — `1f553d99c` (S116: 258-line project verb), `ca0b17c30`
+(S117: 297-line regression test), `a51d96b11` (exec records + plan closure).
+
+### Commit `1f553d99c` — S116: project verb
+
+**Extrapolation logic — REASONABLE, minor gap.**
+
+The verb annualises by `factor = Decimal(4) / Decimal(quarters_filed)` when
+`quarters_filed < 4`, applied to `rendimiento_neto`, `ingresos`, and `gastos`.
+Linear extrapolation is transparent to the operator via `is_extrapolated=True`
+and `quarters_filed/4 (extrapolated from NQ)` in tabular output; `--casilla
+0505=VALUE` allows override. The `0505` input is `projected_rendimiento_neto`
+— correct for estimación directa M100 base liquidable general. Minor gap: the
+casilla comment in the code does not cite the regulatory authority for the
+M130→M100 rendimiento neto mapping (LIRPF Art. 16 + RD 439/2007 Art. 28).
+
+**JSON payload shape — PARTIALLY CONFORMS.**
+
+The payload has `operation`, `year`, `ccaa`, `quarters_filed`,
+`quarters_available`, `is_extrapolated`, `m130_accumulated` (4 sub-fields),
+and `m100_projection` (7 sub-fields). Casilla values emitted as strings
+(correct Decimal serialisation). Non-conformance: flat `dict[str, object]`
+at the top level — consistent with other verbs in `_modelo.py` predating
+the typed-payload requirement (S215 is an open W09 Step, not a new regression).
+
+Calculation-grounding gap: no `legal_refs` or `source_refs` appear on the
+projected M100 casilla values in the output dict. The aeat-calculation-grounding
+rule requires this on every operator-facing CLI JSON payload. The registry engine
+carries provenance internally but the project verb does not surface it. This is
+the same gap as the existing `work calculate` `casilla_values` flat dict — not
+a new regression, but flagged as FU-W07-D.
+
+**Hexagonal direction — PARTIAL VIOLATION.**
+
+`list_work_units` and `list_calculation_revisions` are imported from
+`application.modelo` (lines 20/39) — correct. However `calculate_registry_snapshot`
+is imported directly from `domain.calculations.registry` (local import at
+line 3553), bypassing the application layer. The established pattern routes
+calculation through `_service().calculate(...)` in `_actions.py`, which wraps
+the raw engine call with verification predicates and drift detection (S210).
+For a read-only projection that is not persisted, bypassing persistence is
+intentional — but the calculation orchestration (snapshot acquisition + engine
+invocation) should still live in `application.modelo`, not in the CLI verb.
+FU-W07-E flagged.
+
+**Real-adapter fixture — CLEAN.**
+
+`_require_active_profile()` called at entry. `_service()._authority` used for
+snapshot acquisition. No unsecured monkeypatch. Reads real persisted
+`CalculationRevision` records.
+
+**Verdict: ACCEPT-WITH-FOLLOWUP** (FU-W07-D, FU-W07-E).
+
+### Commit `ca0b17c30` — S117: regression test
+
+**Tautology check — CLEAN.**
+
+Drive side: creates 4 M130 work units via CLI, calculates each via
+`invoke_cached_cli`, reads persisted `CalculationRevision` records. Per-quarter
+assertions (casilla 03 = 8,000.00, casilla 19 = 1,600.00) are derived from
+RD 439/2007 Art. 110 (20% formula), not re-read from the engine. Oracle side:
+calls `calculate_registry_snapshot` directly with accumulated `0505 = 32,000.00`
+and `0604 = 6,400.00`. The two paths exercise different storage and orchestration
+layers — stored-revision aggregation + CLI dispatch vs. direct engine call.
+Satisfies the non-tautological requirement.
+
+**Authority documentation — ADEQUATE.** Module docstring cites AEAT DR 130
+Instrucciones, Casilla 04, IRPF Art. 99 (BOE-A-2006-20764), RD 439/2007
+Art. 110. Full per-quarter worked example reproduced. `_PREV_YEAR_INCOME =
+Decimal("13000.00")` and its minoración = 0 effect are explained inline.
+
+**Real-adapter fixture — CLEAN.**
+
+Uses `isolated_runtime_profile` (real KEK/DEK, real SQLite). Explicitly
+`monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND")` and `AEAT_ALLOW_UNENCRYPTED`
+to prevent inheritance. Correct pattern; consistent with S208→S209 direction.
+
+**Authority path parity concern.** Oracle calls `resources().modelos.authority`;
+verb uses `_service()._authority`. If these yield different snapshot fingerprints
+the assertion could pass despite a stale snapshot on one side, or fail spuriously.
+Not a new regression but worth documenting. FU-W07-F flagged.
+
+**Verdict: ACCEPT-WITH-FOLLOWUP** (FU-W07-F).
+
+### Commit `a51d96b11` — exec records + plan closure
+
+Step records for S116/S117 present. Plan checkboxes closed via CLI.
+`profile-lifecycle-disaster-plan.md` 10-line diff is a routine plan-update
+side-effect (cosmetic spacing / Step close). ACCEPT.
+
+### Cross-commit summary
+
+| Commit | Steps | Verdict | Notes |
+|--------|-------|---------|-------|
+| `1f553d99c` | S116 | ACCEPT-WITH-FOLLOWUP | FU-W07-D (legal_refs gap), FU-W07-E (hex violation) |
+| `ca0b17c30` | S117 | ACCEPT-WITH-FOLLOWUP | FU-W07-F (authority path parity) |
+| `a51d96b11` | records | ACCEPT | |
+
+**Follow-up Steps for W09:**
+
+- FU-W07-D: Surface `legal_refs`/`source_refs` on projected M100 casilla values.
+  Extend `m100_projection` dict with per-casilla provenance from engine result
+  observations.
+- FU-W07-E: Extract snapshot acquisition + `calculate_registry_snapshot` call
+  from CLI verb into `application.modelo` service function. The verb currently
+  imports from `domain.calculations.registry` directly — hexagonal boundary
+  violation.
+- FU-W07-F: Document or test that `resources().modelos.authority` and
+  `_service()._authority` yield the same snapshot for the same registry
+  fingerprint.
