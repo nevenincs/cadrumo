@@ -3248,3 +3248,110 @@ uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P41.S280 --to-p
 - S215 (ledger `_actions.py` four payload helpers) remains in W09.P41 rather than
   moving to W12 because it is lower in scope (4 sites, one file, already under
   active coder attention) and should not be gated behind the full P60 batch.
+
+---
+
+## S254 Batch-3 + D5 regression fix — architecture review (Task #106)
+
+**Commits:** `2a897c177` (S254 Batch-3 + D5 fix) + `8067dc8ff` (vault records)
+**Gates applied:** G1, G2, G3, G5, G6
+**Verdict: ACCEPT-WITH-FOLLOWUP**
+
+### Commit `2a897c177` — S254 Batch-3 migration + D5 fix
+
+#### Fixture migration (`test_profile_lifecycle_verbs.py`)
+
+The `AEAT_SECRET_STORE_BACKEND=unsecured` / `AEAT_ALLOW_UNENCRYPTED=1`
+monkeypatches are gone from `test_profile_lifecycle_verbs.py`. The replacement
+pattern is correct: `isolated_profile_storage_root` for create-path tests,
+`profile_storage_session` wrapping direct encrypted-SQL reads, `root_app` invocation
+so `decorate_typer_app` error boundary is active. The `enforce_unique_tax_id=False`
+flag on `profile_create_storage_span` correctly avoids cross-bucket tax-id scan
+collisions in per-bucket-storage mode. Pattern is consistent with the established
+S208/S252/S253/S273 migration chain.
+
+**G6 (test quality):** `test_profile_import_label_lands_second_copy_under_new_name`
+asserts `original.bucket_id != restored.bucket_id` — this is a genuine
+discriminating assertion; the test would fail if `--label` preserved the bundle UUID.
+Non-tautological. PASS.
+
+#### D5 regression fix (`_config/__init__.py`)
+
+The pre-existing D5 regression was introduced when ADR D5 (UUID preservation on
+import) was implemented: the `--label` path was incorrectly made to preserve the
+bundle UUID instead of minting a fresh one. This caused
+`test_profile_import_label_lands_second_copy_under_new_name` to fail because both
+"operator" and "operator-restored" profiles shared the same `bucket_id`.
+
+**Fix analysis — CORRECT.** The `fresh_uuid_mode` branch accurately implements the
+ADR intent:
+
+- No `--label` → identity-preserving recovery → Tier-1 UUID collision check applies;
+  `profile_id=bundle_profile_id` passed to `_atomic_create_profile`.
+- With `--label` → fresh independent copy → Tier-1 UUID check skipped; `profile_id=None`
+  passed to `_atomic_create_profile`, which mints a fresh UUID.
+
+The revised Tier-2 guard (`if existing is not None`, dropping `!= bundle_profile_id`)
+is also correct for the `fresh_uuid_mode` path: in fresh-UUID mode the minted id is
+new each call, so the old `!= bundle_profile_id` condition would have let label
+collisions through on a retry (the minted UUID would differ from `bundle_profile_id`
+every time).
+
+**Architecture boundary check:** The ADR D5 contract is preserved. The no-`--label`
+path still:
+1. Checks `read_profile_bucket_by_id(bundle_profile_id)` — refuses if UUID taken.
+2. Checks `_read_profile_bucket(target_label)` — refuses if label taken.
+3. Calls `_atomic_create_profile(..., profile_id=bundle_profile_id)` — preserves UUID.
+
+The `test_reimport_same_bundle_is_refused` and `test_mutated_profile_id_creates_second_profile`
+tests in `test_profile_import_idempotency.py` continue to cover the no-`--label`
+identity-preserving path. UUID round-trip confirmed by `assert exported_id in r_show.output`.
+
+**G5 — bonus: dead shim deleted.** The `2a897c177` diff also removes the infinite-
+recursion stub `def _activate_subcommand_output_language(ctx, language): _activate_subcommand_output_language(ctx, language)` from `_config/__init__.py` (lines 1553-1556 of the prior version). This was the S264 (FU-W08-B) target. G5 gate: shim retired, direct import from `_common` used. Recommend closing S264 as resolved by this commit.
+
+#### MINOR follow-up (G3)
+
+Tier-2's `tr()` default string `"label {target_label!r} is already taken by a different profile"` uses "different profile" phrasing regardless of whether the caller is in `fresh_uuid_mode` or the identity-preserving path. In `fresh_uuid_mode` the "different profile" phrasing is misleading — the label might have been taken by the very same bundle imported earlier under a different `--label`. The locale key is `import_label_taken_different_id`; the `default=` text should say "already taken" without "different". This is a wording issue, not a functional bug. Log as W09 follow-up.
+
+### Commit `8067dc8ff` — vault records
+
+Step record for S254 is well-formed. Plan checkbox `[x]` on S254 is present.
+
+**ISSUE: S254 closed prematurely. `test_root_help_shape.py` not migrated.**
+
+The S254 step text lists three files: `test_profile_lifecycle_verbs`,
+`test_root_grammar_invariants`, `test_root_help_shape`. This commit migrated only
+`test_profile_lifecycle_verbs`. Inspection of the current working tree confirms:
+
+- `test_root_grammar_invariants.py` — no `AEAT_SECRET_STORE_BACKEND` references.
+  Already clean (migrated by a prior commit or never needed it). OK.
+- `test_root_help_shape.py` — `_console_env` helper at lines 40-41 still sets
+  `AEAT_SECRET_STORE_BACKEND=unsecured` and `AEAT_ALLOW_UNENCRYPTED=1`. Called
+  on lines 121 and 149 — both `--help` surface tests that never reach storage.
+  The unsecured env is vestigial and must be removed (S265 target).
+
+**Consequence: S209 cannot be closed yet.** S209 requires all 20 files in the
+Batch-3 migration to be clean. `test_root_help_shape.py` is still open.
+
+### Summary
+
+| Item | Status |
+|------|--------|
+| `test_profile_lifecycle_verbs.py` migration | PASS |
+| D5 `fresh_uuid_mode` logic | CORRECT |
+| Tier-2 guard fix | CORRECT |
+| S264 (dead shim) — closed by this commit | PASS — recommend `vault plan step check S264` |
+| `test_root_grammar_invariants.py` | Already clean, OK |
+| `test_root_help_shape.py` migration | NOT DONE — S254 closed prematurely |
+| S209 closable? | NO — blocked on `test_root_help_shape.py` |
+
+### Follow-up Steps
+
+- Reopen S254 via `vault plan step uncheck W09.P41.S254` and add a note that only
+  `test_root_help_shape.py` remains. Alternatively dispatch as a standalone S265-scope
+  fix (drop unsecured env from `_console_env` in `test_root_help_shape.py`; `--help`
+  tests need no storage backend).
+- After `test_root_help_shape.py` is clean, close S254, then close S209.
+- Close S264 now (shim deletion landed in `2a897c177`).
+- Log Tier-2 "different profile" wording as a minor W09 follow-up.

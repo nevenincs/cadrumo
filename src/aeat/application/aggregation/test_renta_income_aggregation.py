@@ -130,7 +130,9 @@ def test_q1_window_includes_jan_mar_transactions() -> None:
     # April is outside Q1 window — ends up in issues
     issue_ids = {i.transaction_id for i in result.issues}
     assert apr.transaction_id in issue_ids
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("1800.00")
+    assert result.casilla_aggregation.casilla_values["01"] == sum(
+        (tx.raw.amount for tx in (jan, feb, mar)), Decimal("0")
+    )
 
 
 def test_q2_window_accumulates_jan_through_jun() -> None:
@@ -144,7 +146,9 @@ def test_q2_window_accumulates_jan_through_jun() -> None:
 
     observation_ids = {o.transaction_id for o in result.observations}
     assert observation_ids == {jan.transaction_id, may.transaction_id}
-    assert result.casilla_aggregation.casilla_values["01"] == Decimal("3000.00")
+    assert result.casilla_aggregation.casilla_values["01"] == sum(
+        (tx.raw.amount for tx in (jan, may)), Decimal("0")
+    )
 
 
 def test_mixed_classification_applies_business_pct() -> None:
@@ -265,7 +269,9 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
     # q2_only is outside Q1 window so it produces one OUTSIDE_PERIOD issue
     assert len(result_q1.issues) == 1
     assert result_q1.issues[0].reason == RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD
-    assert result_q1.casilla_aggregation.casilla_values["01"] == Decimal("4000.00")
+    assert result_q1.casilla_aggregation.casilla_values["01"] == sum(
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2)), Decimal("0")
+    )
     observation_ids_q1 = {o.transaction_id for o in result_q1.observations}
     assert observation_ids_q1 == {q1_tx1.transaction_id, q1_tx2.transaction_id}
 
@@ -277,7 +283,9 @@ def test_repository_backed_aggregation_emits_casilla_01_sum(
 
     # Q2 is cumulative YTD: Jan-Jun, so all three transactions qualify
     assert result_q2.issues == ()
-    assert result_q2.casilla_aggregation.casilla_values["01"] == Decimal("7000.00")
+    assert result_q2.casilla_aggregation.casilla_values["01"] == sum(
+        (tx.raw.amount for tx in (q1_tx1, q1_tx2, q2_only)), Decimal("0")
+    )
     observation_ids_q2 = {o.transaction_id for o in result_q2.observations}
     assert observation_ids_q2 == {q1_tx1.transaction_id, q1_tx2.transaction_id, q2_only.transaction_id}
 

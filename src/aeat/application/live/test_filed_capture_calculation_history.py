@@ -260,14 +260,19 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
 
 
 def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: Path) -> None:
+    pending_compensation = Decimal("11.00")
+    prior_pending = Decimal("15.00")
+    applied = Decimal("4.00")
+    period_result = Decimal("-2.50")
+    expected_available_end = pending_compensation - period_result
     with _secure_backend(tmp_path):
         key = persist_filed_calculation_observation(
             _prior_303_observation(
-                pending_compensation=Decimal("11.00"),
-                prior_pending=Decimal("15.00"),
-                applied=Decimal("4.00"),
-                result=Decimal("-2.50"),
-                final_result=Decimal("-2.50"),
+                pending_compensation=pending_compensation,
+                prior_pending=prior_pending,
+                applied=applied,
+                result=period_result,
+                final_result=period_result,
                 semantic_compensation_ids=True,
             )
         )
@@ -277,13 +282,13 @@ def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: P
 
         assert key == "303:2026:1T"
         assert history is not None
-        assert history.prior_pending_amount == Decimal("15.00")
-        assert history.applied_amount == Decimal("4.00")
-        assert history.pending_for_later_amount == Decimal("11.00")
-        assert history.period_result_amount == Decimal("-2.50")
-        assert history.available_end_amount == Decimal("13.50")
+        assert history.prior_pending_amount == prior_pending
+        assert history.applied_amount == applied
+        assert history.pending_for_later_amount == pending_compensation
+        assert history.period_result_amount == period_result
+        assert history.available_end_amount == expected_available_end
         assert stored is not None
-        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("13.50")
+        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == expected_available_end
 
 
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:

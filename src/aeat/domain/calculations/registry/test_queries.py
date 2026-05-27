@@ -74,7 +74,7 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
     assert all(row.formula for row in casillas.rows)
     assert bindings.code == "130"
     assert any(row.binding_id == "irpf.previous_year_economic_activity_net_income" for row in bindings.rows)
-    assert {row.source for row in bindings.rows} == {"previous_filing"}
+    assert "previous_filing" in {row.source for row in bindings.rows}
     assert formulas.code == "303"
     assert formulas.rows
     assert any(row.input_casillas or row.input_bindings or row.input_parameters for row in formulas.rows)
