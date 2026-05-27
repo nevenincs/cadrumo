@@ -3448,3 +3448,75 @@ is still unmigrated.
 | S254 plan checkbox | Correctly left open |
 | S282 plan checkbox | Correctly closed |
 | S209 closable? | Still NO — `test_root_help_shape.py` open |
+
+---
+
+## Task #113 — Architecture review: W12.P62 validate-helper dedup (46ecfb966 + ec0bb2542)
+
+**Verdict: APPROVE**
+
+### G5 gate — no shim, no re-export, no compatibility alias
+
+`_validate_helpers.py` is a new module containing exactly one function:
+`_missing_refs`. No re-export of the old definition exists in any of the 7
+updated modules. All 7 modules (`_validate_algorithms.py`,
+`_validate_constructs.py`, `_validate_dependency_sections.py`,
+`_validate_exports.py`, `_validate_record_sections.py`,
+`_validate_revision_sections.py`, `_validate_surfaces.py`) remove the local
+definition and add a single `from ._validate_helpers import _missing_refs` line.
+G5 PASS.
+
+### Canonical definition confirmed
+
+`_validate_helpers.py:10` is the sole module-level `def _missing_refs` in the
+entire `registry` package. Verified by grep across all registry modules. PASS.
+
+### `@staticmethod _missing_refs` in `_validate.py` — distinct, not a duplicate
+
+`_validate.py:197` defines `_missing_refs` as a `@staticmethod` on a validator
+class. It is called as `self._missing_refs(...)` (lines 137-138), not as a
+module-level import. The class binding is a genuinely different symbol — it is
+not visible to the 7 `_validate_*.py` module importers, and none of them import
+from `_validate.py`. The two definitions are independent and both correct: the
+class method serves a validator object's internal cohesion; the module-level
+function serves the 7 standalone validation modules. Not a duplication concern.
+PASS.
+
+### `Iterable` import cleanup
+
+Six modules (`_validate_algorithms.py`, `_validate_dependency_sections.py`,
+`_validate_exports.py`, `_validate_record_sections.py`,
+`_validate_revision_sections.py`, `_validate_surfaces.py`) remove `Iterable`
+from their `collections.abc` import because `_missing_refs` was the sole
+consumer. `_validate_constructs.py` retains `Iterable` — confirmed correct: it
+uses `Iterable` as an annotation on 7 function parameters in
+`validate_construct_member_references` and related functions. PASS.
+
+### Pre-existing `test_cross_domain_snapshot_registration.py` failure
+
+The 1/279 failure on `test_cross_domain_snapshot_registration.py` is attributed
+to a circular import `_applicability.py` → `deadlines._engine`. Verification:
+`_applicability.py` was last touched by `acea52801` (W02.P11 applicability
+authority work), which predates `46ecfb966`. `_validate_helpers.py` imports only
+from `collections.abc` and `._schema` — no `deadlines`, no `_applicability`,
+no new transitive dependency that could introduce the circular chain. The failure
+is pre-existing and orthogonal to this commit. S304 tracking is correct. PASS.
+
+### Plan checkboxes (ec0bb2542)
+
+S149-S156 checked in plan. Exec record present at
+`.vault/exec/2026-05-26-cross-domain-continuity/2026-cross-domain-continuity-W12-P62-S149-S156.md`.
+PASS.
+
+### Summary
+
+| Item | Status |
+|------|--------|
+| Single canonical `_missing_refs` in `_validate_helpers.py` | CONFIRMED |
+| No shim / re-export / deprecation alias at original sites | PASS (G5) |
+| All 7 import updates correct | PASS |
+| `@staticmethod` in `_validate.py` is genuinely distinct | CONFIRMED |
+| `Iterable` retained in `_validate_constructs.py` (other usages) | CORRECT |
+| `Iterable` removed from 6 other modules (sole consumer gone) | CORRECT |
+| Pre-existing circular import — NOT introduced by `46ecfb966` | CONFIRMED |
+| S304 tracking of circular import as separate step | CORRECT |
