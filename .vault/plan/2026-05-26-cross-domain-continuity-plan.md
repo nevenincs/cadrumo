@@ -136,7 +136,7 @@ Two parallel mechanisms decide applicability (Python seed table plus per-window 
 - [x] `W02.P11.S227` - R7-INES-1 CRITICAL fix overview calendar so Modelos 200 and 202 appear for LEGAL_ENTITY profiles; `today applicable=true via explain but calendar entries are absent for IS modelos; only M349 surfaces in the calendar for an SA with INCN 18.4M; calendar applicability gate diverges from explain applicability; `src/aeat/application/overview/`.
 - [x] `W02.P11.S228` - R7-INES-2 CRITICAL fix profile-fact key-namespace divergence between persistence and calendar lookup; `third_party_transactions_above_347_threshold persists as obligations.third_party_transactions_above_347_threshold via config profile show but calendar reads it as unset and warns the key is not declared; same defect class as W01.P05 boolean canonical drift but in a different namespace; `src/aeat/application/overview/__init__.py`.
 - [x] `W02.P11.S230` - R7-INES-4 fix Modelo 303 SII monthly cadence; `work create --period 01 accepted but bindings list --period 01 returns no revision for that period; SII-enrolled profiles must have monthly periods 01-12 accepted by the calculate path not just create; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W02.P11.S306` - add --all-profiles flag at the CLI layer for aeat app overview calendar (and follow-on for status explain agenda); build_overview_calendar is pure; iterate list_profile_buckets and call once per profile, then concatenate entries; same pattern applies to status explain agenda as follow-on; `src/aeat/entrypoints/cli/_overview.py`.
+- [ ] `W02.P11.S306` - add --all-profiles flag at the CLI layer for aeat app overview calendar (and follow-on for status explain agenda); `build_overview_calendar is pure; iterate list_profile_buckets and call once per profile, then concatenate entries; same pattern applies to status explain agenda as follow-on; `src/aeat/entrypoints/cli/_overview.py`.
 
 ### Phase `W02.P12` - Modelo 202 modality gate wiring Cluster Q
 
@@ -255,7 +255,7 @@ Add the missing LedgerRentaIncomeAggregationSourceResolver and wire it into Mode
 
 _iva_ledger.py and _renta_ledger.py silently drop non-EUR. Adopt single FX-conversion contract.
 
-- [ ] `W05.P23.S86` - decide and document FX conversion strategy; `.vault/exec/`.
+- [x] `W05.P23.S86` - decide and document FX conversion strategy; `.vault/exec/`.
 - [ ] `W05.P23.S87` - add fx_rate and value_in_eur fields on Transaction or aggregation row; `src/aeat/domain/transactions/_raw_transaction.py`.
 - [ ] `W05.P23.S88` - implement chosen FX strategy in import path or aggregation layer; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
 - [ ] `W05.P23.S89` - replace duplicated currency-not-EUR guards with shared predicate; `src/aeat/application/aggregation/`.
