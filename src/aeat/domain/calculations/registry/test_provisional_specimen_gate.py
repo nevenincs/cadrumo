@@ -152,50 +152,31 @@ def test_corpus_root_derived_from_bundled_path() -> None:
     assert validator._justificante_corpus_root.name == "justificantes"
 
 
-def test_gate_fires_via_production_path() -> None:
-    """Gate must raise RegistryValidationError through the production derivation path.
+def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
+    """Gate must raise RegistryValidationError when no fixture exists and flag is False.
 
-    Uses M184 which has a declaracion_pdf profile and provisional_pending_specimen=True
-    but no fixture directory in justificantes/184.  With provisional_pending_specimen
-    overridden to False, the gate must reject the modelo when the validator uses
-    source_root=bundled_path() (no explicit justificante_corpus_root injection).
+    Uses M130 with an injected empty corpus root so no fixture directory exists.
+    With provisional_pending_specimen overridden to False, the gate must reject the
+    modelo regardless of the production corpus derivation path.
 
-    M036 is no longer usable here: it has a corpus fixture and corpus_round_trip_verified=True
-    (grounded 2026-05-27 from AEAT Anexo 3 instructions), so overriding provisional to False
-    would pass the gate correctly rather than trigger a validation error.
+    Production-path corpus derivation is already covered by
+    test_corpus_root_derived_from_bundled_path; this test focuses purely on the
+    gate-fires logic independent of the fixture inventory on disk.
     """
-    from functools import cache as _cache
+    modelo, catalogues = _committed_130()
+    empty_corpus_root = tmp_path / "justificantes"
+    empty_corpus_root.mkdir()
 
-    @_cache
-    def _load_184() -> tuple[ModeloDefinition, RegistryCatalogues]:
-        modelos, catalogues = load_registry_tree(_REGISTRY_ROOT)
-        return next(m for m in modelos if m.id == "184"), catalogues
+    revision = modelo.revisions["2019-y-siguientes"]
+    profile = _committed_profile(provisional=False)
+    mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
-    modelo, catalogues = _load_184()
-    # Find the revision that carries the declaracion_pdf profile.
-    revision_with_profile = next(
-        (
-            rev
-            for rev in modelo.revisions.values()
-            if any(p.surface == "declaracion_pdf" for p in rev.extraction_profiles)
-        ),
-        None,
+    validator = RegistryValidator(
+        catalogues,
+        source_root=_DATA_ROOT,
+        justificante_corpus_root=empty_corpus_root,
     )
-    assert revision_with_profile is not None, "M036 must have a declaracion_pdf extraction profile"
-
-    # Override provisional_pending_specimen to False so the gate must fire.
-    profiles = tuple(
-        p.model_copy(update={"provisional_pending_specimen": False}) if p.surface == "declaracion_pdf" else p
-        for p in revision_with_profile.extraction_profiles
-    )
-    mutated_revision = revision_with_profile.model_copy(update={"extraction_profiles": profiles})
-    mutated_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, mutated_revision.id: mutated_revision}}
-    )
-
-    # Production call site: no justificante_corpus_root injected.
-    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
-    # Corpus must have been derived (gate is armed).
-    assert validator._justificante_corpus_root is not None, "corpus root derivation failed; gate would be silent"
+    assert validator._justificante_corpus_root is not None, "corpus root must be set; gate would be silent"
     with pytest.raises(RegistryValidationError, match="provisional_pending_specimen"):
         validator.validate_modelo(mutated_modelo)
