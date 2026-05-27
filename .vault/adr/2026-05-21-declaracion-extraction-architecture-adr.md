@@ -301,3 +301,54 @@ conditions or fail the snapshot-build gate:
    = true is set explicitly.
 
 Fixture presence with neither flag is the newly-closed silent-failure path.
+
+## 2026-05-27 amendment — M190 revision rename
+
+### Original revision id and its semantic at authoring time
+
+The M190 extraction profile was initially authored with revision
+`id = "2025-y-siguientes"` and `period_selector = { year_from = 2025,
+periods = ["0A"] }`. This named the revision after the earliest AEAT
+filing year the author expected it to serve, matching the campaign
+year of the M100-2025 relation that references M190.
+
+### Rename: `"2025-y-siguientes"` → `"2024-y-siguientes"` and year_from = 2024
+
+Task-36 Cluster B (commit `be12b2c7a`) renamed the revision id to
+`"2024-y-siguientes"` and shifted `year_from` from 2025 to 2024. The
+TOML registry, every cross-revision selector, and the round-trip gate
+tag (`corpus_round_trip_verified = true`) were updated atomically.
+
+### Rationale
+
+Three independent facts converge on `year_from = 2024`.
+
+First, the sole corpus fixture PDF for M190 is `tests/fixtures/justificantes/190/2024-0A.pdf`
+— a year=2024 document. The round-trip gate requires the profile id and
+period selector to be consistent with the fixture's filing year; a
+revision anchored at 2025 would be semantically misaligned with the
+only verified specimen.
+
+Second, the M100-2025 cross-modelo relation
+`renta-2025-rel-190-retenciones-anuales` carries
+`source_revision_selector = { year = 2025 }`. For that selector to
+resolve correctly, M190's period window must include year 2025;
+`year_from = 2024` with an open upper bound satisfies it.
+
+Third, the task-32 audit confirmed that the AEAT 2024 and 2025 M190
+EDI specifications are structurally identical: Orden HAC/1432/2024
+(modelo 190 2024 tax year) and Orden HAC/1431/2025 (modelo 190 2025
+tax year) define the same Tipo 1 and Tipo 2 record layouts with no
+field additions, removals, or re-numbering. A single revision
+therefore covers both years without ambiguity.
+
+### Decision
+
+One revision with `id = "2024-y-siguientes"` and `year_from = 2024`
+correctly covers the 2024 corpus PDF, satisfies the M100-2025 relation
+selector, and reflects the structural identity of the two AEAT Ordenes.
+If AEAT publishes a future Orden that diverges from the current Tipo 1/2
+layout — introducing new record fields or restructuring the perceptor
+block — a new revision with an appropriate `year_from` boundary would be
+added at that point, following the same named-revision pattern already
+used for other modelos in the registry.
