@@ -4688,3 +4688,91 @@ FU-S278-B: `LedgerTransactionReviewPayload.classified_by` is typed
 The None path is unreachable at runtime but the looser typing is imprecise.
 Tighten to `str = Field(default="auto")` in a subsequent S278 follow-up step.
 
+
+---
+
+## Task #139 — W05.P25.S96-S98 bulk-classify + rule engine (6c4ec924c + 666bc9c59)
+
+**Verdict: APPROVE**
+
+### Git-discipline gate
+
+Step record contains no destructive-git language. The "previously committed"
+note in the step record correctly describes cross-session work where coder2
+authored only the three new files (`_classification_rule.py`,
+`_rule_repository.py`, `test_ledger_bulk_classify.py`) — no
+reconstruction, no restore, no stash. `6c4ec924c` diff confirms only
+additions (three new files). **PASS.**
+
+### ADR D1-D8 compliance
+
+**D1 (regex-only, re.IGNORECASE):** `LedgerClassificationRule.matches()` uses
+`re.search(self.description_pattern, description, re.IGNORECASE)`. No other
+match strategy. PASS.
+
+**D2 (content-addressed rule_id):** `_compute_rule_id` hashes
+`f"{pattern}|{classification.value}|{category_id or ''}"` via SHA-256;
+`rule_id` field enforced `min_length=max_length=64`. PASS.
+
+**D3 (SecureBoundRepository, namespace, sensitivity):** `LedgerClassificationRuleRepository`
+extends `SecureBoundRepository[LedgerClassificationRule]`;
+`namespace = "aeat.ledger.classification.rules"`;
+`sensitivity = SensitivityClass.AUDIT`; `schema_version = 1`. Follows the
+`IvaCompensationHistoryRepository` pattern. PASS.
+
+**D4 (actions: add + apply + result models):** `add_classification_rule` calls
+`LedgerClassificationRule.create()` (which validates regex via `re.compile`
+in the `@field_validator`) then `repo.save(rule)`. `apply_classification_rules`
+loads rules via `rule_repo.list_rules()` and iterates transactions.
+`bulk_classify_from_csv` parses CSV, rejects unknown columns pre-persistence.
+PASS.
+
+**D5 (priority: lower wins, ties by created_at, default 100):**
+`list_rules()` sorts by `(priority, created_at)` ascending; field default
+`priority=100, ge=1`. `test_rule_priority_order_first_match_wins` verifies
+priority=1 beats priority=100 on overlapping patterns. PASS.
+
+**D6 (scope ACTIVE NOT_YET_PROCESSED + --reaffirm extends to manual):**
+`_in_scope()` predicate: `lifecycle_state is ACTIVE` AND
+`business_classification is NOT_YET_PROCESSED` OR (`reaffirm AND classified_by == "manual"`).
+`test_rule_apply_skips_already_classified_without_reaffirm` verifies the gate
+closes. PASS.
+
+**D7 (CLI surface: ledger rule add/apply/list):** `rule_app` sub-app registered
+as `ledger rule`; three commands `add`, `list`, `apply` with correct option
+signatures. `--from-csv` exclusive with `--id`/`--classification`.
+PASS.
+
+**D8 (ApplyRulesResult shape):** `rules_evaluated`, `transactions_scanned`,
+`matched`, `skipped_already_classified`, `no_match`, `applied` all present.
+`BulkClassifyResult` carries `total`, `applied`, `skipped`, `failures`,
+`bucket_event_ids`. PASS.
+
+### G6 anti-tautology check
+
+Five real-behavior tests exercise distinct failure paths with non-trivial
+assertions:
+- Idempotency: add same pattern twice → exactly 1 rule in list (not 2)
+- Invalid regex: `[invalid` → non-zero exit code (gate closes)
+- Skip guard: manually classified tx preserved as PERSONAL when rule says BUSINESS
+  (without `--reaffirm`)
+- Dry-run: all transactions remain `NOT_YET_PROCESSED` after dry-run
+- Priority ordering: `priority=1 BUSINESS` beats `priority=100 PERSONAL` on
+  overlapping description
+
+The `classified_by` provenance assertion (`startswith("rule:")`) is the
+non-trivial behavioral proof that the rule-engine provenance chain is
+wired end-to-end through the domain model, repository, action, and CLI
+emit path. No tautological assertions found. PASS.
+
+### Test run
+
+13/13 passed in 13.04s against real SQLite+encryption stack.
+
+### Follow-up note
+
+`LedgerClassificationRule.priority: int = Field(default=100, ge=1)` sets
+a lower bound of 1. The ADR does not specify a lower bound — this is a
+reasonable defensive constraint (priority=0 would be ambiguous with
+"unset"). No action required.
+
