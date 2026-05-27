@@ -142,8 +142,20 @@ class OverviewCalendarRange(BaseModel):
         return self
 
     def covered_years(self) -> tuple[int, ...]:
-        """Return the calendar years the range spans, oldest first."""
-        return tuple(range(self.from_date.year, self.to_date.year + 1))
+        """Return the fiscal years whose deadline windows may intersect this range.
+
+        AEAT annual declarations (e.g. Modelo 200 IS, Modelo 100 Renta) use
+        ``filing_year = N`` for the tax period that ends on 31 December of year
+        N, but the filing deadline falls in calendar year N+1 (e.g. IS for 2024
+        opens 1 July 2025). A calendar query scoped to a date range that starts
+        in January of N+1 must therefore also query ``deadline_windows(N)`` to
+        pick up those prior-year declarations whose windows open in the query
+        range. Including ``from_date.year - 1`` ensures a single-calendar-year
+        range (e.g. 2025-01-01 to 2025-12-31) fetches both the 2024 fiscal-year
+        windows that open in 2025 and the native 2025 fiscal-year windows.
+        """
+        earliest = self.from_date.year - 1
+        return tuple(range(earliest, self.to_date.year + 1))
 
     def covers(self, candidate: date) -> bool:
         """Return whether ``candidate`` lies inside the inclusive range."""

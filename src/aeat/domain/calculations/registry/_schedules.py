@@ -30,7 +30,7 @@ def applicable_filing_schedules(
             schedule.profile_conditions,
             profile_facts,
             mode=schedule.profile_condition_mode,
-        ):
+        ) is not None:
             matched.append(schedule)
     return tuple(matched)
 
@@ -81,6 +81,8 @@ def _resolve_profile_fact(profile_facts: object, field: str) -> object:
     if field == "iva.regime" and hasattr(profile_facts, "iva_regime"):
         _attr = "iva_regime"
         return getattr(profile_facts, _attr)
+    if field == "taxpayer.entity_type" and hasattr(profile_facts, "entity_type"):
+        return getattr(profile_facts, "entity_type")
     current: object = profile_facts
     for part in field.split("."):
         if isinstance(current, Mapping):
