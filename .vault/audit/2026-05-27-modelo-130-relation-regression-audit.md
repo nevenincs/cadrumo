@@ -468,10 +468,16 @@ summary BEFORE running any `vault plan step check`. The narrative
 survives in those documents even when the plan body is
 re-canonicalised.
 
-**Filed**: this audit document IS the upstream filing for
-internal-campaign tracking. The next vaultspec-core release-train
-should pick this up and produce a fix or document the
-limitation in `.vaultspec/CLI.md`.
+**Filed** (post-P09.S65 correction): this vault audit document
+IS the canonical project-internal upstream filing. An earlier
+P09.S65 attempt to create `.vaultspec/known-limitations.md` was
+removed because `.vaultspec/` (apart from
+`.vaultspec/rules/rules/`) is git-ignored and is not a permitted
+manual-edit location per the vaultspec-cli rule. The next
+vaultspec-core release-train picks the bug filing up from this
+audit document and the campaign's commit history; the bug
+should be ported to the vaultspec-core repo's actual issue
+tracker by the next maintainer working in that repository.
 
 ---
 
