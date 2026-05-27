@@ -3,13 +3,13 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-05-27'
-step_id: 'W07.P01.S04'
+step_id: 'W07.P17.S63'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-05-27-live-iva-compensation-wallet-reload-review]]'
 ---
 
-# `live-iva-compensation-wallet` `W07.P01.S04`
+# `live-iva-compensation-wallet` `W07.P17.S63`
 
 Removed exact operator-private identity markers from committed tests, fixtures,
 and vault notes discovered during the reload privacy sweep.

@@ -3,12 +3,12 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-05-27'
-step_id: 'W07.P01.S01'
+step_id: 'W07.P17.S60'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
-# `live-iva-compensation-wallet` `W07.P01.S01`
+# `live-iva-compensation-wallet` `W07.P17.S60`
 
 Persisted redacted live IVA remote-state acquisition manifests through the active
 profile secure-object backend.
