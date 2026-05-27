@@ -562,9 +562,9 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
-        capture_remote_state_help: Captura en directo el historial de Modelo 303
-          presentado e intenta la lectura de la cartera de IVA AEAT como una adquisición
-          tipada de solo lectura.
+        capture_remote_state_help: Captura en directo el historial de Modelo 303 presentado
+          e intenta la lectura de la cartera de IVA AEAT como una adquisición tipada
+          de solo lectura.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -1368,12 +1368,15 @@ cli:
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
       import_help: Registra un paquete portátil de perfil desde un JSON
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
         con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       logout_session_warning: El cierre de sesión limpió el puntero del perfil activo.
         Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
@@ -1502,7 +1505,7 @@ cli:
       key_help: Clave a limpiar
     workflow_help: Mostrar ayuda del flujo de configuración
   diagnostics:
-    app_help: 'Diagnósticos internos de AEAT solo para ingeniería.'
+    app_help: Diagnósticos internos de AEAT solo para ingeniería.
     browser:
       http_status_label: Estado HTTP
       markers_label: Marcadores
@@ -1520,20 +1523,22 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
+        ambiguous_profile: 'Etiqueta de perfil ambigua: %{profile}'
         invalid_value_fallback: 'Valor no válido para %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        profile_empty: '--profile no puede estar vacío cuando se proporciona.'
-        ambiguous_profile: 'Etiqueta de perfil ambigua: %{profile}'
+        no_active_profile: No hay perfil activo ni se proporcionó --profile NAME;
+          ejecuta `aeat config profile switch NAME` primero.
+        profile_empty: --profile no puede estar vacío cuando se proporciona.
         unknown_profile: 'Perfil desconocido: %{profile}'
-        no_active_profile: 'No hay perfil activo ni se proporcionó --profile NAME; ejecuta `aeat config profile switch NAME` primero.'
         unknown_profile_key: 'Clave de perfil desconocida: %{key}'
-      get_help: 'Lee el valor guardado de una clave de perfil.'
-      help: 'Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.'
-      key_help: 'Clave de perfil.'
-      profile_help: 'Perfil que se va a usar; por defecto, el perfil activo.'
-      set_help: 'Escribe el valor de una clave de perfil, validado con el descriptor del asistente.'
-      unset_help: 'Borra el valor de una clave de perfil.'
-      value_help: 'Valor que se va a guardar.'
+      get_help: Lee el valor guardado de una clave de perfil.
+      help: Inspección de campos de perfil y ediciones quirúrgicas solo para ingeniería.
+      key_help: Clave de perfil.
+      profile_help: Perfil que se va a usar; por defecto, el perfil activo.
+      set_help: Escribe el valor de una clave de perfil, validado con el descriptor
+        del asistente.
+      unset_help: Borra el valor de una clave de perfil.
+      value_help: Valor que se va a guardar.
     repair:
       audience_internal: problema interno de la aplicación
       auth_label: Autenticación
@@ -1550,13 +1555,14 @@ cli:
       python_label: Python
       version_label: Versión
     secure_objects:
-      all_help: 'Devuelve todas las claves, incluidas las filas no legibles.'
+      all_help: Devuelve todas las claves, incluidas las filas no legibles.
       errors:
-        conflicting_filters: '--all y --unreadable no se pueden combinar; pasa uno o ninguno.'
-      help: 'Inventariar el índice de objetos seguros por espacio de nombres.'
-      list_help: 'Lista las claves de objetos seguros guardadas en un espacio de nombres.'
-      namespace_help: 'Espacio de nombres que se va a inventariar.'
-      unreadable_help: 'Limita el listado a filas no descifrables.'
+        conflicting_filters: --all y --unreadable no se pueden combinar; pasa uno
+          o ninguno.
+      help: Inventariar el índice de objetos seguros por espacio de nombres.
+      list_help: Lista las claves de objetos seguros guardadas en un espacio de nombres.
+      namespace_help: Espacio de nombres que se va a inventariar.
+      unreadable_help: Limita el listado a filas no descifrables.
     summary:
       auth_no_session: El proveedor de autenticación %{provider} no tiene una sesión
         lista
@@ -2261,8 +2267,15 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
@@ -2294,6 +2307,13 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
