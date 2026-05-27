@@ -7,7 +7,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from itertools import pairwise
-from typing import Annotated, Literal, cast
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
@@ -741,6 +741,12 @@ class ExtractionProfileDefinition(RegistryModel):
     confidence: Literal["strict", "review_required"]
     provisional_pending_specimen: bool = False
     corpus_round_trip_verified: bool = False
+    verification_source: Literal[
+        "real_aeat_corpus_pdf",
+        "synthetic_from_aeat_published_text",
+        "historical_suppression",
+        "not_applicable",
+    ] | None = None
     min_coverage: DecimalValue = Field(ge=Decimal("0"), le=Decimal("1"))
     failure_semantics: Literal["fail_hard"]
     legal_refs: LegalRefs
@@ -1214,9 +1220,11 @@ class ModeloScheduleDefinition(RegistryModel):
 def _normalise_dispatch_table_entries(value: object) -> object:
     if not isinstance(value, Mapping) or "dispatch_table_entries" not in value:
         return value
-    # TOML fragments always parse to string-keyed tables; the narrowed
-    # ``Mapping`` carries an ``Unknown`` key type the type system cannot prove.
-    mapping = cast("Mapping[str, object]", value)
+    # TOML fragments always parse to string-keyed tables; ``isinstance`` narrows
+    # to Mapping[Unknown, object] because the key type is erased by the object
+    # parameter.  The annotation below re-attaches the known str key type at
+    # this single TOML deserialization boundary.
+    mapping: Mapping[str, object] = value  # type: ignore[assignment]
     if "dispatch_table" in mapping:
         raise RegistryValidationError("formula leaf must use dispatch_table or dispatch_table_entries, not both")
 
@@ -1228,7 +1236,7 @@ def _normalise_dispatch_table_entries(value: object) -> object:
     for raw_entry in raw_entries:
         if not isinstance(raw_entry, Mapping):
             raise RegistryValidationError("dispatch_table_entries entries must be tables")
-        entry = cast("Mapping[str, object]", raw_entry)
+        entry: Mapping[str, object] = raw_entry  # type: ignore[assignment]  # same TOML key-type boundary as above
         if set(entry) != {"key", "parameter"}:
             raise RegistryValidationError("dispatch_table_entries entries must declare key and parameter")
         key = entry["key"]

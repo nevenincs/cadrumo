@@ -339,7 +339,7 @@ def test_parser_modelo_130_corpus_numeric_casilla_profile_gap(pdf_stem: str, yea
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
 
-    with pytest.raises(DeclaracionParseError, match=r"coverage=0") as exc_info:
+    with pytest.raises(DeclaracionParseError) as exc_info:
         parse_declaracion(
             pdf_path,
             modelo_override="130",
@@ -347,8 +347,15 @@ def test_parser_modelo_130_corpus_numeric_casilla_profile_gap(pdf_stem: str, yea
             period_override=period,
         )
 
-    assert "missing=" in str(exc_info.value), (
-        f"{pdf_stem}: expected 'missing=' in error message, got {exc_info.value!r}"
+    err = exc_info.value
+    assert err.coverage == 0, (
+        f"{pdf_stem}: expected coverage=0, got {err.coverage!r}"
+    )
+    # All 19 M130 numeric_casilla profile targets must be reported missing
+    # because the printed form places box numbers at line-end, not line-start.
+    expected_missing = tuple(f"{n:02d}" for n in range(1, 20))
+    assert err.missing == expected_missing, (
+        f"{pdf_stem}: expected all 19 casillas missing, got {err.missing!r}"
     )
 
 
@@ -1805,7 +1812,7 @@ def test_parser_modelo_131_numeric_casilla_profile_gap() -> None:
     to silently accept partial extraction, or if a future revision introduces
     a named_label profile that can extract from this fixture layout.
     """
-    with pytest.raises(DeclaracionParseError, match=r"coverage=0") as exc_info:
+    with pytest.raises(DeclaracionParseError) as exc_info:
         parse_declaracion(
             _MODELO_131_SYNTHETIC_FIXTURE,
             modelo_override="131",
@@ -1813,7 +1820,15 @@ def test_parser_modelo_131_numeric_casilla_profile_gap() -> None:
             period_override="1T",
         )
 
-    assert "missing=" in str(exc_info.value), f"expected 'missing=' in error message, got {exc_info.value!r}"
+    err = exc_info.value
+    assert err.coverage == 0, f"expected coverage=0, got {err.coverage!r}"
+    # All 15 M131 numeric_casilla profile targets must be reported missing
+    # because the printed form uses bracket [NN] notation (line-end), not
+    # the line-start box-number prefix required by the numeric_casilla strategy.
+    expected_missing = tuple(f"{n:02d}" for n in range(1, 16))
+    assert err.missing == expected_missing, (
+        f"expected all 15 casillas missing, got {err.missing!r}"
+    )
 
 
 def _modelo_130_snapshot():

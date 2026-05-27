@@ -28,11 +28,11 @@ from aeat.core.resources import resources
 from aeat.domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from aeat.tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 
-from . import list_iva_compensation_history, persist_and_reconcile_iva_compensation_wallet
+from . import load_iva_remote_state, persist_and_reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_TAXPAYER_NIF = "12345678Z"
+_TAXPAYER_REF = "synthetic-taxpayer"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
 _BUCKET_ID = "operator"
 _SESSION_BUCKET_ID = "ephemeral"
@@ -62,8 +62,8 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
               </table>
             </body></html>
             """,
-            taxpayer_nif=_TAXPAYER_NIF,
-            authenticated_identity=_TAXPAYER_NIF,
+            taxpayer_nif=_TAXPAYER_REF,
+            authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             source_url=IVA_COMPENSATION_WALLET_URL,
@@ -80,7 +80,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         reloaded_wallet = FiledDeclaracionObservationStore(tmp_path / "wallet-evidence").load_iva_wallet_observation(
             Path(report.observation_path)
         )
-        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, 2026, "2T")
+        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "2T")
 
         assert reloaded_wallet == observation
         assert reloaded_decision is not None
@@ -91,10 +91,10 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
         assert report.local_recurrence_amount == "1200.00"
         assert report.divergence == "match"
         assert report.blocked is False
-        assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_NIF, 2026, "2T")
+        assert report.decision_key == iva_wallet_decision_key(_TAXPAYER_REF, 2026, "2T")
         database_bytes = db_path.read_bytes()
-        assert _TAXPAYER_NIF.encode("ascii") not in database_bytes
-        assert f"{_TAXPAYER_NIF}:2026:2T".encode("ascii") not in database_bytes
+        assert _TAXPAYER_REF.encode("ascii") not in database_bytes
+        assert f"{_TAXPAYER_REF}:2026:2T".encode("ascii") not in database_bytes
 
 
 def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_path: Path) -> None:
@@ -102,7 +102,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         history_repo = IvaCompensationHistoryRepository()
         history_repo.save_period(
             IvaCompensationPeriodState(
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2022,
                 period="4T",
                 expediente_id="EXP-2022-4T",
@@ -116,7 +116,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         )
         history_repo.save_period(
             IvaCompensationPeriodState(
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2024,
                 period="1T",
                 expediente_id="EXP-2024-1T",
@@ -130,7 +130,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
         )
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
                 target_period="2T",
                 selected_authority="aeat_wallet",
@@ -162,7 +162,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             )
         )
 
-        report = list_iva_compensation_history(as_of_year=2026)
+        remote_state = load_iva_remote_state(as_of_year=2026)
+        report = remote_state.history
 
     assert report.row_count == 2
     assert report.carry_forward_lot_count == 2
@@ -181,7 +182,10 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
     assert any(
         "source_kind" not in source and source.startswith("aeat_wallet") for source in decision.authority_sources
     )
-    assert _TAXPAYER_NIF not in report.model_dump_json()
+    assert "wallet:2026:2T" not in report.model_dump_json()
+    assert "EXP-2022-4T" not in report.model_dump_json()
+    assert "EXP-2024-1T" not in report.model_dump_json()
+    assert _TAXPAYER_REF not in report.model_dump_json()
 
 
 def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Path) -> None:
@@ -191,7 +195,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         history_repo = IvaCompensationHistoryRepository()
         history_repo.save_period(
             IvaCompensationPeriodState(
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2025,
                 period="4T",
                 expediente_id="EXP-2025-4T",
@@ -222,8 +226,8 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
               </table>
             </body></html>
             """,
-            taxpayer_nif=_TAXPAYER_NIF,
-            authenticated_identity=_TAXPAYER_NIF,
+            taxpayer_nif=_TAXPAYER_REF,
+            authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
             target_period="1T",
             source_url=IVA_COMPENSATION_WALLET_URL,
@@ -237,7 +241,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
 
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
-                taxpayer_nif=_TAXPAYER_NIF,
+                taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
                 target_period="1T",
                 selected_authority="aeat_wallet",
@@ -275,28 +279,30 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             tmp_path / "remote-iva-evidence"
         ).load_iva_wallet_observation(wallet_ref)
         reloaded_history = IvaCompensationHistoryRepository().load_period(2025, "4T")
-        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_NIF, 2026, "1T")
-        report = list_iva_compensation_history(as_of_year=2026)
+        reloaded_decision = IvaWalletDecisionRepository().load_decision(_TAXPAYER_REF, 2026, "1T")
+        remote_state = load_iva_remote_state(as_of_year=2026)
+        report = remote_state.history
 
-        # available_end is the structural sum pending_for_later +
-        # generated; deriving the expected from the same observation
-        # avoids the hand-summed-literal tautology pattern.
-        expected_available_end = (
-            reloaded_history.pending_for_later_amount
-            + reloaded_history.generated_amount
-        )
         assert reloaded_wallet == wallet
         assert reloaded_history is not None
-        assert reloaded_history.available_end_amount == expected_available_end
+        assert reloaded_history.pending_for_later_amount == Decimal("80.00")
+        assert reloaded_history.generated_amount == Decimal("20.00")
+        assert reloaded_history.available_end_amount == Decimal("100.00")
         assert reloaded_decision is not None
         assert reloaded_decision.selected_amount == reloaded_history.available_end_amount
+        assert remote_state.wallet_observation_count == 1
+        assert remote_state.wallet_observations[0].taxpayer_ref.startswith("sha256:")
+        assert remote_state.wallet_observations[0].total_pending == str(reloaded_wallet.total_pending)
         assert report.row_count == 1
         assert report.authority_decision_count == 1
         assert report.authority_decisions[0].taxpayer_ref.startswith("sha256:")
-        assert _TAXPAYER_NIF not in report.model_dump_json()
+        assert _TAXPAYER_REF not in remote_state.model_dump_json()
+        assert "EXP-2025-4T" not in remote_state.model_dump_json()
+        assert "303:2025:4T" not in remote_state.model_dump_json()
+        assert _TAXPAYER_REF not in report.model_dump_json()
 
         database_bytes = (profile.paths.db_dir / "aeat.db").read_bytes()
-        assert _TAXPAYER_NIF.encode("ascii") not in database_bytes
+        assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert b"EXP-2025-4T" not in database_bytes
 
 

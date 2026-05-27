@@ -260,7 +260,9 @@ src/aeat/_data/corpus/manuals/**/source.html/
 
 # Scratch / ad-hoc workspace / temp
 scratch/*
+.vault-scratch/
 tmp/
+tmp_*/
 temp/
 cache/
 

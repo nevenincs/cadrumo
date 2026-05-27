@@ -143,6 +143,21 @@ class SecureObjectNamespaceIntegrity(BaseModel):
     unreadable: int = Field(ge=0)
 
 
+class SecureObjectDecryptabilityRow(BaseModel):
+    """Row-level decryptability metadata without plaintext payload disclosure."""
+
+    model_config = _STRICT_FROZEN
+
+    namespace: str = Field(min_length=1)
+    row_id: int = Field(ge=0)
+    object_key: bytes
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    written_at: datetime
+    readable: bool
+    reason: str | None = None
+
+
 class SecureObjectRepository:
     """Repository over encrypted byte objects stored in the primary database."""
 
@@ -447,6 +462,71 @@ class SecureObjectRepository:
             readable=readable,
             unreadable=unreadable,
         )
+
+    def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
+        """Yield row-level decryptability metadata for one namespace.
+
+        This is the row-level companion to :meth:`probe_namespace_integrity`.
+        It decrypts only to validate the AEAD tag, never returns plaintext, and
+        exposes the HMAC lookup digest plus storage metadata needed by repair
+        diagnostics.
+        """
+
+        with session_scope(self._engine) as session:
+            stmt = (
+                text(
+                    "SELECT id, object_key, classification, schema_version, written_at, payload "
+                    "FROM secure_objects WHERE namespace = :namespace "
+                    "ORDER BY object_key"
+                )
+                .bindparams(bindparam("namespace", value=namespace))
+                .columns(
+                    id=_orm.SecureObjectRow.__table__.c.id.type,
+                    object_key=_orm.SecureObjectRow.__table__.c.object_key.type,
+                    classification=_orm.SecureObjectRow.__table__.c.classification.type,
+                    schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
+                    written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
+                )
+            )
+            rows = session.execute(stmt).all()
+        for raw in rows:
+            object_key_raw = raw.object_key
+            if isinstance(object_key_raw, bytes):
+                object_key_value = object_key_raw
+            elif isinstance(object_key_raw, str):
+                object_key_value = object_key_raw.encode("utf-8")
+            else:
+                object_key_value = bytes(object_key_raw)
+            payload_raw = raw.payload
+            if isinstance(payload_raw, bytes):
+                payload_value = payload_raw
+            elif isinstance(payload_raw, str):
+                payload_value = payload_raw.encode("utf-8")
+            else:
+                payload_value = bytes(payload_raw)
+            try:
+                decrypt_encrypted_bytes_column(payload_value)
+            except DecryptionError as exc:
+                yield SecureObjectDecryptabilityRow(
+                    namespace=namespace,
+                    row_id=int(raw.id),
+                    object_key=object_key_value,
+                    classification=str(raw.classification),
+                    schema_version=int(raw.schema_version),
+                    written_at=raw.written_at,
+                    readable=False,
+                    reason=str(exc),
+                )
+            else:
+                yield SecureObjectDecryptabilityRow(
+                    namespace=namespace,
+                    row_id=int(raw.id),
+                    object_key=object_key_value,
+                    classification=str(raw.classification),
+                    schema_version=int(raw.schema_version),
+                    written_at=raw.written_at,
+                    readable=True,
+                )
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
         """Return stored lookup digests under ``namespace`` as hex strings.

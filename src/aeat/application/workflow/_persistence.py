@@ -15,7 +15,10 @@ from ...adapters.persistence.storage.errors import (
     SecretStoreError,
     StorageError,
 )
-from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ...adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket,
+    secure_object_repository_for_cold_bootstrap_state,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
@@ -334,7 +337,7 @@ def workflow_state_repository() -> WorkflowStateRepository:
     if bucket_id is None:
         if classify_storage_route(load_settings()).kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
             return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
-        return WorkflowStateRepository(objects=SecureObjectRepository())
+        return WorkflowStateRepository(objects=secure_object_repository_for_cold_bootstrap_state())
     return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
 
 

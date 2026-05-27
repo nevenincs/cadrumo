@@ -264,7 +264,13 @@ def _draft_by_id(draft_id: str) -> ModeloDraft:
 
 
 def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> dict[str, object]:
-    """Return filing inputs aggregated from registry-approved sources."""
+    """Return filing inputs aggregated from registry-approved sources.
+
+    Returns casilla-id → Decimal binding dict consumed directly as
+    ``binding_overrides`` by the calculation engine. dict[str, object] is
+    intentional: callers may merge or extend the result before passing it
+    downstream. Mapping would block that mutation.
+    """
     if modelo.strip() == "100" and _annual_filing_year(period) is not None:
         filing_year = _annual_filing_year(period)
         assert filing_year is not None
@@ -329,7 +335,7 @@ def _annual_filing_year(period: str) -> int | None:
 # ---------------------------------------------------------------------
 
 
-def activate_subcommand_output_language(ctx: "typer.Context", language: str | None) -> None:
+def activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
     """Apply a subcommand-supplied ``--output-language`` to the render path.
 
     ``--output-language`` on a subcommand short-circuits the root

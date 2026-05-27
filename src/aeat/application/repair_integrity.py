@@ -39,6 +39,7 @@ from typing import Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..adapters.persistence.storage.sql.secure_objects import (
+    SecureObjectDecryptabilityRow,
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
 )
@@ -70,6 +71,7 @@ class _SecureObjectRepositoryProtocol(Protocol):
     def list_namespaces(self) -> tuple[str, ...]: ...
     def probe_namespace_integrity(self, namespace: str) -> SecureObjectNamespaceIntegrity: ...
     def list_keys(self, namespace: str) -> tuple[str, ...]: ...
+    def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]: ...
 
 
 class RepairIntegrityReport(BaseModel):
@@ -219,12 +221,10 @@ def build_repair_list_report(
         raise ValueError(msg)
     repo = repository or SecureObjectRepository()
     integrity = repo.probe_namespace_integrity(namespace)
-    keys = repo.list_keys(namespace)
-    rows = tuple(RepairListRow(namespace=namespace, object_key_digest=k) for k in keys)
+    row_metadata = tuple(repo.iter_namespace_decryptability(namespace))
+    rows = tuple(_repair_list_row(row) for row in row_metadata)
     if only_unreadable:
-        # Surface the integrity status; the storage layer does not yet
-        # expose per-key decryptability without attempting decryption,
-        # so this filter currently surfaces every key with a flag.
+        rows = tuple(row for row in rows if row.readable is False)
         filter_mode = "unreadable"
     elif include_all:
         filter_mode = "all"
@@ -236,6 +236,19 @@ def build_repair_list_report(
         rows=rows,
         rows_total=len(rows),
         filter_mode=filter_mode,
+    )
+
+
+def _repair_list_row(row: SecureObjectDecryptabilityRow) -> RepairListRow:
+    return RepairListRow(
+        namespace=row.namespace,
+        object_key_digest=row.object_key.hex(),
+        readable=row.readable,
+        row_id=row.row_id,
+        classification=row.classification,
+        schema_version=row.schema_version,
+        written_at=row.written_at,
+        reason=row.reason if row.readable is False else None,
     )
 
 
@@ -338,6 +351,12 @@ class RepairRemediationDecisionRepository:
         """Persist one decision as an encrypted AUDIT-class secure-object row."""
         from ..core.classification import SensitivityClass
 
+        expected_decision_id = _expected_repair_decision_id(decision)
+        if decision.decision_id != expected_decision_id:
+            raise ValueError(
+                f"repair-remediation decision declares decision_id {decision.decision_id!r} "
+                f"but re-derived {expected_decision_id!r}; refusing the save"
+            )
         payload = decision.model_dump_json().encode("utf-8")
         self._repo().save(
             namespace=_REPAIR_DECISION_NAMESPACE,
@@ -350,12 +369,23 @@ class RepairRemediationDecisionRepository:
 
     def load_decision(self, decision_id: str) -> RepairRemediationDecision:
         """Load one decision by its content-addressed id; re-derives + checks the id."""
-        record = self._repo().load(namespace=_REPAIR_DECISION_NAMESPACE, object_key=decision_id)
+        from ..core.classification import SensitivityClass
+
+        record = self._repo().load(
+            namespace=_REPAIR_DECISION_NAMESPACE,
+            object_key=decision_id,
+            expected_class=SensitivityClass.AUDIT,
+            max_supported_version=1,
+        )
+        if record is None:
+            raise ValueError(f"repair-remediation decision {decision_id!r} does not exist")
         decoded = RepairRemediationDecision.model_validate_json(record.payload)
-        if decoded.decision_id != decision_id:
+        expected_decision_id = _expected_repair_decision_id(decoded)
+        if decoded.decision_id != decision_id or decoded.decision_id != expected_decision_id:
             raise ValueError(
                 f"repair-remediation decision payload at key {decision_id!r} "
-                f"declares decision_id {decoded.decision_id!r}; refusing the load"
+                f"declares decision_id {decoded.decision_id!r} but re-derived "
+                f"{expected_decision_id!r}; refusing the load"
             )
         return decoded
 
@@ -376,27 +406,189 @@ class RepairRemediationDecisionRepository:
         return tuple(sorted(decisions, key=lambda d: d.decided_at, reverse=True))
 
 
+def _expected_repair_decision_id(decision: RepairRemediationDecision) -> str:
+    return repair_remediation_decision_id(
+        target_namespace=decision.target_namespace,
+        target_object_key_digest=decision.target_object_key_digest,
+        outcome=decision.outcome,
+        decided_at=decision.decided_at,
+        decided_by=decision.decided_by,
+        reason=decision.reason,
+        likely_origin=decision.likely_origin,
+        replacement_evidence_requirements=decision.replacement_evidence_requirements,
+        verified_replacement_evidence_refs=decision.verified_replacement_evidence_refs,
+    )
+
+
+class RepairPolicyNamespaceClassification(BaseModel):
+    """Minimal namespace classification attached to a repair-policy surface."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    role: str = Field(min_length=1)
+
+
+class RepairPolicyNamespacePolicy(BaseModel):
+    """Policy metadata for one namespace governed by a command surface."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace_classification: RepairPolicyNamespaceClassification
+    owner_domain: str = Field(min_length=1)
+    repair_policy: str = Field(min_length=1)
+    recovery_policy: str = Field(min_length=1)
+    mutation_authority: str = Field(min_length=1)
+
+
 class RepairPolicyCommandSurface(BaseModel):
     """One catalogued repair-policy CLI command surface."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     command_path: str = Field(min_length=1)
-    """The canonical CLI command path (e.g. ``aeat config repair integrity``)."""
+    """The canonical CLI command path (e.g. ``config repair integrity objects``)."""
+
+    command_family: str = Field(min_length=1)
+    owner_domains: tuple[str, ...]
+    adr_links: tuple[str, ...]
+    namespace_policies: tuple[RepairPolicyNamespacePolicy, ...] = ()
+
+
+_SECURE_OBJECT_POLICY = RepairPolicyNamespacePolicy(
+    namespace_classification=RepairPolicyNamespaceClassification(role="profile_local_secure_object"),
+    owner_domain="secure_storage",
+    repair_policy="metadata_only_digest_inventory_preserve_ciphertext",
+    recovery_policy="restore_matching_master_key_or_rebuild_from_authoritative_source",
+    mutation_authority="explicit_operator_confirmation_required_for_mutation",
+)
+_PROFILE_BUNDLE_POLICY = RepairPolicyNamespacePolicy(
+    namespace_classification=RepairPolicyNamespaceClassification(role="profile_bundle"),
+    owner_domain="profile_lifecycle",
+    repair_policy="preserve_manifest_and_encrypted_payload_identity",
+    recovery_policy="profile_import_export_roundtrip",
+    mutation_authority="explicit_operator_confirmation_required_for_profile_mutation",
+)
+_MODEL_FILING_POLICY = RepairPolicyNamespacePolicy(
+    namespace_classification=RepairPolicyNamespaceClassification(role="modelo_filing_artifact"),
+    owner_domain="modelo_filing",
+    repair_policy="preserve_exported_or_imported_filing_evidence",
+    recovery_policy="reimport_authoritative_filing_evidence",
+    mutation_authority="operator_requested_import_or_export_only",
+)
+_LEDGER_POLICY = RepairPolicyNamespacePolicy(
+    namespace_classification=RepairPolicyNamespaceClassification(role="ledger_artifact"),
+    owner_domain="ledger",
+    repair_policy="preserve_transaction_evidence_and_import_payloads",
+    recovery_policy="reimport_authoritative_ledger_source",
+    mutation_authority="operator_requested_import_or_export_only",
+)
+_REPAIR_ADR_LINKS = (
+    "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]",
+    "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]",
+)
+
+
+def _surface(
+    command_path: str,
+    *,
+    command_family: str,
+    owner_domains: tuple[str, ...],
+    namespace_policies: tuple[RepairPolicyNamespacePolicy, ...] = (),
+) -> RepairPolicyCommandSurface:
+    return RepairPolicyCommandSurface(
+        command_path=command_path,
+        command_family=command_family,
+        owner_domains=owner_domains,
+        adr_links=_REPAIR_ADR_LINKS,
+        namespace_policies=namespace_policies,
+    )
 
 
 def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSurface, ...]:
     """Return the catalogued repair-policy CLI surfaces.
 
-    Per ADR Decision 4, this is a scaffold matching the consumer test
-    contract at ``test_repair_policy_coverage.py``: returns objects
-    carrying a ``command_path`` string that aligns with the CLI
-    registry. The live-iva-compensation-wallet campaign's full
-    implementation supersedes via standard merge.
+    The catalog mirrors the Typer command registry for repair,
+    recovery, import, export, and bucket-history surfaces. It is used
+    as an executable drift gate: adding a new command in those families
+    requires an ADR-linked policy row here.
     """
     return (
-        RepairPolicyCommandSurface(command_path="aeat config repair integrity"),
-        RepairPolicyCommandSurface(command_path="aeat config repair list"),
+        _surface("config repair logs", command_family="repair", owner_domains=("diagnostics",)),
+        _surface(
+            "config repair quarantine",
+            command_family="repair",
+            owner_domains=("secure_storage",),
+            namespace_policies=(_SECURE_OBJECT_POLICY,),
+        ),
+        _surface(
+            "config repair reset-state",
+            command_family="repair",
+            owner_domains=("workflow_state",),
+            namespace_policies=(_SECURE_OBJECT_POLICY,),
+        ),
+        _surface(
+            "config repair profile",
+            command_family="repair",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "config repair integrity objects",
+            command_family="repair",
+            owner_domains=("secure_storage",),
+            namespace_policies=(_SECURE_OBJECT_POLICY,),
+        ),
+        _surface("config repair integrity registry", command_family="repair", owner_domains=("registry",)),
+        _surface(
+            "config repair list",
+            command_family="repair",
+            owner_domains=("secure_storage",),
+            namespace_policies=(_SECURE_OBJECT_POLICY,),
+        ),
+        _surface("config repair connectivity", command_family="repair", owner_domains=("remote_connectivity",)),
+        _surface(
+            "config profile import",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface(
+            "config profile export",
+            command_family="recovery",
+            owner_domains=("profile_lifecycle",),
+            namespace_policies=(_PROFILE_BUNDLE_POLICY,),
+        ),
+        _surface("config bucket history", command_family="audit", owner_domains=("bucket_lifecycle",)),
+        _surface(
+            "app ledger import",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app ledger export",
+            command_family="recovery",
+            owner_domains=("ledger",),
+            namespace_policies=(_LEDGER_POLICY,),
+        ),
+        _surface(
+            "app modelo export",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app modelo filing-record import",
+            command_family="recovery",
+            owner_domains=("modelo_filing",),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
+        _surface(
+            "app modelo audit export",
+            command_family="audit",
+            owner_domains=("modelo_audit", "modelo_filing"),
+            namespace_policies=(_MODEL_FILING_POLICY,),
+        ),
     )
 
 
@@ -405,6 +597,8 @@ __all__ = [
     "RepairListReport",
     "RepairListRow",
     "RepairPolicyCommandSurface",
+    "RepairPolicyNamespaceClassification",
+    "RepairPolicyNamespacePolicy",
     "RepairRemediationDecision",
     "RepairRemediationDecisionRepository",
     "build_repair_integrity_report",

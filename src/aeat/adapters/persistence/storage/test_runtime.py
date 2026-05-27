@@ -17,6 +17,8 @@ from aeat.adapters.persistence.storage.runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_cold_bootstrap_state
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings, StorageRouteKind, override_settings
@@ -229,6 +231,28 @@ def test_runtime_repository_factory_refuses_unready_runtime(tmp_path: Path) -> N
     assert raised.value.translated_message == "errors.storage.runtime.not_ready"
     assert "Storage runtime is not ready for profile-bound storage" in rendered
     assert "unlock a profile" in rendered
+
+
+def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_path: Path) -> None:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None):
+        repository = secure_object_repository_for_cold_bootstrap_state()
+
+    assert isinstance(repository, SecureObjectRepository)
+
+
+def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
+    with (
+        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        pytest.raises(StorageValidationError, match="Cold-bootstrap storage"),
+    ):
+        secure_object_repository_for_cold_bootstrap_state()
+
+
+def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Path) -> None:
+    settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+
+    with pytest.raises(StorageValidationError, match="explicit database route"):
+        secure_object_repository_for_cold_bootstrap_state(settings)
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:

@@ -25,6 +25,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
 _EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.auth_gate_4033}"
+_SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
 
 
 def test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total() -> None:
@@ -62,8 +63,8 @@ def test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total()
 
     observation = parse_iva_compensation_wallet_html(
         html,
-        taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         source_url=IVA_COMPENSATION_WALLET_URL,
@@ -93,8 +94,8 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
     with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
         parse_iva_compensation_wallet_html(
             html,
-            taxpayer_nif="12345678Z",
-            authenticated_identity="12345678Z",
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             source_url=IVA_COMPENSATION_WALLET_URL,
@@ -118,8 +119,8 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
     with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
         parse_iva_compensation_wallet_html(
             html,
-            taxpayer_nif="12345678Z",
-            authenticated_identity="12345678Z",
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             source_url=IVA_COMPENSATION_WALLET_URL,
@@ -142,8 +143,8 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
     with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
         parse_iva_compensation_wallet_html(
             html,
-            taxpayer_nif="12345678Z",
-            authenticated_identity="12345678Z",
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             source_url=IVA_COMPENSATION_WALLET_URL,
@@ -166,8 +167,8 @@ def test_parse_iva_compensation_wallet_html_accepts_executed_empty_wallet_shell_
 
     observation = parse_iva_compensation_wallet_html(
         html,
-        taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         source_url=IVA_COMPENSATION_WALLET_URL,
@@ -195,8 +196,8 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
     with pytest.raises(SedeParseError, match="recognizable IVA compensation wallet table"):
         parse_iva_compensation_wallet_html(
             html,
-            taxpayer_nif="12345678Z",
-            authenticated_identity="12345678Z",
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             source_url=IVA_COMPENSATION_WALLET_URL,

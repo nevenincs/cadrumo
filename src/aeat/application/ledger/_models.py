@@ -269,6 +269,7 @@ class LedgerTransactionPayload(BaseModel):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
+    classified_by: str | None = None
 
 
 class LedgerTransactionReviewPayload(BaseModel):

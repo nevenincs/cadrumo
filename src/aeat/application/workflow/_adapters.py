@@ -17,7 +17,7 @@ than failing.
 from __future__ import annotations
 
 from datetime import date
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ...core.config import Settings, load_settings
 
@@ -33,7 +33,6 @@ from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ..filing import (
     CasillaSchemaProvider,
     ModeloDraft,
-    ModeloProfile,
     build_draft,
 )
 from ._engine import WorkflowEngine
@@ -41,13 +40,13 @@ from ._errors import WorkflowError
 from ._protocols import (
     CertificateBundleProtocol,
     DeadlineEngineProtocol,
-    ExpedientesSource,
     ModeloDraftBuilderProtocol,
     ModeloInputs,
     ModeloInputsProviderProtocol,
-    NotificationsSource,
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
+    WorkflowExpedienteProtocol,
+    WorkflowNotificationsSnapshotProtocol,
 )
 
 _logger = get_logger(__name__)
@@ -94,22 +93,21 @@ class ModeloDraftBuilderAdapter:
     ) -> RegistryModeloDraftProtocol:
         """Delegate to :func:`build_draft`.
 
-        ``cast`` is used for ``profile`` because :class:`TaxpayerProfile`
-        and :class:`aeat.application.filing.ModeloProfile` are structurally
-        compatible (both expose ``tax_id``) but ``TaxpayerProfile`` does not
-        declare ``display_name`` and therefore does not satisfy the Protocol
-        statically. At this adapter boundary the structural bridging is
-        intentional.
+        :class:`TaxpayerProfile` and :class:`aeat.application.filing.ModeloProfile`
+        are structurally compatible (both expose ``tax_id``) but
+        ``TaxpayerProfile`` does not declare ``display_name`` and therefore
+        does not satisfy the Protocol statically. The ``type: ignore`` at the
+        call site documents this intentional structural bridging.
         """
         draft: ModeloDraft = build_draft(
             modelo=modelo,
             period=period,
-            profile=cast(ModeloProfile, profile),
+            profile=profile,  # type: ignore[arg-type]  # TaxpayerProfile satisfies ModeloProfile structurally but lacks display_name declaration; structural bridging is intentional at this adapter boundary
             inputs=inputs,
             schema_provider=self._schema_provider,
             fail_on_warning=fail_on_warning,
         )
-        return cast(RegistryModeloDraftProtocol, draft)
+        return draft  # type: ignore[return-value]  # ModeloDraft satisfies RegistryModeloDraftProtocol structurally; Protocol conformance is verified at test time
 
 
 class SubmissionEngineAdapter:
@@ -135,16 +133,22 @@ class SubmissionEngineAdapter:
         self._engine.preflight(draft, today=today, skip_deadline_window=skip_deadline_window)
 
 
-async def _live_expedientes_source(session: object, modelo: str | None) -> object:
+async def _live_expedientes_source(
+    session: object, modelo: str | None
+) -> tuple[WorkflowExpedienteProtocol, ...]:
     from ...adapters.outbound.aeat.sede import walk_expedientes_tree
 
-    return await walk_expedientes_tree(cast(AeatSession, session), modelo=modelo)
+    # session is typed as ``object`` to match the ``ExpedientesSource`` Protocol
+    # (Callable[[object, str | None], ...]); the concrete value at this call
+    # site is always an ``AeatSession`` supplied by ``default_engine``.
+    return await walk_expedientes_tree(session, modelo=modelo)  # type: ignore[arg-type]
 
 
-async def _live_notifications_source(session: object) -> object:
+async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
     from ...adapters.outbound.aeat.sede import fetch_notifications_query
 
-    return await fetch_notifications_query(cast(AeatSession, session))
+    # Same Protocol-boundary narrowing as _live_expedientes_source above.
+    return await fetch_notifications_query(session)  # type: ignore[arg-type]
 
 
 def default_engine(
@@ -200,8 +204,8 @@ def default_engine(
         certificate_bundle=certificate_bundle,
         inputs_provider=inputs_provider,
         settings=cfg,
-        expedientes_source=cast(ExpedientesSource, _live_expedientes_source) if session is not None else None,
-        notifications_source=cast(NotificationsSource, _live_notifications_source) if session is not None else None,
+        expedientes_source=_live_expedientes_source if session is not None else None,
+        notifications_source=_live_notifications_source if session is not None else None,
     )
 
 

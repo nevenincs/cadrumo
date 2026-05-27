@@ -9,6 +9,8 @@ specifics.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ..pdf._errors import PdfModeloImportError
 
 
@@ -21,7 +23,36 @@ class DeclaracionParseError(PdfModeloImportError):
     detection failure; the bare class is raised for low-level failures
     (PDF unreadable, header field missing, missing registry coverage,
     etc.).
+
+    When the error originates from an extraction-coverage failure the
+    following structured attributes are populated so callers can assert
+    on them without parsing the message string:
+
+    Attributes:
+        missing: Tuple of casilla IDs that produced no hit in the PDF.
+        malformed: Tuple of casilla IDs whose captured value could not
+            be parsed as a valid decimal or text token.
+        ambiguous: Tuple of casilla IDs that matched more than one
+            region in the PDF.
+        coverage: Fraction of target casillas successfully extracted
+            (``Decimal``).  ``None`` when the error is not an
+            extraction-coverage failure.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        missing: tuple[str, ...] = (),
+        malformed: tuple[str, ...] = (),
+        ambiguous: tuple[str, ...] = (),
+        coverage: Decimal | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.missing: tuple[str, ...] = missing
+        self.malformed: tuple[str, ...] = malformed
+        self.ambiguous: tuple[str, ...] = ambiguous
+        self.coverage: Decimal | None = coverage
 
 
 class TemplateNotDetectedError(DeclaracionParseError):
