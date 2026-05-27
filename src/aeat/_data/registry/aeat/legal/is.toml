@@ -718,6 +718,7 @@ review_status = "reviewed"
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-1.html#a1"
 document_id = "BOE-A-2015-11071"
 article = "1"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a1"
@@ -737,6 +738,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-2.html#a2"
 document_id = "BOE-A-2015-11071"
 article = "2"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a2"
@@ -756,6 +758,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-13.html#a13"
 document_id = "BOE-A-2015-11071"
 article = "13"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a13"
@@ -774,6 +777,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-44-2015-art-14.html#a14"
 document_id = "BOE-A-2015-11071"
 article = "14"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
@@ -787,4 +791,24 @@ required_text = [
     "reserva especial",
     "beneficios líquidos",
     "10 por ciento",
+]
+
+[legal."ley-31-2022:art-39"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-31-2022-art-39.html#a39"
+document_id = "BOE-A-2022-22128"
+article = "39"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128#a39"
+published_at = 2022-12-29
+effective_from = 2023-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 31/2022 Art. 39: modifica el articulo 29 de la Ley 27/2014 LIS para introducir el tipo reducido del 23 por ciento para entidades cuya cifra de negocios del periodo impositivo inmediato anterior sea inferior a 1 millon de euros (entidades de reducida dimension). Aplicable a periodos impositivos iniciados a partir del 1 de enero de 2023. Las entidades sujetas al tipo general del 25 por ciento que cumplan el umbral de cifra de negocios inferior a 1 millon de euros aplican el tipo ERD del 23 por ciento; las cooperativas fiscalmente protegidas y entidades sin fines lucrativos conservan sus tipos especiales."
+required_text = [
+    "23 por ciento",
+    "cifra de negocios del período impositivo inmediato anterior",
+    "1 millón de euros",
 ]
