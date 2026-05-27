@@ -1586,7 +1586,12 @@ cli:
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
       purchase_invoice_evidence_help: Id de justificant de factura de compra
-      source_jurisdiction_help: 'Codi de país ISO 3166-1 alfa-2 (dues lletres) que identifica la jurisdicció fiscal d''origen de l''ingrés o despesa (p. ex. ES per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre Beckham de l''art. 93 LIRPF.'
+      source_jurisdiction_help: Codi de país ISO 3166-1 alfa-2 (dues lletres) que
+        identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
+        per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
+        Beckham de l'art. 93 LIRPF.
+      source_jurisdiction_required_beckham: 'El règim impatriat (art. 93 LIRPF, Beckham) tracta de forma diferent els rendiments de font espanyola i els de font estrangera; --source-jurisdiction s''ha de declarar explícitament a cada apunt. Un valor per defecte silenciós ES inclouria rendiments de font estrangera a la base de l''IRPF (art. 93.5 segregació).'
+      source_jurisdiction_required_irnr: '--source-jurisdiction es obligatori per a perfils de no resident IRNR.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)

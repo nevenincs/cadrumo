@@ -1218,7 +1218,11 @@ cli:
       notes_help: cli.ledger.add.notes_help
       prorrata_reference_help: cli.ledger.add.prorrata_reference_help
       purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
-      source_jurisdiction_help: 'Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás, FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.'
+      source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
+        a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
+        FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
+      source_jurisdiction_required_beckham: 'Az impatriado (LIRPF 93. cikk, Beckham) különbözőképp kezeli a spanyol és külföldi forrású jövedelmet; a --source-jurisdiction értéket minden tételnél kifejezetten meg kell adni. A csendes ES alapérték a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).'
+      source_jurisdiction_required_irnr: 'A --source-jurisdiction megadasa kotelezo nem rezidens IRNR profiloknal.'
       taxable_base_help: cli.ledger.add.taxable_base_help
       usage_ratio_help: cli.ledger.add.usage_ratio_help
       value_date_help: cli.ledger.add.value_date_help
