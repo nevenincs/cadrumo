@@ -327,9 +327,9 @@ Pere Modelo 100 returns 0 cuota the IRPF tarifa is not applied. 130 to 100 proje
 
 Trace Modelo 100 cuota path end-to-end for a pensioner-landlord profile and identify where the tarifa is silently zeroed.
 
-- [ ] `W07.P31.S113` - trace Modelo 100 cuota path end-to-end for pensioner-landlord and identify where tarifa is silently zeroed; `.vault/exec/`.
-- [ ] `W07.P31.S114` - confirm root cause class CCAA fact missing or wrong; `profile-fact bindings missing per Cluster T; rate lookup gated on wrong predicate; apply fix at correct boundary; `src/aeat/_data/registry/aeat/modelos/100/`.
-- [ ] `W07.P31.S115` - regression test Pere profile base 35400 minimo 5550 Catalonia returns Modelo 100 cuota in expected range; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
+- [x] `W07.P31.S113` - trace Modelo 100 cuota path end-to-end for pensioner-landlord and identify where tarifa is silently zeroed; `.vault/exec/`.
+- [x] `W07.P31.S114` - confirm root cause class CCAA fact missing or wrong; `profile-fact bindings missing per Cluster T; rate lookup gated on wrong predicate; apply fix at correct boundary; `src/aeat/_data/registry/aeat/modelos/100/`.
+- [x] `W07.P31.S115` - regression test Pere profile base 35400 minimo 5550 Catalonia returns Modelo 100 cuota in expected range; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
 
 ### Phase `W07.P32` - 130 to 100 projection verb
 
@@ -455,6 +455,9 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; `potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S240` - convention note FU-W04-A: commit d8bec8bd9 co-landed multiple Steps plus exec records plus new test files plus __init__.py changes in a single commit; `future executors should land Step content separately from exec records and from __init__ changes; documentation-only no code change; `.vaultspec/`.
 - [ ] `W09.P41.S241` - FU-W05-A multi-step co-landing convention note from Wave-5 audit; `commit 03be9b6f4 bundled exec records and step closures; same pattern as FU-W04-A; documentation-only no code change; `.vaultspec/`.
+- [ ] `W09.P41.S242` - FU-W02-A multi-step co-landing convention note from Wave-2 audit; `commit 30065a92e S38-S42; documentation-only no code change; `.vaultspec/`.
+- [ ] `W09.P41.S243` - FU-W02-B multi-step co-landing convention note from Wave-2 audit; `commit acea52801 S43+S44+S46; documentation-only no code change; `.vaultspec/`.
+- [ ] `W09.P41.S244` - FU-W02-C MUST-FIX rewrite test_legal_entity_can_create_modelo_202_work_unit with isolated_runtime_profile fixture; currently uses monkeypatch AEAT_SECRET_STORE_BACKEND=unsecured to work around the storage regression S209; once S209 lands the unsecured workaround in this test must be removed; blocks Wave-2 quality-gate sign-off; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
 
 ### Phase `W09.P42` - twin function merge
 
