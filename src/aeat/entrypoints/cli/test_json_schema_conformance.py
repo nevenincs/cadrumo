@@ -39,11 +39,23 @@ import pytest
 
 from ...core.json_contract import SCHEMA_REGISTRY, SchemaEnvelope
 
+# Import the per-package payload modules so their @register_schema
+# decorators populate SCHEMA_REGISTRY before the gate inspects it.
+# A test-local import is necessary because the CLI lazy-loads
+# subcommand modules — the registry is otherwise empty until the
+# first Typer dispatch.
+from . import _modelo_payloads, _review_payloads  # noqa: F401  (side-effect import)
+
 # Per-command allow-list of migrated emit sites. Populated as each
 # command's ``--json`` emit site is lifted to
 # :func:`emit_json_success`. Starts empty — every entry must be paired
 # with the matching emit-site migration commit.
-MIGRATED_COMMANDS: frozenset[str] = frozenset()
+MIGRATED_COMMANDS: frozenset[str] = frozenset(
+    {
+        # P09.S42c: first emit-site lifted to the envelope shape.
+        "modelo.work.calculate",
+    }
+)
 
 
 @pytest.mark.unit
