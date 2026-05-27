@@ -270,6 +270,19 @@ class LedgerTransactionPayload(BaseModel):
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
     classified_by: str = Field(min_length=1)
+    source_jurisdiction: str | None = None
+
+    @field_validator("source_jurisdiction")
+    @classmethod
+    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalised = value.strip()
+        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
+            raise ValueError(
+                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
+            )
+        return normalised
 
 
 class LedgerTransactionReviewPayload(BaseModel):
