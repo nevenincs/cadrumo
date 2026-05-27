@@ -219,7 +219,7 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [x] `W04.P19.S76` - regression test that Modelo 130 with all casillas zero is no longer verificado_completo; `src/aeat/application/modelo/test_verification_substance.py`.
 - [x] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
 - [x] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
-- [ ] `W04.P19.S296` - fix M200 DP200014:00562 casilla TOML misclassification — change input_kind from manual to computed and required from true to false in liquidacion-00562-cuota-integra.toml; no verifier code change required; add regression test asserting M200 revision with DP200014:00562 present only in casilla_values engine-computed reaches VERIFICADO_COMPLETO without MISSING_REQUIRED_CASILLA finding; scope confirmed to ONE casilla across M100/M200/M202/M303; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml`.
+- [ ] `W04.P19.S296` - fix M200 DP200014:00562 casilla TOML misclassification — change input_kind from manual to computed and required from true to false in liquidacion-00562-cuota-integra.toml; `no verifier code change required; add regression test asserting M200 revision with DP200014:00562 present only in casilla_values engine-computed reaches VERIFICADO_COMPLETO without MISSING_REQUIRED_CASILLA finding; scope confirmed to ONE casilla across M100/M200/M202/M303; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml`.
 
 ### Phase `W04.P20` - verification path naming and boundary documentation
 
@@ -669,11 +669,11 @@ promote 38 untyped boundary sites surfaced by discovery2 sweep S97; 14 CLI paylo
 
 promote 8 W09.P39 validate-helper duplicate steps (S149-S156) into a dedicated phase; one canonical _validate_helpers.py with seven import updates
 
-- [ ] `W12.P62.S149` - create _validate_helpers.py with canonical _missing_refs and any other shared validate-helpers; `src/aeat/domain/calculations/registry/_validate_helpers.py`.
-- [ ] `W12.P62.S150` - delete duplicate _missing_refs from _validate_algorithms.py and import from _validate_helpers; `src/aeat/domain/calculations/registry/_validate_algorithms.py`.
-- [ ] `W12.P62.S151` - same for _validate_constructs.py; `src/aeat/domain/calculations/registry/_validate_constructs.py`.
-- [ ] `W12.P62.S152` - same for _validate_dependency_sections.py; `src/aeat/domain/calculations/registry/_validate_dependency_sections.py`.
-- [ ] `W12.P62.S153` - same for _validate_exports.py; `src/aeat/domain/calculations/registry/_validate_exports.py`.
-- [ ] `W12.P62.S154` - same for _validate_record_sections.py; `src/aeat/domain/calculations/registry/_validate_record_sections.py`.
-- [ ] `W12.P62.S155` - same for _validate_revision_sections.py; `src/aeat/domain/calculations/registry/_validate_revision_sections.py`.
-- [ ] `W12.P62.S156` - same for _validate_surfaces.py; `src/aeat/domain/calculations/registry/_validate_surfaces.py`.
+- [x] `W12.P62.S149` - create _validate_helpers.py with canonical _missing_refs and any other shared validate-helpers; `src/aeat/domain/calculations/registry/_validate_helpers.py`.
+- [x] `W12.P62.S150` - delete duplicate _missing_refs from _validate_algorithms.py and import from _validate_helpers; `src/aeat/domain/calculations/registry/_validate_algorithms.py`.
+- [x] `W12.P62.S151` - same for _validate_constructs.py; `src/aeat/domain/calculations/registry/_validate_constructs.py`.
+- [x] `W12.P62.S152` - same for _validate_dependency_sections.py; `src/aeat/domain/calculations/registry/_validate_dependency_sections.py`.
+- [x] `W12.P62.S153` - same for _validate_exports.py; `src/aeat/domain/calculations/registry/_validate_exports.py`.
+- [x] `W12.P62.S154` - same for _validate_record_sections.py; `src/aeat/domain/calculations/registry/_validate_record_sections.py`.
+- [x] `W12.P62.S155` - same for _validate_revision_sections.py; `src/aeat/domain/calculations/registry/_validate_revision_sections.py`.
+- [x] `W12.P62.S156` - same for _validate_surfaces.py; `src/aeat/domain/calculations/registry/_validate_surfaces.py`.
