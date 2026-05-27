@@ -340,6 +340,10 @@ application:
         descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
+    findings:
+      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
+        presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
+        en el año representan el 70% o más de los rendimientos íntegros.'
   overview:
     explain:
       errors:
@@ -402,14 +406,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nueva factura cobrable
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
+          intracomunitarias UE)
         eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que un cliente te debe pagar
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas cobrables registradas
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
-          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
+          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualiza los datos de una factura cobrable
@@ -456,14 +461,15 @@ cli:
         year_help: Ejercicio fiscal
       payable_invoice:
         add_help: Registra una nueva factura pagable
-        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones
+          intracomunitarias UE)
         eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que debes pagar a un proveedor
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas pagables registradas
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
-          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
+          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualiza los datos de una factura pagable
@@ -805,6 +811,13 @@ cli:
           operador)
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
+        autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
+          inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
+          de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
+          automáticamente el 21% (Art. 90 LISIVA) para calcular la cuota devengada.
+          Sólo aplicable a Modelo 303.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base debe ser
+          un importe decimal; recibido: {value}'
         borrador_help: Id del snapshot de borrador del modelo 100 (completo o prefijo
           no ambiguo). Sus valores de binding se usan solo para bindings marcados
           aeat_prefilled; las sobrescrituras --binding del operador siempre tienen
@@ -835,6 +848,17 @@ cli:
           o CCAA donde se ubica el bien transmitido (ITPyAJD Modelo 600/620). Determina
           la Hacienda competente (Ley 22/2009 Art. 32). País Vasco y Navarra son regímenes
           forales; consulta la Hacienda autonómica correspondiente.
+        compare_taxation_error: 'La comparación conjunta vs. individual no está disponible:
+          {detail}'
+        compare_taxation_help: 'Compara la cuota IRPF en tributación conjunta (Art.
+          82-84 LIRPF) frente a tributación individual para una unidad de trabajo
+          Modelo 100 existente. Ejecuta el motor de cálculo del registro dos veces
+          — una con tipo de declaración = 2 (conjunta) y otra con tipo = 1 (individual)
+          — sobre los mismos datos de perfil, y emite el diferencial de cuota y la
+          recomendación. Operación efímera: no persiste ninguna revisión.'
+        compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
+        compare_taxation_work_unit_not_found: Unidad de trabajo {work_unit_id} no
+          encontrada; consulta las unidades activas con 'aeat app modelo work list'.
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
@@ -941,6 +965,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
         notes_help: Notas opcionales asociadas al filing record
+        output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
@@ -954,6 +979,9 @@ cli:
           reconocido. --year y --period se componen por separado: pasa --year %{year}
           para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
           trimestre o MM para un mes) en --period.'
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: 'AVISO: plazo voluntario vencido (Art. 27 LGT). Presenta
+          con recargo antes de recibir requerimiento de la AEAT.'
         prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no está
           soportado para el modelo %{modelo} en esta revisión; no se ha declarado
           ninguna casilla exenta de prestaciones INSS (Art. 7.h). Usa --casilla para
@@ -971,6 +999,24 @@ cli:
         relation_not_decimal: 'El valor de --relation para {key} no es un decimal:
           {value}.'
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
+        rescate_plan_pensiones_aportaciones_pre_2007_help: Aportaciones realizadas
+          al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF).
+          Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.
+        rescate_plan_pensiones_aportaciones_totales_help: Total de aportaciones al
+          plan de pensiones (denominador del prorrateo DT 12ª LIRPF). Necesario junto
+          con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-pre-2007.
+        rescate_plan_pensiones_capital_help: Importe bruto del rescate del plan de
+          pensiones en forma de capital (DT 12ª LIRPF). Úsalo junto con --rescate-plan-pensiones-aportaciones-pre-2007
+          y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule
+          automáticamente la reducción del 40% y la inyecte en casilla 0011.
+        rescate_plan_pensiones_casilla_not_found: --rescate-plan-pensiones-capital
+          no está soportado para esta revisión de modelo; no se ha declarado ninguna
+          casilla de reducción del rendimiento del trabajo por DT 12ª LIRPF. Usa --casilla
+          para suministrar los valores directamente.
+        rescate_plan_pensiones_incomplete: --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007
+          y --rescate-plan-pensiones-aportaciones-totales deben suministrarse conjuntamente.
+        rescate_plan_pensiones_not_decimal: Los valores --rescate-plan-pensiones-*
+          deben ser importes decimales.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Acepta un id de ejecución de flujo o un id de unidad
@@ -999,8 +1045,8 @@ cli:
           (socio/partícipe M184), ''vinculada'' (operación vinculada M232), ''operador''
           (operador intracomunitario M349) o ''contraparte'' (declarada M347). Repetir
           para añadir más filas. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE
-          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
+          importe=10000''. Ejemplo M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          clave_operacion=E importe=50000''.'
         row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
         row_m184_shares_not_100: 'M184 filas miembro: los porcentajes de participación
           deben sumar exactamente 100%; se obtuvo {total} con {count} filas.'
@@ -1008,8 +1054,8 @@ cli:
           {total} no supera el umbral de €{threshold} exigido por RD 1065/2007 art.
           31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
-          el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE
-          Anexo XI)'
+          el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
+          XI)'
         row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
           {supported}.'
         row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
@@ -1017,6 +1063,23 @@ cli:
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.
+        sal_beneficio_neto_help: Beneficio neto del ejercicio de la Sociedad Laboral
+          (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación
+          obligatoria a la reserva especial, limitada por el umbral del 50% del capital
+          social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015
+          Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva
+          acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
+          y --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: --sal-beneficio-neto no está soportado para
+          esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial
+          de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.
+        sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
+          (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite
+          del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.
+        sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social
+          deben suministrarse conjuntamente.
+        sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA=DECIMAL
           (repetible; al menos uno requerido)
@@ -1028,31 +1091,9 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
-        plazo_days_remaining: "days_remaining\t{days_remaining}"
-        plazo_vencido_warning: "AVISO: plazo voluntario vencido (Art. 27 LGT). Presenta\
-          \ con recargo antes de recibir requerimiento de la AEAT."
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        rescate_plan_pensiones_capital_help: 'Importe bruto del rescate del plan de pensiones en forma de capital (DT 12ª LIRPF). Úsalo junto con --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule automáticamente la reducción del 40% y la inyecte en casilla 0011.'
-        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.'
-        rescate_plan_pensiones_aportaciones_totales_help: 'Total de aportaciones al plan de pensiones (denominador del prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-pre-2007.'
-        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reducción del rendimiento del trabajo por DT 12ª LIRPF. Usa --casilla para suministrar los valores directamente.'
-        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales deben suministrarse conjuntamente.'
-        rescate_plan_pensiones_not_decimal: 'Los valores --rescate-plan-pensiones-* deben ser importes decimales.'
-        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada por el umbral del 50% del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
-        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
-        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
-        autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica automáticamente el 21% (Art. 90 LISIVA) para calcular la cuota devengada. Sólo aplicable a Modelo 303.'
-        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base debe ser un importe decimal; recibido: {value}'
-        sal_reserva_casilla_not_found: '--sal-beneficio-neto no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.'
-        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social deben suministrarse conjuntamente.'
-        sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales.'
-        compare_taxation_help: 'Compara la cuota IRPF en tributación conjunta (Art. 82-84 LIRPF) frente a tributación individual para una unidad de trabajo Modelo 100 existente. Ejecuta el motor de cálculo del registro dos veces — una con tipo de declaración = 2 (conjunta) y otra con tipo = 1 (individual) — sobre los mismos datos de perfil, y emite el diferencial de cuota y la recomendación. Operación efímera: no persiste ninguna revisión.'
-        compare_taxation_work_unit_not_found: 'Unidad de trabajo {work_unit_id} no encontrada; consulta las unidades activas con ''aeat app modelo work list''.'
-        compare_taxation_error: 'La comparación conjunta vs. individual no está disponible: {detail}'
-        compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
-        output_language_help: 'Idioma de salida para los mensajes renderizados.'
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -1318,10 +1359,10 @@ cli:
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      logout_session_warning: El cierre de sesión limpió el puntero del perfil
-        activo. Los verbos posteriores en este terminal serán rechazados con
-        NoActiveBucketSessionError hasta que ejecutes `aeat config profile switch
-        NOMBRE` (o abras un nuevo terminal y vuelvas a seleccionar).
+      logout_session_warning: El cierre de sesión limpió el puntero del perfil activo.
+        Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
+        hasta que ejecutes `aeat config profile switch NOMBRE` (o abras un nuevo terminal
+        y vuelvas a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -1408,7 +1449,11 @@ cli:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
       requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
-      scope_help: 'Ámbito a reiniciar. profile: borra todos los buckets de perfil (manifiestos, DEKs, declaraciones, revisiones de libro mayor y facturas). auth: limpia la sesión de autenticación AEAT/SEDE persistida. data: pone en cuarentena las filas de objetos seguros ilegibles en todos los espacios de nombres. all: aplica profile, auth y data juntos.'
+      scope_help: 'Ámbito a reiniciar. profile: borra todos los buckets de perfil
+        (manifiestos, DEKs, declaraciones, revisiones de libro mayor y facturas).
+        auth: limpia la sesión de autenticación AEAT/SEDE persistida. data: pone en
+        cuarentena las filas de objetos seguros ilegibles en todos los espacios de
+        nombres. all: aplica profile, auth y data juntos.'
       yes_help: Confirmar explícitamente la operación de reinicio
     set:
       help: Asignar un valor a una clave de configuración
@@ -1806,12 +1851,12 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
+    remove_key_help: Clave de locale con puntos que se eliminará.
+    remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
-    remove_locale_help: 'Código de locale a actualizar.'
-    remove_key_help: 'Clave de locale con puntos que se eliminará.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -2064,14 +2109,18 @@ cli:
         part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
+      verify_dangling_rule_section_ref: la regla %{rule_id} referencia una sección
+        desconocida %{target}
+      verify_dangling_section_ref: la sección %{section_id} referencia una sección
+        desconocida %{target}
+      verify_failed: 'la verificación falló para %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verificar la integridad del manual contra su contrato
+      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual
+        fetch'' para materializarlo'
+      verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción
+        de %{field_name}'
       view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       year_help: Año fiscal del manual (p. ej. 2024)
-      verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción de %{field_name}'
-      verify_dangling_section_ref: 'la sección %{section_id} referencia una sección desconocida %{target}'
-      verify_dangling_rule_section_ref: 'la regla %{rule_id} referencia una sección desconocida %{target}'
-      verify_missing_manifest: '%{manifest_path} no existe; ejecuta ''aeat manual fetch'' para materializarlo'
-      verify_failed: 'la verificación falló para %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: Nº declaraciones de aplicabilidad
       application_link_count: Nº enlaces de aplicación
@@ -2176,10 +2225,10 @@ cli:
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`. Los modificadores globales (`--format json`, `--language es`,
-        `--profile NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del
-        subcomando, p. ej. `aeat --format json app ledger list` (no `aeat app
-        ledger list --format json`).'
+        --help`. Los modificadores globales (`--format json`, `--language es`, `--profile
+        NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del subcomando,
+        p. ej. `aeat --format json app ledger list` (no `aeat app ledger list --format
+        json`).'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
         csv` - añadir tus movimientos bancarios.'
@@ -2701,6 +2750,8 @@ errors:
       de trabajo.
     fail_normatives_normative_parse: Un registro normativo no superó la validación
       del esquema.
+    fail_observability_run_trace_persistence: El almacén de trazas de ejecución no
+      pudo completar una operación del sistema de archivos.
     fail_outbound_storage: Se produjo un error en el proveedor de almacenamiento.
     fail_outbound_storage_network: No se pudo contactar con el servicio de almacenamiento.
       Comprueba tu conexión a internet y vuelve a intentarlo.
@@ -2753,7 +2804,6 @@ errors:
       con el resumen anual.
     stale_exchange_rate: El único tipo de cambio disponible está fuera del margen
       de frescura aceptable.
-    fail_observability_run_trace_persistence: 'El almacén de trazas de ejecución no pudo completar una operación del sistema de archivos.'
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
   identity:
@@ -3367,8 +3417,8 @@ wizard:
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
       country-of-fiscal-residence:
-        help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE, FR).
-          Obligatorio cuando fiscal-residency es non_resident_irnr.
+        help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE,
+          FR). Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
         help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible).
           Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,NIF=XXXXXXXXX]'
@@ -3399,9 +3449,9 @@ wizard:
         help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
           categoría
       irpf-special-regime:
-        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes. "impatriado"
-          para trabajadores desplazados a España acogidos a la Ley Beckham (Art. 93
-          LIRPF), aplicable los primeros 6 años tras el traslado.
+        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes.
+          "impatriado" para trabajadores desplazados a España acogidos a la Ley Beckham
+          (Art. 93 LIRPF), aplicable los primeros 6 años tras el traslado.
       irpf-special-regime-start-date:
         help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
           Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
@@ -3674,7 +3724,8 @@ wizard:
           murcia:
             label: Murcia
       country-of-fiscal-residence:
-        prompt: País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE, FR)
+        prompt: País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE,
+          FR)
       fiscal-residency:
         choices:
           non_resident_irnr:
