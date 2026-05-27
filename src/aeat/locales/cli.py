@@ -62,6 +62,27 @@ def scaffold(
     typer.echo("locale scaffold updated")
 
 
+@app.command("set")
+def set_value(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_key_help", default="Dotted locale key to update.")),
+    ],
+    value: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_value_help", default="Replacement locale value.")),
+    ],
+) -> None:
+    """Set one locale string leaf."""
+
+    path = _default_manager().set_locale_value(locale, key, value)
+    typer.echo(f"updated {path.name}:{key}")
+
+
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
 

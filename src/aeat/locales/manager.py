@@ -151,6 +151,38 @@ class LocaleManager:
             with open(f, "w", encoding="utf-8") as f_obj:
                 yaml.dump(new_data, f_obj, allow_unicode=True, sort_keys=True, default_flow_style=False)
 
+    def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
+        """Set one existing locale leaf while preserving the YAML layout."""
+
+        if locale != Path(locale).name or Path(locale).suffix:
+            raise LocaleError(f"Invalid locale code: {locale!r}")
+        allowed_locales = {path.stem for path in self.locales_dir.glob("*.yml")}
+        if locale not in allowed_locales:
+            raise LocaleError(f"Locale file not found: {locale!r}")
+
+        locale_path = (self.locales_dir / f"{locale}.yml").resolve()
+        locales_root = self.locales_dir.resolve()
+        try:
+            locale_path.relative_to(locales_root)
+        except ValueError as exc:
+            raise LocaleError(f"Locale path escapes locale root: {locale!r}") from exc
+        if not locale_path.is_file():
+            raise LocaleError(f"Locale file not found: {locale_path}")
+        parts = dotted_key.split(".")
+        if not dotted_key or any(not part for part in parts):
+            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+
+        cursor: LocaleNode = self.load_locale(locale_path)
+        for part in parts:
+            if not isinstance(cursor, dict) or part not in cursor:
+                raise LocaleError(f"Locale key not found: {dotted_key!r}; run locale scaffold first")
+            cursor = cursor[part]
+        if isinstance(cursor, dict):
+            raise LocaleError(f"Cannot set {dotted_key!r}: it resolves to a namespace")
+
+        _replace_existing_yaml_leaf(locale_path, parts, value)
+        return locale_path
+
 
 def _collect_required_leaves(
     keys: set[str],
@@ -192,6 +224,58 @@ def _set_nested_leaf(root: dict[str, LocaleNode], dotted_key: str, value: Locale
         assert isinstance(child, dict)  # narrowed by the line above
         curr = child
     curr[parts[-1]] = value
+
+
+def _yaml_single_quoted(value: str) -> str:
+    """Render a scalar as a YAML single-quoted string."""
+
+    escaped = value.replace("'", "''")
+    return "'" + escaped + "'"
+
+
+def _yaml_leaf_end(lines: list[str], start: int, indent: int) -> int:
+    """Return the slice end for a scalar leaf and its indented continuation."""
+
+    end = start + 1
+    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):")
+    while end < len(lines):
+        match = key_pattern.match(lines[end])
+        if match is not None and len(match.group("indent")) <= indent:
+            break
+        end += 1
+    return end
+
+
+def _replace_existing_yaml_leaf(path: Path, parts: list[str], value: str) -> None:
+    """Replace a single existing leaf line without rebuilding the whole YAML file."""
+
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    stack: list[tuple[int, str]] = []
+    key_pattern = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
+
+    for index, line in enumerate(lines):
+        match = key_pattern.match(line)
+        if match is None:
+            continue
+
+        indent = len(match.group("indent"))
+        key = match.group("key")
+        rest = match.group("rest")
+        while stack and stack[-1][0] >= indent:
+            stack.pop()
+
+        current_parts = [item for _, item in stack] + [key]
+        if current_parts == parts:
+            newline = "\r\n" if line.endswith("\r\n") else "\n"
+            replacement = match.group("indent") + key + ": " + _yaml_single_quoted(value) + newline
+            lines[index : _yaml_leaf_end(lines, index, indent)] = [replacement]
+            path.write_text("".join(lines), encoding="utf-8")
+            return
+
+        if not rest.strip():
+            stack.append((indent, key))
+
+    raise LocaleError(f"Locale key not found in YAML text: {'.'.join(parts)!r}")
 
 
 def _flatten_leaf_values(mapping: dict[str, LocaleNode], prefix: str = "") -> dict[str, str]:
