@@ -17,6 +17,7 @@ from aeat.tests.secure_sql import isolated_runtime_profile, isolated_sessionless
 
 from . import (
     IvaCompensationHistoryCaptureReport,
+    IvaRemoteStateAcquisitionManifest,
     IvaRemoteStateAcquisitionReport,
     LiveIvaAcquisitionFailureMode,
     LiveIvaReadStatus,
@@ -243,6 +244,43 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         database_bytes = db_path.read_bytes()
         assert b"AEAT wallet auth gate" not in database_bytes
         assert b"remote-state" not in database_bytes
+
+
+def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
+    legacy = IvaRemoteStateAcquisitionReport(
+        output_root="legacy-output",
+        year_from=2024,
+        year_to=2024,
+        target_year=2026,
+        target_period="1T",
+        filed_history=None,
+        wallet=None,
+        outcomes=(),
+    )
+
+    manifest = IvaRemoteStateAcquisitionManifest.model_validate(
+        {
+            "acquisition_id": "legacy",
+            "captured_at": _CAPTURED_AT,
+            "year_from": 2024,
+            "year_to": 2024,
+            "target_year": 2026,
+            "target_period": "1T",
+            "filed_history_succeeded": False,
+            "wallet_succeeded": False,
+            "surfaces": [
+                {"surface": "filed_history", "status": "failed", "failure_type": "MissingSurfaceReport"},
+                {"surface": "wallet_cartera", "status": "failed", "failure_type": "MissingSurfaceReport"},
+            ],
+        }
+    )
+
+    assert legacy.auth.failure_type == "MissingAuthResult"
+    assert manifest.auth.failure_type == "LegacyManifestAuthOutcome"
+    assert tuple(surface.outcome_mode for surface in manifest.surfaces) == (
+        LiveIvaAcquisitionFailureMode.UNKNOWN,
+        LiveIvaAcquisitionFailureMode.UNKNOWN,
+    )
 
 
 def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp_path: Path) -> None:
