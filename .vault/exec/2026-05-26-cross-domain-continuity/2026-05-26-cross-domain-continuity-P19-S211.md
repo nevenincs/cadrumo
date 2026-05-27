@@ -12,8 +12,8 @@ related:
 
 ## Outcome
 
-Added `test_tampered_revision_raises_drift_error` to
-`src/aeat/application/modelo/test_verificado_completo_regression.py`.
+Added `test_observation_tampering_is_detected_by_verify_path` to
+`src/aeat/application/modelo/test_verification_substance.py`.
 
 The test calculates an M130 revision normally, then constructs a tampered
 `CalculationRevision` via `model_construct` (bypassing `_enforce_invariants`) with
@@ -34,4 +34,4 @@ pydantic's deserialization validators before reaching the application layer.
 
 ## Files changed
 
-- `src/aeat/application/modelo/test_verificado_completo_regression.py` (S211 test)
+- `src/aeat/application/modelo/test_verification_substance.py` (S211 tampering regression test)
