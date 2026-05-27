@@ -39,7 +39,7 @@ from aeat.domain.deadlines._models import (
     LegalEntityForm,
 )
 
-from ._applicability import (
+from aeat.domain.calculations.registry.applicability import (
     _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
     _INCOMPLETE_LEGAL_REFS,
     _INCOMPLETE_UNDECLARED_REASON,

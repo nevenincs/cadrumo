@@ -26,7 +26,7 @@ from datetime import date
 
 import pytest
 
-from ._applicability import ApplicabilityVerdict, derive_modelo_applicability
+from aeat.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ._explain import build_overview_explain
 
 from . import OverviewCalendarRange, build_overview_calendar
