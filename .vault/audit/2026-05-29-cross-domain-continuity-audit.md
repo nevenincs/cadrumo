@@ -3736,3 +3736,214 @@ in 1.85s).
 Implementation is architecturally clean. One minor locale gap in `hu.yml`
 (HU translations absent for the two new keys) is tracked as a non-blocking
 follow-up. S91-S95 are closed.
+
+---
+
+## Task #118 — Architecture grounding: W05.P25 bulk classify + W05.P26 IVA wallet
+
+**Date:** 2026-05-27
+**Author:** architecture-specialist
+
+---
+
+### W05.P25 — Bulk classify + rule-based classifier
+
+#### Existing classify path
+
+`ledger classify` is a single-transaction verb at `_ledger.py:480`. It accepts
+`--id`, `--classification`, `--business-pct`, `--category-id`, `--taxable-base`,
+`--iva-rate`, `--iva-amount`, `--irpf-category`, `--iva-category`,
+`--counterparty-eu-member-state`. It builds a `ManualLedgerTransactionPatch` and
+calls `update_manual_transaction_fields`. No CSV input path exists anywhere; no
+batch loop exists. There is no `--from-csv` flag on any ledger command.
+
+The `source_command` field on `ManualLedgerTransactionCommand` records the
+originating CLI verb. The `edit_lineage` trail on `Transaction` preserves
+this provenance per mutation.
+
+There is no persisted `ClassificationRule` model, no `description_pattern` field
+anywhere in `src/aeat/`, and no rule storage concept in the profile or any
+repository. The only existing rule-adjacent concept is `classified_by` (a string
+in the classification decision) and `_IvaClassificationRule` (an internal
+`NamedTuple` inside `_classification.py` for stateless IVA rate routing —
+not stored, not operator-configurable).
+
+#### S96 — `--from-csv` bulk classify
+
+**Pattern:** parse CSV with header `id,classification[,category_id,business_pct,...]`,
+iterate, call `update_manual_transaction_fields` once per row using
+`ManualLedgerTransactionPatch`. Re-use `_parse_decimal`, `_validate_category_id`,
+`_resolve_id` exactly as `ledger classify` does. `source_command` for each
+persisted mutation should be `"aeat app ledger classify --from-csv"`.
+
+**CSV schema decision:** minimum required columns are `id` and `classification`.
+All other `ManualLedgerTransactionPatch` fields are optional columns. Unknown
+columns must be rejected before any persistence call (fail-closed input).
+
+**Input model:** introduce `BulkClassifyRow(BaseModel)` in
+`src/aeat/application/ledger/_models.py` — one pydantic model per CSV row,
+validated before any persistence call. This keeps the boundary typed.
+
+**Result model:** introduce `BulkClassifyResult(BaseModel)` with
+`rows_attempted`, `rows_succeeded`, `rows_failed`,
+`failures: tuple[BulkClassifyFailure, ...]` where `BulkClassifyFailure`
+carries `row_index`, `transaction_id`, and `reason`. Emit via `_emit` in
+JSON mode; in text mode emit a summary line plus per-failure detail.
+
+**ADR gap (non-blocking):** partial-success vs all-or-nothing batch semantics.
+Recommendation: **partial-success** with per-row failure reporting, matching
+the existing ledger import pattern (`LedgerSourceImportResult.skipped` /
+`diagnostics`). Document in commit message; no separate ADR needed.
+
+**Revised S96 text:**
+Add `--from-csv <file>` flag to `aeat app ledger classify`. CSV header must
+include `id` and `classification`; optional columns: `category_id`,
+`business_pct`, `taxable_base`, `iva_rate`, `iva_amount`, `irpf_category`,
+`iva_category`, `counterparty_eu_member_state`. Unknown columns rejected
+before any persistence call. Each row validated as `BulkClassifyRow` before
+persistence. Rows failing validation collected in `BulkClassifyResult.failures`
+(partial-success semantics matching ledger import). `source_command` for each
+persisted mutation is `"aeat app ledger classify --from-csv"`. Add
+`BulkClassifyRow`, `BulkClassifyResult`, `BulkClassifyFailure` to
+`src/aeat/application/ledger/_models.py`. Locale keys:
+`cli.ledger.classify.from_csv_help`, `cli.ledger.classify.bulk_summary`.
+Files: `src/aeat/entrypoints/cli/_ledger.py`,
+`src/aeat/application/ledger/_models.py`, locale YMLs.
+
+#### S97 — Rule-based classifier surface
+
+**No existing model.** There is no `LedgerClassificationRule` record type, no
+rule repository, no pattern-matching engine anywhere. This is greenfield domain
+work.
+
+**Data model:** `LedgerClassificationRule` belongs in
+`src/aeat/domain/transactions/` (domain layer). Minimum fields: `rule_id`
+(content-addressed SHA-256 of pattern+classification+category), `description_pattern`
+(regex string), `classification: BusinessClassification`, `category_id: str | None`,
+`priority: int` (lower = higher priority), `created_at: datetime`, `actor: str`.
+Recommend **regex** as the canonical engine — consistent with existing
+`classified_by="rule:vendor-map"` provenance string convention.
+
+**Storage:** rules are profile-scoped. They live in a
+`SecureBoundRepository[LedgerClassificationRule]` with namespace
+`"aeat.ledger.classification.rules"`, sensitivity `AUDIT`. The `rule_add`
+and `apply_classification_rules` actions live in
+`src/aeat/application/ledger/_actions.py`.
+
+**Interaction with manual `ledger classify`:** `apply_classification_rules`
+iterates ACTIVE NOT_YET_PROCESSED transactions in priority order and calls
+`update_manual_transaction_fields` with `classified_by="rule:<rule_id>"`.
+Manual `ledger classify --id` always wins; a subsequent `rule apply` must
+NOT overwrite an existing manual classification unless `--reaffirm` is
+passed (matching the existing `reaffirm` flag on `ledger classify`).
+
+**ADR gap (BLOCKING for S97):** No ADR exists for rule storage and engine
+semantics. The classification-harmonization ADR (`2026-04-20`) documents
+intent but deferred pending `#236`. That contract is now live on `Transaction`
+(confidence + `classified_by` provenance). An ADR must be authored before
+S97 implementation covering: pattern engine (regex only or regex+substring+glob),
+storage backend (profile-scoped `SecureBoundRepository` vs flat JSON in profile
+record), conflict policy, `rule apply` scope, and reaffirm interaction.
+
+**Revised S97 text:**
+Author `LedgerClassificationRule` domain model in
+`src/aeat/domain/transactions/_classification_rule.py`. Add
+`LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificationRule])`
+in `src/aeat/application/ledger/_rule_repository.py` with namespace
+`"aeat.ledger.classification.rules"`. Add `add_classification_rule` and
+`apply_classification_rules` actions in `src/aeat/application/ledger/_actions.py`.
+Expose `aeat app ledger rule add` CLI sub-app. `apply_classification_rules`
+iterates ACTIVE NOT_YET_PROCESSED transactions in priority order; skips any
+transaction whose `classified_by` is not `"manual"` unless `--reaffirm`.
+Requires rule-engine ADR authored first.
+
+**Revised S98 text:**
+Regression tests for S96 and S97. S96 tests: (a) valid CSV with mixed
+success/failure rows produces correct `BulkClassifyResult`; (b) CSV with
+unknown column rejected before any persistence call; (c) `source_command`
+recorded as `"aeat app ledger classify --from-csv"` in `edit_lineage`.
+S97 tests: (a) round-trip `LedgerClassificationRule` through
+`LedgerClassificationRuleRepository` with anti-tautology proof; (b)
+`apply_classification_rules` matches by regex and skips manually-classified
+rows; (c) `--reaffirm` flag overwrites prior manual classification.
+All tests use real `isolated_runtime_profile`; no mocks.
+
+---
+
+### W05.P26 — IVA wallet balance verb
+
+#### Existing IVA wallet infrastructure
+
+`app live iva-wallet` (`_app_live.py`) already provides three verbs: `pull`
+(live fetch + persist, `IvaWalletCaptureReport`), `history` (local history +
+carry-forward lots + authority decisions, `IvaCompensationHistoryReport`), and
+`capture-history` (live pull of multi-year filed Modelo 303 history). The
+`app modelo` tree has no `iva-wallet` sub-command. No `balance` verb exists anywhere.
+
+#### Balance model
+
+The balance is NOT a dedicated wallet record. It is computed from
+`IvaCompensationPeriodState` records persisted in `IvaCompensationHistoryRepository`
+via `build_iva_compensation_carry_forward_report` in
+`src/aeat/application/calculations/_iva_compensation_history.py`. That function
+loads all periods, applies FIFO allocation of `applied_amount` across
+`generated_amount` lots, and returns `IvaCompensationCarryForwardReport` with
+per-lot `remaining_amount`. The current balance is the sum of `remaining_amount`
+across all non-expired lots. This is already surfaced (though not aggregated) in
+`iva-wallet history` via `_iva_wallet_history_lines`.
+
+#### Next pull date
+
+No "next pull date" concept exists. The four-year expiry window is enforced by
+`enforce_iva_compensation_four_year_window`. Expiry review states transition at
+`age_years == 4` (`EXPIRY_REVIEW_DUE`) and `age_years > 4` (`EXPIRED_REVIEW_REQUIRED`).
+"Next pull date" is ambiguous between (a) the next Modelo 303 quarterly filing
+deadline (deadline engine) and (b) the nearest lot-expiry boundary
+(`source_filing_year + 4`). The deadline engine is out of scope for this step.
+**Decision required:** surface (b) — nearest `source_filing_year + 4` among ACTIVE
+lots — as `next_expiry_year` rather than a wall-clock date. This avoids coupling to
+the deadline engine and is self-contained within the history repository.
+
+#### Naming: `app modelo iva-wallet` vs `app live iva-wallet`
+
+A `balance` verb reads only local persisted history — no AEAT connectivity needed.
+Placing it under `app live` would mislead operators. Place under a new
+`app modelo iva-wallet` sub-app, mirroring the pattern where offline computation
+verbs live under `app modelo` and live-fetch verbs live under `app live`.
+
+#### S99 — revised text
+
+Add `aeat app modelo iva-wallet balance` verb. Logic: call
+`build_iva_compensation_carry_forward_report(list_periods(), as_of_year=current_year)`,
+enforce the four-year window, sum `remaining_amount` across non-expired lots.
+Emit: `total_balance`, `lot_count`, `oldest_lot_year`,
+`oldest_lot_expiry_review_state`, `next_expiry_year` (nearest
+`source_filing_year + 4` among ACTIVE lots, or `None` if no lots). Introduce
+`IvaWalletBalanceReport(BaseModel)` in a new
+`src/aeat/application/calculations/_iva_wallet_balance.py`. Wire via a new
+`modelo_iva_wallet_app` Typer sub-app in `src/aeat/entrypoints/cli/_modelo.py`.
+Add locale keys: `cli.modelo.iva_wallet.balance_help`,
+`cli.modelo.iva_wallet.total_balance`, `cli.modelo.iva_wallet.next_expiry_year`.
+
+#### S100 — revised text
+
+Regression test asserting coherent state after a sequence of quarterly filings
+with credit. Use `isolated_runtime_profile` (real encrypted storage). Sequence:
+persist three `IvaCompensationPeriodState` records (Q1 2024 generates 1200 EUR,
+Q2 2024 applies 300 EUR, Q1 2025 applies 500 EUR). Assert: `total_balance == 400`,
+`lot_count == 1`, `oldest_lot_year == 2024`,
+`oldest_lot_expiry_review_state == "expiry_review_due"` when `as_of_year == 2028`,
+`next_expiry_year == 2028`. Anti-tautology: mutate one persisted record
+`applied_amount` to an inconsistent value, reload, assert `model_validator`
+raises `ValueError`. No mocks.
+
+---
+
+### ADR gaps summary
+
+| Gap | Blocking? | Scope |
+|-----|-----------|-------|
+| S97: Rule storage + engine semantics ADR | YES — blocks S97 | W05.P25 |
+| S96: Partial-success vs all-or-nothing | NO — recommend partial-success | W05.P25 |
+| S99: `balance` verb placement (`app modelo` vs `app live`) | Decision above (app modelo) | W05.P26 |
+| S99: "next pull date" semantics | Decision above (lot-expiry boundary) | W05.P26 |
