@@ -11,11 +11,10 @@ the on-disk payload and assert the drift surfaces.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
-
-from decimal import Decimal
 
 from . import (
     EntityType,
@@ -566,8 +565,8 @@ class TestConvenioAplicable:
     def test_nl_maps_to_espana_paises_bajos_convenio(self) -> None:
         assert self._profile("NL").convenio_aplicable == "BOE-A-1972-674 España-Países Bajos"
 
-    def test_unknown_country_returns_none(self) -> None:
-        # MA (Marruecos) is not yet in the table; should return None not raise.
+    def test_ma_maps_to_espana_marruecos_convenio(self) -> None:
+        # BOE-A-1985-13340 España-Marruecos added in task #225.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
@@ -575,6 +574,18 @@ class TestConvenioAplicable:
             country_of_fiscal_residence="MA",
             representante_fiscal_nif="12345678Z",
             representante_fiscal_nombre="Rep Marroquí",
+        )
+        assert profile.convenio_aplicable == "BOE-A-1985-13340 España-Marruecos"
+
+    def test_unknown_country_returns_none(self) -> None:
+        # ZZ is not a real ISO code and has no convenio entry.
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="ZZ",
+            representante_fiscal_nif="12345678Z",
+            representante_fiscal_nombre="Rep Desconocido",
         )
         assert profile.convenio_aplicable is None
 
@@ -642,3 +653,112 @@ class TestMultiplePagadoresObligation:
         profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
         assert profile.irpf_pagadores_count is None
         assert profile.irpf_pagadores_secondary_income is None
+
+
+class TestResidencyBoundaryNear:
+    """Art. 9 LIRPF 183-day rule: residency_boundary_near advisory property.
+
+    Expected values derive from Art. 9 Ley 35/2006 (LIRPF), which establishes
+    183 days of physical presence in Spanish territory as the habitual-residence
+    threshold. The advisory window is defined as 150-215 days inclusive: below
+    150 the taxpayer is clearly not at risk; above 215 the threshold is clearly
+    crossed. No numeric values are hand-invented; boundaries follow the statute.
+    """
+
+    def _profile_with_days(self, days_in_spain: dict[int, int]) -> TaxpayerProfile:
+        return TaxpayerProfile(
+            tax_id="12345678Z",
+            iva_regime=IVARegime.GENERAL,
+            days_in_spain=days_in_spain,
+        )
+
+    def test_empty_days_returns_false(self) -> None:
+        # No data declared → cannot assert boundary proximity.
+        assert self._profile_with_days({}).residency_boundary_near is False
+
+    def test_149_days_returns_false(self) -> None:
+        # 149 days — one below the advisory lower bound (150).
+        assert self._profile_with_days({2024: 149}).residency_boundary_near is False
+
+    def test_150_days_returns_true(self) -> None:
+        # 150 days — at the advisory lower bound; boundary zone begins.
+        assert self._profile_with_days({2024: 150}).residency_boundary_near is True
+
+    def test_183_days_returns_true(self) -> None:
+        # 183 days — the statutory habitual-residence threshold (Art. 9 LIRPF).
+        assert self._profile_with_days({2024: 183}).residency_boundary_near is True
+
+    def test_215_days_returns_true(self) -> None:
+        # 215 days — at the advisory upper bound; boundary zone ends.
+        assert self._profile_with_days({2024: 215}).residency_boundary_near is True
+
+    def test_216_days_returns_false(self) -> None:
+        # 216 days — one above the advisory upper bound; residency clearly triggered.
+        assert self._profile_with_days({2024: 216}).residency_boundary_near is False
+
+    def test_multi_year_one_year_in_range_returns_true(self) -> None:
+        # 2023 safely above, 2024 safely below, 2025 in the boundary window.
+        assert self._profile_with_days({2023: 220, 2024: 100, 2025: 170}).residency_boundary_near is True
+
+    def test_multi_year_all_out_of_range_returns_false(self) -> None:
+        # Both years clearly below advisory lower bound.
+        assert self._profile_with_days({2023: 90, 2024: 120}).residency_boundary_near is False
+
+    def test_days_in_spain_roundtrip(self) -> None:
+        # days_in_spain dict must survive a strict pydantic JSON roundtrip.
+        original = self._profile_with_days({2023: 180, 2024: 200})
+        restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
+        assert restored.days_in_spain == {2023: 180, 2024: 200}
+        assert restored == original
+
+
+class TestParseDaysInSpain:
+    """Unit tests for the _parse_days_in_spain helper (Art. 9 LIRPF).
+
+    Verifies that the helper correctly extracts taxpayer_type.days_in_spain_YYYY
+    keys from a canonical flat profile mapping and ignores malformed entries.
+    """
+
+    def setup_method(self) -> None:
+        from aeat.domain.deadlines._profiles import _parse_days_in_spain
+
+        self._parse = _parse_days_in_spain
+
+    def test_valid_single_year(self) -> None:
+        result = self._parse({"taxpayer_type.days_in_spain_2024": "165"})
+        assert result == {2024: 165}
+
+    def test_valid_multiple_years(self) -> None:
+        result = self._parse(
+            {
+                "taxpayer_type.days_in_spain_2023": "200",
+                "taxpayer_type.days_in_spain_2024": "165",
+            }
+        )
+        assert result == {2023: 200, 2024: 165}
+
+    def test_non_four_digit_year_ignored(self) -> None:
+        # "24" is not a 4-digit year; must be silently skipped.
+        result = self._parse({"taxpayer_type.days_in_spain_24": "165"})
+        assert result == {}
+
+    def test_non_numeric_value_ignored(self) -> None:
+        result = self._parse({"taxpayer_type.days_in_spain_2024": "many"})
+        assert result == {}
+
+    def test_empty_mapping_returns_empty(self) -> None:
+        assert self._parse({}) == {}
+
+    def test_unrelated_keys_ignored(self) -> None:
+        result = self._parse(
+            {
+                "taxpayer_type.fiscal_residency": "RESIDENT_IRPF",
+                "taxpayer_type.days_in_spain_2024": "183",
+            }
+        )
+        assert result == {2024: 183}
+
+    def test_five_digit_year_ignored(self) -> None:
+        # "20244" has length 5 — not exactly 4 digits.
+        result = self._parse({"taxpayer_type.days_in_spain_20244": "100"})
+        assert result == {}
