@@ -206,6 +206,15 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #:   by task #47.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
+        "renta-2024-minimo-ascendientes-mayor-65-2024",
+        "renta-2024-minimo-ascendientes-mayor-75-2024",
+        "renta-2024-minimo-contribuyente-edad-65-74-2024",
+        "renta-2024-minimo-contribuyente-edad-75-2024",
+        "renta-2024-minimo-descendientes-cuarto-y-siguientes-2024",
+        "renta-2024-minimo-descendientes-menor-tres-anos-2024",
+        "renta-2024-minimo-descendientes-primer-hijo-2024",
+        "renta-2024-minimo-descendientes-segundo-hijo-2024",
+        "renta-2024-minimo-descendientes-tercer-hijo-2024",
         "renta-2025-ric-reduccion-rate-maximo",
         "renta-2025-ric-materializacion-plazo-anos",
         "renta-2025-ric-mantenimiento-plazo-anos",

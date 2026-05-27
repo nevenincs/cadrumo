@@ -2,8 +2,7 @@
   "by_classification": {
     "direct_resolvable": 12,
     "non_previous_filing": 72,
-    "relation_driven": 3,
-    "relation_orphaned": 1
+    "relation_driven": 4
   },
   "entries": [
     {
@@ -32,270 +31,6 @@
       "classification": "non_previous_filing",
       "modelo": "309",
       "revision": "2004-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-322-iva-repercutido-general-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.general",
-      "casilla_label": "Cuota IVA repercutido al tipo general (21%)",
-      "classification": "non_previous_filing",
-      "modelo": "322",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-322-iva-repercutido-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%)",
-      "classification": "non_previous_filing",
-      "modelo": "322",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-322-iva-repercutido-super-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.super-reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%)",
-      "classification": "non_previous_filing",
-      "modelo": "322",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-322-iva-soportado-interiores-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.soportado.interiores",
-      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes",
-      "classification": "non_previous_filing",
-      "modelo": "322",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.autorepercutido.intracomunitaria",
-      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias",
-      "classification": "non_previous_filing",
-      "modelo": "322",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-353-iva-repercutido-general-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.general",
-      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - agregado del grupo",
-      "classification": "non_previous_filing",
-      "modelo": "353",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-353-iva-repercutido-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo",
-      "classification": "non_previous_filing",
-      "modelo": "353",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-353-iva-repercutido-super-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.repercutido.super-reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - agregado del grupo",
-      "classification": "non_previous_filing",
-      "modelo": "353",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-353-iva-soportado-interiores-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.soportado.interiores",
-      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - agregado del grupo",
-      "classification": "non_previous_filing",
-      "modelo": "353",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-353-iva-autorepercutido-intracomunitaria-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.autorepercutido.intracomunitaria",
-      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo",
-      "classification": "non_previous_filing",
-      "modelo": "353",
-      "revision": "2008-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-iva-repercutido-general-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.anual.repercutido.general",
-      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - anual",
-      "classification": "non_previous_filing",
-      "modelo": "390",
-      "revision": "2010-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-iva-repercutido-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.anual.repercutido.reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - anual",
-      "classification": "non_previous_filing",
-      "modelo": "390",
-      "revision": "2010-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-iva-repercutido-super-reducido-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.anual.repercutido.super-reducido",
-      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - anual",
-      "classification": "non_previous_filing",
-      "modelo": "390",
-      "revision": "2010-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-iva-soportado-interiores-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.anual.soportado.interiores",
-      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - anual",
-      "classification": "non_previous_filing",
-      "modelo": "390",
-      "revision": "2010-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
-      "binding_source": "ledger_iva_aggregation",
-      "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
-      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual",
-      "classification": "non_previous_filing",
-      "modelo": "390",
-      "revision": "2010-y-siguientes"
-    },
-    {
-      "binding_id": "modelo-390-prev-303-cuota-devengada-total",
-      "binding_source": "previous_filing",
-      "casilla_id": "iva.anual.reconciliacion.devengada-303",
-      "casilla_label": "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales",
-      "classification": "direct_resolvable",
-      "max_year_delta": null,
-      "modelo": "390",
-      "raw_selector": {
-        "filing_year_delta": 0,
-        "source_casillas": [
-          "iva.cuota-devengada-total"
-        ],
-        "source_modelo": "303",
-        "source_periods": [
-          "1T",
-          "2T",
-          "3T",
-          "4T"
-        ]
-      },
-      "resolves_for_target_periods": [
-        "0A"
-      ],
-      "revision": "2010-y-siguientes",
-      "suppresses_for_target_periods": []
-    },
-    {
-      "binding_id": "modelo-390-prev-303-cuota-deducible-total",
-      "binding_source": "previous_filing",
-      "casilla_id": "iva.anual.reconciliacion.deducible-303",
-      "casilla_label": "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales",
-      "classification": "direct_resolvable",
-      "max_year_delta": null,
-      "modelo": "390",
-      "raw_selector": {
-        "filing_year_delta": 0,
-        "source_casillas": [
-          "iva.cuota-deducible-total"
-        ],
-        "source_modelo": "303",
-        "source_periods": [
-          "1T",
-          "2T",
-          "3T",
-          "4T"
-        ]
-      },
-      "resolves_for_target_periods": [
-        "0A"
-      ],
-      "revision": "2010-y-siguientes",
-      "suppresses_for_target_periods": []
-    },
-    {
-      "binding_id": "modelo-390-prev-303-resultado-regimen-general",
-      "binding_source": "previous_filing",
-      "casilla_id": "iva.anual.reconciliacion.resultado-303",
-      "casilla_label": "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales",
-      "classification": "direct_resolvable",
-      "max_year_delta": null,
-      "modelo": "390",
-      "raw_selector": {
-        "filing_year_delta": 0,
-        "source_casillas": [
-          "iva.resultado-regimen-general"
-        ],
-        "source_modelo": "303",
-        "source_periods": [
-          "1T",
-          "2T",
-          "3T",
-          "4T"
-        ]
-      },
-      "resolves_for_target_periods": [
-        "0A"
-      ],
-      "revision": "2010-y-siguientes",
-      "suppresses_for_target_periods": []
-    },
-    {
-      "binding_id": "modelo-390-prev-303-compensacion-ultimo-periodo",
-      "binding_source": "previous_filing",
-      "casilla_id": "iva.anual.compensacion-ultimo-periodo-97",
-      "casilla_label": "Resultado declaracion-liquidacion ultimo periodo - A compensar",
-      "classification": "direct_resolvable",
-      "max_year_delta": null,
-      "modelo": "390",
-      "raw_selector": {
-        "filing_year_delta": 0,
-        "period": "4T",
-        "source_casillas": [
-          "iva.compensacion-disponible-fin-periodo"
-        ],
-        "source_modelo": "303"
-      },
-      "resolves_for_target_periods": [
-        "0A"
-      ],
-      "revision": "2010-y-siguientes",
-      "suppresses_for_target_periods": []
-    },
-    {
-      "binding_id": "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
-      "binding_source": "previous_filing",
-      "casilla_id": "iva.anual.compensacion-generada-ejercicio-no-97",
-      "casilla_label": "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97",
-      "classification": "direct_resolvable",
-      "max_year_delta": null,
-      "modelo": "390",
-      "raw_selector": {
-        "filing_year_delta": 0,
-        "source_casillas": [
-          "iva.compensacion-generada-periodo"
-        ],
-        "source_modelo": "303",
-        "source_periods": [
-          "1T",
-          "2T",
-          "3T"
-        ]
-      },
-      "resolves_for_target_periods": [
-        "0A"
-      ],
-      "revision": "2010-y-siguientes",
-      "suppresses_for_target_periods": []
     },
     {
       "binding_id": "renta-2025-profile-tax-id",
@@ -608,14 +343,18 @@
       "binding_source": "previous_filing",
       "casilla_id": "1577",
       "casilla_label": "Rendimiento neto de actividad economica atribuido por entidades en regimen de atribucion de rentas",
-      "classification": "relation_orphaned",
+      "classification": "relation_driven",
       "modelo": "100",
       "raw_selector": {
-        "relation": "atribucion-actividades-economicas",
         "source_modelo": "184",
         "source_output": "tipo2.renta-atribuible-importe"
       },
-      "relation_id": "atribucion-actividades-economicas",
+      "relation_ids": [
+        "renta-2025-rel-184-atribucion-actividades-economicas"
+      ],
+      "relation_kinds": [
+        "cross_model_output"
+      ],
       "revision": "2025"
     },
     {
@@ -954,6 +693,51 @@
       "suppresses_for_target_periods": []
     },
     {
+      "binding_id": "modelo-322-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%)",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-322-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias",
+      "classification": "non_previous_filing",
+      "modelo": "322",
+      "revision": "2008-y-siguientes"
+    },
+    {
       "binding_id": "vat-349-declarante-numero-operadores",
       "binding_source": "collectible_invoice",
       "casilla_id": "decl.numero-operadores",
@@ -988,6 +772,51 @@
       "classification": "non_previous_filing",
       "modelo": "349",
       "revision": "2020-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-353-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - agregado del grupo",
+      "classification": "non_previous_filing",
+      "modelo": "353",
+      "revision": "2008-y-siguientes"
     },
     {
       "binding_id": "modelo-369-exterior-de-external-services-21pct",
@@ -1033,6 +862,180 @@
       "classification": "non_previous_filing",
       "modelo": "369",
       "revision": "esquema-union"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-general-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.general",
+      "casilla_label": "Cuota IVA repercutido al tipo general (21%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo reducido (10%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-repercutido-super-reducido-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.repercutido.super-reducido",
+      "casilla_label": "Cuota IVA repercutido al tipo super-reducido (4%) - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-soportado-interiores-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.soportado.interiores",
+      "casilla_label": "Cuota IVA soportado en operaciones interiores corrientes - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-iva-autorepercutido-intracomunitaria-cuota",
+      "binding_source": "ledger_iva_aggregation",
+      "casilla_id": "iva.anual.autorepercutido.intracomunitaria",
+      "casilla_label": "Cuota IVA autorepercutida en adquisiciones intracomunitarias - anual",
+      "classification": "non_previous_filing",
+      "modelo": "390",
+      "revision": "2010-y-siguientes"
+    },
+    {
+      "binding_id": "modelo-390-prev-303-cuota-devengada-total",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.devengada-303",
+      "casilla_label": "Cuota devengada anual reconciliada desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.cuota-devengada-total"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-cuota-deducible-total",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.deducible-303",
+      "casilla_label": "Cuota deducible anual reconciliada desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.cuota-deducible-total"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-resultado-regimen-general",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.reconciliacion.resultado-303",
+      "casilla_label": "Resultado anual reconciliado desde los cuatro Modelos 303 trimestrales",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.resultado-regimen-general"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T",
+          "4T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-compensacion-ultimo-periodo",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.compensacion-ultimo-periodo-97",
+      "casilla_label": "Resultado declaracion-liquidacion ultimo periodo - A compensar",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "period": "4T",
+        "source_casillas": [
+          "iva.compensacion-disponible-fin-periodo"
+        ],
+        "source_modelo": "303"
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
+    },
+    {
+      "binding_id": "modelo-390-prev-303-compensacion-generada-ejercicio-no-97",
+      "binding_source": "previous_filing",
+      "casilla_id": "iva.anual.compensacion-generada-ejercicio-no-97",
+      "casilla_label": "Cuotas pendientes de compensacion generadas en el ejercicio y distintas de las incluidas en la casilla 97",
+      "classification": "direct_resolvable",
+      "max_year_delta": null,
+      "modelo": "390",
+      "raw_selector": {
+        "filing_year_delta": 0,
+        "source_casillas": [
+          "iva.compensacion-generada-periodo"
+        ],
+        "source_modelo": "303",
+        "source_periods": [
+          "1T",
+          "2T",
+          "3T"
+        ]
+      },
+      "resolves_for_target_periods": [
+        "0A"
+      ],
+      "revision": "2010-y-siguientes",
+      "suppresses_for_target_periods": []
     }
   ],
   "total_bound_casillas": 88
