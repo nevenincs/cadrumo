@@ -353,7 +353,7 @@ Add an aeat app modelo compare verb surfacing prior-period versus current-period
 
 Code-reviewer and Pere Marc re-run confirming IRPF tarifa applied, 130 to 100 projection discoverable, IVA-wallet queryable.
 
-- [ ] `W07.P34.S120` - dispatch vaultspec-code-reviewer against every Wave-7 commit; `.vault/exec/`.
+- [x] `W07.P34.S120` - dispatch vaultspec-code-reviewer against every Wave-7 commit; `.vault/exec/`.
 - [ ] `W07.P34.S121` - re-run Pere pensioner-landlord and Marc autonomo to confirm tarifa applied 130-to-100 projection discoverable IVA-wallet queryable Pere 1250 EUR gestor figure reconciles; `.vault/audit/`.
 - [ ] `W07.P34.S122` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
