@@ -303,7 +303,7 @@ Design and implement a bundled-export schema that carries work units calculation
 - [ ] `W06.P28.S105` - implement bundled serializer with schema-version bumping; `src/aeat/application/user_profile/`.
 - [ ] `W06.P28.S106` - implement bundled deserializer with provenance preservation; `src/aeat/application/user_profile/`.
 - [ ] `W06.P28.S107` - real-CLI roundtrip test export non-trivial profile and re-import to fresh storage root every artefact survives; `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`.
-- [ ] `W06.P28.S260` - author profile-portability ADR formalising the bundle decision space; strip encrypted material refuse-on-profile-id-collision schema-version 2 bump typed-pydantic-throughout; cite the W75 grounding section as research basis; required before S104 implementation lands; `.vault/adr/`.
+- [x] `W06.P28.S260` - author profile-portability ADR formalising the bundle decision space; `strip encrypted material refuse-on-profile-id-collision schema-version 2 bump typed-pydantic-throughout; cite the W75 grounding section as research basis; required before S104 implementation lands; `.vault/adr/`.
 
 ### Phase `W06.P29` - idempotent import
 
