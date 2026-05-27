@@ -1796,6 +1796,51 @@ def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
     )
 
 
+def test_parser_modelo_131_numeric_casilla_profile_gap() -> None:
+    """Assert that the numeric_casilla profile cannot extract any casillas from
+    the M131 synthetic fixture; documents the structural layout gap.
+
+    The M131 printed form places box numbers at the END of label lines (e.g.
+    "Suma de rendimientos netos ........... 01  5.000,00"), identical to the
+    M130 multi-column tabular layout.  The numeric_casilla match strategy
+    requires the box number at LINE START (regex: ^\\s*NN\\b...<amount>$), so
+    no casilla can be matched in the fixture specimen.
+
+    Ground truth for the layout verdict:
+    - AEAT DR xlsx 2026 (01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx):
+      shared-strings [65]-[78] confirm the bracket [NN] casilla notation
+      ("Suma de rendimientos netos [01]", "Diferencia [10]", etc.) identical to
+      the M130 line-end convention.
+    - AEAT instructions HTML (modelo-131-instrucciones.html): "Casilla NN."
+      section-heading format confirms box numbers are trailing references, not
+      line-start prefixes.
+    - M130 corpus (15 PDFs 2021-2024): confirmed line-end box numbers for the
+      same AEAT IRPF quarterly pago-fraccionado form series.
+
+    The fixture uses ejercicio=2026 so the 2026 revision snapshot is resolved;
+    that revision carries the declaracion_pdf extraction profile under test.
+    provisional_pending_specimen=true is retained on all M131 revisions because
+    no real AEAT-generated M131 corpus PDFs are available for empirical round-trip
+    verification.
+
+    This test is a positive structural assertion: it will fail (alerting the
+    maintainer) if the profile's failure_semantics or min_coverage are changed
+    to silently accept partial extraction, or if a future revision introduces
+    a named_label profile that can extract from this fixture layout.
+    """
+    with pytest.raises(DeclaracionParseError, match=r"coverage=0") as exc_info:
+        parse_declaracion(
+            _MODELO_131_SYNTHETIC_FIXTURE,
+            modelo_override="131",
+            **{"año_override": 2026},
+            period_override="1T",
+        )
+
+    assert "missing=" in str(exc_info.value), (
+        f"expected 'missing=' in error message, got {exc_info.value!r}"
+    )
+
+
 def _modelo_130_snapshot():
     return _modelo_snapshot("130", filing_year=2024, period="1T")
 
