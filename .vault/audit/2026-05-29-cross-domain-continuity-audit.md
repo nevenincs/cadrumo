@@ -4627,3 +4627,64 @@ Both tests pass in 29.10s. No mocks, no skip/xfail.
 discovery3 #121 and the Marc/Inés round-8 testimonials. Operator-facing verify
 output now carries `legal_refs` and `source_refs` per finding. Option A
 implementation matches the architecture grounding exactly.
+
+---
+
+## Task #136 — W12.P61.S278 typed payload models (c25b14a54 + c94ed9a38)
+
+**Verdict: APPROVE**
+
+### Scope
+
+S278 replaces four `dict[str, object]` return types in the application-ledger
+layer with typed pydantic models: `LedgerTransactionReviewPayload`,
+`LedgerTransactionResultPayload`, `LedgerTransactionTrackingPayload`
+(new), plus `LedgerTransactionPayload` (promoted from dict return to
+typed return at the function boundary). `LedgerReviewRow.transaction`
+typed from `dict[str, object] | None` to `LedgerTransactionPayload | None`.
+10 call sites updated in CLI layer to use typed attribute access and
+`.model_dump(mode="python")` at the JSON emission boundary.
+
+### Gate checks
+
+**G2 (no shims)**: Old dict-returning implementations deleted; no aliases,
+no compatibility wrappers, no deprecation markers. Clean cut. PASS.
+
+**G3 (no hardcoded user strings)**: New models in `_models.py` carry no
+user-facing strings. PASS.
+
+**G4 (locale scaffold)**: No locale keys touched. PASS.
+
+**G5 (no shims)**: Confirmed — the four functions now return typed models
+directly. The chain `_actions.py` → `_ledger.py` → `.model_dump()` at emit
+is the correct pattern. PASS.
+
+**G6 (anti-tautology tests)**: S278 is structural (type promotion, no
+behavioral change). The existing ledger suite (182 tests passing in
+36.97s against the real SQLite+encryption stack) provides real-behavior
+coverage. No tautological assertions introduced. PASS.
+
+### Hexagonal boundary compliance
+
+`LedgerTransactionReviewPayload` uses only `str | None` fields — correct
+for an output emit model crossing the CLI boundary. `LedgerTransactionTrackingPayload`
+preserves domain entry tuples (`TransactionEvidenceProvenanceEntry`,
+`TransactionEditLineageEntry`, `TransactionLifecycleLineageEntry`) as
+tuple fields; these are serialized by `.model_dump(mode="json")` at the
+CLI emit boundary. No domain types leak into the wire JSON directly.
+PASS.
+
+### Test run
+
+182 passed, 1 failed (`test_rule_apply_classifies_not_yet_processed_transactions`).
+The failure is in an **untracked** file (`test_ledger_bulk_classify.py`) — coder2's
+Task #125 in-flight WIP, not committed, not part of S278. The S278 commit contains
+no test changes and introduced no regression against committed code.
+
+### Follow-up flag
+
+FU-S278-B: `LedgerTransactionReviewPayload.classified_by` is typed
+`str | None = None` while `Transaction.classified_by: str` is non-nullable.
+The None path is unreachable at runtime but the looser typing is imprecise.
+Tighten to `str = Field(default="auto")` in a subsequent S278 follow-up step.
+
