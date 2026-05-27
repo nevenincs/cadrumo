@@ -200,11 +200,18 @@ application:
         snapshot_not_active: application.modelo.borrador_binding.errors.snapshot_not_active
         source_trace_mismatch: application.modelo.borrador_binding.errors.source_trace_mismatch
     errors:
+      calculation_revision_not_found: "Nem található számítási revízió ezzel az azonosítóval: %{calculation_revision_id}."
+      computed_casilla_binding_conflict: "A bucket-ből származó bemenetek számított cellákat céloznak meg, amelyek nem írhatók felül külső bindolással. Érintett cellák: %{computed}."
       export_no_active_bucket: application.modelo.errors.export_no_active_bucket
       external_filing_evidence_reference_blank: application.modelo.errors.external_filing_evidence_reference_blank
       external_filing_no_casilla_values: application.modelo.errors.external_filing_no_casilla_values
+      filing_record_not_found: "Nem található beadási nyilvántartás ezzel az azonosítóval: %{filing_record_id}."
       reconcile_declaration_unsupported: application.modelo.errors.reconcile_declaration_unsupported
       reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
+      verification_report_not_found: "Nem található ellenőrzési jelentés ezzel az azonosítóval: %{verification_report_id}."
+      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és időszak alapján a folytatáshoz.
+      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modelo, év és időszak alapján a folytatáshoz.
+      work_unit_not_found: "Nem található modelo munkaegység ezzel az azonosítóval: %{work_unit_id}."
   overview:
     explain:
       errors:
@@ -476,6 +483,15 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: cli.app.modelo.list.year_help
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: cli.app.modelo.readiness.modelo_help
         period_help: cli.app.modelo.readiness.period_help

@@ -666,7 +666,7 @@ def get_work_unit(
     catalogue = repo.load()
     unit = catalogue.get(work_unit_id)
     if unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     return unit
 
 
@@ -693,7 +693,7 @@ def rename_work_unit(
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded; "
@@ -754,7 +754,7 @@ def discard_work_unit(
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
@@ -1354,9 +1354,9 @@ def calculate_modelo_revision_from_bucket_aggregation(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
 
     try:
         authority = _authority_via_resources()
@@ -1688,7 +1688,7 @@ def _merge_bucket_bound_inputs(
         if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
     )
     if computed:
-        raise ModeloAggregationBindingError(f"bucket-derived inputs target computed casillas: {computed!r}")
+        raise ModeloAggregationBindingError(tr("application.modelo.errors.computed_casilla_binding_conflict", computed=computed))
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
@@ -1774,7 +1774,7 @@ def get_calculation_revision(
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     return revision
 
 
@@ -1802,7 +1802,7 @@ def mark_revision_verificado_completo(
     catalogue = cr_repo.load()
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2276,7 +2276,7 @@ def verify_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2503,9 +2503,9 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     """
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
     return work_unit
 
 
@@ -2717,7 +2717,7 @@ def file_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2919,7 +2919,7 @@ def get_filing_record(
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
     if record is None:
-        raise ModeloRecordNotFoundError(f"no filing record with id={filing_record_id!r}")
+        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=filing_record_id))
     return record
 
 
@@ -2954,7 +2954,7 @@ def get_verification_report(
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)
     if report is None:
-        raise VerificationReportNotFoundError(f"no verification report with id={verification_report_id!r}")
+        raise VerificationReportNotFoundError(tr("application.modelo.errors.verification_report_not_found", verification_report_id=verification_report_id))
     return report
 
 
@@ -3015,7 +3015,7 @@ def amend_modelo_revision(
     filing_catalogue = fr_repo.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
-        raise ModeloRecordNotFoundError(f"no filing record with id={from_filing_record_id!r}")
+        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=from_filing_record_id))
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
             f"filing record {from_filing_record_id!r} has no external_evidence; the "
@@ -3265,9 +3265,9 @@ def import_external_filing_evidence(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_import", work_unit_id=work_unit_id))
 
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
