@@ -895,7 +895,33 @@ def test_validator_requires_application_link_for_formulas() -> None:
 def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas() -> None:
     modelo, catalogues = _committed_modelo("036")
     revision = next(iter(modelo.revisions.values()))
-    mutated = _as_communication_revision(revision)
+    communication = _as_communication_revision(revision)
+    # A pure communication-only modelo does not file declarations and
+    # therefore has no PDF-extraction surface; strip extraction_profiles
+    # and their corpus-PDF requirements from the mutated revision.
+    extractor_link_ids = frozenset(
+        link.id for link in communication.application_links if link.surface == "extractor"
+    )
+    constructs_without_extractor = tuple(
+        construct.model_copy(
+            update={
+                "extraction_profiles": (),
+                "application_links": tuple(
+                    link_id for link_id in construct.application_links if link_id not in extractor_link_ids
+                ),
+            }
+        )
+        for construct in communication.constructs
+    )
+    mutated = communication.model_copy(
+        update={
+            "constructs": constructs_without_extractor,
+            "extraction_profiles": (),
+            "application_links": tuple(
+                link for link in communication.application_links if link.surface != "extractor"
+            ),
+        }
+    )
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo_145, mutated))
