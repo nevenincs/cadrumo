@@ -464,3 +464,19 @@ The 14 hardening Steps live at P07.S32-S46. Acceptance criterion
 **8** is added: every P07 Step is closed (verified) before the
 campaign is considered structurally complete; the prior 31-Step
 closure is structurally necessary but not sufficient.
+
+### P07.S36 outcome — strict-rejection contract recovered
+
+The lost design intent from the original Decision Z2 is restored
+via P07.S36 with a narrower-but-strict gate: previous-filing
+bound casillas supplied via `inputs` MUST also appear in
+`binding_values` under the matching binding id. The production
+`resolve_bound_casilla_inputs` projection pattern is preserved
+(the helper writes both maps from the same source); the
+test-fixture lie pattern (input-only, no binding value) is now
+rejected with a typed `RegistryValidationError`. The smuggle-via-
+inputs hazard — the silent-zero hazard in disguise — is gone.
+
+Amendment 2026-05-27 (A)'s "silent ignore" wording is superseded
+for the smuggle case. The runtime contract for legitimate
+projection (both maps populated with the same value) is unchanged.
