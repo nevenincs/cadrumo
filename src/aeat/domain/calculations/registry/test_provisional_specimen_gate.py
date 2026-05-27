@@ -116,7 +116,12 @@ def test_fixture_present_round_trip_verified_validates(tmp_path: Path) -> None:
     (modelo_fixture_dir / "2024-1T.pdf").write_bytes(b"%PDF-1.4 stub")
 
     revision = modelo.revisions["2019-y-siguientes"]
-    profile = _committed_profile(provisional=False).model_copy(update={"corpus_round_trip_verified": True})
+    profile = _committed_profile(provisional=False).model_copy(
+        update={
+            "corpus_round_trip_verified": True,
+            "verification_source": "synthetic_from_aeat_published_text",
+        }
+    )
     mutated = revision.model_copy(update={"extraction_profiles": (profile,)})
     mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
