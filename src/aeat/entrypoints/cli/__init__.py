@@ -30,18 +30,22 @@ from ._stdio import configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 configure_stdio_for_utf8()
 
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ._command_suggestions import AeatTyperGroup, LazySubcommand, register_lazy_subcommand
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr as _tr
+from ._command_suggestions import (
+    AeatTyperGroup as _AeatTyperGroup,
+    LazySubcommand as _LazySubcommand,
+    register_lazy_subcommand as _register_lazy_subcommand,
+)
 from ._common import _FORMAT_TEXT, _emit
-from ._errors import decorate_typer_app, write_stderr
-from ._log_levels import apply_to_root_logger, resolve_log_level
+from ._errors import decorate_typer_app as _decorate_typer_app, write_stderr as _write_stderr
+from ._log_levels import apply_to_root_logger as _apply_to_root_logger, resolve_log_level as _resolve_log_level
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
 # Importing every module just to build the ``aeat`` app object made
 # ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
-# :class:`LazySubcommand` loader only when an operator actually invokes
+# :class:`_LazySubcommand` loader only when an operator actually invokes
 # something in the owning subtree (see :mod:`._command_suggestions`).
 # ``--version`` / ``--help`` / the bare landing surface short-circuit
 # in the callbacks below before any subcommand is resolved.
@@ -53,12 +57,12 @@ from ._log_levels import apply_to_root_logger, resolve_log_level
 
 app = typer.Typer(
     name="aeat",
-    help=tr("cli.root.app_help"),
+    help=_tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
     add_completion=True,
-    cls=AeatTyperGroup,
+    cls=_AeatTyperGroup,
 )
 
 
@@ -69,50 +73,50 @@ def _root(
         None,
         "--language",
         "--lang",
-        click_type=click.Choice(SUPPORTED_OUTPUT_LANGUAGES),
-        help=tr("cli.root.language_help"),
+        click_type=click.Choice(_SUPPORTED_OUTPUT_LANGUAGES),
+        help=_tr("cli.root.language_help"),
         is_eager=True,
     ),
     profile: str | None = typer.Option(
         None,
         "--profile",
-        help=tr("cli.root.profile_help"),
+        help=_tr("cli.root.profile_help"),
     ),
     version: bool = typer.Option(
         False,
         "--version",
         "-V",
-        help=tr("cli.root.version_help"),
+        help=_tr("cli.root.version_help"),
         is_eager=True,
     ),
     detail: bool = typer.Option(
         False,
         "--detail",
-        help=tr("cli.root.detail_help"),
+        help=_tr("cli.root.detail_help"),
         is_eager=True,
     ),
     help_: bool = typer.Option(
         False,
         "--help",
         "-h",
-        help=tr("cli.root.help_help"),
+        help=_tr("cli.root.help_help"),
         is_eager=True,
     ),
     format_: str = typer.Option(
         _FORMAT_TEXT,
         "--format",
-        help=tr("cli.root.format_help"),
+        help=_tr("cli.root.format_help"),
     ),
-    quiet: bool = typer.Option(False, "--quiet", help=tr("cli.root.quiet_help")),
-    verbose: bool = typer.Option(False, "--verbose", help=tr("cli.root.verbose_help")),
-    debug: bool = typer.Option(False, "--debug", help=tr("cli.root.debug_help")),
+    quiet: bool = typer.Option(False, "--quiet", help=_tr("cli.root.quiet_help")),
+    verbose: bool = typer.Option(False, "--verbose", help=_tr("cli.root.verbose_help")),
+    debug: bool = typer.Option(False, "--debug", help=_tr("cli.root.debug_help")),
 ) -> None:
     """Capture root-level CLI flags into the Typer context."""
     if language is not None:
         from ...core.config import override_settings
 
         ctx.with_resource(override_settings(aeat_output_language=language))
-    apply_to_root_logger(resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
+    _apply_to_root_logger(_resolve_log_level(quiet=quiet, verbose=verbose, debug=debug))
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
@@ -185,10 +189,10 @@ def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
 
     requested = profile.strip()
     if not requested:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=profile))
+        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=profile))
     pointer = read_profile_bucket(requested) or read_profile_bucket_by_id(requested)
     if pointer is None:
-        raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=requested))
+        raise CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=requested))
     ctx.with_resource(override_settings(aeat_active_profile=pointer.bucket_id))
 
 
@@ -246,7 +250,7 @@ def _activate_active_bucket_session(ctx: typer.Context) -> None:
     # The active profile's encrypted record is only decryptable once the
     # bucket session above is open. ``output_language()`` is cached, and
     # its cache key (env vars + `.env` mtime) does not vary when a
-    # session opens — so any `tr()` fired during module import or the
+    # session opens — so any `_tr()` fired during module import or the
     # root callback cached the settings-default language before the
     # profile preference was readable. Drop the cache here so the verb
     # body re-resolves through the now-readable profile preference.
@@ -298,7 +302,7 @@ def _full_invocation_verb_path() -> str | None:
 def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Typer:
     failed_app = typer.Typer(
         name=name,
-        help=tr("cli.root.unavailable_app_help"),
+        help=_tr("cli.root.unavailable_app_help"),
         no_args_is_help=False,
         invoke_without_command=True,
     )
@@ -311,13 +315,13 @@ def _import_failure_surface(name: str, error: ModuleNotFoundError) -> typer.Type
 
 
 def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
-    write_stderr(_startup_import_error_text(error))
+    _write_stderr(_startup_import_error_text(error))
     raise typer.Exit(code=1)
 
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
     dependency = _missing_dependency_name(error)
-    return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
+    return _tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 
 def _missing_dependency_name(error: ModuleNotFoundError) -> str:
@@ -336,18 +340,18 @@ def _missing_dependency_name(error: ModuleNotFoundError) -> str:
 
 app_app = typer.Typer(
     name="app",
-    help=tr("cli.root.app_app_help"),
+    help=_tr("cli.root.app_app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
-    cls=AeatTyperGroup,
+    cls=_AeatTyperGroup,
 )
 
 
 @app_app.callback()
 def _app_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.root.app_help_help"), is_eager=True),
+    help_: bool = typer.Option(False, "--help", "-h", help=_tr("cli.root.app_help_help"), is_eager=True),
 ) -> None:
     """Render app-level workflow help when requested."""
 
@@ -384,9 +388,9 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
 def _lazy(group_name: str, name: str, module_name: str) -> None:
     """Register ``module_name`` as a lazily-loaded subcommand of ``group_name``."""
 
-    register_lazy_subcommand(
+    _register_lazy_subcommand(
         group_name,
-        LazySubcommand(name, _lazy_loader(module_name, name), decorate=decorate_typer_app),
+        _LazySubcommand(name, _lazy_loader(module_name, name), decorate=_decorate_typer_app),
     )
 
 
@@ -406,7 +410,7 @@ _lazy("app", "review", "._review")
 
 _lazy("aeat", "config", "._config")
 app.add_typer(app_app, name="app")
-decorate_typer_app(app)
+_decorate_typer_app(app)
 
 
 def main() -> None:
