@@ -109,7 +109,7 @@ Mandated breakpoint. Dispatch code-reviewer on Wave-1 commits, round-7 persona f
 - [x] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
 - [x] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
 - [x] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
-- [ ] `W01.P09.S37` - expand this plan in place: every new BLOCKER and MAJOR becomes a new Phase or Step in the appropriate Wave; `re-run vault plan check; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W01.P09.S37` - expand this plan in place: every new BLOCKER and MAJOR becomes a new Phase or Step in the appropriate Wave; `re-run vault plan check; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W02` - applicability and calendar consolidation
 
@@ -129,7 +129,7 @@ The domain version is the superset (179 lines more; carries Modelo202Modality sy
 
 Two parallel mechanisms decide applicability (Python seed table plus per-window TOML applicability_conditions). Calendar drops non-APPLICABLE silently. _GATING_FIELDS is hardcoded.
 
-- [ ] `W02.P11.S43` - confirm _MODELO_APPLICABILITY_RULES is the canonical modelo-level applicability authority; `add module docstring documenting that modelo-level rules live in Python while window-level applicability_conditions live on ModeloDeadlineWindow registry slot; audit the 18 modelos to ensure every rule populates applicable_entity_types required_income_categories required_estimation_regimes and required_payer_fact where the modelo demands those axes; `src/aeat/domain/calculations/registry/_applicability.py`.
+- [x] `W02.P11.S43` - confirm _MODELO_APPLICABILITY_RULES is the canonical modelo-level applicability authority; `add module docstring documenting that modelo-level rules live in Python while window-level applicability_conditions live on ModeloDeadlineWindow registry slot; audit the 18 modelos to ensure every rule populates applicable_entity_types required_income_categories required_estimation_regimes and required_payer_fact where the modelo demands those axes; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [ ] `W02.P11.S44` - replace the hardcoded 5-entry _GATING_FIELDS dict with a derivation from _MODELO_APPLICABILITY_RULES; `for each rule emit profile_key modelos message_key fix_command tuples covering income-categories entity-types estimation-regimes payer-facts; the resulting projection must be a function not a dict so it stays in sync as rules evolve; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S45` - add calendar-side diagnostic surface --show-suppressed surfacing every obligation the calendar dropped and the verdict reason; `src/aeat/application/overview/__init__.py`.
 - [ ] `W02.P11.S46` - regression test asserting build_overview_explain and build_overview_calendar produce identical ApplicabilityVerdict per modelo for the same profile; `pin the current correct agreement state to prevent future drift; `src/aeat/application/overview/test_calendar_applicability_consistency.py`.
@@ -158,7 +158,7 @@ Mandated breakpoint. Dispatch code-reviewer, round-8 persona fleet focused on cr
 - [x] `W02.P13.S51` - dispatch vaultspec-code-reviewer against every Wave-2 commit; `.vault/exec/`.
 - [ ] `W02.P13.S52` - dispatch round-8 persona fleet (landlord autonomo SL gestor multi-profile) CLI only; `.vault/audit/`.
 - [ ] `W02.P13.S53` - dispatch Sonnet grounding pass against calendar to applicability join to confirm unification holds; `src/aeat/application/overview/`.
-- [ ] `W02.P13.S54` - consolidate round-8 findings into new audit document via vaultspec CLI and expand this plan in place; `.vault/audit/`.
+- [x] `W02.P13.S54` - consolidate round-8 findings into new audit document via vaultspec CLI and expand this plan in place; `.vault/audit/`.
 
 ## Wave `W03` - corporate-tax-runtime hardening
 
@@ -206,7 +206,7 @@ Mandated breakpoint. Code-reviewer, repeat Joan SL persona plus fresh sociedad-a
 - [x] `W03.P18.S68` - dispatch vaultspec-code-reviewer against every Wave-3 commit; `.vault/exec/`.
 - [ ] `W03.P18.S69` - re-run round-6 Joan SL persona to confirm every B-JOAN-* finding closed; `plus fresh sociedad-anonima persona; `.vault/audit/`.
 - [ ] `W03.P18.S70` - re-run round-6 Pere pensioner-landlord to confirm Cluster T closed and the IRPF tarifa is applied; `.vault/audit/`.
-- [ ] `W03.P18.S71` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W03.P18.S71` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W04` - verification semantics
 
@@ -301,7 +301,7 @@ Mandated breakpoint. Code-reviewer and repeat Laia Marc Joan to confirm ledger s
 
 - [x] `W05.P27.S101` - dispatch vaultspec-code-reviewer against every Wave-5 commit; `.vault/exec/`.
 - [ ] `W05.P27.S102` - re-run Laia e-commerce OSS UK Marc autonomo intracom and Joan SL intracom confirming OSS 349 UK IVA-wallet handled; `.vault/audit/`.
-- [ ] `W05.P27.S103` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W05.P27.S103` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W06` - profile portability
 
@@ -372,7 +372,7 @@ Code-reviewer and Pere Marc re-run confirming IRPF tarifa applied, 130 to 100 pr
 
 - [x] `W07.P34.S120` - dispatch vaultspec-code-reviewer against every Wave-7 commit; `.vault/exec/`.
 - [ ] `W07.P34.S121` - re-run Pere pensioner-landlord and Marc autonomo to confirm tarifa applied 130-to-100 projection discoverable IVA-wallet queryable Pere 1250 EUR gestor figure reconciles; `.vault/audit/`.
-- [ ] `W07.P34.S122` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W07.P34.S122` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W08` - localisation parity and hygiene
 
@@ -636,7 +636,7 @@ Code-reviewer fresh Haiku swarm over 1400 plus files full round-6 fleet repeated
 - [ ] `W09.P49.S172` - dispatch vaultspec-code-reviewer against every Wave-9 commit; `.vault/exec/`.
 - [ ] `W09.P49.S173` - dispatch fresh Haiku discovery swarm over 1400 plus files for drift surviving Wave 9 append Step per finding; `src/aeat/`.
 - [ ] `W09.P49.S174` - re-run full round-6 persona fleet plus new tax shapes sociedad civil comunidad de bienes autonomo objetiva trabajador asalariado pensioner with foreign pension; `.vault/audit/`.
-- [ ] `W09.P49.S175` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W09.P49.S175` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W10` - registry deadline-window backfill
 
