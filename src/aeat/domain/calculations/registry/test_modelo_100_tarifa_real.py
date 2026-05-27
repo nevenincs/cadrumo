@@ -518,3 +518,157 @@ def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> No
     assert abs(actual_delta - expected_delta) <= _TOLERANCE, (
         f"cuota delta = {actual_delta!r}; expected delta {expected_delta!r} (949.02 - 602.87 = 346.15 EUR)."
     )
+
+
+# -----------------------------------------------------------------------
+# S361 tests — M100 2024 settlement-chain tail (renta-2024-final-settlement).
+#
+# Root cause: casillas 0587, 0595, 0598, 0609, 0610, 0670 had no formulas
+# in the 2024 revision; all stayed at 0 forever.
+#
+# The fix adds construct renta-2024-final-settlement with 6 formulas:
+#   0587 = 0585 + 0586  (cuota liquida incrementada total)
+#   0595 = 0587 - 0588 - 0589 - 0590 - 0591  (cuota resultante)
+#   0598 = copy(0153)   (retenciones arrendamientos urbanos)
+#   0609 = sum(0592..0606)  (total pagos a cuenta, 14 operands)
+#   0610 = 0595 - 0609  (cuota diferencial)
+#   0670 = 0610 - 0611 + 0612 ... + 0669  (resultado declaracion, 17 ops)
+#
+# Test strategy: structural identity checks per RD 439/2007 Art. 110.
+# We do NOT assert absolute euro values computed from the same chain.
+# We verify:
+#   - 0587 = 0585 + 0586 (structural identity)
+#   - 0609 equals the single retención operand supplied (0592 = single source)
+#   - 0610 = 0595 - 0609 (structural identity)
+#   - Anti-tautology: cuota diferencial decreases when retención increases
+#
+# Authority: RD 439/2007 Art. 110, LIRPF Art. 99, AEAT 2024 form BOE.
+# -----------------------------------------------------------------------
+
+_TRABAJO_BASE_55500 = Decimal("55500")
+_RETENCION_1824 = Decimal("1824")
+_RETENCION_3648 = Decimal("3648")  # doubled retención for anti-tautology
+
+
+def test_s361_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot) -> None:
+    """Casilla 0587 must equal 0585 + 0586 per renta-2024-cuota-liquida-incrementada-total.
+
+    S361 regression guard: before the fix, 0587 had no formula and stayed 0
+    even when 0585 and 0586 were computed and positive. After the fix, 0587 is
+    computed and equals the sum of both cuota liquida incrementada values.
+    Authority: LIRPF Art. 50, AEAT forma BOE 2024.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _TRABAJO_BASE_55500},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    c0585 = result.values["0585"]
+    c0586 = result.values["0586"]
+    c0587 = result.values["0587"]
+
+    assert c0587 > Decimal("0"), (
+        f"casilla 0587 = {c0587!r}; must be positive (S361 regression: was silently 0 before fix). "
+        f"Check 2024/formulas/0169-renta-2024-cuota-liquida-incrementada-total.toml."
+    )
+    assert abs(c0587 - (c0585 + c0586)) <= _TOLERANCE, (
+        f"0587 ({c0587!r}) must equal 0585 ({c0585!r}) + 0586 ({c0586!r}). "
+        f"Structural identity failure in renta-2024-cuota-liquida-incrementada-total."
+    )
+
+
+def test_s361_0609_equals_retencion_trabajo_operand(m100_2024_snapshot) -> None:
+    """Casilla 0609 must equal the supplied retenciones trabajo (0592) per RD 439/2007 Art. 110.
+
+    With only casilla 0592 (retenciones trabajo) supplied and all other 0609
+    operands zero, 0609 must exactly equal the supplied amount. This confirms
+    the 14-operand sum in renta-2024-total-pagos-a-cuenta is wired correctly.
+    Authority: RD 439/2007 Art. 109-110, LIRPF Art. 99.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _TRABAJO_BASE_55500, "0592": _RETENCION_1824},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    c0609 = result.values["0609"]
+    assert c0609 == _RETENCION_1824, (
+        f"casilla 0609 (total pagos a cuenta) = {c0609!r}; "
+        f"expected {_RETENCION_1824!r} (sole 0592 operand). "
+        f"S361 regression: before fix, 0609 had no formula and stayed 0. "
+        f"Check 2024/formulas/0172-renta-2024-total-pagos-a-cuenta.toml."
+    )
+
+
+def test_s361_0610_equals_0595_minus_0609(m100_2024_snapshot) -> None:
+    """Casilla 0610 must equal 0595 - 0609 per renta-2024-cuota-diferencial.
+
+    Structural identity: cuota diferencial = cuota resultante - total pagos a cuenta.
+    This holds for any non-zero retención supplied via 0592.
+    Authority: LIRPF Art. 79, AEAT 2024 form BOE.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _TRABAJO_BASE_55500, "0592": _RETENCION_1824},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    c0595 = result.values["0595"]
+    c0609 = result.values["0609"]
+    c0610 = result.values["0610"]
+
+    assert abs(c0610 - (c0595 - c0609)) <= _TOLERANCE, (
+        f"0610 ({c0610!r}) must equal 0595 ({c0595!r}) - 0609 ({c0609!r}). "
+        f"Structural identity failure in renta-2024-cuota-diferencial."
+    )
+    assert c0610 < c0595, (
+        f"0610 ({c0610!r}) must be less than 0595 ({c0595!r}) when retenciones > 0."
+    )
+
+
+def test_s361_anti_tautology_higher_retencion_reduces_cuota_diferencial(
+    m100_2024_snapshot,
+) -> None:
+    """Anti-tautology: doubling retenciones must halve the remaining cuota diferencial gap.
+
+    If 0609 -> 0610 subtraction is not wired, both scenarios yield the same
+    0610 regardless of 0592. This test catches a wiring break in the 14-operand
+    sum or the 0610 formula.
+    Authority: RD 439/2007 Art. 110.
+    """
+    result_low = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _TRABAJO_BASE_55500, "0592": _RETENCION_1824},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+    result_high = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _TRABAJO_BASE_55500, "0592": _RETENCION_3648},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    c0610_low = result_low.values["0610"]
+    c0610_high = result_high.values["0610"]
+    assert c0610_high < c0610_low, (
+        f"0610 with doubled retenciones ({c0610_high!r}) must be less than with "
+        f"half retenciones ({c0610_low!r}). "
+        f"If equal, the 0609 -> 0610 subtraction is not wired."
+    )
+    # The delta in 0610 must equal the delta in 0609 (doubled retenciones)
+    expected_delta = _RETENCION_3648 - _RETENCION_1824
+    actual_delta = c0610_low - c0610_high
+    assert abs(actual_delta - expected_delta) <= _TOLERANCE, (
+        f"0610 delta = {actual_delta!r}; expected {expected_delta!r} "
+        f"(doubled retenciones delta = {expected_delta!r} EUR)."
+    )
