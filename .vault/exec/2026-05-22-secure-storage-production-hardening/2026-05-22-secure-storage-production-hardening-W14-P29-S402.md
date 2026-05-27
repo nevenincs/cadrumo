@@ -3,12 +3,12 @@ tags:
   - '#exec'
   - '#secure-storage-production-hardening'
 date: '2026-05-26'
-step_id: 'S396'
+step_id: 'S402'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
 ---
 
-# `secure-storage-production-hardening` `W07.P27.S396`
+# `secure-storage-production-hardening` `W14.P29.S402`
 
 Populated 6 optional `ModeloDraft` fields with non-default values in both roundtrip test fixtures and added 6 parametrized anti-tautology field-drop proof cases.
 
@@ -38,4 +38,4 @@ The anti-tautology file received a new `@pytest.mark.parametrize` test (`test_bo
 
 - 9 tests pass (`src/aeat/domain/filing/` suite: 11 total including 2 pre-existing amendment roundtrip tests)
 - Ruff: all checks passed
-- Plan step `W07.P27.S396` closed
+- Plan step `W14.P29.S402` closed
