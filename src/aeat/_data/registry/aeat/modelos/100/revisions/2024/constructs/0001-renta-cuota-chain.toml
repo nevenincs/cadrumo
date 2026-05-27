@@ -52,6 +52,7 @@ formulas = [
     "renta-2024-base-imponible-general",
     "renta-2024-base-imponible-del-ahorro",
     "renta-2024-base-liquidable-general",
+    "renta-2024-base-liquidable-general-sometida-a-gravamen",
     "renta-2024-base-liquidable-del-ahorro",
     "renta-2024-cuota-escala-autonomica-sobre-base-liquidable-general",
     "renta-2024-cuota-escala-autonomica-sobre-minimo-personal-familiar",
