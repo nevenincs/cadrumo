@@ -23,7 +23,7 @@ source_refs = [
 [revisions."2025-02-03-y-siguientes"]
 label = "Modelo 036 desde 3 de febrero de 2025"
 valid_from = 2025-02-03
-period_selector = { year_from = 2025, periods = ["ALTA", "MODIFICACION", "BAJA"] }
+period_selector = { year_from = 2025, periods = ["alta", "modificacion", "baja"] }
 legal_refs = [
     "rd-1065-2007:art-9",
     "rd-1065-2007:art-10",
@@ -194,7 +194,7 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-036-procedure"]
 [[revisions."2025-02-03-y-siguientes".filing_schedules]]
 id = "modelo-036-event-triggered"
 period_kind = "ad_hoc"
-periods = ["ALTA", "MODIFICACION", "BAJA"]
+periods = ["alta", "modificacion", "baja"]
 profile_condition_mode = "all"
 legal_refs = [
     "rd-1065-2007:art-9",
