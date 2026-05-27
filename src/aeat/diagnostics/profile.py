@@ -97,9 +97,10 @@ def register(app: typer.Typer) -> None:
         profile: str | None = typer.Option(None, "--profile", help=tr("cli.diagnostics.profile.profile_help")),
     ) -> None:
         try:
-            get_profile_key(key)
+            registered = get_profile_key(key)
         except KeyError as exc:
             raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
+        canonical_key = registered.key
         pointer = _resolve_target_profile(profile)
         with profile_storage_session(pointer.bucket_id):
             service = build_lifecycle_service(bucket_id=pointer.bucket_id)
@@ -107,8 +108,8 @@ def register(app: typer.Typer) -> None:
                 record = service.read(pointer.bucket_id)
             except ProfileNotFoundError as exc:
                 raise _profile_bad_parameter("unknown_profile", profile=pointer.label) from exc
-        value = fact_value(record, key) or ""
-        typer.echo(f"{key}\t{value or '<unset>'}")
+        value = fact_value(record, canonical_key) or ""
+        typer.echo(f"{canonical_key}\t{value or '<unset>'}")
 
     @sub.command("set", help=tr("cli.diagnostics.profile.set_help"))
     def _set(
@@ -153,14 +154,15 @@ def register(app: typer.Typer) -> None:
         profile: str | None = typer.Option(None, "--profile", help=tr("cli.diagnostics.profile.profile_help")),
     ) -> None:
         try:
-            get_profile_key(key)
+            registered = get_profile_key(key)
         except KeyError as exc:
             raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
-        fact = UserProfileFact(path=key, value=None)
+        canonical_key = registered.key
+        fact = UserProfileFact(path=canonical_key, value=None)
         pointer = _resolve_target_profile(profile)
         with profile_storage_session(pointer.bucket_id):
             repository = workflow_state_repository()
             repository.update(lambda current: set_active_field(current, fact))
-        typer.echo(f"{key}\t<unset>")
+        typer.echo(f"{canonical_key}\t<unset>")
 
     app.add_typer(sub)
