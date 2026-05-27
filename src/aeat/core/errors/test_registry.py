@@ -7,15 +7,18 @@ from pydantic import ValidationError
 
 from ..access_gate import LiveSubmitForbiddenError
 from ..i18n import tr
+from ..i18n._render import UnmatchedPlaceholderError
 from ..observability._errors import RunContextMissingError
 from . import (
     ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
+    get_registered_error_code,
     register,
     render_error_json,
     render_error_text,
 )
+from ._registry import _DEFERRED_BIND, _flush_deferred_binds
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -95,6 +98,46 @@ def test_messages_do_not_contain_known_broken_fragments() -> None:
             message = tr(code.message_key, locale=locale)
             for fragment in disallowed_fragments:
                 assert fragment not in message
+
+
+def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
+    """bind_error_code defers silently when _DECLARED_CODE_BY_QUALNAME is unavailable.
+
+    Simulates the circular-import window by manually placing a registered
+    class into _DEFERRED_BIND, clearing its .code attribute, then verifying
+    that get_registered_error_code rebinds it correctly.  This is the path
+    that prevents the ValueError crash seen by Inés / Diego when parallel
+    agent __pycache__ writes produced a stale pyc for registry/_core.py.
+    """
+
+    # UnmatchedPlaceholderError is registered in registry/_core.py.
+    # Confirm it is already correctly bound in normal operation.
+    code_before = get_registered_error_code(UnmatchedPlaceholderError)
+    assert code_before.code == "INTERNAL_I18N_UNMATCHED_PLACEHOLDER"
+
+    # Simulate the deferred state: remove from _CLASS_CODE_REGISTRY and
+    # add to _DEFERRED_BIND (as if __init_subclass__ fired mid-init).
+    from ._registry import _CLASS_CODE_REGISTRY
+
+    saved_code = _CLASS_CODE_REGISTRY.pop(UnmatchedPlaceholderError, None)
+    _DEFERRED_BIND.add(UnmatchedPlaceholderError)
+
+    try:
+        # _flush_deferred_binds should rebind the class without raising.
+        _flush_deferred_binds()
+        assert UnmatchedPlaceholderError not in _DEFERRED_BIND, (
+            "class should have been flushed out of _DEFERRED_BIND"
+        )
+        assert UnmatchedPlaceholderError in _CLASS_CODE_REGISTRY, (
+            "class should have been added to _CLASS_CODE_REGISTRY"
+        )
+        rebound = get_registered_error_code(UnmatchedPlaceholderError)
+        assert rebound.code == "INTERNAL_I18N_UNMATCHED_PLACEHOLDER"
+    finally:
+        # Restore invariant regardless of assertion outcome.
+        if saved_code is not None:
+            _CLASS_CODE_REGISTRY[UnmatchedPlaceholderError] = saved_code
+        _DEFERRED_BIND.discard(UnmatchedPlaceholderError)
 
 
 def test_core_error_prefixes_are_grep_stable() -> None:
