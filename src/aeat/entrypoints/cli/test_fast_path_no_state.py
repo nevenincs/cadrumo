@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -45,18 +45,11 @@ _FAST_PATH_BUDGET_MS = 200.0
 
 
 @pytest.fixture
-def _clean_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+def _clean_storage_root(tmp_path: Path) -> Iterator[Path]:
     """A pristine storage root: no pointer, no database, no buckets."""
 
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 def _warm() -> None:
