@@ -130,8 +130,14 @@ campaign — out of scope for the silent-zero elimination work.
 
 ## Provenance
 
-- Sweep script: `.vault-scratch/bound_casilla_sweep.py` (one-off, discarded after S08 closes).
-- Sweep output: `.vault-scratch/bound_casilla_sweep.json` (one-off, discarded after S08 closes).
+- Sweep script: discarded under P07.S35 (one-off as planned). The
+  script body lives in commit `5d069ce6b` (P02.S06-S08) for
+  archival reference; the runtime classifier had a known false-
+  positive bug (relation_orphaned matched `selector.relation`
+  against `RelationDefinition.id` instead of using
+  `target_binding`) tracked at P07.S37.
+- Sweep output: discarded under P07.S35. The findings catalogued
+  in this audit are the durable record.
 - Classification logic: `_PreviousModeloSelector.required_period_anchors_for_target` plus presence-of-`RelationDefinition`-targeting-the-binding-id in the revision.
 
 ## Plan amendment required
