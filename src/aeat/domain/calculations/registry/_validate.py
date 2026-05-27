@@ -27,7 +27,7 @@ from ._validate_revision_sections import validate_revision_definition
 if TYPE_CHECKING:
     from ...user_profile._schema import ProfileSchemaDefinition
 
-_CatalogueCacheKey = tuple[int, int, str | None]
+_CatalogueCacheKey = tuple[int, int, str | None, bool]
 _CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
 _ModeloValidationCacheKey = tuple[int, int, int, str | None, str | None]
 _ModeloValidationCacheValue = tuple[
@@ -48,7 +48,14 @@ _MODELO_VALIDATION_CACHE: dict[_ModeloValidationCacheKey, _ModeloValidationCache
 _REGISTRY_VALIDATION_CACHE: dict[_RegistryValidationCacheKey, _RegistryValidationCacheValue] = {}
 
 class RegistryValidator:
-    """Validate legal/source closure and calculability for modelos."""
+    """Validate legal/source closure and calculability for modelos.
+
+    ``catalogue_corpus_strict=True`` (the default) enforces
+    ``required_text`` corpus checks on every legal reference.  Set it to
+    ``False`` for the production authority so that a pending corpus
+    annotation never aborts a user-facing workflow; strict checks are
+    reserved for explicit registry audit calls.
+    """
 
     def __init__(
         self,
@@ -57,10 +64,12 @@ class RegistryValidator:
         source_root: Path | None = None,
         justificante_corpus_root: Path | None = None,
         user_profile_schema: ProfileSchemaDefinition | None = None,
+        catalogue_corpus_strict: bool = True,
     ) -> None:
         self._legal = catalogues.legal
         self._sources = catalogues.sources
         self._source_root = source_root
+        self._catalogue_corpus_strict = catalogue_corpus_strict
         self._user_profile_schema = user_profile_schema
         self._evidence = EvidenceValidator(
             legal_refs=self._legal,
@@ -110,7 +119,7 @@ class RegistryValidator:
         if self._catalogue_failures is not None:
             return self._catalogue_failures
         source_root_key = self._source_root_key()
-        cache_key = (id(self._legal), id(self._sources), source_root_key)
+        cache_key = (id(self._legal), id(self._sources), source_root_key, self._catalogue_corpus_strict)
         cached = _CATALOGUE_FAILURE_CACHE.get(cache_key)
         if cached is not None and cached[0] is self._legal and cached[1] is self._sources:
             self._catalogue_failures = cached[2]
@@ -118,7 +127,11 @@ class RegistryValidator:
 
         failures: list[str] = []
         try:
-            verify_legal_catalogue(self._legal, source_root=self._source_root)
+            verify_legal_catalogue(
+                self._legal,
+                source_root=self._source_root,
+                corpus_strict=self._catalogue_corpus_strict,
+            )
         except RegistryValidationError as exc:
             failures.append(str(exc))
         if self._source_root is not None:
