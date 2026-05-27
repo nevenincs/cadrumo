@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -622,7 +623,7 @@ portals_app = typer.Typer(
 app.add_typer(portals_app, name="portals")
 
 
-def _portal_row(metadata) -> dict[str, object]:
+def _portal_row(metadata) -> Mapping[str, object]:
     # `metadata.label` and `metadata.purpose` are Translatable
     # translation keys (e.g. `entries.portal_sede_root.label`). A bare
     # `str()` dumps the raw key path at the operator; route them
@@ -722,7 +723,7 @@ expedientes_app = typer.Typer(
 app.add_typer(expedientes_app, name="expedientes")
 
 
-def _expedientes_row(snapshot) -> dict[str, object]:
+def _expedientes_row(snapshot) -> Mapping[str, object]:
     return {
         "snapshot_id": snapshot.snapshot_id,
         "captured_at": snapshot.captured_at.isoformat(),
@@ -879,7 +880,7 @@ verify_app = typer.Typer(
 app.add_typer(verify_app, name="verify")
 
 
-def _verify_row(observation) -> dict[str, object]:
+def _verify_row(observation) -> Mapping[str, object]:
     return {
         "observation_id": observation.observation_id,
         "surface": observation.surface.value,
@@ -1150,7 +1151,7 @@ borrador_100_app = typer.Typer(
 borrador_app.add_typer(borrador_100_app, name="100")
 
 
-def _borrador_row(snapshot) -> dict[str, object]:
+def _borrador_row(snapshot) -> Mapping[str, object]:
     return {
         "snapshot_id": snapshot.snapshot_id,
         "filing_year": snapshot.filing_year,
