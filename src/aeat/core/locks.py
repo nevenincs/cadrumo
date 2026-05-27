@@ -23,7 +23,6 @@ a TOCTOU window.
 
 from __future__ import annotations
 
-import contextlib
 import os
 import sys
 import time
@@ -77,13 +76,18 @@ def fsync_parent_dir(target: Path) -> None:
     try:
         fd = os.open(parent, os.O_DIRECTORY | os.O_RDONLY)
     except OSError:
+        _log.debug("fsync_parent_dir: could not open parent directory %s", parent, exc_info=True)
         return
     try:
-        with contextlib.suppress(OSError):
+        try:
             os.fsync(fd)
+        except OSError:
+            _log.debug("fsync_parent_dir: could not fsync parent directory %s", parent, exc_info=True)
     finally:
-        with contextlib.suppress(OSError):
+        try:
             os.close(fd)
+        except OSError:
+            _log.debug("fsync_parent_dir: could not close parent directory fd for %s", parent, exc_info=True)
 
 
 if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
@@ -101,9 +105,11 @@ if sys.platform == "win32":  # pragma: no cover - branch covered on Windows only
         """Release the exclusive lock previously acquired via :func:`_try_lock`."""
         # Best-effort: the OS already releases the lock when the
         # descriptor is closed. Avoid raising during teardown.
-        with contextlib.suppress(OSError):
+        try:
             os.lseek(fd, 0, os.SEEK_SET)
             msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        except OSError:
+            _log.debug("exclusive_file_lock: Windows lock release failed for fd %s", fd, exc_info=True)
 
 else:  # POSIX
     import fcntl
@@ -116,8 +122,10 @@ else:  # POSIX
             return False
 
     def _release_lock(fd: int) -> None:
-        with contextlib.suppress(OSError):
+        try:
             fcntl.flock(fd, fcntl.LOCK_UN)
+        except OSError:
+            _log.debug("exclusive_file_lock: POSIX lock release failed for fd %s", fd, exc_info=True)
 
 
 @contextmanager
