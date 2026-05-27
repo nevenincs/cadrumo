@@ -3489,4 +3489,262 @@ def modelo_export_verb(
     _emit(ctx, payload, lines)
 
 
+@app.command(
+    "project",
+    help=tr(
+        "cli.app.modelo.project_help",
+        default=(
+            "Project a year-end Modelo 100 from quarterly Modelo 130 filings. "
+            "Reads all M130 work-unit revisions for --year, aggregates rendimiento neto "
+            "and pagos fraccionados, and runs the M100 registry calculation to surface "
+            "the projected cuota íntegra and net obligation."
+        ),
+    ),
+)
+def modelo_project(
+    ctx: typer.Context,
+    year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.project.year_help", default="Filing year (e.g. 2024)."))],
+    ccaa: Annotated[
+        str,
+        typer.Option(
+            "--ccaa",
+            help=tr(
+                "cli.app.modelo.project.ccaa_help",
+                default=(
+                    "Autonomous community tax residence key for the M100 autonomic scale "
+                    "(e.g. cataluna, comunidad-valenciana). Must match the registry enum."
+                ),
+            ),
+        ),
+    ],
+    casilla: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--casilla",
+            help=tr(
+                "cli.app.modelo.project.casilla_help",
+                default=(
+                    "Additional M100 casilla override as ID=VALUE (e.g. 0513=1150 for "
+                    "age supplement). Repeat for multiple overrides."
+                ),
+            ),
+        ),
+    ] = None,
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr(
+                "cli.app.modelo.project.binding_help",
+                default=(
+                    "Additional M100 binding override as KEY=VALUE. Repeat for multiple. "
+                    "Retenciones bindings (renta-YYYY-modelo-111-retenciones-periodicas etc.) "
+                    "default to zero when not supplied."
+                ),
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Project a year-end Modelo 100 from the active profile's M130 quarterly filings."""
+
+    _require_active_profile()
+
+    from ...application.modelo import list_work_units as _list_work_units
+    from ...domain.calculations.registry import calculate_registry_snapshot
+    from ...domain.modelos._work_unit import WorkUnitState
+
+    # -- Collect M130 work units for the requested year --------------------------
+    all_units = _list_work_units()
+    m130_units = [
+        u for u in all_units
+        if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
+    ]
+
+    if not m130_units:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.no_m130_units",
+                default=f"No Modelo 130 work units found for year {year}. "
+                "Create and calculate M130 work units first with "
+                "`aeat app modelo work create --modelo 130`.",
+            )
+        )
+
+    # -- Gather latest calculation revisions for each M130 work unit -------------
+    _QUARTERS = {"1T", "2T", "3T", "4T"}
+    m130_quarters: dict[str, CalculationRevision] = {}
+    for unit in m130_units:
+        revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
+        if not revisions:
+            continue
+        # Use the most recent revision (list is sorted by created_at).
+        latest = revisions[-1]
+        period = unit.period
+        if period in _QUARTERS:
+            m130_quarters[period] = latest
+
+    if not m130_quarters:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.no_m130_revisions",
+                default=f"Modelo 130 work units for year {year} have no calculation revisions. "
+                "Run `aeat app modelo work calculate <work_unit_id>` for each quarter first.",
+            )
+        )
+
+    # -- Aggregate M130 outputs across quarters ----------------------------------
+    # M130 casilla 03: rendimiento neto (accrual base for the quarter, not cumulative).
+    # M130 casilla 19: resultado final (amount paid in the quarter).
+    # M130 casilla 01: ingresos (quarterly revenue).
+    # M130 casilla 02: gastos (quarterly expenses).
+    quarters_filed = len(m130_quarters)
+    total_rendimiento_neto = sum(
+        rev.casilla_values.get("03", Decimal("0")) for rev in m130_quarters.values()
+    )
+    total_pagos_fraccionados = sum(
+        rev.casilla_values.get("19", Decimal("0")) for rev in m130_quarters.values()
+    )
+    total_ingresos = sum(
+        rev.casilla_values.get("01", Decimal("0")) for rev in m130_quarters.values()
+    )
+    total_gastos = sum(
+        rev.casilla_values.get("02", Decimal("0")) for rev in m130_quarters.values()
+    )
+
+    # Extrapolate to full year when fewer than 4 quarters are available.
+    # Linear extrapolation: annualise by (4 / quarters_filed).
+    if quarters_filed < 4:
+        factor = Decimal(4) / Decimal(quarters_filed)
+        projected_rendimiento_neto = (total_rendimiento_neto * factor).quantize(Decimal("0.01"))
+        projected_ingresos = (total_ingresos * factor).quantize(Decimal("0.01"))
+        projected_gastos = (total_gastos * factor).quantize(Decimal("0.01"))
+        is_extrapolated = True
+    else:
+        projected_rendimiento_neto = total_rendimiento_neto
+        projected_ingresos = total_ingresos
+        projected_gastos = total_gastos
+        is_extrapolated = False
+
+    # -- Build M100 snapshot inputs and bindings ---------------------------------
+    authority = _service()._authority
+    try:
+        m100_snapshot = authority.snapshot("100", filing_year=year, period="0A")
+    except RegistrySnapshotError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    # Casilla overrides from --casilla flags.
+    casilla_specs = list(casilla or ())
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in casilla_specs)
+    extra_inputs: dict[str, Decimal] = {}
+    for k, v in casilla_pairs.items():
+        try:
+            extra_inputs[k] = Decimal(v)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
+            ) from exc
+
+    # Binding overrides from --binding flags.
+    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    extra_bindings: dict[str, Decimal] = {}
+    extra_enum_bindings: dict[str, str] = {}
+    for k, v in binding_pairs.items():
+        try:
+            extra_bindings[k] = Decimal(v)
+        except (InvalidOperation, ValueError):
+            extra_enum_bindings[k] = v
+
+    # M100 inputs: projected base liquidable general from M130 rendimiento neto,
+    # pagos fraccionados from M130 casilla 19 sum.
+    m100_inputs: dict[str, Decimal] = {
+        "0505": projected_rendimiento_neto,  # base liquidable general
+        "0604": total_pagos_fraccionados,    # pagos fraccionados M130 (manual, actual paid)
+        **extra_inputs,
+    }
+
+    # Default retenciones bindings to zero; caller may override via --binding.
+    _retenciones_binding_ids = (
+        f"renta-{year}-modelo-111-retenciones-periodicas",
+        f"renta-{year}-modelo-115-retenciones-periodicas",
+        f"renta-{year}-modelo-123-retenciones-periodicas",
+        f"renta-{year}-modelo-193-retenciones-anuales",
+    )
+    m100_bindings: dict[str, Decimal] = {
+        f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        **{bid: Decimal("0") for bid in _retenciones_binding_ids},
+        **extra_bindings,
+    }
+    m100_enum_bindings: dict[str, str] = {
+        f"renta-{year}-profile-tax-residence-ccaa": ccaa,
+        **extra_enum_bindings,
+    }
+
+    # -- Run M100 registry snapshot calculation ----------------------------------
+    try:
+        engine_result = calculate_registry_snapshot(
+            m100_snapshot,
+            inputs=m100_inputs,
+            date_context={"filing_period": date(year, 12, 31)},
+            binding_values=m100_bindings,
+            enum_binding_values=m100_enum_bindings,
+        )
+    except RegistryValidationError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.m100_calculation_error",
+                default=f"M100 projection calculation failed: {exc}",
+            )
+        ) from exc
+
+    cuota_estatal = engine_result.values.get("0545", Decimal("0"))
+    cuota_autonomica = engine_result.values.get("0546", Decimal("0"))
+    cuota_liquida_estatal = engine_result.values.get("0595", Decimal("0"))
+    cuota_liquida_autonomica = engine_result.values.get("0596", Decimal("0"))
+    cuota_resultante = engine_result.values.get("0597", Decimal("0"))
+
+    payload: dict[str, object] = {
+        "operation": "modelo.project",
+        "year": year,
+        "ccaa": ccaa,
+        "quarters_filed": quarters_filed,
+        "quarters_available": sorted(m130_quarters.keys()),
+        "is_extrapolated": is_extrapolated,
+        "m130_accumulated": {
+            "ingresos": str(total_ingresos),
+            "gastos": str(total_gastos),
+            "rendimiento_neto": str(total_rendimiento_neto),
+            "pagos_fraccionados": str(total_pagos_fraccionados),
+        },
+        "m100_projection": {
+            "base_liquidable_general_0505": str(projected_rendimiento_neto),
+            "pagos_fraccionados_0604": str(total_pagos_fraccionados),
+            "cuota_integra_estatal_0545": str(cuota_estatal),
+            "cuota_integra_autonomica_0546": str(cuota_autonomica),
+            "cuota_liquida_estatal_0595": str(cuota_liquida_estatal),
+            "cuota_liquida_autonomica_0596": str(cuota_liquida_autonomica),
+            "cuota_resultante_0597": str(cuota_resultante),
+        },
+    }
+
+    extrapolation_note = f" (extrapolated from {quarters_filed}Q)" if is_extrapolated else ""
+    lines = [
+        "operation\tmodelo.project",
+        f"year\t{year}",
+        f"ccaa\t{ccaa}",
+        f"quarters_filed\t{quarters_filed}/4{extrapolation_note}",
+        f"m130_ingresos\t{total_ingresos}",
+        f"m130_gastos\t{total_gastos}",
+        f"m130_rendimiento_neto\t{total_rendimiento_neto}",
+        f"m130_pagos_fraccionados\t{total_pagos_fraccionados}",
+        "---",
+        f"m100_base_liquidable_general\t{projected_rendimiento_neto}",
+        f"m100_cuota_integra_estatal\t{cuota_estatal}",
+        f"m100_cuota_integra_autonomica\t{cuota_autonomica}",
+        f"m100_cuota_liquida_estatal\t{cuota_liquida_estatal}",
+        f"m100_cuota_liquida_autonomica\t{cuota_liquida_autonomica}",
+        f"m100_cuota_resultante\t{cuota_resultante}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 __all__ = ["app"]
