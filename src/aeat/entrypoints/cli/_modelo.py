@@ -2061,20 +2061,24 @@ def work_calculate(
         }
         modality_lines = [f"modality\t{_verdict.modality.value}"]
 
-    payload = {
-        "operation": "modelo.work.calculate",
-        "saved": True,
-        "saved_confirmation": saved_confirmation,
-        **_calculation_revision_payload(revision),
-        **modality_payload,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkCalculateResult
+
+    result = WorkCalculateResult.model_validate(
+        {
+            "saved": True,
+            "saved_confirmation": saved_confirmation,
+            **_calculation_revision_payload(revision),
+            **modality_payload,
+        }
+    )
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
         *modality_lines,
         saved_confirmation,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
 
 
 @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
