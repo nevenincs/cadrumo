@@ -31,9 +31,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import (
@@ -595,7 +596,23 @@ class ProfileRepository:
                 continue
             if not manifest_path(paths).is_file():
                 continue
-            manifest = read_manifest(paths)
+            try:
+                manifest = read_manifest(paths)
+            except (StorageValidationError, ValidationError, OSError) as exc:
+                # A torn or legacy manifest (e.g. missing the lifecycle
+                # `status` field added by a later schema version) must not
+                # prevent the inventory scan that uniqueness guards and
+                # operator-facing list rely on. Skip it with a warning so
+                # the operator can repair the bucket separately; a fresh
+                # profile create against a different taxpayer remains
+                # reachable. The narrow scan in `list_profile_bucket_scan_issues`
+                # surfaces the torn bucket on diagnostic surfaces.
+                _log.warning(
+                    "profile inventory: skipping unreadable bucket manifest %s: %s",
+                    entry.name,
+                    exc,
+                )
+                continue
             summaries.append(
                 ProfileSummary(
                     profile_id=manifest.bucket_id,
