@@ -1,6 +1,6 @@
 access_gate:
   errors:
-    default_translatable: 'Error de porta d''acces.'
+    default_translatable: Error de porta d'acces.
 adapters:
   aeat:
     clave_movil:
@@ -109,7 +109,7 @@ aggregation:
     errors:
       bucket_mismatch: El bucket del repositori de moviments no coincideix amb el
         bucket d'agregació sol·licitat.
-      candidate_outside_period: 'La candidatura queda fora del periode.'
+      candidate_outside_period: La candidatura queda fora del periode.
       unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
   modelo_bindings:
     errors:
@@ -1586,6 +1586,7 @@ cli:
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
       purchase_invoice_evidence_help: Id de justificant de factura de compra
+      source_jurisdiction_help: 'Codi de país ISO 3166-1 alfa-2 (dues lletres) que identifica la jurisdicció fiscal d''origen de l''ingrés o despesa (p. ex. ES per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre Beckham de l''art. 93 LIRPF.'
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
@@ -3173,9 +3174,12 @@ errors:
       empty_database_url: L'URL de base de dades configurada és buida. Selecciona
         un perfil o configura l'emmagatzematge abans de tornar-ho a provar.
     namespace:
-      classification_mismatch: 'L''espai de noms d''objecte segur %{namespace} està registrat amb sensibilitat %{expected}, però el cridador ha usat %{classification}.'
-      schema_mismatch: 'L''espai de noms d''objecte segur %{namespace} està registrat amb esquema %{expected}, però el cridador ha usat l''esquema %{schema_version}.'
-      unregistered: 'L''espai de noms d''objecte segur %{namespace} no està registrat per a l''emmagatzematge runtime.'
+      classification_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb sensibilitat %{expected}, però el cridador ha usat %{classification}.
+      schema_mismatch: L'espai de noms d'objecte segur %{namespace} està registrat
+        amb esquema %{expected}, però el cridador ha usat l'esquema %{schema_version}.
+      unregistered: L'espai de noms d'objecte segur %{namespace} no està registrat
+        per a l'emmagatzematge runtime.
     runtime:
       cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
         només està disponible abans de seleccionar un bucket de perfil actiu.
@@ -3370,16 +3374,18 @@ wizard:
     blank_path: Path required for %{prompt_key}.
     blank_secret: Secret value required for %{prompt_key}.
     blank_text: Value required for %{prompt_key}.
-    checkbox_required: 'Seleccioneu almenys una opcio per a %{prompt_key}.'
-    checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides: %{choices}.'
-    checkbox_without_choices: 'La pregunta %{prompt_key} no declara opcions de casella.'
+    checkbox_required: Seleccioneu almenys una opcio per a %{prompt_key}.
+    checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides:
+      %{choices}.'
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opcions de casella.
     invalid_confirm: 'Resposta booleana no valida per a %{prompt_key}: %{raw}.'
     invalid_integer: 'Enter no valid per a %{prompt_key}: %{raw}.'
     invalid_postcode: 'Codi postal no vàlid per a %{prompt_key}: %{raw}. Un codi postal
       espanyol té 5 dígits (codi de província 01-52 seguit de tres dígits).'
     invalid_tax_id: 'NIF/NIE/CIF no valid per a %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides: %{choices}.'
-    select_without_choices: 'La pregunta %{prompt_key} no declara opcions de seleccio.'
+    select_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions valides:
+      %{choices}.'
+    select_without_choices: La pregunta %{prompt_key} no declara opcions de seleccio.
     unsupported_console: "L'assistent guiat necessita un terminal interactiu, i aquesta\
       \ execució no en té.\nEncara no s'ha desat res.\n\nPots acabar de crear aquest\
       \ perfil de dues maneres:\n\n1. Torna a executar l'ordre des d'un terminal interactiu\
@@ -3393,17 +3399,17 @@ wizard:
       \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
       \ edit %{profile_name}"
   other:
-    description: 'Altres opcions de configuracio'
+    description: Altres opcions de configuracio
     section:
-      title: 'Altres ajustos'
-    title: 'Altres'
+      title: Altres ajustos
+    title: Altres
   progress:
-    question_prefix: 'Pregunta %{q_n} de %{q_total}'
+    question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Pas %{section_n} de %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: 'Introduiu el cami del certificat digital (.p12, .pfx)'
+        prompt: Introduiu el cami del certificat digital (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -3526,21 +3532,21 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: 'Persona casada'
-            label: 'Casat/ada'
+            description: Persona casada
+            label: Casat/ada
           pareja-hecho-no-registrada:
-            description: 'Parella de fet no registrada'
-            label: 'Parella no registrada'
+            description: Parella de fet no registrada
+            label: Parella no registrada
           pareja-hecho-registrada:
-            description: 'Parella de fet registrada'
-            label: 'Parella registrada'
+            description: Parella de fet registrada
+            label: Parella registrada
           separado-divorciado:
-            label: 'Separat/ada o divorciat/ada'
+            label: Separat/ada o divorciat/ada
           soltero:
-            label: 'Solter/a'
+            label: Solter/a
         help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
           optar per la declaració conjunta i quina unitat familiar aplica.'
-        prompt: 'Indiqueu la situacio familiar'
+        prompt: Indiqueu la situacio familiar
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
@@ -3615,7 +3621,7 @@ wizard:
         prompt: Alta en ROI
       iva-sii-enrolled:
         prompt: Inscrit al SII (Subministrament Immediat d'Informació)
-      title: 'IVA configuracio'
+      title: IVA configuracio
     notes:
       notes:
         prompt: Notes per al teu propi record (opcional)
@@ -3677,7 +3683,7 @@ wizard:
       iva-regime:
         choices:
           exento:
-            label: 'Exempt/a'
+            label: Exempt/a
           general:
             label: Règim general
           reagp:
@@ -3700,7 +3706,7 @@ wizard:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil
       regimes:
-        prompt: 'Seleccioneu els regims fiscals aplicables'
+        prompt: Seleccioneu els regims fiscals aplicables
       surnames:
         prompt: Cognoms o raó social per a capçaleres d'exportació
       tax-id:
@@ -3709,7 +3715,7 @@ wizard:
         choices:
           individual:
             description: Useu aquest valor quan presenteu només la declaració individual
-            label: '1 - tributacio individual'
+            label: 1 - tributacio individual
           joint:
             description: Useu aquest valor només per a tributació conjunta de la unitat
               familiar
@@ -3720,7 +3726,7 @@ wizard:
       ccaa:
         choices:
           andalucia:
-            label: 'Andalusia (CA)'
+            label: Andalusia (CA)
           aragon:
             label: Aragó
           asturias:
@@ -3740,13 +3746,13 @@ wizard:
           comunidad_valenciana:
             label: Comunitat Valenciana
           extremadura:
-            label: 'Extremadura (CA)'
+            label: Extremadura (CA)
           galicia:
             label: Galícia
           la_rioja:
-            label: 'La Rioja (CA)'
+            label: La Rioja (CA)
           madrid:
-            label: 'Madrid (CA)'
+            label: Madrid (CA)
           murcia:
             label: Múrcia
       country-of-fiscal-residence:

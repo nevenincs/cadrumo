@@ -1495,6 +1495,7 @@ cli:
       notes_help: Operator notes stored with the transaction
       prorrata_reference_help: IVA prorrata substrate reference
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
+      source_jurisdiction_help: 'Two-letter ISO 3166-1 alpha-2 country code identifying the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source, FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham filter.'
       taxable_base_help: VAT-exclusive base amount
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
@@ -3014,9 +3015,12 @@ errors:
       empty_database_url: The configured database URL is empty. Select a profile or
         configure storage before trying again.
     namespace:
-      classification_mismatch: 'Secure-object namespace %{namespace} is registered for sensitivity %{expected}, but the caller used %{classification}.'
-      schema_mismatch: 'Secure-object namespace %{namespace} is registered for schema %{expected}, but the caller used schema %{schema_version}.'
-      unregistered: 'Secure-object namespace %{namespace} is not registered for runtime storage.'
+      classification_mismatch: Secure-object namespace %{namespace} is registered
+        for sensitivity %{expected}, but the caller used %{classification}.
+      schema_mismatch: Secure-object namespace %{namespace} is registered for schema
+        %{expected}, but the caller used schema %{schema_version}.
+      unregistered: Secure-object namespace %{namespace} is not registered for runtime
+        storage.
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.
