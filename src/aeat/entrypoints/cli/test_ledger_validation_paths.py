@@ -10,7 +10,6 @@ message fragment appears in stderr/output.
 Verbs covered: add, update, allocate, split, classify.
 ledger_list and ledger_view do not construct pydantic models from operator
 flags and therefore have no ValidationError path to exercise here.
-# TODO(S05): add list/view surface assertions once S05 lands.
 """
 
 from __future__ import annotations
