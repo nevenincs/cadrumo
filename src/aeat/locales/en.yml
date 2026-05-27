@@ -1374,7 +1374,7 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   diagnostics:
-    app_help: cli.diagnostics.app_help
+    app_help: 'Engineer-only diagnostics for AEAT internals.'
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -1392,15 +1392,20 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
-        invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
-        invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
-      get_help: cli.diagnostics.profile.get_help
-      help: cli.diagnostics.profile.help
-      key_help: cli.diagnostics.profile.key_help
-      profile_help: cli.diagnostics.profile.profile_help
-      set_help: cli.diagnostics.profile.set_help
-      unset_help: cli.diagnostics.profile.unset_help
-      value_help: cli.diagnostics.profile.value_help
+        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
+        invalid_value_with_choices: '%{message} (%{choices})'
+        ambiguous_profile: 'Ambiguous profile label: %{profile}'
+        unknown_profile: 'Unknown profile: %{profile}'
+        no_active_profile: 'No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first.'
+        unknown_profile_key: 'Unknown profile key: %{key}'
+        profile_empty: '--profile must not be empty when supplied.'
+      get_help: 'Read one profile key stored value.'
+      help: 'Engineer-only profile field inspection and surgical edits.'
+      key_help: 'Profile key.'
+      profile_help: 'Profile to use; defaults to the active profile.'
+      set_help: 'Write one profile key value, validated against the wizard descriptor.'
+      unset_help: 'Clear one profile key value.'
+      value_help: 'Value to store.'
     repair:
       audience_internal: internal application issue
       auth_label: Auth
@@ -1417,13 +1422,13 @@ cli:
       python_label: Python
       version_label: Version
     secure_objects:
-      all_help: cli.diagnostics.secure_objects.all_help
+      all_help: 'Return every key, including unreadable rows.'
       errors:
-        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
-      help: cli.diagnostics.secure_objects.help
-      list_help: cli.diagnostics.secure_objects.list_help
-      namespace_help: cli.diagnostics.secure_objects.namespace_help
-      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
+        conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
+      help: 'Inventory the secure-object index by namespace.'
+      list_help: 'List secure-object keys stored under one namespace.'
+      namespace_help: 'Namespace to inventory.'
+      unreadable_help: 'Restrict the listing to undecryptable rows.'
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
