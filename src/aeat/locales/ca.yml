@@ -2970,7 +2970,11 @@ filing:
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
   errors:
-    foral_regime: '{tax_region} és un règim foral fora de l''abast d''aquest perfil.'
+    foral_regime: 'Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
+      en virtut del Concert Econòmic (Llei 12/2002), no davant l''AEAT. Aquest CLI no
+      modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
+      (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons el
+      vostre territori.'
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
   keys:
     description: Profile configuration keys and their descriptions

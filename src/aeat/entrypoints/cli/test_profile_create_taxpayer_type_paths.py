@@ -294,3 +294,74 @@ def test_natural_person_with_economic_activity_stores_the_activity() -> None:
     assert result.exit_code == 0, result.output
     rows = _profile_rows(runner, "autonomo")
     assert rows["activities.description"] == "fontaneria epigrafe 151"
+
+
+def test_profile_create_refuses_pais_vasco_with_concierto_economico_redirect() -> None:
+    """Lourdes F1: `profile create ... --tax-residence-ccaa pais_vasco` must
+    be refused with a clean non-zero exit citing the Concierto Económico
+    (Ley 12/2002). No traceback; the operator must be redirected to the
+    Hacienda Foral, not left with a Python stack trace."""
+
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        [
+            "config",
+            "profile",
+            "create",
+            "lourdes",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "44444444A",
+            "--activity",
+            "traductora",
+            "--tax-residence-ccaa",
+            "pais_vasco",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in (result.output or "")
+    output = result.output or ""
+    assert any(
+        phrase in output
+        for phrase in ("Concierto", "Ley 12/2002", "Hacienda Foral", "foral")
+    )
+
+
+def test_profile_create_refuses_navarra_with_concierto_economico_redirect() -> None:
+    """Lourdes F1: `--tax-residence-ccaa navarra` must produce the same
+    foral-refusal as País Vasco — both are excluded from AEAT jurisdiction
+    under the Concierto / Convenio Económico."""
+
+    runner = CliRunner()
+    result = runner.invoke(
+        root_app,
+        [
+            "config",
+            "profile",
+            "create",
+            "navarrese",
+            "--quiet",
+            "--accept-defaults",
+            "--entity-type",
+            "natural_person",
+            "--tax-id",
+            "44444445B",
+            "--activity",
+            "agricultor",
+            "--tax-residence-ccaa",
+            "navarra",
+        ],
+    )
+
+    assert result.exit_code != 0
+    assert "Traceback" not in (result.output or "")
+    output = result.output or ""
+    assert any(
+        phrase in output
+        for phrase in ("Concierto", "Ley 12/2002", "Hacienda Foral", "foral")
+    )

@@ -2814,7 +2814,11 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   errors:
-    foral_regime: '{tax_region} is a foral regime outside the scope of this profile.'
+    foral_regime: 'Residents in {tax_region} file with the corresponding Hacienda Foral
+      under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
+      not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
+      (Gipuzkoa), araba.eus/ogasun (Álava), or hacienda.navarra.es (Navarra) depending
+      on your territory.'
     not_configured: No tax-residence profile is configured for RENTA.
   keys:
     description: Profile configuration keys and their descriptions
