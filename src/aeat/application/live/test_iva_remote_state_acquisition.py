@@ -8,9 +8,11 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from aeat.adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from aeat.adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from aeat.adapters.persistence.storage.errors import StorageValidationError
+from aeat.application.auth import AuthenticatedAeatSessionResult, AuthProviderKind
 from aeat.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
 
 from . import (
@@ -29,6 +31,76 @@ from . import (
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
+
+
+def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Path) -> None:
+    auth_result = AuthenticatedAeatSessionResult(
+        provider_kind=AuthProviderKind.CLAVE_MOVIL,
+        session=object(),
+        assertion=object(),
+        reused_persisted_session=True,
+        fresh=False,
+    )
+    filed_history = IvaCompensationHistoryCaptureReport(
+        output_root=str(tmp_path / "filed-history"),
+        year_from=2022,
+        year_to=2024,
+        captured_count=12,
+        observation_paths=("observations/303-2022-1T.json",),
+        artefact_refs=("secure-object:artefact",),
+        casilla_count=948,
+        calculation_observation_count=12,
+        calculation_observation_keys=("303:2022:1T",),
+        reloaded_history_count=12,
+        reloaded_rows=(),
+    )
+
+    report = build_iva_remote_state_acquisition_report(
+        output_root=tmp_path,
+        year_from=2022,
+        year_to=2024,
+        target_year=2026,
+        target_period="2T",
+        auth_result=auth_result,
+        filed_history=filed_history,
+    )
+
+    assert report.auth.status is LiveIvaReadStatus.SUCCEEDED
+    assert report.auth.outcome_mode is LiveIvaAcquisitionFailureMode.AUTHENTICATED
+    assert report.auth.provider_kind == AuthProviderKind.CLAVE_MOVIL.value
+    assert report.auth.reused_persisted_session is True
+    filed_outcome, wallet_outcome = report.outcomes
+    assert filed_outcome.status is LiveIvaReadStatus.SUCCEEDED
+    assert filed_outcome.outcome_mode is LiveIvaAcquisitionFailureMode.AUTHENTICATED
+    assert wallet_outcome.failure_type == "MissingSurfaceReport"
+
+
+def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) -> None:
+    auth_error = ClaveMovilApprovalTimeoutError(
+        "operator reported no prompt",
+        failure_mode="auth_completion_timeout",
+        context={"phone_state": "app_did_not_prompt", "auth_mode": "non_qr"},
+    )
+
+    report = build_iva_remote_state_acquisition_report(
+        output_root=tmp_path,
+        year_from=2024,
+        year_to=2024,
+        target_year=2026,
+        target_period="1T",
+        auth_error=auth_error,
+    )
+
+    assert report.auth.status is LiveIvaReadStatus.FAILED
+    assert report.auth.failure_mode is LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
+    assert tuple(outcome.failure_mode for outcome in report.outcomes) == (
+        LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+        LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+    )
+    assert tuple(outcome.failure_type for outcome in report.outcomes) == (
+        "ClaveMovilApprovalTimeoutError",
+        "ClaveMovilApprovalTimeoutError",
+    )
 
 
 def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fails(tmp_path: Path) -> None:
@@ -142,9 +214,16 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         assert acquisition_row.acquisition_ref.startswith("sha256:")
         assert acquisition_row.target_year == manifest.target_year
         assert acquisition_row.target_period == manifest.target_period
+        assert acquisition_row.auth_status == "failed"
+        assert acquisition_row.auth_outcome_mode == "unknown"
+        assert acquisition_row.auth_failure_mode == "unknown"
+        assert acquisition_row.auth_failure_type == "MissingAuthResult"
         assert acquisition_row.filed_history_succeeded is True
         assert acquisition_row.wallet_succeeded is False
-        assert any("failure_mode=aeat_403" in surface for surface in acquisition_row.surfaces)
+        assert any(
+            "outcome=aeat_403" in surface and "failure_mode=aeat_403" in surface
+            for surface in acquisition_row.surfaces
+        )
         assert manifest.acquisition_id not in remote_state.model_dump_json()
         assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
         assert len(manifest.acquisition_id.rsplit(":", 1)[-1]) == 64
