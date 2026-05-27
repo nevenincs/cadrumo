@@ -169,6 +169,11 @@ application:
           CAMI' amb un camí vàlid.
         path_unset: No s'ha seleccionat cap fitxer de certificat. Executa 'aeat config
           auth configure --provider certificate --file CAMI' per indicar-lo.
+      load:
+        password_unset: No hi ha cap contrasenya de certificat configurada. Configura
+          la contrasenya del certificat abans de continuar.
+        path_unset: No hi ha cap fitxer de certificat configurat. Executa 'aeat config
+          auth configure --provider certificate --file CAMI' per indicar-lo.
     clave_movil:
       health:
         identity_unset: No s'ha configurat cap DNI/NIE per a Cl@ve Mòbil. Configura'n
