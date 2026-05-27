@@ -1,0 +1,60 @@
+[[revisions."2008-y-siguientes".bindings]]
+id = "modelo-322-iva-repercutido-general-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21"], rate_kinds = ["general"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2008-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-322-2007-form"
+required_text = ["modelo 322"]
+
+[[revisions."2008-y-siguientes".bindings]]
+id = "modelo-322-iva-repercutido-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_reduced_10"], rate_kinds = ["reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2008-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-322-2007-form"
+required_text = ["modelo 322"]
+
+[[revisions."2008-y-siguientes".bindings]]
+id = "modelo-322-iva-repercutido-super-reducido-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_super_reduced_4"], rate_kinds = ["super_reduced"], flow_direction = "repercutido", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-88", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2008-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-322-2007-form"
+required_text = ["modelo 322"]
+
+[[revisions."2008-y-siguientes".bindings]]
+id = "modelo-322-iva-soportado-interiores-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["domestic_general_21", "domestic_reduced_10", "domestic_super_reduced_4"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "soportado", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-92", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2008-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-322-2007-form"
+required_text = ["modelo 322"]
+
+[[revisions."2008-y-siguientes".bindings]]
+id = "modelo-322-iva-autorepercutido-intracomunitaria-cuota"
+source = "ledger_iva_aggregation"
+selector = { categories = ["intra_community_acquisition_reverse_charge"], rate_kinds = ["general", "reduced", "super_reduced"], flow_direction = "inversion_sujeto_pasivo", fact = "iva_amount_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["ley-37-1992:art-84", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-322-2026", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
+
+[[revisions."2008-y-siguientes".bindings.source_citations]]
+source_ref = "boe-modelo-322-2007-form"
+required_text = ["modelo 322"]
+
