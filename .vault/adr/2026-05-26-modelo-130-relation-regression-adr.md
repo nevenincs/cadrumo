@@ -427,3 +427,40 @@ to match the amended contract: passing
 rejected). The structural invariant the test pins — that
 previous-filing bound casillas cannot be smuggled in through
 inputs — is preserved.
+
+## Amendment 2026-05-27 (B) — hardening turn after honesty review
+
+The 2026-05-27 campaign-close honesty review surfaced 14 items
+the campaign acquired or exposed but did not action: dead schema
+surface (`_PreviousModeloSelector.relation` field accepting
+arbitrary ignored values), private/public contradiction
+(`_INCOMPLETE_*` constants re-exported through public `__all__`),
+shim files that should be deleted
+(`application/overview/_applicability.py`), one-off scripts not
+discarded as promised (`bound_casilla_sweep.py`), a weakened
+test contract that lost its design intent (silent-ignore vs
+strict-rejection), assumed-not-verified M131 carry-forward
+grounding, fictional 1T fixture seed, architecturally
+unvalidated M036 manifest exclusion, untracked
+`provisional_pending_specimen` usage drift, an undiagnosed
+shared-worktree loader race, unaudited cross-campaign sweep
+commits, and an authoring-time gap on the tautology gate.
+
+**The campaign does not weaken; it hardens.** None of these
+items is closed by acknowledgement alone. P07 phase tracks each
+as a Step with a verification gate; nothing closes without
+proving the harder contract is now enforced. The narrowing in
+Amendment 2026-05-27 (A) is preserved as the runtime contract,
+but the lost design intent from the original Decision Z2 is
+re-established in S36 either by re-imposing strict rejection
+after refactoring the production projection helper to feed
+`binding_values` directly, OR by adding an authoring-time gate
+test that walks every fixture and fails on previous_filing
+bound-casilla-via-inputs patterns. The fixture-lying detection
+must close — silent ignore is the silent-zero hazard in
+disguise.
+
+The 14 hardening Steps live at P07.S32-S46. Acceptance criterion
+**8** is added: every P07 Step is closed (verified) before the
+campaign is considered structurally complete; the prior 31-Step
+closure is structurally necessary but not sufficient.
