@@ -309,9 +309,6 @@ application:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
-      duplicate_tax_id_scan_unreadable_profile: Cannot verify tax-id uniqueness because
-        profile '%{profile}' is unreadable; run repair diagnostics before creating
-        another profile.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
@@ -525,6 +522,7 @@ cli:
           or collectible_invoice. Repeat for multiple observations.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
+        json_validation_error: '{flag} value is not a valid observation object: {details}.'
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: Aggregation period passed to the backend service.
@@ -1301,11 +1299,11 @@ cli:
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification state for the transaction
-      help: Classify one ledger transaction in the active profile bucket
-      id_help: Ledger transaction id to classify
       counterparty_eu_member_state_help: EU member state of the counterparty (ISO
         3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
         prohibited with export_third_country_zero_rated
+      help: Classify one ledger transaction in the active profile bucket
+      id_help: Ledger transaction id to classify
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
@@ -1675,6 +1673,7 @@ cli:
         first so the most-overdue items triage first. Local-only; never contacts AEAT.
       to_help: Inclusive end date (ISO YYYY-MM-DD); defaults to today.
     calendar:
+      all_profiles_help: Render the calendar for every registered profile instead of the active one. Each block is prefixed with a profile header line.
       allow_incomplete_help: Render the calendar even when profile data is incomplete.
       from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
       help: Render the deadline calendar for the active profile across the supplied
@@ -1867,18 +1866,8 @@ cli:
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
-    app_app_help: Tax workspace for overview, ledger, modelo, registry, and review
-    app_help: 'Spanish tax workflow assistant
-
-
-      Quickstart: aeat config profile create NAME --tax-id NIF'
-    app_help_help: Show app workflow help
-    debug_help: Show internal debug logs on stderr
-    detail_help: Also show the detailed registry summary
     errors:
       did_you_mean_command: Did you mean '%{command}'?
-    format_help: Output format for command results
-    help_help: Show workflow-oriented help
     landing:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
@@ -1907,15 +1896,6 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
-    language_help: Output language for this command (overrides the active profile)
-    profile_help: cli.root.profile_help
-    quiet_help: Show only errors on stderr
-    startup_import_error: 'Cannot start the AEAT command surface: missing dependency
-      {dependency}. Run `aeat config repair`.'
-    unavailable_app_help: App commands are unavailable because an optional dependency
-      is missing
-    verbose_help: Show internal informational logs on stderr
-    version_help: Show package version (add --detail for the full registry summary)
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:

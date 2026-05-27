@@ -115,3 +115,45 @@ def test_calendar_help_advertises_local_only(cli_runner: CliRunner) -> None:
     assert any(
         token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
+
+
+def test_all_profiles_flag_iterates_every_registered_profile(cli_runner: CliRunner) -> None:
+    """--all-profiles iterates every registered profile.
+
+    Two profiles are registered; the flag must emit a `profile` header
+    line for each one. The test does not assert specific obligation rows
+    because the minimal fixture leaves the taxpayer model undeclared;
+    --allow-incomplete is required to get any output at all.
+    """
+
+    with profile_create_storage_span("second"):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id="second",
+                display_name="Second Operator",
+                enforce_unique_tax_id=False,
+            ),
+        )
+
+    result = cli_runner.invoke(
+        app,
+        [
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2026-01-01",
+            "--to",
+            "2026-03-31",
+            "--all-profiles",
+            "--allow-incomplete",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    # Both profile labels must appear in the output.
+    assert "operator" in result.output
+    assert "Second Operator" in result.output
+    # Output is structured with per-profile header lines.
+    profile_lines = [line for line in result.output.splitlines() if line.startswith("profile\t")]
+    assert len(profile_lines) == 2, f"expected 2 profile header lines, got: {result.output}"

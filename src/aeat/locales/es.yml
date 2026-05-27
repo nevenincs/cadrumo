@@ -170,8 +170,8 @@ application:
         path_unset: No se ha seleccionado un archivo de certificado. Ejecuta 'aeat
           config auth configure --provider certificate --file RUTA' para indicarlo.
       load:
-        password_unset: No hay contraseña de certificado configurada. Configura
-          la contraseña del certificado antes de continuar.
+        password_unset: No hay contraseña de certificado configurada. Configura la
+          contraseña del certificado antes de continuar.
         path_unset: No hay archivo de certificado configurado. Ejecuta 'aeat config
           auth configure --provider certificate --file RUTA' para indicarlo.
     clave_movil:
@@ -345,9 +345,6 @@ application:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ya lo usa el perfil '%{profile}'; un contribuyente
         debe tener un solo perfil.
-      duplicate_tax_id_scan_unreadable_profile: No se puede verificar la unicidad
-        del NIF porque el perfil '%{profile}' no puede leerse; ejecuta los diagnósticos
-        de reparación antes de crear otro perfil.
       no_active_profile_selected: No hay un perfil activo seleccionado.
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta `aeat config
         profile switch NAME` para activarlo o `aeat config profile delete NAME` primero.
@@ -573,6 +570,7 @@ cli:
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
+        json_validation_error: cli.app.modelo.aggregate.json_validation_error
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -1399,11 +1397,11 @@ cli:
       category_help: Id de categoría de gasto deducible (solo movimientos de gasto;
         los ingresos no necesitan categoría)
       classification_help: Estado de clasificación profesional del movimiento
-      help: Clasificar un movimiento del libro en el bucket del perfil activo
-      id_help: Id del movimiento del libro a clasificar
       counterparty_eu_member_state_help: Estado miembro de la UE de la contraparte
         (ISO 3166-1 alfa-2 minúsculas, p. ej. de); obligatorio con --iva-category
         intra_community_supply, prohibido con export_third_country_zero_rated
+      help: Clasificar un movimiento del libro en el bucket del perfil activo
+      id_help: Id del movimiento del libro a clasificar
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
@@ -1768,6 +1766,7 @@ cli:
         contacta con AEAT.
       to_help: Fecha de fin inclusiva (ISO YYYY-MM-DD); por defecto, hoy.
     calendar:
+      all_profiles_help: Mostrar el calendario de todos los perfiles registrados en lugar del activo. Cada bloque va precedido de una línea de cabecera con el nombre del perfil.
       allow_incomplete_help: Generar el calendario aunque los datos del perfil estén
         incompletos.
       from_help: Fecha de inicio inclusiva del calendario (ISO YYYY-MM-DD).
@@ -1968,19 +1967,8 @@ cli:
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: Espacio de trabajo fiscal para overview, ledger, modelo, registry
-      y review
-    app_help: 'Asistente de flujo fiscal español
-
-
-      Quickstart: aeat config profile create NAME --tax-id NIF'
-    app_help_help: Mostrar ayuda del flujo de app
-    debug_help: Mostrar logs internos de depuración en stderr
-    detail_help: Mostrar también el resumen detallado del registro
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
-    format_help: Formato de salida para los resultados del comando
-    help_help: Mostrar ayuda orientada al flujo de trabajo
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
@@ -2009,16 +1997,6 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
-    language_help: Idioma de salida para este comando (sustituye al perfil activo)
-    profile_help: cli.root.profile_help
-    quiet_help: Mostrar solo errores en stderr
-    startup_import_error: 'No se puede iniciar la interfaz de comandos de AEAT: falta
-      la dependencia {dependency}. Ejecuta `aeat config repair`.'
-    unavailable_app_help: Los comandos de app no están disponibles porque falta una
-      dependencia opcional
-    verbose_help: Mostrar logs internos informativos en stderr
-    version_help: Mostrar la versión del paquete (añade --detail para el resumen completo
-      del registro)
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -2237,7 +2215,8 @@ errors:
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
-    bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
+    bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
+      asignado.
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
