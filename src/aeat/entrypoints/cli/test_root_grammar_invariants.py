@@ -8,22 +8,21 @@ one.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'negative.db').as_posix()}")
+def _isolated_state(tmp_path: Path) -> Iterator[None]:
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def test_root_does_not_register_bare_reconcile_alias() -> None:

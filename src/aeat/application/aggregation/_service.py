@@ -7,6 +7,7 @@ implemented family aggregators without adding CLI-local conversion logic.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
 
@@ -102,7 +103,7 @@ class PerModeloAggregationLogFields(BaseModel):
     source_kind_count: int = Field(ge=0)
     result_row_count: int = Field(ge=0)
 
-    def as_extra(self) -> dict[str, object]:
+    def as_extra(self) -> Mapping[str, object]:
         """Return a logging ``extra`` payload with stable field names."""
 
         return {

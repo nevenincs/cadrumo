@@ -15,6 +15,31 @@ Two invariants are pinned here:
 2. The ``validate_bracket_table_temporal_coverage`` validator fires on a
    deliberately gapped parameter fixture, confirming the detection logic is
    not tautological: removing the check leaves the coverage gap silent.
+
+R8-M200-1 regression: casilla DP200014:00562 classification fix
+---------------------------------------------------------------
+
+Before this fix the TOML for ``DP200014:00562`` declared
+``input_kind = "manual"`` and ``required = true`` even though the formula
+``modelo-200-cuota-integra`` computes it from the base imponible.  This
+caused ``verify_modelo_revision`` to demand the cuota íntegra as a
+user-supplied input, making every S.A. (and SL, etc.) M200 filing refuse
+VERIFICADO_COMPLETO with a spurious MISSING_REQUIRED_CASILLA finding.
+
+Three invariants are pinned here:
+
+3. The registry snapshot declares ``DP200014:00562`` as
+   ``input_kind = "computed"`` and ``required = False`` — confirming the
+   TOML reclassification landed and the schema parsed it correctly.
+
+4. ``calculate_registry_snapshot`` emits ``DP200014:00562`` in
+   ``result.values`` WITHOUT the caller supplying it in ``inputs`` —
+   confirming the formula engine owns the value, not the operator.
+
+5. Anti-tautology: casilla ``00501`` (base para la liquidación) is still
+   ``input_kind = "manual"`` and ``required = True`` in the same snapshot
+   — confirming the classification machinery discriminates correctly and
+   that invariants 3-4 are not vacuous.
 """
 
 from __future__ import annotations
@@ -28,12 +53,9 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree
-from ._errors import RegistryValidationError
+from ._formula_runtime import calculate_registry_snapshot
 from ._schema import ParameterDefinition
-from ._validate_revision_rules import (
-    _bracket_coverage_gaps,
-    validate_bracket_table_temporal_coverage,
-)
+from ._validate_revision_rules import _bracket_coverage_gaps
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -115,18 +137,14 @@ def test_pyme_bracket_2024_window_is_present_in_registry() -> None:
     """The 2024 pyme bracket window exists at 23 % in the registry.
 
     After the S56 backfill ``is.modelo-200.tipo-gravamen-pyme`` must carry a
-    window covering 2024-01-01 – 2024-12-31 with ``marginal_rate = 0.23``.
+    window covering 2024-01-01 to 2024-12-31 with ``marginal_rate = 0.23``.
     This tests the registry encoding directly against the LIS Art. 29 2024
     authority; it is not a recomputation of the formula.
     """
     parameters = {p.id: p for p in _snapshot_2024().revision.parameters}
     parameter = parameters["is.modelo-200.tipo-gravamen-pyme"]
-    brackets_2024 = [
-        b for b in parameter.brackets if b.valid_from == date(2024, 1, 1)
-    ]
-    assert brackets_2024, (
-        "is.modelo-200.tipo-gravamen-pyme must have at least one bracket for 2024-01-01"
-    )
+    brackets_2024 = [b for b in parameter.brackets if b.valid_from == date(2024, 1, 1)]
+    assert brackets_2024, "is.modelo-200.tipo-gravamen-pyme must have at least one bracket for 2024-01-01"
     # The 2024 flat rate was 23 % (pre-tranche regime).
     assert any(b.marginal_rate == Decimal("0.23") for b in brackets_2024), (
         "2024 bracket must carry the LIS Art. 29 pre-2025 pyme flat rate of 23 %"
@@ -174,12 +192,8 @@ def test_coverage_validator_fires_on_deliberate_gap() -> None:
         revision_from=date(2024, 1, 1),
         revision_to=date(2024, 12, 31),
     )
-    assert gaps, (
-        "_bracket_coverage_gaps must detect the 2024 gap when brackets start at 2025"
-    )
-    assert gaps[0][0] == date(2024, 1, 1), (
-        "gap must start at the revision's valid_from (2024-01-01)"
-    )
+    assert gaps, "_bracket_coverage_gaps must detect the 2024 gap when brackets start at 2025"
+    assert gaps[0][0] == date(2024, 1, 1), "gap must start at the revision's valid_from (2024-01-01)"
 
 
 def test_coverage_validator_passes_when_no_gap() -> None:
@@ -219,6 +233,110 @@ def test_coverage_validator_passes_when_no_gap() -> None:
         revision_from=date(2024, 1, 1),
         revision_to=date(2025, 12, 31),
     )
-    assert not gaps, (
-        "_bracket_coverage_gaps must not flag a parameter whose windows cover the full revision range"
+    assert not gaps, "_bracket_coverage_gaps must not flag a parameter whose windows cover the full revision range"
+
+
+# ---------------------------------------------------------------------------
+# 3. R8-M200-1 regression: DP200014:00562 classification (R8-M200-1)
+# ---------------------------------------------------------------------------
+
+_DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
+
+
+def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
+    """DP200014:00562 must be classified as computed=true, required=false in the registry.
+
+    Before R8-M200-1 the TOML declared ``input_kind = "manual"`` and
+    ``required = true``, causing ``verify_modelo_revision`` to demand the
+    cuota íntegra as a user-supplied input.  After the fix the casilla must
+    carry ``input_kind = "computed"`` and ``required = False`` so the
+    verification layer never blocks on it.
+
+    This tests the registry encoding directly (no formula execution) and
+    would fail against the pre-fix TOML regardless of test ordering.
+    """
+    parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
+    casilla = parameters_by_id.get("DP200014:00562")
+    assert casilla is not None, "DP200014:00562 must be declared in the 2024-y-siguientes revision"
+    assert casilla.input_kind == "computed", (
+        "DP200014:00562 must be input_kind='computed'; formula modelo-200-cuota-integra owns the value"
     )
+    assert casilla.required is False, (
+        "DP200014:00562 must be required=false; the engine computes it — the operator never supplies it directly"
+    )
+
+
+def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
+    """calculate_registry_snapshot emits DP200014:00562 without it appearing in inputs.
+
+    The formula ``modelo-200-cuota-integra`` must produce the cuota íntegra
+    from the post-nivelación base imponible.  If the caller did NOT supply
+    ``DP200014:00562`` in ``inputs`` and the value is still present in
+    ``result.values`` the formula engine owns the casilla correctly.
+
+    Failure mode: if the TOML misclassification is reverted (manual+required)
+    the engine would no longer compute this casilla and it would either be
+    absent from ``result.values`` or the engine would raise because a manual
+    casilla has no supplied value.
+    """
+    inputs_without_00562 = {
+        "DP200014:00552": Decimal("200000"),
+        "DP200014:01033": Decimal("0"),
+        "DP200014:01034": Decimal("0"),
+        "DP200014B:00592": Decimal("0"),
+        "DP200014B:01766": Decimal("0"),
+        "DP200014B:01784": Decimal("0"),
+        "DP200026:00625": Decimal("100"),
+    }
+    assert "DP200014:00562" not in inputs_without_00562, (
+        "Test fixture must NOT supply DP200014:00562 — the whole point is that "
+        "the engine must produce it without operator input"
+    )
+
+    result = calculate_registry_snapshot(
+        _snapshot_2024(),
+        inputs=inputs_without_00562,
+        enum_binding_values={_DISPATCH_BINDING: "sa"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("5000000"),
+        },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert "DP200014:00562" in result.values, (
+        "formula engine must emit DP200014:00562 in result.values; "
+        "if absent the formula graph is not wired correctly after TOML fix"
+    )
+    # S.A. (gran empresa, INCN ≥ 1.000.000 EUR) pays 25 % on 200.000 EUR base.
+    # Authority: LIS Art. 29.1 (BOE-A-2014-12328) general rate for 2024.
+    assert result.values["DP200014:00562"] == Decimal("50000.00"), (
+        "cuota íntegra for S.A. at LIS Art. 29.1 general rate (25 %) on 200.000 EUR base must be 50.000 EUR"
+    )
+
+
+def test_cuota_integra_antitautology_manual_casilla_still_required() -> None:
+    """Anti-tautology: casilla 00501 (base pérdidas y ganancias) remains manual+required.
+
+    If the registry classification machinery were broken — e.g., every
+    casilla silently defaulted to ``input_kind = "computed"`` — the invariant
+    in ``test_cuota_integra_casilla_is_classified_computed_not_manual`` would
+    pass vacuously.  This probe verifies that a genuinely-manual required
+    casilla (``00501``, the pre-tax P&L result that operators must enter
+    from their accounts) still carries ``input_kind = "manual"`` and
+    ``required = True`` in the same snapshot.
+
+    If this test fails the classification machinery is broken and the
+    compute/manual distinction is unreliable across the entire revision.
+    """
+    parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
+    casilla = parameters_by_id.get("00501")
+    assert casilla is not None, (
+        "00501 must be declared in the 2024-y-siguientes revision; "
+        "if absent the snapshot failed to load the casilla TOML cluster"
+    )
+    assert casilla.input_kind == "manual", (
+        "00501 (resultado cuenta pérdidas y ganancias) must remain input_kind='manual'; "
+        "this is an operator-supplied figure from the company's accounts"
+    )
+    assert casilla.required is True, "00501 must remain required=true; the verify layer must still block on its absence"

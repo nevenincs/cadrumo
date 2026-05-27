@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 
 from ._schema import (
     CasillaDefinition,
@@ -13,6 +13,7 @@ from ._schema import (
     SourceReference,
 )
 from ._validate_evidence import EvidenceValidator
+from ._validate_helpers import _missing_refs
 
 
 def validate_export_layout_section(
@@ -146,11 +147,3 @@ def _validate_export_field(
             )
 
 
-def _missing_refs(
-    scope: str,
-    owner: str,
-    refs: Iterable[str],
-    catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
-    ref_kind: str,
-) -> list[str]:
-    return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]

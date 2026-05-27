@@ -37,11 +37,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -77,10 +76,16 @@ _TAUTOLOGY_CASILLA = "02"
 # ---------------------------------------------------------------------------
 
 
+def _payload(output: str) -> dict:
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for the compare verb regression test.
 
@@ -88,21 +93,11 @@ def runtime_profile(
     active bucket).  Extra env overrides provide non-bucket directories.
     """
 
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-
-    with isolated_runtime_profile(
+    with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="Modelo compare regression test profile",
     ) as profile:
-        dispose_engine(profile.settings)
         yield profile
 
 
@@ -149,7 +144,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, str]:
@@ -173,7 +168,7 @@ def _calculate_m130(work_unit_id: str, ingresos: str, gastos: str) -> dict[str, 
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    return dict(json.loads(result.output)["casilla_values"])
+    return dict(_payload(result.output)["casilla_values"])
 
 
 # ---------------------------------------------------------------------------
@@ -250,7 +245,7 @@ def test_modelo_compare_m130_two_year_delta_rows(
     assert compare_result.exit_code == 0, compare_result.output
     assert "Traceback" not in compare_result.output
 
-    payload = json.loads(compare_result.output)
+    payload = _payload(compare_result.output)
     assert payload["year_a"] == 2025
     assert payload["year_b"] == 2026
     assert payload["modelo"] == "130"

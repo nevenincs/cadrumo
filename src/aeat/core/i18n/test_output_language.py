@@ -7,6 +7,10 @@ from pathlib import Path
 
 import pytest
 
+from aeat.application.user_profile._orchestration import profile_create_storage_span
+from aeat.core.config import override_settings
+from aeat.tests.secure_sql import isolated_profile_storage_root
+
 from ._render import output_language
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -14,19 +18,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 @pytest.fixture
 def isolated_language_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
     monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
-    # Per-bucket storage: the seeded profile writes a bucket manifest,
-    # an encrypted record, and the active-profile pointer under the
-    # storage root — redirect it into tmp so the test stays isolated.
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'language.db').as_posix()}")
-    # The column-encrypt path requires an active bucket session even
-    # for seeding; an ephemeral provider supplies one for the test.
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("default"),
+    ):
         try:
             yield
         finally:
@@ -63,26 +62,22 @@ def test_output_language_reads_active_profile_without_emitting_bucket_events(
 
 def test_environment_output_language_override_wins_over_profile(
     isolated_language_state: None,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     del isolated_language_state
     _seed_profile_language("ca")
 
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-
-    assert output_language() == "en"
+    with override_settings(aeat_output_language="en"):
+        assert output_language() == "en"
 
 
 def test_environment_output_language_override_is_canonical(
     isolated_language_state: None,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     del isolated_language_state
     _seed_profile_language("ca")
 
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "es")
-
-    assert output_language() == "es"
+    with override_settings(aeat_output_language="es"):
+        assert output_language() == "es"
 
 
 def test_clean_install_defaults_to_spanish(isolated_language_state: None) -> None:

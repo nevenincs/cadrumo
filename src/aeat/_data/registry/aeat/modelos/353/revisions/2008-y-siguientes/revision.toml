@@ -1,0 +1,15 @@
+[revisions."2008-y-siguientes"]
+label = "Modelo 353 ejercicios 2008 y siguientes (Orden EHA/3434/2007 art 2 y 8)"
+valid_from = 2008-01-01
+period_selector = { year_from = 2008, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-353-2026",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+]
+

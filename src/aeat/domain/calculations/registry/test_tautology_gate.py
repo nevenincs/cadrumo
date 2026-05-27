@@ -389,6 +389,11 @@ _HAND_SUMMED_WAIVERS: frozenset[str] = frozenset(
         # the parser's sum-of-rows convenience field; asserting it
         # exercises parser aggregation, not a registry calc formula.
         "src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py::test_parse_iva_compensation_wallet_html_extracts_generation_rows_and_total",
+        # PDF parser extraction-fidelity test. Each Modelo 123 amount is
+        # read from a committed declaration fixture generated from the
+        # public record-design labels; the assertions pin parser field
+        # extraction, not a calculation or aggregation resolver.
+        "src/aeat/adapters/inbound/declaracion/test_parser_boundary.py::test_parser_extracts_modelo_123_2024_corpus_round_trip",
         # The 1200.00 target is a fixture INPUT (prior-303 compensation
         # balance + wallet pending amount), threaded through the engine
         # unchanged. The gate coincidentally matches 1000+200 (an

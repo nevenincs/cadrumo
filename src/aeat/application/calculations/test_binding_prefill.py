@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -22,7 +22,8 @@ from ...domain.calculations.registry import (
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ...tests.secure_sql import isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
-from ._binding_prefill import resolve_bindings_from_local_store
+from ._binding_prefill import extract_modelo_303_local_iva_compensation_recurrence, resolve_bindings_from_local_store
+from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
 from ._multi_year import PreviousFilingSourceResolver
 from ._observations_repository import CalculationObservationRepository
 
@@ -172,6 +173,8 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         assert source_resolution.owned_sources == ("previous_filing",)
         assert source_resolution.provenance
         assert all(item.source_kind == "previous_filing" for item in source_resolution.provenance)
+        assert prefill.prefilled
+        assert {item.source_kind for item in prefill.prefilled} == {"app_filing"}
         assert {item.source_periods for item in prefill.prefilled} >= {
             ("1T", "2T", "3T", "4T"),
             ("4T",),
@@ -186,3 +189,45 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         assert result.values["iva.anual.resultado-regimen-general"] == result.values[
             "iva.anual.reconciliacion.resultado-303"
         ]
+
+
+def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
+    tmp_path: Path,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        iva_history_repository = IvaCompensationHistoryRepository()
+        iva_history_repository.save_period(
+            IvaCompensationPeriodState(
+                taxpayer_nif="12345678Z",
+                filing_year=2025,
+                period="4T",
+                expediente_id="30320254T0000000000",
+                status="presentada",
+                presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
+                prior_pending_amount=Decimal("100.00"),
+                applied_amount=Decimal("25.00"),
+                pending_for_later_amount=Decimal("75.00"),
+                period_result_amount=Decimal("0.00"),
+                final_result_amount=Decimal("0.00"),
+                generated_amount=Decimal("0.00"),
+                available_end_amount=Decimal("75.00"),
+                source_observation_key="303:2025:4T:history-source",
+            )
+        )
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+
+        recurrence, report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=CalculationObservationRepository(),
+            iva_history_repository=iva_history_repository,
+            captured_at=datetime(2026, 4, 1, 8, 0, tzinfo=UTC),
+        )
+
+    assert recurrence is not None
+    assert recurrence.amount == Decimal("75.00")
+    assert recurrence.source_kind == "aeat_sede_iva_compensation_history"
+    assert recurrence.source_modelo == "303"
+    assert recurrence.source_filing_year == 2025
+    assert recurrence.source_periods == ("4T",)
+    assert report.prefilled
+    assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}

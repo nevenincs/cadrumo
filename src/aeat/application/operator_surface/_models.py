@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -222,7 +223,7 @@ class OperatorSurfaceLogFields(BaseModel):
     lifecycle: str
     source_kind_count: int
 
-    def as_extra(self) -> dict[str, object]:
+    def as_extra(self) -> Mapping[str, object]:
         """Return a logging ``extra`` payload with stable field names."""
 
         return {

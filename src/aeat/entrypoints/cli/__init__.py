@@ -21,14 +21,14 @@ from collections.abc import Callable
 import click
 import typer
 
-from ._stdio import configure_stdio_for_utf8
+from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 
 # Force UTF-8 on stdout / stderr before any echo, log, or Rich console
 # instantiation. Default Windows terminals expose cp1252; emoji,
 # CJK, the U+2192 arrow used by the review queue, and the § sign
 # in some VAT citations all crash typer.echo on cp1252. See
 # :mod:`._stdio` for the rationale.
-configure_stdio_for_utf8()
+_configure_stdio_for_utf8()
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr as _tr
 from ._command_suggestions import (

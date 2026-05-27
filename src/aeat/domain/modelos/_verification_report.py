@@ -105,6 +105,8 @@ class ModeloVerificationFinding(BaseModel):
     expectation_id: _CasillaRef | None = None
     message: _FindingMessage
     next_action: _FindingMessage | None = None
+    legal_refs: tuple[str, ...] = ()
+    source_refs: tuple[str, ...] = ()
 
 
 def derive_verification_report_id(

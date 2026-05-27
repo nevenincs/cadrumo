@@ -2,24 +2,22 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...application.workflow._models import resolve_active_bucket_id
-from ...core.config import override_settings
 from ...core.resources import resources
 from ...domain.user_profile import (
     ProfileNotFoundError,
     UserProfileFact,
     UserProfileStatus,
 )
-from ...tests.secure_sql import isolated_runtime_profile
+from ...tests.secure_sql import isolated_profile_storage_root
 from ..workflow._models import WorkflowState
 from ..workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
 from ._orchestration import (
+    profile_create_storage_span,
     read_active_profile,
     register_active_profile,
     remove_active_profile,
@@ -37,16 +35,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # any per-file fixture wiring here.
 
 
-@pytest.fixture
-def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
-    with (
-        isolated_runtime_profile(
-            tmp_path=tmp_path,
-            bucket_id="user-profile-orchestration-test",
-        ) as profile,
-        override_settings(aeat_active_profile=None),
-    ):
-        yield profile.repository
+@pytest.fixture(autouse=True)
+def _storage_root(tmp_path: Path):
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 @pytest.fixture(scope="module")
@@ -65,16 +57,17 @@ def _all_required_facts(schema) -> tuple[UserProfileFact, ...]:
     return tuple(facts)
 
 
-def test_register_active_profile_threads_state_and_emits_events(secure_objects, schema) -> None:
+def test_register_active_profile_threads_state_and_emits_events(schema) -> None:
     state = WorkflowState()
-    updated = register_active_profile(
-        state,
-        profile_id="default",
-        display_name="Default operator",
-        facts=_all_required_facts(schema),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
+    with profile_create_storage_span("default") as routing_profile_id:
+        updated = register_active_profile(
+            state,
+            profile_id="default",
+            display_name="Default operator",
+            facts=_all_required_facts(schema),
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
     assert resolve_active_bucket_id() == "default"
     # The bucket directory is named by the UUID identity ("default"
     # here); its manifest carries the decoupled operator label.
@@ -88,88 +81,90 @@ def test_register_active_profile_threads_state_and_emits_events(secure_objects, 
     assert actions == ("profile.created", "profile.selected", "profile.values.updated")
 
 
-def test_select_profile_refuses_when_missing(secure_objects, schema) -> None:
+def test_select_profile_refuses_when_missing(schema) -> None:
     state = WorkflowState()
     with pytest.raises(ProfileNotFoundError):
-        select_profile(state, profile_id="ghost", secure_objects=secure_objects, schema=schema)
+        select_profile(state, profile_id="ghost", schema=schema)
 
 
-def test_set_active_field_appends_workflow_event(secure_objects, schema) -> None:
+def test_set_active_field_appends_workflow_event(schema) -> None:
     state = WorkflowState()
-    state = register_active_profile(
-        state,
-        profile_id="default",
-        display_name="Default operator",
-        facts=_all_required_facts(schema),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    state = set_active_field(
-        state,
-        UserProfileFact(path="identity.email", value="op@example.test"),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    last_event = state.bucket_events[-1]
-    assert last_event.action == "profile.values.updated"
-    assert last_event.object_id == "identity.email"
+    with profile_create_storage_span("default") as routing_profile_id:
+        state = register_active_profile(
+            state,
+            profile_id="default",
+            display_name="Default operator",
+            facts=_all_required_facts(schema),
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
+        state = set_active_field(
+            state,
+            UserProfileFact(path="identity.email", value="op@example.test"),
+            schema=schema,
+        )
+        last_event = state.bucket_events[-1]
+        assert last_event.action == "profile.values.updated"
+        assert last_event.object_id == "identity.email"
 
-    state = set_active_field(
-        state,
-        UserProfileFact(path="identity.email", value=None),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    cleared = state.bucket_events[-1]
-    assert cleared.action == "profile.values.cleared"
+        state = set_active_field(
+            state,
+            UserProfileFact(path="identity.email", value=None),
+            schema=schema,
+        )
+        cleared = state.bucket_events[-1]
+        assert cleared.action == "profile.values.cleared"
 
 
-def test_set_active_fields_bulk_threads_each_workflow_event(secure_objects, schema) -> None:
+def test_set_active_fields_bulk_threads_each_workflow_event(schema) -> None:
     state = WorkflowState()
-    state = register_active_profile(
-        state,
-        profile_id="default",
-        display_name="Default operator",
-        facts=_all_required_facts(schema),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    bulk_facts = (
-        UserProfileFact(path="identity.email", value="a@example.test"),
-        UserProfileFact(path="identity.notes", value="freelance"),
-    )
-    state = set_active_fields(state, bulk_facts, secure_objects=secure_objects, schema=schema)
-    bulk_events = [e for e in state.bucket_events if e.object_id in {"identity.email", "identity.notes"}]
-    assert len(bulk_events) == 2
+    with profile_create_storage_span("default") as routing_profile_id:
+        state = register_active_profile(
+            state,
+            profile_id="default",
+            display_name="Default operator",
+            facts=_all_required_facts(schema),
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
+        bulk_facts = (
+            UserProfileFact(path="identity.email", value="a@example.test"),
+            UserProfileFact(path="identity.notes", value="freelance"),
+        )
+        state = set_active_fields(state, bulk_facts, schema=schema)
+        bulk_events = [e for e in state.bucket_events if e.object_id in {"identity.email", "identity.notes"}]
+        assert len(bulk_events) == 2
 
 
-def test_read_active_profile_returns_record(secure_objects, schema) -> None:
+def test_read_active_profile_returns_record(schema) -> None:
     state = WorkflowState()
-    state = register_active_profile(
-        state,
-        profile_id="default",
-        display_name="Default operator",
-        facts=_all_required_facts(schema),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    record = read_active_profile(state, secure_objects=secure_objects, schema=schema)
-    assert record is not None
-    assert record.profile_id == "default"
-    assert record.status is UserProfileStatus.ACTIVE
+    with profile_create_storage_span("default") as routing_profile_id:
+        state = register_active_profile(
+            state,
+            profile_id="default",
+            display_name="Default operator",
+            facts=_all_required_facts(schema),
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
+        record = read_active_profile(state, schema=schema)
+        assert record is not None
+        assert record.profile_id == "default"
+        assert record.status is UserProfileStatus.ACTIVE
 
 
-def test_remove_active_profile_tombstones_and_clears_pointer(secure_objects, schema) -> None:
+def test_remove_active_profile_tombstones_and_clears_pointer(schema) -> None:
     state = WorkflowState()
-    state = register_active_profile(
-        state,
-        profile_id="default",
-        display_name="Default operator",
-        facts=_all_required_facts(schema),
-        secure_objects=secure_objects,
-        schema=schema,
-    )
-    state = remove_active_profile(state, secure_objects=secure_objects, schema=schema)
+    with profile_create_storage_span("default") as routing_profile_id:
+        state = register_active_profile(
+            state,
+            profile_id="default",
+            display_name="Default operator",
+            facts=_all_required_facts(schema),
+            schema=schema,
+            routing_profile_id=routing_profile_id,
+        )
+        state = remove_active_profile(state, schema=schema)
     from aeat.application.workflow._models import resolve_active_bucket_id
 
     assert resolve_active_bucket_id() is None

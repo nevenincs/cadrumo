@@ -39,6 +39,37 @@ _log = get_logger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
+def _active_bucket_objects_or_default() -> SecureObjectRepository:
+    """Return a bucket-attached repository when an active profile bucket is present.
+
+    When an active profile bucket is available the repository is backed by
+    the bucket's own encrypted database, resolved through
+    :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
+    so the URL is derived from the live bucket path rather than the
+    settings-override snapshot captured at test-fixture construction time.
+    Falls back to the bare :class:`SecureObjectRepository` when no bucket
+    is active (bootstrap stage or no active profile).
+    """
+
+    from .....core._bucket_pointer_io import resolve_active_bucket_id
+
+    bucket_id = resolve_active_bucket_id()
+    if bucket_id is None:
+        return SecureObjectRepository()
+    try:
+        from ..runtime_repository import secure_object_repository_for_active_bucket
+
+        return secure_object_repository_for_active_bucket()
+    except Exception:
+        # Session not yet established or bucket repo unavailable; fall back
+        # to the bare repository so bootstrap-stage consumers still succeed.
+        _log.debug(
+            "_active_bucket_objects_or_default: bucket repo unavailable, falling back to default",
+            exc_info=True,
+        )
+        return SecureObjectRepository()
+
+
 class SecureBoundRepository(Generic[T]):
     """Generic repository over encrypted SQL-backed envelopes for one payload type.
 
@@ -70,7 +101,10 @@ class SecureBoundRepository(Generic[T]):
     payload_type: ClassVar[type[BaseModel]]
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+        if objects is not None:
+            self._objects = objects
+        else:
+            self._objects = _active_bucket_objects_or_default()
         cls = type(self)
         for attr in ("namespace", "payload_type", "sensitivity", "schema_version"):
             if not hasattr(cls, attr) or getattr(cls, attr, None) is None:

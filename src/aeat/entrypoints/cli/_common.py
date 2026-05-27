@@ -51,6 +51,45 @@ def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
         typer.echo(rendered.text)
 
 
+def _emit_envelope(
+    ctx: typer.Context,
+    *,
+    command: str,
+    result: object,
+    lines: Iterable[str],
+) -> None:
+    """Render a typed result through :class:`SchemaEnvelope` for JSON or as text lines.
+
+    The per-command incremental migration path ratified by the
+    linkage-design-audit ADR Decision 3 lifts emit sites from the
+    bare-payload :func:`_emit` shape to the envelope shape one verb at
+    a time. JSON mode goes through :func:`emit_json_success` so the
+    payload is wrapped in ``{"schema_version": ..., "command": ...,
+    "result": ..., "warnings": ...}``; text mode keeps the existing
+    line iterator unchanged so terminal output is unaffected.
+
+    Args:
+        ctx: Typer context (used to discover the requested output format).
+        command: Stable command path string (matches the
+            ``@register_schema(...)`` argument on the result model).
+        result: The strict-validated payload model to surface as
+            ``envelope.result``. Must be a pydantic model registered
+            under ``command`` so :data:`MIGRATED_COMMANDS` conformance
+            holds.
+        lines: Iterable of pre-formatted text lines (used unchanged
+            for text mode).
+    """
+
+    from ...core.json_contract import emit_json_success
+
+    if _format_of(ctx) == "json":
+        emit_json_success(command, result)
+        return
+    rendered_lines = list(lines)
+    if rendered_lines:
+        typer.echo("\n".join(rendered_lines))
+
+
 def _bad(message: str) -> typer.BadParameter:
     return typer.BadParameter(message)
 

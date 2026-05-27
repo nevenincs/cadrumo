@@ -49,6 +49,15 @@ class ObservationPayload(OutputSchema):
     source_refs: tuple[str, ...] = ()
 
 
+class ResultSummaryRowPayload(OutputSchema):
+    """One headline-result summary row (registry-declared lead figure)."""
+
+    role: str
+    casilla_id: str
+    value: str  # serialised Decimal
+    label: str
+
+
 class CalculationRevisionPayload(OutputSchema):
     """Calculation revision fields surfaced by calculate / revisions commands."""
 
@@ -57,6 +66,11 @@ class CalculationRevisionPayload(OutputSchema):
     state: str
     casilla_values: dict[str, str]  # casilla_id → str(Decimal)
     observations: tuple[ObservationPayload, ...]
+    # Registry-declared lead figures (result-to-pay / result-to-refund
+    # plus key computed casillas) surfaced above the full casilla table.
+    # Empty tuple when the modelo carries no summary mapping or the
+    # revision has no values to summarise.
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
     inputs_snapshot: dict[str, object]
     created_at: str
@@ -134,8 +148,17 @@ class FormulaPayload(OutputSchema):
 
 
 @register_schema("modelo.work.create")
+@register_schema("modelo.work.reuse")
 class WorkCreateResult(OutputSchema):
+    # ``operation`` is either ``modelo.work.create`` (a fresh unit was
+    # created) or ``modelo.work.reuse`` (an existing unit matching the
+    # natural-key tuple was returned unchanged); the same shape covers
+    # both lanes so the command surface keeps a single typed contract.
     operation: str = "modelo.work.create"
+    status: str
+    status_message: str
+    name_applied: str | None = None
+    applicability_guard_bypassed: bool
     work_unit_id: str
     bucket_id: str
     modelo: str
@@ -217,11 +240,16 @@ class WorkDiscardResult(OutputSchema):
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
     operation: str = "modelo.work.calculate"
+    # Persistence-confirmation pair surfaced by the calculate verb so JSON
+    # consumers see the same signal the text-mode confirmation line carries.
+    saved: bool = True
+    saved_confirmation: str
     calculation_revision_id: str
     work_unit_id: str
     state: str
     casilla_values: dict[str, str]
     observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
     inputs_snapshot: dict[str, object]
     created_at: str
@@ -231,6 +259,11 @@ class WorkCalculateResult(OutputSchema):
     filed_at: str | None = None
     filed_by: str | None = None
     superseded_at: str | None = None
+    # Modelo 202 pago-fraccionado modality (Art. 40.2 vs 40.3 lane).
+    # Populated only when the underlying work unit is modelo 202; other
+    # modelos leave these unset.
+    modality: str | None = None
+    modality_reason: str | None = None
 
 
 @register_schema("modelo.work.revisions")
@@ -239,6 +272,37 @@ class WorkRevisionsResult(OutputSchema):
     work_unit_id_filter: str | None = None
     revision_count: int
     revisions: list[CalculationRevisionPayload]
+
+
+@register_schema("modelo.work.revision")
+class WorkRevisionResult(OutputSchema):
+    """Single-revision shape returned by ``aeat app modelo work revision``.
+
+    Carries the same calculation-revision fields as
+    :class:`WorkCalculateResult` minus the persistence-confirmation
+    pair (``saved`` / ``saved_confirmation``). Modelo 202 modality
+    surfaces on the same optional fields so the inspection verb stays
+    contract-compatible with the calculate verb's output.
+    """
+
+    operation: str = "modelo.work.revision"
+    calculation_revision_id: str
+    work_unit_id: str
+    state: str
+    casilla_values: dict[str, str]
+    observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    binding_overrides: dict[str, str]
+    inputs_snapshot: dict[str, object]
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    verified_by: str | None = None
+    filed_at: str | None = None
+    filed_by: str | None = None
+    superseded_at: str | None = None
+    modality: str | None = None
+    modality_reason: str | None = None
 
 
 @register_schema("modelo.work.verify")
@@ -281,6 +345,8 @@ class WorkAmendResult(OutputSchema):
     operation: str = "modelo.work.amend"
     amendment_kind: str
     amends_filing_record_id: str
+    # amend uses the same filing-record body as work.file but always
+    # carries the amendment metadata pair above.
     filing_record_id: str
     work_unit_id: str
     calculation_revision_id: str

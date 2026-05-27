@@ -15,6 +15,7 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
 from ..categories import (
@@ -55,8 +56,8 @@ def usage_ratios_object_key(bucket_id: str) -> str:
 def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None = None) -> UsageRatioProfile:
     """Load one bucket's persisted usage-ratio profile, or return an empty one."""
 
-    repository = objects or SecureObjectRepository()
     object_key = usage_ratios_object_key(bucket_id)
+    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
     try:
         record = repository.load(
             _USAGE_RATIO_NAMESPACE,
@@ -82,6 +83,11 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         _LOGGER.error("usage-ratios object validation failed", exc_info=True)
         raise UsageRatioPersistenceError(
             f"invalid usage-ratio profile object\n{_summarise_validation_errors(exc)}"
+        ) from exc
+    except UnicodeDecodeError as exc:
+        _LOGGER.error("usage-ratios object payload is not UTF-8", exc_info=True)
+        raise UsageRatioPersistenceError(
+            f"invalid usage-ratio profile object\n  - payload: invalid UTF-8: {exc}"
         ) from exc
     except (ClassificationError, EnvelopeVersionError) as exc:
         _LOGGER.error("usage-ratios object integrity error", exc_info=True)
@@ -127,7 +133,7 @@ def save_usage_ratios(
         payload=profile,
     )
     object_key = usage_ratios_object_key(bucket_id)
-    repository = objects or SecureObjectRepository()
+    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
     try:
         repository.save(
             namespace=_USAGE_RATIO_NAMESPACE,

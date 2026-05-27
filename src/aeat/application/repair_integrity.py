@@ -42,7 +42,10 @@ from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
 )
+from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck
+
+_log = get_logger(__name__)
 
 _REPAIR_DECISION_NAMESPACE = "aeat.application.repair_integrity.decisions"
 """Profile-local secure-object namespace for repair-remediation decisions.
@@ -87,6 +90,12 @@ class RepairListRow(BaseModel):
 
     namespace: str = Field(min_length=1)
     object_key_digest: str = Field(min_length=1)
+    readable: bool | None = None
+    row_id: int | None = Field(default=None, ge=0)
+    classification: str | None = None
+    schema_version: int | None = Field(default=None, ge=1)
+    written_at: datetime | None = None
+    reason: str | None = None
 
 
 class RepairListReport(BaseModel):
@@ -293,7 +302,9 @@ def repair_remediation_decision_id(
         "reason": reason.strip(),
         "likely_origin": likely_origin.strip(),
         "replacement_evidence_requirements": tuple(sorted(item.strip() for item in replacement_evidence_requirements)),
-        "verified_replacement_evidence_refs": tuple(sorted(item.strip() for item in verified_replacement_evidence_refs)),
+        "verified_replacement_evidence_refs": tuple(
+            sorted(item.strip() for item in verified_replacement_evidence_refs)
+        ),
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
@@ -359,7 +370,8 @@ class RepairRemediationDecisionRepository:
         for key in keys:
             try:
                 decisions.append(self.load_decision(key))
-            except Exception:
+            except Exception as exc:
+                _log.debug("skipping unreadable repair decision %s: %s", key, type(exc).__name__)
                 continue
         return tuple(sorted(decisions, key=lambda d: d.decided_at, reverse=True))
 

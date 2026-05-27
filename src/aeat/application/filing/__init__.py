@@ -7,16 +7,16 @@ from datetime import date
 from decimal import Decimal, InvalidOperation
 from functools import lru_cache
 
-from ...core._time import utc_now
-from ...core.errors import BaseSeverity
-from ...core.resources import resources
+from ...core._time import utc_now as _utc_now
+from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
-    RegistrySnapshot,
-    RegistrySnapshotError,
-    RegistrySnapshotRef,
-    RegistryValidationError,
-    calculate_registry_snapshot,
-    enum_consumed_binding_ids,
+    RegistrySnapshot as _RegistrySnapshot,
+    RegistrySnapshotError as _RegistrySnapshotError,
+    RegistrySnapshotRef as _RegistrySnapshotRef,
+    RegistryValidationError as _RegistryValidationError,
+    calculate_registry_snapshot as _calculate_registry_snapshot,
+    enum_consumed_binding_ids as _enum_consumed_binding_ids,
 )
 from ...domain.filing import (
     APPROVAL_BASIS_VERSION,
@@ -56,9 +56,9 @@ from ...domain.filing import (
     make_amendment_id,
 )
 from ...domain.period import (
-    PeriodValidationError,
-    parse_canonical_period,
-    period_end_date,
+    PeriodValidationError as _PeriodValidationError,
+    parse_canonical_period as _parse_canonical_period,
+    period_end_date as _period_end_date,
 )
 from ._calculate import (
     DeclaracionCalculateNextAction,
@@ -123,7 +123,7 @@ def build_draft(
 
     snapshot = _load_registry_snapshot(modelo=modelo, period=period)
     filing_year, registry_period = _registry_period(period)
-    snapshot_ref = RegistrySnapshotRef(
+    snapshot_ref = _RegistrySnapshotRef(
         modelo=snapshot.modelo.id,
         revision_id=snapshot.revision.id,
         modelo_year=filing_year,
@@ -138,21 +138,21 @@ def build_draft(
     casilla_ids = {casilla.id for casilla in snapshot.revision.casillas}
     bindings = {binding.id: binding for binding in snapshot.revision.bindings}
     calculation_binding_ids = _formula_binding_ids(snapshot) | _bound_casilla_binding_ids(snapshot)
-    enum_binding_ids = enum_consumed_binding_ids(snapshot.revision)
+    enum_binding_ids = _enum_consumed_binding_ids(snapshot.revision)
     decimal_binding_ids = calculation_binding_ids - enum_binding_ids
     casilla_inputs = _decimal_inputs_for_ids(inputs, casilla_ids)
     binding_inputs = _decimal_inputs_for_ids(inputs, decimal_binding_ids)
     enum_binding_inputs = _string_inputs_for_ids(inputs, enum_binding_ids)
     filing_binding_values = _filing_binding_values(inputs, bindings, enum_binding_ids)
     try:
-        result = calculate_registry_snapshot(
+        result = _calculate_registry_snapshot(
             snapshot,
             inputs=casilla_inputs,
             date_context={"filing_period": _filing_period_date(period)},
             binding_values=binding_inputs,
             enum_binding_values=enum_binding_inputs or None,
         )
-    except RegistryValidationError as exc:
+    except _RegistryValidationError as exc:
         raise ModeloBuilderError(f"registry calculation failed: {exc}") from exc
     entries = {entry.target: entry for entry in result.entries}
     schema_ids = {casilla.id for casilla in collection.all()}
@@ -201,7 +201,7 @@ def build_draft(
                 source="registry schema",
             )
         )
-    created_at = utc_now()
+    created_at = _utc_now()
     value_tuple = tuple(sorted(values, key=lambda value: value.casilla_id))
     binding_value_tuple = tuple(sorted(filing_binding_values, key=lambda value: value.binding_id))
     casilla_provenance = tuple(
@@ -247,16 +247,16 @@ def build_draft(
 
 
 @lru_cache(maxsize=128)
-def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
+def _load_registry_snapshot(*, modelo: str, period: str) -> _RegistrySnapshot:
     filing_year, registry_period = _registry_period(period)
     try:
-        authority = resources().modelos.authority
+        authority = _resources().modelos.authority
         return authority.snapshot(
             modelo,
             filing_year=filing_year,
             period=registry_period,
         )
-    except RegistrySnapshotError as exc:
+    except _RegistrySnapshotError as exc:
         raise ModeloBuilderError(
             f"registry snapshot is not available for modelo={modelo} period={period}: {exc}"
         ) from exc
@@ -264,24 +264,24 @@ def _load_registry_snapshot(*, modelo: str, period: str) -> RegistrySnapshot:
 
 def _registry_period(period: str) -> tuple[int, str]:
     try:
-        return parse_canonical_period(period)
-    except PeriodValidationError as exc:
+        return _parse_canonical_period(period)
+    except _PeriodValidationError as exc:
         raise ModeloBuilderError(str(exc)) from exc
 
 
 def _filing_period_date(period: str) -> date:
     filing_year, registry_period = _registry_period(period)
-    return period_end_date(filing_year, registry_period)
+    return _period_end_date(filing_year, registry_period)
 
 
-def _formula_binding_ids(snapshot: RegistrySnapshot) -> set[str]:
+def _formula_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     binding_ids: set[str] = set()
     for formula in snapshot.revision.formulas:
         _collect_formula_binding_ids(formula.expression, binding_ids)
     return binding_ids
 
 
-def _bound_casilla_binding_ids(snapshot: RegistrySnapshot) -> set[str]:
+def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     return {
         casilla.binding
         for casilla in snapshot.revision.casillas
@@ -330,7 +330,7 @@ def _filing_binding_values(
     values: list[ModeloBindingValue] = []
     for binding_id, binding in bindings.items():
         if binding_id in enum_binding_ids:
-            # Enum-channel bindings flow through calculate_registry_snapshot's
+            # Enum-channel bindings flow through _calculate_registry_snapshot's
             # enum_binding_values parameter; they carry no fichero-BOE addressing
             # and must not be coerced to Decimal here.
             continue
@@ -473,9 +473,9 @@ def validate_draft(
 
 
 _SEVERITY_RANK: dict[str, int] = {
-    BaseSeverity.INFO: 0,
-    BaseSeverity.WARNING: 1,
-    BaseSeverity.ERROR: 2,
+    _BaseSeverity.INFO: 0,
+    _BaseSeverity.WARNING: 1,
+    _BaseSeverity.ERROR: 2,
 }
 
 
@@ -501,7 +501,7 @@ def iter_findings(
             severity name.
     """
     try:
-        threshold = _SEVERITY_RANK[BaseSeverity[severity_at_least]]
+        threshold = _SEVERITY_RANK[_BaseSeverity[severity_at_least]]
     except KeyError as exc:
         raise ModeloCalculateError(f"Unknown severity {severity_at_least!r}; expected INFO, WARNING, or ERROR") from exc
     for finding in draft.findings:

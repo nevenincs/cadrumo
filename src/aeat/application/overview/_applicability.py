@@ -10,7 +10,7 @@ correct hexagonal layer.
 
 from __future__ import annotations
 
-from aeat.domain.calculations.registry._applicability import (
+from aeat.domain.calculations.registry import (
     _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
     _INCOMPLETE_LEGAL_REFS,
     _INCOMPLETE_UNDECLARED_REASON,

@@ -28,8 +28,21 @@ if TYPE_CHECKING:
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
+_AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
+    {
+        "aeat_sede_justificante",
+        "aeat_sede_iva_compensation_history",
+        "filed_history_observation",
+    }
+)
 
-type IvaCompensationAuthority = Literal["aeat_wallet", "taxpayer_override", "local_recurrence", "missing"]
+type IvaCompensationAuthority = Literal[
+    "aeat_wallet",
+    "taxpayer_override",
+    "filed_history",
+    "local_recurrence",
+    "missing",
+]
 type IvaCompensationAuthoritySourceKind = Literal[
     "aeat_wallet",
     "local_recurrence",
@@ -42,6 +55,7 @@ type IvaCompensationDivergence = Literal[
     "wallet_higher",
     "wallet_lower",
     "wallet_missing",
+    "filed_history_only",
     "wallet_stale",
     "override",
     "missing",
@@ -301,6 +315,27 @@ def reconcile_iva_compensation_wallet(
                 authority_sources=authority_sources,
                 decided_at=when,
             )
+        if _is_filed_history_source(local_recurrence_source):
+            return IvaCompensationReconciliationDecision(
+                taxpayer_nif=taxpayer_nif,
+                target_year=target_year,
+                target_period=target_period,
+                selected_authority="filed_history",
+                selected_amount=local_recurrence_amount,
+                wallet_amount=None,
+                local_recurrence_amount=local_recurrence_amount,
+                override_amount=None,
+                divergence="filed_history_only",
+                blocked=False,
+                stale_wallet=False,
+                reason=(
+                    "Direct AEAT wallet/cartera evidence is unavailable; using AEAT filed-history-derived "
+                    "recurrence as an explicit filed-history-only authority."
+                ),
+                wallet_captured_at=None,
+                authority_sources=authority_sources,
+                decided_at=when,
+            )
         return IvaCompensationReconciliationDecision(
             taxpayer_nif=taxpayer_nif,
             target_year=target_year,
@@ -442,28 +477,19 @@ def _authority_sources(
             amount=local_recurrence_amount,
             source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
         )
-        sources.append(recurrence_source)
-        if (
-            recurrence_source.source_kind == "local_recurrence"
-            and recurrence_source.source_modelo is not None
-            and recurrence_source.source_filing_year is not None
-            and recurrence_source.source_periods
-        ):
+        if recurrence_source.source_kind == "filed_history_observation":
             sources.append(
                 IvaCompensationAuthoritySource(
-                    source_kind="filed_history_observation",
+                    source_kind="local_recurrence",
                     amount=local_recurrence_amount,
-                    source_locator=(
-                        f"{recurrence_source.source_modelo}:"
-                        f"{recurrence_source.source_filing_year}:"
-                        f"{','.join(recurrence_source.source_periods)}"
-                    ),
+                    source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
                     captured_at=recurrence_source.captured_at,
                     source_modelo=recurrence_source.source_modelo,
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
                 )
-            )
+        )
+        sources.append(recurrence_source)
     if override is not None:
         sources.append(
             IvaCompensationAuthoritySource(
@@ -474,6 +500,10 @@ def _authority_sources(
             )
         )
     return tuple(sources)
+
+
+def _is_filed_history_source(source: IvaCompensationAuthoritySource | None) -> bool:
+    return source is not None and source.source_kind == "filed_history_observation"
 
 
 def _local_recurrence_authority_source(
@@ -487,8 +517,13 @@ def _local_recurrence_authority_source(
     source_filing_year = int(recurrence.source_filing_year)
     source_periods = tuple(str(item) for item in recurrence.source_periods)
     resolved_at = recurrence.resolved_at
+    source_kind: IvaCompensationAuthoritySourceKind = (
+        "filed_history_observation"
+        if recurrence.source_kind in _AEAT_FILED_HISTORY_SOURCE_KINDS
+        else "local_recurrence"
+    )
     return IvaCompensationAuthoritySource(
-        source_kind="local_recurrence",
+        source_kind=source_kind,
         amount=amount,
         source_locator=f"binding:{binding_id}",
         captured_at=resolved_at,

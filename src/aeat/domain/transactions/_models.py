@@ -31,6 +31,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serial
 from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
+from ..iva._schema import EUMemberState, IvaCategory
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -265,6 +266,8 @@ _TRANSACTION_DECIMAL_KEYS: tuple[str, ...] = (
     "iva_rate",
     "iva_amount",
     "classification_confidence",
+    "fx_rate",
+    "value_in_eur",
 )
 _TRANSACTION_COLLECTION_KEYS: tuple[str, ...] = (
     "evidence_provenance",
@@ -279,6 +282,8 @@ def _coerce_transaction_enum_fields(payload: dict[str, object]) -> None:
         ("direction", TransactionDirection),
         ("business_classification", BusinessClassification),
         ("lifecycle_state", TransactionLifecycleState),
+        ("iva_category", IvaCategory),
+        ("counterparty_eu_member_state", EUMemberState),
     )
     for key, enum_cls in enum_coercers:
         value = payload.get(key)
@@ -723,6 +728,33 @@ class Transaction(BaseModel):
             the active decision.
         classification_history: Tuple of historical
             :class:`ClassificationHistoryEntry` records, oldest first.
+        iva_category: Explicit IVA category override.  When set the
+            aggregation layer uses this value in place of the
+            rate-kind-derived domestic category, enabling non-domestic
+            categories (intra-community, export, non-subject) to be
+            expressed without a synthetic rate.  ``None`` for
+            transactions where the standard domestic rate derivation
+            is sufficient.
+        counterparty_eu_member_state: ISO 3166-1 alpha-2 EU member
+            state of the counterparty.  Required by the aggregation
+            gate when ``iva_category`` is
+            :attr:`IvaCategory.INTRA_COMMUNITY_SUPPLY`; rejected
+            when the category is
+            :attr:`IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED`.
+            ``None`` otherwise.
+        fx_rate: ECB reference rate applied at import time to convert
+            ``raw.amount`` from ``raw.currency`` to EUR.  The rate is
+            expressed as a multiplier: ``raw.amount * fx_rate =
+            value_in_eur``.  ``None`` when the native currency is EUR
+            or when the rate was unavailable at import time.
+        value_in_eur: Pre-converted EUR-equivalent of ``raw.amount``
+            computed at import time as ``raw.amount * fx_rate``,
+            rounded to two decimal places.  Aggregation layers use
+            this field in place of ``raw.amount`` for non-EUR
+            transactions, making casilla sums deterministic and
+            independent of rate changes after the import date.
+            ``None`` when the native currency is EUR or when no rate
+            was available.
     """
 
     model_config = _STRICT_FROZEN
@@ -757,6 +789,10 @@ class Transaction(BaseModel):
     classification_reason: str = ""
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
+    iva_category: IvaCategory | None = None
+    counterparty_eu_member_state: EUMemberState | None = None
+    fx_rate: Decimal | None = None
+    value_in_eur: Decimal | None = None
 
     @model_validator(mode="before")
     @classmethod
@@ -844,10 +880,37 @@ class Transaction(BaseModel):
         """Restrict classification_confidence to the inclusive 0..1 range when not None."""
         return _validate_confidence_range(value)
 
+    @field_validator("fx_rate", "value_in_eur")
+    @classmethod
+    def _validate_fx_fields(cls, value: Decimal | None, info: core_schema.ValidationInfo) -> Decimal | None:
+        """Reject negative FX rate or converted amounts."""
+        return _validate_non_negative_decimal(value, field_name=info.field_name or "")
+
     @model_validator(mode="after")
     def _enforce_business_pct(self) -> Self:
         """Enforce the classification/business percentage coupling."""
         _validate_business_pct_coupling(self.business_classification, self.business_pct)
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_fx_coupling(self) -> Self:
+        """Enforce that fx_rate and value_in_eur are both set or both absent.
+
+        A non-EUR transaction may carry neither (rate unavailable at import)
+        but must never carry only one of the pair, which would signal a
+        partially-applied conversion.  EUR-native transactions must have
+        both fields absent.
+        """
+        fx_set = self.fx_rate is not None
+        eur_set = self.value_in_eur is not None
+        if fx_set != eur_set:
+            raise TransactionValidationError(
+                "fx_rate and value_in_eur must both be set or both be absent"
+            )
+        if self.raw.currency == "EUR" and (fx_set or eur_set):
+            raise TransactionValidationError(
+                "fx_rate and value_in_eur must be absent for EUR-native transactions"
+            )
         return self
 
 

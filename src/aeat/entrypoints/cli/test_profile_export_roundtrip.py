@@ -60,7 +60,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
     from aeat.application.modelo._actions import create_work_unit
     from aeat.core._bucket_pointer_io import resolve_active_bucket_id
     from aeat.core.config import override_settings
-    from aeat.domain.calculations.registry._bindings import CasillaObservation
+    from aeat.domain.calculations.registry import CasillaObservation
     from aeat.domain.modelos._calculation_repository import (
         CalculationRevisionCatalogueRepository,
         upsert_calculation_revision,

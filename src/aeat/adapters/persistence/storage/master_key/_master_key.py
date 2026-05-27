@@ -1022,15 +1022,37 @@ def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
 
 
 def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
-    """Return the bucket's key schedule, or ``None`` when no manifest exists."""
+    """Return the bucket's key schedule, or ``None`` when no manifest exists.
+
+    Tolerates a manifest that is missing the ``status`` field (legacy format
+    before lifecycle-status was introduced) so that a session can still be
+    opened to allow the repair command to backfill the missing field.
+    """
 
     from ..bucket._layout import bucket_paths
     from ..bucket._manifest_io import read_manifest
+    from ..errors import StorageValidationError
 
     try:
         return read_manifest(bucket_paths(storage_root, bucket_id)).key_schedule
     except FileNotFoundError:
         return None
+    except StorageValidationError as exc:
+        if "missing required lifecycle status" in str(exc):
+            # Legacy manifest without status; parse key_schedule directly so
+            # the session can open and the repair command can backfill status.
+            import tomllib
+
+            from ..bucket._layout import bucket_paths as _bp
+            from ..bucket._manifest import BucketKeySchedule
+            from ..bucket._manifest_io import manifest_path
+
+            paths = _bp(storage_root, bucket_id)
+            payload: dict[str, object] = dict(tomllib.loads(manifest_path(paths).read_text(encoding="utf-8")))
+            raw = payload.get("key_schedule")
+            if raw is not None:
+                return BucketKeySchedule(str(raw))
+        raise
 
 
 def _wrapped_dek_from_document(document: _WrappedBucketDekDocument):

@@ -10,41 +10,41 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from ...adapters.outbound.aeat.auth import AeatSession
+from ...adapters.outbound.aeat.auth import AeatSession as _AeatSession
 from ...adapters.outbound.aeat.sede import (
-    PRE303_PRESENTATION_SERVICE_URL,
-    Declaracion,
-    FiledDeclaracionObservation,
-    FiledDeclaracionObservationStore,
-    IvaCompensationWalletObservation,
-    SedeParseError,
-    capture_previous_filing_observations,
-    capture_relation_source_observations,
-    fetch_iva_compensation_wallet,
-    open_declarations_register,
-    registry_observation_from_filed_declaration,
-    shared_playwright,
+    PRE303_PRESENTATION_SERVICE_URL as _PRE303_PRESENTATION_SERVICE_URL,
+    Declaracion as _Declaracion,
+    FiledDeclaracionObservation as _FiledDeclaracionObservation,
+    FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
+    IvaCompensationWalletObservation as _IvaCompensationWalletObservation,
+    SedeParseError as _SedeParseError,
+    capture_previous_filing_observations as _capture_previous_filing_observations,
+    capture_relation_source_observations as _capture_relation_source_observations,
+    fetch_iva_compensation_wallet as _fetch_iva_compensation_wallet,
+    open_declarations_register as _open_declarations_register,
+    registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
+    shared_playwright as _shared_playwright,
 )
-from ...application.auth import ensure_authenticated_aeat_session
+from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import (
-    CalculationObservationRepository,
-    IvaCompensationAuthoritySource,
-    IvaCompensationCarryForwardLot,
-    IvaCompensationHistoryRepository,
-    IvaCompensationPeriodState,
-    IvaCompensationReconciliationDecision,
-    IvaWalletDecisionRepository,
-    build_iva_compensation_carry_forward_report,
-    iva_compensation_state_from_filed_observation,
-    iva_wallet_decision_key,
-    observation_key,
-    reconcile_modelo_303_iva_compensation,
+    CalculationObservationRepository as _CalculationObservationRepository,
+    IvaCompensationAuthoritySource as _IvaCompensationAuthoritySource,
+    IvaCompensationCarryForwardLot as _IvaCompensationCarryForwardLot,
+    IvaCompensationHistoryRepository as _IvaCompensationHistoryRepository,
+    IvaCompensationPeriodState as _IvaCompensationPeriodState,
+    IvaCompensationReconciliationDecision as _IvaCompensationReconciliationDecision,
+    IvaWalletDecisionRepository as _IvaWalletDecisionRepository,
+    build_iva_compensation_carry_forward_report as _build_iva_compensation_carry_forward_report,
+    iva_compensation_state_from_filed_observation as _iva_compensation_state_from_filed_observation,
+    iva_wallet_decision_key as _iva_wallet_decision_key,
+    observation_key as _observation_key,
+    reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
 )
-from ...core.access_gate import AeatAccessGate
-from ...core.config import Settings, load_settings
-from ...core.resources import bundled_path, resources
-from ...domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ...domain.calculations.registry._authority import ValidatedRegistryAuthority
+from ...core.access_gate import AeatAccessGate as _AeatAccessGate
+from ...core.config import Settings as _Settings, load_settings as _load_settings
+from ...core.resources import bundled_path as _bundled_path, resources as _resources
+from ...domain.calculations.registry import CasillaObservation as _CasillaObservation, RegistryModeloObservation as _RegistryModeloObservation
+from ...domain.calculations.registry._authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
@@ -291,12 +291,12 @@ class FiledDataListingReport(BaseModel):
 
 
 def select_declarations_for_capture(
-    declarations: tuple[Declaracion, ...],
+    declarations: tuple[_Declaracion, ...],
     *,
     period: str | None = None,
     expediente_id: str | None = None,
     limit: int | None = None,
-) -> tuple[Declaracion, ...]:
+) -> tuple[_Declaracion, ...]:
     """Select filed-declaration rows for capture from one register query."""
 
     selected = declarations
@@ -311,7 +311,7 @@ def select_declarations_for_capture(
     return selected
 
 
-def filed_data_listing_row(declaration: Declaracion) -> FiledDataListingRow:
+def filed_data_listing_row(declaration: _Declaracion) -> FiledDataListingRow:
     """Map one AEAT declaration-register row into the application report shape."""
 
     return FiledDataListingRow(
@@ -343,8 +343,8 @@ async def list_filed_data(
     session, settings = await _active_verified_session()
     rows: list[FiledDataListingRow] = []
     async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(
             session,
             settings=settings,
             playwright=playwright,
@@ -377,15 +377,15 @@ async def capture_filed_data(
     """Capture filed-declaration artefacts through the active AEAT session."""
 
     session, _settings = await _active_verified_session()
-    store = FiledDeclaracionObservationStore(output_root)
+    store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
+    observations_for_calculation: list[_FiledDeclaracionObservation] = []
     casilla_count = 0
 
     async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(
             session,
             playwright=playwright,
         ) as register,
@@ -442,31 +442,31 @@ async def capture_source_filed_data(
 ) -> SourceFiledDataCaptureReport:
     """Capture filed observations required by a target filing's registry dependencies."""
 
-    from ...core.resources import resources
+    from ...core.resources import resources as _resources
 
     session, settings = await _active_verified_session()
     if registry_root is None and source_root is None:
-        authority = resources().modelos.authority
+        authority = _resources().modelos.authority
     else:
-        authority = ValidatedRegistryAuthority.load(
-            registry_root or bundled_path("registry", "aeat"),
-            source_root=source_root or bundled_path(),
+        authority = _ValidatedRegistryAuthority.load(
+            registry_root or _bundled_path("registry", "aeat"),
+            source_root=source_root or _bundled_path(),
         )
     snapshot = authority.snapshot(
         modelo,
         filing_year=year,
         period=period,
     )
-    store = FiledDeclaracionObservationStore(output_root)
+    store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
+    observations_for_calculation: list[_FiledDeclaracionObservation] = []
     casilla_count = 0
     seen: set[tuple[str, int, str, str]] = set()
 
-    async with shared_playwright(session) as playwright:
+    async with _shared_playwright(session) as playwright:
         observations = (
-            await capture_previous_filing_observations(
+            await _capture_previous_filing_observations(
                 session,
                 snapshot.revision,
                 filing_year=year,
@@ -476,7 +476,7 @@ async def capture_source_filed_data(
                 artefact_sink=store.persist_artefact,
             )
         ) + (
-            await capture_relation_source_observations(
+            await _capture_relation_source_observations(
                 session,
                 snapshot.revision,
                 filing_year=year,
@@ -526,41 +526,41 @@ def _capture_report_path(path: Path, *, output_root: Path) -> str:
 
 
 def persist_filed_calculation_observation(
-    observation: FiledDeclaracionObservation,
+    observation: _FiledDeclaracionObservation,
     *,
-    repository: CalculationObservationRepository | None = None,
+    repository: _CalculationObservationRepository | None = None,
 ) -> str:
     """Promote one AEAT filed-declaration observation into calculation history."""
 
-    registry_observation = registry_observation_from_filed_declaration(observation)
+    registry_observation = _registry_observation_from_filed_declaration(observation)
     registry_observation = _with_derived_303_compensation_available(registry_observation)
-    repo = repository if repository is not None else CalculationObservationRepository()
+    repo = repository if repository is not None else _CalculationObservationRepository()
     repo.save_observation(
         registry_observation,
         source_kind="aeat_sede_justificante",
         captured_at=observation.presented_at,
     )
     if observation.modelo == "303":
-        IvaCompensationHistoryRepository().save_period(
-            iva_compensation_state_from_filed_observation(observation)
+        _IvaCompensationHistoryRepository().save_period(
+            _iva_compensation_state_from_filed_observation(observation)
         )
-    return observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
+    return _observation_key(registry_observation.modelo, registry_observation.filing_year, registry_observation.period)
 
 
 def list_iva_compensation_history(
     *,
-    repository: IvaCompensationHistoryRepository | None = None,
-    decision_repository: IvaWalletDecisionRepository | None = None,
+    repository: _IvaCompensationHistoryRepository | None = None,
+    decision_repository: _IvaWalletDecisionRepository | None = None,
     as_of_year: int | None = None,
 ) -> IvaCompensationHistoryReport:
     """List profile-local IVA compensation history derived from filed Modelo 303 observations."""
 
-    repo = repository if repository is not None else IvaCompensationHistoryRepository()
-    decision_repo = decision_repository if decision_repository is not None else IvaWalletDecisionRepository()
+    repo = repository if repository is not None else _IvaCompensationHistoryRepository()
+    decision_repo = decision_repository if decision_repository is not None else _IvaWalletDecisionRepository()
     states = repo.list_periods()
     rows = tuple(_history_row(state) for state in states)
     resolved_as_of_year = as_of_year if as_of_year is not None else datetime.now(UTC).year
-    carry_forward = build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
+    carry_forward = _build_iva_compensation_carry_forward_report(states, as_of_year=resolved_as_of_year)
     authority_decisions = tuple(_authority_decision_row(decision) for decision in decision_repo.list_decisions())
     return IvaCompensationHistoryReport(
         row_count=len(rows),
@@ -596,24 +596,24 @@ async def capture_iva_compensation_history(
 
 
 async def _capture_iva_compensation_history_with_session(
-    session: AeatSession,
+    session: _AeatSession,
     *,
-    settings: Settings,
+    settings: _Settings,
     year_from: int,
     year_to: int,
     output_root: Path,
 ) -> IvaCompensationHistoryCaptureReport:
     """Capture filed Modelo 303s using an already-acquired AEAT session."""
 
-    store = FiledDeclaracionObservationStore(output_root)
+    store = _FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
+    observations_for_calculation: list[_FiledDeclaracionObservation] = []
     casilla_count = 0
 
     async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(
             session,
             settings=settings,
             playwright=playwright,
@@ -657,7 +657,7 @@ async def _capture_iva_compensation_history_with_session(
     )
 
 
-def _history_row(state: IvaCompensationPeriodState) -> IvaCompensationHistoryRow:
+def _history_row(state: _IvaCompensationPeriodState) -> IvaCompensationHistoryRow:
     return IvaCompensationHistoryRow(
         year=state.filing_year,
         period=state.period,
@@ -673,7 +673,7 @@ def _history_row(state: IvaCompensationPeriodState) -> IvaCompensationHistoryRow
     )
 
 
-def _carry_forward_lot_row(lot: IvaCompensationCarryForwardLot) -> IvaCompensationCarryForwardLotRow:
+def _carry_forward_lot_row(lot: _IvaCompensationCarryForwardLot) -> IvaCompensationCarryForwardLotRow:
     return IvaCompensationCarryForwardLotRow(
         taxpayer_ref=_taxpayer_ref(lot.taxpayer_nif),
         source_filing_year=lot.source_filing_year,
@@ -687,7 +687,7 @@ def _carry_forward_lot_row(lot: IvaCompensationCarryForwardLot) -> IvaCompensati
     )
 
 
-def _authority_decision_row(decision: IvaCompensationReconciliationDecision) -> IvaWalletAuthorityDecisionRow:
+def _authority_decision_row(decision: _IvaCompensationReconciliationDecision) -> IvaWalletAuthorityDecisionRow:
     return IvaWalletAuthorityDecisionRow(
         taxpayer_ref=_taxpayer_ref(decision.taxpayer_nif),
         target_year=decision.target_year,
@@ -707,7 +707,7 @@ def _authority_decision_row(decision: IvaCompensationReconciliationDecision) -> 
     )
 
 
-def _authority_source_text(source: IvaCompensationAuthoritySource) -> str:
+def _authority_source_text(source: _IvaCompensationAuthoritySource) -> str:
     parts = [str(source.source_kind)]
     if source.source_modelo is not None:
         parts.append(f"modelo={source.source_modelo}")
@@ -731,11 +731,11 @@ def _taxpayer_ref(taxpayer_nif: str) -> str:
 
 
 def _persist_latest_filed_calculation_observations(
-    observations: tuple[FiledDeclaracionObservation, ...],
+    observations: tuple[_FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist only the latest captured observation per modelo/year/period."""
 
-    latest: dict[tuple[str, int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[str, int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         key = (observation.modelo, observation.ejercicio, observation.period)
         current = latest.get(key)
@@ -752,11 +752,11 @@ def _persist_latest_filed_calculation_observations(
 
 
 def _persist_iva_compensation_history_observations_strict(
-    observations: tuple[FiledDeclaracionObservation, ...],
+    observations: tuple[_FiledDeclaracionObservation, ...],
 ) -> tuple[str, ...]:
     """Persist latest Modelo 303 observations and verify each history row reloads."""
 
-    latest: dict[tuple[int, str], FiledDeclaracionObservation] = {}
+    latest: dict[tuple[int, str], _FiledDeclaracionObservation] = {}
     for observation in observations:
         if observation.modelo != "303":
             raise LiveApplicationInputError("IVA compensation history capture only accepts Modelo 303 observations")
@@ -769,11 +769,11 @@ def _persist_iva_compensation_history_observations_strict(
             latest[key] = observation
 
     keys: list[str] = []
-    history_repo = IvaCompensationHistoryRepository()
+    history_repo = _IvaCompensationHistoryRepository()
     for (_year, _period), observation in sorted(latest.items()):
         try:
             key = persist_filed_calculation_observation(observation)
-        except SedeParseError as exc:
+        except _SedeParseError as exc:
             raise LiveApplicationError(
                 f"filed Modelo 303 {observation.ejercicio}/{observation.period} "
                 "could not be promoted into IVA compensation history"
@@ -787,10 +787,10 @@ def _persist_iva_compensation_history_observations_strict(
     return tuple(keys)
 
 
-def _latest_declarations_by_period(declarations: tuple[Declaracion, ...]) -> tuple[Declaracion, ...]:
+def _latest_declarations_by_period(declarations: tuple[_Declaracion, ...]) -> tuple[_Declaracion, ...]:
     """Return one latest accepted declaration per period from register rows."""
 
-    latest: dict[str, Declaracion] = {}
+    latest: dict[str, _Declaracion] = {}
     for declaration in declarations:
         current = latest.get(declaration.period)
         if current is None:
@@ -813,17 +813,17 @@ def _history_period_sort_key(period: str) -> tuple[int, str]:
 
 
 def _persist_filed_calculation_observation_if_extractable(
-    observation: FiledDeclaracionObservation,
+    observation: _FiledDeclaracionObservation,
 ) -> tuple[str, ...]:
     try:
         return (persist_filed_calculation_observation(observation),)
-    except SedeParseError:
+    except _SedeParseError:
         return ()
 
 
 def _with_derived_303_compensation_available(
-    observation: RegistryModeloObservation,
-) -> RegistryModeloObservation:
+    observation: _RegistryModeloObservation,
+) -> _RegistryModeloObservation:
     """Add the internal Modelo 303 carry-forward value from official filed casillas."""
 
     if observation.modelo != "303":
@@ -842,14 +842,14 @@ def _with_derived_303_compensation_available(
 
     generated = max(Decimal("0"), -resultado)
     available = posterior + generated
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = _resources().modelos.authority.snapshot(
         "303",
         filing_year=observation.filing_year,
         period=observation.period,
     )
     casilla = next(item for item in snapshot.revision.casillas if item.id == target_id)
     formula = next(item for item in snapshot.revision.formulas if item.target == target_id)
-    derived = CasillaObservation(
+    derived = _CasillaObservation(
         casilla_id=target_id,
         value=available,
         formula_id=formula.id,
@@ -870,10 +870,10 @@ def _casilla_decimal(values: dict[str, Decimal], *casilla_ids: str) -> Decimal |
 
 
 def persist_and_reconcile_iva_compensation_wallet(
-    observation: IvaCompensationWalletObservation,
+    observation: _IvaCompensationWalletObservation,
     *,
     output_root: Path,
-    repository: CalculationObservationRepository | None = None,
+    repository: _CalculationObservationRepository | None = None,
     decided_at: datetime | None = None,
 ) -> IvaWalletCaptureReport:
     """Persist, reload, reconcile, and report one AEAT IVA wallet observation.
@@ -883,17 +883,17 @@ def persist_and_reconcile_iva_compensation_wallet(
     result returned by the browser driver.
     """
 
-    store = FiledDeclaracionObservationStore(output_root)
+    store = _FiledDeclaracionObservationStore(output_root)
     path = store.persist_iva_wallet_observation(observation)
     reloaded = store.load_iva_wallet_observation(path)
     if reloaded != observation:
         raise LiveApplicationError("persisted IVA wallet observation did not reload with identical evidence")
-    snapshot = resources().modelos.authority.snapshot(
+    snapshot = _resources().modelos.authority.snapshot(
         "303",
         filing_year=reloaded.target_year,
         period=reloaded.target_period,
     )
-    reconciliation = reconcile_modelo_303_iva_compensation(
+    reconciliation = _reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=reloaded.taxpayer_nif,
         wallet=reloaded,
@@ -901,7 +901,7 @@ def persist_and_reconcile_iva_compensation_wallet(
         decided_at=decided_at,
     )
     decision = reconciliation.decision
-    loaded_decision = IvaWalletDecisionRepository().load_decision(
+    loaded_decision = _IvaWalletDecisionRepository().load_decision(
         decision.taxpayer_nif,
         decision.target_year,
         decision.target_period,
@@ -915,7 +915,7 @@ def persist_and_reconcile_iva_compensation_wallet(
         target_year=reloaded.target_year,
         target_period=reloaded.target_period,
         observation_path=str(path),
-        decision_key=iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
+        decision_key=_iva_wallet_decision_key(decision.taxpayer_nif, decision.target_year, decision.target_period),
         row_count=len(reloaded.rows),
         total_pending=str(reloaded.total_pending),
         selected_authority=decision.selected_authority,
@@ -943,8 +943,8 @@ async def capture_expedientes(*, bucket_id: str, modelo: str, year: int):
 
     session, settings = await _active_verified_session()
     async with (
-        shared_playwright(session) as playwright,
-        open_declarations_register(session, settings=settings, playwright=playwright) as register,
+        _shared_playwright(session) as playwright,
+        _open_declarations_register(session, settings=settings, playwright=playwright) as register,
     ):
         declarations = await register.walk(modelo=modelo, ejercicio=year)
     capture = ExpedientesCapture(
@@ -961,9 +961,9 @@ async def capture_notifications(*, bucket_id: str):
 
     The flow is:
 
-    1. ``AeatAccessGate.require_live_read()`` — refuses unless
+    1. ``_AeatAccessGate.require_live_read()`` — refuses unless
        ``AEAT_LIVE_TESTS_ENABLED=1`` is set in the operator's shell.
-    2. ``ensure_authenticated_aeat_session(operation="live-notifications-read")``
+    2. ``_ensure_authenticated_aeat_session(operation="live-notifications-read")``
        — acquires or refreshes the authenticated session
        (e.g. triggers a Cl@ve Móvil push).
     3. ``fetch_notifications_query`` — drives Playwright against the
@@ -1005,7 +1005,7 @@ async def capture_iva_compensation_wallet(
 
     session, settings = await _active_verified_session(
         operation="live-iva-wallet-read",
-        target_url=PRE303_PRESENTATION_SERVICE_URL,
+        target_url=_PRE303_PRESENTATION_SERVICE_URL,
     )
     return await _capture_iva_compensation_wallet_with_session(
         session,
@@ -1018,9 +1018,9 @@ async def capture_iva_compensation_wallet(
 
 
 async def _capture_iva_compensation_wallet_with_session(
-    session: AeatSession,
+    session: _AeatSession,
     *,
-    settings: Settings,
+    settings: _Settings,
     target_year: int,
     target_period: str,
     taxpayer_nif: str | None = None,
@@ -1028,7 +1028,7 @@ async def _capture_iva_compensation_wallet_with_session(
 ) -> IvaWalletCaptureReport:
     """Capture and persist the wallet with an already-acquired AEAT session."""
 
-    observation: IvaCompensationWalletObservation = await fetch_iva_compensation_wallet(
+    observation: _IvaCompensationWalletObservation = await _fetch_iva_compensation_wallet(
         session,
         target_year=target_year,
         target_period=target_period,
@@ -1055,7 +1055,7 @@ async def capture_iva_remote_state(
 
     session, settings = await _active_verified_session(
         operation="live-iva-remote-state-read",
-        target_url=PRE303_PRESENTATION_SERVICE_URL,
+        target_url=_PRE303_PRESENTATION_SERVICE_URL,
     )
     store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
     filed_history: IvaCompensationHistoryCaptureReport | None = None
@@ -1169,10 +1169,10 @@ async def _active_verified_session(
     *,
     operation: str = "live-filed-read",
     target_url: str | None = None,
-) -> tuple[AeatSession, Settings]:
-    settings = load_settings()
-    AeatAccessGate(settings).require_live_read()
-    result = await ensure_authenticated_aeat_session(
+) -> tuple[_AeatSession, _Settings]:
+    settings = _load_settings()
+    _AeatAccessGate(settings).require_live_read()
+    result = await _ensure_authenticated_aeat_session(
         settings,
         operation=operation,
         target_url=target_url,

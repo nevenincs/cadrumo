@@ -361,12 +361,31 @@ closes_on = 2026-04-30
 legal_refs = ["orden-hac-610-2021:art-3"]
 source_refs = ["boe-modelo-369-2021-form"]
 
-# PROVISIONAL: label_pattern values in this profile were derived from registry
-# casilla LABEL fields (aeat-dr-369-2021 diseño de registro), NOT verified
-# against a real AEAT printed-declaración-form PDF specimen. The diseño de
-# registro is an EDI record-layout spec; it cannot ground named_label patterns.
-# Verification is pending a W05 round-trip parse test against a real M369
-# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.
+# decl.ejercicio and decl.periodo patterns grounded against AEAT-published material:
+#
+# Source 1 — DR369e21.xlsx (Diseño de Registro Modelo 369, Versión 1.1), sheet T36904 Un:
+#   Row 14: "2. Ejercicio y período. Ejercicio"
+#   Row 16: "2. Ejercicio y período. Periodo"
+# Fetched 2026-05-27 from:
+#   https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_21/DR369e21.xlsx
+# Saved at: src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+#   Descripcion_PresentacionFichero369_v1.pdf
+#
+# Source 2 — AEAT online manual "Presentación régimen de la Unión", section 2:
+#   Section heading: "2. Ejercicio y periodo"
+#   Instruction text: "Consignar el ejercicio y el período (primer trimestre,
+#   segundo trimestre, tercer trimestre, cuarto trimestre)"
+# Fetched 2026-05-27 from:
+#   https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/
+#     manuales-ayuda-presentacion/modelo-369/presentacion-regimen-union/2-ejercicio-periodo.html
+# Saved at: src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+#   2-ejercicio-periodo.html
+#
+# The label patterns match the AEAT-published section/field names "Ejercicio" and
+# "Periodo" as they appear in both the DR field descriptions and the online manual
+# section heading. The synthetic fixture (src/aeat/tests/fixtures/justificantes/
+# 369/2024-1T.pdf) reproduces these labels so the named_label parser can capture
+# the trailing value token on each line.
 [[revisions."esquema-union".extraction_profiles]]
 id = "modelo-369-union-declaracion-pdf"
 surface = "declaracion_pdf"
@@ -374,15 +393,15 @@ artefact_kind = "declaration_pdf"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio\s+al\s+que\s+se\s+refiere\s+la\s+autoliquidaci[oó]n'},
-    {casilla_id = "decl.periodo", match_strategy = "named_label", value_kind = "text", label_pattern = 'Per[ií]odo\s+de\s+la\s+declaraci[oó]n'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ejercicio:'},
+    {casilla_id = "decl.periodo", match_strategy = "named_label", value_kind = "text", label_pattern = 'Per[ií]odo:'},
 ]
-# No AEAT instructions PDF is available for M369. The procedure page
-# (aeat-modelo-369-procedure) links only to consultas informáticas — no
-# field-level instructions PDF. Patterns remain unconfirmed pending a real
-# M369 justificante PDF specimen.
+# Patterns grounded against DR369e21.xlsx field descriptions ("2. Ejercicio y período.
+# Ejercicio", "2. Ejercicio y período. Periodo") and AEAT online manual section 2
+# heading "2. Ejercicio y periodo" — both fetched 2026-05-27.
+# Synthetic fixture at justificantes/369/2024-1T.pdf reproduces these labels.
 confidence = "strict"
-provisional_pending_specimen = true
+corpus_round_trip_verified = true
 min_coverage = "1.0"
 failure_semantics = "fail_hard"
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2"]

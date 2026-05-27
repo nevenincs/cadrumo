@@ -13,40 +13,40 @@ from pydantic import BaseModel, ConfigDict
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from ...adapters.outbound.aeat.sede import (
-    FiledDeclaracionObservationStore,
-    registry_observation_from_filed_declaration,
+    FiledDeclaracionObservationStore as _FiledDeclaracionObservationStore,
+    registry_observation_from_filed_declaration as _registry_observation_from_filed_declaration,
 )
-from ...adapters.persistence.storage import MasterKeyProvider
-from ...core.resources import bundled_path
+from ...adapters.persistence.storage import MasterKeyProvider as _MasterKeyProvider
+from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import (
-    ValidatedRegistryAuthority,
-    calculate_registry_snapshot,
-    generate_parity_tape_path,
-    load_parity_scenario,
-    load_parity_tape,
-    replay_parity_tape,
-    resolve_previous_filing_binding_values,
-    resolve_relation_values_from_observations,
-    run_parity_scenario,
-    save_parity_tape,
-    verify_workbook_backend,
+    ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
+    calculate_registry_snapshot as _calculate_registry_snapshot,
+    generate_parity_tape_path as _generate_parity_tape_path,
+    load_parity_scenario as _load_parity_scenario,
+    load_parity_tape as _load_parity_tape,
+    replay_parity_tape as _replay_parity_tape,
+    resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
+    resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
+    run_parity_scenario as _run_parity_scenario,
+    save_parity_tape as _save_parity_tape,
+    verify_workbook_backend as _verify_workbook_backend,
 )
-from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle
+from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry._filed_state import (
-    RegistryFiledStateComparison,
-    compare_calculation_to_filed_observation,
+    RegistryFiledStateComparison as _RegistryFiledStateComparison,
+    compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
 )
-from ...domain.calculations.registry._groi_oracle import GroiOracle
+from ...domain.calculations.registry._groi_oracle import GroiOracle as _GroiOracle
 from ...domain.calculations.registry._live_parity import (
-    CrossReferenceApplicabilityDeclaracion,
-    LiveParityCatalogue,
-    OracleEnvironment,
-    audit_registry_oracle_bindings,
-    collect_applicability_declarations,
-    collect_orphan_oracle_ids,
+    CrossReferenceApplicabilityDeclaracion as _CrossReferenceApplicabilityDeclaracion,
+    LiveParityCatalogue as _LiveParityCatalogue,
+    OracleEnvironment as _OracleEnvironment,
+    audit_registry_oracle_bindings as _audit_registry_oracle_bindings,
+    collect_applicability_declarations as _collect_applicability_declarations,
+    collect_orphan_oracle_ids as _collect_orphan_oracle_ids,
 )
-from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport
-from ...domain.period import period_end_date
+from ...domain.calculations.registry._workbook_parity import WorkbookBackendVerificationReport as _WorkbookBackendVerificationReport
+from ...domain.period import period_end_date as _period_end_date
 from ._corpus import (
     RegistryCitationArticleProjection,
     RegistryCitationReferenceProjection,
@@ -152,7 +152,7 @@ class FiledStateVerificationReport(BaseModel):
 
     observation_path: str
     source_observation_paths: tuple[str, ...]
-    comparison: RegistryFiledStateComparison
+    comparison: _RegistryFiledStateComparison
 
 
 class RegistryOracleAuditReport(BaseModel):
@@ -164,7 +164,7 @@ class RegistryOracleAuditReport(BaseModel):
     registered_oracle_ids: tuple[str, ...]
     failure_count: int
     failures: tuple[str, ...]
-    applicability_declarations: tuple[CrossReferenceApplicabilityDeclaracion, ...]
+    applicability_declarations: tuple[_CrossReferenceApplicabilityDeclaracion, ...]
     orphan_oracle_ids: tuple[str, ...]
 
 
@@ -185,7 +185,7 @@ class RegistryRevisionInventory(NamedTuple):
 def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
     """Load the registry tree and return stable read-only inventory counts."""
 
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
+    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
@@ -215,7 +215,7 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
     """Load and fail-fast validate every registry modelo against shared catalogues."""
 
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
+    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
     modelos = authority.modelos
     catalogues = authority.catalogues
@@ -244,10 +244,10 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     )
 
 
-def _typed_oracle_environment(environment: str) -> OracleEnvironment:
-    """Validate ``environment`` against :data:`OracleEnvironment` literally.
+def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
+    """Validate ``environment`` against :data:`_OracleEnvironment` literally.
 
-    Replaces the previous ``cast(OracleEnvironment, environment)``
+    Replaces the previous ``cast(_OracleEnvironment, environment)``
     pattern after an untyped string check. The match statement
     returns each Literal arm verbatim so pyrefly narrows the return
     type exactly — no cast, no type-ignore escape. A future
@@ -265,7 +265,7 @@ def _typed_oracle_environment(environment: str) -> OracleEnvironment:
             return "both"
         case _:
             raise RegistryApplicationInputError(
-                f"environment must be one of {sorted(get_args(OracleEnvironment))!r}; "
+                f"environment must be one of {sorted(get_args(_OracleEnvironment))!r}; "
                 f"got {environment!r}"
             )
 
@@ -274,17 +274,17 @@ def audit_registry_oracles(registry_root: Path, *, environment: str) -> Registry
     """Audit registered live-parity oracles against every registry cross-reference."""
 
     typed_environment = _typed_oracle_environment(environment)
-    authority = ValidatedRegistryAuthority.load(registry_root, source_root=bundled_path())
-    oracle_catalogue = LiveParityCatalogue()
-    oracle_catalogue.register(AeatNifIvaCheckerOracle(), environment="production")
-    oracle_catalogue.register(GroiOracle(), environment="production")
-    failures = audit_registry_oracle_bindings(
+    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
+    oracle_catalogue = _LiveParityCatalogue()
+    oracle_catalogue.register(_AeatNifIvaCheckerOracle(), environment="production")
+    oracle_catalogue.register(_GroiOracle(), environment="production")
+    failures = _audit_registry_oracle_bindings(
         authority.modelos,
         oracle_catalogue,
         environment=typed_environment,
     )
-    applicability_declarations = collect_applicability_declarations(authority.modelos)
-    orphan_oracle_ids = collect_orphan_oracle_ids(authority.modelos, oracle_catalogue)
+    applicability_declarations = _collect_applicability_declarations(authority.modelos)
+    orphan_oracle_ids = _collect_orphan_oracle_ids(authority.modelos, oracle_catalogue)
     return RegistryOracleAuditReport(
         environment=environment,
         registered_oracle_ids=tuple(sorted(oracle_catalogue.ids())),
@@ -302,21 +302,21 @@ def verify_filed_state(
     registry_root: Path | None = None,
     source_root: Path | None = None,
     required_casillas: tuple[str, ...] = (),
-    master_key_provider: MasterKeyProvider | None = None,
+    master_key_provider: _MasterKeyProvider | None = None,
 ) -> FiledStateVerificationReport:
     """Compare a local registry calculation to a captured filed observation."""
 
     filed_observation = _load_filed_observation(observation_path, master_key_provider=master_key_provider)
-    registry_observation = registry_observation_from_filed_declaration(filed_observation)
+    registry_observation = _registry_observation_from_filed_declaration(filed_observation)
     source_observations = tuple(
         _load_filed_observation(path, master_key_provider=master_key_provider) for path in source_observation_paths
     )
     registry_source_observations = tuple(
-        registry_observation_from_filed_declaration(observation) for observation in source_observations
+        _registry_observation_from_filed_declaration(observation) for observation in source_observations
     )
-    authority = ValidatedRegistryAuthority.load(
-        registry_root or bundled_path("registry", "aeat"),
-        source_root=source_root or bundled_path(),
+    authority = _ValidatedRegistryAuthority.load(
+        registry_root or _bundled_path("registry", "aeat"),
+        source_root=source_root or _bundled_path(),
     )
     snapshot = authority.snapshot(
         filed_observation.modelo,
@@ -329,23 +329,23 @@ def verify_filed_state(
         for casilla_id, value in registry_observation.casilla_values.items()
         if casilla_id in input_casillas
     }
-    binding_values = resolve_previous_filing_binding_values(
+    binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,
         registry_source_observations,
         filing_year=filed_observation.ejercicio,
         period=filed_observation.period,
     )
-    relation_values = resolve_relation_values_from_observations(
+    relation_values = _resolve_relation_values_from_observations(
         snapshot.revision,
         registry_source_observations,
         filing_year=filed_observation.ejercicio,
         period=filed_observation.period,
     )
-    calculation = calculate_registry_snapshot(
+    calculation = _calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={
-            "filing_period": period_end_date(
+            "filing_period": _period_end_date(
                 filing_year=filed_observation.ejercicio,
                 registry_period=filed_observation.period,
             )
@@ -356,7 +356,7 @@ def verify_filed_state(
     casillas = required_casillas or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"
     )
-    comparison = compare_calculation_to_filed_observation(
+    comparison = _compare_calculation_to_filed_observation(
         calculation,
         registry_observation,
         required_casillas=casillas,
@@ -375,13 +375,13 @@ def verify_registry_workbooks(
     per_file_timeout_seconds: float = 10.0,
     resume_from: Path | None = None,
     output: Path | None = None,
-) -> WorkbookBackendVerificationReport:
+) -> _WorkbookBackendVerificationReport:
     """Run workbook backend verification and optionally persist the JSON report."""
 
     previous_report = None
     if resume_from is not None:
-        previous_report = WorkbookBackendVerificationReport.model_validate_json(resume_from.read_text(encoding="utf-8"))
-    report = verify_workbook_backend(
+        previous_report = _WorkbookBackendVerificationReport.model_validate_json(resume_from.read_text(encoding="utf-8"))
+    report = _verify_workbook_backend(
         root,
         scan_limit=limit,
         per_file_timeout_seconds=per_file_timeout_seconds,
@@ -403,15 +403,15 @@ def run_registry_parity(
 ):
     """Run one stored parity scenario and archive the resulting tape."""
 
-    scenario = load_parity_scenario(scenario_path)
-    tape = run_parity_scenario(
+    scenario = _load_parity_scenario(scenario_path)
+    tape = _run_parity_scenario(
         scenario,
         registry_root=registry_root,
         source_root=source_root,
         scenario_path=scenario_path,
     )
-    target = output or generate_parity_tape_path(store_root, scenario.id, tape.created_at)
-    save_parity_tape(tape, target)
+    target = output or _generate_parity_tape_path(store_root, scenario.id, tape.created_at)
+    _save_parity_tape(tape, target)
     return tape, target
 
 
@@ -423,8 +423,8 @@ def replay_registry_parity(
 ):
     """Replay one archived parity tape against the current registry runtime."""
 
-    tape = load_parity_tape(tape_path)
-    return replay_parity_tape(
+    tape = _load_parity_tape(tape_path)
+    return _replay_parity_tape(
         tape,
         registry_root=registry_root,
         source_root=source_root,
@@ -496,8 +496,8 @@ def _revision_details(modelos) -> tuple[RegistryRevisionDetailReport, ...]:
     return tuple(reports)
 
 
-def _load_filed_observation(path: Path, *, master_key_provider: MasterKeyProvider | None = None):
-    return FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
+def _load_filed_observation(path: Path, *, master_key_provider: _MasterKeyProvider | None = None):
+    return _FiledDeclaracionObservationStore(path.parent, master_key_provider=master_key_provider).load_observation(path)
 
 
 __all__ = [

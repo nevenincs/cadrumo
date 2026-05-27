@@ -13,9 +13,13 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 import click
 import typer
+from pydantic import BaseModel, ValidationError
 
 from ...application.aggregation import (
+    CounterpartObservation,
+    ForeignAssetIngestObservation,
     PerModeloAggregationCommand,
+    RetencionObservation,
     aggregate_per_modelo,
 )
 from ...application.modelo import (
@@ -261,6 +265,7 @@ def modelo_readiness(
         f"revision_id\t{revision_id}",
         f"filing_year\t{filing_year}",
         f"period\t{period or ''}",
+        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
         f"missing\t{len(report.missing)}",
@@ -392,6 +397,7 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "ledger_iva_aggregation": "ledger source",
     "ledger_oss_aggregation": "ledger source",
     "ledger_renta_expense_aggregation": "ledger source",
+    "profile": "profile fact",
     "profile_fact": "profile fact",
     "bucket_state": "bucket",
     "waiver": "waiver",
@@ -956,16 +962,42 @@ def formulas(
     _emit(ctx, report, lines)
 
 
-def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
-    parsed: list[dict[str, object]] = []
+def _parse_typed_cli_observations[ObservationT: BaseModel](
+    values: list[str] | None,
+    *,
+    model: type[ObservationT],
+    flag: str,
+) -> tuple[ObservationT, ...]:
+    """Parse a list of raw JSON strings into typed observation models.
+
+    Each string must be a JSON object conforming to *model*'s schema.
+    ``typer.BadParameter`` is raised on JSON syntax errors, non-object
+    JSON, or pydantic validation failures so the CLI error boundary
+    presents a clear operator-facing refusal instead of an opaque
+    traceback.
+    """
+    parsed: list[ObservationT] = []
     for raw in values or ():
         try:
-            value = json.loads(raw)
+            top = json.loads(raw)
         except json.JSONDecodeError as exc:
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)) from exc
-        if not isinstance(value, dict):
+        if not isinstance(top, dict):
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
-        parsed.append(value)
+        try:
+            # model_validate_json uses pydantic's JSON-mode coercions (string →
+            # Decimal, string → StrEnum) even when the model declares strict=True
+            # at the Python-object boundary.
+            parsed.append(model.model_validate_json(raw))
+        except ValidationError as exc:
+            details = "; ".join(f"{'.'.join(str(s) for s in e['loc'])}: {e['msg']}" for e in exc.errors())
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.aggregate.json_validation_error",
+                    flag=flag,
+                    details=details,
+                )
+            ) from exc
     return tuple(parsed)
 
 
@@ -1007,25 +1039,24 @@ def aggregate_modelo(
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
 
-    command = PerModeloAggregationCommand.model_validate_json(
-        json.dumps(
-            {
-                "modelo": modelo,
-                "period": period,
-                "retencion_observations": _parse_json_object_options(
-                    retencion_observation,
-                    flag="--retencion-observation",
-                ),
-                "counterpart_observations": _parse_json_object_options(
-                    counterpart_observation,
-                    flag="--counterpart-observation",
-                ),
-                "foreign_asset_observations": _parse_json_object_options(
-                    foreign_asset_observation,
-                    flag="--foreign-asset-observation",
-                ),
-            }
-        )
+    command = PerModeloAggregationCommand(
+        modelo=modelo,
+        period=period,
+        retencion_observations=_parse_typed_cli_observations(
+            retencion_observation,
+            model=RetencionObservation,
+            flag="--retencion-observation",
+        ),
+        counterpart_observations=_parse_typed_cli_observations(
+            counterpart_observation,
+            model=CounterpartObservation,
+            flag="--counterpart-observation",
+        ),
+        foreign_asset_observations=_parse_typed_cli_observations(
+            foreign_asset_observation,
+            model=ForeignAssetIngestObservation,
+            flag="--foreign-asset-observation",
+        ),
     )
     result = aggregate_per_modelo(command)
     payload = {
@@ -1233,6 +1264,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     {
         "errors.calc.binding_value_missing",
+        "errors.calc.bound_casilla_binding_value_missing",
         "errors.calc.enum_binding_value_missing",
         "errors.calc.relation_value_missing",
     }
@@ -1418,21 +1450,26 @@ def work_create(
         )
         operation = "modelo.work.create"
 
-    payload = {
-        "operation": operation,
-        "status": status,
-        "status_message": status_message,
-        "name_applied": name_applied,
-        "applicability_guard_bypassed": allow_not_applicable,
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkCreateResult
+
+    result = WorkCreateResult.model_validate(
+        {
+            "operation": operation,
+            "status": status,
+            "status_message": status_message,
+            "name_applied": name_applied,
+            "applicability_guard_bypassed": allow_not_applicable,
+            **_work_unit_payload(unit),
+        }
+    )
     lines = [
         f"operation\t{operation}",
         f"status\t{status}",
         *_work_unit_lines(unit),
         status_message,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command=operation, result=result, lines=lines)
 
 
 @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
@@ -1454,13 +1491,17 @@ def work_list(
 
     _require_active_profile()
     units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
-    payload = {
-        "operation": "modelo.work.list",
-        "bucket_id_filter": bucket_id,
-        "include_discarded": include_discarded,
-        "work_unit_count": len(units),
-        "work_units": [_work_unit_payload(unit) for unit in units],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkListResult
+
+    result = WorkListResult.model_validate(
+        {
+            "bucket_id_filter": bucket_id,
+            "include_discarded": include_discarded,
+            "work_unit_count": len(units),
+            "work_units": [_work_unit_payload(unit) for unit in units],
+        }
+    )
     lines = [
         "operation\tmodelo.work.list",
         f"bucket_id_filter\t{bucket_id or ''}",
@@ -1483,7 +1524,7 @@ def work_list(
         )
         for unit in units
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
 
 
 @work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
@@ -1502,12 +1543,12 @@ def work_status(
         unit = get_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.status",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkStatusResult
+
+    result = WorkStatusResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines)
 
 
 @work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
@@ -1534,12 +1575,12 @@ def work_rename(
         unit = rename_work_unit(work_unit_id, name, actor=actor or _resolve_default_actor())
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.rename",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRenameResult
+
+    result = WorkRenameResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
 
 
 @work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
@@ -1588,12 +1629,12 @@ def work_discard(
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.discard",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkDiscardResult
+
+    result = WorkDiscardResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
 
 
 filing_record_app = typer.Typer(
@@ -1615,24 +1656,24 @@ def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]
         # provenance (formula_id, operand_refs, operand_values,
         # legal_refs, source_refs). Without this projection the CLI
         # JSON would strip every regulatory grounding signal.
-        "observations": [
+        "observations": tuple(
             {
                 "casilla_id": obs.casilla_id,
                 "value": str(obs.value),
                 "formula_id": obs.formula_id,
-                "operand_refs": list(obs.operand_refs),
-                "operand_values": [str(v) for v in obs.operand_values],
-                "legal_refs": list(obs.legal_refs),
-                "source_refs": list(obs.source_refs),
+                "operand_refs": tuple(obs.operand_refs),
+                "operand_values": tuple(str(v) for v in obs.operand_values),
+                "legal_refs": tuple(obs.legal_refs),
+                "source_refs": tuple(obs.source_refs),
             }
             for obs in rev.observations
-        ],
+        ),
         # Headline result summary: registry-declared result-to-pay /
         # result-to-refund total plus the modelo's key computed
         # casillas, so the JSON consumer gets the same lead figures the
         # text surface shows.
         "result_summary": _result_summary_payload(rev),
-        "binding_overrides": dict(rev.binding_overrides),
+        "binding_overrides": {key: str(value) for key, value in rev.binding_overrides.items()},
         "inputs_snapshot": dict(rev.inputs_snapshot),
         "created_at": rev.created_at.isoformat(),
         "updated_at": rev.updated_at.isoformat(),
@@ -1674,15 +1715,15 @@ def _result_summary_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _result_summary_payload(rev: CalculationRevision) -> list[dict[str, object]]:
+def _result_summary_payload(rev: CalculationRevision) -> tuple[dict[str, object], ...]:
     """Return the headline-result summary rows for the JSON payload."""
 
     from ...application.modelo import calculation_result_summary
 
     summary = calculation_result_summary(rev)
     if summary is None:
-        return []
-    return [
+        return ()
+    return tuple(
         {
             "role": row.role,
             "casilla_id": row.casilla_id,
@@ -1690,7 +1731,7 @@ def _result_summary_payload(rev: CalculationRevision) -> list[dict[str, object]]
             "label": row.label,
         }
         for row in summary.rows
-    ]
+    )
 
 
 def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
@@ -2058,20 +2099,24 @@ def work_calculate(
         }
         modality_lines = [f"modality\t{_verdict.modality.value}"]
 
-    payload = {
-        "operation": "modelo.work.calculate",
-        "saved": True,
-        "saved_confirmation": saved_confirmation,
-        **_calculation_revision_payload(revision),
-        **modality_payload,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkCalculateResult
+
+    result = WorkCalculateResult.model_validate(
+        {
+            "saved": True,
+            "saved_confirmation": saved_confirmation,
+            **_calculation_revision_payload(revision),
+            **modality_payload,
+        }
+    )
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
         *modality_lines,
         saved_confirmation,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
 
 
 @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))
@@ -2088,12 +2133,16 @@ def work_revisions(
         work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     revisions = list_calculation_revisions(work_unit_id=work_unit_id)
-    payload = {
-        "operation": "modelo.work.revisions",
-        "work_unit_id_filter": work_unit_id,
-        "revision_count": len(revisions),
-        "revisions": [_calculation_revision_payload(rev) for rev in revisions],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRevisionsResult
+
+    result = WorkRevisionsResult.model_validate(
+        {
+            "work_unit_id_filter": work_unit_id,
+            "revision_count": len(revisions),
+            "revisions": [_calculation_revision_payload(rev) for rev in revisions],
+        }
+    )
     lines = [
         "operation\tmodelo.work.revisions",
         f"work_unit_id_filter\t{work_unit_id or ''}",
@@ -2104,7 +2153,7 @@ def work_revisions(
         f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
         for rev in revisions
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 
 @work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
@@ -2143,17 +2192,21 @@ def work_revision(
         }
         modality_lines_r = [f"modality\t{_verdict_r.modality.value}"]
 
-    payload = {
-        "operation": "modelo.work.revision",
-        **_calculation_revision_payload(revision),
-        **modality_payload_r,
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRevisionResult
+
+    result = WorkRevisionResult.model_validate(
+        {
+            **_calculation_revision_payload(revision),
+            **modality_payload_r,
+        }
+    )
     lines = [
         "operation\tmodelo.work.revision",
         *_calculation_revision_lines(revision),
         *modality_lines_r,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.revision", result=result, lines=lines)
 
 
 @work_app.command(
@@ -2245,6 +2298,8 @@ def _verification_report_payload(report: VerificationReport) -> dict[str, object
                 "expectation_id": f.expectation_id,
                 "message": f.message,
                 "next_action": f.next_action,
+                "legal_refs": list(f.legal_refs),
+                "source_refs": list(f.source_refs),
             }
             for f in report.findings
         ],
@@ -2280,6 +2335,10 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
                 )
             )
         )
+        if finding.legal_refs:
+            lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
+        if finding.source_refs:
+            lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
     return lines
 
 
@@ -2334,12 +2393,12 @@ def work_verify(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.verify",
-        **_verification_report_payload(report),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkVerifyResult
+
+    result = WorkVerifyResult.model_validate(_verification_report_payload(report))
     lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines)
 
     if not report.granted_verificado_completo:
         raise typer.Exit(code=1)
@@ -2393,13 +2452,13 @@ def work_file(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.file",
-        **_filing_record_payload(record),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkFileResult
+
+    result = WorkFileResult.model_validate(_filing_record_payload(record))
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
 
 
 _WORKFLOW_RUN_ID_RE = r"[0-9a-f]{16}"
@@ -2687,12 +2746,16 @@ def work_amend(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.amend",
-        "amendment_kind": amendment_kind.value,
-        "amends_filing_record_id": from_filing_record_id,
-        **_filing_record_payload(record),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkAmendResult
+
+    result = WorkAmendResult.model_validate(
+        {
+            "amendment_kind": amendment_kind.value,
+            "amends_filing_record_id": from_filing_record_id,
+            **_filing_record_payload(record),
+        }
+    )
     lines = [
         "operation\tmodelo.work.amend",
         f"amendment_kind\t{amendment_kind.value}",
@@ -2700,7 +2763,7 @@ def work_amend(
         *_filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
 
 
 @filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
@@ -3589,8 +3652,7 @@ def modelo_project(
     # -- Collect M130 work units for the requested year --------------------------
     all_units = _list_work_units()
     m130_units = [
-        u for u in all_units
-        if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
+        u for u in all_units if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
     ]
 
     if not m130_units:
@@ -3673,9 +3735,7 @@ def modelo_project(
         try:
             extra_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
 
     # Binding overrides from --binding flags.
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
@@ -3691,7 +3751,7 @@ def modelo_project(
     # pagos fraccionados from M130 casilla 19 sum.
     m100_inputs: dict[str, Decimal] = {
         "0505": projected_rendimiento_neto,  # base liquidable general
-        "0604": total_pagos_fraccionados,    # pagos fraccionados M130 (manual, actual paid)
+        "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
     }
 
@@ -3801,10 +3861,7 @@ def modelo_compare(
             "--year",
             help=tr(
                 "cli.app.modelo.compare.year_help",
-                default=(
-                    "Filing year to include in the comparison. "
-                    "Specify exactly twice: --year 2024 --year 2025."
-                ),
+                default=("Filing year to include in the comparison. Specify exactly twice: --year 2024 --year 2025."),
             ),
         ),
     ] = None,
@@ -3848,10 +3905,7 @@ def modelo_compare(
         Raises typer.BadParameter if no revision of either kind exists.
         """
         all_units = _list_work_units()
-        units_for_year = [
-            u for u in all_units
-            if str(u.modelo) == modelo and u.filing_year == filing_year
-        ]
+        units_for_year = [u for u in all_units if str(u.modelo) == modelo and u.filing_year == filing_year]
         if not units_for_year:
             raise typer.BadParameter(
                 tr(
@@ -3877,19 +3931,13 @@ def modelo_compare(
                 )
             )
 
-        verified = [
-            r for r in all_revisions
-            if r.state is CalculationRevisionState.VERIFICADO_COMPLETO
-        ]
+        verified = [r for r in all_revisions if r.state is CalculationRevisionState.VERIFICADO_COMPLETO]
         if verified:
             best = max(verified, key=lambda r: r.created_at)
             return best, False, period_by_unit.get(best.work_unit_id, "0A")
 
         # Draft fallback: most recent BORRADOR.
-        borradores = [
-            r for r in all_revisions
-            if r.state is CalculationRevisionState.BORRADOR
-        ]
+        borradores = [r for r in all_revisions if r.state is CalculationRevisionState.BORRADOR]
         if borradores:
             best = max(borradores, key=lambda r: r.created_at)
             return best, True, period_by_unit.get(best.work_unit_id, "0A")
@@ -3932,9 +3980,7 @@ def modelo_compare(
         return label, primary_section
 
     # -- Build delta rows -----------------------------------------------------
-    all_casilla_ids = sorted(
-        set(rev_a.casilla_values) | set(rev_b.casilla_values)
-    )
+    all_casilla_ids = sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values))
 
     delta_rows: list[dict[str, object]] = []
     for cid in all_casilla_ids:
@@ -3943,9 +3989,7 @@ def modelo_compare(
         delta = val_b - val_a
         label, section = _meta(cid)
         if val_a != Decimal("0"):
-            pct_change: str | None = str(
-                (delta / val_a * Decimal("100")).quantize(Decimal("0.01"))
-            )
+            pct_change: str | None = str((delta / val_a * Decimal("100")).quantize(Decimal("0.01")))
         else:
             pct_change = None
 

@@ -24,7 +24,7 @@ def select_revision(
             continue
         if not revision.period_selector.includes_year(filing_year):
             continue
-        if period not in revision.period_selector.periods:
+        if period.lower() not in {p.lower() for p in revision.period_selector.periods}:
             continue
         if on is not None and (revision.valid_from > on or (revision.valid_to is not None and revision.valid_to < on)):
             continue

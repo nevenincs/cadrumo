@@ -18,6 +18,7 @@ from ....domain.profile.inventory import (
     compute_inventory_valuation,
 )
 from ..storage import SensitivityClass
+from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -116,7 +117,7 @@ class InventoryLedgerRepository:
                 repository self-resolves from settings.
         """
 
-        self._objects = objects if objects is not None else SecureObjectRepository()
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:

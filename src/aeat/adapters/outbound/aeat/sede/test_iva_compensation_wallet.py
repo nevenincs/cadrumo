@@ -16,6 +16,7 @@ from ._iva_compensation_wallet import (
     _assert_read_browser_action,
     _assert_read_http,
     _wallet_execute_gate_status,
+    _wallet_page_shape_context,
     is_aeat_wallet_auth_gate_redirect,
     parse_iva_compensation_wallet_html,
 )
@@ -238,6 +239,25 @@ def test_iva_wallet_read_guard_allows_wallet_execute_read_query() -> None:
 def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
     assert is_aeat_wallet_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
     assert not is_aeat_wallet_auth_gate_redirect(IVA_COMPENSATION_WALLET_URL)
+
+
+def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
+    html = f"""
+    <html><body>
+      <form id="Form" method="post" action="{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}">
+        <input id="session" name="session" type="hidden" value="QUERY-CANARY" />
+      </form>
+    </body></html>
+    """
+
+    context = _wallet_page_shape_context(
+        html,
+        landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
+    )
+
+    assert context["landing_url"] == IVA_COMPENSATION_WALLET_URL
+    assert "QUERY-CANARY" not in str(context)
+    assert context["raw_sha256"]
 
 
 def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:

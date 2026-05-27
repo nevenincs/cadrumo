@@ -9,8 +9,8 @@ refusal that names ``aeat config profile switch`` as the recovery
 verb.
 
 This roundtrip drives the full cycle with real adapters — a real
-master-key provider that opens and activates a real
-:class:`BucketSession`, and a real SQLite-backed
+bucket-session helper that opens and activates a real
+:class:`BucketSession`, and a real per-bucket
 :class:`SecureObjectRepository`:
 
 1. Open a session and confirm an encrypted-column write/read succeeds.
@@ -34,15 +34,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.errors import SessionExpiredError
 from aeat.adapters.persistence.storage.master_key._active_session import _active_session
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository, create_engine_from_settings
-from aeat.adapters.persistence.storage.sql._orm import Base
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.secure_objects import SensitivityClass
-from aeat.core.config import Settings
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -76,21 +73,21 @@ def _load(repository: SecureObjectRepository) -> object:
 
 
 @pytest.fixture
-def _engine_settings(tmp_path: Path) -> Iterator[Settings]:
-    """A real SQLite engine with the ORM schema applied for session lifecycle tests."""
+def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
+    """A real active-profile runtime with an unlocked per-bucket repository."""
 
-    settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'session-roundtrip.db').as_posix()}")
-    engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(engine)
-    engine.dispose()
-    try:
-        yield settings
-    finally:
-        dispose_engine()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session-roundtrip") as profile:
+        yield profile
 
 
-def _repository(settings: Settings) -> SecureObjectRepository:
-    return SecureObjectRepository(engine=create_engine_from_settings(settings))
+@pytest.fixture
+def _inactive_repository(tmp_path: Path) -> SecureObjectRepository:
+    """A real repository whose bucket session has already closed."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session-roundtrip") as profile:
+        repository = profile.repository
+    assert _active_session.get() is None
+    return repository
 
 
 def _active_bucket_session() -> BucketSession:
@@ -101,7 +98,7 @@ def _active_bucket_session() -> BucketSession:
     return session
 
 
-def test_session_open_then_verb_succeeds_and_touches_deadline(_engine_settings: Settings) -> None:
+def test_session_open_then_verb_succeeds_and_touches_deadline(_runtime_profile: TestRuntimeProfile) -> None:
     """An encrypted write inside an active session succeeds and rolls the deadline.
 
     The successful call polls the idle evaluator, finds the session
@@ -109,19 +106,18 @@ def test_session_open_then_verb_succeeds_and_touches_deadline(_engine_settings: 
     after the call sits one full idle window past the call time.
     """
 
-    with EphemeralMasterKeyProvider():
-        session = _active_bucket_session()
-        deadline_before = session.idle_deadline
-        repository = _repository(_engine_settings)
+    session = _active_bucket_session()
+    deadline_before = session.idle_deadline
+    repository = _runtime_profile.repository
 
-        _save(repository)
-        loaded = _load(repository)
-        assert loaded is not None
-        # The freshness poll on the successful calls touched the deadline forward.
-        assert session.idle_deadline > deadline_before
+    _save(repository)
+    loaded = _load(repository)
+    assert loaded is not None
+    # The freshness poll on the successful calls touched the deadline forward.
+    assert session.idle_deadline > deadline_before
 
 
-def test_expired_session_refuses_the_next_verb(_engine_settings: Settings) -> None:
+def test_expired_session_refuses_the_next_verb(_runtime_profile: TestRuntimeProfile) -> None:
     """Once the idle window has elapsed, the next repository call refuses.
 
     The live session's idle deadline is rolled behind ``now`` to model
@@ -129,20 +125,19 @@ def test_expired_session_refuses_the_next_verb(_engine_settings: Settings) -> No
     repository call then raises ``SessionExpiredError``.
     """
 
-    with EphemeralMasterKeyProvider():
-        session = _active_bucket_session()
-        repository = _repository(_engine_settings)
-        _save(repository)
+    session = _active_bucket_session()
+    repository = _runtime_profile.repository
+    _save(repository)
 
-        # Expire the session: roll its deadline into the past.
-        session.touch(datetime.now(UTC) - timedelta(hours=1))
-        assert session.is_expired(datetime.now(UTC))
+    # Expire the session: roll its deadline into the past.
+    session.touch(datetime.now(UTC) - timedelta(hours=1))
+    assert session.is_expired(datetime.now(UTC))
 
-        with pytest.raises(SessionExpiredError):
-            _load(repository)
+    with pytest.raises(SessionExpiredError):
+        _load(repository)
 
 
-def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_engine_settings: Settings) -> None:
+def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_runtime_profile: TestRuntimeProfile) -> None:
     """The full cycle: a fresh verb succeeds, then an expired verb refuses.
 
     One session object carries the whole lifecycle. The first call
@@ -150,21 +145,20 @@ def test_session_lifecycle_full_roundtrip_open_verb_expiry_refusal(_engine_setti
     to model a wall-clock idle timeout; the second call refuses.
     """
 
-    with EphemeralMasterKeyProvider():
-        session = _active_bucket_session()
-        repository = _repository(_engine_settings)
+    session = _active_bucket_session()
+    repository = _runtime_profile.repository
 
-        # Verb 1 — fresh session: succeeds.
-        _save(repository)
-        assert _load(repository) is not None
+    # Verb 1 — fresh session: succeeds.
+    _save(repository)
+    assert _load(repository) is not None
 
-        # Idle window elapses: roll the session's own deadline behind now.
-        session.touch(datetime.now(UTC) - timedelta(hours=1))
-        assert session.is_expired(datetime.now(UTC))
+    # Idle window elapses: roll the session's own deadline behind now.
+    session.touch(datetime.now(UTC) - timedelta(hours=1))
+    assert session.is_expired(datetime.now(UTC))
 
-        # Verb 2 — expired session: refuses.
-        with pytest.raises(SessionExpiredError):
-            _load(repository)
+    # Verb 2 — expired session: refuses.
+    with pytest.raises(SessionExpiredError):
+        _load(repository)
 
 
 def test_expired_session_refusal_names_profile_switch_recovery_verb() -> None:
@@ -186,7 +180,7 @@ def test_expired_session_refusal_names_profile_switch_recovery_verb() -> None:
 
 
 def test_no_active_session_makes_freshness_poll_a_clean_noop(
-    _engine_settings: Settings,
+    _inactive_repository: SecureObjectRepository,
 ) -> None:
     """With no session bound, the idle-freshness poll is a no-op, not a crash.
 
@@ -199,7 +193,6 @@ def test_no_active_session_makes_freshness_poll_a_clean_noop(
     """
 
     assert _active_session.get() is None
-    repository = _repository(_engine_settings)
     # The freshness poll must return without raising SessionExpiredError
     # (or any other exception) when no session is bound.
-    repository._check_session_freshness()
+    _inactive_repository._check_session_freshness()

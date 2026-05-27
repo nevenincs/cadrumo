@@ -177,9 +177,43 @@ def isolated_runtime_profile(
                 dispose_engine(settings)
 
 
+@contextmanager
+def isolated_cli_runtime_profile(
+    *,
+    tmp_path: Path,
+    bucket_id: str = "test-runtime-profile",
+    label: str = "Test runtime profile",
+) -> Iterator[TestRuntimeProfile]:
+    """Create a real runtime profile with CLI-adjacent directories isolated.
+
+    CLI work-unit tests need the active bucket database plus the
+    filesystem directories read from settings for runs, drafts, tokens,
+    financial transactions, and invoices. Keep that setup on the central
+    settings surface instead of per-test environment mutation.
+    """
+
+    with (
+        override_settings(
+            aeat_runs_dir=tmp_path / "runs",
+            aeat_drafts_dir=tmp_path / "drafts",
+            aeat_token_dir=tmp_path / "tokens",
+            aeat_financial_txs_dir=tmp_path / "txs",
+            aeat_invoices_dir=tmp_path / "invoices",
+        ),
+        isolated_runtime_profile(
+            tmp_path=tmp_path,
+            bucket_id=bucket_id,
+            label=label,
+        ) as profile,
+    ):
+        dispose_engine(profile.settings)
+        yield profile
+
+
 __all__ = [
     "TestRuntimeProfile",
     "dev_test_database_password",
+    "isolated_cli_runtime_profile",
     "isolated_ephemeral_secure_sql",
     "isolated_profile_storage_root",
     "isolated_runtime_profile",

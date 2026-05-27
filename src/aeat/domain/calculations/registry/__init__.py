@@ -230,6 +230,31 @@ from ._schema import (
 )
 from ._snapshot import build_snapshot
 from ._sources import verify_source_catalogue, verify_source_file
+# Applicability is imported after _schema so its transitive import of
+# aeat.domain.deadlines (which depends on DeadlineWindowDefinition
+# exported above) does not race a partially-initialised registry
+# namespace.
+from ._applicability import (
+    _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
+    _INCOMPLETE_LEGAL_REFS,
+    _INCOMPLETE_UNDECLARED_REASON,
+    _INCOMPLETE_UNDETERMINED_REASON,
+    _INCOMPLETE_UNRULED_REASON,
+    _MODELO_APPLICABILITY_RULES,
+    ApplicabilityVerdict,
+    Modelo202Modality,
+    Modelo202ModalityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
+    PayerFact,
+    TaxRoute,
+    derive_modelo_202_modality,
+    derive_modelo_applicability,
+    derive_tax_route,
+    has_applicability_rule,
+    iter_modelo_applicability_rules,
+    taxpayer_model_is_declared,
+)
 from ._validate import RegistryValidator
 from ._validate_references import (
     CrossDomainSnapshotCheck,
@@ -500,4 +525,17 @@ __all__ = [
     "verify_source_file",
     "verify_workbook_backend",
     "withholding_binding_requirements",
+    "ApplicabilityVerdict",
+    "Modelo202Modality",
+    "Modelo202ModalityVerdict",
+    "ModeloApplicability",
+    "ModeloApplicabilityRule",
+    "PayerFact",
+    "TaxRoute",
+    "derive_modelo_202_modality",
+    "derive_modelo_applicability",
+    "derive_tax_route",
+    "has_applicability_rule",
+    "iter_modelo_applicability_rules",
+    "taxpayer_model_is_declared",
 ]

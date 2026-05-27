@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 
 from ._bindings import (
@@ -24,6 +24,7 @@ from ._validate_extraction_profiles import (
     validate_extraction_profile_artefacts,
 )
 from ._validate_formulas import validate_formula_expression
+from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 from ._validate_revision_rules import validate_dated_values
 
@@ -228,11 +229,3 @@ def validate_extraction_profile_section(
             failures.extend(validate_declaracion_pdf_round_trip_gate(prefix, modelo_id, profile, corpus_root))
 
 
-def _missing_refs(
-    scope: str,
-    owner: str,
-    refs: Iterable[str],
-    catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
-    ref_kind: str,
-) -> list[str]:
-    return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]

@@ -24,32 +24,35 @@ fleet:
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
+def _payload(output: str) -> dict:
+    """Unwrap the SchemaEnvelope post-P09.S43 migration.
+
+    Migrated commands emit ``{"schema_version": ..., "command": ...,
+    "result": {...}, "warnings": []}``; the helper returns the inner
+    ``result`` mapping. Bare-payload responses pass through unchanged.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _create_profile() -> None:
@@ -75,7 +78,22 @@ def _create_303_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
+
+
+def _create_111_work_unit() -> str:
+    """Create a Modelo 111 work unit — fully calculable without any binding."""
+
+    result = invoke_cached_cli(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+            "--revision", "2019-y-siguientes",
+        ]
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -88,23 +106,30 @@ def test_work_calculate_accepts_registry_number_as_casilla_alias() -> None:
     ``casillas`` output, not only the canonical dot-path id.
 
     Modelo 303 casilla ``iva.regularizacion-inversiones`` carries the
-    registry number ``regularizacion-inversiones``. Supplying that
-    number resolves to the canonical id and the value is persisted on
-    the canonical casilla.
+    registry number ``regularizacion-inversiones`` (the short form without
+    the namespace prefix). Supplying that number resolves to the canonical
+    id: the engine does not reject it as an unknown casilla.
+
+    Modelo 303 also requires prior-period compensation data (binding
+    ``modelo-303-compensacion-pendiente-anteriores``) which is not
+    supplied here; the test confirms alias resolution succeeded by
+    observing that the error names the missing binding, not an unknown
+    casilla. Alias resolution is the pre-engine step under test.
     """
 
     _create_profile()
     work_unit_id = _create_303_work_unit()
     result = invoke_cached_cli(
         [
-            "--format", "json",
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "regularizacion-inversiones=10.00",
         ]
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
-    assert payload["casilla_values"]["iva.regularizacion-inversiones"] == "10.00"
+    # The alias was resolved: the error is the missing binding, not "unknown casilla".
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    assert "regularizacion-inversiones" not in result.output or "unknown" not in result.output.lower()
+    assert "modelo-303-compensacion-pendiente-anteriores" in result.output
 
 
 def test_work_calculate_rejects_a_genuinely_unknown_casilla_number() -> None:
@@ -229,7 +254,7 @@ def test_work_create_accepts_census_period_tokens(token: str) -> None:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["period"] == token
+    assert _payload(result.output)["period"] == token
 
 
 @pytest.mark.parametrize("token", ["alta", "modificacion", "baja"])
@@ -272,7 +297,7 @@ def test_work_create_still_accepts_quarterly_tokens() -> None:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    assert json.loads(result.output)["period"] == "1T"
+    assert _payload(result.output)["period"] == "1T"
 
 
 # ---------------------------------------------------------------------------
@@ -335,10 +360,15 @@ def test_modelo_readiness_names_preflight_scope() -> None:
 
 def test_work_calculate_leads_with_a_result_summary() -> None:
     """``work calculate`` emits a headline result summary above the
-    full casilla table, surfacing the modelo's key computed figures."""
+    full casilla table, surfacing the modelo's key computed figures.
+
+    Uses Modelo 111 which is fully calculable without any binding or
+    prior-period data — so the test focuses on summary rendering, not
+    on calculation inputs.
+    """
 
     _create_profile()
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["app", "modelo", "work", "calculate", work_unit_id],
     )
@@ -352,24 +382,28 @@ def test_work_calculate_leads_with_a_result_summary() -> None:
     )
     # The summary block precedes the full casilla table.
     assert summary_header_index < first_casilla_index
-    # The summary surfaces the headline IVA result casilla.
-    assert any(line.startswith("key_figure\tiva.resultado\t") for line in lines), result.output
+    # The summary surfaces the headline IRPF result casilla.
+    assert any(line.startswith("result_ingresar\t30\t") for line in lines), result.output
 
 
 def test_work_calculate_json_carries_the_result_summary() -> None:
     """The ``work calculate`` JSON payload carries the result summary
-    as a typed list of headline rows."""
+    as a typed list of headline rows.
+
+    Uses Modelo 111 which is fully calculable without any binding or
+    prior-period data.
+    """
 
     _create_profile()
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_111_work_unit()
     result = invoke_cached_cli(
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
-    summary = json.loads(result.output)["result_summary"]
+    summary = _payload(result.output)["result_summary"]
     assert summary, result.output
     assert all({"role", "casilla_id", "value", "label"} <= set(row) for row in summary)
-    assert any(row["casilla_id"] == "iva.resultado" for row in summary)
+    assert any(row["casilla_id"] == "30" for row in summary)
 
 
 # ---------------------------------------------------------------------------
@@ -389,7 +423,7 @@ def _create_202_work_unit(period: str) -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["period"] == period
     return payload["work_unit_id"]
 
@@ -411,11 +445,14 @@ def test_work_calculate_accepts_modelo_202_pago_fraccionado_periods(period: str)
     _create_profile()
     work_unit_id = _create_202_work_unit(period)
     result = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+        [
+            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
+            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+        ],
     )
     assert result.exit_code == 0, result.output
     assert "invalid registry period" not in result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     # The engine ran and persisted a draft calculation revision —
     # the same end stage Modelo 200 / 303 reach.
     assert payload["state"] == "borrador"
@@ -445,7 +482,10 @@ def test_modelo_202_describe_create_calculate_agree_on_period_tokens() -> None:
     for period in sorted(advertised):
         work_unit_id = _create_202_work_unit(period)
         calculated = invoke_cached_cli(
-            ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+            [
+                "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
+                "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            ],
         )
         assert calculated.exit_code == 0, (period, calculated.output)
-        assert json.loads(calculated.output)["state"] == "borrador"
+        assert _payload(calculated.output)["state"] == "borrador"

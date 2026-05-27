@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
@@ -17,6 +18,7 @@ from pydantic import BaseModel, ConfigDict
 # breaks the cycle.
 from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
 
@@ -109,7 +111,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
 
-    record = SecureObjectRepository().load(
+    record = _secure_objects().load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -138,7 +140,8 @@ def record_auth_diagnostic_phone_state(
 
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
         raise ValueError(phone_state)
-    record = SecureObjectRepository().load(
+    objects = _secure_objects()
+    record = objects.load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -152,7 +155,7 @@ def record_auth_diagnostic_phone_state(
         "phone_state": phone_state,
         "reported_at": reported_at.isoformat(),
     }
-    SecureObjectRepository().save(
+    objects.save(
         namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         object_key=diagnostic_id,
         classification=SensitivityClass.SESSION,
@@ -168,21 +171,27 @@ def record_auth_diagnostic_phone_state(
 
 
 def _diagnostic_records():
-    return SecureObjectRepository().list_records(
+    return _secure_objects().list_records(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         expected_class=SensitivityClass.SESSION,
         max_supported_version=1,
     )
 
 
-def _payload(raw: bytes) -> dict[str, object]:
+def _secure_objects() -> SecureObjectRepository:
+    return secure_object_repository_for_active_bucket()
+
+
+def _payload(raw: bytes) -> Mapping[str, object]:
+    # Legitimate internal boundary: deserializes encrypted JSON blob; dict[str, object]
+    # is the correct structural type from json.loads, exposed as Mapping to callers.
     payload = json.loads(raw.decode("utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("auth diagnostic payload is not a JSON object")
     return {str(key): value for key, value in payload.items()}
 
 
-def _json_object(value: object) -> dict[str, object]:
+def _json_object(value: object) -> Mapping[str, object]:
     """Narrow a JSON value to a string-keyed object, or an empty one."""
 
     if not isinstance(value, dict):
@@ -190,7 +199,7 @@ def _json_object(value: object) -> dict[str, object]:
     return {str(key): item for key, item in value.items()}
 
 
-def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
+def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummary:
     captured_at = payload.get("captured_at")
     if not isinstance(captured_at, str):
         raise ValueError("auth diagnostic payload is missing captured_at")
@@ -243,7 +252,7 @@ def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-def _detail_fingerprints_from_payload(payload: dict[str, object]) -> dict[str, str]:
+def _detail_fingerprints_from_payload(payload: Mapping[str, object]) -> dict[str, str]:
     raw_auth_attempt = payload.get("auth_attempt")
     if not isinstance(raw_auth_attempt, dict):
         return {}

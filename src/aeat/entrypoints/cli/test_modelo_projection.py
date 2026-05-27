@@ -43,13 +43,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -77,10 +76,16 @@ _CCAA = "madrid"
 # ---------------------------------------------------------------------------
 
 
+def _payload(output: str) -> dict:
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for M130→M100 projection regression test.
 
@@ -89,21 +94,11 @@ def runtime_profile(
     directories work-unit commands read from settings.
     """
 
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-
-    with isolated_runtime_profile(
+    with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="M130 projection regression test profile",
     ) as profile:
-        dispose_engine(profile.settings)
         yield profile
 
 
@@ -152,7 +147,7 @@ def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +204,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert calc_result.exit_code == 0, (
             f"M130 calculate failed for period {period}: {calc_result.output}"
         )
-        quarter_payload = json.loads(calc_result.output)
+        quarter_payload = _payload(calc_result.output)
         assert "casilla_values" in quarter_payload, calc_result.output
         # Verify oracle inputs produce expected per-quarter values.
         assert Decimal(quarter_payload["casilla_values"]["03"]) == Decimal("8000.00"), (
@@ -233,7 +228,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     )  # fmt: skip
     assert project_result.exit_code == 0, project_result.output
     assert "Traceback" not in project_result.output
-    proj_payload = json.loads(project_result.output)
+    proj_payload = _payload(project_result.output)
 
     assert proj_payload["quarters_filed"] == 4
     assert proj_payload["is_extrapolated"] is False

@@ -16,8 +16,13 @@ from aeat.adapters.persistence.storage.runtime import StorageRuntimeReadinessCod
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.core.classification import SensitivityClass
-from aeat.core.config import StorageRouteKind, override_settings
-from aeat.tests.secure_sql import isolated_ephemeral_secure_sql, isolated_runtime_profile
+from aeat.core.config import StorageRouteKind, load_settings, override_settings
+from aeat.tests.secure_sql import (
+    dev_test_database_password,
+    isolated_ephemeral_secure_sql,
+    isolated_profile_storage_root,
+    isolated_runtime_profile,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -101,6 +106,18 @@ def test_isolated_runtime_profile_provisions_manifest_runtime_and_repository(tmp
     assert _secure_object_row_count(profile.paths.db_dir / "aeat.db") == 1
     assert not (profile.storage_root / "aeat.db").exists()
     assert not has_active_bucket_session()
+
+
+def test_profile_bootstrap_storage_uses_shared_dev_database_password(tmp_path: Path) -> None:
+    expected = "unique-dev-test-database-password-for-profile-bootstrap"
+    with (
+        override_settings(aeat_dev_test_database_password=expected),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
+        settings = load_settings()
+
+    assert settings.aeat_secret_passphrase.get_secret_value() == expected
+    assert dev_test_database_password(settings) == expected
 
 
 def _control_session() -> BucketSession:
