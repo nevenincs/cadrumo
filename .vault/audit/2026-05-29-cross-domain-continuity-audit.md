@@ -2119,3 +2119,132 @@ and M202 2025-2P/3P closing date oracle verification (FU-W10-B).
 | FU-S208-A | S267 | Verify all `isolated_profile_storage_root` callers pass with file-backend change; document `aeat_dev_test_database_password` CI dependency in `secure_sql.py` |
 | FU-W10-A | S268 | Extract HAC/242/2025 art-8 text into corpus HTML + add `required_text` to `orden-hac-242-2025:art-8` in `irpf.toml` |
 | FU-W10-B | S269 | Oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar |
+
+---
+
+## S253 partial batch + R7-A side-fix — architecture review (Task #84)
+
+### Commits reviewed
+
+| Commit | Description |
+|--------|-------------|
+| `cf7775ebe` | S253 Batch 2: 5 of 12 Category B files migrated + `ledger_transaction_payload` side-fix |
+| `dba0107ea` | Vault step record + S253 plan closure |
+
+### Fixture choice — `isolated_profile_storage_root` vs `isolated_runtime_profile`
+
+**ACCEPT as used, with architectural note.**
+
+The commit message says "isolated_profile_storage_root / real EphemeralMasterKeyProvider"
+— this is stale wording. Since S208, `isolated_profile_storage_root` uses the file
+backend + `aeat_dev_test_database_password`, not `EphemeralMasterKeyProvider`.
+The commit message inaccuracy is minor but worth noting (FU-S253-A).
+
+My #68 grounding designated Category B as "active-profile tests requiring
+`isolated_runtime_profile`". That designation was too broad. The correct split is:
+
+- **`isolated_profile_storage_root`** (empty root, file backend): correct for tests
+  that exercise the profile-create CLI path, which itself provisions and activates
+  a bucket session. The test simulates a first-run operator. The 4 migrated CLI
+  tests (`test_apex_workflow_verification`, `test_cli_surface`,
+  `test_profile_output_language`, `test_session_lifecycle_roundtrip`) all go through
+  `aeat config profile create` to set up their preconditions — `isolated_profile_storage_root`
+  is correct.
+- **`isolated_runtime_profile`**: required only for tests that skip the CLI create
+  step and directly require a pre-provisioned active `BucketSession` (e.g., tests
+  that call application-layer functions directly with a live `SecureObjectRepository`).
+
+The 7 unmigrated files (including `test_modelo_202_modality`) may fall in the
+`isolated_runtime_profile` category. S273 will triage.
+
+### S253 plan closure — PREMATURE
+
+S253 was marked `[x]` in `dba0107ea` despite 7 of 12 files remaining unmigrated.
+The step record itself correctly documents the partial coverage and lists the 7
+remaining files. However, closing the plan step implies the Step is complete; the
+step record's partial-coverage documentation does not undo the visual closure.
+
+This is accurately captured as S273 in the plan. **No remedial action needed in
+this review** — the coder's self-documentation is honest and the S273 follow-up
+is already logged. The pattern of "close step + document partial coverage + log
+follow-up" is acceptable when the partial coverage is clearly itemised.
+
+### S253 migration correctness (5 migrated files)
+
+**ACCEPT.**
+
+- `test_apex_workflow_verification.py`: drops 7 monkeypatches (unsecured backend,
+  explicit dirs, database URL). Retains auth-env delenv guards (correct — those
+  are not storage-backend noise). Uses `isolated_profile_storage_root`. ✓
+- `test_cli_surface.py`: similar pattern. ✓
+- `test_profile_output_language.py`: correct. The architectural note in the commit
+  message about `profile_create_storage_span` inner `override_settings` is accurate
+  and explains why `override_settings(aeat_active_profile=bucket_id)` wraps must be
+  added to any test assertion that reads per-bucket database state. This is a
+  non-obvious constraint worth preserving in the test docstring.
+- `test_session_lifecycle_roundtrip.py`: drops monkeypatches from `_engine_settings`
+  fixture. The fixture now constructs `Settings(aeat_database_url=...)` directly —
+  this is not using `isolated_profile_storage_root`; it sets up a minimal SQL engine
+  for the session roundtrip assertion which does not go through the profile-create
+  path. This is correct: the session lifecycle test operates below the profile layer
+  and needs only a real engine, not a full storage root. ✓
+- `test_modelo_source_mesh_calculate`: already migrated before this commit (correctly
+  noted). No change. ✓
+
+All 5 files drop `AEAT_SECRET_STORE_BACKEND=unsecured` and `AEAT_ALLOW_UNENCRYPTED=1`
+monkeypatches. ✓
+
+### S244 (M202 modality must-fix)
+
+S244 targets `test_modelo_202_modality.py`. That file is in the unmigrated 7 and
+NOT touched in `cf7775ebe`. This is correct — the commit message and step record
+both acknowledge the 7 remaining files. S244 is absorbed by S273 (migrate remaining
+7). The must-fix is still open; it has not been silently dropped. ✓
+
+### R7-A side-fix — `ledger_transaction_payload` counterparty coercion
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+The fix: `counterparty=raw.counterparty or ""` at the call site in
+`src/aeat/application/ledger/_actions.py:1036`.
+
+`LedgerTransactionPayload.counterparty` is declared `str = ""` (non-nullable, empty
+default). `Transaction.raw.counterparty` is `str | None` (per `_models.py` line 44).
+The fix correctly coerces `None → ""` before passing to the strict pydantic model.
+
+**Boundary question: is call-site coercion the right fix, or should
+`LedgerTransactionPayload.counterparty` accept `str | None`?**
+
+The right boundary is the call site. `LedgerTransactionPayload` is a **read
+projection** — a display DTO. Its `counterparty: str = ""` contract says "always a
+string, empty when absent". Changing it to `str | None` would push the
+absent-counterparty handling onto every consumer of the payload (CLI renderers,
+JSON serialisers, export paths). The current model contract is correct; the bug
+was a missing coercion in the factory function. The fix is in the right place.
+
+However, a second coercion already exists at line 2445:
+`counterparty=raw.counterparty or ""` — the same pattern. This means the
+absent-counterparty coercion lives in two separate call sites rather than being
+centralised. The domain `Transaction.raw.counterparty: str | None` field should
+expose a `display_counterparty: str` property that returns `self.counterparty or ""`
+once, and both callers should use it. Logged as **FU-S274-A / S275**.
+
+**Verdict: `cf7775ebe` side-fix ACCEPT.** The coercion is correct at the call site.
+The duplication follow-up is a quality note, not a blocking issue.
+
+### Summary
+
+- `cf7775ebe`: ACCEPT-WITH-FOLLOWUP. 5 files migrated correctly. Fixture choice
+  (`isolated_profile_storage_root`) is correct for these tests. Commit message
+  "EphemeralMasterKeyProvider" wording is stale (file backend since S208). Side-fix
+  for R7-A is at the right boundary; duplicate coercion logged as S275.
+- `dba0107ea`: ACCEPT. Step record is honest about partial coverage; S273 correctly
+  logged; plan closure premature but mitigated by self-documentation.
+
+### Follow-ups
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-S253-A | — | Commit message inaccuracy: "EphemeralMasterKeyProvider" in `cf7775ebe` is stale since S208 file-backend change |
+| FU-S244 | S273 | Migrate remaining 7 Category B files (includes S244 M202 modality must-fix) |
+| FU-S274-A | S275 | Centralise `counterparty or ""` coercion into a `display_counterparty` property on the domain `TransactionRaw` model; retire two identical call-site coercions |
