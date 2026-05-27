@@ -13,8 +13,11 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
+from aeat.domain.calculations.registry._loader import load_legal_parameters_only
+from aeat.domain.fincas._errors import FincaValidationError
 from aeat.domain.fincas._imputacion_parameters import (
     LirpfArt85ImputacionParameters,
+    _parameters_from_catalogue,
     load_imputacion_parameters,
 )
 
@@ -100,3 +103,11 @@ def test_loader_record_validates_inputs_in_pydantic_strict_mode() -> None:
             old_or_no_revision_rate=Decimal("0.02"),
             catastral_revision_lookback_years=10,
         )
+
+
+def test_missing_lirpf_art_85_parameter_raises_finca_validation_error() -> None:
+    parameters = dict(load_legal_parameters_only(bundled_path("registry", "aeat")))
+    del parameters["lirpf-art-85:catastral-revision-lookback-years"]
+
+    with pytest.raises(FincaValidationError, match=r"catastral-revision-lookback-years"):
+        _parameters_from_catalogue(parameters)

@@ -14,11 +14,14 @@ cannot silently relax them.
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from . import SpendingCategory, load_category_profiles_from_manual, resolve_category_profiles
+from ._errors import CategoryValidationError
 from ._proportionality import ProportionalityKind
+from ._registry import load_category_profile_file
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -106,3 +109,12 @@ def test_load_category_profiles_from_manual_rejects_unknown_year() -> None:
 
     with pytest.raises(ValueError, match=r"2024|year|unsupported|unknown"):
         load_category_profiles_from_manual(2024)
+
+
+def test_load_category_profile_file_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
+    """Registry file access failures stay inside the AEAT exception hierarchy."""
+
+    missing = tmp_path / "missing-category-profile.toml"
+
+    with pytest.raises(CategoryValidationError, match=r"cannot stat category profile registry"):
+        load_category_profile_file(missing)
