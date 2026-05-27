@@ -27,24 +27,24 @@ Roberto landlord persona derivation (base liquidable general 55,500 EUR,
 Madrid CCAA, arrendamientos urbanos retenciones 1,824 EUR):
 
   Escala estatal 2024 at 55,500 EUR (LIRPF Art. 63):
-    0–12,450      @ 9.50%  = 1,182.75
-    12,450–20,200 @ 12.00% = 930.00   (cumul 2,112.75)
-    20,200–35,200 @ 15.00% = 2,250.00 (cumul 4,362.75)
-    35,200–55,500 @ 18.50% = 3,755.50 (cumul 8,118.25)
+    0-12,450      @ 9.50%  = 1,182.75
+    12,450-20,200 @ 12.00% = 930.00   (cumul 2,112.75)
+    20,200-35,200 @ 15.00% = 2,250.00 (cumul 4,362.75)
+    35,200-55,500 @ 18.50% = 3,755.50 (cumul 8,118.25)
   tarifa_estatal(55,500) = 8,118.25
   tarifa_estatal(5,550)  =   527.25  (mínimo contribuyente)
   Cuota íntegra estatal (0545) = 7,591.00
-  No deducciones → cuota líquida estatal (0570) = 7,591.00
-  No incrementos  → cuota líquida estatal incrementada (0585) = 7,591.00
+  No deducciones -> cuota líquida estatal (0570) = 7,591.00
+  No incrementos  -> cuota líquida estatal incrementada (0585) = 7,591.00
 
   Madrid 2024 autonomic escala
   (source: registry parameter file
    ``0014-renta-2024-escala-autonomica-madrid-base-general.toml``,
    authority ``aeat-renta-2024-manual-parte1``):
-    0–13,362.22       @ 8.50%  = 1,135.79
-    13,362.22–19,004.63 @ 10.70% = 603.74  (cumul 1,739.53)
-    19,004.63–35,425.68 @ 12.80% = 2,101.89 (cumul 3,841.42)
-    35,425.68–57,320.40 @ 17.40%: 55,500–35,425.68 = 20,074.32 @ 17.40% = 3,492.93
+    0-13,362.22       @ 8.50%  = 1,135.79
+    13,362.22-19,004.63 @ 10.70% = 603.74  (cumul 1,739.53)
+    19,004.63-35,425.68 @ 12.80% = 2,101.89 (cumul 3,841.42)
+    35,425.68-57,320.40 @ 17.40%: 55,500-35,425.68 = 20,074.32 @ 17.40% = 3,492.93
     tarifa_madrid(55,500) = 7,334.35
   tarifa_madrid(5,550) = 5,550 * 8.50% = 471.75  (mínimo contribuyente)
   Cuota íntegra autonómica (0546) = 7,334.35 - 471.75 = 6,862.60
@@ -109,6 +109,16 @@ _EXPECTED_0670 = _EXPECTED_0610
 
 _TOLERANCE = Decimal("0.02")
 
+_RELATION_VALUES_2024 = {
+    "renta-2024-rel-111-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-111-retenciones-mensuales": Decimal("0"),
+    "renta-2024-rel-115-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-123-retenciones-trimestrales": Decimal("0"),
+    "renta-2024-rel-193-retenciones-anuales": Decimal("0"),
+    "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
+    "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
+}
+
 
 def _binding_values() -> dict:
     return {
@@ -120,6 +130,9 @@ def _binding_values() -> dict:
         # declaration_type = 1 (individual) → 0461 computed = 0
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        "renta-2024-profile-marriage-full-year": Decimal("0"),
+        "renta-2024-profile-marriage-month-start": Decimal("0"),
+        "renta-2024-profile-marriage-month-end": Decimal("0"),
     }
 
 
@@ -146,6 +159,7 @@ def test_s361_0587_cuota_liquida_total_is_computed(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
@@ -179,6 +193,7 @@ def test_s361_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot) -
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
@@ -208,6 +223,7 @@ def test_s361_0610_cuota_diferencial_computed(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
@@ -233,6 +249,7 @@ def test_s361_0670_resultado_declaracion_computed(m100_2024_snapshot) -> None:
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
@@ -257,6 +274,7 @@ def test_s361_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot) ->
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
@@ -291,6 +309,7 @@ def test_s361_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
     _higher_retenciones = Decimal("3000")
@@ -300,6 +319,7 @@ def test_s361_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "madrid"},
         binding_values=_binding_values(),
+        relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
     )
 
