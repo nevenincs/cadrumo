@@ -366,6 +366,17 @@ def test_binding_count_is_exactly_30() -> None:
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
+
+    Breakdown of the 30: 19 scalar bindings (single-value profile reads
+    keyed by entity_type, ccaa, estimation_regime, income categories,
+    address-cadastral references, etc.) plus 11 family-repeating-collection
+    bindings (per-dependent / per-spouse / per-child arrays whose
+    cardinality follows the operator's declared family composition).
+    The split matters when a new binding lands: a 20-scalar / 10-collection
+    rebalance still totals 30 but indicates a different schema shift
+    (operator-data field add vs family-collection contract change).
+    Future drift in the sentinel meaning is prevented by this note
+    plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
     assert len(profile_bindings) == 30, (
