@@ -224,3 +224,83 @@ leverage remediations in parallel:
 
 - **L11 + L12**: process-discipline reminders for future dispatches;
   no remediation needed beyond the documentation.
+
+## 2026-05-27 second-pass amendment — honest follow-through
+
+After the first-pass remediation (W08 phases P34-P37) closed many findings via
+"acknowledged" or "documented" rationales, a strict-honest review (tasks #57-#64)
+re-opened the deflected items. Material findings that overturn earlier closures:
+
+**Finding A — Concurrent-campaign regressions hidden as "pre-existing"** (task
+#59 verification): The two test failures task #51 classified as "pre-existing,
+unrelated" were ACTUALLY regressions introduced during this session by
+concurrent-campaign commits authored by the same operator under different task
+IDs. `test_previous_filing_selector_accepts_singular_source_output_shape`
+was broken by commit `63e6bd6bc` (m130 carry-forward retired the
+`_PreviousModeloSelector.relation` field without updating callers, 09:11:58);
+`test_no_hand_summed_aggregation_tests_across_codebase` was broken by commit
+`13818f914` (no-synthetic-sede plan-close reverted commit `b84c03ce7`'s
+hand-summed fix at 08:59:31). Both fixed within the same morning at commits
+`120243920` and `cc3a6d32f`. Both currently passing at HEAD. The
+"pre-existing" classification was wrong; the cross-attribution risk M4 / L15
+flagged is operationally real and active, not theoretical.
+
+**Finding B — M036 uppercase-period drift caused by the M036-grounding work
+itself** (task #61 trace): The uppercase ALTA/MODIFICACION/BAJA values in
+M036's `period_selector` that motivated the `_temporal.py:27` case-insensitive
+fix were introduced by commit `33783e00c` (the M036 grounding work from this
+session at 06:33), which mirrored AEAT Anexo 3 HTML table display casing
+without checking the domain-layer constant `CENSUS_MODELO_EVENT_KINDS`
+canonicalized as lowercase 10 days earlier. Fixed in commit `472de9c02`
+21 minutes later. The subsequent `_temporal.py` case-insensitive mask in
+`c5deb30ff` does not protect the case-sensitive equality guard in
+`_active_036_ownership_from_registry()`. Task #63 added a registry-author
+lint test (`test_m036_revision_periods_are_lowercase_canonical`) at commit
+`8e84ad7e1` to catch future re-introduction. The drift class is closed
+through the lint; the masking comparison in `_temporal.py` remains as a
+secondary defence but is no longer the only protection.
+
+**Finding C — `verification_source` honor-system tightened to fixture-
+metadata-verified** (task #58): The `verification_source` enum added in task
+#49 was honor-system — a profile tagged `real_aeat_corpus_pdf` against a
+synthetic reportlab-generated fixture would pass validation. Commit
+`61654633c` added `test_verification_source_fixture_metadata.py` that walks
+every grounded profile, reads fixture `/Producer` PDF metadata, asserts
+`real_aeat_corpus_pdf` profiles have NO `aeat-test-fixture-generator`
+producer string and `synthetic_from_aeat_published_text` profiles DO have
+it. 18 parametrized + sentinel tests pass; no mis-tagged profiles. Edge
+case documented: a synthetic generator that omits `setProducer` cannot
+be distinguished from real AEAT PDF; protected by the invariant that
+`_generate.py` always sets the explicit producer string (established by
+commit `a04be5ff2` task #53).
+
+**Finding D — M037 AEAT-surface search exhausted** (task #60): The earlier
+M037 closure as "historically suppressed" was correct but never empirically
+verified. Commit `1a9eaa34c` exhausted every AEAT Sede URL pattern, the
+Diseños de Registro archive (which lists M036 then M038 with M037 absent
+entirely), and captured the BOE-A-2025-410 suppression order. SEARCH_LOG.md
+authored documenting every URL attempted so future agents do not repeat
+the search. Domain-enforced absence is the only correct state for M037,
+now empirically established.
+
+**Finding E — Pure-production-path gate tests honestly limited** (task #62):
+The earlier "production-path" test added in task #50 was classified
+"Hybrid" by the same agent's own pre-survey table (used `source_root` plus
+direct `corpus_root` injection). Commit `7749a997f` added three pure-
+production-path tests (`source_root=bundled_path()` with NO kwarg
+injection). Honest finding: specimen-gate Scenario A (no fixture + no flag
+→ fires) CANNOT be triggered via pure-production wiring because every
+real modelo has at least one fixture in the corpus directory; the
+Scenario A test stays in the empty-corpus-injection pattern with inline
+prose explaining the limitation.
+
+**Honest meta-conclusion**: The first-pass post-rush audit was insufficient
+where it closed findings via "acknowledged" or "documented" rationales
+without performing the actual remediation work. Two findings (A, B) that
+the first pass rationalized away turned out to be REAL silent-failure
+classes that were active during the session. The second pass surfaced
+them through independent verification of the closure claims. Going
+forward: prefer explicit "out of scope" classification over
+"acknowledged" rationalization when a finding is real but the operator
+chooses not to remediate immediately; this preserves the audit signal
+for future sessions.
