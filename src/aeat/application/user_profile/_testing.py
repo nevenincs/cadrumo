@@ -62,6 +62,7 @@ def register_minimal_profile(
     display_name: str | None = None,
     overrides: Mapping[str, str] | None = None,
     secure_objects: SecureObjectRepository | None = None,
+    enforce_unique_tax_id: bool = True,
 ) -> WorkflowState:
     """Register ``profile_id`` with the minimum required schema facts.
 
@@ -73,6 +74,13 @@ def register_minimal_profile(
             of the placeholder facts (also accepts paths not in the
             required set; they merge in).
         secure_objects: Optional injected secure-object repository.
+        enforce_unique_tax_id: When ``False``, skip the cross-bucket
+            tax-id uniqueness scan. Use in per-bucket-storage test
+            scenarios where each profile's encrypted record lives in its
+            own SQLite file and opening a second bucket session to scan
+            a previously-created profile is not possible within the
+            current active session. Matches the CLI ``profile create``
+            behaviour (which also passes ``enforce_unique_tax_id=False``).
 
     Returns:
         The state with the profile registered + activated and the
@@ -95,6 +103,7 @@ def register_minimal_profile(
             display_name=display_name or profile_id,
             facts=facts,
             secure_objects=secure_objects,
+            enforce_unique_tax_id=enforce_unique_tax_id,
         )
     except ProfileAlreadyExistsError:
         selected = select_profile(state, profile_id=profile_id, secure_objects=secure_objects)
