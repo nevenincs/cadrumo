@@ -4,6 +4,105 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.domain.buckets._errors.BucketsError",
+        ErrorCode(
+            code="ERROR_DOMAIN_BUCKETS",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketEventValidationError",
+        ErrorCode(
+            code="INTEGRITY_DOMAIN_BUCKET_EVENT_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketMaintenanceError",
+        ErrorCode(
+            code="ERROR_DOMAIN_BUCKET_MAINTENANCE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat app bucket --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketBrowseError",
+        ErrorCode(
+            code="FAIL_DOMAIN_BUCKET_BROWSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat app bucket history --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketExportError",
+        ErrorCode(
+            code="FAIL_DOMAIN_BUCKET_EXPORT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat app bucket export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketImportError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_BUCKET_IMPORT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat app bucket import --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketRenameError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_BUCKET_RENAME",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config profile rename --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._errors.BucketDeleteRefusedError",
+        ErrorCode(
+            code="REFUSED_DOMAIN_BUCKET_DELETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config profile delete --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.buckets._event_repository.BucketEventHistoryPersistenceError",
+        ErrorCode(
+            code="FAIL_DOMAIN_BUCKET_EVENT_HISTORY_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.error.error_storage_bucket",
+            default_suggestion="aeat config repair integrity objects",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.live._notifications.NotificationsSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_NOTIFICATIONS_SNAPSHOT_NOT_FOUND",
@@ -1067,7 +1166,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_AGGREGATION_BINDING",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_aggregation_binding",
-            default_suggestion="aeat app ledger preflight --mode modelo",
+            default_suggestion="aeat app ledger preflight",
             retryable=False,
             runbook_id=None,
         ),
@@ -1078,7 +1177,10 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
-            default_suggestion="aeat app live iva-wallet pull",
+            default_suggestion=(
+                "aeat app modelo iva-wallet seed --filing-year YEAR "
+                "--period PERIOD --amount 0 --confirm"
+            ),
             retryable=False,
             runbook_id=None,
         ),

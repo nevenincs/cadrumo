@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ...core.errors import AeatError
+
 if TYPE_CHECKING:
     from ...domain.user_profile import UserProfilePortableExport
 
@@ -185,5 +187,5 @@ def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_i
     repo.save(catalogue)
 
 
-class UnsupportedBundleSchemaVersionError(Exception):
+class UnsupportedBundleSchemaVersionError(AeatError):
     """Raised when a bundle carries an unsupported ``bundle_schema_version``."""
