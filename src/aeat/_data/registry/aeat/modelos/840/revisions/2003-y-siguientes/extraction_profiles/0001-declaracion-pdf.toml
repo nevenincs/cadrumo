@@ -1,0 +1,27 @@
+# label_patterns grounded against the AEAT-published printed form PDF at
+# src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/
+#   01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
+# (source_ref: boe-modelo-840-2003-form).
+# pdfplumber extracts casilla-number prefixed labels: "14Ejercicio:" and
+# "15Declaración de:". The patterns match those extracted lines at line-start.
+# Round-trip verified by test_parser_extracts_modelo_840_synthetic_fixture_targets
+# in test_parser_boundary.py against a sanitized synthetic fixture built from
+# the corpus-published labels.
+[[revisions."2003-y-siguientes".extraction_profiles]]
+id = "modelo-840-declaracion-pdf"
+surface = "declaracion_pdf"
+artefact_kind = "declaration_pdf"
+accepted_artefact_kinds = ["declaration_pdf"]
+parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
+target_casillas = [
+    {casilla_id = "decl.tipo-declaracion", match_strategy = "named_label", value_kind = "enum", label_pattern = '15\s*Declaraci[oó]n\s+de:'},
+    {casilla_id = "decl.ejercicio", match_strategy = "named_label", value_kind = "amount", label_pattern = '14\s*Ejercicio:'},
+]
+confidence = "strict"
+corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
+min_coverage = "1.0"
+failure_semantics = "fail_hard"
+legal_refs = ["orden-hac-2572-2003:apartado-1"]
+source_refs = ["aeat-dr-840", "boe-modelo-840-2003-form"]
+

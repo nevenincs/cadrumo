@@ -13,6 +13,7 @@ import pytest
 from aeat.adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from aeat.application.calculations import (
     CalculationObservationRepository,
+    IvaCompensationOverride,
     IvaWalletDecisionRepository,
     reconcile_modelo_303_iva_compensation,
 )
@@ -32,7 +33,7 @@ from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
-_TAXPAYER_NIF = "12345678Z"
+_TAXPAYER_NIF = "taxpayeralpha"
 _TARGET_YEAR = 2026
 _TARGET_PERIOD = "2T"
 _DECIDED_AT = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
@@ -221,7 +222,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         )
 
 
-def test_missing_wallet_uses_filed_history_decision_through_real_modelo_303_engine(tmp_path: Path) -> None:
+def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         _store_operator_profile()
         observation_repo = CalculationObservationRepository()
@@ -237,10 +238,66 @@ def test_missing_wallet_uses_filed_history_decision_through_real_modelo_303_engi
 
         assert report.decision.selected_authority == "filed_history"
         assert report.decision.divergence == "filed_history_only"
+        assert report.decision.blocked is True
+        assert {source.source_kind for source in report.decision.authority_sources} == {
+            "local_recurrence",
+            "filed_history_observation",
+        }
+
+        work_repo, calc_repo, event_repo = _work_unit_repositories()
+        work_unit = create_work_unit(
+            bucket_id="operator",
+            modelo="303",
+            filing_year=_TARGET_YEAR,
+            period=_TARGET_PERIOD,
+            revision_id=snapshot.revision.id,
+            repository=work_repo,
+            clock=_DECIDED_AT,
+        )
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
+            calculate_modelo_revision(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                binding_values={},
+                backend_binding_values=_modelo_303_engine_inputs(),
+                iva_compensation_decision=report.decision,
+                filing_period_date=date(2026, 6, 30),
+                work_unit_repository=work_repo,
+                calculation_repository=calc_repo,
+                bucket_event_repository=event_repo,
+                clock=_DECIDED_AT,
+            )
+        assert len(calc_repo.load()) == 0
+
+
+def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine_prefill(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        _store_operator_profile()
+        observation_repo = CalculationObservationRepository()
+        _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
+        snapshot = resources().modelos.authority.snapshot("303", filing_year=_TARGET_YEAR, period=_TARGET_PERIOD)
+        report = reconcile_modelo_303_iva_compensation(
+            snapshot,
+            taxpayer_nif=_TAXPAYER_NIF,
+            wallet=None,
+            repository=observation_repo,
+            override=IvaCompensationOverride(
+                amount=Decimal("1200.00"),
+                reason="Operator reviewed filed-history evidence while direct wallet/cartera was unavailable.",
+                evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
+                recorded_at=_DECIDED_AT,
+            ),
+            decided_at=_DECIDED_AT,
+        )
+
+        assert report.decision.selected_authority == "taxpayer_override"
+        assert report.decision.divergence == "override"
         assert report.decision.blocked is False
         assert {source.source_kind for source in report.decision.authority_sources} == {
             "local_recurrence",
             "filed_history_observation",
+            "taxpayer_override",
         }
 
         work_repo, calc_repo, event_repo = _work_unit_repositories()

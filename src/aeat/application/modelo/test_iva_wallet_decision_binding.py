@@ -7,10 +7,14 @@ from decimal import Decimal
 
 import pytest
 
+from ...core.resources import resources
 from ..calculations._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 from ._actions import ModeloIvaWalletReconciliationBlocked, _apply_iva_compensation_decision_binding
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_TAXPAYER_REF = "taxpayeralpha"
+_OTHER_TAXPAYER_REF = "othertaxpayeralpha"
 
 
 def _decision(
@@ -19,7 +23,7 @@ def _decision(
     amount: Decimal | None = Decimal("1200"),
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         selected_authority="aeat_wallet" if not blocked else "missing",
@@ -36,21 +40,39 @@ def _decision(
     )
 
 
-def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:
-    caller: dict[str, Decimal] = {}
-    backend: dict[str, Decimal] = {}
+def _revision():
+    return resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision
 
+
+def _apply(
+    *,
+    taxpayer_nif: str = _TAXPAYER_REF,
+    casilla_inputs: dict[str, Decimal] | None = None,
+    backend_casilla_inputs: dict[str, Decimal] | None = None,
+    caller_binding_values: dict[str, Decimal] | None = None,
+    backend_binding_values: dict[str, Decimal] | None = None,
+    decision: IvaCompensationReconciliationDecision | None = None,
+) -> None:
     _apply_iva_compensation_decision_binding(
         "303",
         2026,
         "2T",
-        taxpayer_nif="12345678Z",
-        casilla_inputs={},
-        backend_casilla_inputs={},
-        caller_binding_values=caller,
-        backend_binding_values=backend,
-        decision=_decision(),
+        bucket_id="operator",
+        revision=_revision(),
+        taxpayer_nif=taxpayer_nif,
+        casilla_inputs=casilla_inputs or {},
+        backend_casilla_inputs=backend_casilla_inputs or {},
+        caller_binding_values=caller_binding_values if caller_binding_values is not None else {},
+        backend_binding_values=backend_binding_values if backend_binding_values is not None else {},
+        decision=decision,
     )
+
+
+def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:
+    caller: dict[str, Decimal] = {}
+    backend: dict[str, Decimal] = {}
+
+    _apply(caller_binding_values=caller, backend_binding_values=backend, decision=_decision())
 
     assert backend["modelo-303-compensacion-pendiente-anteriores"] == Decimal("1200")
 
@@ -61,7 +83,9 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={},
             caller_binding_values={},
@@ -76,7 +100,9 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={},
             caller_binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("800")},
@@ -91,7 +117,9 @@ def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refuse
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={},
             caller_binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("800")},
@@ -104,17 +132,7 @@ def test_modelo_303_without_prior_compensation_binding_can_calculate_without_wal
     caller: dict[str, Decimal] = {}
     backend: dict[str, Decimal] = {"modelo-303-iva-repercutido-general-cuota": Decimal("100")}
 
-    _apply_iva_compensation_decision_binding(
-        "303",
-        2026,
-        "2T",
-        taxpayer_nif="12345678Z",
-        casilla_inputs={},
-        backend_casilla_inputs={},
-        caller_binding_values=caller,
-        backend_binding_values=backend,
-        decision=None,
-    )
+    _apply(caller_binding_values=caller, backend_binding_values=backend, decision=None)
 
     assert backend == {"modelo-303-iva-repercutido-general-cuota": Decimal("100")}
 
@@ -125,7 +143,9 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={"iva.compensacion-pendiente-periodos-anteriores": Decimal("800")},
             backend_casilla_inputs={},
             caller_binding_values={},
@@ -140,7 +160,9 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={"iva.compensacion-pendiente-periodos-anteriores": Decimal("800")},
             caller_binding_values={},
@@ -155,7 +177,9 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
             "303",
             2026,
             "2T",
-            taxpayer_nif="99999999R",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_OTHER_TAXPAYER_REF,
             casilla_inputs={},
             backend_casilla_inputs={},
             caller_binding_values={},
@@ -170,7 +194,9 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
             "303",
             2026,
             "2T",
-            taxpayer_nif="12345678Z",
+            bucket_id="operator",
+            revision=_revision(),
+            taxpayer_nif=_TAXPAYER_REF,
             casilla_inputs={"iva.compensacion-pendiente-periodos-anteriores": Decimal("800")},
             backend_casilla_inputs={},
             caller_binding_values={},

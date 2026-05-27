@@ -568,6 +568,7 @@ def create_work_unit(
     """
 
     _reject_unknown_revision(modelo=modelo, revision_id=revision_id)
+    _reject_unknown_period_for_revision(modelo=modelo, revision_id=revision_id, period=period)
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()
@@ -1873,6 +1874,49 @@ def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
     )
 
 
+def _reject_unknown_period_for_revision(*, modelo: str, revision_id: str, period: str) -> None:
+    """Refuse a work-unit create that names a period the revision does not declare.
+
+    Cross-domain-continuity W02.P12.S220 (persona R7-003): M202 currently
+    accepts ``--period 1T`` at create then fails calculate with
+    no-revision-for-period; period validation must fire at create using
+    the revision's declared period catalogue.
+
+    The revision's ``filing_schedules`` carry the declared periods per
+    period-kind (monthly / quarterly / annual / ad_hoc). The union of
+    every schedule's ``periods`` tuple is the valid period set for that
+    revision. An unknown period is refused with the sorted-valid list.
+
+    Caller is expected to have already validated the modelo + revision_id
+    via :func:`_reject_unknown_revision`; this helper re-loads the modelo
+    definition lazily and is safe to call independently.
+    """
+
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        modelo_def = _authority_via_resources().modelo(modelo)
+    except RegistrySnapshotError as exc:
+        raise ModeloError(str(exc)) from exc
+    revision = modelo_def.revisions.get(revision_id)
+    if revision is None:
+        return
+    declared: set[str] = set()
+    for schedule in revision.filing_schedules:
+        declared.update(schedule.periods)
+    if not declared:
+        # Revisions without filing_schedules (rare; informational-only)
+        # cannot validate; accept anything to preserve current behaviour.
+        return
+    if period in declared:
+        return
+    available = ", ".join(sorted(declared))
+    raise ModeloError(
+        f"period {period!r} is not declared on modelo {modelo!r} "
+        f"revision {revision_id!r}. Available periods: {available}"
+    )
+
+
 def _reject_incomplete_amendment_casillas(
     *,
     modelo: str,
@@ -2468,7 +2512,6 @@ def _collect_revision_verification_findings(
         )
         return findings, resolved_casillas, missing_required
 
-    casillas_by_id = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
     revision_keys = set(target.inputs_snapshot)
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
@@ -2481,7 +2524,7 @@ def _collect_revision_verification_findings(
                     _missing_required_casilla_finding(
                         casilla_id,
                         target.work_unit_id,
-                        casilla_def=casillas_by_id.get(casilla_id),
+                        casilla_def=casilla,
                     )
                 )
 

@@ -326,11 +326,11 @@ def reconcile_iva_compensation_wallet(
                 local_recurrence_amount=local_recurrence_amount,
                 override_amount=None,
                 divergence="filed_history_only",
-                blocked=False,
+                blocked=True,
                 stale_wallet=False,
                 reason=(
-                    "Direct AEAT wallet/cartera evidence is unavailable; using AEAT filed-history-derived "
-                    "recurrence as an explicit filed-history-only authority."
+                    "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
+                    "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
                 ),
                 wallet_captured_at=None,
                 authority_sources=authority_sources,
@@ -346,9 +346,12 @@ def reconcile_iva_compensation_wallet(
             local_recurrence_amount=local_recurrence_amount,
             override_amount=None,
             divergence="wallet_missing",
-            blocked=False,
+            blocked=True,
             stale_wallet=False,
-            reason="AEAT wallet is unavailable; using lower-confidence local recurrence.",
+            reason=(
+                "AEAT wallet is unavailable; local recurrence is lower-confidence fallback evidence and requires "
+                "explicit taxpayer override before automatic output."
+            ),
             wallet_captured_at=None,
             authority_sources=authority_sources,
             decided_at=when,
@@ -383,9 +386,12 @@ def reconcile_iva_compensation_wallet(
             local_recurrence_amount=local_recurrence_amount,
             override_amount=None,
             divergence="wallet_stale",
-            blocked=False,
+            blocked=True,
             stale_wallet=True,
-            reason="AEAT wallet observation is stale; using lower-confidence local recurrence.",
+            reason=(
+                "AEAT wallet observation is stale; local recurrence is lower-confidence fallback evidence and "
+                "requires explicit taxpayer override before automatic output."
+            ),
             wallet_captured_at=wallet_captured_at,
             authority_sources=authority_sources,
             decided_at=when,

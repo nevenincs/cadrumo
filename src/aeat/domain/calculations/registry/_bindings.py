@@ -1517,18 +1517,27 @@ class _RentaLedgerIncomeSelector(BaseModel):
 
     ``modelo`` is the M130 declaration series (the only model that sources
     income via this aggregation path). ``target_casilla`` is the casilla that
-    receives the cumulative revenue total — currently only ``"01"`` (Ingresos
-    íntegros, actividades económicas estimación directa).
+    receives the cumulative revenue total.
+
+    ``fact`` controls which aggregation path is applied:
+
+    - ``"gross_income_sum"`` sums ``RentaIncomeObservation.gross_amount``
+      (``raw.amount`` or its business fraction) across the window — the
+      ingresos íntegros path feeding casilla ``"01"``.
+    - ``"taxable_base_sum"`` sums ``RentaIncomeObservation.taxable_base_amount``
+      (the VAT-exclusive base imponible) — the rendimiento-neto path feeding
+      casilla ``"03"``.  Observations whose ``taxable_base_amount`` is
+      ``None`` contribute zero to this sum.
     """
 
     model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
 
     modelo: Literal["130"] = "130"
     target_casilla: str = Field(min_length=2, max_length=8)
-    fact: Literal["gross_income_sum"] = "gross_income_sum"
+    fact: Literal["gross_income_sum", "taxable_base_sum"] = "gross_income_sum"
 
 
-_RENTA_130_INCOME_CASILLAS: frozenset[str] = frozenset({"01"})
+_RENTA_130_INCOME_CASILLAS: frozenset[str] = frozenset({"01", "03"})
 
 
 def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedgerIncomeSelector:
@@ -1538,6 +1547,9 @@ def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedge
         raise RegistryValidationError(
             f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector"
         ) from exc
+
+
+_RENTA_130_INCOME_SUPPORTED_FACTS: frozenset[str] = frozenset({"gross_income_sum", "taxable_base_sum"})
 
 
 def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
@@ -1556,17 +1568,17 @@ def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBin
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only aggregation op 'sum', got {op!r}"
         )
-    if selector.fact != "gross_income_sum":
+    if selector.fact not in _RENTA_130_INCOME_SUPPORTED_FACTS:
         raise RegistryValidationError(
             f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
-            f"fact 'gross_income_sum', got {selector.fact!r}"
+            f"facts {sorted(_RENTA_130_INCOME_SUPPORTED_FACTS)!r}, got {selector.fact!r}"
         )
 
 
 class RentaIncomeObservationProtocol(Protocol):
     """Structural protocol for actividad-económica income observations.
 
-    The registry only needs these two attributes to resolve
+    The registry only needs these attributes to resolve
     ``ledger_renta_income_aggregation`` bindings; the full
     :class:`~aeat.application.aggregation._renta_income_ledger.RentaIncomeObservation`
     satisfies this protocol without any explicit declaration.
@@ -1578,12 +1590,21 @@ class RentaIncomeObservationProtocol(Protocol):
     @property
     def gross_amount(self) -> Decimal: ...
 
+    @property
+    def taxable_base_amount(self) -> Decimal | None: ...
+
 
 def resolve_ledger_renta_income_aggregation_binding_values(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],
 ) -> dict[str, Decimal]:
-    """Resolve every ``ledger_renta_income_aggregation`` binding on ``revision``."""
+    """Resolve every ``ledger_renta_income_aggregation`` binding on ``revision``.
+
+    The ``fact`` declared in the binding selector controls which field is
+    summed: ``"gross_income_sum"`` → ``observation.gross_amount``;
+    ``"taxable_base_sum"`` → ``observation.taxable_base_amount`` (zero when
+    ``None``).
+    """
 
     available = tuple(observations)
     resolved: dict[str, Decimal] = {}
@@ -1592,7 +1613,13 @@ def resolve_ledger_renta_income_aggregation_binding_values(
             continue
         selector = _renta_ledger_income_selector(binding)
         matched = [observation for observation in available if observation.target_casilla == selector.target_casilla]
-        resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
+        if selector.fact == "taxable_base_sum":
+            resolved[str(binding.id)] = sum(
+                (observation.taxable_base_amount or Decimal("0") for observation in matched),
+                Decimal("0"),
+            )
+        else:
+            resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
 
 

@@ -53,7 +53,7 @@ from ...domain.deadlines import (
 )
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
-from ._applicability import (
+from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     ModeloApplicability,
     PayerFact as _PayerFact,

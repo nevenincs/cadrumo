@@ -1132,3 +1132,80 @@ def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
     )
     with pytest.raises(_typer.BadParameter):
         _parse_typed_cli_observations([missing_scheme], model=RetencionObservation, flag="--retencion-observation")
+
+
+def test_verification_report_lines_includes_next_action_when_refused() -> None:
+    """A refused verification report surfaces a retrieval next_action pointer."""
+    from datetime import UTC, datetime
+
+    from aeat.domain.modelos._verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+        VerificationCompletenessStatus,
+        VerificationReport,
+        derive_verification_report_id,
+    )
+    from aeat.entrypoints.cli._modelo import _verification_report_lines
+
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
+    calc_id = "a" * 64
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calc_id,
+        run_at=run_at,
+        verified_by="test-actor",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calc_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message="cross-casilla predicate failed",
+            ),
+        ),
+        run_at=run_at,
+        verified_by="test-actor",
+        granted_verificado_completo=False,
+    )
+
+    lines = _verification_report_lines(report)
+
+    next_action_lines = [l for l in lines if l.startswith("next_action\t")]
+    assert len(next_action_lines) == 1
+    assert calc_id in next_action_lines[0]
+    assert "verification-report list" in next_action_lines[0]
+
+
+def test_verification_report_lines_omits_next_action_when_granted() -> None:
+    """A granted verification report does NOT emit a next_action pointer."""
+    from datetime import UTC, datetime
+
+    from aeat.domain.modelos._verification_report import (
+        VerificationCompletenessStatus,
+        VerificationReport,
+        derive_verification_report_id,
+    )
+    from aeat.entrypoints.cli._modelo import _verification_report_lines
+
+    run_at = datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC)
+    calc_id = "b" * 64
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calc_id,
+        run_at=run_at,
+        verified_by="test-actor",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calc_id,
+        completeness_status=VerificationCompletenessStatus.COMPLETE,
+        run_at=run_at,
+        verified_by="test-actor",
+        granted_verificado_completo=True,
+    )
+
+    lines = _verification_report_lines(report)
+
+    assert not any(l.startswith("next_action\t") for l in lines)

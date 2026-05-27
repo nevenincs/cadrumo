@@ -28,6 +28,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 _NOW = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
+_TAXPAYER_REF = "synthetic-taxpayer"
+_OTHER_TAXPAYER_REF = "other-synthetic-taxpayer"
 
 
 def test_wallet_reconciliation_uses_public_sede_observation_export() -> None:
@@ -36,8 +38,8 @@ def test_wallet_reconciliation_uses_public_sede_observation_export() -> None:
 
 def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensationWalletObservation:
     return IvaCompensationWalletObservation(
-        taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
+        authenticated_identity=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         rows=(
@@ -59,7 +61,7 @@ def _wallet(amount: Decimal, *, captured_at: datetime = _NOW) -> IvaCompensation
 
 def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("1200")),
@@ -81,7 +83,7 @@ def test_wallet_match_selects_aeat_wallet_and_keeps_local_as_corroboration() -> 
 
 def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_provenance() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("1200")),
@@ -116,7 +118,7 @@ def test_iva_wallet_decision_source_resolver_emits_modelo_303_binding_and_proven
 
 def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("1200")),
@@ -133,7 +135,7 @@ def test_wallet_without_local_history_is_authoritative_but_not_cross_verified() 
 
 def test_wallet_higher_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("1200")),
@@ -149,7 +151,7 @@ def test_wallet_higher_than_local_blocks_automatic_output() -> None:
 
 def test_wallet_lower_than_local_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("400")),
@@ -162,9 +164,9 @@ def test_wallet_lower_than_local_blocks_automatic_output() -> None:
     assert decision.blocked is True
 
 
-def test_missing_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> None:
+def test_missing_wallet_records_local_recurrence_but_blocks_automatic_output() -> None:
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=None,
@@ -175,7 +177,7 @@ def test_missing_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> 
     assert decision.selected_authority == "local_recurrence"
     assert decision.selected_amount == Decimal("800")
     assert decision.divergence == "wallet_missing"
-    assert decision.blocked is False
+    assert decision.blocked is True
 
 
 def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_authority() -> None:
@@ -190,7 +192,7 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     )
 
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=None,
@@ -202,7 +204,7 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     assert decision.selected_authority == "filed_history"
     assert decision.selected_amount == Decimal("800")
     assert decision.divergence == "filed_history_only"
-    assert decision.blocked is False
+    assert decision.blocked is True
     assert {source.source_kind for source in decision.authority_sources} == {
         "local_recurrence",
         "filed_history_observation",
@@ -210,10 +212,10 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     assert filed_history_source in decision.authority_sources
 
 
-def test_stale_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> None:
+def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> None:
     stale = _wallet(Decimal("1200"), captured_at=_NOW - timedelta(days=40))
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=stale,
@@ -227,7 +229,7 @@ def test_stale_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> No
     assert decision.wallet_amount == Decimal("1200")
     assert decision.divergence == "wallet_stale"
     assert decision.stale_wallet is True
-    assert decision.blocked is False
+    assert decision.blocked is True
 
 
 def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> None:
@@ -239,7 +241,7 @@ def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> N
     )
 
     decision = reconcile_iva_compensation_wallet(
-        taxpayer_nif="12345678Z",
+        taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period="2T",
         wallet=_wallet(Decimal("1200")),
@@ -267,7 +269,7 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None
 
     with pytest.raises(IvaCompensationReconciliationInputError, match="target"):
         reconcile_iva_compensation_wallet(
-            taxpayer_nif="12345678Z",
+            taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             wallet=wallet,
@@ -277,11 +279,11 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None
 
 
 def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> None:
-    wallet = _wallet(Decimal("1200")).model_copy(update={"taxpayer_nif": "99999999R"})
+    wallet = _wallet(Decimal("1200")).model_copy(update={"taxpayer_nif": _OTHER_TAXPAYER_REF})
 
     with pytest.raises(IvaCompensationReconciliationInputError, match="taxpayer"):
         reconcile_iva_compensation_wallet(
-            taxpayer_nif="12345678Z",
+            taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
             target_period="2T",
             wallet=wallet,

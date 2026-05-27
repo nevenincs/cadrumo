@@ -314,9 +314,38 @@ def _initial_values(
     # or surface as absent-by-design / raise. The established
     # `resolve_bound_casilla_inputs` helper legitimately projects
     # binding values into the `inputs` mapping as a convenience for
-    # callers; that projection remains supported and is not a
-    # masking pattern (the source of truth is the binding map).
+    # callers; that projection is recognised and not a masking
+    # pattern (the source of truth is the binding map).
+    #
+    # P07.S36 hardening: re-impose ADR Decision Z2's lost design
+    # intent on previous-filing bound casillas specifically. The
+    # ONLY legitimate way to land a previous-filing bound casilla
+    # value in `inputs` is the projection pattern where the same
+    # value is ALSO present in `binding_values` under the casilla's
+    # binding id. A previous-filing bound casilla supplied via
+    # `inputs` WITHOUT the matching `binding_values[binding_id]`
+    # entry is a test-fixture lie — the silent-zero hazard in
+    # disguise. Raise loudly so the lie is caught at fixture
+    # authoring time, not absorbed as a silent default.
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    smuggled_previous_filing_bound = sorted(
+        casilla_id
+        for casilla_id in inputs
+        if casillas[casilla_id].input_kind == "bound"
+        and casillas[casilla_id].binding is not None
+        and (binding_def := bindings_by_id.get(casillas[casilla_id].binding or "")) is not None
+        and binding_def.source == "previous_filing"
+        and binding_def.id not in binding_values
+    )
+    if smuggled_previous_filing_bound:
+        raise RegistryValidationError(
+            "previous-filing bound registry casillas cannot be supplied via inputs "
+            "without the matching binding_values entry; the projection from "
+            "resolve_bound_casilla_inputs must include the binding value as the "
+            f"source of truth: {smuggled_previous_filing_bound!r}",
+            translated_message="errors.calc.bound_input_smuggled_without_binding_value",
+            context={"casilla_ids": ",".join(smuggled_previous_filing_bound)},
+        )
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()
     for casilla in revision.casillas:

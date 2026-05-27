@@ -235,7 +235,7 @@ def _overview_calendar_all_profiles(
         f"to\t{rng.to_date.isoformat()}",
         f"profiles\t{len(active_buckets)}",
     ]
-    all_calendars: list[dict] = []
+    all_calendars: list[dict[str, object]] = []
 
     repository = ProfileRepository()
     for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):

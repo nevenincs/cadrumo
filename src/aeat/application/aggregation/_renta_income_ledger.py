@@ -54,6 +54,10 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
     UNSUPPORTED_PERIOD = "unsupported_period"
+    # Nómina / trabajo entries declare irpf_category="trabajo" — they
+    # belong to IRPF rendimientos del trabajo, not actividad económica,
+    # and must not feed M130 casillas.
+    TRABAJO_INCOME = "trabajo_income"
 
 
 class RentaIncomeLedgerAggregationIssue(BaseModel):
@@ -71,8 +75,14 @@ class RentaIncomeObservation(BaseModel):
 
     Carries the typed gross amount and the target casilla it feeds. The
     domain registry resolver matches ``target_casilla`` against the binding
-    selector and sums ``gross_amount`` across all observations for that
-    casilla.
+    selector and sums ``gross_amount`` (or ``taxable_base_amount``) across
+    all observations for that casilla depending on the declared fact.
+
+    ``taxable_base_amount`` is the VAT-exclusive base imponible from the
+    original invoice (``transaction.taxable_base``).  It feeds the
+    ``taxable_base_sum`` fact path used by the rendimiento-neto binding
+    (casilla 03).  ``None`` when the transaction carries no explicit
+    ``taxable_base``.
     """
 
     model_config = _STRICT_FROZEN
@@ -80,6 +90,7 @@ class RentaIncomeObservation(BaseModel):
     transaction_id: str = Field(min_length=1, max_length=128)
     target_casilla: str = Field(min_length=2, max_length=8)
     gross_amount: Decimal = Field(ge=Decimal("0"))
+    taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     filing_date: date
 
 
@@ -206,6 +217,10 @@ def _resolve_quarterly_period(period: Period | str) -> Period:
     return resolved
 
 
+_IRPF_CATEGORY_ACTIVIDAD_ECONOMICA: str = "actividad_economica"
+_IRPF_CATEGORY_TRABAJO: str = "trabajo"
+
+
 def _classify_income_transaction(
     transaction: Transaction,
     *,
@@ -229,6 +244,18 @@ def _classify_income_transaction(
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta income",
         )
 
+    # Nómina entries (irpf_category="trabajo") belong to rendimientos del
+    # trabajo and must not feed M130 actividad-económica casillas.
+    if transaction.irpf_category == _IRPF_CATEGORY_TRABAJO:
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaIncomeLedgerAggregationIssueReason.TRABAJO_INCOME,
+            detail=(
+                f"irpf_category {transaction.irpf_category!r} belongs to rendimientos del trabajo, "
+                "not actividad económica; excluded from M130"
+            ),
+        )
+
     gross_amount = _income_business_amount(transaction)
     if gross_amount is None:
         reason = (
@@ -250,17 +277,39 @@ def _classify_income_transaction(
             detail=f"filing date {filing_date} is outside the cumulative income window",
         )
 
+    # taxable_base carries the VAT-exclusive base imponible when set; it
+    # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
+    taxable_base_amount: Decimal | None = None
+    if transaction.taxable_base is not None:
+        raw_tb = transaction.taxable_base
+        if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:
+            taxable_base_amount = raw_tb * transaction.business_pct
+        else:
+            taxable_base_amount = raw_tb
+
     return RentaIncomeObservation(
         transaction_id=transaction_id,
         target_casilla=_TARGET_CASILLA_INGRESOS,
         gross_amount=gross_amount,
+        taxable_base_amount=taxable_base_amount,
         filing_date=filing_date,
     )
 
 
 def _income_business_amount(transaction: Transaction) -> Decimal | None:
-    """Return the business-attributed income amount, or None if not eligible."""
+    """Return the business-attributed income amount, or None if not eligible.
+
+    When ``irpf_category`` is explicitly set to ``"actividad_economica"`` the
+    transaction is already classified as a professional-activity receipt and
+    ``business_classification`` is treated as ``BUSINESS`` by definition (the
+    category tag is the authoritative signal).  This avoids the common case
+    where a transaction is tagged with ``irpf_category=actividad_economica``
+    before the broader ``business_classification`` sweep has run.
+    """
     amount = abs(transaction.raw.amount)
+    if transaction.irpf_category == _IRPF_CATEGORY_ACTIVIDAD_ECONOMICA:
+        # The explicit IRPF category is the authoritative M130 eligibility gate.
+        return amount
     if transaction.business_classification is BusinessClassification.BUSINESS:
         return amount
     if transaction.business_classification is BusinessClassification.MIXED and transaction.business_pct is not None:

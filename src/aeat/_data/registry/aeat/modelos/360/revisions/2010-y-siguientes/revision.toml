@@ -1,0 +1,15 @@
+[revisions."2010-y-siguientes"]
+label = "Modelo 360 ejercicios 2010 y siguientes (Orden EHA/789/2010, modificada por HAP/841/2016). Ad-hoc por trigger de devolucion solicitada."
+valid_from = 2010-04-01
+period_selector = { year_from = 2010, periods = ["AD-HOC"] }
+legal_refs = [
+    "ley-37-1992:art-117-bis",
+    "orden-eha-789-2010:art-1",
+    "orden-eha-789-2010:art-4",
+]
+source_refs = [
+    "aeat-dr-360-2010",
+    "aeat-modelo-360-procedure",
+    "boe-modelo-360-2010-form",
+]
+

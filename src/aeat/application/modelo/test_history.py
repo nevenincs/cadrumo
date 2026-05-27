@@ -43,6 +43,34 @@ def repos(tmp_path: Path):
         )
 
 
+def test_create_rejects_unknown_period_for_modelo_revision(repos) -> None:
+    """``create_work_unit`` must refuse a period the revision's
+    ``filing_schedules`` do not declare.
+
+    Persona-testimonial finding (cross-domain-continuity W02.P12.S220):
+    M202 previously accepted ``--period 1T`` at create then failed
+    calculate with no-revision-for-period. The boundary now catches
+    the modelo-202 quarterly-token typo at create-time with the
+    declared-period listing (``1P``, ``2P``, ``3P``).
+    """
+    wu_repo, _, _, _, bv_repo = repos
+    with pytest.raises(ModeloError) as exc:
+        create_work_unit(
+            bucket_id="default",
+            modelo="202",
+            filing_year=2026,
+            period="1T",
+            revision_id="2025-y-siguientes",
+            repository=wu_repo,
+            bucket_event_repository=bv_repo,
+        )
+    message = str(exc.value)
+    assert "1T" in message
+    assert "modelo '202'" in message
+    assert "Available periods:" in message
+    assert "1P" in message
+
+
 def test_create_rejects_unknown_revision_with_helpful_list(repos) -> None:
     """``create_work_unit`` must refuse a revision id the modelo registry does
     not declare, naming the modelo and listing the available revisions so the

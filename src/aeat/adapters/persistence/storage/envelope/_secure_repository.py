@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar, Generic, TypeVar
+from typing import Any, ClassVar, cast
 
 from pydantic import BaseModel
 
@@ -31,46 +31,30 @@ from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
 from .._path_safety import safe_repository_id
 from ..errors import ClassificationError, EnvelopeVersionError
+from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
 from ..sql import SecureObjectRepository
 from ._envelope import Envelope
 
 _log = get_logger(__name__)
 
-T = TypeVar("T", bound=BaseModel)
-
 
 def _active_bucket_objects_or_default() -> SecureObjectRepository:
-    """Return a bucket-attached repository when an active profile bucket is present.
+    """Return active-bucket storage when selected, otherwise the process default.
 
     When an active profile bucket is available the repository is backed by
     the bucket's own encrypted database, resolved through
-    :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
+    :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket_or_default_route`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction time.
-    Falls back to the bare :class:`SecureObjectRepository` when no bucket
-    is active (bootstrap stage or no active profile).
+    A missing active bucket uses the process-default route for explicit
+    test harnesses and bootstrap-adjacent callers. Once a bucket is
+    selected, route/session failures are not swallowed.
     """
 
-    from .....core._bucket_pointer_io import resolve_active_bucket_id
-
-    bucket_id = resolve_active_bucket_id()
-    if bucket_id is None:
-        return SecureObjectRepository()
-    try:
-        from ..runtime_repository import secure_object_repository_for_active_bucket
-
-        return secure_object_repository_for_active_bucket()
-    except Exception:
-        # Session not yet established or bucket repo unavailable; fall back
-        # to the bare repository so bootstrap-stage consumers still succeed.
-        _log.debug(
-            "_active_bucket_objects_or_default: bucket repo unavailable, falling back to default",
-            exc_info=True,
-        )
-        return SecureObjectRepository()
+    return secure_object_repository_for_active_bucket_or_default_route()
 
 
-class SecureBoundRepository(Generic[T]):
+class SecureBoundRepository[T: BaseModel]:
     """Generic repository over encrypted SQL-backed envelopes for one payload type.
 
     Subclasses MUST set class attributes:
@@ -177,7 +161,7 @@ class SecureBoundRepository(Generic[T]):
                 f"{envelope.schema_version}; consumer supports up to "
                 f"{self.schema_version}",
             )
-        return envelope.payload  # type: ignore[return-value]
+        return cast(T, envelope.payload)
 
     def save(self, payload: T) -> None:
         """Persist ``payload`` as an encrypted envelope row.
@@ -228,7 +212,7 @@ class SecureBoundRepository(Generic[T]):
             max_supported_version=self.schema_version,
         ):
             envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
-            identifiers.append(self.extract_identifier(envelope.payload))  # type: ignore[arg-type]
+            identifiers.append(self.extract_identifier(cast(T, envelope.payload)))
         yield from sorted(identifiers)
 
     def iter_records(self) -> Iterator[T]:
@@ -249,7 +233,10 @@ class SecureBoundRepository(Generic[T]):
         subscripting it with the subclass's concrete payload type
         produces the validator Pydantic needs at the JSON boundary.
         """
-        return Envelope[self.payload_type]  # type: ignore[name-defined,valid-type]
+        return cast(
+            type[Envelope[BaseModel]],
+            cast(Any, Envelope).__class_getitem__(self.payload_type),
+        )
 
 
 __all__ = ["SecureBoundRepository"]

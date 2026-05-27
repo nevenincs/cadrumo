@@ -1,0 +1,16 @@
+[revisions."2003-y-siguientes"]
+label = "Modelo 840 ejercicios 2003 y siguientes (Orden HAC/2572/2003)"
+valid_from = 2003-09-19
+period_selector = { year_from = 2003, periods = ["0A"] }
+legal_refs = [
+    "rdl-2-2004:art-78",
+    "rdl-2-2004:art-82",
+    "rdl-2-2004:art-90",
+    "orden-hac-2572-2003:apartado-1",
+    "orden-hac-2572-2003:apartado-6",
+]
+source_refs = [
+    "aeat-dr-840",
+    "boe-modelo-840-2003-form",
+]
+

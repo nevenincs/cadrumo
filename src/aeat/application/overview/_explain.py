@@ -26,7 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.i18n import tr
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.deadlines._errors import DeadlineValidationError, NoDeadlineWindowsError
-from ._applicability import (
+from aeat.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     derive_modelo_applicability,
 )
