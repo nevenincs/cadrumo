@@ -477,28 +477,19 @@ def _authority_sources(
             amount=local_recurrence_amount,
             source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
         )
-        sources.append(recurrence_source)
-        if (
-            recurrence_source.source_kind == "local_recurrence"
-            and recurrence_source.source_modelo is not None
-            and recurrence_source.source_filing_year is not None
-            and recurrence_source.source_periods
-        ):
+        if recurrence_source.source_kind == "filed_history_observation":
             sources.append(
                 IvaCompensationAuthoritySource(
-                    source_kind="filed_history_observation",
+                    source_kind="local_recurrence",
                     amount=local_recurrence_amount,
-                    source_locator=(
-                        f"{recurrence_source.source_modelo}:"
-                        f"{recurrence_source.source_filing_year}:"
-                        f"{','.join(recurrence_source.source_periods)}"
-                    ),
+                    source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
                     captured_at=recurrence_source.captured_at,
                     source_modelo=recurrence_source.source_modelo,
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
                 )
-            )
+        )
+        sources.append(recurrence_source)
     if override is not None:
         sources.append(
             IvaCompensationAuthoritySource(
