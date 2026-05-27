@@ -1209,3 +1209,93 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     lines = _verification_report_lines(report)
 
     assert not any(l.startswith("next_action\t") for l in lines)
+
+
+class TestDt12ReduccionPlanPensiones:
+    """DT12-001: _compute_dt12_reduccion_plan_pensiones oracle + anti-tautology.
+
+    Expected values derived from LIRPF DT 12ª formula:
+    pre_2007 / totales * gross_rescate * 40%.
+    Carla oracle: 9600 / 33000 * 60000 * 40% = 6983.636... rounded to 6983.64.
+    """
+
+    def test_carla_oracle_shape(self) -> None:
+        """Carla round-19 B: 9600/33000 * 60000 * 40% (LIRPF DT 12ª).
+
+        Derivation: 9600 / 33000 * 60000 * 0.40
+          = 0.29090909... * 60000 * 0.40
+          = 17454.5454... * 0.40
+          = 6981.8181...
+          rounded HALF_UP (money-2) → 6981.82
+        """
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("9600"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result == Decimal("6981.82")
+
+    def test_anti_tautology_different_ratio_different_reduccion(self) -> None:
+        """Changing the pre/post ratio produces a different reducción amount."""
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result_carla = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("9600"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        # Halve the pre-2007 fraction → ~half the reducción
+        result_half = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("4800"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result_carla != result_half
+        # 4800/33000 * 60000 * 0.40 = 3490.9090... → 3490.91
+        assert result_half == Decimal("3490.91")
+
+    def test_zero_pre_2007_yields_zero_reduccion(self) -> None:
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("0"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result == Decimal("0.00")
+
+    def test_zero_totales_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        with pytest.raises(ValueError, match="aportaciones_totales must be positive"):
+            _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=Decimal("60000"),
+                aportaciones_pre_2007=Decimal("9600"),
+                aportaciones_totales=Decimal("0"),
+            )
+
+    def test_negative_gross_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        with pytest.raises(ValueError, match="gross_rescate must be non-negative"):
+            _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=Decimal("-1"),
+                aportaciones_pre_2007=Decimal("9600"),
+                aportaciones_totales=Decimal("33000"),
+            )

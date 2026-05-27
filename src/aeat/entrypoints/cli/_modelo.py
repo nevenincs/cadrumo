@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
@@ -2202,6 +2202,9 @@ _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternida
 #: Semantic role that identifies the Art. 81 deducción maternidad casilla (0611).
 _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
 
+#: Semantic role that identifies the trabajo reducción casilla (0011, DT 12ª/DT 25ª LIRPF).
+_REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
+
 
 def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
     """Return the casilla id for the INSS maternidad/paternidad exempt slot.
@@ -2265,6 +2268,67 @@ def _resolve_deduccion_maternidad_casilla_id(work_unit_id: str) -> str:
             ),
         )
     )
+
+
+def _resolve_reduccion_trabajo_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the rendimiento trabajo reducción slot (0011).
+
+    Looks up by ``semantic_role`` so future M100 revisions that renumber the
+    casilla still resolve correctly.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found (e.g.
+    when ``--rescate-plan-pensiones-capital`` is used against a modelo that
+    does not declare the reducción slot).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _REDUCCION_TRABAJO_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.rescate_plan_pensiones_casilla_not_found",
+            default=(
+                "--rescate-plan-pensiones-capital is not supported for this modelo revision; "
+                "no DT 12ª trabajo reducción casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _compute_dt12_reduccion_plan_pensiones(
+    *,
+    gross_rescate: Decimal,
+    aportaciones_pre_2007: Decimal,
+    aportaciones_totales: Decimal,
+) -> Decimal:
+    """Compute the DT 12ª LIRPF 40% reducción for a plan-de-pensiones capital rescate.
+
+    Formula (LIRPF DT 12ª): ``pre_2007 / totales * gross_rescate * 40%``.
+    The result is rounded to 2 decimal places (money-2 per registry convention).
+
+    Raises :exc:`ValueError` when ``aportaciones_totales`` is zero or negative
+    (division by zero guard) or when any input is negative.
+    """
+
+    if aportaciones_totales <= Decimal(0):
+        raise ValueError(
+            f"aportaciones_totales must be positive; got {aportaciones_totales}"
+        )
+    if gross_rescate < Decimal(0):
+        raise ValueError(f"gross_rescate must be non-negative; got {gross_rescate}")
+    if aportaciones_pre_2007 < Decimal(0):
+        raise ValueError(f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}")
+
+    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
+    # money-2 rounding matches the registry convention for all M100 casillas.
+    return reduccion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
@@ -2480,6 +2544,52 @@ def work_calculate(
             ),
         ),
     ] = None,
+    rescate_plan_pensiones_capital: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-capital",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_capital_help",
+                default=(
+                    "Importe bruto del rescate del plan de pensiones en forma de capital "
+                    "(DT 12ª LIRPF). Úsalo junto con "
+                    "--rescate-plan-pensiones-aportaciones-pre-2007 y "
+                    "--rescate-plan-pensiones-aportaciones-totales para que el asistente "
+                    "calcule automáticamente la reducción del 40% y la inyecte en casilla 0011."
+                ),
+            ),
+        ),
+    ] = None,
+    rescate_plan_pensiones_aportaciones_pre_2007: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-aportaciones-pre-2007",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_pre_2007_help",
+                default=(
+                    "Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 "
+                    "(base prorrateo DT 12ª LIRPF). Necesario junto con "
+                    "--rescate-plan-pensiones-capital y "
+                    "--rescate-plan-pensiones-aportaciones-totales."
+                ),
+            ),
+        ),
+    ] = None,
+    rescate_plan_pensiones_aportaciones_totales: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-aportaciones-totales",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_totales_help",
+                default=(
+                    "Total de aportaciones al plan de pensiones (denominador del prorrateo "
+                    "DT 12ª LIRPF). Necesario junto con "
+                    "--rescate-plan-pensiones-capital y "
+                    "--rescate-plan-pensiones-aportaciones-pre-2007."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2550,6 +2660,49 @@ def work_calculate(
         deduccion_amount = _compute_deduccion_maternidad_0611(meses_pairs)
         maternidad_casilla_id = _resolve_deduccion_maternidad_casilla_id(work_unit_id)
         casilla_inputs[maternidad_casilla_id] = Decimal(deduccion_amount)
+
+    # --rescate-plan-pensiones-* computes the DT 12ª LIRPF 40% reducción for a
+    # capital lump-sum pension rescate and injects it into the revision-specific
+    # casilla 0011, resolved by semantic_role.  All three flags must be supplied
+    # together; partial supply raises BadParameter.
+    rescate_supplied = (
+        rescate_plan_pensiones_capital,
+        rescate_plan_pensiones_aportaciones_pre_2007,
+        rescate_plan_pensiones_aportaciones_totales,
+    )
+    if any(rescate_supplied):
+        if not all(rescate_supplied):
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.rescate_plan_pensiones_incomplete",
+                    default=(
+                        "--rescate-plan-pensiones-capital, "
+                        "--rescate-plan-pensiones-aportaciones-pre-2007, and "
+                        "--rescate-plan-pensiones-aportaciones-totales must all be supplied together."
+                    ),
+                )
+            )
+        try:
+            dt12_gross = Decimal(rescate_plan_pensiones_capital)  # type: ignore[arg-type]
+            dt12_pre_2007 = Decimal(rescate_plan_pensiones_aportaciones_pre_2007)  # type: ignore[arg-type]
+            dt12_totales = Decimal(rescate_plan_pensiones_aportaciones_totales)  # type: ignore[arg-type]
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
+                    default="--rescate-plan-pensiones-* values must be decimals.",
+                )
+            ) from exc
+        try:
+            dt12_reduccion = _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=dt12_gross,
+                aportaciones_pre_2007=dt12_pre_2007,
+                aportaciones_totales=dt12_totales,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        reduccion_casilla_id = _resolve_reduccion_trabajo_casilla_id(work_unit_id)
+        casilla_inputs[reduccion_casilla_id] = dt12_reduccion
 
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
