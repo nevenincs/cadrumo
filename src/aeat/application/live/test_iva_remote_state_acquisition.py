@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from aeat.adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
+from aeat.adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
+from aeat.adapters.persistence.storage.errors import StorageValidationError
+from aeat.tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
 
 from . import (
     IvaCompensationHistoryCaptureReport,
@@ -16,6 +20,9 @@ from . import (
     LiveIvaReadStatus,
     LiveIvaReadSurface,
     build_iva_remote_state_acquisition_report,
+    list_iva_remote_state_acquisition_manifests,
+    load_iva_remote_state_acquisition_manifest,
+    persist_iva_remote_state_acquisition_report,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -89,3 +96,83 @@ def test_combined_acquisition_reports_missing_surface_as_typed_failure(tmp_path:
         "MissingSurfaceReport",
         "MissingSurfaceReport",
     )
+
+
+def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session") as profile:
+        filed_history = IvaCompensationHistoryCaptureReport(
+            output_root=str(tmp_path / "filed-history"),
+            year_from=2022,
+            year_to=2024,
+            captured_count=12,
+            observation_paths=("observations/303-2022-1T.json",),
+            artefact_refs=("secure-object:artefact",),
+            casilla_count=948,
+            calculation_observation_count=12,
+            calculation_observation_keys=("303:2022:1T",),
+            reloaded_history_count=12,
+            reloaded_rows=(),
+        )
+        wallet_error = SedeNavigationError(
+            "AEAT wallet auth gate",
+            failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+            context={"captured_at": _CAPTURED_AT.isoformat()},
+        )
+        report = build_iva_remote_state_acquisition_report(
+            output_root=tmp_path / "remote-state",
+            year_from=2022,
+            year_to=2024,
+            target_year=2026,
+            target_period="2T",
+            filed_history=filed_history,
+            wallet_error=wallet_error,
+        )
+
+        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        reloaded = load_iva_remote_state_acquisition_manifest(manifest.acquisition_id)
+        listed = list_iva_remote_state_acquisition_manifests()
+        manifest_json = manifest.model_dump_json()
+
+        assert reloaded == manifest
+        assert listed == (manifest,)
+        assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
+        assert len(manifest.acquisition_id.rsplit(":", 1)[-1]) == 64
+        assert manifest.filed_history_succeeded is True
+        assert manifest.wallet_succeeded is False
+        filed_surface, wallet_surface = manifest.surfaces
+        assert filed_surface.surface is LiveIvaReadSurface.FILED_HISTORY
+        assert filed_surface.reloaded_history_count == filed_history.reloaded_history_count
+        assert wallet_surface.surface is LiveIvaReadSurface.WALLET_CARTERA
+        assert wallet_surface.failure_mode is LiveIvaAcquisitionFailureMode.AEAT_403
+        assert wallet_surface.failure_type == "SedeNavigationError"
+        assert "AEAT wallet auth gate" not in manifest_json
+        assert "remote-state" not in manifest_json
+
+        db_path = profile.paths.db_dir / "aeat.db"
+        assert _secure_object_namespace_count(db_path, LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE.namespace) == 1
+        database_bytes = db_path.read_bytes()
+        assert b"AEAT wallet auth gate" not in database_bytes
+        assert b"remote-state" not in database_bytes
+
+
+def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp_path: Path) -> None:
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+        report = build_iva_remote_state_acquisition_report(
+            output_root=tmp_path / "operator-private-output-root",
+            year_from=2024,
+            year_to=2024,
+            target_year=2026,
+            target_period="1T",
+        )
+
+        with pytest.raises(StorageValidationError):
+            persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+
+
+def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:
+    with sqlite3.connect(database_path) as connection:
+        row = connection.execute(
+            "SELECT COUNT(*) FROM secure_objects WHERE namespace = ?",
+            (namespace,),
+        ).fetchone()
+    return int(row[0])
