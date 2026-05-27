@@ -384,12 +384,20 @@ class TestAnnualFilingWindows:
 
     def test_modelo_303_quarterly_windows_resolve(self) -> None:
         for year in (2025, 2026):
-            periods = sorted(
+            quarterly_periods = sorted(
                 window.period
                 for code, _revision, window in _engine()._registry.deadline_windows(year)
-                if code == "303"
+                if code == "303" and window.period_kind == "quarterly"
             )
-            assert periods == [f"{year}-1T", f"{year}-2T", f"{year}-3T", f"{year}-4T"]
+            assert quarterly_periods == [f"{year}-1T", f"{year}-2T", f"{year}-3T", f"{year}-4T"]
+            # SII-enrolled monthly windows also appear; assert they are present as a
+            # regression guard.
+            monthly_periods = sorted(
+                window.period
+                for code, _revision, window in _engine()._registry.deadline_windows(year)
+                if code == "303" and window.period_kind == "monthly"
+            )
+            assert len(monthly_periods) > 0, f"M303 monthly windows absent for {year}"
 
     def test_modelo_347_annual_window_resolves(self) -> None:
         for year in (2025, 2026):
