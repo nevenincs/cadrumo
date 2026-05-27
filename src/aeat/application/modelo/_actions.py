@@ -2214,45 +2214,57 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
-    """Evaluate a draft revision against the verified-complete contract.
+    """Evaluate a draft revision against the four-layer verified-complete gate.
+
+    The gate is described fully in the package docstring
+    (:mod:`aeat.application.modelo`). This function is the implementation
+    entry point.
 
     Pipeline:
 
-    1. Load the revision (must be DRAFT).
-    2. Resolve the registry snapshot for the parent work unit's
-       (modelo, year, period). On failure, emit a BLOCKING finding
-       and refuse the transition.
-    3. For each required-manual-input casilla in the registry:
-       check the revision's ``casilla_values`` contains it. Missing
-       entries become MISSING_REQUIRED_CASILLA findings of BLOCKING
-       severity.
-    4. Build a :class:`VerificationReport`. When zero blocking
-       findings are present and the completeness status is
-       ``COMPLETE``, ``granted_verificado_completo`` is ``True`` and
-       the calculation revision transitions DRAFT →
-       VERIFICADO_COMPLETO.
-    5. If the report would grant ``VERIFICADO_COMPLETO``, run the
-       WorkflowEngine-owned gate before mutating state. The gate runs
-       with :attr:`WorkflowPurpose.VERIFY`: it validates the draft
-       against the registry but is independent of the AEAT filing
-       calendar — it never refuses because the filing window is closed
-       or absent. The ``NO_PENDING_OBLIGATION`` guard stays on the
-       filing path (``file_modelo_revision``).
-    6. Persist the report in the verification-report catalogue.
-       Failed attempts persist so the audit trail explains why a
-       transition was refused.
+    1. **State machine** -- load the revision; it must be in ``BORRADOR``
+       (DRAFT) state. Any other state raises
+       :exc:`CalculationRevisionStateError`.
+    2. **Registry snapshot** -- resolve the snapshot for the parent work
+       unit's ``(modelo, filing_year, period)``. On failure, emit a
+       BLOCKING finding and refuse the transition immediately.
+    3. **Layer 1 — required-input gate** -- for each casilla declared
+       ``required = true`` and ``input_kind = "manual"`` in the registry,
+       check that the revision's ``casilla_values`` contains a value.
+       Missing entries produce
+       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
+       findings and set ``completeness_status`` to ``INCOMPLETE``.
+    4. **Layer 2 — cross-casilla predicate gate** -- evaluate each
+       :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
+       from the snapshot against the stored ``casilla_values``.  A failing
+       predicate produces a
+       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.BLOCKING_RULE`
+       finding.
+    5. **Provenance re-validation** -- call
+       :func:`_assert_revision_content_integrity` to re-derive the SHA-256
+       content address and check that each ``CasillaObservation.value``
+       matches ``casilla_values`` for the same casilla.  Either mismatch
+       raises :exc:`StoredCalculationDriftError`.
+    6. **Workflow engine gate** -- when layers 1-3 produce zero blocking
+       findings, run the WorkflowEngine-owned preflight with
+       ``WorkflowPurpose.VERIFY`` before mutating state.  This gate
+       validates the draft against the registry but is independent of the
+       AEAT filing calendar.
+    7. **Persist** -- write the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`
+       to the verification-report catalogue.  Failed attempts are persisted
+       so the audit trail records why the transition was refused.
 
     Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not in
-            DRAFT state. Re-verifying a verified-complete or filed
-            revision is rejected because the state is immutable
-            from those points; the operator must produce a new
-            calculation revision (which lands as a fresh draft) to
-            verify again.
-        ModeloWorkflowGateError: When the workflow/preflight gate
-            aborts before the verified-complete transition.
+        CalculationRevisionNotFoundError: When the revision id is absent.
+        CalculationRevisionStateError: When the revision is not in BORRADOR
+            state.  Re-verifying a verified-complete or filed revision is
+            rejected; the operator must produce a fresh calculation revision
+            (which lands as a new draft).
+        StoredCalculationDriftError: When the content-address or observation
+            provenance check fails, indicating storage corruption or
+            tampering.
+        ModeloWorkflowGateError: When the workflow preflight gate aborts
+            before the verified-complete transition.
     """
 
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
