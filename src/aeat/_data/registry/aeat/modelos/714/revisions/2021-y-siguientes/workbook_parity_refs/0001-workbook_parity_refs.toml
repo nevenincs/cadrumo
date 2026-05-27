@@ -1,9 +1,0 @@
-[[revisions."2021-y-siguientes".workbook_parity_refs]]
-id = "modelo-714-boe-form-layout"
-workbook_source = "boe-modelo-714-form"
-fixture_id = "modelo-714-boe-form-static-layout"
-formula_coverage = "static_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["ley-19-1991:art-28"]
-source_refs = ["boe-modelo-714-form"]

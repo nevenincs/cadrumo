@@ -1,7 +1,0 @@
-[[revisions."2023-y-siguientes".application_links]]
-id = "modelo-721-deadline"
-surface = "deadline"
-consumer = "aeat.domain.deadlines"
-requires_snapshot = true
-legal_refs = ["orden-hfp-887-2023:art-1", "ley-11-2021:da-10"]
-source_refs = ["aeat-modelo-721-procedure", "boe-modelo-721-2023-form"]

@@ -48,3 +48,13 @@ validation gate once the committed corpus is clean.
 - [x] `P03.S07` - Add a generic hard validator for unresolved casilla label placeholders and wire it into registry-scope validation; `src/aeat/domain/calculations/registry`.
 - [x] `P03.S08` - Add mutation tests proving any future `{name}`/`{number}` casilla-label placeholder raises `RegistryValidationError`; `src/aeat/domain/calculations/registry tests`.
 - [x] `P03.S09` - Run path-scoped registry validation and commit the hard-fail gate with the cleanup record; `.vault/exec`.
+
+### Phase `P04` - Empty revision eradication
+
+Remove registry definitions that only record authority metadata without a
+casilla payload, and make the zero-casilla shape impossible to reintroduce
+through the normal registry validator.
+
+- [x] `P04.S10` - Identify every committed modelo revision with zero casillas and no calculation payload; `151`, `714`, `721`.
+- [x] `P04.S11` - Remove the empty registered modelo definitions while preserving legal/source catalogue authority and CLI refusal behavior; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P04.S12` - Add a generic revision validator and regression tests proving zero-casilla revisions fail validation; `src/aeat/domain/calculations/registry`.

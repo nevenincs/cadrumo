@@ -1,4 +1,4 @@
-"""Regression tests for Modelo 714 Path-B refusal stub.
+"""Regression tests for Modelo 714 unsupported local-work refusal.
 
 Eva round-10 show-stopper: ``aeat app modelo work create --modelo 714``
 must return a legally-grounded refusal payload rather than a silent error
@@ -8,7 +8,7 @@ Modelo 714 is the declaración for the Impuesto sobre el Patrimonio under
 Ley 19/1991 Art. 28, governed by Orden HAC/1023/2021 (BOE-A-2021-7593).
 The obligation threshold is net wealth > €700.000 in general (€600.000 in
 Comunitat Valenciana).  The full casilla inventory and calculation engine
-have not yet been authored; the guard surfaces this gap with the governing
+have not yet been authored; the guard surfaces this unsupported surface with the governing
 legal authority rather than a generic crash.
 
 No mocks: the guard runs against the real registry authority and locale
@@ -34,22 +34,6 @@ def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _create_natural_person() -> None:
-    result = invoke_cached_cli(
-        [
-            "config", "profile", "create", "operator",
-            "--quiet", "--accept-defaults",
-            "--tax-id", "12345678Z",
-            "--name", "Operator",
-            "--activity", "designer",
-            "--entity-type", "natural_person",
-            "--irpf-income-categories", "trabajo",
-            "--irpf-estimation-regime", "directa_normal",
-        ]
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-
-
 def test_work_create_714_refuses_with_legal_authority_message(
     _isolated_cli_backend: Path,
 ) -> None:
@@ -61,7 +45,6 @@ def test_work_create_714_refuses_with_legal_authority_message(
     cite the legal authority, and redirect to AEAT Sede Electrónica.
     """
 
-    _create_natural_person()
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "create",
@@ -85,44 +68,24 @@ def test_work_create_714_refuses_with_legal_authority_message(
     assert "Modelo desconocido" not in result.output
 
 
-def test_work_create_714_registry_loader_accepts_without_integrity_error(
+def test_work_create_714_has_no_placeholder_registry_definition(
     _isolated_cli_backend: Path,
 ) -> None:
-    """Roundtrip: the registry loader must accept the M714 stub without
-    integrity errors (referential integrity, source catalogue).
-
-    This test validates the registry entry itself, independently of the
-    CLI refusal guard.
-    """
+    """The normal registry must not carry an empty M714 definition."""
 
     from aeat.core.resources import bundled_path
-    from aeat.domain.calculations.registry import (
-        RegistryValidator,
-        build_snapshot,
-        load_registry_tree,
-    )
+    from aeat.domain.calculations.registry import load_registry_tree
 
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_714 = next(m for m in modelos if m.id == "714")
-
-    # Validate the definition against its catalogues — no integrity errors.
-    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo_714)
-
-    # Must resolve revision for year 2024, period 0A.
-    snapshot = build_snapshot(
-        modelo_714,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2024,
-        period="0A",
-    )
-    assert snapshot.revision.id == "2021-y-siguientes"
+    assert "714" not in {modelo.id for modelo in modelos}
+    assert "ley-19-1991:art-28" in catalogues.legal
+    assert "boe-modelo-714-form" in catalogues.sources
 
 
 def test_work_create_714_refusal_fires_before_profile_check(
     _isolated_cli_backend: Path,
 ) -> None:
-    """The stub-model guard fires before the active-profile requirement.
+    """The unsupported-model guard fires before the active-profile requirement.
 
     An operator without an active profile still gets the M714 refusal
     message (not a ``no active profile`` error), proving the guard

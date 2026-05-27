@@ -36,6 +36,7 @@ from ._validate_revision_identity import (
     _emit_combined_primary_id_failures,
     _emit_completeness_gate_failures,
     _emit_per_kind_duplicate_failures,
+    _emit_revision_payload_failures,
 )
 from ._validate_revision_rules import (
     validate_bracket_table_temporal_coverage,
@@ -69,6 +70,7 @@ def validate_revision_definition(
         failures.append(f"{prefix}: revision must declare official workbook parity coverage")
     _emit_per_kind_duplicate_failures(failures, prefix, context.ids_by_kind)
     _emit_combined_primary_id_failures(failures, prefix, context.ids_by_kind)
+    _emit_revision_payload_failures(failures, prefix, revision)
     _emit_casilla_identity_failures(failures, prefix, revision)
     _emit_completeness_gate_failures(failures, prefix, revision)
 
@@ -245,5 +247,4 @@ def validate_revision_definition(
     )
     failures.extend(validate_formula_dag(prefix, revision))
     return failures
-
 
