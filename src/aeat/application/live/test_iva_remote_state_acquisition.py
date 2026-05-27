@@ -21,6 +21,7 @@ from . import (
     LiveIvaReadSurface,
     build_iva_remote_state_acquisition_report,
     list_iva_remote_state_acquisition_manifests,
+    load_iva_remote_state,
     load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
 )
@@ -131,10 +132,20 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
         reloaded = load_iva_remote_state_acquisition_manifest(manifest.acquisition_id)
         listed = list_iva_remote_state_acquisition_manifests()
+        remote_state = load_iva_remote_state(as_of_year=2026)
         manifest_json = manifest.model_dump_json()
 
         assert reloaded == manifest
         assert listed == (manifest,)
+        assert remote_state.acquisition_manifest_count == 1
+        acquisition_row = remote_state.acquisition_manifests[0]
+        assert acquisition_row.acquisition_ref.startswith("sha256:")
+        assert acquisition_row.target_year == manifest.target_year
+        assert acquisition_row.target_period == manifest.target_period
+        assert acquisition_row.filed_history_succeeded is True
+        assert acquisition_row.wallet_succeeded is False
+        assert any("failure_mode=aeat_403" in surface for surface in acquisition_row.surfaces)
+        assert manifest.acquisition_id not in remote_state.model_dump_json()
         assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
         assert len(manifest.acquisition_id.rsplit(":", 1)[-1]) == 64
         assert manifest.filed_history_succeeded is True
