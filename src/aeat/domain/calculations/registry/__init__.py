@@ -235,12 +235,6 @@ from ._sources import verify_source_catalogue, verify_source_file
 # exported above) does not race a partially-initialised registry
 # namespace.
 from ._applicability import (
-    _ATTRIBUTION_PASS_THROUGH_LEGAL_REFS,
-    _INCOMPLETE_LEGAL_REFS,
-    _INCOMPLETE_UNDECLARED_REASON,
-    _INCOMPLETE_UNDETERMINED_REASON,
-    _INCOMPLETE_UNRULED_REASON,
-    _MODELO_APPLICABILITY_RULES,
     ApplicabilityVerdict,
     Modelo202Modality,
     Modelo202ModalityVerdict,
