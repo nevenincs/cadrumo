@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
@@ -10,6 +13,7 @@ from aeat.adapters.persistence.storage import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    ATTACHMENT_BLOB_NAMESPACE,
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
     BUCKET_LOCK_FILENAME,
@@ -36,6 +40,7 @@ from aeat.adapters.persistence.storage import (
     StorageNamespaceScope,
 )
 from aeat.core.classification import SensitivityClass
+from aeat.core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -235,3 +240,208 @@ def test_namespace_definition_rejects_pathlike_namespaces() -> None:
             object_key_grammar="{id}",
             scope=StorageNamespaceScope.PROFILE_LOCAL,
         )
+
+
+def test_every_discovered_production_secure_object_namespace_is_registered() -> None:
+    registered = {definition.namespace for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
+    discovered = _discover_production_secure_object_namespaces()
+
+    assert {
+        ATTACHMENT_BLOB_NAMESPACE.namespace,
+        GOOGLE_OAUTH_CLIENT_NAMESPACE.namespace,
+        WORKFLOW_STATE_NAMESPACE.namespace,
+        "aeat.domain.transactions.bucket",
+        "aeat.outbound.aeat.auth.sessions",
+    } <= discovered
+    assert sorted(discovered - registered) == []
+
+
+_SECURE_OBJECT_METHODS = {
+    "delete",
+    "exists",
+    "exists_by_raw_key",
+    "iter_namespace_decryptability",
+    "iter_records_with_failures",
+    "list_keys",
+    "list_object_keys",
+    "list_records",
+    "load",
+    "peek_metadata",
+    "probe_namespace_integrity",
+    "save",
+    "save_many",
+    "save_with_raw_key",
+}
+
+_SECURE_BOUND_CLASS_NAMES = {
+    "SecureBoundRepository",
+    "_SecureBoundRepository",
+}
+
+
+def _discover_production_secure_object_namespaces() -> set[str]:
+    namespaces: set[str] = set()
+    for path in _iter_aeat_production_sources():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        bindings = _collect_namespace_value_bindings(tree)
+        namespaces.update(_namespace_values_from_assignments(tree, bindings))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                namespaces.update(_namespace_values_from_call(node, bindings))
+    return namespaces
+
+
+def _iter_aeat_production_sources() -> tuple[Path, ...]:
+    return tuple(
+        sorted(
+            path
+            for path in (PROJECT_ROOT / "src/aeat").rglob("*.py")
+            if not _is_test_surface(path) and path.name != "_namespace_registry.py"
+        )
+    )
+
+
+def _is_test_surface(path: Path) -> bool:
+    relative = path.relative_to(PROJECT_ROOT).as_posix()
+    return (
+        path.name.startswith("test_")
+        or path.name == "conftest.py"
+        or "/test_" in relative
+        or relative.startswith("src/aeat/tests/")
+    )
+
+
+def _collect_namespace_value_bindings(tree: ast.AST) -> dict[str, str]:
+    bindings = _collect_imported_registry_namespace_bindings(tree)
+    discovered = True
+    while discovered:
+        discovered = False
+        for node in ast.walk(tree):
+            targets, value = _assignment_parts(node)
+            if value is None:
+                continue
+            resolved = _resolve_namespace_value(value, bindings)
+            if resolved is None:
+                continue
+            for target in targets:
+                if not isinstance(target, ast.Name) or "NAMESPACE" not in target.id:
+                    continue
+                if bindings.get(target.id) != resolved:
+                    bindings[target.id] = resolved
+                    discovered = True
+    return bindings
+
+
+def _namespace_values_from_assignments(tree: ast.AST, bindings: dict[str, str]) -> set[str]:
+    values: set[str] = set()
+    for node in ast.walk(tree):
+        targets, value = _assignment_parts(node)
+        if value is None:
+            continue
+        resolved = _resolve_namespace_value(value, bindings)
+        if resolved is None:
+            continue
+        for target in targets:
+            name = _target_name(target)
+            if name is not None and _is_namespace_target_name(name):
+                values.add(resolved)
+    return values
+
+
+def _collect_imported_registry_namespace_bindings(tree: ast.AST) -> dict[str, str]:
+    storage_exports = __import__("aeat.adapters.persistence.storage", fromlist=["*"])
+    namespace_by_export = {
+        name: value.namespace
+        for name, value in vars(storage_exports).items()
+        if isinstance(value, SecureObjectNamespaceDefinition)
+    }
+    bindings: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ImportFrom) or not _is_storage_namespace_import(node):
+            continue
+        for alias in node.names:
+            if alias.name in namespace_by_export:
+                bindings[alias.asname or alias.name] = namespace_by_export[alias.name]
+    return bindings
+
+
+def _is_storage_namespace_import(node: ast.ImportFrom) -> bool:
+    return node.module in {
+        "aeat.adapters.persistence.storage",
+        "aeat.adapters.persistence.storage._namespace_registry",
+        "_namespace_registry",
+    } or (
+        node.level > 0
+        and node.module
+        in {
+            "adapters.persistence.storage",
+            "adapters.persistence.storage._namespace_registry",
+            "_namespace_registry",
+        }
+    )
+
+
+def _assignment_parts(node: ast.AST) -> tuple[list[ast.expr], ast.expr | None]:
+    if isinstance(node, ast.Assign):
+        return list(node.targets), node.value
+    if isinstance(node, ast.AnnAssign):
+        return [node.target], node.value
+    return [], None
+
+
+def _resolve_namespace_value(node: ast.expr, bindings: dict[str, str]) -> str | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("aeat."):
+        return node.value
+    if isinstance(node, ast.Name):
+        return bindings.get(node.id)
+    if isinstance(node, ast.Attribute) and node.attr == "namespace" and isinstance(node.value, ast.Name):
+        return bindings.get(node.value.id)
+    return None
+
+
+def _namespace_values_from_call(node: ast.Call, bindings: dict[str, str]) -> set[str]:
+    values: set[str] = set()
+    call_name = _call_name(node.func)
+    if call_name in _SECURE_OBJECT_METHODS:
+        for keyword in node.keywords:
+            if keyword.arg != "namespace":
+                continue
+            resolved = _resolve_namespace_value(keyword.value, bindings)
+            if resolved is not None:
+                values.add(resolved)
+    if call_name in _SECURE_OBJECT_METHODS and node.args:
+        resolved = _resolve_namespace_value(node.args[0], bindings)
+        if resolved is not None:
+            values.add(resolved)
+    if call_name in _SECURE_BOUND_CLASS_NAMES:
+        for keyword in node.keywords:
+            if keyword.arg != "namespace":
+                continue
+            resolved = _resolve_namespace_value(keyword.value, bindings)
+            if resolved is not None:
+                values.add(resolved)
+    return values
+
+
+def _target_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+def _is_namespace_target_name(name: str) -> bool:
+    return name == "namespace" or name.endswith("_NAMESPACE")
+
+
+def _is_namespace_constant_name(name: str) -> bool:
+    return name == "namespace" or "NAMESPACE" in name
+
+
+def _call_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
