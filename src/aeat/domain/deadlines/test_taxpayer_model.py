@@ -17,8 +17,10 @@ from pydantic import ValidationError
 
 from . import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
     ModeloIVAProfile,
@@ -190,4 +192,243 @@ class TestTaxpayerModelAntiTautology:
         payload = json.loads(original.model_dump_json())
         payload["entity_type"] = "alien_lifeform"
         with pytest.raises(ValidationError):
+            TaxpayerProfile.model_validate_json(json.dumps(payload))
+
+
+class TestImpatriado:
+    """SCHEMA-001: IMPATRIADO requires special_regime_start_date."""
+
+    def test_impatriado_without_start_date_is_rejected(self) -> None:
+        """Constructing IMPATRIADO without a start date raises ValidationError.
+
+        This enforces the Art. 93 / RIRPF Art. 116 requirement that the
+        election date is known so beckham_window_active can compute the
+        6-year expiry. A missing date must surface immediately at construction,
+        not silently default.
+        """
+
+        with pytest.raises(ValidationError, match=r"special_regime_start_date is required"):
+            TaxpayerProfile(
+                tax_id="X1234567L",
+                entity_type=EntityType.NATURAL_PERSON,
+                iva_regime=IVARegime.GENERAL,
+                irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+                # special_regime_start_date intentionally omitted
+            )
+
+    def test_impatriado_with_start_date_is_accepted(self) -> None:
+        """IMPATRIADO with a start date is a valid profile."""
+
+        from datetime import date
+
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            special_regime_start_date=date(2023, 1, 15),
+        )
+        assert profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
+        assert profile.special_regime_start_date == date(2023, 1, 15)
+
+    def test_general_regime_without_start_date_is_accepted(self) -> None:
+        """General-regime profile with no start date is fine — the validator
+        only fires for IMPATRIADO."""
+
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.GENERAL,
+        )
+        assert profile.special_regime_start_date is None
+
+    def test_none_regime_without_start_date_is_accepted(self) -> None:
+        """A profile with no special-regime declaration accepts no start date."""
+
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+        )
+        assert profile.irpf_special_regime is None
+        assert profile.special_regime_start_date is None
+
+    def test_impatriado_roundtrip_preserves_start_date(self) -> None:
+        """IMPATRIADO + start_date survive the pydantic dict cycle unchanged.
+
+        The non-default election date (2023-01-15) ensures a
+        save-drops-field / load-re-defaults-field regression surfaces as
+        strict inequality rather than passing silently.
+
+        Dict roundtrip (model_dump / model_validate) preserves Python date
+        objects; JSON roundtrip is unsuitable because strict=True rejects
+        ISO strings for date fields.
+        """
+
+        from datetime import date
+
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            special_regime_start_date=date(2023, 1, 15),
+        )
+        restored = TaxpayerProfile.model_validate(original.model_dump())
+        assert restored == original
+
+    def test_anti_tautology_dropping_start_date_breaks_equality(self) -> None:
+        """Dropping special_regime_start_date from the dict payload raises
+        a validation error — confirming the roundtrip gate is functional.
+
+        SCHEMA-001 validator fires and rejects the reload with IMPATRIADO
+        but no start_date, which is the exact regression the guard prevents.
+        """
+
+        from datetime import date
+
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            special_regime_start_date=date(2023, 1, 15),
+        )
+        payload = original.model_dump()
+        del payload["special_regime_start_date"]
+        # SCHEMA-001 validator rejects IMPATRIADO without start_date.
+        with pytest.raises(ValidationError, match=r"special_regime_start_date is required"):
+            TaxpayerProfile.model_validate(payload)
+
+
+class TestBeckhamWindow:
+    """WINDOW-001: beckham_window_active oracle tests (RIRPF Art. 116.1).
+
+    Window = start_date.year <= today.year <= start_date.year + 5.
+    Election year 2023 → window 2023-2028 inclusive; 2029 is year 7 = expired.
+    """
+
+    def _impatriado(self) -> TaxpayerProfile:
+        from datetime import date
+
+        return TaxpayerProfile(
+            tax_id="X1234567L",
+            entity_type=EntityType.NATURAL_PERSON,
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+            special_regime_start_date=date(2023, 1, 15),
+        )
+
+    def test_election_year_is_within_window(self) -> None:
+        from datetime import date
+
+        assert self._impatriado().beckham_window_active(date(2023, 6, 1)) is True
+
+    def test_year_five_is_within_window(self) -> None:
+        from datetime import date
+
+        assert self._impatriado().beckham_window_active(date(2027, 12, 31)) is True
+
+    def test_year_six_is_within_window(self) -> None:
+        from datetime import date
+
+        assert self._impatriado().beckham_window_active(date(2028, 12, 31)) is True
+
+    def test_year_seven_is_outside_window(self) -> None:
+        from datetime import date
+
+        assert self._impatriado().beckham_window_active(date(2029, 1, 1)) is False
+
+    def test_year_before_election_is_outside_window(self) -> None:
+        from datetime import date
+
+        assert self._impatriado().beckham_window_active(date(2022, 12, 31)) is False
+
+    def test_general_regime_profile_is_always_outside_window(self) -> None:
+        from datetime import date
+
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            irpf_special_regime=IrpfSpecialRegime.GENERAL,
+        )
+        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+
+    def test_profile_without_special_regime_is_always_outside_window(self) -> None:
+        from datetime import date
+
+        profile = TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
+        assert profile.beckham_window_active(date(2026, 5, 27)) is False
+
+
+class TestNonResidentAxis:
+    """IRNR-001: fiscal_residency / country_of_fiscal_residence axis.
+
+    TRLIRNR RDLeg 5/2004 Art. 2 defines non-residency; this class asserts
+    the validator, the ue_eee_status property, and the roundtrip contract.
+    """
+
+    def test_non_resident_without_country_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match=r"country_of_fiscal_residence is required"):
+            TaxpayerProfile(
+                tax_id="X1234567L",
+                iva_regime=IVARegime.GENERAL,
+                fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+                country_of_fiscal_residence=None,
+            )
+
+    def test_non_resident_with_country_is_accepted(self) -> None:
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="GB",
+        )
+        assert profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+        assert profile.country_of_fiscal_residence == "GB"
+
+    def test_ue_eee_status_true_for_eu_member(self) -> None:
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="FR",
+        )
+        assert profile.ue_eee_status is True
+
+    def test_ue_eee_status_false_for_gb_post_brexit(self) -> None:
+        # GB left the EU/EEA on 2020-12-31; the authoritative set excludes it.
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="GB",
+        )
+        assert profile.ue_eee_status is False
+
+    def test_ue_eee_status_false_when_country_none(self) -> None:
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+        assert profile.ue_eee_status is False
+
+    def test_non_resident_roundtrip_preserves_fiscal_residency_and_country(self) -> None:
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="DE",
+        )
+        restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
+        assert restored == original
+
+    def test_anti_tautology_dropping_country_breaks_when_non_resident(self) -> None:
+        # Verify the anti-tautology contract: removing country_of_fiscal_residence
+        # from a NON_RESIDENT_IRNR payload must surface as a ValidationError.
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="IT",
+        )
+        payload = json.loads(original.model_dump_json())
+        del payload["country_of_fiscal_residence"]
+        with pytest.raises(ValidationError, match=r"country_of_fiscal_residence is required"):
             TaxpayerProfile.model_validate_json(json.dumps(payload))

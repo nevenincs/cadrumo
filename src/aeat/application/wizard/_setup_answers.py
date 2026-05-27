@@ -12,13 +12,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...domain.deadlines._models import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
+from ...domain.profile import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
 from ...domain.profile._ccaa import CCAA
 
 
@@ -145,7 +152,7 @@ class SetupAnswers(BaseModel):
     irpf_special_regime: IrpfSpecialRegime | str = ""
     """IRPF special-regime axis. Blank for the general regime; ``impatriado``
     activates the Ley Beckham path (LIRPF Art. 93)."""
-    special_regime_start_date: str = ""
+    irpf_special_regime_start_date: str = ""
     """ISO-8601 opt-in election date for the special regime. Blank when undeclared."""
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
@@ -153,6 +160,12 @@ class SetupAnswers(BaseModel):
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: CCAA = CCAA.MADRID
+    fiscal_residency: FiscalResidency | str = ""
+    """Fiscal residency category. Blank for the default RESIDENT_IRPF path;
+    ``non_resident_irnr`` routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004)."""
+    country_of_fiscal_residence: str = ""
+    """ISO 3166-1 alpha-2 code of the country of fiscal residence.
+    Required when ``fiscal_residency`` is ``non_resident_irnr``."""
 
     # ── notes ────────────────────────────────────────────────────────────
     notes: str = ""
@@ -234,6 +247,17 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return IrpfSpecialRegime(value)
         raise TypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
+
+    @field_validator("fiscal_residency", mode="before")
+    @classmethod
+    def _parse_fiscal_residency(cls, value: object) -> FiscalResidency | str:
+        if value == "":
+            return ""
+        if isinstance(value, FiscalResidency):
+            return value
+        if isinstance(value, str):
+            return FiscalResidency(value)
+        raise TypeError("fiscal_residency must be a FiscalResidency member, string token, or blank")
 
     @field_validator("irpf_income_categories")
     @classmethod
@@ -395,6 +419,28 @@ class SetupAnswers(BaseModel):
         except ValueError as exc:
             raise ValueError(
                 f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
+
+    @field_validator("irpf_special_regime_start_date")
+    @classmethod
+    def _validate_irpf_special_regime_start_date(cls, value: str) -> str:
+        """Reject a non-ISO special-regime election date at the typed boundary.
+
+        Optional: a blank string is accepted unchanged.  A non-blank
+        value must be a valid ISO-8601 date so the beckham-window gate
+        and ``TaxpayerProfile.beckham_window_active`` receive a parseable date.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"special_regime_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
             ) from exc
         return value
 

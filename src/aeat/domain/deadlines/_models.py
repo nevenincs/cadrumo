@@ -17,6 +17,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..profile._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
 
@@ -299,6 +300,16 @@ class TaxpayerProfile(BaseModel):
             the special regime. Required to compute the six-year window
             for ``IMPATRIADO`` (RIRPF Art. 116). ``None`` when
             undeclared or when ``irpf_special_regime`` is ``GENERAL``.
+        fiscal_residency: Fiscal residency category. ``None`` treated as
+            ``RESIDENT_IRPF`` by engine consumers. ``NON_RESIDENT_IRNR``
+            routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004 Art. 2):
+            the engine suppresses IRPF-resident deadlines and will
+            activate IRNR obligations (Modelos 210/216/247) when
+            their registry entries are wired.
+        country_of_fiscal_residence: ISO 3166-1 alpha-2 code of the
+            country of fiscal residence. Required when
+            ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
+            valid only for IRPF residents.
     """
 
     model_config = _STRICT_FROZEN
@@ -335,6 +346,8 @@ class TaxpayerProfile(BaseModel):
     notes: str = ""
     irpf_special_regime: IrpfSpecialRegime | None = None
     special_regime_start_date: date | None = None
+    fiscal_residency: FiscalResidency | None = None
+    country_of_fiscal_residence: str | None = None
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod
@@ -384,6 +397,47 @@ class TaxpayerProfile(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _check_impatriado_requires_start_date(self) -> Self:
+        """Reject an IMPATRIADO regime declared without a start date.
+
+        The six-year Beckham window (RIRPF Art. 116) cannot be computed
+        without the opt-in election date. Any caller that constructs an
+        IMPATRIADO profile without a ``special_regime_start_date`` has an
+        incomplete model — reject it at the boundary so downstream
+        consumers never see a nil start date for an active impatriado.
+        """
+
+        if (
+            self.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
+            and self.special_regime_start_date is None
+        ):
+            raise DeadlineValidationError(
+                "special_regime_start_date is required when "
+                "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_non_resident_requires_country(self) -> Self:
+        """Reject a NON_RESIDENT_IRNR profile declared without a country code.
+
+        The IRNR regime (TRLIRNR RDLeg 5/2004 Art. 2) is defined by the
+        absence of habitual residence in Spain; the country of actual fiscal
+        residence is therefore mandatory for any meaningful downstream
+        computation (EU/EEA status, convenio lookup, Modelo 210 routing).
+        """
+
+        if (
+            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and self.country_of_fiscal_residence is None
+        ):
+            raise DeadlineValidationError(
+                "country_of_fiscal_residence is required when "
+                "fiscal_residency is NON_RESIDENT_IRNR (TRLIRNR RDLeg 5/2004 Art. 2)"
+            )
+        return self
+
     @model_validator(mode="before")
     @classmethod
     def _derive_objective_estimation_flag(cls, data: object) -> object:
@@ -406,6 +460,43 @@ class TaxpayerProfile(BaseModel):
         derived = dict(data)
         derived["uses_objective_estimation_irpf"] = parsed is IrpfEstimationRegime.OBJETIVA
         return derived
+
+    def beckham_window_active(self, today: date) -> bool:
+        """Return True if the Beckham window (Art. 93 LIRPF) is active on *today*.
+
+        The window covers the year of election and the following five
+        calendar years — six years total (RIRPF Art. 116.1). Year-7 and
+        beyond return False; the taxpayer reverts to the general IRPF regime.
+        Returns False for any non-IMPATRIADO profile regardless of date.
+
+        Args:
+            today: Reference date for the window check (caller supplies
+                ``date.today()`` in production; tests supply a fixed date).
+
+        Returns:
+            True only when ``irpf_special_regime is IMPATRIADO`` and
+            ``start_date.year <= today.year <= start_date.year + 5``.
+        """
+
+        if (
+            self.irpf_special_regime is not IrpfSpecialRegime.IMPATRIADO
+            or self.special_regime_start_date is None
+        ):
+            return False
+        return self.special_regime_start_date.year <= today.year <= self.special_regime_start_date.year + 5
+
+    @property
+    def ue_eee_status(self) -> bool:
+        """True when ``country_of_fiscal_residence`` is in the EU + EEA (post-Brexit).
+
+        ``GB`` is excluded from 2021-01-01 (Brexit transition end).
+        Returns ``False`` when ``country_of_fiscal_residence`` is ``None``
+        (i.e., for IRPF-resident profiles).
+        """
+
+        if self.country_of_fiscal_residence is None:
+            return False
+        return self.country_of_fiscal_residence.upper() in UE_EEA_COUNTRY_CODES
 
 
 class RecargoBand(BaseModel):

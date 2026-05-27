@@ -43,6 +43,42 @@ class RentaDisabilityGrade(StrEnum):
     ASSISTANCE_OR_REDUCED_MOBILITY = "4"
 
 
+# ISO 3166-1 alpha-2 codes for EU member states and EEA members.
+# Post-Brexit: GB is excluded (left EU 2020-12-31, left EEA 2020-12-31).
+# Source: https://ec.europa.eu/eurostat/statistics-explained/index.php/Glossary:European_Economic_Area_(EEA)
+# EEA = EU27 + IS, LI, NO.  CH has bilateral agreements but is not EEA.
+UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset({
+    # EU 27
+    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
+    "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
+    "NL", "PL", "PT", "RO", "SE", "SI", "SK",
+    # EEA non-EU
+    "IS", "LI", "NO",
+})
+"""Closed set of EU + EEA ISO-3166-1 alpha-2 country codes (post-Brexit)."""
+
+
+class FiscalResidency(StrEnum):
+    """Fiscal residency category governing the applicable tax regime.
+
+    Determines whether the taxpayer files under IRPF (Spanish resident)
+    or IRNR (non-resident), following TRLIRNR RDLeg 5/2004 Art. 2:
+
+    - ``RESIDENT_IRPF``: habitual residence in Spain; subject to IRPF
+      (Ley 35/2006 LIRPF). Files Modelo 100 (or Modelo 151 for impatriados).
+    - ``NON_RESIDENT_IRNR``: no habitual residence in Spain; subject to
+      IRNR (RDLeg 5/2004 TRLIRNR). Files Modelo 210 (general),
+      Modelo 216 (retenciones), or Modelo 247 (pensiones).
+
+    Post-Brexit note (from 1 January 2021): GB is no longer an EU/EEA
+    member; ``ue_eee_status`` returns ``False`` for GB residents regardless
+    of prior residence history.
+    """
+
+    RESIDENT_IRPF = "resident_irpf"
+    NON_RESIDENT_IRNR = "non_resident_irnr"
+
+
 class SituacionFamiliar(StrEnum):
     """Legal family situation for the Art. 82 LIRPF unidad-familiar eligibility test.
 
@@ -83,6 +119,8 @@ class SituacionFamiliar(StrEnum):
 
 
 __all__ = [
+    "UE_EEA_COUNTRY_CODES",
+    "FiscalResidency",
     "RentaDeclaracionType",
     "RentaDisabilityGrade",
     "RentaMaritalStatus",

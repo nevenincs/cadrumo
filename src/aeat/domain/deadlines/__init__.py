@@ -61,6 +61,7 @@ from ._festivos import (
 )
 from ._models import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
@@ -89,6 +90,7 @@ __all__ = [
     "DeadlineError",
     "DeadlineShift",
     "EntityType",
+    "FiscalResidency",
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
