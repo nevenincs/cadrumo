@@ -112,13 +112,13 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
             "DP200014B:00592": Decimal("0"),
             "DP200014B:01766": Decimal("0"),
             "DP200014B:01784": Decimal("0"),
-            "DP200026:00625": Decimal("100"),
         },
         enum_binding_values={_DISPATCH_BINDING: "sl"},
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             # INCN below 1.000.000 EUR → micro-empresa lane → tipo-gravamen-pyme bracket
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},
@@ -286,7 +286,6 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         "DP200014B:00592": Decimal("0"),
         "DP200014B:01766": Decimal("0"),
         "DP200014B:01784": Decimal("0"),
-        "DP200026:00625": Decimal("100"),
     }
     assert "DP200014:00562" not in inputs_without_00562, (
         "Test fixture must NOT supply DP200014:00562 — the whole point is that "
@@ -300,6 +299,7 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         binding_values={
             "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
             "modelo-200-2024-profile-incn-prior-12-months": Decimal("5000000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
         },
         relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
         date_context={"filing_period": date(2024, 12, 31)},

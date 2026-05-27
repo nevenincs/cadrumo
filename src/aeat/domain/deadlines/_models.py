@@ -326,6 +326,7 @@ class TaxpayerProfile(BaseModel):
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     new_entity_first_two_profit_periods: bool | None = None
+    tributacion_estado_porcentaje: Decimal | None = None
     establecimiento_type: str = ""
     elected_withholding_pct: str = ""
     vivienda_office_total_m2: Decimal | None = None
