@@ -20,12 +20,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import UTC, datetime
 
+from pydantic import ValidationError
+
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import (
     ProfileNotFoundError,
     ProfileSnapshotNotFoundError,
+    StoredProfileDriftError,
     UserProfileRecord,
     UserProfileSnapshot,
 )
@@ -133,7 +136,10 @@ class UserProfileLifecycleRepository:
         )
         if record is None:
             raise ProfileNotFoundError(f"profile {profile_id!r} not found in bucket {self._bucket_id!r}")
-        envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
+        try:
+            envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
+        except ValidationError as exc:
+            raise StoredProfileDriftError(profile_id, exc) from exc
         if envelope.classification is not SensitivityClass.IDENTITY:
             raise ClassificationError(
                 f"profile {profile_id!r} has classification {envelope.classification}; "
@@ -178,7 +184,13 @@ class UserProfileLifecycleRepository:
             expected_class=SensitivityClass.IDENTITY,
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         ):
-            envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
+            # Extract the profile_id from the hashed object key is not
+            # possible (keys are stored hashed); use the bucket_id as
+            # the context identifier so the error is still actionable.
+            try:
+                envelope = Envelope[UserProfileRecord].model_validate_json(raw.payload.decode("utf-8"))
+            except ValidationError as exc:
+                raise StoredProfileDriftError(self._bucket_id, exc) from exc
             yield envelope.payload
 
     def delete(self, profile_id: str) -> bool:

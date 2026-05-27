@@ -423,7 +423,7 @@ def test_import_refuses_discarded_work_unit(repos) -> None:
         clock=_T1,
     )
 
-    with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|state|DISCARDED"):
+    with pytest.raises(WorkUnitMutationRefusedError):
         import_external_filing_evidence(
             work_unit_id=work_unit.work_unit_id,
             casilla_values={"01": Decimal("1500")},

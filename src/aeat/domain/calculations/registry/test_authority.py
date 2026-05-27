@@ -41,11 +41,13 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
             "06": Decimal("50.00"),
             "08": Decimal("5000.00"),
             "10": Decimal("20.00"),
-            "15": Decimal("20.00"),
             "16": Decimal("5.00"),
             "18": Decimal("100.00"),
         },
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("9500.00")},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("20.00"),
+        },
         date_context={"filing_period": date(2026, 4, 20)},
     )
 

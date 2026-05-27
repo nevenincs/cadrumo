@@ -56,7 +56,11 @@ def test_modelo_303_revision_period_selectors_cover_2009_to_present() -> None:
     assert rev_new.valid_from == date(2023, 1, 1)
     assert rev_new.period_selector.year_from == 2023
     assert rev_new.period_selector.year_to is None
-    assert rev_new.period_selector.periods == ("1T", "2T", "3T", "4T")
+    # S230: 2023+ revision accepts both quarterly (standard) and monthly (SII-enrolled)
+    assert "1T" in rev_new.period_selector.periods
+    assert "4T" in rev_new.period_selector.periods
+    assert "01" in rev_new.period_selector.periods
+    assert "12" in rev_new.period_selector.periods
 
 
 def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
@@ -449,6 +453,59 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
 
     # Disponible at end of period equals the remainder carried forward.
     assert result.values["iva.compensacion-disponible-fin-periodo"] == pendiente_posteriores
+
+
+def test_modelo_303_sii_monthly_snapshot_resolves_for_each_period() -> None:
+    """S230 regression: SII-enrolled taxpayers file M303 monthly (Art. 62.6
+    RD 1624/1992). The 2023-y-siguientes revision must accept periods 01-12
+    via select_revision so ``bindings list --period 01`` resolves without a
+    RegistrySnapshotError."""
+    modelo, catalogues = _load_modelo_303()
+
+    for period in ("01", "06", "12"):
+        snapshot = build_snapshot(
+            modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period=period,
+        )
+        assert snapshot.revision.id == "2023-y-siguientes"
+        schedule_ids = {s.id for s in snapshot.revision.filing_schedules}
+        assert "modelo-303-mensual-sii" in schedule_ids, (
+            f"monthly SII schedule absent for period {period}"
+        )
+
+
+def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() -> None:
+    """The monthly schedule must fire for SII-enrolled profiles and be excluded
+    for standard quarterly profiles."""
+    from aeat.domain.calculations.registry._schedules import applicable_filing_schedules
+    from aeat.domain.deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
+
+    modelo, catalogues = _load_modelo_303()
+    revision = modelo.revisions["2023-y-siguientes"]
+
+    sii_profile = TaxpayerProfile(
+        tax_id="A12345678",
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(sii_enrolled=True),
+    )
+    quarterly_profile = TaxpayerProfile(
+        tax_id="B98765432",
+        iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(sii_enrolled=False),
+    )
+
+    sii_schedules = applicable_filing_schedules(revision, sii_profile)
+    sii_ids = {s.id for s in sii_schedules}
+    assert "modelo-303-mensual-sii" in sii_ids, "monthly SII schedule must match SII-enrolled profile"
+    assert "modelo-303-trimestral" not in sii_ids, "quarterly schedule must NOT match SII-enrolled profile"
+
+    quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
+    quarterly_ids = {s.id for s in quarterly_schedules}
+    assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
+    assert "modelo-303-mensual-sii" not in quarterly_ids, "monthly SII schedule must NOT match standard quarterly profile"
 
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:

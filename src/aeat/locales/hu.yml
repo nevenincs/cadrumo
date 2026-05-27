@@ -98,6 +98,7 @@ aggregation:
       bucket_mismatch: aggregation.renta_ledger.errors.bucket_mismatch
       modelo_mismatch: aggregation.renta_ledger.errors.modelo_mismatch
       period_mismatch: aggregation.renta_ledger.errors.period_mismatch
+      quarterly_period_required: aggregation.renta_ledger.errors.quarterly_period_required
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -199,11 +200,28 @@ application:
         snapshot_not_active: application.modelo.borrador_binding.errors.snapshot_not_active
         source_trace_mismatch: application.modelo.borrador_binding.errors.source_trace_mismatch
     errors:
+      calculation_revision_not_found: 'Nem található számítási revízió ezzel az azonosítóval:
+        %{calculation_revision_id}.'
+      computed_casilla_binding_conflict: 'A bucket-ből származó bemenetek számított
+        cellákat céloznak meg, amelyek nem írhatók felül külső bindolással. Érintett
+        cellák: %{computed}.'
       export_no_active_bucket: application.modelo.errors.export_no_active_bucket
       external_filing_evidence_reference_blank: application.modelo.errors.external_filing_evidence_reference_blank
       external_filing_no_casilla_values: application.modelo.errors.external_filing_no_casilla_values
+      filing_record_not_found: 'Nem található beadási nyilvántartás ezzel az azonosítóval:
+        %{filing_record_id}.'
       reconcile_declaration_unsupported: application.modelo.errors.reconcile_declaration_unsupported
       reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
+      verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
+        azonosítóval: %{verification_report_id}.'
+      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
+        dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és
+        időszak alapján a folytatáshoz.
+      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
+        dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modelo, év
+        és időszak alapján a folytatáshoz.
+      work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
+        %{work_unit_id}.'
   overview:
     explain:
       errors:
@@ -211,9 +229,15 @@ application:
   user_profile:
     errors:
       duplicate_tax_id: application.user_profile.errors.duplicate_tax_id
+      duplicate_tax_id_scan_unreadable_profile: application.user_profile.errors.duplicate_tax_id_scan_unreadable_profile
       no_active_profile_selected: application.user_profile.errors.no_active_profile_selected
       profile_already_exists: application.user_profile.errors.profile_already_exists
+      profile_create_route_mismatch: application.user_profile.errors.profile_create_route_mismatch
+      profile_label_blank: application.user_profile.errors.profile_label_blank
+      profile_manifest_already_registered: application.user_profile.errors.profile_manifest_already_registered
+      profile_manifest_missing: application.user_profile.errors.profile_manifest_missing
       profile_not_registered: application.user_profile.errors.profile_not_registered
+      profile_tombstoned_not_selectable: application.user_profile.errors.profile_tombstoned_not_selectable
   wizard:
     errors:
       profile_flag_required: application.wizard.errors.profile_flag_required
@@ -431,6 +455,22 @@ cli:
         modelo_help: cli.app.modelo.casillas.modelo_help
         period_help: cli.app.modelo.casillas.period_help
         required_help: cli.app.modelo.casillas.required_help
+      compare:
+        modelo_help: Az összehasonlítandó modell száma (pl. 100, 130).
+        need_two_years: Pontosan két --year értéket kell megadni (pl. --year 2024
+          --year 2025).
+        no_revisions: A(z) %{modelo} modell %{filing_year}. évi munkaegységeihez nem
+          tartoznak számítási revíziók. Előbb futtasd az `aeat app modelo work calculate`
+          parancsot.
+        no_usable_revisions: A(z) %{modelo} modellnek a(z) %{filing_year}. évre nincs
+          elérhető VERIFICADO_COMPLETO vagy BORRADOR revíziója az összehasonlításhoz.
+        no_work_units: Nem található %{modelo} modell munkaegység a(z) %{filing_year}.
+          évre. Előbb hozz létre és számíts ki egy munkaegységet.
+        year_help: Az összehasonlításba bevonandó pénzügyi év. Pontosan kétszer add
+          meg (--year 2024 --year 2025).
+      compare_help: Összehasonlítja ugyanazon modell két pénzügyi évének számítási
+        revízióit. Casillánként emittál különbség-sorokat (év_b - év_a) szekciónként
+        csoportosítva.
       describe:
         as_of_help: cli.app.modelo.describe.as_of_help
         modelo_help: cli.app.modelo.describe.modelo_help
@@ -469,6 +509,15 @@ cli:
       history_help: cli.app.modelo.history_help
       list:
         year_help: cli.app.modelo.list.year_help
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: cli.app.modelo.readiness.modelo_help
         period_help: cli.app.modelo.readiness.period_help
@@ -506,6 +555,12 @@ cli:
         calculate_help: cli.app.modelo.work.calculate_help
         calculate_saved: cli.app.modelo.work.calculate_saved
         calculation_revision_id_help: cli.app.modelo.work.calculation_revision_id_help
+        casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
+          ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
+          minősített formát.'
+        casilla_bare_numeric_unknown: A --casilla {key} nem illeszkedik egyetlen casilla-számra
+          sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
+          használd az `aeat app modelo casillas <MODELO>` parancsot.
         casilla_help: cli.app.modelo.work.casilla_help
         casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
         create_created: cli.app.modelo.work.create_created
@@ -1215,6 +1270,7 @@ cli:
       allow_incomplete_help: cli.overview.calendar.allow_incomplete_help
       from_help: cli.overview.calendar.from_help
       help: cli.overview.calendar.help
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: cli.overview.calendar.to_help
     calendar_refused_incomplete: cli.overview.calendar_refused_incomplete
     drafts: cli.overview.drafts
@@ -1249,7 +1305,8 @@ cli:
       work_units_present: cli.overview.status.work_units_present
       work_units_present_with_discarded: cli.overview.status.work_units_present_with_discarded
     status_help: cli.overview.status_help
-    taxpayer_model_undeclared: cli.overview.taxpayer_model_undeclared
+    taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
+      a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
     verbose_help: cli.overview.verbose_help
   registry:
     app_help: cli.registry.app_help
@@ -1531,7 +1588,6 @@ errors:
   calc:
     binding_value_missing: errors.calc.binding_value_missing
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window
@@ -1943,9 +1999,10 @@ errors:
         profile switch NAME` parancsot a profil újraaktiválásához.
       unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
         Az éles, profilhoz kötött tároláshoz fájl- vagy kulcstartó-alapú őrzés szükséges.
-    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord már
-      nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális formátumtól.
-      Futtasd az `aeat config repair` parancsot a diagnosztikához és helyreállításhoz.
+    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord
+      már nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális
+      formátumtól. Futtasd az `aeat config repair` parancsot a diagnosztikához és
+      helyreállításhoz.
   transaction:
     import_source_invalid: errors.transaction.import_source_invalid
     ledger_import_failed: errors.transaction.ledger_import_failed

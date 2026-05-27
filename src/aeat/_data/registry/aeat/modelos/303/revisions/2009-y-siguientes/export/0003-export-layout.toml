@@ -7,6 +7,7 @@ record_type = "page_02"
 order = 2
 encoding = "latin-1"
 line_ending = "none"
+required = false
 
 [[revisions.2009-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-02-open"
@@ -829,6 +830,7 @@ record_type = "page_04"
 order = 4
 encoding = "latin-1"
 line_ending = "none"
+required = false
 
 [[revisions.2009-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-04-open"
@@ -972,6 +974,7 @@ record_type = "page_05"
 order = 5
 encoding = "latin-1"
 line_ending = "none"
+required = false
 
 [[revisions.2009-y-siguientes.export_layouts.records.fields]]
 id = "modelo-303-page-05-open"

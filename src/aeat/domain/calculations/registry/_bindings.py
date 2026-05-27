@@ -40,6 +40,7 @@ __all__ = [
     "RegistryModeloObservation",
     "RegistryModeloObservationRequirement",
     "RentaExpenseObservationProtocol",
+    "RentaIncomeObservationProtocol",
     "invoice_binding_requirements",
     "previous_filing_observation_requirements",
     "resolve_bound_casilla_inputs",
@@ -48,11 +49,13 @@ __all__ = [
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
+    "resolve_ledger_renta_income_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "validate_invoice_binding_definition",
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
     "validate_ledger_renta_expense_aggregation_binding_definition",
+    "validate_ledger_renta_income_aggregation_binding_definition",
 ]
 
 _InvoiceGrouping = Literal["operator_clave", "operator_clave_period"]
@@ -365,9 +368,7 @@ class _PreviousModeloSelector(BaseModel):
         if self.source_period_offset_from_target is None:
             anchors: tuple[tuple[int, str], ...] = tuple((0, period) for period in self.required_periods)
         else:
-            derived = _derive_offset_source_anchor(
-                self.source_period_offset_from_target, target_period=target_period
-            )
+            derived = _derive_offset_source_anchor(self.source_period_offset_from_target, target_period=target_period)
             anchors = () if derived is None else (derived,)
         if self.max_year_delta is None:
             return anchors
@@ -424,9 +425,7 @@ class _PreviousModeloSelector(BaseModel):
                 "previous-filing selector cannot declare both source_casillas and source_output"
             )
         if self.relation is not None and self.source_output is None:
-            raise RegistryValidationError(
-                "previous-filing selector relation requires source_output"
-            )
+            raise RegistryValidationError("previous-filing selector relation requires source_output")
         return self
 
 
@@ -492,8 +491,7 @@ def _derive_offset_source_anchor(offset: int, *, target_period: str) -> tuple[in
         year_delta, zero_based = divmod(int(target_period) - 1 + offset, 12)
         return year_delta, f"{zero_based + 1:02d}"
     raise RegistryValidationError(
-        "previous-filing source_period_offset_from_target cannot interpret "
-        f"target period {target_period!r}"
+        f"previous-filing source_period_offset_from_target cannot interpret target period {target_period!r}"
     )
 
 
@@ -1394,9 +1392,7 @@ def unsupported_ledger_iva_observations(
     """
 
     selectors = tuple(
-        _iva_ledger_selector(binding)
-        for binding in revision.bindings
-        if binding.source == "ledger_iva_aggregation"
+        _iva_ledger_selector(binding) for binding in revision.bindings if binding.source == "ledger_iva_aggregation"
     )
     unsupported: list[IvaLedgerObservation] = []
     for observation in observations:
@@ -1519,6 +1515,90 @@ def resolve_ledger_renta_expense_aggregation_binding_values(
             and observation.target_casilla == selector.target_casilla
         ]
         resolved[binding.id] = sum((observation.deductible_amount for observation in matched), Decimal("0"))
+    return resolved
+
+
+class _RentaLedgerIncomeSelector(BaseModel):
+    """Validated form of a ledger_renta_income_aggregation binding selector.
+
+    ``modelo`` is the M130 declaration series (the only model that sources
+    income via this aggregation path). ``target_casilla`` is the casilla that
+    receives the cumulative revenue total — currently only ``"01"`` (Ingresos
+    íntegros, actividades económicas estimación directa).
+    """
+
+    model_config = ConfigDict(strict=False, frozen=True, extra="forbid")
+
+    modelo: Literal["130"] = "130"
+    target_casilla: str = Field(min_length=2, max_length=8)
+    fact: Literal["gross_income_sum"] = "gross_income_sum"
+
+
+_RENTA_130_INCOME_CASILLAS: frozenset[str] = frozenset({"01"})
+
+
+def _renta_ledger_income_selector(binding: DataBindingDefinition) -> _RentaLedgerIncomeSelector:
+    try:
+        return _RentaLedgerIncomeSelector.model_validate(_selector_as_dict(binding))
+    except (ValueError, TypeError) as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed ledger_renta_income_aggregation selector"
+        ) from exc
+
+
+def validate_ledger_renta_income_aggregation_binding_definition(binding: DataBindingDefinition) -> None:
+    """Validate a ``ledger_renta_income_aggregation`` binding definition."""
+
+    if binding.source != "ledger_renta_income_aggregation":
+        raise RegistryValidationError(f"binding {binding.id!r} is not a ledger_renta_income_aggregation source")
+    selector = _renta_ledger_income_selector(binding)
+    if selector.target_casilla not in _RENTA_130_INCOME_CASILLAS:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} target_casilla {selector.target_casilla!r} "
+            "is outside the supported Modelo 130 income casillas"
+        )
+    op = str((binding.aggregation or {}).get("op", "sum"))
+    if op != "sum":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_renta_income_aggregation supports only aggregation op 'sum', got {op!r}"
+        )
+    if selector.fact != "gross_income_sum":
+        raise RegistryValidationError(
+            f"binding {binding.id!r} ledger_renta_income_aggregation supports only "
+            f"fact 'gross_income_sum', got {selector.fact!r}"
+        )
+
+
+class RentaIncomeObservationProtocol(Protocol):
+    """Structural protocol for actividad-económica income observations.
+
+    The registry only needs these two attributes to resolve
+    ``ledger_renta_income_aggregation`` bindings; the full
+    :class:`~aeat.application.aggregation._renta_income_ledger.RentaIncomeObservation`
+    satisfies this protocol without any explicit declaration.
+    """
+
+    @property
+    def target_casilla(self) -> str: ...
+
+    @property
+    def gross_amount(self) -> Decimal: ...
+
+
+def resolve_ledger_renta_income_aggregation_binding_values(
+    revision: ModeloRevision,
+    observations: Iterable[RentaIncomeObservationProtocol],
+) -> dict[str, Decimal]:
+    """Resolve every ``ledger_renta_income_aggregation`` binding on ``revision``."""
+
+    available = tuple(observations)
+    resolved: dict[str, Decimal] = {}
+    for binding in revision.bindings:
+        if binding.source != "ledger_renta_income_aggregation":
+            continue
+        selector = _renta_ledger_income_selector(binding)
+        matched = [observation for observation in available if observation.target_casilla == selector.target_casilla]
+        resolved[str(binding.id)] = sum((observation.gross_amount for observation in matched), Decimal("0"))
     return resolved
 
 
@@ -1769,9 +1849,7 @@ def resolve_counterpart_binding_row_values(
         source_kind, grouping, _, _ = cohort_key
         _, sample_selector = members[0]
         matched = tuple(
-            _counterpart_to_invoice(observation)
-            for observation in available
-            if observation.source_kind == source_kind
+            _counterpart_to_invoice(observation) for observation in available if observation.source_kind == source_kind
         )
         scope_filtered = tuple(_filter_invoice_observations(matched, sample_selector))
         rows = _build_invoice_rows(grouping, scope_filtered)
@@ -2606,14 +2684,10 @@ class _ProfileSelector(BaseModel):
                 "profile_keys (composite), or profile_model (collection)"
             )
         if has_composite and self.format is None:
-            raise RegistryValidationError(
-                "profile composite selector (profile_keys) requires a format renderer"
-            )
+            raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
         if has_collection:
             if self.field is None:
-                raise RegistryValidationError(
-                    "profile model selector must declare field"
-                )
+                raise RegistryValidationError("profile model selector must declare field")
             # ``collection`` is only required when the profile model
             # selector targets a repeating sub-collection
             # (``repeating = true`` plus a named ``collection``). Scalar
@@ -2621,23 +2695,16 @@ class _ProfileSelector(BaseModel):
             # "TaxResidenceProfile"`` + ``field = "ccaa"``) omit
             # ``collection`` because the field IS at the model root.
             if self.repeating and self.collection is None:
-                raise RegistryValidationError(
-                    "profile collection selector with repeating=true must declare collection"
-                )
+                raise RegistryValidationError("profile collection selector with repeating=true must declare collection")
         # required_when_* must be paired
-        if (self.required_when_profile_key is None) != (
-            self.required_when_value is None
-        ):
+        if (self.required_when_profile_key is None) != (self.required_when_value is None):
             raise RegistryValidationError(
-                "profile selector required_when_profile_key and required_when_value "
-                "must be declared together"
+                "profile selector required_when_profile_key and required_when_value must be declared together"
             )
         return self
 
 
-_MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(
-    ("record", "field", "offset", "length")
-)
+_MANUAL_INPUT_RECORD_SHAPE_KEYS: frozenset[str] = frozenset(("record", "field", "offset", "length"))
 """Canonical record-field shape keys on the manual_input selector.
 
 Single source of truth for both the typed validator in
@@ -2699,18 +2766,13 @@ class _ManualInputSelector(BaseModel):
     def _validate_manual_input_shape(self) -> _ManualInputSelector:
         record_shape_keys = _MANUAL_INPUT_RECORD_SHAPE_KEYS
         has_casilla = self.casilla is not None
-        has_record_shape = any(
-            getattr(self, key) is not None for key in record_shape_keys
-        )
+        has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
         if has_casilla and has_record_shape:
             raise RegistryValidationError(
-                "manual_input selector must declare either the casilla shape or "
-                "the record-field shape, not both"
+                "manual_input selector must declare either the casilla shape or the record-field shape, not both"
             )
         if not has_casilla and not has_record_shape:
-            raise RegistryValidationError(
-                "manual_input selector must declare a casilla or a record-field shape"
-            )
+            raise RegistryValidationError("manual_input selector must declare a casilla or a record-field shape")
         if has_record_shape:
             missing = [key for key in record_shape_keys if getattr(self, key) is None]
             if missing:
@@ -2731,9 +2793,7 @@ def _manual_input_selector(binding: DataBindingDefinition) -> _ManualInputSelect
     try:
         return _ManualInputSelector.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
-        raise RegistryValidationError(
-            f"binding {binding.id!r} has malformed manual_input selector"
-        ) from exc
+        raise RegistryValidationError(f"binding {binding.id!r} has malformed manual_input selector") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -2764,6 +2824,7 @@ _BINDING_SELECTOR_REGISTRY: dict[str, type[BaseModel]] = {
     "ledger_oss_aggregation": _OssIossLedgerSelector,
     "ledger_iva_aggregation": _IvaLedgerSelector,
     "ledger_renta_expense_aggregation": _RentaLedgerExpenseSelector,
+    "ledger_renta_income_aggregation": _RentaLedgerIncomeSelector,
     "withholding": _WithholdingSelector,
     "related_party_operation": _RelatedPartySelector,
     "foreign_asset": _ForeignAssetSelector,
@@ -2816,8 +2877,7 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
         selector_model.model_validate(_selector_as_dict(binding))
     except ValueError as exc:
         return [
-            f"binding {binding.id!r} (source={binding.source!r}) "
-            f"selector violates {selector_model.__name__}: {exc}"
+            f"binding {binding.id!r} (source={binding.source!r}) selector violates {selector_model.__name__}: {exc}"
         ]
     # Counterpart-source bindings get the additional fact/op
     # invariants that ``_validated_counterpart_selector`` runs at
@@ -2827,8 +2887,5 @@ def validate_binding_selector_shape(binding: DataBindingDefinition) -> list[str]
         try:
             _validated_counterpart_selector(binding)
         except RegistryValidationError as exc:
-            return [
-                f"binding {binding.id!r} (source={binding.source!r}) "
-                f"counterpart invariants violated: {exc}"
-            ]
+            return [f"binding {binding.id!r} (source={binding.source!r}) counterpart invariants violated: {exc}"]
     return []

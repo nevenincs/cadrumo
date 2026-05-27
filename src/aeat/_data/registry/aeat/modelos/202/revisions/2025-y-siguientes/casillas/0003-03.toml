@@ -1,3 +1,10 @@
+# Modality gate (Art. 40.2 lane): this casilla is only applicable when
+# INCN over the prior 12 months does NOT exceed 6.000.000 EUR (LIS Art.
+# 40.3). When INCN > 6.000.000 EUR this casilla must not be filed and
+# only the Art. 40.3 lane (clave 32) applies. The gate is enforced at
+# calculation time via `derive_modelo_202_modality`; the INCN is
+# supplied through binding
+# `modelo-202-2025-y-siguientes-incn-prior-12-months`.
 [[revisions.2025-y-siguientes.casillas]]
 id = "03"
 number = "03"

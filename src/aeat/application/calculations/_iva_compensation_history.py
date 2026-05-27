@@ -227,10 +227,10 @@ def iva_compensation_state_from_filed_observation(
     if observation.modelo != "303":
         raise ValueError("IVA compensation history only accepts Modelo 303 observations")
     values = _decimal_casilla_values(observation)
-    result = values.get("69")
-    posterior = values.get("87")
+    result = _casilla_value(values, "69", "iva.resultado")
+    posterior = _casilla_value(values, "87", "iva.compensacion-pendiente-periodos-posteriores")
     generated = max(Decimal("0"), -result) if result is not None else Decimal("0")
-    available = values.get("iva.compensacion-disponible-fin-periodo")
+    available = _casilla_value(values, "iva.compensacion-disponible-fin-periodo")
     if available is None:
         available = (posterior or Decimal("0")) + generated
     source_artefact_sha256 = next(
@@ -244,11 +244,11 @@ def iva_compensation_state_from_filed_observation(
         expediente_id=observation.expediente_id,
         status=observation.status,
         presented_at=observation.presented_at,
-        prior_pending_amount=values.get("110"),
-        applied_amount=values.get("78"),
+        prior_pending_amount=_casilla_value(values, "110", "iva.compensacion-pendiente-periodos-anteriores"),
+        applied_amount=_casilla_value(values, "78", "iva.compensacion-aplicada-periodo"),
         pending_for_later_amount=posterior,
         period_result_amount=result,
-        final_result_amount=values.get("71"),
+        final_result_amount=_casilla_value(values, "71"),
         generated_amount=generated,
         available_end_amount=available,
         source_observation_key=f"303:{observation.ejercicio}:{observation.period}:{observation.expediente_id}",
@@ -266,6 +266,14 @@ def _decimal_casilla_values(observation: FiledDeclaracionObservation) -> dict[st
         except InvalidOperation as exc:
             raise ValueError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
     return values
+
+
+def _casilla_value(values: dict[str, Decimal], *casilla_ids: str) -> Decimal | None:
+    for casilla_id in casilla_ids:
+        value = values.get(casilla_id)
+        if value is not None:
+            return value
+    return None
 
 
 def _period_sort_key(period: str) -> tuple[int, str]:

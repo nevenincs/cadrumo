@@ -36,6 +36,7 @@ from ....domain.attachments._errors import (
 from ....domain.attachments._models import Attachment
 from .envelope import Envelope
 from .errors import ClassificationError, EnvelopeVersionError
+from .runtime_repository import secure_object_repository_for_active_bucket
 from .sql import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
@@ -70,7 +71,7 @@ class AttachmentStore(BaseModel):
     objects: SecureObjectRepository | None = Field(default=None, exclude=True, repr=False)
 
     def _objects_repo(self) -> SecureObjectRepository:
-        return self.objects or SecureObjectRepository()
+        return self.objects or secure_object_repository_for_active_bucket()
 
     @property
     def blobs_dir(self) -> Path:

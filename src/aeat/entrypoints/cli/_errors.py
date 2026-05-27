@@ -52,6 +52,7 @@ from ...core.errors import (
     render_error_text,
 )
 from ...core.logging import get_logger
+from ...domain.user_profile._errors import StoredProfileDriftError
 
 _log = get_logger(__name__)
 
@@ -179,9 +180,14 @@ class CliRefusedBoundaryError(AeatError):
 def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """Wrap ``callback`` so :class:`AeatError` emits the structured stderr form.
 
-    The wrapper catches three exception families and routes them to
+    The wrapper catches four exception families and routes them to
     :func:`_emit_error_and_exit`:
 
+    - :exc:`~aeat.domain.user_profile._errors.StoredProfileDriftError` is
+      wrapped in :exc:`CliStoredDataValidationBoundaryError` so operators see a
+      repair-oriented message distinct from input-time validation failures.
+      Checked before the broad :class:`AeatError` arm by typed exception, not
+      field-path introspection.
     - :class:`aeat.core.errors.AeatError` is forwarded verbatim.
     - :exc:`pydantic.ValidationError` is wrapped in
       :exc:`CliValidationBoundaryError`.
@@ -211,6 +217,16 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return callback(*args, **kwargs)
+        except StoredProfileDriftError as error:
+            # Discriminate stored-data drift (schema mismatch on a persisted
+            # profile record) from input-time validation failures.  Both
+            # originate from pydantic ValidationError but the operator-facing
+            # messages and recovery paths differ.  Checked before the broad
+            # AeatError arm so the typed CLI wrapper is emitted, not the raw
+            # domain error code.
+            if _UNDER_TEST.get():
+                raise
+            _emit_error_and_exit(CliStoredDataValidationBoundaryError(error.original_exception))
         except AeatError as error:
             if _UNDER_TEST.get():
                 raise

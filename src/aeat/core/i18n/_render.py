@@ -287,7 +287,6 @@ def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
 __all__ = [
     "SUPPORTED_OUTPUT_LANGUAGES",
     "UnmatchedPlaceholderError",
-    "_I18N_STRICT_PLACEHOLDERS",
     "output_language",
     "register_profile_language_resolver",
     "tr",

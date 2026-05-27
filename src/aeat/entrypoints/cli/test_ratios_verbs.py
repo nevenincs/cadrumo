@@ -8,22 +8,24 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._models import resolve_active_bucket_id
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.entrypoints.cli._ledger import ratios_app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'ratios-verbs.db').as_posix()}")
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("default"),
+    ):
         try:
             workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield
@@ -103,8 +105,7 @@ def test_ratios_set_emits_ledger_ratios_set_event(cli_runner: CliRunner) -> None
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_SET
-        and event.object_id == "vehiculo_combustible"
+        if event.event_type is BucketEventType.LEDGER_RATIOS_SET and event.object_id == "vehiculo_combustible"
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
     assert matching[-1].payload["new"] == "0.5"
@@ -126,8 +127,7 @@ def test_ratios_unset_emits_ledger_ratios_unset_event(cli_runner: CliRunner) -> 
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_UNSET
-        and event.object_id == "vehiculo_combustible"
+        if event.event_type is BucketEventType.LEDGER_RATIOS_UNSET and event.object_id == "vehiculo_combustible"
     ]
     assert matching
     assert matching[-1].payload["prior"] == "0.5"
@@ -211,10 +211,7 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw(
         for event in catalogue.events.values()
         if event.event_type is BucketEventType.LEDGER_RATIOS_CENSUS_OVERRIDE_WARNING
     ]
-    assert not warnings, (
-        "no warning should fire when the override exactly matches the "
-        "census-derived value"
-    )
+    assert not warnings, "no warning should fire when the override exactly matches the census-derived value"
 
 
 def test_ratios_list_surfaces_census_mismatch_without_hiding_rows(

@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -48,16 +48,9 @@ _LEAK_MARKERS: tuple[str, ...] = (
 def _fresh_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """A pristine storage root: no pointer, no database, no buckets."""
 
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
+        yield storage_root
 
 
 @pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))
@@ -66,7 +59,6 @@ def test_cold_start_verb_refuses_without_leaking_internals(
 ) -> None:
     """Each cold-start verb refuses without surfacing a raw config error."""
 
-    dispose_engine()
     result = invoke_cached_cli(list(verb))
 
     assert result.exit_code != 0, f"{' '.join(verb)} should refuse: {result.output}"
@@ -82,7 +74,6 @@ def test_cold_start_verb_surfaces_profile_create_guidance(
 ) -> None:
     """Each cold-start verb names ``profile create`` so the operator can recover."""
 
-    dispose_engine()
     result = invoke_cached_cli(list(verb))
 
     flat = result.output.replace("\n", " ")
@@ -100,9 +91,7 @@ def test_cold_start_refusal_is_consistent_across_surfaces(_fresh_storage_root: P
     is that every profile-scoped surface produces the same refusal.
     """
 
-    dispose_engine()
     modelo = invoke_cached_cli(["app", "modelo", "work", "list"])
-    dispose_engine()
     ledger = invoke_cached_cli(["app", "ledger", "list"])
 
     assert modelo.exit_code != 0, modelo.output

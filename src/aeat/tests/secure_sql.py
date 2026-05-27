@@ -69,6 +69,26 @@ def isolated_ephemeral_secure_sql(
 
 
 @contextmanager
+def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
+    """Run tests against an empty storage root with no active bucket session.
+
+    Unlike :func:`isolated_profile_storage_root`, this helper does not
+    start an :class:`EphemeralMasterKeyProvider` session. It is for tests
+    that assert ``has_active_bucket_session() is False`` — the bootstrap-
+    exempt repair verbs, cold-start refusal tests, and fast-path surfaces
+    that must all operate without an active session.
+    """
+
+    storage_root = tmp_path / "aeat-storage"
+    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+        dispose_engine(settings)
+        try:
+            yield storage_root
+        finally:
+            dispose_engine(settings)
+
+
+@contextmanager
 def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     """Run profile-bootstrap tests against an empty real storage root.
 
@@ -77,16 +97,28 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     It is for tests that exercise the profile creation path itself,
     where the system under test must create the bucket directory,
     manifest, pointer, and per-bucket database.
+
+    The file backend is configured with the dev-test passphrase so
+    ``get_master_key_provider()`` calls inside ``profile create`` and
+    related verbs resolve a working provider without needing
+    ``AEAT_SECRET_STORE_BACKEND=unsecured``.
     """
 
     storage_root = tmp_path / "aeat-storage"
-    with override_settings(aeat_local_storage_root=storage_root, aeat_active_profile=None) as settings:
+    secret_store_dir = tmp_path / "secrets"
+    passphrase = load_settings().aeat_dev_test_database_password
+    with override_settings(
+        aeat_local_storage_root=storage_root,
+        aeat_active_profile=None,
+        aeat_secret_store_backend="file",  # noqa: S106
+        aeat_secret_store_dir=secret_store_dir,
+        aeat_secret_passphrase=passphrase,
+    ) as settings:
         dispose_engine(settings)
-        with EphemeralMasterKeyProvider():
-            try:
-                yield storage_root
-            finally:
-                dispose_engine(settings)
+        try:
+            yield storage_root
+        finally:
+            dispose_engine(settings)
 
 
 @contextmanager
@@ -151,4 +183,5 @@ __all__ = [
     "isolated_ephemeral_secure_sql",
     "isolated_profile_storage_root",
     "isolated_runtime_profile",
+    "isolated_sessionless_storage_root",
 ]

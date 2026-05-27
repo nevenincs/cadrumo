@@ -259,6 +259,33 @@ def test_filed_303_capture_persists_secure_iva_compensation_history(tmp_path: Pa
         assert _SYNTHETIC_EXPEDIENTE_ID.encode("utf-8") not in database_bytes
 
 
+def test_filed_303_capture_accepts_semantic_compensation_casilla_ids(tmp_path: Path) -> None:
+    with _secure_backend(tmp_path):
+        key = persist_filed_calculation_observation(
+            _prior_303_observation(
+                pending_compensation=Decimal("11.00"),
+                prior_pending=Decimal("15.00"),
+                applied=Decimal("4.00"),
+                result=Decimal("-2.50"),
+                final_result=Decimal("-2.50"),
+                semantic_compensation_ids=True,
+            )
+        )
+
+        history = IvaCompensationHistoryRepository().load_period(2026, "1T")
+        stored = CalculationObservationRepository().load_observation("303", 2026, "1T")
+
+        assert key == "303:2026:1T"
+        assert history is not None
+        assert history.prior_pending_amount == Decimal("15.00")
+        assert history.applied_amount == Decimal("4.00")
+        assert history.pending_for_later_amount == Decimal("11.00")
+        assert history.period_result_amount == Decimal("-2.50")
+        assert history.available_end_amount == Decimal("13.50")
+        assert stored is not None
+        assert stored.observation.casilla_values["iva.compensacion-disponible-fin-periodo"] == Decimal("13.50")
+
+
 def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
         repository = CalculationObservationRepository()
@@ -290,6 +317,7 @@ def _prior_303_observation(
     period: str = "1T",
     expediente_id: str = _SYNTHETIC_EXPEDIENTE_ID,
     presented_at: datetime = _CAPTURED_AT,
+    semantic_compensation_ids: bool = False,
 ) -> FiledDeclaracionObservation:
     body = f"303-{year}-{period}-submitted-file".encode("ascii")
     external = load_external_constants().aeat
@@ -316,7 +344,11 @@ def _prior_303_observation(
             *(
                 (
                     ObservedCasillaValue(
-                        casilla_id="110",
+                        casilla_id=(
+                            "iva.compensacion-pendiente-periodos-anteriores"
+                            if semantic_compensation_ids
+                            else "110"
+                        ),
                         value=str(prior_pending),
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:110",
@@ -329,7 +361,7 @@ def _prior_303_observation(
             *(
                 (
                     ObservedCasillaValue(
-                        casilla_id="78",
+                        casilla_id="iva.compensacion-aplicada-periodo" if semantic_compensation_ids else "78",
                         value=str(applied),
                         source_artefact_kind="submitted_file",
                         source_locator="submitted-file:78",
@@ -340,14 +372,14 @@ def _prior_303_observation(
                 else ()
             ),
             ObservedCasillaValue(
-                casilla_id="87",
+                casilla_id="iva.compensacion-pendiente-periodos-posteriores" if semantic_compensation_ids else "87",
                 value=str(pending_compensation),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:87",
                 confidence=1.0,
             ),
             ObservedCasillaValue(
-                casilla_id="69",
+                casilla_id="iva.resultado" if semantic_compensation_ids else "69",
                 value=str(result),
                 source_artefact_kind="submitted_file",
                 source_locator="submitted-file:69",

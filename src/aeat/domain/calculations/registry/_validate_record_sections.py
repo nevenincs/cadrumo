@@ -12,6 +12,7 @@ from ._bindings import (
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
     validate_ledger_renta_expense_aggregation_binding_definition,
+    validate_ledger_renta_income_aggregation_binding_definition,
 )
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
@@ -77,9 +78,7 @@ def validate_formula_section(
         failures.extend(_missing_refs(prefix, owner, formula.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, formula.source_refs, source_refs, "source"))
         failures.extend(evidence.require_legal_authority_refs(prefix, owner, formula.legal_refs))
-        failures.extend(
-            evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance")
-        )
+        failures.extend(evidence.require_source_tier(prefix, owner, formula.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
                 prefix,
@@ -121,9 +120,7 @@ def validate_parameter_section(
         failures.extend(_missing_refs(prefix, owner, parameter.legal_refs, legal_refs, "legal"))
         failures.extend(_missing_refs(prefix, owner, parameter.source_refs, source_refs, "source"))
         failures.extend(evidence.require_legal_authority_refs(prefix, owner, parameter.legal_refs))
-        failures.extend(
-            evidence.require_source_tier(prefix, owner, parameter.source_refs, "official_source_guidance")
-        )
+        failures.extend(evidence.require_source_tier(prefix, owner, parameter.source_refs, "official_source_guidance"))
         failures.extend(
             evidence.validate_source_citations(
                 prefix,
@@ -187,6 +184,7 @@ def _validate_per_source_binding(
         ("ledger_oss_aggregation", validate_ledger_oss_aggregation_binding_definition),
         ("ledger_iva_aggregation", validate_ledger_iva_aggregation_binding_definition),
         ("ledger_renta_expense_aggregation", validate_ledger_renta_expense_aggregation_binding_definition),
+        ("ledger_renta_income_aggregation", validate_ledger_renta_income_aggregation_binding_definition),
     )
     for source_name, validator in source_validators:
         if binding.source == source_name:

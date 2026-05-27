@@ -20,25 +20,15 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.entrypoints.cli import app as root_app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from aeat.adapters.persistence.storage import get_master_key_provider
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'taxpayer-type.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        with get_master_key_provider():
-            yield
-    finally:
-        dispose_engine()
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _profile_rows(runner: CliRunner, name: str) -> dict[str, str]:

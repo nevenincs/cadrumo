@@ -234,6 +234,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         relation_values=relation_values,
         binding_values={
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
     )
@@ -271,7 +272,10 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         modelo_130_results[period] = calculate_registry_snapshot(
             registry_snapshot("130", filing_year, period),
             inputs=inputs,
-            binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+            },
             date_context={"filing_period": _modelo_130_filing_date(filing_year, period)},
         )
 
@@ -296,7 +300,10 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         inputs={},
         date_context={"filing_period": date(filing_year, 12, 31)},
         relation_values=relation_values,
-        binding_values={"renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1")},
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+        },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
     )
 
@@ -399,7 +406,6 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
         "27": Decimal("200"),
         "28": Decimal("500"),
         "29": Decimal("100"),
-        "30": Decimal("3000"),
         "31": Decimal("0"),
         "33": Decimal("0"),
         "20": Decimal("0"),
@@ -420,6 +426,9 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
         snapshot,
         inputs=inputs,
         date_context={"filing_period": date(2026, 12, 31)},
+        binding_values={
+            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": Decimal("3000"),
+        },
     )
 
     entries = {entry.target: entry for entry in result.entries}
@@ -477,6 +486,9 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
         snapshot,
         inputs=inputs,
         date_context={"filing_period": date(2024, 12, 31)},
+        binding_values={
+            "modelo-202-2023-2024-pagos-fraccionados-anteriores": Decimal("0"),
+        },
     )
 
 

@@ -1,0 +1,16 @@
+[[revisions."2013-y-siguientes".parameters]]
+id = "modelo-720-asset-declaration-threshold-eur"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter"]
+source_refs = ["aeat-modelo-720-procedure"]
+
+[[revisions."2013-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-720-procedure"
+required_text = ["bienes y derechos situados en el extranjero"]
+
+[[revisions."2013-y-siguientes".parameters.values]]
+value = "50000.00"
+date_axis = "filing_period"
+valid_from = 2013-01-01
+

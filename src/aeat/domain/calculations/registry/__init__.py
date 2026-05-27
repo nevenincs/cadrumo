@@ -14,6 +14,7 @@ from ._bindings import (
     OssIossLedgerObservation,
     RegistryModeloObservation,
     RegistryModeloObservationRequirement,
+    RentaIncomeObservationProtocol,
     WithholdingObservation,
     WithholdingObservationRequirement,
     counterpart_binding_requirements,
@@ -27,6 +28,7 @@ from ._bindings import (
     resolve_ledger_iva_aggregation_binding_values,
     resolve_ledger_oss_aggregation_binding_values,
     resolve_ledger_renta_expense_aggregation_binding_values,
+    resolve_ledger_renta_income_aggregation_binding_values,
     resolve_previous_filing_binding_values,
     resolve_withholding_binding_row_values,
     resolve_withholding_binding_values,
@@ -35,6 +37,7 @@ from ._bindings import (
     validate_ledger_iva_aggregation_binding_definition,
     validate_ledger_oss_aggregation_binding_definition,
     validate_ledger_renta_expense_aggregation_binding_definition,
+    validate_ledger_renta_income_aggregation_binding_definition,
     withholding_binding_requirements,
 )
 from ._censo_modelos import (
@@ -222,6 +225,7 @@ from ._schema import (
     SourceReference,
     SupportRemovalDecisionDefinition,
     VerificationExpectationDefinition,
+    VerificationPredicateDefinition,
     WorkbookParityReference,
 )
 from ._snapshot import build_snapshot
@@ -363,6 +367,7 @@ __all__ = [
     "RemoteOperation",
     "RemoteStateGuardPolicy",
     "RemoteStateGuardResult",
+    "RentaIncomeObservationProtocol",
     "RentaWebOpenDriver",
     "RentaWebOpenLivePayload",
     "RentaWebOpenObservation",
@@ -378,6 +383,7 @@ __all__ = [
     "SyntheticInputValue",
     "ValidatedRegistryAuthority",
     "VerificationExpectationDefinition",
+    "VerificationPredicateDefinition",
     "WithholdingObservation",
     "WithholdingObservationRequirement",
     "WorkbookArtefactReport",
@@ -468,6 +474,7 @@ __all__ = [
     "resolve_ledger_iva_aggregation_binding_values",
     "resolve_ledger_oss_aggregation_binding_values",
     "resolve_ledger_renta_expense_aggregation_binding_values",
+    "resolve_ledger_renta_income_aggregation_binding_values",
     "resolve_previous_filing_binding_values",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
@@ -486,6 +493,7 @@ __all__ = [
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
     "validate_ledger_renta_expense_aggregation_binding_definition",
+    "validate_ledger_renta_income_aggregation_binding_definition",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",

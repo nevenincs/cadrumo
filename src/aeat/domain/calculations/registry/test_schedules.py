@@ -139,6 +139,28 @@ def test_resolve_profile_fact_missing_object_attribute_raises() -> None:
         _resolve_profile_fact(profile, "name")
 
 
+def test_resolve_profile_fact_taxpayer_entity_type_special_case() -> None:
+    """S227 regression: the M202 filing schedule uses ``field = "taxpayer.entity_type"``
+    but TaxpayerProfile exposes ``entity_type`` directly (no ``.taxpayer`` sub-attribute).
+    Without the special case, ``_resolve_profile_fact(profile, "taxpayer.entity_type")``
+    raises RegistryValidationError and M202 is absent from the calendar for all
+    LEGAL_ENTITY profiles.
+
+    The special case must resolve ``taxpayer.entity_type`` against the object's
+    ``entity_type`` attribute, mirroring the ``iva.regime`` -> ``iva_regime`` pattern.
+    """
+    from ...deadlines.taxpayer_model import EntityType, TaxpayerProfile
+    from ...deadlines._models import IVARegime
+
+    profile = TaxpayerProfile(
+        tax_id="B12345678",
+        entity_type=EntityType.LEGAL_ENTITY,
+        iva_regime=IVARegime.GENERAL,
+    )
+    result = _resolve_profile_fact(profile, "taxpayer.entity_type")
+    assert result is EntityType.LEGAL_ENTITY
+
+
 # ---------------------------------------------------------------------------
 # evaluate_profile_conditions
 # ---------------------------------------------------------------------------

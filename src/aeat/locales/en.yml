@@ -129,6 +129,8 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
+      quarterly_period_required: Quarterly period is required for M130 income aggregation
+        (e.g. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -272,16 +274,28 @@ application:
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
     errors:
+      calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
+      computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
+        and cannot be overridden by external binding. Affected casillas: %{computed}.'
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
+      filing_record_not_found: No filing record found with id=%{filing_record_id}.
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
+      verification_report_not_found: No verification report found with id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded
+        and cannot be calculated. Create a fresh work unit on the same modelo, year,
+        and period to continue.
+      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and
+        cannot be imported. Create a fresh work unit on the same modelo, year, and
+        period to continue.
+      work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
   overview:
     explain:
       errors:
@@ -290,11 +304,23 @@ application:
     errors:
       duplicate_tax_id: Tax id '%{tax_id}' is already used by profile '%{profile}';
         one taxpayer must have one profile.
+      duplicate_tax_id_scan_unreadable_profile: Cannot verify tax-id uniqueness because
+        profile '%{profile}' is unreadable; run repair diagnostics before creating
+        another profile.
       no_active_profile_selected: No active profile selected.
       profile_already_exists: Profile '%{profile}' already exists; run `aeat config
         profile switch NAME` to activate it or `aeat config profile delete NAME` first.
+      profile_create_route_mismatch: Profile create route '%{route}' does not match
+        profile id '%{profile}'.
+      profile_label_blank: Profile label must not be blank.
+      profile_manifest_already_registered: Profile '%{profile}' already has a registered
+        bucket manifest at %{bucket_dir}.
+      profile_manifest_missing: Profile '%{profile}' has no registered bucket manifest
+        at %{bucket_dir}.
       profile_not_registered: Profile '%{profile}' does not exist; run `aeat config
         profile create NAME` to create it.
+      profile_tombstoned_not_selectable: Profile '%{profile}' is tombstoned and cannot
+        be selected.
   wizard:
     errors:
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'
@@ -540,6 +566,20 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
         required_help: Show only casillas the modelo marks as required
+      compare:
+        modelo_help: Modelo number to compare (e.g. 100, 130).
+        need_two_years: Exactly two --year values are required (e.g. --year 2024 --year
+          2025).
+        no_revisions: Modelo %{modelo} work units for year %{filing_year} have no
+          calculation revisions. Run `aeat app modelo work calculate` first.
+        no_usable_revisions: Modelo %{modelo} for year %{filing_year} has no VERIFICADO_COMPLETO
+          or BORRADOR revisions available for comparison.
+        no_work_units: No Modelo %{modelo} work units found for year %{filing_year}.
+          Create and calculate a work unit first.
+        year_help: Filing year to include in the comparison. Specify exactly twice
+          (--year 2024 --year 2025).
+      compare_help: Compare two filing-year calculation revisions for the same modelo.
+        Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)
@@ -589,6 +629,15 @@ cli:
       history_help: Show the chronological lifecycle audit for one modelo
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: Modelo code (e.g. 303).
         period_help: Period token (e.g. Q1, annual).
@@ -645,6 +694,12 @@ cli:
           with `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
+        casilla_bare_numeric_ambiguous: '--casilla {key} matches multiple casillas
+          in this revision: {candidates}. Supply the qualified PREFIX:NNNNN form to
+          disambiguate.'
+        casilla_bare_numeric_unknown: --casilla {key} does not match any casilla number
+          in this revision.{prefix_hint} Use `aeat app modelo casillas <MODELO>` to
+          list valid casilla IDs.
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
@@ -1615,6 +1670,7 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile edit NAME'' or pass --allow-incomplete to see the calendar computed
@@ -2064,7 +2120,6 @@ errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base

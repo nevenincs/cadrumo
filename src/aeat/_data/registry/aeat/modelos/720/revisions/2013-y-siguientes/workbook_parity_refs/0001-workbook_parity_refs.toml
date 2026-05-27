@@ -1,0 +1,19 @@
+[[revisions."2013-y-siguientes".workbook_parity_refs]]
+id = "modelo-720-dr"
+workbook_source = "aeat-dr-720"
+fixture_id = "modelo-720-record-design-layout"
+formula_coverage = "record_design_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["orden-hap-72-2013:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720"]
+
+# PROVISIONAL: label_pattern values in this profile were derived from registry
+# casilla LABEL fields (aeat-dr-720 diseño de registro), NOT verified
+# against a real AEAT printed-declaración-form PDF specimen. The diseño de
+# registro is an EDI record-layout spec; it cannot ground named_label patterns.
+# Specific divergence: decl.ejercicio uses label_pattern ending in 'la\s+informaci[oó]n'
+# but the EDI field descriptor uses 'la declaración' — the suffix is inconsistent
+# and the correct printed-form wording is unverified.
+# Verification is pending a round-trip parse test against a real M720
+# printed-form PDF. Until that test passes, these patterns are unconfirmed guesses.

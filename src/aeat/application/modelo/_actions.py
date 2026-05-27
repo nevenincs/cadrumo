@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+import re as _re
 from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -39,6 +40,7 @@ from ...domain.calculations.registry import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
     RegistrySnapshot,
+    VerificationPredicateDefinition,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -229,6 +231,19 @@ class AmendmentTargetStateError(ModeloError):
     """Raised when the modelo-amend path is asked to amend a filing
     record that is not in ``CURRENT`` status (e.g., it was already
     superseded by a later filing)."""
+
+
+class StoredCalculationDriftError(ModeloError):
+    """Raised when the verify path detects that a persisted calculation revision
+    has drifted from its content-addressed id.
+
+    The ``calculation_revision_id`` is a SHA-256 hash of
+    ``(work_unit_id, inputs_snapshot, binding_overrides, casilla_values)``.
+    When the stored payload re-hashes to a different value the record has been
+    mutated after creation — either by tampering or a storage corruption.  The
+    verify path refuses VERIFICADO_COMPLETO and raises this error so the
+    operator is forced to produce a fresh calculation revision.
+    """
 
 
 class ExternalModeloImportError(ModeloError):
@@ -651,7 +666,7 @@ def get_work_unit(
     catalogue = repo.load()
     unit = catalogue.get(work_unit_id)
     if unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     return unit
 
 
@@ -678,7 +693,7 @@ def rename_work_unit(
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitMutationRefusedError(
             f"work unit {work_unit_id!r} is discarded; "
@@ -739,7 +754,7 @@ def discard_work_unit(
     catalogue: WorkUnitCatalogue = repo.load()
     existing = catalogue.get(work_unit_id)
     if existing is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if existing.state is WorkUnitState.DESCARTADO:
         raise WorkUnitAlreadyDiscardedError(
             f"work unit {work_unit_id!r} is already discarded "
@@ -1339,9 +1354,9 @@ def calculate_modelo_revision_from_bucket_aggregation(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
 
     try:
         authority = _authority_via_resources()
@@ -1673,7 +1688,7 @@ def _merge_bucket_bound_inputs(
         if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
     )
     if computed:
-        raise ModeloAggregationBindingError(f"bucket-derived inputs target computed casillas: {computed!r}")
+        raise ModeloAggregationBindingError(tr("application.modelo.errors.computed_casilla_binding_conflict", computed=computed))
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
@@ -1759,7 +1774,7 @@ def get_calculation_revision(
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     return revision
 
 
@@ -1787,7 +1802,7 @@ def mark_revision_verificado_completo(
     catalogue = cr_repo.load()
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2026,6 +2041,164 @@ def _required_input_casillas_for_revision(
     return tuple(required), tuple(optional)
 
 
+def _verification_predicates_for_revision(
+    *,
+    modelo: str,
+    filing_year: int,
+    period: str,
+) -> tuple[VerificationPredicateDefinition, ...]:
+    """Return Layer 2 predicates for the registry revision, or empty tuple.
+
+    Resolves the same snapshot as
+    ``_required_input_casillas_for_revision``; when the registry is
+    unavailable the verification pipeline already blocked on Layer 1, so
+    returning an empty tuple here is safe — the caller never reaches
+    predicate evaluation in that case.
+    """
+
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        authority = _authority_via_resources()
+    except FileNotFoundError:
+        return ()
+
+    try:
+        snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError:
+        return ()
+
+    return snapshot.revision.verification_predicates
+
+
+def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
+    """Raise StoredCalculationDriftError when the revision's stored payload
+    does not match its content-addressed id or has internal observation drift.
+
+    Two checks run:
+
+    1. Content-hash check: the ``calculation_revision_id`` is a SHA-256
+       hash of ``(work_unit_id, inputs_snapshot, binding_overrides,
+       casilla_values)``.  Re-deriving the hash and comparing it to the
+       stored id detects tampering or corruption of the primary payload.
+
+    2. Observation provenance cross-check: for each typed
+       ``CasillaObservation`` in ``revision.observations``, the
+       ``observation.value`` must match ``revision.casilla_values``
+       for the same casilla.  A mismatch means the typed provenance
+       envelope (which carries ``formula_id``, ``legal_refs``,
+       ``source_refs``) and the flat casilla-values mapping are no
+       longer consistent — either observations or casilla_values was
+       mutated after creation.
+
+    Older revisions where ``observations == ()`` skip check 2 so the
+    legacy-payload path remains loadable.
+    """
+    expected = derive_calculation_revision_id(
+        work_unit_id=revision.work_unit_id,
+        inputs_snapshot=revision.inputs_snapshot,
+        binding_overrides=revision.binding_overrides,
+        casilla_values=revision.casilla_values,
+        source_transaction_ids=revision.source_transaction_ids,
+        borrador_snapshot_id=revision.borrador_snapshot_id,
+        bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
+    )
+    if expected != revision.calculation_revision_id:
+        raise StoredCalculationDriftError(
+            f"calculation revision {revision.calculation_revision_id!r} content-address mismatch: "
+            f"stored id does not match re-derived hash of its payload; "
+            f"the record may have been tampered with or corrupted"
+        )
+
+    # Observation provenance cross-check (S210).
+    for obs in revision.observations:
+        stored = revision.casilla_values.get(obs.casilla_id)
+        if stored is None:
+            raise StoredCalculationDriftError(
+                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
+                f"observation for casilla {obs.casilla_id!r} is present but casilla_values "
+                f"has no entry for it; the provenance envelope may have been tampered with"
+            )
+        if obs.value != stored:
+            raise StoredCalculationDriftError(
+                f"calculation revision {revision.calculation_revision_id!r} provenance drift: "
+                f"observation value for casilla {obs.casilla_id!r} is {obs.value!r} "
+                f"but casilla_values holds {stored!r}; "
+                f"the record may have been tampered with or corrupted"
+            )
+
+
+_PREDICATE_ALL_NONZERO = _re.compile(r'^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
+_PREDICATE_ANY_NONZERO = _re.compile(r'^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
+
+
+def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
+    """Parse the comma-separated quoted-id list from a predicate expression."""
+    ids: list[str] = []
+    for token in ids_fragment.split(','):
+        token = token.strip().strip('"').strip("'")
+        if token:
+            ids.append(token)
+    return ids
+
+
+def _evaluate_predicate_expression(
+    expression: str,
+    casilla_values: Mapping[str, Decimal],
+) -> bool:
+    """Return True when the predicate holds, False when it is violated.
+
+    Supports the W04 DSL subset:
+
+    - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
+    - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
+
+    An expression that does not match either pattern is treated as
+    holding (i.e. unknown predicates do not block the operator).
+    """
+    expr = expression.strip()
+
+    m = _PREDICATE_ALL_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_ANY_NONZERO.match(expr)
+    if m:
+        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    return True
+
+
+def _evaluate_verification_predicates(
+    predicates: tuple[VerificationPredicateDefinition, ...],
+    casilla_values: Mapping[str, Decimal],
+) -> list[ModeloVerificationFinding]:
+    """Evaluate Layer 2 cross-casilla predicates; return BLOCKING_RULE findings for violations."""
+    if not predicates:
+        return []
+
+    findings: list[ModeloVerificationFinding] = []
+    for predicate in predicates:
+        if not _evaluate_predicate_expression(predicate.expression, casilla_values):
+            findings.append(
+                ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message=(
+                        f"cross-casilla invariant {predicate.predicate_id!r} violated: "
+                        f"{predicate.expression}"
+                    ),
+                    next_action=(
+                        f"Ensure all casillas required by predicate "
+                        f"{predicate.predicate_id!r} are non-zero before verifying."
+                    ),
+                )
+            )
+    return findings
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -2041,45 +2214,57 @@ def verify_modelo_revision(
     settings: Settings | None = None,
     clock: datetime | None = None,
 ) -> VerificationReport:
-    """Evaluate a draft revision against the verified-complete contract.
+    """Evaluate a draft revision against the four-layer verified-complete gate.
+
+    The gate is described fully in the package docstring
+    (:mod:`aeat.application.modelo`). This function is the implementation
+    entry point.
 
     Pipeline:
 
-    1. Load the revision (must be DRAFT).
-    2. Resolve the registry snapshot for the parent work unit's
-       (modelo, year, period). On failure, emit a BLOCKING finding
-       and refuse the transition.
-    3. For each required-manual-input casilla in the registry:
-       check the revision's ``casilla_values`` contains it. Missing
-       entries become MISSING_REQUIRED_CASILLA findings of BLOCKING
-       severity.
-    4. Build a :class:`VerificationReport`. When zero blocking
-       findings are present and the completeness status is
-       ``COMPLETE``, ``granted_verificado_completo`` is ``True`` and
-       the calculation revision transitions DRAFT →
-       VERIFICADO_COMPLETO.
-    5. If the report would grant ``VERIFICADO_COMPLETO``, run the
-       WorkflowEngine-owned gate before mutating state. The gate runs
-       with :attr:`WorkflowPurpose.VERIFY`: it validates the draft
-       against the registry but is independent of the AEAT filing
-       calendar — it never refuses because the filing window is closed
-       or absent. The ``NO_PENDING_OBLIGATION`` guard stays on the
-       filing path (``file_modelo_revision``).
-    6. Persist the report in the verification-report catalogue.
-       Failed attempts persist so the audit trail explains why a
-       transition was refused.
+    1. **State machine** -- load the revision; it must be in ``BORRADOR``
+       (DRAFT) state. Any other state raises
+       :exc:`CalculationRevisionStateError`.
+    2. **Registry snapshot** -- resolve the snapshot for the parent work
+       unit's ``(modelo, filing_year, period)``. On failure, emit a
+       BLOCKING finding and refuse the transition immediately.
+    3. **Layer 1 — required-input gate** -- for each casilla declared
+       ``required = true`` and ``input_kind = "manual"`` in the registry,
+       check that the revision's ``casilla_values`` contains a value.
+       Missing entries produce
+       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA`
+       findings and set ``completeness_status`` to ``INCOMPLETE``.
+    4. **Layer 2 — cross-casilla predicate gate** -- evaluate each
+       :class:`~aeat.domain.calculations.registry.VerificationPredicateDefinition`
+       from the snapshot against the stored ``casilla_values``.  A failing
+       predicate produces a
+       :attr:`~aeat.domain.modelos._verification_report.ModeloVerificationFindingKind.BLOCKING_RULE`
+       finding.
+    5. **Provenance re-validation** -- call
+       :func:`_assert_revision_content_integrity` to re-derive the SHA-256
+       content address and check that each ``CasillaObservation.value``
+       matches ``casilla_values`` for the same casilla.  Either mismatch
+       raises :exc:`StoredCalculationDriftError`.
+    6. **Workflow engine gate** -- when layers 1-3 produce zero blocking
+       findings, run the WorkflowEngine-owned preflight with
+       ``WorkflowPurpose.VERIFY`` before mutating state.  This gate
+       validates the draft against the registry but is independent of the
+       AEAT filing calendar.
+    7. **Persist** -- write the :class:`~aeat.domain.modelos._verification_report.ModeloVerificationReport`
+       to the verification-report catalogue.  Failed attempts are persisted
+       so the audit trail records why the transition was refused.
 
     Raises:
-        CalculationRevisionNotFoundError: When the revision id is
-            absent.
-        CalculationRevisionStateError: When the revision is not in
-            DRAFT state. Re-verifying a verified-complete or filed
-            revision is rejected because the state is immutable
-            from those points; the operator must produce a new
-            calculation revision (which lands as a fresh draft) to
-            verify again.
-        ModeloWorkflowGateError: When the workflow/preflight gate
-            aborts before the verified-complete transition.
+        CalculationRevisionNotFoundError: When the revision id is absent.
+        CalculationRevisionStateError: When the revision is not in BORRADOR
+            state.  Re-verifying a verified-complete or filed revision is
+            rejected; the operator must produce a fresh calculation revision
+            (which lands as a new draft).
+        StoredCalculationDriftError: When the content-address or observation
+            provenance check fails, indicating storage corruption or
+            tampering.
+        ModeloWorkflowGateError: When the workflow preflight gate aborts
+            before the verified-complete transition.
     """
 
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
@@ -2091,12 +2276,14 @@ def verify_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified"
         )
+
+    _assert_revision_content_integrity(target)
 
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
@@ -2249,6 +2436,15 @@ def _collect_revision_verification_findings(
         else:
             missing_required.append(casilla_id)
             findings.append(_missing_required_casilla_finding(casilla_id, target.work_unit_id))
+
+    # Layer 2: cross-casilla predicate gate.
+    predicates = _verification_predicates_for_revision(
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    findings.extend(_evaluate_verification_predicates(predicates, target.casilla_values))
+
     return findings, resolved_casillas, missing_required
 
 
@@ -2307,9 +2503,9 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     """
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot calculate")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
     return work_unit
 
 
@@ -2521,7 +2717,7 @@ def file_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(f"no calculation revision with id={calculation_revision_id!r}")
+        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2723,7 +2919,7 @@ def get_filing_record(
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
     if record is None:
-        raise ModeloRecordNotFoundError(f"no filing record with id={filing_record_id!r}")
+        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=filing_record_id))
     return record
 
 
@@ -2758,7 +2954,7 @@ def get_verification_report(
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)
     if report is None:
-        raise VerificationReportNotFoundError(f"no verification report with id={verification_report_id!r}")
+        raise VerificationReportNotFoundError(tr("application.modelo.errors.verification_report_not_found", verification_report_id=verification_report_id))
     return report
 
 
@@ -2819,7 +3015,7 @@ def amend_modelo_revision(
     filing_catalogue = fr_repo.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
-        raise ModeloRecordNotFoundError(f"no filing record with id={from_filing_record_id!r}")
+        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=from_filing_record_id))
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
             f"filing record {from_filing_record_id!r} has no external_evidence; the "
@@ -3069,9 +3265,9 @@ def import_external_filing_evidence(
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"no modelo work unit with work_unit_id={work_unit_id!r}")
+        raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(f"work unit {work_unit_id!r} is discarded; cannot import")
+        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_import", work_unit_id=work_unit_id))
 
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,

@@ -11,17 +11,16 @@ from typing import cast
 import click
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import get_operator_surface_contract
 from aeat.application.wizard._catalogue import SETUP_FLOW
 from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    dispose_engine()
     for name in (
         "AEAT_AUTH_PROVIDER",
         "AEAT_CERTIFICATE_PATH",
@@ -31,26 +30,15 @@ def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
     # The round-trip helper writes its synthetic certificate to
-    # `<backend>/certificate.p12`. The certificate auth backend probes
+    # `<tmp_path>/certificate.p12`. The certificate auth backend probes
     # the path from `Settings.aeat_certificate_path`, so the env var
     # must name the same file the operator configures — otherwise
     # `configured` (operational readiness) and the backend health
     # summary would describe two different paths.
     monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(tmp_path / "certificate.p12"))
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    try:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
         yield tmp_path
-    finally:
-        dispose_engine()
 
 
 def _invoke(args: list[str]):

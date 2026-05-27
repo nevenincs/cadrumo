@@ -8,22 +8,25 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
+from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.config import override_settings
 from aeat.entrypoints.cli._ledger import collectible_invoice_app, payable_invoice_app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'invoices-verbs.db').as_posix()}")
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(aeat_invoices_dir=tmp_path / "invoices"),
+        profile_create_storage_span("default"),
+    ):
         try:
             workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="default"))
             yield

@@ -283,3 +283,26 @@ def _annual_filing_year(period: str) -> int | None:
     if _re.fullmatch(r"\d{4}A", text):
         return int(text[:4])
     return None
+
+
+# ---------------------------------------------------------------------
+# Output-language override
+# ---------------------------------------------------------------------
+
+
+def activate_subcommand_output_language(ctx: "typer.Context", language: str | None) -> None:
+    """Apply a subcommand-supplied ``--output-language`` to the render path.
+
+    ``--output-language`` on a subcommand short-circuits the root
+    callback's ``--language`` flow; rather than re-parsing, override the
+    Settings field directly and drop the cached language so any ``tr()``
+    fired during the verb body resolves to the requested locale.
+    """
+
+    if language is None:
+        return
+    from ...core.config import override_settings
+    from ...core.i18n._render import clear_output_language_cache
+
+    ctx.with_resource(override_settings(aeat_output_language=language))
+    clear_output_language_cache()

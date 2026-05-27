@@ -49,6 +49,17 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
 
+# Periods initiated in 2024: 23 % flat rate (LIS Art. 29 pre-2025 pyme
+# regime; Real Decreto-ley 4/2004 + Ley 27/2014 Art. 29 as in force for
+# ejercicios iniciados en 2024). The two-tranche micro-empresa scale
+# (17 %/20 %) was introduced for periods initiated in 2025.
+[[revisions."2024-y-siguientes".parameters.brackets]]
+lower_bound = "0"
+fixed_addition = "0"
+marginal_rate = "0.23"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
 # Periods initiated in 2025: 17 % on 0-50.000 EUR, 20 % on the rest.
 [[revisions."2024-y-siguientes".parameters.brackets]]
 lower_bound = "0"

@@ -76,13 +76,9 @@ def _load(repository: SecureObjectRepository) -> object:
 
 
 @pytest.fixture
-def _engine_settings(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
-    """A real SQLite engine on the unsecured backend with the ORM schema applied."""
+def _engine_settings(tmp_path: Path) -> Iterator[Settings]:
+    """A real SQLite engine with the ORM schema applied for session lifecycle tests."""
 
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    dispose_engine()
     settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'session-roundtrip.db').as_posix()}")
     engine = create_engine_from_settings(settings)
     Base.metadata.create_all(engine)

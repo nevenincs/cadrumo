@@ -28,19 +28,23 @@ from typing import Any, Protocol, runtime_checkable
 
 from pydantic import AnyUrl
 
-from .....core.config import Settings
-from .....core.errors import AeatError
-from .....core.logging import get_logger
-from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
-from .....domain.justificante._errors import JustificanteVerificationError
-from .._playwright import PlaywrightError
+from .....core.config import Settings as _Settings
+from .....core.errors import AeatError as _AeatError
+from .....core.logging import get_logger as _get_logger
+from .....domain.calculations.registry import (
+    RemoteOperation as _RemoteOperation,
+    RemoteStateGuardPolicy as _RemoteStateGuardPolicy,
+    assert_remote_operation_allowed as _assert_remote_operation_allowed,
+)
+from .....domain.justificante._errors import JustificanteVerificationError as _JustificanteVerificationError
+from .._playwright import PlaywrightError as _PlaywrightError
 
-_logger = get_logger(__name__)
+_logger = _get_logger(__name__)
 
-_VERIFY_EXTERNAL = Settings.external_constants()
+_VERIFY_EXTERNAL = _Settings.external_constants()
 _VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.sede}{_VERIFY_EXTERNAL.aeat.help_pages.csv_verification}"
 _VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.sede.removeprefix("https://")
-_VERIFY_GUARD_POLICY = RemoteStateGuardPolicy(
+_VERIFY_GUARD_POLICY = _RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
     evidence_tier="official_source_guidance",
     classification="public_read_surface",
@@ -143,12 +147,12 @@ async def verify_csv(
         the document as unknown.
 
     Raises:
-        JustificanteVerificationError: If the round-trip cannot be completed
+        _JustificanteVerificationError: If the round-trip cannot be completed
             (browser launch failure, network error, parsing failure).
     """
     csv = csv.strip().upper()
     if not csv:
-        raise JustificanteVerificationError("cannot verify an empty CSV")
+        raise _JustificanteVerificationError("cannot verify an empty CSV")
 
     own_browser = False
     session = browser
@@ -156,8 +160,8 @@ async def verify_csv(
         try:
             session = await DEFAULT_BROWSER_SESSION_FACTORY()
             own_browser = True
-        except (PlaywrightError, AeatError) as exc:
-            raise JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
+        except (_PlaywrightError, _AeatError) as exc:
+            raise _JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
 
     try:
         context = await session.create_context()
@@ -172,7 +176,7 @@ async def verify_csv(
                 _assert_verify_action("csv-verifier-query")
                 await page.fill("input[name*='csv' i]", csv)
                 await page.press("input[name*='csv' i]", "Enter")
-            except PlaywrightError:
+            except _PlaywrightError:
                 _assert_verify_action("csv-verifier-query")
                 await page.keyboard.type(csv)
                 await page.keyboard.press("Enter")
@@ -181,10 +185,10 @@ async def verify_csv(
             return valid
         finally:
             await context.close()
-    except JustificanteVerificationError:
+    except _JustificanteVerificationError:
         raise
     except Exception as exc:
-        raise JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
+        raise _JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
     finally:
         if own_browser and session is not None:
             try:
@@ -194,16 +198,16 @@ async def verify_csv(
 
 
 def _assert_verify_http(method: str, url: str) -> None:
-    assert_remote_operation_allowed(
+    _assert_remote_operation_allowed(
         _VERIFY_GUARD_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
+        _RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
     )
 
 
 def _assert_verify_action(action: str) -> None:
-    assert_remote_operation_allowed(
+    _assert_remote_operation_allowed(
         _VERIFY_GUARD_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
+        _RemoteOperation(kind="browser_action", action=action),
     )
 
 

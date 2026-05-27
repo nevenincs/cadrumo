@@ -144,6 +144,8 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
+      quarterly_period_required: Es requereix un període trimestral per a l'agregació
+        d'ingressos del Model 130 (p.ex. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -306,17 +308,31 @@ application:
         source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
           els identificadors de binding resolts.
     errors:
+      calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
+      computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
+        a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
+        afectades: %{computed}.'
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de modelo.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
+      filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
+      verification_report_not_found: No s'ha trobat cap informe de verificació amb
+        id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està
+        descartada i no es pot calcular. Crea una nova unitat de treball sobre el
+        mateix modelo, any i periode per continuar.
+      work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està
+        descartada i no es pot importar. Crea una nova unitat de treball sobre el
+        mateix modelo, any i periode per continuar.
+      work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
   overview:
     explain:
       errors:
@@ -325,11 +341,23 @@ application:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
+      duplicate_tax_id_scan_unreadable_profile: No es pot verificar la unicitat del
+        NIF perquè el perfil '%{profile}' no es pot llegir; executa els diagnòstics
+        de reparació abans de crear un altre perfil.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
+      profile_create_route_mismatch: La ruta de creació de perfil '%{route}' no coincideix
+        amb l'id de perfil '%{profile}'.
+      profile_label_blank: L'etiqueta del perfil no pot estar buida.
+      profile_manifest_already_registered: El perfil '%{profile}' ja té un manifest
+        de bucket registrat a %{bucket_dir}.
+      profile_manifest_missing: El perfil '%{profile}' no té cap manifest de bucket
+        registrat a %{bucket_dir}.
       profile_not_registered: El perfil '%{profile}' no existeix; executa `aeat config
         profile create NAME` per crear-lo.
+      profile_tombstoned_not_selectable: El perfil '%{profile}' està eliminat i no
+        es pot seleccionar.
   wizard:
     errors:
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
@@ -584,6 +612,21 @@ cli:
         period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
           exemples periodics inclouen 2026Q1 i 2026-01
         required_help: Mostrar només les caselles marcades com a obligatòries
+      compare:
+        modelo_help: Número de model a comparar (p. ex. 100, 130).
+        need_two_years: Cal especificar exactament dos valors --year (p. ex. --year
+          2024 --year 2025).
+        no_revisions: Les unitats de treball del Model %{modelo} per a l'exercici
+          %{filing_year} no tenen revisions de càlcul. Executa `aeat app modelo work
+          calculate` primer.
+        no_usable_revisions: El Model %{modelo} per a l'exercici %{filing_year} no
+          té revisions VERIFICADO_COMPLETO ni BORRADOR disponibles per a comparar.
+        no_work_units: No s'han trobat unitats de treball del Model %{modelo} per
+          a l'exercici %{filing_year}. Crea i calcula una unitat de treball primer.
+        year_help: Exercici fiscal a incloure a la comparació. Especifica exactament
+          dues vegades (--year 2024 --year 2025).
+      compare_help: Compara les revisions de càlcul de dos exercicis per al mateix
+        model. Emet diferències per casella (any_b - any_a) agrupades per secció.
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
@@ -636,6 +679,15 @@ cli:
       history_help: Mostra l'auditoria cronològica del cicle de vida d'un model
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: Codi de model (p. ex. 303).
         period_help: Token de període (p. ex. Q1, annual).
@@ -697,6 +749,12 @@ cli:
           consultar aquesta amb `aeat app modelo work revision %{revision_id}`.'
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'una revisió de càlcul
+        casilla_bare_numeric_ambiguous: '--casilla {key} coincideix amb diverses caselles
+          en aquesta revisió: {candidates}. Utilitza la forma qualificada PREFIX:NNNNN
+          per desambiguar.'
+        casilla_bare_numeric_unknown: --casilla {key} no coincideix amb cap número
+          de casella en aquesta revisió.{prefix_hint} Utilitza `aeat app modelo casillas
+          <MODELO>` per llistar els identificadors de casella vàlids.
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
           admet l'id de casella, el número del registre o el número de casella imprès
           al BOE mostrats per `aeat app modelo casillas`.
@@ -1689,6 +1747,7 @@ cli:
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
+      show_suppressed_help: cli.overview.calendar.show_suppressed_help
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
       ''aeat config profile edit NAME'' o useu --allow-incomplete per veure el calendari
@@ -2144,7 +2203,6 @@ errors:
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
-    bound_supplied_as_input: errors.calc.bound_supplied_as_input
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que

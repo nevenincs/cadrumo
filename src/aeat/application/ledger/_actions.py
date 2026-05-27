@@ -1033,7 +1033,7 @@ def ledger_transaction_payload(transaction: Transaction) -> dict[str, object]:
         amount=_display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
-        counterparty=raw.counterparty,
+        counterparty=raw.counterparty or "",
         description=raw.description,
         business_classification=transaction.business_classification.value,
         business_pct=_display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
@@ -3157,6 +3157,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
         and command.usage_ratio_id == current.usage_ratio_id
         and command.prorrata_reference == current.prorrata_reference
         and command.purchase_invoice_evidence_id == current.purchase_invoice_evidence_id
+        # tuple[str, ...] on both sides — Python tuple equality is value-equal, not identity-equal.
         and command.attachment_ids == current.attachment_ids
         and command.notes == current.notes
     )

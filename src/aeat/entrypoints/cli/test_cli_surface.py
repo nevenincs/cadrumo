@@ -5,16 +5,15 @@ transport handlers route into the application layer, and that the
 JSON envelope matches the typed records the backend exposes. They
 do NOT exercise live AEAT, certificate auth, or any network surface.
 
-Each test isolates state through ``AEAT_RUNS_DIR`` /
-``AEAT_FINANCIAL_TXS_DIR`` / ``AEAT_INVOICES_DIR`` /
-``AEAT_DRAFTS_DIR`` env vars set on a per-test ``tmp_path``, and
-through ``AEAT_SECRET_STORE_BACKEND=unsecured`` so the encrypted
-state envelope writes through the in-process plain-bytes backend.
+Each test isolates storage state through ``isolated_profile_storage_root``
+which provisions a real file-backend storage root per test without a
+pre-existing active profile.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -24,14 +23,19 @@ from typing import cast
 import pytest
 
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
-def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from aeat.adapters.persistence.storage.sql import dispose_engine
+@pytest.fixture(autouse=True)
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
-    dispose_engine()
+
+def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Clear ambient auth env vars for tests that interact with auth CLI surfaces."""
     for name in (
         "AEAT_AUTH_PROVIDER",
         "AEAT_CERTIFICATE_PATH",
@@ -41,14 +45,6 @@ def _isolate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
     ):
         monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
 
 
 def _invoke(args: list[str]):

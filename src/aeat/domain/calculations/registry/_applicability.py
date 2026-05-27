@@ -48,6 +48,27 @@ attribution entity to the member pass-through (its own obligation is
 the informational Modelo 184). This is the corporate-entity ADR §4
 engine routing contract.
 
+**Canonical applicability authority — modelo level.**
+:data:`_MODELO_APPLICABILITY_RULES` is the single canonical source for
+modelo-level applicability. Any question of the form "does this
+taxpayer ever owe this modelo?" is answered here. Code that derives
+applicability verdicts MUST read from this table; it MUST NOT
+re-implement the logic in another module or maintain a parallel copy
+of the rules dict.
+
+**Relation to ``applicability_conditions`` on ``ModeloDeadlineWindow``.**
+:class:`~aeat.domain.deadlines.ModeloDeadlineWindow` carries a
+``applicability_conditions`` mapping that governs *window-level*
+scheduling — which specific deadline window applies for a profile
+within the set of applicable windows (e.g. Modelo 202 uses different
+modality windows for the April / October / December instalments, and
+some windows filter by ``entity_size``). These conditions are
+COMPLEMENTARY to the modelo-level rules, not replacements:
+``applicability_conditions`` operates after the modelo-level gate
+confirms the modelo applies at all; it never overrides the modelo-level
+verdict. Adding a condition to a deadline window does not affect the
+``ApplicabilityVerdict`` returned by :func:`derive_modelo_applicability`.
+
 Every rule carries ``legal_refs`` — scoped registry citation keys in
 the ``law-slug:art-N`` form (e.g. ``ley-35-2006:art-99``) that resolve
 against ``src/aeat/_data/registry/aeat/legal/*.toml`` — per

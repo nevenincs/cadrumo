@@ -1,0 +1,19 @@
+[[revisions."2019-y-siguientes".parameters]]
+id = "irpf.urban_rental_withholding_rate"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+source_refs = ["aeat-modelo-115-180-folleto-actividades"]
+
+[[revisions."2019-y-siguientes".parameters.values]]
+value = "19"
+date_axis = "filing_period"
+valid_from = 2019-01-01
+
+[[revisions."2019-y-siguientes".parameters.source_citations]]
+source_ref = "aeat-modelo-115-180-folleto-actividades"
+required_text = ["arrendamiento o subarrendamiento de bienes inmuebles urbanos"]
+
+# Casilla IDs in this modelo are the same as the printed form numbers.
+# form_number is not declared individually because id == form_number for all casillas.
+

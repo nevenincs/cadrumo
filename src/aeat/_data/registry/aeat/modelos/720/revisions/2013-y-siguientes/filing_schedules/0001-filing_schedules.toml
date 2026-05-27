@@ -1,0 +1,8 @@
+[[revisions."2013-y-siguientes".filing_schedules]]
+id = "modelo-720-anual"
+period_kind = "annual"
+periods = ["0A"]
+profile_condition_mode = "all"
+legal_refs = ["orden-hap-72-2013:art-1", "orden-hap-72-2013:art-2", "ley-58-2003:art-93"]
+source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
+

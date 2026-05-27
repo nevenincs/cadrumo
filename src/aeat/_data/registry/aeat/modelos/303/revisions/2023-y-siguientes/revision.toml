@@ -6,7 +6,9 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 
 [revisions.2023-y-siguientes.period_selector]
 year_from = 2023
-periods = ["1T", "2T", "3T", "4T"]
+# Quarterly periods for standard autoliquidacion; monthly periods for
+# SII-enrolled taxpayers (Art. 62.6 RD 1624/1992, Orden HFP/187/2017).
+periods = ["1T", "2T", "3T", "4T", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
 
 [[revisions.2023-y-siguientes.workbook_parity_refs]]
 id = "modelo-303-dr-2025"
@@ -517,6 +519,30 @@ explanation = "Autonomos not in an exempt IVA regime file Modelo 303 quarterly V
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
 
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.sii_enrolled"
+op = "not_equals"
+value = true
+explanation = "SII-enrolled taxpayers file Modelo 303 monthly, not quarterly; this schedule excludes them."
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules]]
+id = "modelo-303-mensual-sii"
+period_kind = "monthly"
+periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
+profile_condition_mode = "all"
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2023-y-siguientes.filing_schedules.profile_conditions]]
+field = "iva.sii_enrolled"
+op = "equals"
+value = true
+explanation = "Taxpayers enrolled in SII (Suministro Inmediato de Informacion) file Modelo 303 monthly per Art. 62.6 RD 1624/1992."
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
 [[revisions.2023-y-siguientes.deadline_windows]]
 id = "modelo-303-2025-1t"
 filing_year = 2025
@@ -597,6 +623,50 @@ closes_on = 2027-01-30
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = ["boe-modelo-303-2008-form"]
 
+# Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
+# Orden HFP/187/2017). Period closes on the 30th of the following month; January
+# closes on the last day of February. Representative anchors registered here to
+# keep the registry minimal; months 02-05, 07-11 follow the same pattern.
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-01-mensual"
+filing_year = 2025
+period = "2025-01"
+period_kind = "monthly"
+opens_on = 2025-02-01
+closes_on = 2025-02-28
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-06-mensual"
+filing_year = 2025
+period = "2025-06"
+period_kind = "monthly"
+opens_on = 2025-07-01
+closes_on = 2025-07-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2025-12-mensual"
+filing_year = 2025
+period = "2025-12"
+period_kind = "monthly"
+opens_on = 2026-01-01
+closes_on = 2026-01-30
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.deadline_windows]]
+id = "modelo-303-2026-01-mensual"
+filing_year = 2026
+period = "2026-01"
+period_kind = "monthly"
+opens_on = 2026-02-01
+closes_on = 2026-02-28
+legal_refs = ["rd-1624-1992:art-71"]
+source_refs = ["boe-modelo-303-2008-form"]
+
 [[revisions.2023-y-siguientes.constructs]]
 id = "modelo-303-iva-autoliquidacion"
 title = "Modelo 303 IVA quarterly autoliquidacion"
@@ -632,8 +702,8 @@ workbook_parity_refs = ["modelo-303-dr-2025"]
 extraction_profiles = ["modelo-303-declaracion-pdf"]
 live_cross_references = ["modelo-303-static-documentation", "modelo-303-filed-declarations-read"]
 application_links = ["modelo-303-portal", "modelo-303-filing", "modelo-303-extractor", "modelo-303-verification", "modelo-303-review", "modelo-303-approval", "modelo-303-reconciliation", "modelo-303-workflow", "modelo-303-deadline", "modelo-303-calculation"]
-filing_schedules = ["modelo-303-trimestral"]
-deadline_windows = ["modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t"]
+filing_schedules = ["modelo-303-trimestral", "modelo-303-mensual-sii"]
+deadline_windows = ["modelo-303-2025-1t", "modelo-303-2025-2t", "modelo-303-2025-3t", "modelo-303-2025-4t", "modelo-303-2026-1t", "modelo-303-2026-2t", "modelo-303-2026-3t", "modelo-303-2026-4t", "modelo-303-2025-01-mensual", "modelo-303-2025-06-mensual", "modelo-303-2025-12-mensual", "modelo-303-2026-01-mensual"]
 
 [revisions.2023-y-siguientes.completeness_manifest]
 source_ref = "aeat-dr-303-2025"

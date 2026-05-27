@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
+import click
 import typer
 
 from ...application.aggregation import (
@@ -44,7 +45,7 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...core.errors import resolve_error_message
-from ...core.i18n import tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
@@ -53,10 +54,11 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _emit, _parse_iso_date, _profile_to_taxpayer
+from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
+    from ...domain.calculations.registry._schema import ModeloRevision
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -65,6 +67,9 @@ _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 
 _CASILLA_MAX_LEN = 64
 _BINDING_MAX_LEN = 128
+_BARE_NUMERIC_RE = re.compile(r"^\d+$")
+
+_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 def _validate_work_unit_id(value: str) -> str:
@@ -308,9 +313,7 @@ def describe_modelo(
         # rewritten — an unknown-modelo error keeps its own message.
         message = str(exc)
         if period is not None and "period" in message.lower():
-            raise typer.BadParameter(
-                _bare_period_error(modelo, period, fallback=message)
-            ) from exc
+            raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
         raise typer.BadParameter(message) from exc
     _emit(
         ctx,
@@ -486,9 +489,7 @@ def _parse_kv_spec[T](
     key, _, value = spec.partition("=")
     key = key.strip()
     if not key:
-        raise typer.BadParameter(
-            tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec)
-        )
+        raise typer.BadParameter(tr("cli.app.modelo.work.kv_empty_key_error", flag=flag, spec=spec))
     if key_validator is not None:
         key_validator(key, spec)
     return key, transform(value)
@@ -515,13 +516,7 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     except Exception:
         return ()
     return tuple(
-        sorted(
-            {
-                token
-                for revision in definition.revisions.values()
-                for token in revision.period_selector.periods
-            }
-        )
+        sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods})
     )
 
 
@@ -640,8 +635,7 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
     return tr(
         "cli.app.modelo.describe.period_token_invalid",
         default=(
-            f"--period {period!r} is not a valid period token for modelo "
-            f"{modelo}. Valid tokens: {', '.join(declared)}."
+            f"--period {period!r} is not a valid period token for modelo {modelo}. Valid tokens: {', '.join(declared)}."
         ),
         period=period,
         modelo=modelo,
@@ -758,9 +752,7 @@ def bindings_list(
         if missing:
             profile_resolved = _profile_resolved_binding_ids(report)
             rows = tuple(
-                row
-                for row in rows
-                if row.source != "constant_value" and row.binding_id not in profile_resolved
+                row for row in rows if row.source != "constant_value" and row.binding_id not in profile_resolved
             )
         for row in rows:
             merged_rows.append(
@@ -970,9 +962,7 @@ def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[
         try:
             value = json.loads(raw)
         except json.JSONDecodeError as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)) from exc
         if not isinstance(value, dict):
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
         parsed.append(value)
@@ -1201,11 +1191,11 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     bypassed deliberately.
     """
 
-    from ...application.overview._applicability import (
+    from ...application.workflow._persistence import workflow_state_repository
+    from ...domain.calculations.registry.applicability import (
         ApplicabilityVerdict,
         derive_modelo_applicability,
     )
-    from ...application.workflow._persistence import workflow_state_repository
     from ._common import _profile_to_taxpayer
     from ._errors import CliRefusedBoundaryError
 
@@ -1260,11 +1250,7 @@ def _missing_binding_guidance(error: RegistryValidationError, work_unit_id: str)
     Non-input registry-validation errors fall through unchanged.
     """
 
-    base = (
-        tr(error.translated_message, **(error.context or {}))
-        if error.translated_message is not None
-        else str(error)
-    )
+    base = tr(error.translated_message, **(error.context or {})) if error.translated_message is not None else str(error)
     if error.translated_message not in _MISSING_INPUT_TRANSLATED_MESSAGES:
         return base
 
@@ -1332,8 +1318,7 @@ def work_create(
             help=tr(
                 "cli.app.modelo.work.allow_not_applicable_help",
                 default=(
-                    "Crear la unidad de trabajo aunque el modelo no aplique "
-                    "al tipo de contribuyente del perfil activo."
+                    "Crear la unidad de trabajo aunque el modelo no aplique al tipo de contribuyente del perfil activo."
                 ),
             ),
         ),
@@ -1823,6 +1808,85 @@ def _parse_casilla_override(spec: str) -> tuple[str, str]:
     )
 
 
+def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
+    """Return the registry revision for a work unit's modelo + filing scope.
+
+    Loads the work unit from the active profile's bucket, then fetches
+    the registry snapshot for its ``(modelo, filing_year, period)``
+    triple. The result is used by :func:`_normalise_casilla_key` so
+    bare-numeric ``--casilla`` tokens can be resolved against the real
+    casilla catalogue before the calculation is dispatched.
+    """
+
+    unit = get_work_unit(work_unit_id)
+    authority = _service()._authority
+    snapshot = authority.snapshot(
+        str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+    )
+    return snapshot.revision
+
+
+def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
+    """Resolve a bare-numeric ``--casilla`` key to its qualified CasillaId.
+
+    When the operator supplies a bare integer token (e.g. ``"69"`` or
+    ``"552"``), this function searches ``revision.casillas`` for entries
+    whose ``number`` attribute is numerically equal to the supplied token
+    (leading zeros stripped on both sides for comparison).
+
+    - Exactly one match → return the qualified ``casilla.id``
+      (e.g. ``"iva.resultado"`` or ``"DP200014:00552"``).
+    - Multiple matches → raise :class:`typer.BadParameter` naming each
+      candidate id so the operator can supply the unambiguous form.
+    - No match → raise :class:`typer.BadParameter` listing the casilla
+      prefixes available for this revision (S60 improved error).
+    - Non-numeric key → return unchanged (already qualified or format
+      validation will reject it).
+    """
+
+    if not _BARE_NUMERIC_RE.fullmatch(key):
+        return key
+
+    # Strip leading zeros for numeric equality; "69", "069", "00069" all match.
+    key_numeric = key.lstrip("0") or "0"
+    matches = [c for c in revision.casillas if ((c.number or "").lstrip("0") or "0") == key_numeric]
+    if len(matches) == 1:
+        return str(matches[0].id)
+
+    if len(matches) > 1:
+        candidates = ", ".join(str(c.id) for c in sorted(matches, key=lambda c: str(c.id)))
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.casilla_bare_numeric_ambiguous",
+                default=(
+                    f"--casilla {key!r} matches multiple casillas in this revision: "
+                    f"{candidates}. Supply the qualified PREFIX:NNNNN form to disambiguate."
+                ),
+                key=key,
+                candidates=candidates,
+            )
+        )
+
+    # No match — build a helpful suggestion listing the available
+    # segmento prefixes so the operator knows the key shape for
+    # this revision (S60).
+    prefixes: list[str] = sorted({str(c.id).split(":")[0] for c in revision.casillas if ":" in str(c.id)})
+    prefix_hint = f" Available prefixes for this revision: {', '.join(prefixes)}." if prefixes else ""
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.casilla_bare_numeric_unknown",
+            default=(
+                f"--casilla {key!r} does not match any casilla number in this revision."
+                f"{prefix_hint} Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs."
+            ),
+            key=key,
+            prefix_hint=prefix_hint,
+        )
+    )
+
+
 @work_app.command("calculate", help=tr("cli.app.modelo.work.calculate_help"))
 def work_calculate(
     ctx: typer.Context,
@@ -1877,9 +1941,17 @@ def work_calculate(
             ),
         ),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
+    activate_subcommand_output_language(ctx, output_language)
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     from ...application.modelo import (
@@ -1888,15 +1960,23 @@ def work_calculate(
         ModeloIvaWalletReconciliationBlocked,
     )
 
-    casilla_pairs = dict(_parse_casilla_override(spec) for spec in (casilla or ()))
+    casilla_specs = list(casilla or ())
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in casilla_specs)
+    if casilla_pairs:
+        # Resolve bare-numeric tokens against the casilla catalogue before
+        # the decimal conversion pass so the application layer only sees
+        # qualified CasillaIds.
+        try:
+            revision = _casilla_revision_for_work_unit(work_unit_id)
+        except WorkUnitNotFoundError as exc:
+            raise _bad_parameter_from_error(exc) from exc
+        casilla_pairs = {_normalise_casilla_key(k, revision): v for k, v in casilla_pairs.items()}
     casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -1913,9 +1993,7 @@ def work_calculate(
         try:
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)) from exc
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
@@ -1959,15 +2037,38 @@ def work_calculate(
         state=revision.state.value,
         work_unit_id=revision.work_unit_id,
     )
+    # For Modelo 202 derive and surface the Art. 40.2 / 40.3 modality so
+    # the operator knows which pago-fraccionado lane applies. The verdict
+    # is gated by the LIS Art. 40.3 INCN threshold (6.000.000 EUR over
+    # the prior 12 months).  derive_modelo_202_modality returns INCOMPLETE
+    # when the profile does not declare an INCN or is not a legal entity.
+    modality_payload: dict[str, object] = {}
+    modality_lines: list[str] = []
+    unit_for_modality = get_work_unit(revision.work_unit_id)
+    if str(unit_for_modality.modelo) == "202":
+        from ...application.workflow._persistence import workflow_state_repository
+        from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+
+        _wf_state = workflow_state_repository().load()
+        _profile_202 = _profile_to_taxpayer(_wf_state)
+        _verdict = derive_modelo_202_modality(_profile_202)
+        modality_payload = {
+            "modality": _verdict.modality.value,
+            "modality_reason": _verdict.reason,
+        }
+        modality_lines = [f"modality\t{_verdict.modality.value}"]
+
     payload = {
         "operation": "modelo.work.calculate",
         "saved": True,
         "saved_confirmation": saved_confirmation,
         **_calculation_revision_payload(revision),
+        **modality_payload,
     }
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
+        *modality_lines,
         saved_confirmation,
     ]
     _emit(ctx, payload, lines)
@@ -2026,11 +2127,32 @@ def work_revision(
         revision = get_calculation_revision(calculation_revision_id)
     except CalculationRevisionNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
+    modality_payload_r: dict[str, object] = {}
+    modality_lines_r: list[str] = []
+    unit_for_modality_r = get_work_unit(revision.work_unit_id)
+    if str(unit_for_modality_r.modelo) == "202":
+        from ...application.workflow._persistence import workflow_state_repository
+        from ...domain.calculations.registry.applicability import derive_modelo_202_modality
+
+        _wf_state_r = workflow_state_repository().load()
+        _profile_202_r = _profile_to_taxpayer(_wf_state_r)
+        _verdict_r = derive_modelo_202_modality(_profile_202_r)
+        modality_payload_r = {
+            "modality": _verdict_r.modality.value,
+            "modality_reason": _verdict_r.reason,
+        }
+        modality_lines_r = [f"modality\t{_verdict_r.modality.value}"]
+
     payload = {
         "operation": "modelo.work.revision",
         **_calculation_revision_payload(revision),
+        **modality_payload_r,
     }
-    lines = ["operation\tmodelo.work.revision", *_calculation_revision_lines(revision)]
+    lines = [
+        "operation\tmodelo.work.revision",
+        *_calculation_revision_lines(revision),
+        *modality_lines_r,
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -2172,6 +2294,13 @@ def work_verify(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Verify a draft calculation revision against the verified-complete contract.
 
@@ -2181,6 +2310,7 @@ def work_verify(
     inputs or blocking findings.
     """
 
+    activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is intentionally NOT wrapped in
     # typer.BadParameter: it is a workflow-state refusal (e.g.
@@ -2230,9 +2360,17 @@ def work_file(
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
 
+    activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is a workflow-state refusal, not a
     # user-input error — it propagates to the command error boundary
@@ -2435,9 +2573,7 @@ def _parse_amendment_casilla(spec: str) -> tuple[str, Decimal]:
         try:
             return Decimal(value.strip())
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.set_not_decimal", value=value)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.set_not_decimal", value=value)) from exc
 
     return _parse_kv_spec(
         spec,
@@ -3202,8 +3338,8 @@ def modelo_reconcile_verb(
         "cli.app.modelo.reconcile_from_justificante.help",
         default=(
             "Reconcile a modelo work unit against a justificante PDF. Sugar for "
-            "operators who think \"reconcile from this justificante\" rather than "
-            "\"reconcile, source = justificante\". Shares the modelo_reconcile "
+            'operators who think "reconcile from this justificante" rather than '
+            '"reconcile, source = justificante". Shares the modelo_reconcile '
             "application service entry point with the flag-based form. Local-only; "
             "never contacts AEAT."
         ),
@@ -3377,6 +3513,502 @@ def modelo_export_verb(
         f"format\t{result.format}",
         f"bucket_event_id\t{result.bucket_event_id}",
     ]
+    _emit(ctx, payload, lines)
+
+
+@app.command(
+    "project",
+    help=tr(
+        "cli.app.modelo.project_help",
+        default=(
+            "Project a year-end Modelo 100 from quarterly Modelo 130 filings. "
+            "Reads all M130 work-unit revisions for --year, aggregates rendimiento neto "
+            "and pagos fraccionados, and runs the M100 registry calculation to surface "
+            "the projected cuota íntegra and net obligation."
+        ),
+    ),
+)
+def modelo_project(
+    ctx: typer.Context,
+    year: Annotated[
+        int,
+        typer.Option(
+            "--year",
+            help=tr("cli.app.modelo.project.year_help", default="Filing year (e.g. 2024)."),
+        ),
+    ],
+    ccaa: Annotated[
+        str,
+        typer.Option(
+            "--ccaa",
+            help=tr(
+                "cli.app.modelo.project.ccaa_help",
+                default=(
+                    "Autonomous community tax residence key for the M100 autonomic scale "
+                    "(e.g. cataluna, comunidad-valenciana). Must match the registry enum."
+                ),
+            ),
+        ),
+    ],
+    casilla: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--casilla",
+            help=tr(
+                "cli.app.modelo.project.casilla_help",
+                default=(
+                    "Additional M100 casilla override as ID=VALUE (e.g. 0513=1150 for "
+                    "age supplement). Repeat for multiple overrides."
+                ),
+            ),
+        ),
+    ] = None,
+    binding: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--binding",
+            help=tr(
+                "cli.app.modelo.project.binding_help",
+                default=(
+                    "Additional M100 binding override as KEY=VALUE. Repeat for multiple. "
+                    "Retenciones bindings (renta-YYYY-modelo-111-retenciones-periodicas etc.) "
+                    "default to zero when not supplied."
+                ),
+            ),
+        ),
+    ] = None,
+) -> None:
+    """Project a year-end Modelo 100 from the active profile's M130 quarterly filings."""
+
+    _require_active_profile()
+
+    from ...application.modelo import list_work_units as _list_work_units
+    from ...domain.calculations.registry import calculate_registry_snapshot
+    from ...domain.modelos._work_unit import WorkUnitState
+
+    # -- Collect M130 work units for the requested year --------------------------
+    all_units = _list_work_units()
+    m130_units = [
+        u for u in all_units
+        if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
+    ]
+
+    if not m130_units:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.no_m130_units",
+                default=f"No Modelo 130 work units found for year {year}. "
+                "Create and calculate M130 work units first with "
+                "`aeat app modelo work create --modelo 130`.",
+            )
+        )
+
+    # -- Gather latest calculation revisions for each M130 work unit -------------
+    _quarters = {"1T", "2T", "3T", "4T"}
+    m130_quarters: dict[str, CalculationRevision] = {}
+    for unit in m130_units:
+        revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
+        if not revisions:
+            continue
+        # Use the most recent revision (list is sorted by created_at).
+        latest = revisions[-1]
+        period = unit.period
+        if period in _quarters:
+            m130_quarters[period] = latest
+
+    if not m130_quarters:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.no_m130_revisions",
+                default=f"Modelo 130 work units for year {year} have no calculation revisions. "
+                "Run `aeat app modelo work calculate <work_unit_id>` for each quarter first.",
+            )
+        )
+
+    # -- Aggregate M130 outputs across quarters ----------------------------------
+    # M130 casilla 03: rendimiento neto (accrual base for the quarter, not cumulative).
+    # M130 casilla 19: resultado final (amount paid in the quarter).
+    # M130 casilla 01: ingresos (quarterly revenue).
+    # M130 casilla 02: gastos (quarterly expenses).
+    quarters_filed = len(m130_quarters)
+    total_rendimiento_neto = sum(
+        (rev.casilla_values.get("03", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
+    )
+    total_pagos_fraccionados = sum(
+        (rev.casilla_values.get("19", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
+    )
+    total_ingresos = sum(
+        (rev.casilla_values.get("01", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
+    )
+    total_gastos = sum(
+        (rev.casilla_values.get("02", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
+    )
+
+    # Extrapolate to full year when fewer than 4 quarters are available.
+    # Linear extrapolation: annualise by (4 / quarters_filed).
+    if quarters_filed < 4:
+        factor = Decimal(4) / Decimal(quarters_filed)
+        projected_rendimiento_neto = (total_rendimiento_neto * factor).quantize(Decimal("0.01"))
+        is_extrapolated = True
+    else:
+        projected_rendimiento_neto = total_rendimiento_neto
+        is_extrapolated = False
+
+    # -- Build M100 snapshot inputs and bindings ---------------------------------
+    authority = _service()._authority
+    try:
+        m100_snapshot = authority.snapshot("100", filing_year=year, period="0A")
+    except RegistrySnapshotError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    # Casilla overrides from --casilla flags.
+    casilla_specs = list(casilla or ())
+    casilla_pairs = dict(_parse_casilla_override(spec) for spec in casilla_specs)
+    extra_inputs: dict[str, Decimal] = {}
+    for k, v in casilla_pairs.items():
+        try:
+            extra_inputs[k] = Decimal(v)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
+            ) from exc
+
+    # Binding overrides from --binding flags.
+    binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
+    extra_bindings: dict[str, Decimal] = {}
+    extra_enum_bindings: dict[str, str] = {}
+    for k, v in binding_pairs.items():
+        try:
+            extra_bindings[k] = Decimal(v)
+        except (InvalidOperation, ValueError):
+            extra_enum_bindings[k] = v
+
+    # M100 inputs: projected base liquidable general from M130 rendimiento neto,
+    # pagos fraccionados from M130 casilla 19 sum.
+    m100_inputs: dict[str, Decimal] = {
+        "0505": projected_rendimiento_neto,  # base liquidable general
+        "0604": total_pagos_fraccionados,    # pagos fraccionados M130 (manual, actual paid)
+        **extra_inputs,
+    }
+
+    # Default retenciones bindings to zero; caller may override via --binding.
+    _retenciones_binding_ids = (
+        f"renta-{year}-modelo-111-retenciones-periodicas",
+        f"renta-{year}-modelo-115-retenciones-periodicas",
+        f"renta-{year}-modelo-123-retenciones-periodicas",
+        f"renta-{year}-modelo-193-retenciones-anuales",
+    )
+    m100_bindings: dict[str, Decimal] = {
+        f"renta-{year}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        **{bid: Decimal("0") for bid in _retenciones_binding_ids},
+        **extra_bindings,
+    }
+    m100_enum_bindings: dict[str, str] = {
+        f"renta-{year}-profile-tax-residence-ccaa": ccaa,
+        **extra_enum_bindings,
+    }
+
+    # -- Run M100 registry snapshot calculation ----------------------------------
+    try:
+        engine_result = calculate_registry_snapshot(
+            m100_snapshot,
+            inputs=m100_inputs,
+            date_context={"filing_period": date(year, 12, 31)},
+            binding_values=m100_bindings,
+            enum_binding_values=m100_enum_bindings,
+        )
+    except RegistryValidationError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.project.m100_calculation_error",
+                default=f"M100 projection calculation failed: {exc}",
+            )
+        ) from exc
+
+    cuota_estatal = engine_result.values.get("0545", Decimal("0"))
+    cuota_autonomica = engine_result.values.get("0546", Decimal("0"))
+    cuota_liquida_estatal = engine_result.values.get("0595", Decimal("0"))
+    cuota_liquida_autonomica = engine_result.values.get("0596", Decimal("0"))
+    cuota_resultante = engine_result.values.get("0597", Decimal("0"))
+
+    payload: dict[str, object] = {
+        "operation": "modelo.project",
+        "year": year,
+        "ccaa": ccaa,
+        "quarters_filed": quarters_filed,
+        "quarters_available": sorted(m130_quarters.keys()),
+        "is_extrapolated": is_extrapolated,
+        "m130_accumulated": {
+            "ingresos": str(total_ingresos),
+            "gastos": str(total_gastos),
+            "rendimiento_neto": str(total_rendimiento_neto),
+            "pagos_fraccionados": str(total_pagos_fraccionados),
+        },
+        "m100_projection": {
+            "base_liquidable_general_0505": str(projected_rendimiento_neto),
+            "pagos_fraccionados_0604": str(total_pagos_fraccionados),
+            "cuota_integra_estatal_0545": str(cuota_estatal),
+            "cuota_integra_autonomica_0546": str(cuota_autonomica),
+            "cuota_liquida_estatal_0595": str(cuota_liquida_estatal),
+            "cuota_liquida_autonomica_0596": str(cuota_liquida_autonomica),
+            "cuota_resultante_0597": str(cuota_resultante),
+        },
+    }
+
+    extrapolation_note = f" (extrapolated from {quarters_filed}Q)" if is_extrapolated else ""
+    lines = [
+        "operation\tmodelo.project",
+        f"year\t{year}",
+        f"ccaa\t{ccaa}",
+        f"quarters_filed\t{quarters_filed}/4{extrapolation_note}",
+        f"m130_ingresos\t{total_ingresos}",
+        f"m130_gastos\t{total_gastos}",
+        f"m130_rendimiento_neto\t{total_rendimiento_neto}",
+        f"m130_pagos_fraccionados\t{total_pagos_fraccionados}",
+        "---",
+        f"m100_base_liquidable_general\t{projected_rendimiento_neto}",
+        f"m100_cuota_integra_estatal\t{cuota_estatal}",
+        f"m100_cuota_integra_autonomica\t{cuota_autonomica}",
+        f"m100_cuota_liquida_estatal\t{cuota_liquida_estatal}",
+        f"m100_cuota_liquida_autonomica\t{cuota_liquida_autonomica}",
+        f"m100_cuota_resultante\t{cuota_resultante}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@app.command(
+    "compare",
+    help=tr(
+        "cli.app.modelo.compare_help",
+        default=(
+            "Compare two filing-year calculation revisions for the same modelo. "
+            "Emits per-casilla delta rows (year_b - year_a) grouped by section. "
+            "Uses the most recent VERIFICADO_COMPLETO revision for each year; "
+            "falls back to the latest BORRADOR when no verified revision exists, "
+            "and flags the affected year as a draft in the output."
+        ),
+    ),
+)
+def modelo_compare(
+    ctx: typer.Context,
+    year: Annotated[
+        list[int] | None,
+        typer.Option(
+            "--year",
+            help=tr(
+                "cli.app.modelo.compare.year_help",
+                default=(
+                    "Filing year to include in the comparison. "
+                    "Specify exactly twice: --year 2024 --year 2025."
+                ),
+            ),
+        ),
+    ] = None,
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.modelo.compare.modelo_help",
+                default="Modelo number to compare (e.g. 100, 130).",
+            ),
+        ),
+    ] = "100",
+) -> None:
+    """Compare two filing-year revisions for the same modelo casilla-by-casilla."""
+
+    _require_active_profile()
+
+    from ...application.modelo import list_work_units as _list_work_units
+    from ...domain.modelos._calculation_revision import CalculationRevisionState
+
+    years = list(year or ())
+    if len(years) != 2:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.compare.need_two_years",
+                default="Exactly two --year values are required (e.g. --year 2024 --year 2025).",
+            )
+        )
+    year_a, year_b = sorted(years)
+
+    # -- Resolve the best revision for each year --------------------------------
+    def _best_revision(
+        filing_year: int,
+    ) -> tuple[CalculationRevision, bool, str]:
+        """Return (revision, is_draft_fallback, period) for *filing_year*.
+
+        Prefers the most recent VERIFICADO_COMPLETO revision; falls back to the
+        most recent BORRADOR when no verified revision is available.
+        The period is taken from the owning work unit for snapshot lookup.
+        Raises typer.BadParameter if no revision of either kind exists.
+        """
+        all_units = _list_work_units()
+        units_for_year = [
+            u for u in all_units
+            if str(u.modelo) == modelo and u.filing_year == filing_year
+        ]
+        if not units_for_year:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.compare.no_work_units",
+                    modelo=modelo,
+                    filing_year=filing_year,
+                )
+            )
+
+        # Build a map from work_unit_id to period for snapshot derivation.
+        period_by_unit: dict[str, str] = {u.work_unit_id: u.period for u in units_for_year}
+
+        all_revisions: list[CalculationRevision] = []
+        for unit in units_for_year:
+            all_revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
+
+        if not all_revisions:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.compare.no_revisions",
+                    modelo=modelo,
+                    filing_year=filing_year,
+                )
+            )
+
+        verified = [
+            r for r in all_revisions
+            if r.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        ]
+        if verified:
+            best = max(verified, key=lambda r: r.created_at)
+            return best, False, period_by_unit.get(best.work_unit_id, "0A")
+
+        # Draft fallback: most recent BORRADOR.
+        borradores = [
+            r for r in all_revisions
+            if r.state is CalculationRevisionState.BORRADOR
+        ]
+        if borradores:
+            best = max(borradores, key=lambda r: r.created_at)
+            return best, True, period_by_unit.get(best.work_unit_id, "0A")
+
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.compare.no_usable_revisions",
+                modelo=modelo,
+                filing_year=filing_year,
+            )
+        )
+
+    rev_a, draft_a, period_a = _best_revision(year_a)
+    rev_b, draft_b, period_b = _best_revision(year_b)
+
+    # -- Resolve casilla metadata from the snapshot ---------------------------
+    # We use the year_b snapshot as the primary label/section source; fall back
+    # to year_a for casillas that appear only in the older revision.
+    try:
+        authority = _service()._authority
+        snap_b = authority.snapshot(modelo, filing_year=year_b, period=period_b)
+        snap_a = authority.snapshot(modelo, filing_year=year_a, period=period_a)
+    except RegistrySnapshotError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    # Build lookup: casilla_id -> CasillaDefinition (prefer year_b).
+    casilla_meta: dict[str, object] = {}
+    for snap in (snap_a, snap_b):
+        for cdef in snap.revision.casillas:
+            casilla_meta[cdef.id] = cdef
+
+    def _meta(casilla_id: str) -> tuple[str, str]:
+        """Return (label, primary_section) for a casilla id."""
+        cdef = casilla_meta.get(casilla_id)
+        if cdef is None:
+            return casilla_id, ""
+        label = getattr(cdef, "label", str(casilla_id))
+        sections = getattr(cdef, "section", ())
+        primary_section = sections[0] if sections else ""
+        return label, primary_section
+
+    # -- Build delta rows -----------------------------------------------------
+    all_casilla_ids = sorted(
+        set(rev_a.casilla_values) | set(rev_b.casilla_values)
+    )
+
+    delta_rows: list[dict[str, object]] = []
+    for cid in all_casilla_ids:
+        val_a = rev_a.casilla_values.get(cid, Decimal("0"))
+        val_b = rev_b.casilla_values.get(cid, Decimal("0"))
+        delta = val_b - val_a
+        label, section = _meta(cid)
+        if val_a != Decimal("0"):
+            pct_change: str | None = str(
+                (delta / val_a * Decimal("100")).quantize(Decimal("0.01"))
+            )
+        else:
+            pct_change = None
+
+        delta_rows.append(
+            {
+                "casilla_id": cid,
+                "label": label,
+                "section": section,
+                "year_a_value": str(val_a),
+                "year_b_value": str(val_b),
+                "delta": str(delta),
+                "pct_change": pct_change,
+            }
+        )
+
+    # Group by section for structured output.
+    sections_seen: list[str] = []
+    by_section: dict[str, list[dict[str, object]]] = {}
+    for row in delta_rows:
+        sec = str(row["section"])
+        if sec not in by_section:
+            sections_seen.append(sec)
+            by_section[sec] = []
+        by_section[sec].append(row)
+
+    payload: dict[str, object] = {
+        "operation": "modelo.compare",
+        "modelo": modelo,
+        "year_a": year_a,
+        "year_b": year_b,
+        "year_a_revision_id": rev_a.calculation_revision_id,
+        "year_b_revision_id": rev_b.calculation_revision_id,
+        "year_a_is_draft": draft_a,
+        "year_b_is_draft": draft_b,
+        "sections": [
+            {
+                "section": sec,
+                "rows": by_section[sec],
+            }
+            for sec in sections_seen
+        ],
+        "delta_rows": delta_rows,
+    }
+
+    # Tab-delimited text: header + one row per casilla with non-zero delta.
+    draft_note_a = " (BORRADOR)" if draft_a else ""
+    draft_note_b = " (BORRADOR)" if draft_b else ""
+    lines = [
+        "operation\tmodelo.compare",
+        f"modelo\t{modelo}",
+        f"year_a\t{year_a}{draft_note_a}",
+        f"year_b\t{year_b}{draft_note_b}",
+        "---",
+        "casilla_id\tlabel\tsection\tyear_a\tyear_b\tdelta\tpct_change",
+    ]
+    for row in delta_rows:
+        if row["delta"] == "0" and row["year_a_value"] == "0" and row["year_b_value"] == "0":
+            continue
+        pct = row["pct_change"] if row["pct_change"] is not None else "n/a"
+        lines.append(
+            f"{row['casilla_id']}\t{row['label']}\t{row['section']}"
+            f"\t{row['year_a_value']}\t{row['year_b_value']}\t{row['delta']}\t{pct}"
+        )
     _emit(ctx, payload, lines)
 
 

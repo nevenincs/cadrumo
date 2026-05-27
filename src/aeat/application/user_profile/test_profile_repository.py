@@ -35,6 +35,7 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileStatus,
 )
+from ...domain.user_profile._errors import UserProfileValidationError
 from ...tests.secure_sql import isolated_profile_storage_root
 from ..workflow._profile_bucket_scan import (
     list_profile_buckets,
@@ -137,6 +138,26 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
     assert read_profile_bucket("Duplicate", root=_backend) is None
     # The original is untouched and still loads.
     assert repository.load(first.profile_id).label == "Original"
+
+
+def test_create_fails_closed_when_tax_id_scan_hits_unreadable_profile(_backend: Path) -> None:
+    """An unreadable live profile blocks create before any new store write."""
+
+    repository = ProfileRepository()
+    created = repository.create(label="Drifted Tax Id Holder", facts=_VALID_FACTS)
+
+    target = manifest_path(bucket_paths(_backend, created.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        f'bucket_id = "{created.profile_id}"',
+        'bucket_id = "00000000-0000-4000-8000-000000000000"',
+    )
+    assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    with pytest.raises(UserProfileValidationError):
+        repository.create(label="Blocked", facts=_SECOND_FACTS)
+
+    assert read_profile_bucket("Blocked", root=_backend) is None
 
 
 def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
@@ -375,8 +396,9 @@ def test_select_refuses_a_tombstoned_profile(_backend: Path) -> None:
     created = repository.create(label="Not Selectable", facts=_VALID_FACTS)
     repository.delete(created.profile_id)
 
-    with pytest.raises(ProfileNotFoundError, match="tombstoned"):
+    with pytest.raises(ProfileNotFoundError) as excinfo:
         repository.select(created.profile_id)
+    assert created.profile_id in str(excinfo.value)
 
 
 def test_deleted_profile_name_is_reusable(_backend: Path) -> None:

@@ -12,32 +12,35 @@ from aeat.adapters.persistence.storage import (
     activate_master_key_provider,
     get_master_key_provider,
 )
-from aeat.adapters.persistence.storage.sql import SecureObjectRepository
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.application.workflow._models import WorkflowState
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.config import override_settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
+def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    try:
-        yield
-    finally:
-        dispose_engine()
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(
+            aeat_token_dir=tmp_path / "tokens",
+            aeat_runs_dir=tmp_path / "runs",
+            aeat_financial_txs_dir=tmp_path / "txs",
+            aeat_invoices_dir=tmp_path / "invoices",
+            aeat_drafts_dir=tmp_path / "drafts",
+        ),
+    ):
+        try:
+            yield
+        finally:
+            dispose_engine()
 
 
 def _seed_workflow_state() -> None:
@@ -68,7 +71,7 @@ def _seed_workflow_state() -> None:
 
 def _row_exists() -> bool:
     with activate_master_key_provider(get_master_key_provider()):
-        return SecureObjectRepository().exists("aeat.workflow", "state")
+        return secure_object_repository_for_active_bucket().exists("aeat.workflow", "state")
 
 
 def test_reset_state_dry_run_returns_fingerprint_without_deleting_row() -> None:
