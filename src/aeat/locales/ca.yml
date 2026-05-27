@@ -144,7 +144,8 @@ aggregation:
         de Renda.
       period_mismatch: El període no coincideix amb el període esperat del llibre
         de Renda.
-      quarterly_period_required: Es requereix un període trimestral per a l'agregació d'ingressos del Model 130 (p.ex. 2024Q1).
+      quarterly_period_required: Es requereix un període trimestral per a l'agregació
+        d'ingressos del Model 130 (p.ex. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -307,17 +308,24 @@ application:
         source_trace_mismatch: La traça d'origen de l'esborrany ha de coincidir amb
           els identificadors de binding resolts.
     errors:
+      calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
+      computed_casilla_binding_conflict: "Les entrades procedents del bucket apunten a caselles calculades i no es poden sobreescriure amb binding extern. Caselles afectades: %{computed}."
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de modelo.
       external_filing_evidence_reference_blank: La importació de declaració externa
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
+      filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
+      verification_report_not_found: No s'ha trobat cap informe de verificació amb id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està descartada i no es pot calcular. Crea una nova unitat de treball sobre el mateix modelo, any i periode per continuar.
+      work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està descartada i no es pot importar. Crea una nova unitat de treball sobre el mateix modelo, any i periode per continuar.
+      work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
   overview:
     explain:
       errors:
@@ -649,6 +657,15 @@ cli:
       history_help: Mostra l'auditoria cronològica del cicle de vida d'un model
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: Codi de model (p. ex. 303).
         period_help: Token de període (p. ex. Q1, annual).

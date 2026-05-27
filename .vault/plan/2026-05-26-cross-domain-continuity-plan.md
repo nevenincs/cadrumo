@@ -365,24 +365,24 @@ Seventeen hardcoded f-strings in _actions.py. --output-language parity gap on au
 
 Seventeen raise error f-string sites; each gets a locale key plus tr. One Step per site keeps the diff per-Step reviewable.
 
-- [ ] `W08.P35.S123` - de-hardcode ledger preflight blocks modelo calculation message; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S124` - de-hardcode caller binding values cannot override bucket-derived source bindings message first site; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S125` - de-hardcode caller binding values cannot override bucket-derived source bindings message second site; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S126` - de-hardcode registry snapshot for modelo missing message; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S127` - de-hardcode site 5 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S128` - de-hardcode site 6 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S129` - de-hardcode site 7 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S130` - de-hardcode site 8 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S131` - de-hardcode site 9 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S132` - de-hardcode site 10 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S133` - de-hardcode site 11 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S134` - de-hardcode site 12 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S135` - de-hardcode site 13 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S136` - de-hardcode site 14 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S137` - de-hardcode site 15 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S138` - de-hardcode site 16 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S139` - de-hardcode site 17 of 17; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W08.P35.S140` - Haiku validation sweep over application for any further hardcoded f-string error raises append Step per finding; `src/aeat/application/`.
+- [x] `W08.P35.S123` - de-hardcode ledger preflight blocks modelo calculation message; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S124` - de-hardcode caller binding values cannot override bucket-derived source bindings message first site; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S125` - de-hardcode caller binding values cannot override bucket-derived source bindings message second site; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S126` - de-hardcode registry snapshot for modelo missing message; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S127` - de-hardcode site 5 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S128` - de-hardcode site 6 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S129` - de-hardcode site 7 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S130` - de-hardcode site 8 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S131` - de-hardcode site 9 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S132` - de-hardcode site 10 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S133` - de-hardcode site 11 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S134` - de-hardcode site 12 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S135` - de-hardcode site 13 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S136` - de-hardcode site 14 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S137` - de-hardcode site 15 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S138` - de-hardcode site 16 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S139` - de-hardcode site 17 of 17; `src/aeat/application/modelo/_actions.py`.
+- [x] `W08.P35.S140` - Haiku validation sweep over application for any further hardcoded f-string error raises append Step per finding; `src/aeat/application/`.
 
 ### Phase `W08.P36` - --output-language parity fix
 

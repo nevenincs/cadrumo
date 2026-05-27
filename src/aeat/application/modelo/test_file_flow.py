@@ -1128,7 +1128,7 @@ def test_calculate_refused_on_discarded_work_unit(repos) -> None:
         bucket_event_repository=bv_repo,
         clock=_T1,
     )
-    with pytest.raises(WorkUnitMutationRefusedError, match=r"discard|state|DISCARDED|work_unit"):
+    with pytest.raises(WorkUnitMutationRefusedError):
         calculate_modelo_revision(
             work_unit.work_unit_id,
             casilla_inputs={"01": Decimal("1000")},
@@ -1178,7 +1178,7 @@ def test_get_filing_record_raises_on_missing_id(repos) -> None:
 
 def test_get_calculation_revision_raises_on_missing_id(repos) -> None:
     _, cr_repo, _, _, _ = repos
-    with pytest.raises(CalculationRevisionNotFoundError, match=r"calculation|revision|not|found"):
+    with pytest.raises(CalculationRevisionNotFoundError):
         get_calculation_revision(
             "0" * 64,
             calculation_repository=cr_repo,

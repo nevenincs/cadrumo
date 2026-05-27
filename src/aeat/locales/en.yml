@@ -129,7 +129,8 @@ aggregation:
         Renta ledger bucket.
       modelo_mismatch: Tax model does not match the expected Renta ledger model.
       period_mismatch: Period does not match the expected Renta ledger period.
-      quarterly_period_required: Quarterly period is required for M130 income aggregation (e.g. 2024Q1).
+      quarterly_period_required: Quarterly period is required for M130 income aggregation
+        (e.g. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -273,16 +274,23 @@ application:
           with `aeat app live borrador 100 list`.
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
     errors:
+      calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
+      computed_casilla_binding_conflict: "Bucket-derived inputs target computed casillas and cannot be overridden by external binding. Affected casillas: %{computed}."
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
       external_filing_evidence_reference_blank: External-filing import requires a
         non-empty evidence_reference_id.
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
+      filing_record_not_found: No filing record found with id=%{filing_record_id}.
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
+      verification_report_not_found: No verification report found with id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded and cannot be calculated. Create a fresh work unit on the same modelo, year, and period to continue.
+      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and cannot be imported. Create a fresh work unit on the same modelo, year, and period to continue.
+      work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
   overview:
     explain:
       errors:
@@ -602,6 +610,15 @@ cli:
       history_help: Show the chronological lifecycle audit for one modelo
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: Modelo code (e.g. 303).
         period_help: Period token (e.g. Q1, annual).

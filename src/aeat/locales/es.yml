@@ -144,7 +144,8 @@ aggregation:
         libro de Renta.
       period_mismatch: El periodo no coincide con el periodo esperado del libro de
         Renta.
-      quarterly_period_required: Se requiere un periodo trimestral para la agregación de ingresos del Modelo 130 (p.ej. 2024Q1).
+      quarterly_period_required: Se requiere un periodo trimestral para la agregación
+        de ingresos del Modelo 130 (p.ej. 2024Q1).
   source_mesh:
     errors:
       duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
@@ -306,17 +307,24 @@ application:
         source_trace_mismatch: La traza de origen del borrador debe coincidir con
           los identificadores de binding resueltos.
     errors:
+      calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
+      computed_casilla_binding_conflict: "Las entradas procedentes del bucket tienen como destino casillas calculadas; no se pueden sobreescribir con binding externo. Casillas afectadas: %{computed}."
       export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de exportar una revisión de modelo.
       external_filing_evidence_reference_blank: La importación de declaración externa
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
+      filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
       reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
         aún no está disponible; usa --from-justificante PATH hasta que el parser de
         declaración esté implementado.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
+      verification_report_not_found: No existe ningún informe de verificación con id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el mismo modelo, ejercicio y periodo para continuar.
+      work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el mismo modelo, ejercicio y periodo para continuar.
+      work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
   overview:
     explain:
       errors:
@@ -661,6 +669,15 @@ cli:
       history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
+      project:
+        binding_help: cli.app.modelo.project.binding_help
+        casilla_help: cli.app.modelo.project.casilla_help
+        ccaa_help: cli.app.modelo.project.ccaa_help
+        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
+        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
+        no_m130_units: cli.app.modelo.project.no_m130_units
+        year_help: cli.app.modelo.project.year_help
+      project_help: cli.app.modelo.project_help
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
         period_help: Token de periodo (p. ej. Q1, annual).
