@@ -229,7 +229,7 @@ class TestIvaRemoteStateCliSurface:
 
         assert "auth_status=failed" in lines
         assert "auth_outcome=no_clave_prompt" in lines
-        assert "auth_outcome_label=no clave prompt" in lines
+        assert "auth_outcome_label=no Cl@ve prompt" in lines
         assert "filed_history_succeeded=False" in lines
         assert "wallet_succeeded=False" in lines
         assert any(
