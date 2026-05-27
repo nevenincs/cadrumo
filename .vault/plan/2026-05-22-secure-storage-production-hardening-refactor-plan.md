@@ -406,7 +406,7 @@ Current register count: `293` production candidate files.
 | `AFR-134` | `src/aeat/application/modelo/_export.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-135` | `src/aeat/application/modelo/_history.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-136` | `src/aeat/application/modelo/_profile_binding.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-137` | `src/aeat/application/modelo/_reconcile.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | pending |
+| `AFR-137` | `src/aeat/application/modelo/_reconcile.py` | `secure-object, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S85` | migrated |
 | `AFR-138` | `src/aeat/application/operator_surface/_contract.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-139` | `src/aeat/application/operator_surface/_crud_contract.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-140` | `src/aeat/application/operator_surface/_help.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
@@ -759,7 +759,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S236` - Close `AFR-134` for `src/aeat/application/modelo/_export.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_export.py`.
 - [ ] `W12.P26.S237` - Close `AFR-135` for `src/aeat/application/modelo/_history.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_history.py`.
 - [ ] `W12.P26.S238` - Close `AFR-136` for `src/aeat/application/modelo/_profile_binding.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/modelo/_profile_binding.py`.
-- [ ] `W12.P26.S239` - Close `AFR-137` for `src/aeat/application/modelo/_reconcile.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/modelo/_reconcile.py`.
+- [x] `W12.P26.S239` - Close `AFR-137` for `src/aeat/application/modelo/_reconcile.py` with signals `secure-object, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S85`; `src/aeat/application/modelo/_reconcile.py`.
 - [ ] `W12.P26.S240` - Close `AFR-138` for `src/aeat/application/operator_surface/_contract.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/operator_surface/_contract.py`.
 - [ ] `W12.P26.S241` - Close `AFR-139` for `src/aeat/application/operator_surface/_crud_contract.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/application/operator_surface/_crud_contract.py`.
 - [ ] `W12.P26.S242` - Close `AFR-140` for `src/aeat/application/operator_surface/_help.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/application/operator_surface/_help.py`.
