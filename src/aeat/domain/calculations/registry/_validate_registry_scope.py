@@ -6,6 +6,7 @@ from collections.abc import Iterable
 
 from ._schema import ModeloDefinition
 from ._validate_cross_revision import _validate_cross_revision_casilla_consistency
+from ._validate_label_artifacts import validate_no_label_artifacts
 from ._validate_relation_sources import (
     validate_previous_filing_binding_closure,
     validate_relation_closure,
@@ -38,6 +39,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
     failures.extend(_validate_required_role_declarations(modelo_tuple))
     failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
+    failures.extend(validate_no_label_artifacts(modelo_tuple))
     _emit_semantic_role_typo_twin_warnings(modelo_tuple)
     return tuple(failures)
 
