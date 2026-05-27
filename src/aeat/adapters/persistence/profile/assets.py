@@ -18,6 +18,7 @@ from ....domain.profile.assets import (
 )
 from ....domain.profile.errors import AssetRecordError
 from ..storage import SensitivityClass
+from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
@@ -100,8 +101,8 @@ def save_amortizacion_ledger(ledger: AmortizacionLedger) -> Path:
 class AssetsLedgerRepository:
     """Governed repository for the encrypted assets ledger."""
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
@@ -201,8 +202,8 @@ class AmortizacionLedgerRepository:
     payload type is :class:`aeat.domain.profile.assets.AmortizacionLedger`.
     """
 
-    def __init__(self) -> None:
-        self._objects = SecureObjectRepository()
+    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     @property
     def envelope_path(self) -> Path:
