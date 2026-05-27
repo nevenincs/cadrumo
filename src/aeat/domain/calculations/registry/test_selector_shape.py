@@ -64,6 +64,7 @@ def test_binding_selector_registry_covers_typed_sources() -> None:
         "ledger_oss_aggregation",
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
+        "ledger_renta_income_aggregation",
         "withholding",
         "related_party_operation",
         "foreign_asset",
