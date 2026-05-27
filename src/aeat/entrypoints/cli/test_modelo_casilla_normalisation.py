@@ -31,6 +31,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 _PROFILE_ID = "casilla-norm-test-profile"
 
 
+def _payload(output: str) -> dict:
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
@@ -90,7 +97,7 @@ def _create_303_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 # ---------------------------------------------------------------------------

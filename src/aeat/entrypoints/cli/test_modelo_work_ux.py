@@ -236,6 +236,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
     first_payload = _payload(first.output)
     assert first_payload["status"] == "created"
     assert first_payload["operation"] == "modelo.work.create"
+    assert first_payload["name_applied"] is None
 
     second = _invoke(
         [
@@ -250,6 +251,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
     assert second_payload["status"] == "reused"
     assert second_payload["operation"] == "modelo.work.reuse"
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
+    assert second_payload["name_applied"] is None
 
 
 def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_backend: Path) -> None:
