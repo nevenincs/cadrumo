@@ -406,6 +406,9 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
 
 
 def _review_metadata_reset() -> dict[str, object]:
+    # Legitimate internal boundary: returns a partial-update dict consumed by
+    # ModeloDraft.model_copy(update=...) and mutated by callers before use.
+    # dict[str, object] is required here; Mapping would prevent the mutation.
     return {
         "approved_at": None,
         "approved_by": None,
