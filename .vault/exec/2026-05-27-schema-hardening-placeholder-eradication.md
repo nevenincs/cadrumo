@@ -184,3 +184,68 @@ Result: passed.
 `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_registry_schema.py src/aeat/domain/calculations/registry/test_committed_registry.py src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_cross_revision_drift.py src/aeat/domain/calculations/registry/test_registry_reviewability.py -q`
 
 Result: 161 passed.
+
+## Tracking Inventory: Registry Hardening Pathways
+
+This inventory is a sequencing guard. It records which discovered pathways are
+already governed by existing vault artefacts and which must not proceed without
+a plan or ADR update.
+
+### Already tracked
+
+- Generic revision-fragment authoring is governed by the accepted fragment ADR
+  and the fragment-architecture research. Current loader support compiles
+  revision fragment directories into the existing runtime schema, and the
+  directory-mode loader tests cover fragment equivalence, scalar redeclaration,
+  local-catalogue rejection, export-record merging, construct-member merging,
+  stale sibling rejection, fragment inventory, and multi-revision single-file
+  prevention.
+- Validator modularisation is tracked in the schema-hardening plan P05. The
+  agreed substrate is bounded helper modules plus the existing public registry
+  validation entrypoints, not an opportunistic rewrite.
+- Reviewability creep is tracked in this plan P05 and enforced by committed
+  TOML line-count and row-width gates. Further registry growth must pass those
+  gates rather than relying on review discipline.
+- Placeholder labels and empty revision payloads are tracked in this plan
+  P01-P04. Future `{name}` or `{number}` casilla-label placeholders and
+  zero-casilla revisions are validator failures.
+- Cross-revision casilla drift is tracked through the drift validator and its
+  committed-corpus gate. Repairs to `label`, `section`, `data_type`,
+  `semantic_role`, and `legal_refs` drift must be source-grounded registry
+  corrections, not suppressions.
+- M200 fragmentation is already landed as the proof that the 100k-line class of
+  registry file is not acceptable. The active fragment architecture ADR remains
+  the governing decision for further splits.
+- Per-modelo standardisation is tracked through the existing model-specific
+  schema-hardening plans for M036, M115, M184, M190, M193, M308, M309, M322,
+  M347, M353, M360, M390, M720, and M840, plus prior M130 and M131 plans.
+- M303 autoconsumo/profile binding work is tracked by its task exec record and
+  by the cross-WIP repair section above. It is not a new generic registry
+  architecture.
+
+### Requires a plan refresh before implementation
+
+- The next fragmentation target must be selected from current committed
+  line-count, revision-count, and layout-mode evidence. The previous candidate
+  list has moved because M200 and several standardisation slices have already
+  fragmented large surfaces.
+- Remaining single-file or partially fragmented modelos must be handled through
+  the generic fragment loader path. No model-specific schema definitions or
+  loader branches should be added.
+- Validator-module size must continue to be watched against the P05 baseline. If
+  `_validate.py` or helper modules grow again, the next slice should first
+  rebalance modules and tests under the existing public entrypoints.
+- Source/evidence failures discovered by broader gates should be fixed in the
+  legal/source catalogue or modelo registry data with exact required-text
+  grounding. They should not weaken evidence-tier validation.
+
+### Requires a future ADR before implementation
+
+- M100 compile-time template expansion remains a decision, not an
+  implementation permission. Physical fragmentation is already allowed by the
+  fragment ADR; template expansion would add a new authoring compiler feature
+  and must get its own ADR before code or TOML changes.
+- Any move from module-level validator helpers to a `validate/` package is a
+  compatibility decision if it changes public exports or import boundaries. The
+  current plan allows further extraction only while preserving the existing
+  registry validation API.
