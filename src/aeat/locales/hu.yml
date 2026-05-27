@@ -1218,6 +1218,7 @@ cli:
       notes_help: cli.ledger.add.notes_help
       prorrata_reference_help: cli.ledger.add.prorrata_reference_help
       purchase_invoice_evidence_help: cli.ledger.add.purchase_invoice_evidence_help
+      source_jurisdiction_help: 'Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás, FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.'
       taxable_base_help: cli.ledger.add.taxable_base_help
       usage_ratio_help: cli.ledger.add.usage_ratio_help
       value_date_help: cli.ledger.add.value_date_help
@@ -1998,7 +1999,7 @@ errors:
     casilla_referenced_before_evaluation: errors.calc.casilla_referenced_before_evaluation
     computed_supplied_as_input: errors.calc.computed_supplied_as_input
     date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
-    date_binding_value_missing: 'Hianyzik a datumkotes erteke.'
+    date_binding_value_missing: Hianyzik a datumkotes erteke.
     dispatch_key_unknown: errors.calc.dispatch_key_unknown
     dispatch_parameter_kind: errors.calc.dispatch_parameter_kind
     divide_by_zero: errors.calc.divide_by_zero
@@ -2009,8 +2010,8 @@ errors:
     parameter_unknown: errors.calc.parameter_unknown
     relation_value_missing: errors.calc.relation_value_missing
     unknown_input_casillas: errors.calc.unknown_input_casillas
-    unsupported_comparison_op: 'Nem tamogatott osszehasonlito muvelet.'
-    unsupported_op: 'Nem tamogatott muvelet.'
+    unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
+    unsupported_op: Nem tamogatott muvelet.
   censo:
     no_snapshot_captured: errors.censo.no_snapshot_captured
     profile_not_found: errors.censo.profile_not_found
@@ -2031,7 +2032,7 @@ errors:
     error_categories: errors.error.error_categories
     error_categories_validation: errors.error.error_categories_validation
     error_deadlines_deadline: errors.error.error_deadlines_deadline
-    error_deadlines_missing_windows: 'Hianyoznak a hatarido-ablakok.'
+    error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
     error_deadlines_profile: errors.error.error_deadlines_profile
     error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
     error_deadlines_validation: errors.error.error_deadlines_validation
@@ -2300,8 +2301,9 @@ errors:
     refused_application_registry_input: errors.refused.refused_application_registry_input
     refused_auth_configure_dangling_active_profile: Az aktív profilmutató nem oldható
       fel regisztrált tárolóegységre.
-    refused_auth_login_live_tests_disabled: 'Az eles bejelentkezesi probak le vannak tiltva.'
-    refused_auth_login_precondition: 'A bejelentkezes elofeltetele nem teljesul.'
+    refused_auth_login_live_tests_disabled: Az eles bejelentkezesi probak le vannak
+      tiltva.
+    refused_auth_login_precondition: A bejelentkezes elofeltetele nem teljesul.
     refused_auth_provider_reserved: A kiválasztott hitelesítési szolgáltató fenntartott,
       de nincs megvalósítva.
     refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
@@ -2386,7 +2388,7 @@ errors:
     refused_workflow_resume: errors.refused.refused_workflow_resume
     unsupported_currency: errors.refused.unsupported_currency
   snapshot:
-    modelo_not_registered: 'A modelo nincs regisztralva.'
+    modelo_not_registered: A modelo nincs regisztralva.
   storage:
     engine:
       create_failed: Nem sikerült létrehozni a tárolási adatbázismotort. Ellenőrizd
@@ -2394,12 +2396,17 @@ errors:
       empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy állítsd
         be a tárolást, mielőtt újra próbálkozol.
     namespace:
-      classification_mismatch: 'A(z) %{namespace} secure-object névtér %{expected} érzékenységgel van regisztrálva, de a hívó %{classification} értéket használt.'
-      schema_mismatch: 'A(z) %{namespace} secure-object névtér %{expected} sémával van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.'
-      unregistered: 'A(z) %{namespace} secure-object névtér nincs regisztrálva runtime tároláshoz.'
+      classification_mismatch: A(z) %{namespace} secure-object névtér %{expected}
+        érzékenységgel van regisztrálva, de a hívó %{classification} értéket használt.
+      schema_mismatch: A(z) %{namespace} secure-object névtér %{expected} sémával
+        van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
+      unregistered: A(z) %{namespace} secure-object névtér nincs regisztrálva runtime
+        tároláshoz.
     runtime:
-      cold_bootstrap_active_profile_refused: 'Hideginditasi tarhely csak aktiv profil kivalasztasa elott hasznalhato.'
-      cold_bootstrap_explicit_database_refused: 'Hideginditasi tarhely nem kerulheti meg az explicit adatbazis-utvonalat.'
+      cold_bootstrap_active_profile_refused: Hideginditasi tarhely csak aktiv profil
+        kivalasztasa elott hasznalhato.
+      cold_bootstrap_explicit_database_refused: Hideginditasi tarhely nem kerulheti
+        meg az explicit adatbazis-utvonalat.
       no_active_session: Nincs aktív bucket-munkamenet. Futtasd az `aeat config profile
         switch NAME` parancsot egy profil feloldásához.
       no_detail: Nem érkezett részletes készenléti hiba.
@@ -2699,21 +2706,21 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: 'Hazas szemely'
-            label: 'Hazas'
+            description: Hazas szemely
+            label: Hazas
           pareja-hecho-no-registrada:
-            description: 'Nem regisztralt elettarsi kapcsolat'
-            label: 'Nem regisztralt elettars'
+            description: Nem regisztralt elettarsi kapcsolat
+            label: Nem regisztralt elettars
           pareja-hecho-registrada:
-            description: 'Regisztralt elettarsi kapcsolat'
-            label: 'Regisztralt elettars'
+            description: Regisztralt elettarsi kapcsolat
+            label: Regisztralt elettars
           separado-divorciado:
-            label: 'Kulon elo vagy elvalt'
+            label: Kulon elo vagy elvalt
           soltero:
-            label: 'Egyedulallo'
+            label: Egyedulallo
         help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
-        prompt: 'Adja meg a csaladi allapotot'
+        prompt: Adja meg a csaladi allapotot
       spouse-birth-date:
         help: wizard.setup.flags.spouse-birth-date.help
       spouse-disability-grade:
