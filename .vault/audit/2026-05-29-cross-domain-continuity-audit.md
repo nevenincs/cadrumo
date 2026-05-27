@@ -5106,3 +5106,118 @@ S352: dispatch after S340 lands (coder2, SMALL-MEDIUM). The
 investigation of `--binding override` rejection is the first task
 in the step brief.
 
+---
+
+## Triage: Roberto round-9 CRITICAL — S361 M100 cuota chain broken (2024)
+
+**Root cause confirmed. This is worse than S353 — it is the entire
+settlement tail, not a single casilla.**
+
+### Investigation results
+
+Six casillas in the 0587→0670 settlement chain all have no `input_kind`
+field in the 2024 revision — all default to `"manual"`:
+
+| Casilla | Label | Formula exists in 2024? | Formula exists in 2025? |
+|---------|-------|------------------------|------------------------|
+| 0587 | Cuota líquida incrementada total (0585+0586) | NO | YES (`renta-2025-cuota-liquida-incrementada-total`) |
+| 0595 | Cuota resultante de la autoliquidación | NO | YES (`renta-2025-cuota-resultante-autoliquidacion`) |
+| 0598 | Suma retenciones capital inmobiliario (copy of 0153) | NO | YES (`renta-2025-retenciones-arrendamientos-urbanos`) |
+| 0609 | Total pagos a cuenta (sum 0592-0606) | NO | YES (`renta-2025-total-pagos-a-cuenta`) |
+| 0610 | Cuota diferencial (0595 - 0609) | NO | YES (`renta-2025-cuota-diferencial`) |
+| 0670 | Resultado declaración | NO | YES (`renta-2025-resultado-declaracion`) |
+
+**The 2024 `renta-cuota-chain` construct** (in
+`src/aeat/_data/registry/aeat/modelos/100/revisions/2024/constructs/0001-renta-cuota-chain.toml`)
+lists formulas up through `renta-2024-cuota-liquida-estatal-incrementada`
+(which produces 0585 and 0586) but stops there. The settlement tail
+that converts 0585+0586 into 0587 and flows to 0670 was simply never
+authored for 2024.
+
+The **2025 revision** has a dedicated `renta-final-settlement` construct
+(`constructs/0005-renta-final-settlement.toml`) containing exactly the
+six formulas that are missing from 2024. The 2025 formulas use
+`orden-hac-277-2026:art-3` as their primary legal_ref (the 2025 BOE
+form order). The **equivalent authority for 2024** is `orden-hac-56-2024:art-1`
+plus `boe-modelo-100-2024-form`.
+
+The 2020 revision has the same gap — no settlement tail formulas —
+so this was never a 2024-specific regression; the 2024 revision was
+authored in the same incomplete state as 2020. The 2025 revision was
+the first to close the gap. This makes the fix straightforward: backport
+the 2025 formulas with 2024-appropriate legal_refs and source_refs.
+
+### Fix path
+
+The coder must author six new formula TOML files in
+`src/aeat/_data/registry/aeat/modelos/100/revisions/2024/formulas/`:
+
+1. `renta-2024-cuota-liquida-incrementada-total` → target `0587`,
+   expression `sum(0585, 0586)`. Legal ref: `orden-hac-56-2024:art-1`.
+2. `renta-2024-cuota-resultante-autoliquidacion` → target `0595`,
+   expression `sum(0587, negate(0588), negate(0414), negate(0589),
+   negate(0590), negate(0591))`. Legal refs: `ley-35-2006:art-99`,
+   `orden-hac-56-2024:art-1`.
+3. `renta-2024-retenciones-arrendamientos-urbanos` → target `0598`,
+   expression `copy(0153)`. Legal refs: `ley-35-2006:art-99`,
+   `rd-439-2007:art-100`, `orden-hac-56-2024:art-1`.
+4. `renta-2024-total-pagos-a-cuenta` → target `0609`, expression
+   `sum(0592..0606 per the 2025 formula's operand list minus any
+   casillas that don't exist in 2024 — coder must verify)`. Legal
+   refs: `ley-35-2006:art-99`, `rd-439-2007:art-109`,
+   `orden-hac-56-2024:art-1`.
+5. `renta-2024-cuota-diferencial` → target `0610`, expression
+   `subtract(0595, 0609)`. Legal refs: `ley-35-2006:art-99`,
+   `orden-hac-56-2024:art-1`.
+6. `renta-2024-resultado-declaracion` → target `0670`, expression
+   mirrors 2025 formula's 17-operand sum — coder must verify each
+   operand casilla exists in 2024 and adjust if any were added in 2025.
+
+Then update casillas 0587, 0595, 0598, 0609, 0610, 0670 to
+`input_kind = "computed"` with their respective formula IDs.
+
+Then extend `renta-cuota-chain` construct with the six new formula IDs
+(or author a new `renta-2024-final-settlement` construct mirroring the
+2025 pattern — preferred for clarity).
+
+**G6 legal grounding requirement:** Source references for 2024 formulas
+must come from `aeat-dr-100-2024-dictionary`, `boe-modelo-100-2024-form`,
+and `aeat-renta-2024-manual-parte1` (all already cited in the 2024
+casilla `source_refs`). The coder must NOT copy 2025 source_refs
+verbatim — `orden-hac-277-2026:art-3` and `aeat-renta-2025-manual-parte1`
+are 2025 authority only.
+
+**Operand verification requirement:** Before authoring formula 4 (0609
+total pagos) and formula 6 (0670 resultado), the coder must confirm
+each operand casilla number exists in the 2024 revision. The 2025
+formula for 0609 has 14 operands; the 2024 form may have fewer if
+some payment categories were added in 2025. Casilla 0414 (in 0595
+formula) must also be confirmed in 2024.
+
+### Size
+
+**HEAVY.** Six new formula TOMLs + six casilla TOML edits + construct
+extension + oracle-grounded test asserting Roberto's scenario
+(base liquidable €55.5k → 0587=15,141, 0609=1,824, 0610=13,317) +
+anti-tautology + regression tests for each formula individually.
+
+The 2025 backport template means the expressions are known — the heavy
+part is operand verification for 2024 and legal-ref sourcing.
+
+### Dispatch
+
+**CRITICAL, IMMEDIATE.** This affects 100% of M100 2024 filers who
+attempt to calculate their result (every autónomo, every landlord,
+every salaried employee). Dispatch to coder1 as the highest-priority
+item after S342 if S342 is still in flight, or replace it as the
+current priority if coder1 is free. S342 and S361 touch completely
+different subsystems (aggregation vs. registry TOML) and can run in
+parallel on different coders.
+
+**S353 (0505) and S361 (settlement chain)** are both M100 2024 TOML
+gaps. If dispatching to the same coder, S361 must be done first (it
+blocks every filing; S353 only blocks taxpayers without explicit 0505
+supply). If dispatching to different coders, both can proceed in
+parallel since they touch different casilla files and different formula
+files.
+
