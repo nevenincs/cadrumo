@@ -349,7 +349,13 @@ class _BusinessOperationInvoiceService:
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepository | None = None,
     ) -> None:
-        self._settings = settings or Settings()
+        # `Settings()` bypasses the `override_settings` context-var, so a
+        # test (or CLI run) that overrides `aeat_invoices_dir` would still
+        # land writes in the project-default location. `load_settings()`
+        # honours the override and falls back to a fresh `Settings()` when
+        # none is active, so production resolution is unchanged.
+        from ...core.config import load_settings as _load_settings
+        self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def add(
