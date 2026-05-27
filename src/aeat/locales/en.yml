@@ -3460,6 +3460,8 @@ wizard:
             label: English
           es:
             label: Spanish
+          eu:
+            label: Basque
           hu:
             label: Hungarian
         prompt: CLI output language for this profile
