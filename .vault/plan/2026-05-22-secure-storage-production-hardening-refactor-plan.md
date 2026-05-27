@@ -819,8 +819,8 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S296` - Close `AFR-194` for `src/aeat/core/external_constants.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/external_constants.py`.
 - [ ] `W12.P26.S297` - Close `AFR-195` for `src/aeat/core/file_permissions.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/file_permissions.py`.
 - [ ] `W12.P26.S298` - Close `AFR-196` for `src/aeat/core/i18n/_render.py` with signals `active-profile, manifest-bucket, sql-route, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/core/i18n/_render.py`.
-- [ ] `W12.P26.S299` - Close `AFR-197` for `src/aeat/core/locks.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/locks.py`.
-- [ ] `W12.P26.S300` - Close `AFR-198` for `src/aeat/core/logging.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/logging.py`.
+- [x] `W12.P26.S299` - Close `AFR-197` for `src/aeat/core/locks.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/locks.py`.
+- [x] `W12.P26.S300` - Close `AFR-198` for `src/aeat/core/logging.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/logging.py`.
 - [ ] `W12.P26.S301` - Close `AFR-199` for `src/aeat/core/observability/__init__.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/__init__.py`.
 - [ ] `W12.P26.S302` - Close `AFR-200` for `src/aeat/core/observability/_context.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/core/observability/_context.py`.
 - [x] `W12.P26.S303` - Close `AFR-201` for `src/aeat/core/observability/_errors.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/observability/_errors.py`.
