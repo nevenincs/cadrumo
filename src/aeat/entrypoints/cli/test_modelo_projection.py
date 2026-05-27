@@ -249,6 +249,15 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     # same accumulated inputs.  Per no-tautological-calculation-tests.md,
     # the expected value comes from the registry engine, not from
     # re-implementing the IRPF tariff formula.
+    #
+    # Single-authority routing invariant (FU-W07-F): both the verb's
+    # internal calculate_registry_snapshot call and the oracle below
+    # source their RegistrySnapshot from ``resources().modelos.authority``
+    # (see _modelo.py modelo_project + the helper at line 528 / 1322 /
+    # 3418). No alternate ``_service()._authority`` path exists in
+    # the current codebase. The equivalence the audit asked about is
+    # structurally enforced: a divergent path would have to introduce a
+    # second authority constructor, which the resources() module gates.
     authority = resources().modelos.authority
     m100_snapshot = authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
     oracle_result = calculate_registry_snapshot(
