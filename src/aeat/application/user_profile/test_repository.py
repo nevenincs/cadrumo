@@ -27,6 +27,7 @@ from . import (
     user_profile_snapshot_object_key,
     user_profile_value_object_key,
 )
+from ._orchestration import profile_create_storage_span
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -89,13 +90,15 @@ def test_default_lifecycle_repository_binds_named_bucket_database(tmp_path: Path
         facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
     )
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
-        bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
-        bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
+        with profile_create_storage_span(profile_a):
+            bucket_a = UserProfileLifecycleRepository(bucket_id=profile_a)
+            bucket_a.save(profile)
+            assert bucket_a.exists(profile_a) is True
 
-        bucket_a.save(profile)
+        with profile_create_storage_span(profile_b):
+            bucket_b = UserProfileLifecycleRepository(bucket_id=profile_b)
+            assert bucket_b.exists(profile_a) is False
 
-        assert bucket_a.exists(profile_a) is True
-        assert bucket_b.exists(profile_a) is False
         assert (storage_root / "buckets" / profile_a / "db" / "aeat.db").is_file()
 
 
