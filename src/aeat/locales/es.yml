@@ -531,7 +531,7 @@ cli:
           para varias observaciones.
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte {pos}.'
-        json_validation_error: cli.app.modelo.aggregate.json_validation_error
+        json_validation_error: '%{flag} no es un objeto de observación válido: %{details}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion (111, 115, 123,
           180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -734,45 +734,38 @@ cli:
           no se creó nada nuevo. El --name indicado coincide con el nombre guardado.
         create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente sobre modelo/ejercicio/periodo/revisión);
           no se creó nada nuevo. El --name indicado se aplicó como renombrado a %{name}.
-        create_stub_modelo_151_refused: 'Modelo %{modelo} (régimen especial de impatriados
-          "Ley Beckham") no está soportado para crear unidades de trabajo en este CLI.
-          Base legal: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
-          Presenta la declaración en sede.agenciatributaria.gob.es.'
-        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR — Impuesto sobre la
-          Renta de No Residentes) no está soportado para crear unidades de trabajo en
-          este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR, Art. 28 TRLIRNR (plazo
-          trimestral: 1T/2T/3T/4T). Tipo general: 19 % UE/EEE, 24 % resto. Presenta
-          la declaración en sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
-        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD — Impuesto sobre
-          Transmisiones Patrimoniales y Actos Jurídicos Documentados) no está soportado
-          para crear unidades de trabajo en este CLI. Es un impuesto cedido a las CCAA
-          (Ley 28/1990 ITPyAJD). Presenta la autoliquidación en la Hacienda CCAA donde
+        create_stub_modelo_151_refused: 'Modelo %{modelo} (régimen especial de impatriados "Ley Beckham")
+          no está soportado para crear unidades de trabajo en este CLI. Base legal: Ley 35/2006 Art. 93
+          LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008. Presenta la declaración en sede.agenciatributaria.gob.es.'
+        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR — Impuesto sobre la Renta de No Residentes)
+          no está soportado para crear unidades de trabajo en este CLI. Base legal: RD Legislativo 5/2004
+          TRLIRNR, Art. 28 TRLIRNR (plazo trimestral: 1T/2T/3T/4T). Tipo general: 19 % UE/EEE, 24 % resto.
+          Presenta la declaración en sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD — Impuesto sobre Transmisiones Patrimoniales
+          y Actos Jurídicos Documentados) no está soportado para crear unidades de trabajo en este CLI.
+          Es un impuesto cedido a las CCAA (Ley 28/1990 ITPyAJD). Presenta la autoliquidación en la Hacienda
+          CCAA donde se ubica el bien transmitido.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD — transmisiones específicas de medios
+          de transporte usados) no está soportado para crear unidades de trabajo en este CLI. Es un impuesto
+          cedido a las CCAA (Ley 28/1990 ITPyAJD). Presenta la autoliquidación en la Hacienda CCAA donde
           se ubica el bien transmitido.'
-        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD — transmisiones
-          específicas de medios de transporte usados) no está soportado para crear
-          unidades de trabajo en este CLI. Es un impuesto cedido a las CCAA (Ley 28/1990
-          ITPyAJD). Presenta la autoliquidación en la Hacienda CCAA donde se ubica el
-          bien transmitido.'
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD Sucesiones — declaración
-          de adquisición por herencia) no está soportado para crear unidades de trabajo
-          en este CLI. Base legal: Ley 29/1987 LISyD. Plazo: 6 meses desde el fallecimiento,
-          prorrogable 6 meses (Art. 67 RISD). La declaración se presenta en la Hacienda
-          de la CCAA donde el causante tenía su residencia habitual (Ley 22/2009 Art.
-          32). Consulta la Hacienda autonómica correspondiente.'
-        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD — declaración informativa
-          del caudal relicto, se acompaña al Modelo 650) no está soportado para crear
-          unidades de trabajo en este CLI. Base legal: Ley 29/1987 LISyD, plazo de
-          6 meses (Art. 67 RISD). La declaración se presenta en la Hacienda de la CCAA
-          donde el causante tenía su residencia habitual (Ley 22/2009 Art. 32). Consulta
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD Sucesiones — declaración de adquisición
+          por herencia) no está soportado para crear unidades de trabajo en este CLI. Base legal: Ley
+          29/1987 LISyD. Plazo: 6 meses desde el fallecimiento, prorrogable 6 meses (Art. 67 RISD). La
+          declaración se presenta en la Hacienda de la CCAA donde el causante tenía su residencia habitual
+          (Ley 22/2009 Art. 32). Consulta la Hacienda autonómica correspondiente.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD — declaración informativa del caudal relicto,
+          se acompaña al Modelo 650) no está soportado para crear unidades de trabajo en este CLI. Base
+          legal: Ley 29/1987 LISyD, plazo de 6 meses (Art. 67 RISD). La declaración se presenta en la
+          Hacienda de la CCAA donde el causante tenía su residencia habitual (Ley 22/2009 Art. 32). Consulta
           la Hacienda autonómica correspondiente.'
-        create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
-          no está soportado para crear unidades de trabajo en este CLI. Base legal:
-          Ley 19/1991 Art. 28, Orden HAC/1023/2021. Presenta la declaración en sede.agenciatributaria.gob.es.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
-          monedas virtuales situadas en el extranjero) no está soportado para crear
-          unidades de trabajo en este CLI. Obligación: saldos superiores a 50.000 €
-          a 31 de diciembre (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD 1065/2007
-          Art. 42 quáter). Presenta la declaración en sede.agenciatributaria.gob.es.'
+        create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio) no está soportado
+          para crear unidades de trabajo en este CLI. Base legal: Ley 19/1991 Art. 28, Orden HAC/1023/2021.
+          Presenta la declaración en sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre monedas virtuales
+          situadas en el extranjero) no está soportado para crear unidades de trabajo en este CLI. Obligación:
+          saldos superiores a 50.000 € a 31 de diciembre (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD
+          1065/2007 Art. 42 quáter). Presenta la declaración en sede.agenciatributaria.gob.es.'
         discard_help: Marcar una unidad de trabajo como descartada (transición de estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva a ejecutar 'aeat
           app modelo work discard %{work_unit_id} --yes' para confirmar.

@@ -18,7 +18,7 @@ from ...domain.deadlines._models import (
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
+from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
 from ...domain.profile._ccaa import CCAA
 
 
@@ -84,6 +84,12 @@ class SetupAnswers(BaseModel):
     # ── taxpayer biographic ──────────────────────────────────────────────
     taxpayer_sex: RentaSexCode | str = ""
     taxpayer_marital_status: RentaMaritalStatus | str = ""
+    taxpayer_marriage_date: str = ""
+    """ISO-8601 date when the current marriage began.
+
+    Optional; only relevant when ``taxpayer_marital_status`` is ``"2"``
+    (casado/a).  Used to derive casillas 0245/0246/0247 (matrimonio
+    sobrevenido) during profile-binding resolution."""
     taxpayer_birth_date: str = ""
     taxpayer_disability_grade: RentaDisabilityGrade | str = ""
     taxpayer_death_date: str = ""
@@ -102,6 +108,19 @@ class SetupAnswers(BaseModel):
     # ── family ───────────────────────────────────────────────────────────
     family_descendants_eu_eea_deduction: bool = False
     family_minor_children_in_unit: bool = False
+    situacion_familiar: SituacionFamiliar | str = ""
+    """Art. 82 LIRPF family situation governing conjunta eligibility.
+
+    Blank when undeclared. The verifier checks this against
+    ``taxation_type`` and emits an ERROR when conjunta is requested
+    but the declared situation does not permit it (e.g.
+    ``pareja_hecho_no_registrada``)."""
+    unidad_familiar_descendientes_exclusivos: bool | str = ""
+    """In custodia compartida, the progenitor who claims the children
+    for the monoparental unidad familiar (Art. 82.1.2° LIRPF second
+    indent). Only relevant when ``situacion_familiar`` is
+    ``separado_divorciado`` or ``soltero`` and ``taxation_type`` is
+    ``"2"``. Blank when undeclared."""
 
     # ── IVA ──────────────────────────────────────────────────────────────
     iva_regime: IVARegime = IVARegime.GENERAL
@@ -180,6 +199,31 @@ class SetupAnswers(BaseModel):
             return IrpfEstimationRegime(value)
         raise TypeError("irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank")
 
+    @field_validator("situacion_familiar", mode="before")
+    @classmethod
+    def _parse_situacion_familiar(cls, value: object) -> SituacionFamiliar | str:
+        if value == "":
+            return ""
+        if isinstance(value, SituacionFamiliar):
+            return value
+        if isinstance(value, str):
+            return SituacionFamiliar(value)
+        raise TypeError("situacion_familiar must be a SituacionFamiliar member, string token, or blank")
+
+    @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
+    @classmethod
+    def _parse_unidad_familiar_descendientes_exclusivos(cls, value: object) -> bool | str:
+        if value == "":
+            return ""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == "true":
+                return True
+            if value.lower() == "false":
+                return False
+        raise TypeError("unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank")
+
     @field_validator("irpf_special_regime", mode="before")
     @classmethod
     def _parse_irpf_special_regime(cls, value: object) -> IrpfSpecialRegime | str:
@@ -239,6 +283,28 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return RentaMaritalStatus(value)
         raise TypeError("taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank")
+
+    @field_validator("taxpayer_marriage_date")
+    @classmethod
+    def _validate_taxpayer_marriage_date(cls, value: str) -> str:
+        """Reject a non-ISO marriage date at the typed boundary.
+
+        Optional: a blank string is accepted unchanged.  A non-blank
+        value must be a valid ISO-8601 date so the profile binding
+        resolver can derive the matrimonio-sobrevenido facts.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"taxpayer_marriage_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
 
     @field_validator("taxpayer_disability_grade", "spouse_disability_grade", mode="before")
     @classmethod
