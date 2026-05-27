@@ -224,3 +224,178 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
     # The guard surfaces a tr() refusal key; the English text contains
     # either "business_pct" or "MIXED".
     assert "business_pct" in combined or "MIXED" in combined or "mixed" in combined, combined
+
+
+# ---------------------------------------------------------------------------
+# S384  ledger add — profile-conditional source_jurisdiction (#258)
+#
+# Truth table per the regulatory branching:
+#   - LIRPF Art. 8 (universal-base presumption): resident IRPF GENERAL
+#     profiles silently default omitted --source-jurisdiction to ES.
+#   - LIRPF Art. 93 (Beckham): impatriado profiles must declare the
+#     jurisdiction explicitly; silent ES would mask foreign-source
+#     income that the regime treats separately from Spanish-source.
+#   - TRLIRNR Art. 2 / Art. 10: non-residents file IRNR and must
+#     declare jurisdiction explicitly so the IRNR scope filter has
+#     authoritative provenance per transaction.
+# ---------------------------------------------------------------------------
+
+
+def _set_profile_axis(key: str, value: str) -> None:
+    """Set one profile axis via the diagnostics-app descriptor setter."""
+    from aeat.diagnostics.__main__ import app as diagnostics_app
+
+    result = _RUNNER.invoke(diagnostics_app, ["profile", "set", key, value])
+    assert result.exit_code == 0, result.output
+
+
+def test_ledger_add_defaults_source_jurisdiction_to_es_for_resident_general(
+    tmp_path: Path,
+) -> None:
+    """RESIDENT_IRPF / GENERAL: omitted --source-jurisdiction silently defaults to ES.
+
+    LIRPF Art. 8 universal-base presumption: residents are taxed on
+    worldwide income with a Spanish-source default. The default-ES path
+    must not require operator action."""
+
+    _RUNNER.invoke(
+        app,
+        [
+            "config", "profile", "create", "tester", "--quiet",
+            "--tax-id", "00000001R", "--activity", "freelance",
+        ],
+    )
+    # Default profile is already RESIDENT_IRPF / GENERAL — no diagnostics-set needed.
+
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format", "json",
+            "app", "ledger", "add",
+            "--date", "2026-04-15",
+            "--amount", "-50.00",
+            "--direction", "OUTGOING",
+            "--description", "office supplies",
+            # NO --source-jurisdiction
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["transaction"]["source_jurisdiction"] == "ES", payload
+
+
+def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_impatriado(
+    tmp_path: Path,
+) -> None:
+    """RESIDENT_IRPF / IMPATRIADO: omitted --source-jurisdiction refused (Art. 93 LIRPF).
+
+    The Beckham regime taxes Spanish-source income at the flat IRNR rate
+    while excluding foreign-source from the base. A silent ES default
+    would quietly include foreign-source amounts in the IRPF base —
+    Art. 93.5 LIRPF segregation. Force operator to declare."""
+
+    _RUNNER.invoke(
+        app,
+        [
+            "config", "profile", "create", "tester", "--quiet",
+            "--tax-id", "00000001R", "--activity", "freelance",
+        ],
+    )
+    _set_profile_axis("irpf.special_regime", "impatriado")
+    _set_profile_axis("irpf.special_regime_start_date", "2023-01-01")
+
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app", "ledger", "add",
+            "--date", "2026-04-15",
+            "--amount", "-50.00",
+            "--direction", "OUTGOING",
+            "--description", "consulting",
+            # NO --source-jurisdiction
+        ],
+    )
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    # The refusal key carries Beckham / Art. 93 anchoring.
+    assert (
+        "source-jurisdiction" in combined
+        or "source_jurisdiction" in combined
+        or "Beckham" in combined
+        or "Art" in combined
+        or "93" in combined
+    ), combined
+
+
+def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
+    tmp_path: Path,
+) -> None:
+    """NON_RESIDENT_IRNR: omitted --source-jurisdiction refused (TRLIRNR Art. 2/10).
+
+    Non-residents file IRNR under RDLeg 5/2004; per-row jurisdiction is
+    the authoritative provenance for the IRNR scope filter. Operator
+    must declare it on every ledger entry — no silent default is safe
+    because the IRNR base only admits Spanish-source income."""
+
+    _RUNNER.invoke(
+        app,
+        [
+            "config", "profile", "create", "tester", "--quiet",
+            "--tax-id", "00000001R", "--activity", "freelance",
+        ],
+    )
+    _set_profile_axis("taxpayer.fiscal_residency", "non_resident_irnr")
+
+    result = _RUNNER.invoke(
+        app,
+        [
+            "app", "ledger", "add",
+            "--date", "2026-04-15",
+            "--amount", "-50.00",
+            "--direction", "OUTGOING",
+            "--description", "non-resident expense",
+            # NO --source-jurisdiction
+        ],
+    )
+    assert result.exit_code != 0, result.output
+    combined = result.output or ""
+    assert (
+        "source-jurisdiction" in combined
+        or "source_jurisdiction" in combined
+        or "IRNR" in combined
+        or "TRLIRNR" in combined
+    ), combined
+
+
+def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(
+    tmp_path: Path,
+) -> None:
+    """Operator-supplied --source-jurisdiction is preserved verbatim regardless of profile.
+
+    Resident IRPF / GENERAL operator may legitimately add a foreign-source
+    row (e.g. dividendos de fuente extranjera). The default-ES rule must
+    not override an explicit operator value."""
+
+    _RUNNER.invoke(
+        app,
+        [
+            "config", "profile", "create", "tester", "--quiet",
+            "--tax-id", "00000001R", "--activity", "freelance",
+        ],
+    )
+
+    result = _RUNNER.invoke(
+        app,
+        [
+            "--format", "json",
+            "app", "ledger", "add",
+            "--date", "2026-04-15",
+            "--amount", "100.00",
+            "--direction", "INCOMING",
+            "--description", "foreign dividend",
+            "--source-jurisdiction", "FR",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads(result.output)
+    assert payload["transaction"]["source_jurisdiction"] == "FR", payload
