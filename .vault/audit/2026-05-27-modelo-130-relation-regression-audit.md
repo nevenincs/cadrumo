@@ -95,3 +95,45 @@ correctly absent from the calculation-completeness manifest.
 The S26 fix is architecturally sound; the manifest gate firing
 on the prior `vigencia` entry was correctly catching real drift,
 not a false-positive. No revisit needed.
+
+---
+
+## P07.S41 finding: registry-wide provisional_pending_specimen inventory
+
+Sweep of every extraction profile across every modelo for the
+`provisional_pending_specimen = true` flag and the
+`src/aeat/tests/fixtures/justificantes/{modelo}/` specimen
+inventory:
+
+**Specimen coverage**: every modelo (M036, M100, M111, M115, M123,
+M130, M131, M180, M184, M190, M193, M232, M303, M347, M349, M369,
+M390, M720, M840) has at least one specimen PDF committed under
+`src/aeat/tests/fixtures/justificantes/`. No modelo is missing a
+specimen.
+
+**`provisional_pending_specimen = true` flag set on**:
+
+- `src/aeat/_data/registry/aeat/modelos/111/revisions/2019-y-siguientes/extraction_profiles/0005-extraction_profiles.toml`
+- `src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/extraction_profiles/0001-extraction_profiles.toml`
+- `src/aeat/_data/registry/aeat/modelos/131/revisions/2026/extraction_profiles/0001-extraction_profiles.toml`
+
+All three modelos already have specimen PDFs in the fixtures
+directory (M111: `2024-1T.pdf`, M130: `2021-2T.pdf`, M131:
+`2024-1T.pdf`). Per `test_corpus_round_trip_gate.py`'s shape
+test, the flag is opt-out (specimen + flag = OK; specimen
+without flag = required round-trip; no specimen without flag =
+hard fail).
+
+**Disposition**: the flag on these three profiles is structurally
+redundant (the specimen alone satisfies the gate). It may signal
+that the specimen exists but is synthetic or unverified against
+the corpus round-trip path — in which case the flag is the
+author's deliberate opt-out from round-trip verification while
+the specimen ages into authenticity. The flag is NOT a defect.
+
+**Follow-up recommendation**: each of the three profiles should
+either (a) remove the flag if the specimen is corpus-verified
+and round-trips cleanly, or (b) keep the flag with a brief
+comment explaining the specimen's provisional nature. Not
+tracked as a new Step — author-driven authenticity review is
+out of scope for a structural hardening sweep.
