@@ -11,24 +11,38 @@ import click
 import typer
 
 from ....application.auth._catalogue import known_auth_provider_ids as _known_auth_provider_ids
-from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES, parse_config_reset_scope as _parse_config_reset_scope
+from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
+from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
 from ....application.diagnostics import (
     build_config_repair_report as _build_config_repair_report,
+)
+from ....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects as _preview_quarantine_unreadable_secure_objects,
+)
+from ....application.diagnostics import (
     probe_browser_connectivity as _probe_browser_connectivity,
+)
+from ....application.diagnostics import (
     quarantine_unreadable_secure_objects as _quarantine_unreadable_secure_objects,
+)
+from ....application.diagnostics import (
     render_browser_connectivity_text as _render_browser_connectivity_text,
+)
+from ....application.diagnostics import (
     render_config_repair_text as _render_config_repair_text,
 )
-from ....application.operator_surface import build_help_document as _build_help_document, render_help_text as _render_help_text
+from ....application.operator_surface import build_help_document as _build_help_document
+from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard._catalogue import SETUP_FLOW as _SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
-from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr as _tr
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
+from ....core.i18n import tr as _tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
-from .._common import _emit, activate_subcommand_output_language as _activate_subcommand_output_language
+from .._common import _emit
+from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if typing.TYPE_CHECKING:
@@ -1288,8 +1302,16 @@ def config_profile_import(
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
     )
-    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError, profile_storage_session
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket, read_profile_bucket_by_id
+    from ....application.user_profile._orchestration import (
+        ProfileAlreadyRegisteredError,
+        profile_storage_session,
+    )
+    from ....application.workflow._profile_bucket_scan import (
+        read_profile_bucket as _read_profile_bucket,
+    )
+    from ....application.workflow._profile_bucket_scan import (
+        read_profile_bucket_by_id,
+    )
     from ....domain.user_profile import UserProfilePortableExport
 
     if not path.is_file():
@@ -1313,9 +1335,15 @@ def config_profile_import(
     record = bundle.profile
     bundle_profile_id = record.profile_id
 
-    # D5 two-tier collision guard: UUID takes precedence over label.
-    # Tier 1: refuse if the bundle's profile_id UUID already exists locally.
-    if read_profile_bucket_by_id(bundle_profile_id) is not None:
+    # D5 two-tier collision guard. When --label is absent the operator intends
+    # identity-preserving recovery: keep the bundle UUID (D5). When --label is
+    # supplied the operator wants a fresh independent copy under a new name; in
+    # that case mint a new UUID so the two profiles coexist without collision.
+    explicit_label = label.strip() if label is not None and label.strip() else None
+    fresh_uuid_mode = explicit_label is not None
+
+    # Tier 1 (identity-preserving path): refuse if the bundle UUID already exists.
+    if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
         raise _CliRefusedBoundaryError(
             _tr(
                 "cli.config.profile.import_uuid_collision",
@@ -1326,10 +1354,11 @@ def config_profile_import(
                 profile_id=bundle_profile_id,
             )
         )
-    target_label = label.strip() if label is not None and label.strip() else record.display_name
-    # Tier 2: refuse if the label is taken by a *different* UUID.
+
+    target_label = explicit_label if explicit_label is not None else record.display_name
+    # Tier 2: refuse if the target label is taken by any existing profile.
     existing = _read_profile_bucket(target_label)
-    if existing is not None and existing.bucket_id != bundle_profile_id:
+    if existing is not None:
         raise _CliRefusedBoundaryError(
             _tr(
                 "cli.config.profile.import_label_taken_different_id",
@@ -1341,9 +1370,13 @@ def config_profile_import(
             )
         )
     try:
-        # Preserve the bundle's profile_id (ADR D5).
+        # Preserve the bundle's profile_id only on the identity-preserving path
+        # (no --label). When --label is supplied, _atomic_create_profile mints a
+        # fresh UUID so the new copy is a distinct identity.
         target_id = _atomic_create_profile(
-            display_name=target_label, facts=record.facts, profile_id=bundle_profile_id
+            display_name=target_label,
+            facts=record.facts,
+            profile_id=None if fresh_uuid_mode else bundle_profile_id,
         )
     except ProfileAlreadyRegisteredError as exc:
         raise _CliRefusedBoundaryError(
@@ -1551,10 +1584,6 @@ def config_reset(
             f"removed_auth\t{report.removed_auth_session}",
         ),
     )
-
-
-def _activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
-    _activate_subcommand_output_language(ctx, language)
 
 
 @auth_app.command("providers", help=_tr("cli.config.auth.providers_help"))
