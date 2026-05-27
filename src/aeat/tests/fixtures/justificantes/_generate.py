@@ -229,6 +229,78 @@ def _draw_modelo_349(c: canvas.Canvas, fixture: _Modelo349Fixture) -> None:
 
 
 @dataclass(frozen=True)
+class _Modelo036Fixture:
+    """Sanitized M036 declaracion-censal fixture.
+
+    The section heading label is taken verbatim from the AEAT-published practical
+    guide "Instrucciones Modelo 036", PAGINA 1 (h3 element):
+      "Causas de presentación de la declaración"
+    Source: sede.agenciatributaria.gob.es/.../cumplimentacion-modelo/pagina-1.html
+    Fetched 2026-05-27 and saved at:
+      src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
+        instrucciones-cumplimentacion-pagina-1.html
+
+    The named_label parser matches label_pattern against this heading and captures
+    the event-kind value (Alta/Modificacion/Baja) on the same line.
+    """
+
+    filename: str
+    tax_id: str
+    full_name: str
+    event_kind: str
+
+
+_MODELO_036_FIXTURES: tuple[_Modelo036Fixture, ...] = (
+    _Modelo036Fixture(
+        filename="036/2025-0A.pdf",
+        tax_id="Y0000001S",
+        full_name="DEMO EMPRESA SL",
+        event_kind="Alta",
+    ),
+)
+
+
+def _draw_modelo_036(c: canvas.Canvas, fixture: _Modelo036Fixture) -> None:
+    """Render a sanitized M036 declaracion-censal page onto ``c``.
+
+    The layout reproduces the PAGINA 1 section structure from the AEAT-published
+    practical guide (instrucciones-cumplimentacion-pagina-1.html).  The section
+    heading is the verbatim AEAT-published h3 label:
+
+      "Causas de presentacion de la declaracion"
+
+    followed by the event-kind value on the same line, so the named_label parser
+    can locate and extract the value.  Accented characters are omitted to stay
+    within the ASCII-safe pdfplumber extraction path (consistent with M349/M840
+    fixture conventions).
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(20 * mm, y, "Agencia Tributaria")
+    y -= 8 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(20 * mm, y, "Declaracion censal de alta, modificacion y baja  Modelo 036")
+    y -= 12 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Razon social: {fixture.full_name}")
+    y -= 10 * mm
+    # PAGINA 1 section heading — label text verbatim from AEAT practical guide
+    # instrucciones-cumplimentacion-pagina-1.html (h3):
+    # "Causas de presentación de la declaración"
+    # Accents stripped to match pdfplumber ASCII extraction path.
+    c.drawString(
+        20 * mm,
+        y,
+        f"Causas de presentacion de la declaracion {fixture.event_kind}",
+    )
+    y -= 10 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+
+
+@dataclass(frozen=True)
 class _Modelo840Fixture:
     """Sanitized M840 declaracion fixture.
 
@@ -307,6 +379,20 @@ def main() -> None:
         c.setCreator("aeat fixture generator")
         c.setProducer("reportlab")
         _draw(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+
+    for fixture in _MODELO_036_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4)
+        c.setTitle(f"Declaracion censal Modelo 036 {fixture.event_kind}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion-censal fixture m036")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("reportlab")
+        _draw_modelo_036(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")

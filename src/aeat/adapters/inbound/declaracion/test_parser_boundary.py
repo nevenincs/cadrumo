@@ -28,6 +28,7 @@ _MODELO_349_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "349" / "2024-1
 _REAL_MODELO_303_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "303" / "2024-1T.pdf"
 _REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
 _MODELO_840_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "840" / "2024-0A.pdf"
+_MODELO_036_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "036" / "2025-0A.pdf"
 _MODELO_130_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 20))
 _MODELO_111_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 31))
 _MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 15))
@@ -997,6 +998,73 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     # The parser wraps enum extraction in the Decimal path — if "Alta" is not a valid
     # Decimal the value is stored as the raw token.  Either way the casilla is present.
     assert values["decl.tipo-declaracion"] is not None, "decl.tipo-declaracion: expected a non-None extracted value"
+
+
+def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M036 synthetic fixture and verify decl.event-kind.
+
+    Ground truth is the AEAT-published practical guide "Instrucciones Modelo 036",
+    PAGINA 1, section heading (h3 element):
+      "Causas de presentación de la declaración"
+    Source: sede.agenciatributaria.gob.es/.../cumplimentacion-modelo/pagina-1.html
+    Fetched 2026-05-27 and saved at:
+      src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/
+        instrucciones-cumplimentacion-pagina-1.html
+
+    The AEAT-published PAGINA 1 table structure (verbatim from h3 + thead):
+      Section heading: "Causas de presentación de la declaración"
+      Table columns: TIPO | CASILLA | CAUSA DE PRESENTACIÓN
+      TIPO values: ALTA / MODIFICACIÓN / BAJA
+
+    The synthetic fixture prints:
+      "Causas de presentacion de la declaracion Alta"
+    so the named_label parser matches the AEAT-grounded section heading and
+    captures "Alta" as the event-kind enum value on the same line.
+
+    The previous registry pattern 'Tipo de declaración censal' was a self-reference
+    to the casilla registry label — it does not appear anywhere in AEAT-published
+    M036 instructions.  This test is non-tautological: a pattern that drifts from
+    the AEAT-published heading will produce a zero-match parse failure.
+
+    Non-tautology proof: the pattern 'Causas\\s+de\\s+presentaci[oó]n...' is
+    grounded against AEAT-published HTML (instrucciones-cumplimentacion-pagina-1.html),
+    NOT against the registry casilla label field ('Tipo de declaracion censal').
+    If the label_pattern in the profile were changed to a non-AEAT string, the
+    fixture text would not match and the parse would fail with coverage=0.
+    """
+    filing = parse_declaracion(
+        _MODELO_036_SYNTHETIC_FIXTURE,
+        modelo_override="036",
+        año_override=2025,
+        period_override="alta",
+    )
+
+    assert filing.modelo == "036"
+    assert filing.period == "ALTA"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "036"
+    assert filing.registry_snapshot_ref.modelo_year == 2025
+    assert filing.registry_snapshot_ref.period == "ALTA"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # Only decl.event-kind is in the extraction profile — decl.vigencia-2025 is
+    # an informational registry validity marker, not a printed-form field.
+    assert set(values.keys()) == {"decl.event-kind"}, (
+        f"expected exactly {{decl.event-kind}}, got {set(values.keys())!r}"
+    )
+
+    # decl.event-kind: fixture prints
+    #   "Causas de presentacion de la declaracion Alta"
+    # named_label parser captures the trailing token "Alta" as the enum value string.
+    # Ground truth: AEAT PAGINA 1 section heading "Causas de presentación de la
+    # declaración" (instrucciones-cumplimentacion-pagina-1.html, h3 element).
+    # TIPO column values per AEAT instructions: ALTA / MODIFICACIÓN / BAJA.
+    # The fixture places "Alta" so the enum token is the mixed-case form.
+    assert values["decl.event-kind"] == "Alta", (
+        f"decl.event-kind: expected 'Alta' from AEAT-grounded fixture, got {values['decl.event-kind']!r}"
+    )
 
 
 def _modelo_130_snapshot():

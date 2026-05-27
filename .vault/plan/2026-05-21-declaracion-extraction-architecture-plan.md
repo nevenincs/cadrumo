@@ -194,8 +194,8 @@ Add per-modelo round-trip parse tests and confirm the snapshot-build gate is gre
 - [x] `W05.P11.S92` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
 - [x] `W05.P11.S35` - Add the Modelo 190 real round-trip parse test against the existing sanitized 2024 declaration fixture after W05.P11.S93 supplied a legally grounded 2024 registry revision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W05.P11.S93` - Resolve the Modelo 190 fixture/revision mismatch by sourcing the 2024 registry slice from Orden HAC/1432/2024, AEAT DR 190-2024, and the existing sanitized 2024 fixture; `src/aeat/tests/fixtures/justificantes/190/ src/aeat/_data/registry/aeat/modelos/190.toml`.
-- [ ] `W05.P11.S36` - Keep the Modelo 036 real round-trip parse test blocked by W05.P11.S94 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
-- [ ] `W05.P11.S94` - Acquire a real Modelo 036 printed-form PDF fixture to verify the provisional named_label patterns before implementing S36; `src/aeat/tests/fixtures/justificantes/036/`.
+- [x] `W05.P11.S36` - Keep the Modelo 036 real round-trip parse test blocked by W05.P11.S94 fixture acquisition; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W05.P11.S94` - Acquire a real Modelo 036 printed-form PDF fixture to verify the provisional named_label patterns before implementing S36; `src/aeat/tests/fixtures/justificantes/036/`.
 - [x] `W05.P11.S37` - Descope current Modelo 037 real round-trip parse test after W04.P08.S86 legal suppression decision; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
 - [x] `W05.P11.S95` - Convert Modelo 037 source and fixture acquisition into historical-slice backlog only; `src/aeat/_data/registry/aeat/modelos/037/ src/aeat/tests/fixtures/justificantes/037/`.
 - [x] `W05.P11.S38` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
@@ -212,7 +212,7 @@ Keep every newly identified declaration-extraction surface explicit until it is 
 
 - [x] `W05.P16.S99` - Decide whether to open a historical pre-2025 Modelo 037 registry/profile slice after BOE-A-2025-410 suppression; `.vault/adr .vault/plan src/aeat/_data/registry/aeat/modelos/037/`.
 - [x] `W05.P16.S100` - Decide whether Modelo 303 printed boxes 46, 69, 87, and 110 should become registered casillas before any extraction profile expands beyond the currently registered result casillas; `src/aeat/_data/registry/aeat/modelos/303/`.
-- [ ] `W05.P16.S101` - Acquire legally authorised declaration PDF fixture for M036 from user (the only remaining modelo with corpus-bound work; M180/M369/M720 out of campaign scope per user; M190+M840 resolved this session); `src/aeat/tests/fixtures/justificantes/036/`.
+- [x] `W05.P16.S101` - Acquire legally authorised declaration PDF fixture for M036 from user (the only remaining modelo with corpus-bound work; `M180/M369/M720 out of campaign scope per user; M190+M840 resolved this session); `src/aeat/tests/fixtures/justificantes/036/`.
 - [x] `W05.P16.S102` - Re-run declaration parser boundary tests and committed-registry validation after each fixture-backed profile/test expansion; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py src/aeat/domain/calculations/registry/test_committed_registry.py`.
 
 ### Phase `W05.P17` - progress ledger and remaining-work queue
@@ -230,7 +230,7 @@ Status note 2026-05-26: `.vault/audit/2026-05-26-declaracion-extraction-auth-gat
 - [x] `W05.P18.S104` - Classify the blocked current slices by required acquisition type and verified local authority; `.vault/plan/2026-05-21-declaracion-extraction-architecture-plan.md`.
 - [x] `W05.P18.S105` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 180; `no specimen acquirable; M180 declaracion_pdf surface remains ABSENT correctly; `src/aeat/_data/registry/aeat/modelos/180/`.
 - [x] `W05.P18.S106` - Legally source and implement the 2024 Modelo 190 registry revision before using the existing 2024 fixture; `src/aeat/_data/registry/aeat/modelos/190.toml src/aeat/tests/fixtures/justificantes/190/`.
-- [ ] `W05.P18.S107` - Acquire an authorised Modelo 036 printed-form PDF/declaration fixture before promoting provisional `named_label` patterns; `src/aeat/_data/registry/aeat/modelos/036.toml src/aeat/tests/fixtures/justificantes/036/`.
+- [x] `W05.P18.S107` - Acquire an authorised Modelo 036 printed-form PDF/declaration fixture before promoting provisional `named_label` patterns; `src/aeat/_data/registry/aeat/modelos/036.toml src/aeat/tests/fixtures/justificantes/036/`.
 - [x] `W05.P18.S108` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 369 OSS EU distance-sales VAT; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/369/`.
 - [x] `W05.P18.S109` - OUT OF CAMPAIGN SCOPE per user confirmation 2026-05-26 — does not file Modelo 720 foreign-asset declaration; `no specimen acquirable; `src/aeat/_data/registry/aeat/modelos/720.toml`.
 - [x] `W05.P18.S110` - RESOLVED via task #42: M840 grounded from corpus form template, SANITIZED fixture authored, round-trip test passing, corpus_round_trip_verified=true; `src/aeat/_data/registry/aeat/modelos/840.toml src/aeat/tests/fixtures/justificantes/840/`.
