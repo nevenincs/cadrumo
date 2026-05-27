@@ -43,13 +43,12 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import calculate_registry_snapshot
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -80,7 +79,6 @@ _CCAA = "madrid"
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[TestRuntimeProfile]:
     """Real-session backend for M130→M100 projection regression test.
 
@@ -89,21 +87,11 @@ def runtime_profile(
     directories work-unit commands read from settings.
     """
 
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-
-    with isolated_runtime_profile(
+    with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="M130 projection regression test profile",
     ) as profile:
-        dispose_engine(profile.settings)
         yield profile
 
 

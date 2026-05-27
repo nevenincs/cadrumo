@@ -21,11 +21,10 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.user_profile._repository import UserProfileLifecycleRepository
 from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from aeat.tests.cli_runner import invoke_cached_cli
-from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -35,7 +34,6 @@ _PROFILE_ID = "casilla-norm-test-profile"
 @pytest.fixture
 def runtime_profile(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[TestRuntimeProfile]:
     """Real session backend for casilla normalisation tests.
 
@@ -44,24 +42,11 @@ def runtime_profile(
     directories that work-unit commands read from settings.
     """
 
-    # Work-unit and calculation paths read these from settings; set them
-    # to temp dirs that already exist for the session.
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    # Do not set AEAT_DATABASE_URL — the bucket route must stay ACTIVE_BUCKET_DATABASE.
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND", raising=False)
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-
-    with isolated_runtime_profile(
+    with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_PROFILE_ID,
         label="Casilla normalisation test profile",
     ) as profile:
-        dispose_engine(profile.settings)
         yield profile
 
 
