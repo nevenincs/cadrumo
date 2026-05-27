@@ -1,0 +1,76 @@
+[[revisions."2015-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la declaracion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-hap-2250-2015:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "tipo2.clave"
+number = "77"
+label = "Clave del tipo de renta atribuida (A=capital mobiliario, C=capital inmobiliario, D=actividades economicas, F=ganancias/perdidas no transmision, G=ganancias/perdidas transmision, I=deducciones IRPF, J=deducciones IS, K=retenciones soportadas, L=exceso rentas negativas paises sin convenio)"
+section = ["declarado", "renta"]
+data_type = "text"
+semantic_role = "tipo_renta_atribuida_clave"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 184 tipo-2 clave is the single attributed-income type key field in the annual information return."
+required = true
+input_kind = "manual"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "tipo2.subclave"
+number = "78-79"
+label = "Subclave del tipo de renta atribuida (granularidad por origen geografico Espana/extranjero, reducciones aplicables, etc.)"
+section = ["declarado", "renta"]
+data_type = "text"
+semantic_role = "tipo_renta_atribuida_subclave"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 184 tipo-2 subclave is the single attributed-income subtype field in the annual information return."
+required = true
+input_kind = "manual"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-88", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "tipo2.miembro-nif"
+number = "9-17"
+label = "NIF del miembro de la entidad al que se le atribuye la renta (socio, comunero, heredero, participe)"
+section = ["declarado", "miembro"]
+data_type = "nif"
+semantic_role = "miembro_entidad_atribucion_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+
+[[revisions."2015-y-siguientes".casillas]]
+id = "tipo2.renta-atribuible-importe"
+number = "178-190"
+label = "Importe de la renta atribuible / rendimiento neto atribuible al miembro de la entidad (sin signo, sin coma decimal, en euros)"
+section = ["declarado", "renta"]
+data_type = "money"
+semantic_role = "renta_atribuible_importe"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-hap-2250-2015:art-3", "ley-35-2006:art-86", "ley-35-2006:art-87", "ley-35-2006:art-88", "ley-35-2006:art-89", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-184-2025", "boe-modelo-184-2015-form"]
+

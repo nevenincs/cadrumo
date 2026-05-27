@@ -1,0 +1,18 @@
+[revisions."2015-y-siguientes"]
+label = "Modelo 184 ejercicios 2015 y siguientes (Orden HAP/2250/2015, modificada por HFP/1923/2016, HFP/1106/2017, HAC/1276/2019, HFP/1284/2023 y HAC/1430/2025)"
+valid_from = 2015-10-30
+period_selector = { year_from = 2015, periods = ["0A"] }
+legal_refs = [
+    "orden-hap-2250-2015:art-1",
+    "orden-hap-2250-2015:art-2",
+    "orden-hap-2250-2015:art-3",
+    "orden-hap-2250-2015:art-4",
+    "orden-hap-2250-2015:art-5",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-184-2025",
+    "aeat-modelo-184-procedure",
+    "boe-modelo-184-2015-form",
+]
+
