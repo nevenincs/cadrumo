@@ -352,6 +352,105 @@ ATTACHMENT_MANIFEST_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="{attachment_id_sha256_hex}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
 )
+AEAT_BROWSER_SESSION_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="aeat_browser_sessions",
+    namespace="aeat.outbound.aeat.auth.sessions",
+    owner="aeat.adapters.outbound.aeat.auth",
+    sensitivity=SensitivityClass.SESSION,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{storage_state_path_posix}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="clave_movil_diagnostics",
+    namespace="aeat.outbound.aeat.auth.clave_movil.diagnostics",
+    owner="aeat.adapters.outbound.aeat.auth",
+    sensitivity=SensitivityClass.SESSION,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{diagnostic_id_or_timestamp_iso}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_oauth_client",
+    namespace="aeat.google.oauth.client",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+GOOGLE_OAUTH_TOKEN_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_oauth_token",
+    namespace="aeat.google.oauth.token",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+GOOGLE_OAUTH_METADATA_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_oauth_metadata",
+    namespace="aeat.google.oauth.metadata",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+GOOGLE_DRIVE_CONFIG_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="google_drive_config",
+    namespace="aeat.google.drive.config",
+    owner="aeat.adapters.outbound.google",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{profile}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="llm_cache",
+    namespace="aeat.outbound.llm.cache",
+    owner="aeat.adapters.outbound.llm",
+    sensitivity=SensitivityClass.DIAGNOSTIC,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+LLM_USAGE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="llm_usage",
+    namespace="aeat.outbound.llm.usage",
+    owner="aeat.adapters.outbound.llm",
+    sensitivity=SensitivityClass.DIAGNOSTIC,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="aeat_filed_declaration_artefacts",
+    namespace="aeat.outbound.aeat.sede.filed_declaration.artefacts",
+    owner="aeat.adapters.outbound.aeat.sede",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{sha256_hex}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="aeat_filed_declaration_observations",
+    namespace="aeat.outbound.aeat.sede.filed_declaration.observations",
+    owner="aeat.adapters.outbound.aeat.sede",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{sha256(modelo,ejercicio,period,expediente_id)}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
+AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="aeat_iva_wallet_observations",
+    namespace="aeat.outbound.aeat.sede.iva_compensation_wallet.observations",
+    owner="aeat.adapters.outbound.aeat.sede",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+)
 
 DOMAIN_NAMESPACE_DEFINITIONS = (
     SecureObjectNamespaceDefinition(
@@ -564,12 +663,27 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_CENSUS_SNAPSHOT_NAMESPACE,
         ATTACHMENT_BLOB_NAMESPACE,
         ATTACHMENT_MANIFEST_NAMESPACE,
+        AEAT_BROWSER_SESSION_NAMESPACE,
+        CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+        GOOGLE_OAUTH_CLIENT_NAMESPACE,
+        GOOGLE_OAUTH_TOKEN_NAMESPACE,
+        GOOGLE_OAUTH_METADATA_NAMESPACE,
+        GOOGLE_DRIVE_CONFIG_NAMESPACE,
+        LLM_CACHE_NAMESPACE,
+        LLM_USAGE_NAMESPACE,
+        AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+        AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+        AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
         *DOMAIN_NAMESPACE_DEFINITIONS,
     ),
     paths=STORAGE_PATH_DEFINITIONS,
 )
 
 __all__ = [
+    "AEAT_BROWSER_SESSION_NAMESPACE",
+    "AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE",
+    "AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE",
+    "AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE",
     "APPLICATION_FILING_HISTORY_NAMESPACE",
     "ATTACHMENT_BLOB_NAMESPACE",
     "ATTACHMENT_MANIFEST_NAMESPACE",
@@ -583,7 +697,12 @@ __all__ = [
     "BUCKET_LOCK_FILENAME",
     "BUCKET_MANIFEST_FILENAME",
     "CALCULATION_OBSERVATIONS_NAMESPACE",
+    "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
+    "GOOGLE_DRIVE_CONFIG_NAMESPACE",
+    "GOOGLE_OAUTH_CLIENT_NAMESPACE",
+    "GOOGLE_OAUTH_METADATA_NAMESPACE",
+    "GOOGLE_OAUTH_TOKEN_NAMESPACE",
     "IVA_COMPENSATION_HISTORY_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE",
     "IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE",
@@ -592,6 +711,8 @@ __all__ = [
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
     "LIVE_CENSUS_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
+    "LLM_CACHE_NAMESPACE",
+    "LLM_USAGE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
     "PROFILE_ASSETS_LEDGER_NAMESPACE",
     "PROFILE_INVENTORY_LEDGER_NAMESPACE",
