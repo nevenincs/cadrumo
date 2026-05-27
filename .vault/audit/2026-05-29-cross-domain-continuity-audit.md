@@ -3520,3 +3520,120 @@ PASS.
 | `Iterable` removed from 6 other modules (sole consumer gone) | CORRECT |
 | Pre-existing circular import — NOT introduced by `46ecfb966` | CONFIRMED |
 | S304 tracking of circular import as separate step | CORRECT |
+
+---
+
+## Task #114 — R8-NURIA + S304/S305/S306 triage
+
+### S304 — Circular import: latent defect, NOT currently CLI-blocking
+
+**Current state:** `aeat --version` returns cleanly. `import aeat.domain.calculations.registry`
+succeeds in both registry-first and deadlines-first import order. All 3 tests in
+`test_cross_domain_snapshot_registration.py` pass. The reported "CLI paralysis" is
+NOT reproducible against the current working tree.
+
+**Introduction commit:** `9368c9d46` ("sweep: registry __init__ + remaining
+fixture regen") added `from ._applicability import ...` to
+`calculations/registry/__init__.py`. This creates the cycle:
+`calculations.registry → _applicability → deadlines.taxpayer_model →
+deadlines.__init__ → deadlines._engine → calculations.registry`.
+
+**Why it does not bite now:** `_applicability` is imported near the END of
+`registry/__init__.py`, after all the `DeadlineWindowDefinition`, `ModeloRevision`,
+and other symbols that `deadlines._engine` needs. By the time `_engine` executes
+`from ..calculations.registry import (DeadlineWindowDefinition, ...)`, the
+registry module is already in `sys.modules` and those symbols are populated. A
+comment in `9368c9d46` ("Applicability is imported after _schema so its transitive
+import of aeat.domain.deadlines ... does not race a partially-initialised registry
+namespace") documents this fragility explicitly.
+
+**Risk:** If the import order in `registry/__init__.py` changes — or if a new
+`registry` symbol that `deadlines._engine` needs is added after `_applicability`
+in the file — the cycle will bite with `ImportError`. This is a latent defect.
+
+**Revised S304 step text:**
+> S304: Mitigate the latent circular import introduced by `9368c9d46`: `calculations.registry
+> → _applicability → deadlines → deadlines._engine → calculations.registry`. Current
+> runtime is safe because `_applicability` is imported after the symbols `deadlines._engine`
+> consumes, but the ordering is fragile. Preferred fix (Option A): factor the
+> `TaxpayerModel` types that `_applicability` imports from `deadlines.taxpayer_model`
+> into a new `domain.taxpayer_types` leaf module with no registry or deadlines dependency,
+> eliminating the cross-domain cycle entirely. Fallback (Option B): convert
+> `from ._applicability import ...` in `registry/__init__.py` to a lazy
+> function-level import guard. Do NOT use `TYPE_CHECKING` guards. File:
+> `src/aeat/domain/calculations/registry/__init__.py` and
+> `src/aeat/domain/calculations/registry/_applicability.py`.
+
+### S305 — Multi-profile workspace creation: root cause correction
+
+**Task description inaccuracy:** The description says "`_refuse_duplicate_tax_id`
+opens `UserProfileLifecycleRepository` with the NEW bucket session". This is
+incorrect for the `config profile import` / `config profile duplicate` paths —
+those call `_atomic_create_profile` which passes `enforce_unique_tax_id=False`,
+so `_refuse_duplicate_tax_id` is never reached. The scan IS reached from the
+`config profile create` wizard path: `_run_full_flow` → `persist_answers` →
+`register_active_profile` with the default `enforce_unique_tax_id=True`.
+
+**Session nesting is architecturally correct.** `profile_storage_session` uses
+`ContextVar` with token-based `activate_session` reset — nested sessions stack
+and unwind cleanly. The inner `profile_storage_session(summary.profile_id)` call
+correctly activates the existing profile's session for `self.load(summary.profile_id)`.
+
+**Actual failure mode:** `_refuse_duplicate_tax_id` scans ALL non-tombstoned
+profiles. If any existing profile's `_bucket_key_schedule` raises a non-`"missing
+required lifecycle status"` `StorageValidationError`, or `_load_or_mint_bucket_dek`
+fails, the `except Exception as exc` at line 668 catches it and raises
+`UserProfileValidationError("Cannot verify tax-id uniqueness because profile X
+is unreadable")`. For a gestor with 5 client profiles, one profile with any
+storage issue blocks creating any new client profile — even one with a completely
+different NIF.
+
+**Revised S305 step text:**
+> S305: Fix `_refuse_duplicate_tax_id` fragility in multi-profile gestor scenarios.
+> Change the `except Exception` handler at `_profile_repository.py:668` from
+> fail-closed (raise immediately) to warn-and-continue: accumulate unreadable-profile
+> warnings in a list; after the scan, if any warnings exist AND the new NIF was not
+> confirmed a duplicate, emit the warnings as non-blocking notices in the CLI output
+> and allow creation to proceed. Only raise `UserProfileValidationError` when a
+> duplicate NIF is confirmed. Add regression test: create two profiles with different
+> tax IDs, corrupt profile 2's manifest, create a third profile with a third tax ID;
+> assert creation succeeds with a warning about profile 2. File:
+> `src/aeat/application/user_profile/_profile_repository.py` method
+> `_refuse_duplicate_tax_id` (line 639).
+
+### S306 — No cross-profile calendar: confirmed single-profile, fix path decided
+
+**Confirmed.** `overview_calendar` in `_overview.py` (line 84) uses `_state()`
+(single active profile) and passes one `_TaxpayerProfile` to `build_overview_calendar`.
+`build_overview_calendar` is pure — no I/O, no repository. `overview status`,
+`explain`, `agenda`, and `backlog` are all identically single-profile.
+
+**Fix path:** `build_overview_calendar` need not change. The union-view is CLI-layer
+work: iterate `list_profile_buckets()`, open `profile_storage_session(bucket_id)` per
+bucket, read `record_to_values`, derive `_profile_to_taxpayer`, call
+`build_overview_calendar`, collect results keyed by profile label. The function's
+pure signature is perfectly suited to this iteration.
+
+**Revised S306 step text:**
+> S306: Add `--all-profiles` flag to `aeat app overview calendar`. When set: iterate
+> `list_profile_buckets()`, for each non-tombstoned bucket open
+> `profile_storage_session(bucket_id)`, read `record_to_values`, derive
+> `_profile_to_taxpayer`, call `build_overview_calendar`, collect per-profile results.
+> Output a list of `{profile_label, calendar}` objects in JSON mode; in text mode emit
+> a section header per profile. `build_overview_calendar` itself requires no changes.
+> `--all-profiles` is mutually exclusive with any flag that assumes a single active
+> profile. Track `overview status`, `explain`, and `agenda` `--all-profiles` parity
+> as follow-on steps. File: `src/aeat/entrypoints/cli/_overview.py`.
+
+### Summary
+
+| Item | Finding |
+|------|---------|
+| S304: CLI currently paralysed? | NO — `aeat --version` clean, all 3 tests pass |
+| S304: Cycle exists? | YES — latent, introduced by `9368c9d46` |
+| S304: Fix path | Option A: factor `TaxpayerModel` to leaf module; Option B: lazy import |
+| S305: `_refuse_duplicate_tax_id` with new bucket session? | INACCURATE — session nesting is correct via ContextVar |
+| S305: Actual failure mode | Fail-closed scan: one unreadable existing profile blocks any new creation |
+| S305: Fix path | Change `except Exception` handler to warn-and-continue; only raise on confirmed duplicate |
+| S306: Single-profile calendar confirmed? | YES |
+| S306: Fix path | `--all-profiles` flag at CLI layer; `build_overview_calendar` unchanged |
