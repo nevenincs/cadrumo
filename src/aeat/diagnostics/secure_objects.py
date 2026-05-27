@@ -3,8 +3,7 @@
 Inventories the secure-object index for one namespace, optionally
 filtering to undecryptable rows. Lives under
 ``python -m aeat.diagnostics`` so the operator CLI never advertises
-it. The previous home (``aeat config repair list NAMESPACE``) was
-removed in the same commit that introduced this module.
+it.
 
 The implementation delegates to
 :func:`aeat.application.repair_integrity.build_repair_list_report`
