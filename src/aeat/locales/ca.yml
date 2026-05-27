@@ -818,6 +818,13 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
+        create_stub_modelo_refused: 'El model %{modelo} està registrat però no té
+          suport complet en aquesta versió. La declaració informativa sobre monedes
+          virtuals situades a l''estranger (Model 721) s''ha de presentar directament
+          a la Seu Electrònica de l''AEAT (sede.agenciatributaria.gob.es). L''obligació
+          neix quan el valor agregat supera €50.000 el 31 de desembre (Orden HFP/887/2023,
+          BOE-A-2023-17455). Autoritats legals: Llei 11/2021 Art. 13 / DA 10ª,
+          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu

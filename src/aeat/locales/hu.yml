@@ -607,6 +607,14 @@ cli:
         create_reused: cli.app.modelo.work.create_reused
         create_reused_name_match: cli.app.modelo.work.create_reused_name_match
         create_reused_renamed: cli.app.modelo.work.create_reused_renamed
+        create_stub_modelo_refused: 'A(z) %{modelo} modell regisztrált, de ebben a
+          verzióban még nem teljes körűen támogatott. A külföldi virtuális pénznemekről
+          szóló tájékoztató bevallást (721-es modell) közvetlenül az AEAT elektronikus
+          székhelyén kell benyújtani (sede.agenciatributaria.gob.es). A kötelezettség
+          akkor keletkezik, ha a külföldi virtuális pénznemek összesített értéke december
+          31-én meghaladja az 50.000 €-t (Orden HFP/887/2023, BOE-A-2023-17455). Jogi
+          hivatkozások: Ley 11/2021 13. cikk / DA 10ª, Orden HFP/887/2023,
+          RD 1065/2007 42 quáter cikk.'
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help
