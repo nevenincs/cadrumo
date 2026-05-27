@@ -2489,3 +2489,173 @@ three S109 tests, and documents the fixture choice rationale. No inflated claims
 | Exec record honest about S108 no-code closure | PASS |
 
 **Overall: APPROVE.** W06.P29 closes cleanly. No follow-ups.
+
+---
+
+## Task #94 — W05.P24 IVA intracom + export axes: architecture grounding
+
+**Date:** 2026-05-27
+
+### Investigation 1 — `BusinessClassification` current values
+
+`BusinessClassification` lives in `src/aeat/domain/transactions/_enums.py`. Current
+members: `BUSINESS`, `PERSONAL`, `MIXED`, `NOT_YET_PROCESSED`,
+`PROCESSED_UNCLASSIFIED`, `SKIPPED_BY_RULE`, `FAILED_VALIDATION`.
+
+There is no intracom, export, or retention variant. The S91 brief proposes
+`INTRACOM_SUPPLY`, `INTRACOM_ACQUISITION`, `EXPORT_NON_EU`, `RETAINED_INCOME`.
+
+S91 additions are necessary — the operator has no axis to tag a transaction as an EU
+supply or export from `ledger classify`, so the IVA aggregation pipeline cannot route
+those transactions to casillas 59/60.
+
+**Critical design issue in the S91 brief:** The proposed additions conflate two
+independent axes. `BusinessClassification` answers "is this transaction
+business-relevant, and in what proportion?" The proposed additions instead answer
+"what VAT treatment category does this transaction belong to?" — that is the job of
+`IvaCategory` in `src/aeat/domain/iva/_schema.py`, which already has
+`INTRA_COMMUNITY_SUPPLY` and `EXPORT_THIRD_COUNTRY_ZERO_RATED` with full legal
+citations. Adding IVA-category semantics into `BusinessClassification` creates two
+parallel axes that can contradict each other. The `_classify_iva_transaction`
+aggregation path reads `business_classification` only to gate the
+business/personal/unclassified decision, then derives IVA category from
+`_RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]` — it never reads an IVA category from
+the transaction.
+
+**Revised S91 decision:** Do NOT extend `BusinessClassification` with IVA-category
+values. Instead add `iva_category: IvaCategory | None = None` on `Transaction`.
+`RETAINED_INCOME` maps to the IRPF retention domain (`irpf_category` field already
+present) — must not enter `BusinessClassification`.
+
+### Investigation 2 — `counterparty_country` on `Transaction`
+
+`Transaction` (`_models.py:674`) has no `counterparty_country` field. `RawTransaction`
+has `counterparty: str | None` (free-text). The IVA classification engine takes
+`customer_member_state: EUMemberState` at the invoice level.
+
+**Revised S92 design — two fields, not one:**
+
+- `iva_category: IvaCategory | None = None` on `Transaction` — the operator-supplied
+  or classifier-derived IVA category. Primary routing key for casillas 59/60. `None`
+  means the pipeline falls back to the domestic `_RATE_KIND_TO_DOMESTIC_CATEGORY`
+  path.
+- `counterparty_eu_member_state: EUMemberState | None = None` on `Transaction` —
+  the EU member state of the counterparty, required for intracom transactions and
+  Modelo 349. Type must be `EUMemberState` (existing domain enum), not bare `str`.
+
+Both fields go on `Transaction` directly (operator-classified enrichments, not
+verbatim ingest data). `extra="forbid"` is active on `Transaction`; fields must be
+added explicitly with `None` defaults. S91+S92 can be collapsed into one step.
+
+### Investigation 3 — CLI `ledger classify` flag shape for new axes (S93)
+
+Required additions:
+
+- `--iva-category <IvaCategory value>` — sets `iva_category`. Type: `click.Choice`
+  over `IvaCategory` string values. Combinable with `--classification BUSINESS`.
+- `--eu-member-state <EUMemberState value>` — sets `counterparty_eu_member_state`.
+  Required when `--iva-category` is an intracom category. Validation error if
+  supplied with an export/domestic category.
+- `--retained-income-rate` or existing `--irpf-category` — the `RETAINED_INCOME`
+  brief maps to the IRPF domain, not a new `BusinessClassification` value.
+
+### Investigation 4 — IVA aggregation wiring to casillas 59, 60, 62 (S94)
+
+`aggregate_iva_ledger_observations` (line 318) assigns category via
+`_RATE_KIND_TO_DOMESTIC_CATEGORY[rate_kind]` only — no branch reads
+`transaction.iva_category`. The pre-classified candidate path
+(`aggregate_iva_ledger_candidates`) accepts typed `IvaCategory` but requires
+upstream callers to populate `IvaLedgerCandidate` explicitly.
+
+S94 wiring strategy:
+
+1. In `_classify_iva_transaction`: after business-gate checks, read
+   `transaction.iva_category`. If set to a non-domestic category, emit the
+   observation directly with that category without going through `_RATE_KIND_TO_DOMESTIC_CATEGORY`.
+   For `INTRA_COMMUNITY_SUPPLY` and `EXPORT_THIRD_COUNTRY_ZERO_RATED`: `flow_direction
+   = REPERCUTIDO`, `rate_kind = ZERO`, `iva_amount = 0` (zero-rated).
+   For `INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`: `flow_direction = SOPORTADO`,
+   `rate_kind` from `iva_rate`.
+2. Add registry bindings in both revision.toml files mapping
+   `INTRA_COMMUNITY_SUPPLY + REPERCUTIDO` to casilla 59 and
+   `EXPORT_THIRD_COUNTRY_ZERO_RATED + REPERCUTIDO` to casilla 60.
+
+**Casilla 62 is NOT an intracom/export box.** It is for the `criterio de caja`
+cash-accounting regime (Ley 37/1992 art. 163 quinquies–undecies). The S94 brief
+incorrectly groups it with 59/60. Casilla 62 requires a separate step (FU-W05-A /
+S278). S94 scope: casillas 59 and 60 only.
+
+### Investigation 5 — Casillas 59, 60, 62 in the 2023-y-siguientes revision
+
+Both `2009-y-siguientes` and `2023-y-siguientes` revisions contain all three:
+
+- **59** (`semantic_role = "dr303_59"`): "Entregas intracomunitarias bienes y
+  servicios". `input_kind = "manual"`. Legal refs: `ley-37-1992:art-88`,
+  `ley-37-1992:art-92`. No `binding =` in revision.toml — unbacked. S94 adds it.
+  The zero-rating authority is `ley-37-1992:art-25`; bindings should add this.
+- **60** (`semantic_role = "dr303_60"`): "Exportaciones y operaciones asimiladas".
+  Same — `input_kind = "manual"`, no binding. S94 adds. Export authority:
+  `ley-37-1992:art-21`.
+- **62** (`semantic_role = "dr303_62"`): "Entregas criterio caja devengado art 75
+  LIVA — Base imponible". Cash-accounting-regime box. Out of scope for S94.
+
+Legal refs on 59/60 are correct for the informational summary boxes. The bindings
+S94 adds should also cite `ley-37-1992:art-25` (intracom) and `ley-37-1992:art-21`
+(export) in their `legal_refs`.
+
+### Investigation 6 — S95 test scenario
+
+Marc's IT services to a German client: direction `INCOMING`, `iva_category =
+INTRA_COMMUNITY_SUPPLY` (or `DOMESTIC_NOT_SUBJECT` per R12 — see note below),
+`counterparty_eu_member_state = EUMemberState.DE`, `taxable_base = 1000.00`,
+`iva_amount = 0.00`. After classify, aggregate for 2026/1T → casilla 59 binding
+resolves to `Decimal("1000.00")`.
+
+**R12 vs R10 nuance (critical):** The IVA classification tests confirm that outbound
+B2B services to EU members resolve to `DOMESTIC_NOT_SUBJECT` (R12: place of supply
+is the customer's country), not `INTRA_COMMUNITY_SUPPLY` (R10: goods only). For
+Marc's software services the IVA category is `DOMESTIC_NOT_SUBJECT`. However, the
+303 instructions specify that casilla 59 also receives B2B services to EU members
+where the place of supply is the customer's territory (not subject in ES but
+reportable as intracom). The registry binding for casilla 59 must therefore accept
+both `INTRA_COMMUNITY_SUPPLY` AND `DOMESTIC_NOT_SUBJECT` when
+`counterparty_eu_member_state` is set. The S95 test brief must be explicit about
+this. The S95 goods-export scenario (`EXPORT_THIRD_COUNTRY_ZERO_RATED`, casilla 60)
+is straightforward — no R12-type ambiguity.
+
+### No existing ADR covers W05.P24
+
+No ADR for `BusinessClassification` extension or transaction-level IVA classification
+routing was found. S91 requires a pre-implementation ADR (4 decisions: D1 iva_category
+field placement; D2 no BusinessClassification extension; D3 casilla 62 out of scope;
+D4 R12 services routing for casilla 59).
+
+### Revised Step text for S91-S95
+
+**S91 — REVISE.** Scope: add `iva_category: IvaCategory | None = None` and
+`counterparty_eu_member_state: EUMemberState | None = None` on `Transaction` in
+`src/aeat/domain/transactions/_models.py`. Do NOT extend `BusinessClassification`.
+Preceded by ADR authoring (see FU-W05-B).
+
+**S92 — COLLAPSE into S91.** Both new fields land in the same file. Repurpose S92 as
+the step that updates `ledger classify` test coverage for the new fields, or absorb
+it into S91 and use the freed step for the ADR.
+
+**S93 — ADD `--iva-category` and `--eu-member-state` flags.** `--retained-income-rate`
+maps to IRPF axis (`--irpf-category`), not a new `BusinessClassification` value.
+
+**S94 — NARROW to casillas 59 and 60.** Add registry bindings in both revision.toml
+files. Extend `_classify_iva_transaction` to branch on `transaction.iva_category`.
+Casilla 62 (criterio de caja) is explicitly out of scope.
+
+**S95 — UPDATE test scenario.** Marc IT services to DE → `iva_category =
+DOMESTIC_NOT_SUBJECT` with `counterparty_eu_member_state = EUMemberState.DE`. Assert
+casilla 59 receives the base. Add a second scenario (`EXPORT_THIRD_COUNTRY_ZERO_RATED`)
+for casilla 60.
+
+### Follow-ups
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-W05-A | S278 | Criterio de caja ledger axis (casilla 62): separate step after S94 |
+| FU-W05-B | pre-S91 | Author W05.P24 IVA-classification ADR (D1-D4) before coder starts S91; block S91 on ADR acceptance |
