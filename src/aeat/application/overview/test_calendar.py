@@ -109,13 +109,16 @@ def test_range_rejects_inverted_window() -> None:
 
 
 def test_range_accepts_single_day_window() -> None:
+    # covered_years always includes the prior fiscal year so that annual
+    # declarations (IS Modelo 200, IRPF Modelo 100) whose deadlines fall in
+    # the following calendar year appear when querying that year.
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 1, 1))
-    assert rng.covered_years() == (2026,)
+    assert rng.covered_years() == (2025, 2026)
 
 
 def test_range_covered_years_spans_year_boundary() -> None:
     rng = OverviewCalendarRange(from_date=date(2025, 10, 1), to_date=date(2026, 7, 20))
-    assert rng.covered_years() == (2025, 2026)
+    assert rng.covered_years() == (2024, 2025, 2026)
 
 
 def test_range_covers_returns_true_for_inclusive_bounds() -> None:
@@ -560,15 +563,21 @@ def test_agenda_and_backlog_inherit_the_applicability_exclusion() -> None:
 
 
 def test_calendar_year_without_windows_only_does_not_raise() -> None:
-    """A range that lies entirely inside a year with no registered
-    deadline windows yields an empty calendar rather than raising.
+    """A range whose primary year has no registered deadline windows
+    does not raise, and the taxpayer-model state is answered.
 
     The registry has no deadline windows for 2027 (registry-track gap
     R1). Before the multi-year degradation fix the deadline engine's
     ``ScheduleComputationError`` for that year propagated all the way to
     the operator as a hard error. A year with no registered window data
     is a normal "no data yet" state: ``build_overview_calendar`` must
-    return a valid empty :class:`OverviewCalendar` instead.
+    return a valid :class:`OverviewCalendar` instead of raising.
+
+    Note: ``covered_years()`` now includes the prior year (2026) to pick
+    up prior-fiscal-year deadlines (e.g. IS / Renta annual declarations)
+    that open in the queried calendar year. Some 2026 Q4 windows open in
+    January 2027 and therefore appear in a 2027 range. The contract is
+    that the call succeeds — not that the calendar is empty.
     """
 
     profile = _fully_enrolled_autonomo()
@@ -578,9 +587,12 @@ def test_calendar_year_without_windows_only_does_not_raise() -> None:
     cal = build_overview_calendar(profile, rng, today=date(2027, 6, 1))
 
     assert isinstance(cal, OverviewCalendar)
-    assert cal.entries == ()
     assert cal.taxpayer_model_declared is True
     assert cal.incomplete_reason is None
+    # All surfaced entries intersect the query range.
+    for entry in cal.entries:
+        assert entry.closes_on >= rng.from_date
+        assert entry.opens_on <= rng.to_date
 
 
 def test_calendar_spanning_a_year_without_windows_does_not_raise() -> None:
@@ -892,3 +904,56 @@ def test_calendar_propagates_genuine_registry_fault() -> None:
     # the narrowed catch deliberately let it through.
     assert not isinstance(excinfo.value, NoDeadlineWindowsError)
     assert "validation failed" in str(excinfo.value)
+
+
+# ---------------------------------------------------------------------
+# S227 regressions — LEGAL_ENTITY calendar completeness
+# ---------------------------------------------------------------------
+
+
+def test_calendar_legal_entity_shows_modelo_202_pagos_fraccionados() -> None:
+    """S227 regression: M202 must appear in the calendar for a LEGAL_ENTITY profile.
+
+    The M202 filing schedule uses ``field = "taxpayer.entity_type"`` as a profile
+    condition, but TaxpayerProfile has ``entity_type`` directly — no ``.taxpayer``
+    sub-attribute. Without the ``_resolve_profile_fact`` special case, the condition
+    evaluation raises ``RegistryValidationError`` inside
+    ``applicable_filing_schedules``, causing the engine to crash.
+
+    After the fix the condition resolves correctly and M202 appears for an
+    Impuesto sobre Sociedades contribuyente across the quarters registered.
+    """
+
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 4, 1))
+
+    surfaced = {entry.modelo for entry in cal.entries}
+    assert "202" in surfaced, (
+        "M202 (pago fraccionado IS) must appear for a LEGAL_ENTITY profile; "
+        "absent → filing-schedule profile-condition cannot resolve taxpayer.entity_type"
+    )
+    assert cal.taxpayer_model_declared is True
+
+
+def test_calendar_legal_entity_shows_modelo_200_impuesto_sociedades() -> None:
+    """S227 regression: M200 must appear for a LEGAL_ENTITY profile.
+
+    The M200 Impuesto sobre Sociedades annual declaration has ``filing_year = 2024``
+    but its deadline window opens on 2025-07-01 and closes on 2025-07-25. A calendar
+    query for the range 2025-01-01 to 2025-12-31 must include it.
+
+    Before the ``covered_years()`` fix, the aggregator computed only ``year=2025``
+    schedules. ``deadline_windows(2025)`` returns nothing for M200 (its
+    ``filing_year=2024``), so M200 was absent. The fix expands ``covered_years()``
+    to include ``from_date.year - 1`` (2024) so ``deadline_windows(2024)`` is also
+    queried and M200's window (which intersects the 2025 date range) is surfaced.
+    """
+
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+    cal = build_overview_calendar(_legal_entity(), rng, today=date(2025, 4, 1))
+
+    surfaced = {entry.modelo for entry in cal.entries}
+    assert "200" in surfaced, (
+        "M200 (IS annual) must appear for a LEGAL_ENTITY profile querying 2025; "
+        "absent → covered_years() did not include prior fiscal year 2024"
+    )
