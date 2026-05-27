@@ -259,6 +259,31 @@ def test_corpus_round_trip_verified_with_each_verification_source_passes(
     validator.validate_modelo(mutated_modelo)
 
 
+def test_verification_source_gate_fires_via_production_path() -> None:
+    """verification_source gate must fire via the production wiring (no direct injection).
+
+    M130 has real corpus fixtures.  A profile with corpus_round_trip_verified=True and
+    verification_source=None must raise RegistryValidationError when validated through
+    the production RegistryValidator path where corpus root is derived from
+    source_root=bundled_path().
+
+    This test covers the production-wiring gap analogous to the one that silently
+    disabled the specimen gate: tests using direct justificante_corpus_root injection
+    pass regardless of whether the derivation path works, masking gate failures.
+    """
+    modelo, catalogues = _committed_130()
+    profile = _committed_profile(provisional=False, round_trip_verified=True, verification_source=None)
+    mutated_modelo = _build_mutated_modelo(modelo, profile)
+
+    # Production wiring: no justificante_corpus_root injected
+    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
+    assert validator._justificante_corpus_root is not None, (
+        "corpus root derivation returned None; gate would be silently disabled"
+    )
+    with pytest.raises(RegistryValidationError, match="verification_source"):
+        validator.validate_modelo(mutated_modelo)
+
+
 def test_corpus_round_trip_not_verified_with_no_verification_source_is_dormant(
     tmp_path: Path,
 ) -> None:
