@@ -7,6 +7,8 @@ error (malformed period, unknown modelo) must surface as a
 
 from __future__ import annotations
 
+import json
+
 import pytest
 import typer
 
@@ -15,6 +17,7 @@ from aeat.entrypoints.cli._modelo import _bad_parameter_from_error
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
 
 def _payload(output: str) -> dict:
     """Unwrap the SchemaEnvelope post-P09.S43 migration.
@@ -28,7 +31,6 @@ def _payload(output: str) -> dict:
     if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
         return raw["result"]
     return raw
-
 
 
 def test_modelo_bad_parameter_helper_renders_registered_errors() -> None:
@@ -84,8 +86,6 @@ def test_describe_surfaces_revision_ids_for_work_create() -> None:
 def test_describe_revision_ids_present_in_json_payload() -> None:
     """The typed describe payload carries `revision_ids` as a list so a
     machine consumer can enumerate the valid `--revision` values."""
-
-    import json
 
     result = invoke_cached_cli(["--format", "json", "app", "modelo", "describe", "130"])
     assert result.exit_code == 0, result.output
@@ -804,9 +804,9 @@ def test_work_calculate_help_exposes_by_actor_flag() -> None:
 @pytest.mark.parametrize(
     "period",
     [
-        "2026Q1",   # year-prefixed form ambiguous to the resolver
+        "2026Q1",  # year-prefixed form ambiguous to the resolver
         "INVALID",  # completely invalid
-        "Q1X",      # garbled quarter token
+        "Q1X",  # garbled quarter token
     ],
 )
 def test_work_create_rejects_invalid_period_at_create_time(period: str) -> None:
@@ -1024,9 +1024,7 @@ def test_period_token_error_enumerates_modelo_specific_tokens() -> None:
         ("303", "99", "1T"),
     ],
 )
-def test_describe_invalid_period_enumerates_modelo_tokens(
-    modelo: str, bad_period: str, expected_token: str
-) -> None:
+def test_describe_invalid_period_enumerates_modelo_tokens(modelo: str, bad_period: str, expected_token: str) -> None:
     """``modelo describe --period INVALID`` lists the modelo's valid tokens.
 
     A malformed bare ``--period`` previously surfaced only the generic
@@ -1056,3 +1054,81 @@ def test_describe_unknown_modelo_keeps_its_own_error() -> None:
     assert "999" in flat
     # The error is about the modelo, not the (valid) period token.
     assert "period token" not in flat
+
+
+# ---------------------------------------------------------------------------
+# S277 -- _parse_typed_cli_observations typed-boundary warmup
+# ---------------------------------------------------------------------------
+
+
+def test_parse_typed_cli_observations_round_trips_valid_json() -> None:
+    """A valid JSON object is parsed into the typed model with all fields preserved."""
+    import typer as _typer
+
+    from aeat.application.aggregation._retenciones import RetencionObservation, RetencionScheme
+    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+
+    raw = (
+        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
+        ' "perceptor_nif": "A12345678", "perceptor_name": "Empresa SL",'
+        ' "scheme": "rendimientos_trabajo", "taxable_base": "1000.00",'
+        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
+    )
+    result = _parse_typed_cli_observations([raw], model=RetencionObservation, flag="--retencion-observation")
+
+    assert len(result) == 1
+    obs = result[0]
+    assert isinstance(obs, RetencionObservation)
+    assert obs.source_kind == "ledger_transaction"
+    assert obs.source_object_id == "txn-001"
+    assert obs.perceptor_nif == "A12345678"
+    assert obs.perceptor_name == "Empresa SL"
+    assert obs.scheme == RetencionScheme.WORK_INCOME
+    assert obs.accrued_on == "2024-01-15"
+    _ = _typer  # ensure import is referenced
+
+
+def test_parse_typed_cli_observations_rejects_invalid_json_syntax() -> None:
+    """A string that is not valid JSON raises ``typer.BadParameter``."""
+    import typer as _typer
+
+    from aeat.application.aggregation._retenciones import RetencionObservation
+    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+
+    with pytest.raises(_typer.BadParameter):
+        _parse_typed_cli_observations(["{not: json}"], model=RetencionObservation, flag="--retencion-observation")
+
+
+def test_parse_typed_cli_observations_rejects_non_object_json() -> None:
+    """A JSON value that is not an object (e.g. an array) raises ``typer.BadParameter``."""
+    import typer as _typer
+
+    from aeat.application.aggregation._retenciones import RetencionObservation
+    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+
+    with pytest.raises(_typer.BadParameter):
+        _parse_typed_cli_observations(
+            ['["not", "an", "object"]'],
+            model=RetencionObservation,
+            flag="--retencion-observation",
+        )
+
+
+def test_parse_typed_cli_observations_rejects_schema_violation() -> None:
+    """A JSON object that fails pydantic validation raises ``typer.BadParameter``.
+
+    An object missing the required ``scheme`` field must be refused with a
+    typed validation message, not a bare pydantic traceback.
+    """
+    import typer as _typer
+
+    from aeat.application.aggregation._retenciones import RetencionObservation
+    from aeat.entrypoints.cli._modelo import _parse_typed_cli_observations
+
+    missing_scheme = (
+        '{"source_kind": "ledger_transaction", "source_object_id": "txn-001",'
+        ' "perceptor_nif": "A12345678", "taxable_base": "1000.00",'
+        ' "retencion_amount": "190.00", "accrued_on": "2024-01-15"}'
+    )
+    with pytest.raises(_typer.BadParameter):
+        _parse_typed_cli_observations([missing_scheme], model=RetencionObservation, flag="--retencion-observation")
