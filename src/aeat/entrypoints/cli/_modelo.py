@@ -11,6 +11,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
+import click
 import typer
 
 from ...application.aggregation import (
@@ -44,7 +45,7 @@ from ...application.modelo import (
     verify_modelo_revision,
 )
 from ...core.errors import resolve_error_message
-from ...core.i18n import tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...domain.calculations.registry import RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
@@ -53,7 +54,7 @@ from ...domain.modelos._calculation_revision import CalculationRevision, Calcula
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ._common import _emit, _parse_iso_date, _profile_to_taxpayer
+from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
@@ -67,6 +68,8 @@ _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 _CASILLA_MAX_LEN = 64
 _BINDING_MAX_LEN = 128
 _BARE_NUMERIC_RE = re.compile(r"^\d+$")
+
+_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 def _validate_work_unit_id(value: str) -> str:
@@ -1938,9 +1941,17 @@ def work_calculate(
             ),
         ),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Persist a new draft calculation revision for the work unit."""
 
+    activate_subcommand_output_language(ctx, output_language)
     work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     from ...application.modelo import (
@@ -2283,6 +2294,13 @@ def work_verify(
         str | None,
         typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Verify a draft calculation revision against the verified-complete contract.
 
@@ -2292,6 +2310,7 @@ def work_verify(
     inputs or blocking findings.
     """
 
+    activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is intentionally NOT wrapped in
     # typer.BadParameter: it is a workflow-state refusal (e.g.
@@ -2341,9 +2360,17 @@ def work_file(
         str | None,
         typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),
     ] = None,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Mark a verified modelo revision as internally filed. Does NOT submit to AEAT."""
 
+    activate_subcommand_output_language(ctx, output_language)
     _require_active_profile()
     # ModeloWorkflowGateError is a workflow-state refusal, not a
     # user-input error — it propagates to the command error boundary

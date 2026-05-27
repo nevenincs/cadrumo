@@ -28,7 +28,7 @@ from ....application.workflow._profile_bucket_scan import read_profile_bucket
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ....core.logging import default_log_file_path
 from .._command_suggestions import AeatTyperGroup
-from .._common import _emit
+from .._common import _emit, activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError
 
 if typing.TYPE_CHECKING:
@@ -72,6 +72,8 @@ bucket_app = typer.Typer(
     help=tr("cli.config.bucket.help"),
     no_args_is_help=True,
 )
+
+_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 @app.callback()
@@ -899,6 +901,13 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
 def config_profile_show(
     ctx: typer.Context,
     name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """View one profile's facts (defaults to the active profile).
 
@@ -908,6 +917,7 @@ def config_profile_show(
     discover the failure on stdout and via the shell exit status.
     """
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import ProfileValidationService
     from ....application.user_profile._projections import record_to_path_values
     from ....domain.user_profile import ProfileNotFoundError, load_user_profile_schema
@@ -1483,31 +1493,23 @@ def config_reset(
 
 
 def _activate_subcommand_output_language(ctx: typer.Context, language: str | None) -> None:
-    """Apply a subcommand-supplied ``--output-language`` to the render path.
-
-    ``--output-language`` on a subcommand short-circuits the root
-    callback's ``--language`` flow; rather than re-parsing, override the
-    Settings field directly and drop the cached language so any ``tr()``
-    fired during the verb body resolves to the requested locale
-    (round-5 B3).
-    """
-
-    if language is None:
-        return
-    from ....core.config import override_settings
-    from ....core.i18n._render import clear_output_language_cache
-
-    ctx.with_resource(override_settings(aeat_output_language=language))
-    clear_output_language_cache()
-
-
-_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
+    activate_subcommand_output_language(ctx, language)
 
 
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
-def auth_providers(ctx: typer.Context) -> None:
+def auth_providers(
+    ctx: typer.Context,
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
+) -> None:
     """List supported authentication providers from the backend catalogue."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import list_operator_auth_providers
 
     report = list_operator_auth_providers()
@@ -1538,9 +1540,17 @@ def auth_configure(
         help=tr("cli.config.auth.provider_help"),
     ),
     file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Configure the active authentication provider."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, configure_operator_auth
     from ....application.auth._operator import (
         AuthConfigureDanglingActiveProfileError,
@@ -1673,9 +1683,17 @@ def auth_clear(
     all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
     sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
     locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        "--language",
+        click_type=_OUTPUT_LANGUAGE_CLI,
+        help=tr("cli.config.auth.output_language_help"),
+    ),
 ) -> None:
     """Clear local auth metadata, persisted sessions, and auth locks."""
 
+    _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import AuthProviderReservedError, clear_operator_auth
 
     try:
