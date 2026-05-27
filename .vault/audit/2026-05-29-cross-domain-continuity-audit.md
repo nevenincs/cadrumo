@@ -4853,3 +4853,82 @@ model would add value. The current `Mapping[str, object]` is correct but
 typed log extras would surface schema drift at type-check time. Log as
 low-priority W09 item.
 
+---
+
+## Verdict: W05.P26.S99+S100 — IVA wallet balance verb (e9f45806c + c9fb9f1f8 + b7d3e8d2e)
+
+**APPROVE.**
+
+### Commits reviewed
+
+- `e9f45806c` — W05.P26.S99: `IvaWalletBalanceReport` + `iva-wallet balance` CLI verb
+- `c9fb9f1f8` — W05.P26.S100: 7 regression tests
+- `b7d3e8d2e` — vault step records + plan checkbox closure
+
+### Gate checks
+
+**G1 (no naked env):** `query_iva_wallet_balance` instantiates
+`IvaCompensationHistoryRepository()` directly; profile resolution flows
+through `SecureBoundRepository` → `Settings` — same pattern as every
+other repository in the codebase. No `os.environ`/`os.getenv` introduced.
+**PASS.**
+
+**G2 (typed boundaries):** `IvaWalletBalanceReport` is strict/frozen
+pydantic. The CLI verb calls `report.model_dump(mode="json")` at the
+emission boundary only — no intermediate `dict[str, Any]`. The existing
+`_calculation_revision_payload`, `_verification_report_payload`,
+`_work_unit_payload`, `_filing_record_payload` helpers were all migrated
+from `dict` returns to typed pydantic returns in this same S99 commit;
+call sites updated to `.model_dump(mode="python")` before spread into
+existing dict-merge patterns. This is the correct forward motion on
+the typed-boundary campaign. **PASS.**
+
+**G3 (tr() coverage):** All three operator-visible strings in the
+`iva_wallet_app` and `balance` command use `tr(key, default=...)`.
+No hardcoded f-string exception sites visible. **PASS.**
+
+**G4 (locale scaffold):** `python -m aeat.locales audit` returns
+`ok` for all four locale files (ca, en, es, hu) with three new keys
+each: `cli.app.modelo.iva_wallet.group_help`, `.balance_help`,
+`.as_of_year_help`. Spanish and Catalan prose is domain-correct.
+**PASS.**
+
+**G5 (no shims):** No compatibility aliases, re-exports, or
+deprecation stubs introduced. **PASS.**
+
+**G6 (anti-tautology):** `test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology`
+constructs a `IvaCompensationCarryForwardLot` with
+`applied_amount + remaining_amount != generated_amount` and asserts
+`ValidationError(match="must equal generated_amount")`. This proves the
+`model_validator` closure is real and the roundtrip boundary is not
+tautological. Gate opens + gate closes pattern present. **PASS.**
+
+**Git-discipline gate:** S99 and S100 step records contain no language
+about stash, HEAD reconstruction, backup-restore, or peer-WIP
+manipulation. Both records are clean. **PASS.**
+
+### Design observations
+
+One deliberate asymmetry: `total_balance` sums ALL lots with
+`remaining_amount > 0` including `EXPIRED_REVIEW_REQUIRED` lots; only
+`next_expiry_year` excludes expired lots. The comment in the
+implementation explains this correctly — expired lots represent real
+money that may still be recoverable with operator review; surfacing them
+in the balance figure gives accurate gross exposure. The clock field
+(`next_expiry_year`) correctly restricts to actionable lots only. The
+test at `test_next_expiry_year_is_earliest_active_lot_plus_four`
+confirms the split behaviour explicitly (`total_balance=300` including
+the expired lot; `next_expiry_year=2027` from the active lot only).
+
+FU-S99-A (non-blocking, log as W09 follow-up): An operator viewing
+`total_balance=300` with `lot_count=2` and `next_expiry_year=2027`
+cannot tell that 100 of the 300 is in an expired lot. A future
+enhancement to add `expired_balance` and `active_balance` fields would
+remove this ambiguity. Not a gate failure — current design is
+documented and coherent.
+
+### Tests
+
+7/7 pass, 2.74s, real encrypted SQLite via `isolated_runtime_profile`.
+No mocks, no monkeypatches, no skips.
+
