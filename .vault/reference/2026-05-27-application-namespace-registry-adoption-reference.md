@@ -23,6 +23,7 @@ Application repositories already follow this pattern in the current tree:
 - `src/aeat/application/user_profile/_repository.py` imports `USER_PROFILE_VALUE_NAMESPACE` and `USER_PROFILE_SNAPSHOT_NAMESPACE`, then derives public compatibility constants from the registry entries.
 - `src/aeat/application/filing/_history_repository.py` imports `APPLICATION_FILING_HISTORY_NAMESPACE` and uses its namespace, sensitivity, and schema version.
 - `src/aeat/application/auth/_apoderado.py` imports `AUTH_APODERADO_CONFIGURATION_NAMESPACE` and derives its repository class attributes from that entry.
+- `src/aeat/application/auth/_diagnostics.py` imports `CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE` and derives diagnostic namespace, sensitivity, and schema version from that entry.
 - `src/aeat/application/calculations/_observations_repository.py` imports the calculation and IVA-wallet reconciliation namespace entries and derives repository namespace metadata from them.
 - `src/aeat/application/calculations/_iva_compensation_history.py` imports `IVA_COMPENSATION_HISTORY_NAMESPACE`.
 - `src/aeat/application/ledger/_rule_repository.py` imports `LEDGER_CLASSIFICATION_RULES_NAMESPACE`.
@@ -30,6 +31,6 @@ Application repositories already follow this pattern in the current tree:
 
 ## Discovery Result
 
-The production application scan found no remaining hardcoded `aeat.*` namespace assignments or direct secure-object namespace arguments outside tests. Remaining string literals are test fixtures or test assertions, not production repository ownership.
+The production application scan originally found no remaining literal `aeat.*` namespace assignments or direct secure-object namespace arguments outside tests. Code review identified one remaining non-registry namespace constant path in auth diagnostics: it imported the Clave Movil diagnostic namespace from the outbound adapter and paired it with local sensitivity/schema literals. `W03.P05.S23` moved that path to `CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE`.
 
-`W03.P05.S23` therefore closes by adding an application-level guard that scans production application modules and rejects future namespace literals assigned to namespace constants/class attributes or passed directly to secure-object repository calls.
+`W03.P05.S23` closes by adding an application-level guard that scans production application modules and rejects future namespace literals assigned to namespace constants/class attributes, direct secure-object namespace literals, or secure-object calls that use namespace constants not imported from the storage registry surface.

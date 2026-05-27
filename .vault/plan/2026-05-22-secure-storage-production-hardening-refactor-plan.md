@@ -98,7 +98,7 @@ Create the typed registry and migrate constants to it without changing encrypted
 - [x] `W03.P05.S20` - define secure-object namespace registry models; `src/aeat/adapters/persistence/storage`.
 - [x] `W03.P05.S21` - register profile, ledger, invoice, filing, wallet, and calculation namespaces; `src/aeat/adapters/persistence/storage`.
 - [x] `W03.P05.S22` - register auth, session, cache, evidence, inventory, and remote-sync namespaces; `src/aeat/adapters/persistence/storage`.
-- [ ] `W03.P05.S23` - replace local namespace string constants in application repositories with registry entries; `src/aeat/application`.
+- [x] `W03.P05.S23` - replace local namespace string constants in application repositories with registry entries; `src/aeat/application`.
 
 ### Phase `W03.P06` - namespace policy enforcement
 
