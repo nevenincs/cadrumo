@@ -334,3 +334,17 @@ This slice adds a real filesystem gate in
 their recorded P05 line-count baselines, and any new `_validate*.py` helper is
 capped at 300 lines. Future validator growth must therefore extract/rebalance
 before it can merge.
+
+## Follow-up: Casilla Continuity Contract Research
+
+P07.S24 research is persisted in
+`2026-05-27-schema-hardening-casilla-continuity-contract-research`. The finding
+is that M100 template expansion should not proceed until the schema has a
+generic continuity/evolution contract for non-overlapping annual revisions.
+
+The recommended next architectural substrate is not a template compiler. It is
+an ADR for explicit continuity metadata, with hard validation only after a
+modelo opts into the contract. Repeated casilla ids and annual labels are
+insufficient identity evidence because current M100 drift includes legitimate
+annual evolution, legal-reference retrofit debt, extraction normalisation debt,
+and real id repurposing.
