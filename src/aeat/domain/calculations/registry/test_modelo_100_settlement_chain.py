@@ -117,6 +117,9 @@ def _binding_values() -> dict:
         "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
         "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+        # declaration_type = 1 (individual) → 0461 computed = 0
+        "renta-2024-profile-declaration-type": Decimal("1"),
+        "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
     }
 
 

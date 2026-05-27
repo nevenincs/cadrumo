@@ -45,7 +45,8 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0429": Decimal("0"),
         # 0424 is now computed via the ganancias-patrimoniales saldo formula
         # (max(0422-0423, 0)) and cannot be supplied as input.
-        "0461": Decimal("0"),
+        # 0461 is now computed via renta-2025-reduccion-art-84-conjunta
+        # (declaration_type + minor_children_in_unit binding) and cannot be supplied as input.
         "0501": Decimal("0"),
         "0506": Decimal("0"),
         "0507": Decimal("0"),
@@ -101,6 +102,9 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
         binding_values={
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
@@ -188,16 +192,35 @@ def test_base_imponible_general_subtracts_negative_capital_gains_balance() -> No
 
 
 def test_base_liquidable_general_applies_reductions() -> None:
-    """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable."""
-    scenario = _scenario_2025(
-        "base-liquidable-with-reductions",
-        overrides={
-            "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
-            "0461": Decimal("3400.00"),  # reducción tributación conjunta
-            "0501": Decimal("1000.00"),  # compensación bases liquidables negativas
+    """0500 = 0435 - 0461 - 0501 — reducciones (tributación conjunta, bases negativas) reduce base liquidable.
+
+    0461 is now computed by renta-2025-reduccion-art-84-conjunta from binding values.
+    declaration_type = 2 (conjunta) + minor_children_in_unit = 0 (tipo-1 matrimonio) → 0461 = €3,400.
+    """
+    base_inputs = _base_2025_inputs()
+    base_inputs.update({
+        "0003": Decimal("40000.00"),  # → 0432 = 40000 → 0435 = 40000
+        "0501": Decimal("1000.00"),  # compensación bases liquidables negativas
+    })
+    scenario = RegistryCalculationScenario(
+        id="base-liquidable-with-reductions",
+        modelo="100",
+        revision="2025",
+        filing_year=2025,
+        period="0A",
+        inputs=base_inputs,
+        binding_values={
+            "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+            "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            # declaration_type = 2 (conjunta) + minor_children_in_unit = 0 → 0461 = 3400
+            "renta-2025-profile-declaration-type": Decimal("2"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
         },
-        expected=(
+        enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        relation_values=_RELATION_ZERO_VALUES_2025,
+        expected_outputs=(
             RegistryScenarioExpectedOutput(target="0435", value=Decimal("40000.00")),
+            RegistryScenarioExpectedOutput(target="0461", value=Decimal("3400.00")),
             # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
             RegistryScenarioExpectedOutput(target="0500", value=Decimal("35600.00")),
         ),
