@@ -11,15 +11,25 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.application.live import Borrador100SnapshotService
+from aeat.application.live import (
+    Borrador100SnapshotService,
+    IvaRemoteStateAcquisitionReport,
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaAuthOutcome,
+    LiveIvaReadOutcome,
+    LiveIvaReadStatus,
+    LiveIvaReadSurface,
+)
 from aeat.application.live._verify import VerifyService, VerifySurface
 from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import override_settings
 from aeat.entrypoints.cli._app_live import (
+    _iva_remote_state_capture_lines,
     borrador_100_app,
     expedientes_app,
+    iva_wallet_app,
     verify_app,
 )
 from aeat.tests.secure_sql import isolated_profile_storage_root
@@ -172,4 +182,61 @@ class TestReadOnlyStructuralInvariants:
         forbidden = {"submit", "send", "present", "sign", "pay", "push", "modify"}
         assert registered.isdisjoint(forbidden), (
             f"forbidden write verb on {subgroup_app.info.name}: {registered & forbidden}"
+        )
+
+
+class TestIvaRemoteStateCliSurface:
+    def test_iva_wallet_remote_state_command_is_registered_as_read_capture(self) -> None:
+        registered = {info.name for info in iva_wallet_app.registered_commands}
+
+        assert "capture-remote-state" in registered
+        assert registered.isdisjoint({"submit", "send", "present", "sign", "pay", "modify"})
+
+    def test_remote_state_lines_render_auth_and_surface_outcomes_with_labels(self) -> None:
+        report = IvaRemoteStateAcquisitionReport(
+            output_root="var/aeat/live/iva-remote-state",
+            year_from=2022,
+            year_to=2024,
+            target_year=2026,
+            target_period="2T",
+            auth=LiveIvaAuthOutcome(
+                status=LiveIvaReadStatus.FAILED,
+                outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                failure_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                failure_type="ClaveMovilApprovalTimeoutError",
+            ),
+            filed_history=None,
+            wallet=None,
+            outcomes=(
+                LiveIvaReadOutcome(
+                    surface=LiveIvaReadSurface.FILED_HISTORY,
+                    status=LiveIvaReadStatus.FAILED,
+                    outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                    failure_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                    failure_type="ClaveMovilApprovalTimeoutError",
+                ),
+                LiveIvaReadOutcome(
+                    surface=LiveIvaReadSurface.WALLET_CARTERA,
+                    status=LiveIvaReadStatus.FAILED,
+                    outcome_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                    failure_mode=LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
+                    failure_type="ClaveMovilApprovalTimeoutError",
+                ),
+            ),
+        )
+
+        lines = _iva_remote_state_capture_lines(report)
+
+        assert "auth_status=failed" in lines
+        assert "auth_outcome=no_clave_prompt" in lines
+        assert "auth_outcome_label=no clave prompt" in lines
+        assert "filed_history_succeeded=False" in lines
+        assert "wallet_succeeded=False" in lines
+        assert any(
+            line.startswith("surface_outcome=filed_history\tstatus=failed\toutcome=no_clave_prompt")
+            for line in lines
+        )
+        assert any(
+            line.startswith("surface_outcome=wallet_cartera\tstatus=failed\toutcome=no_clave_prompt")
+            for line in lines
         )
