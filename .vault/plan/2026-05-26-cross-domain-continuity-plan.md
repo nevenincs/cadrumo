@@ -453,6 +453,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S215` - replace four dict[str, object] return types on ledger_transaction_payload ledger_transaction_review_payload ledger_transaction_result_payload ledger_transaction_tracking_payload with typed pydantic models; `aeat-architecture-boundaries forbids bare dict at CLI emit boundary; lines 1024 1055 1064 1075 of application ledger _actions.py; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S216` - add test coverage for _id_resolution.py 95 LOC module; `currently has no dedicated test file; identify callers and write test_id_resolution.py; `src/aeat/application/ledger/_id_resolution.py`.
 - [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; `potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
+- [ ] `W09.P41.S240` - convention note FU-W04-A: commit d8bec8bd9 co-landed multiple Steps plus exec records plus new test files plus __init__.py changes in a single commit; future executors should land Step content separately from exec records and from __init__ changes; documentation-only no code change; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
