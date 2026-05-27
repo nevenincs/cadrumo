@@ -1,0 +1,70 @@
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2020-0a"
+filing_year = 2020
+period = "2020-0A"
+period_kind = "annual"
+opens_on = 2021-01-01
+closes_on = 2021-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2021-0a"
+filing_year = 2021
+period = "2021-0A"
+period_kind = "annual"
+opens_on = 2022-01-01
+closes_on = 2022-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2022-0a"
+filing_year = 2022
+period = "2022-0A"
+period_kind = "annual"
+opens_on = 2023-01-01
+closes_on = 2023-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2023-0a"
+filing_year = 2023
+period = "2023-0A"
+period_kind = "annual"
+opens_on = 2024-01-01
+closes_on = 2024-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2024-0a"
+filing_year = 2024
+period = "2024-0A"
+period_kind = "annual"
+opens_on = 2025-01-01
+closes_on = 2025-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2025-0a"
+filing_year = 2025
+period = "2025-0A"
+period_kind = "annual"
+opens_on = 2026-01-01
+closes_on = 2026-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-390-2026-0a"
+filing_year = 2026
+period = "2026-0A"
+period_kind = "annual"
+opens_on = 2027-01-01
+closes_on = 2027-01-30
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3111-2009:art-8"]
+source_refs = ["boe-modelo-390-2009-form"]
+
