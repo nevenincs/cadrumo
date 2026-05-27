@@ -1537,3 +1537,230 @@ FU-W07-G pending logging).
 | FU-S115-CAT | S251 | Cataluña 2024 tarifa bracket discrepancy investigation |
 
 Wave-7 (W07) is CLOSED at this review pass.
+
+---
+
+## W06 profile portability + import idempotency — architecture grounding (Task #75)
+
+### Scope
+
+Pre-execution grounding for W06.P28-P29 (S104-S109). Traces current export/import
+paths, identifies what the bundle omits, assesses encrypted-material handling,
+provenance preservation, schema versioning, and idempotency strategy. No W06 code
+has landed yet; this section grounds the plan before implementation.
+
+### 1. Current export path — what the bundle carries and omits
+
+`aeat config profile export` reads the active `UserProfileRecord` through
+`build_lifecycle_service().read()` and wraps it in `UserProfilePortableExport`
+(one field: `profile`, type `UserProfileRecord`). `UserProfileRecord` contains:
+- `profile_id`, `display_name`, `status`, `facts` (typed `UserProfileFact` tuples),
+  `created_at`, `updated_at`, `removed_at`, `schema_id`, `schema_version`.
+
+**What the bundle currently omits entirely:**
+- Work units (`ModeloWorkUnit` / `LedgerWorkUnit`) — stored in the
+  `SecureObjectRepository` as encrypted `SecureObject` rows, bucket-scoped.
+- Ledger transactions — same encrypted repository.
+- Calculation revisions (`CalculationRevision`) — same encrypted repository.
+- Filing records — same encrypted repository.
+- Bucket manifest (`BucketManifest`) — plaintext TOML, bucket-scoped; not included.
+- Master-key material — the encrypted DEK and KEK derivation parameters are not
+  exported; the recipient always re-encrypts under their own key on import.
+- Audit/event history from the `WorkflowState` event log.
+
+**Conclusion:** The current bundle is a profile-facts-only snapshot. S104-S107
+require a full-bundle export that carries work units, ledger entries, calculation
+revisions, and filings. This is a net-new schema extension; `UserProfilePortableExport`
+must grow additional fields or a new composite bundle type must be introduced.
+
+### 2. Current import path — collision and idempotency posture
+
+`aeat config profile import` reads `UserProfilePortableExport.model_validate_json`,
+extracts `record.facts`, then calls `_atomic_create_profile(display_name, facts)`.
+Crucially:
+- The bundle's `profile_id` (the originating machine's UUID) is **discarded** — a
+  fresh UUID is minted for the local bucket via `new_profile_id()`.
+- Collision check is **label-only**: `read_profile_bucket(target_label)` — if any
+  existing bucket has the same display name, the import is refused with
+  `cli.config.profile.import_label_taken`.
+- There is **no idempotency**: re-importing the same bundle twice creates two
+  profiles with two distinct UUIDs (differing only by UUID and `created_at`), because
+  the label check uses the imported display name and will pass after the first import
+  changes nothing about the original.
+
+Wait — re-reading: if the first import lands under `target_label`, a second import
+of the same bundle also presents `target_label`, which `read_profile_bucket` finds
+occupied. The second import is **refused**. So the current path is "refuse on
+collision" — idempotency via label uniqueness, not profile-id uniqueness.
+
+**The gap S108 identifies:** the bundle's `profile_id` is thrown away. On a machine
+where the same operator exports and re-imports a bundle (disaster recovery), the
+re-imported profile gets a different UUID than the original. Any foreign-key reference
+to the original `profile_id` in work units / ledger / revisions would be orphaned
+if those objects were also re-imported under the original ID.
+
+**Current idempotency posture:** Refuse-on-label-collision. One import allowed per
+label. No upsert, no merge.
+
+### 3. Encrypted material handling — architectural decision
+
+**Decision: strip master-key material; recipient re-encrypts.**
+
+Rationale:
+- The bucket DEK is wrapped with the operator's KEK (derived from their passphrase
+  via HKDF). Exporting the wrapped DEK exposes the passphrase-protection surface to
+  the bundle recipient — they cannot use it without the originator's passphrase, and
+  carrying it adds no value.
+- `UserProfilePortableExport` wrapping only `UserProfileRecord` (plaintext facts) is
+  the correct architecture: the bundle is a **data transfer object**, not a bucket
+  clone.
+- For work units / ledger / revisions / filings: serialize the decrypted domain
+  objects (pydantic models) into the bundle as JSON. The recipient's import path
+  re-encrypts each object under their own bucket DEK. This is the colleague-handover
+  semantics: the data survives, the encryption custody transfers.
+- **No encrypted `SecureObject` blobs in the bundle.** Only decrypted domain-model
+  payloads.
+
+This matches the existing pattern for `secure-objects export` under
+`python -m aeat.diagnostics` (referenced in `2026-05-18-profile-lifecycle-cli-adr.md`
+§6, "plaintext-discovery rule"), which is a diagnostics-only surface. The full-bundle
+export is the operator-facing equivalent.
+
+### 4. Provenance preservation
+
+Each `CalculationRevision` carries `observations: tuple[CasillaObservation, ...]`
+(typed envelopes with `legal_refs`, `source_refs`, `formula_id`). Each `ModeloWorkUnit`
+references registry casillas via typed selectors. Ledger transactions carry
+`source_refs` on line items.
+
+**Risk:** If any serialisation step collapses typed observations to `dict[str, Decimal]`
+or drops the `observations` field in favour of the flat `casilla_values` mapping,
+provenance is erased. The existing `CalculationRevision.casilla_values` property is
+already a derived flat view from `observations`; the canonical field is `observations`.
+
+**Required:** The bundle serialiser must use `model.model_dump(mode="json")` on the
+full pydantic model (not a hand-rolled dict extraction). The deserialiser must use
+`Model.model_validate(data)` on the full typed model. No intermediate `dict[str, Any]`
+projection. Provenance fields that are optional-but-present must not be stripped by
+`exclude_none=True`.
+
+**S106 must explicitly assert:** after roundtrip, `revision_a.observations ==
+revision_b.observations` (typed equality, not just casilla count). Anti-tautology
+proof: populate a revision with non-default `legal_refs` and `source_refs`, export,
+re-import, assert field equality.
+
+### 5. Schema-version posture
+
+`UserProfileRecord` carries `schema_version: int = Field(default=1, ge=1)` and
+`schema_id: str = "aeat.user_profile"`. `UserProfilePortableExport` carries
+`bundle_schema_version: int = Field(default=1, ge=1)`. The import path emits
+`bundle_schema_version` in its CLI output but does **not** validate it against any
+supported-range check before parsing. This is the gap the plan identifies.
+
+**Required:** Import path must compare `bundle.bundle_schema_version` against a
+`SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int]` constant before attempting to
+parse `bundle.profile` or any sub-object. An unsupported version should raise
+`CliRefusedBoundaryError` with a user-readable message naming the version and the
+supported range.
+
+**S104** must declare the `bundle_schema_version` bump strategy: bump only on
+backward-incompatible shape changes; additive optional fields are non-breaking.
+
+### 6. Idempotency strategy — recommended ruling
+
+Three strategies are in scope per the investigation:
+- (a) **Refuse on label collision** — current behaviour.
+- (b) **Upsert** — overwrite existing profile.
+- (c) **UPSERT with merge** — combine local + bundle contents.
+
+**Recommended: (a) refuse on `profile_id` collision, not label collision.**
+
+Reasoning:
+- The current label-based check is fragile: the same operator could legitimately
+  have two profiles for the same entity under slightly different labels. The canonical
+  identity is `profile_id` (UUID), not display name.
+- For idempotency (S108/S109 goal: "re-import of the same bundle produces one profile,
+  not two"), the check must be on `profile_id`. If `profile_id` from the bundle
+  already exists locally, refuse with "profile already registered" — the import is a
+  no-op for the facts.
+- Upsert (b) and merge (c) introduce write-after-read races in the concurrent
+  agent setting and require a domain-merge strategy for conflicting facts. This is
+  out of scope for W06.
+- **Implication:** the import path must NOT mint a fresh UUID on every import. It
+  must preserve the bundle's `profile_id` and check for prior existence before writing.
+  This is a behaviour change from the current path.
+- Label collision: keep as a separate guard — if the label is occupied by a
+  **different** `profile_id`, refuse (the operator must pass `--label` to rename on
+  import). If the label is occupied by the **same** `profile_id`, it is the idempotent
+  re-import case and should be a no-op or a confirm-and-skip.
+
+### Per-Step verdicts
+
+**S104** — Design bundled-export schema with encrypted-material treatment.
+GROUNDED. Decisions above supply the design parameters:
+- Bundle carries decrypted domain-model payloads (no encrypted blobs).
+- `UserProfilePortableExport` grows: `work_units`, `ledger_transactions`,
+  `calculation_revisions`, `filing_records` — all typed lists, none `dict[str, Any]`.
+- `bundle_schema_version` is bumped to 2 to mark the expanded shape.
+- A `SUPPORTED_BUNDLE_SCHEMA_VERSIONS = frozenset({1, 2})` constant at the import
+  boundary guards forward-compatibility; v1 bundles (facts-only) remain importable.
+- Implement in `src/aeat/domain/user_profile/_values.py`.
+
+**S105** — Implement bundled serialiser with schema-version bumping.
+GROUNDED. Serialiser must:
+- Read `UserProfileRecord` via existing service path (no change).
+- Read work units, ledger transactions, calculation revisions, filing records
+  from the active `SecureObjectRepository` for the target bucket.
+- Wrap in the new `UserProfilePortableExport` v2 shape.
+- Use `model.model_dump(mode="json")` throughout — no manual projection.
+- Implement in `src/aeat/application/user_profile/`.
+
+**S106** — Implement bundled deserialiser with provenance preservation.
+GROUNDED. Deserialiser must:
+- Validate `bundle_schema_version` against `SUPPORTED_BUNDLE_SCHEMA_VERSIONS` first.
+- Preserve the bundle's `profile_id` for idempotency (do not mint fresh UUID).
+- Check for prior `profile_id` existence before writing; refuse on collision (see §6).
+- Re-encrypt each domain-model payload under the new bucket's DEK on write.
+- Use `Model.model_validate(data)` throughout — no `dict[str, Any]` intermediate.
+- Implement in `src/aeat/application/user_profile/`.
+
+**S107** — Real-CLI roundtrip test.
+GROUNDED. Test must:
+- Build a non-trivial profile: work units, ledger transactions, at least one
+  `CalculationRevision` with non-default `legal_refs`/`source_refs` in observations.
+- Export to a temp file, import to a fresh storage root, assert typed equality
+  for every artefact including `observations`.
+- Anti-tautology proof: mutate one `legal_refs` field in the exported JSON, re-import,
+  assert validation error OR assert the mutated value does NOT equal the original.
+- Use `isolated_profile_storage_root` on the import side.
+- No mocks, no unsecured-backend monkeypatches.
+
+**S108** — Add idempotency mode respecting bundle `profile_id`.
+GROUNDED. Behaviour change from current: preserve `profile_id` from bundle; check
+for prior existence by `profile_id`; refuse-on-collision is the canonical path;
+same-label/different-id collision also refuses with `--label` guidance.
+The current label-only check is replaced by a two-tier guard:
+1. `profile_id` already exists locally → refuse "profile already registered".
+2. Label occupied by a different `profile_id` → refuse "label already taken, use --label".
+
+**S109** — Regression test: re-importing same bundle twice produces one profile.
+GROUNDED. Test shape:
+- Import bundle once, assert success, note `profile_id` in output.
+- Import same bundle again, assert `CliRefusedBoundaryError` with "already registered"
+  message (not a crash, not a silent duplicate).
+- List profiles, assert count = 1.
+
+### ADR coverage
+
+No dedicated profile-portability ADR exists. The disaster-recovery ADR
+(`2026-05-19-profile-lifecycle-disaster-adr.md`) covers `profile import` only as a
+bootstrap-exempt verb and an all-or-nothing provisioner; it does not address
+full-bundle content or idempotency semantics. The `2026-05-18-profile-lifecycle-cli-adr.md`
+references `profile import` as a recovery path but defers bundle content to a later
+decision.
+
+**Required before S104 lands:** a short ADR addendum or new ADR covering
+(a) bundle content scope, (b) encrypted-material stripping decision, (c) provenance
+serialisation contract, (d) idempotency strategy (profile-id-first). This
+architecture grounding document serves as the research basis; the ADR must be
+authored before the first S104 commit is reviewed.
