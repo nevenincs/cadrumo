@@ -368,7 +368,10 @@ class TestAttemptDiagnostics:
         assert context["auth_mode"] == "non_qr"
         assert context["auth_route"] == "clave_movil_non_qr_request"
         assert context["identity_kind"] == "NIE"
-        assert context["active_profile_id"] == "diagnostic-profile"
+        assert context["active_profile_id"] == ""
+        assert str(context["active_profile_ref"]).startswith("sha256:")
+        assert context["active_profile_label"] == ""
+        assert context["active_profile_label_present"] is True
         assert context["active_profile_registered"] is True
         assert context["profile_record_present"] is True
         assert context["profile_tax_id_present"] is True
@@ -377,6 +380,7 @@ class TestAttemptDiagnostics:
         assert context["timeout_ms"] == 120_000
         assert "X1234567L" not in context_json
         assert "support-marker" not in context_json
+        assert "diagnostic-profile" not in context_json
 
 
 # ── describe() ──────────────────────────────────────────────────────────────
