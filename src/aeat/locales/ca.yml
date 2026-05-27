@@ -346,9 +346,6 @@ application:
     errors:
       duplicate_tax_id: El NIF '%{tax_id}' ja l'utilitza el perfil '%{profile}'; un
         contribuent ha de tenir un sol perfil.
-      duplicate_tax_id_scan_unreadable_profile: No es pot verificar la unicitat del
-        NIF perquè el perfil '%{profile}' no es pot llegir; executa els diagnòstics
-        de reparació abans de crear un altre perfil.
       no_active_profile_selected: No hi ha cap perfil actiu seleccionat.
       profile_already_exists: El perfil '%{profile}' ja existeix; executa `aeat config
         profile switch NAME` per activar-lo o `aeat config profile delete NAME` primer.
@@ -570,6 +567,7 @@ cli:
         json_not_object: '{flag} ha de ser un objecte JSON.'
         json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte
           {pos}.'
+        json_validation_error: cli.app.modelo.aggregate.json_validation_error
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: Període enviat al servei d'agregació
@@ -1382,11 +1380,11 @@ cli:
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
-      help: Classificar un moviment del llibre al bucket del perfil actiu
-      id_help: Id del moviment del llibre a classificar
       counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
         3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
         prohibit amb export_third_country_zero_rated
+      help: Classificar un moviment del llibre al bucket del perfil actiu
+      id_help: Id del moviment del llibre a classificar
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
@@ -1751,6 +1749,7 @@ cli:
         contacta amb AEAT.
       to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
+      all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del perfil.
       allow_incomplete_help: Generar el calendari encara que les dades del perfil
         siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
@@ -1944,19 +1943,8 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: Espai de treball fiscal per a overview, ledger, modelo, registry
-      i review
-    app_help: 'Assistent per preparar declaracions tributàries espanyoles
-
-
-      Quickstart: aeat config profile create NAME --tax-id NIF'
-    app_help_help: Mostrar ajuda del flux d'app
-    debug_help: Mostrar logs interns de depuració a stderr
-    detail_help: Also show the detailed registry summary
     errors:
       did_you_mean_command: Volíeu dir '%{command}'?
-    format_help: Format de sortida per als resultats de l'ordre
-    help_help: Mostrar ajuda orientada al flux de treball
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
@@ -1985,16 +1973,6 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
-    language_help: Idioma de sortida per a aquesta ordre (substitueix el perfil actiu)
-    profile_help: cli.root.profile_help
-    quiet_help: Mostrar només errors a stderr
-    startup_import_error: 'No es pot iniciar la interfície d''ordres d''AEAT: falta
-      la dependència {dependency}. Executa `aeat config repair`.'
-    unavailable_app_help: Les ordres d'app no estan disponibles perquè falta una dependència
-      opcional
-    verbose_help: Mostrar logs interns informatius a stderr
-    version_help: Mostrar la versió del paquet (afegeix --detail per al resum complet
-      del registre)
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
@@ -2212,7 +2190,8 @@ errors:
       seguretat.
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
-    bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
+    bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
+      assignat.
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que

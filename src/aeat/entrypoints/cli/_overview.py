@@ -118,16 +118,38 @@ def overview_calendar(
             ),
         ),
     ),
+    all_profiles: bool = typer.Option(
+        False,
+        "--all-profiles",
+        help=tr(
+            "cli.overview.calendar.all_profiles_help",
+            default=(
+                "Render the calendar for every registered active profile instead of "
+                "the currently active one. Each profile's entries are emitted in a "
+                "separate block with a leading profile header line."
+            ),
+        ),
+    ),
 ) -> None:
     """Render the deadline calendar over the supplied window."""
 
     from ...application.user_profile._projections import record_to_values
 
-    current = _state()
     rng = OverviewCalendarRange(
         from_date=_parse_iso_date(from_date, label="--from"),
         to_date=_parse_iso_date(to_date, label="--to"),
     )
+
+    if all_profiles:
+        _overview_calendar_all_profiles(
+            ctx,
+            rng=rng,
+            allow_incomplete=allow_incomplete,
+            show_suppressed=show_suppressed,
+        )
+        return
+
+    current = _state()
     record = current.active_profile_record()
     raw_values = record_to_values(record) if record is not None else None
     cal: OverviewCalendar = build_overview_calendar(
@@ -178,6 +200,101 @@ def overview_calendar(
             f"\treason={suppressed.reason[:80]}"
         )
     _emit(ctx, payload, lines)
+
+
+def _overview_calendar_all_profiles(
+    ctx: typer.Context,
+    *,
+    rng: OverviewCalendarRange,
+    allow_incomplete: bool,
+    show_suppressed: bool,
+) -> None:
+    """Emit the deadline calendar for every registered active profile.
+
+    Iterates :func:`list_profile_buckets`, loads each active bucket's
+    profile record inside its own :func:`profile_storage_session`, and
+    calls :func:`build_overview_calendar` once per profile. Unreadable
+    buckets are skipped with a warning line; they do not abort the scan.
+    """
+
+    import logging
+
+    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+    from ...application.user_profile._orchestration import profile_storage_session
+    from ...application.user_profile._profile_repository import ProfileRepository
+    from ...application.user_profile._projections import projection_for_taxpayer, record_to_values
+    from ...application.workflow._profile_bucket_scan import list_profile_buckets
+
+    _log = logging.getLogger(__name__)
+    today = _date.today()
+    buckets = list_profile_buckets()
+    active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is BucketLifecycleStatus.ACTIVE}
+
+    all_lines: list[str] = [
+        f"from\t{rng.from_date.isoformat()}",
+        f"to\t{rng.to_date.isoformat()}",
+        f"profiles\t{len(active_buckets)}",
+    ]
+    all_calendars: list[dict] = []
+
+    repository = ProfileRepository()
+    for bucket_id, pointer in sorted(active_buckets.items(), key=lambda kv: kv[1].label):
+        try:
+            with profile_storage_session(bucket_id):
+                record = repository.load(bucket_id)
+        except Exception:
+            _log.warning(
+                "overview calendar: skipping unreadable profile %s (%s)",
+                bucket_id,
+                pointer.label,
+                exc_info=True,
+            )
+            all_lines.append(f"profile_skipped\t{bucket_id}\t{pointer.label}")
+            continue
+
+        raw_values = record_to_values(record.record)
+        taxpayer = projection_for_taxpayer(record.record, tax_id_default="00000000T")
+        cal = build_overview_calendar(
+            taxpayer,
+            rng,
+            today=today,
+            raw_values=raw_values,
+            show_suppressed=show_suppressed,
+        )
+
+        all_lines.append(f"profile\t{bucket_id}\t{pointer.label}")
+        all_lines.append(f"entries\t{len(cal.entries)}")
+        for entry in cal.entries:
+            all_lines.append(
+                f"{entry.modelo}\t{entry.period}\t{entry.user_state.value}"
+                f"\topens={entry.opens_on.isoformat()}"
+                f"\tcloses={entry.closes_on.isoformat()}"
+                f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
+                f"\tshift={entry.shift_reason}"
+            )
+        if not cal.taxpayer_model_declared:
+            all_lines.append(
+                f"warning\tINCOMPLETE_TAXPAYER_MODEL\t"
+                f"{cal.incomplete_reason or tr('cli.overview.taxpayer_model_undeclared')}"
+            )
+        for warning in cal.warnings:
+            all_lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
+        for suppressed in cal.suppressed_entries:
+            all_lines.append(
+                f"suppressed\t{suppressed.modelo}\t{suppressed.period}"
+                f"\tverdict={suppressed.verdict.value}"
+                f"\treason={suppressed.reason[:80]}"
+            )
+
+        all_calendars.append(
+            {
+                "profile_id": bucket_id,
+                "label": pointer.label,
+                "calendar": cal.model_dump(mode="json"),
+            }
+        )
+
+    _emit(ctx, {"profiles": all_calendars}, all_lines)
 
 
 @app.command(
@@ -349,9 +466,7 @@ def overview_backlog(
         f"late_count\t{backlog.late_count}",
     ]
     for entry in backlog.items:
-        lines.append(
-            f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}"
-        )
+        lines.append(f"{entry.modelo}\t{entry.period}\tcloses={entry.adjusted_closes_on.isoformat()}")
     for warning in backlog.warnings:
         lines.append(f"warning\t{warning.code}\t{tr(warning.message)}\tfix={warning.fix_command}")
     _emit(ctx, payload, lines)

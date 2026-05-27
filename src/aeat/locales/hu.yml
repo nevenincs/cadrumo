@@ -234,7 +234,6 @@ application:
   user_profile:
     errors:
       duplicate_tax_id: application.user_profile.errors.duplicate_tax_id
-      duplicate_tax_id_scan_unreadable_profile: application.user_profile.errors.duplicate_tax_id_scan_unreadable_profile
       no_active_profile_selected: application.user_profile.errors.no_active_profile_selected
       profile_already_exists: application.user_profile.errors.profile_already_exists
       profile_create_route_mismatch: application.user_profile.errors.profile_create_route_mismatch
@@ -427,6 +426,7 @@ cli:
         foreign_asset_observation_help: cli.app.modelo.aggregate.foreign_asset_observation_help
         json_not_object: cli.app.modelo.aggregate.json_not_object
         json_parse_error: cli.app.modelo.aggregate.json_parse_error
+        json_validation_error: cli.app.modelo.aggregate.json_validation_error
         modelo_help: cli.app.modelo.aggregate.modelo_help
         period_help: cli.app.modelo.aggregate.period_help
         retencion_observation_help: cli.app.modelo.aggregate.retencion_observation_help
@@ -943,9 +943,9 @@ cli:
       business_pct_requires_mixed: cli.ledger.classify.business_pct_requires_mixed
       category_help: cli.ledger.classify.category_help
       classification_help: cli.ledger.classify.classification_help
+      counterparty_eu_member_state_help: cli.ledger.classify.counterparty_eu_member_state_help
       help: cli.ledger.classify.help
       id_help: cli.ledger.classify.id_help
-      counterparty_eu_member_state_help: cli.ledger.classify.counterparty_eu_member_state_help
       irpf_category_help: cli.ledger.classify.irpf_category_help
       iva_amount_help: cli.ledger.classify.iva_amount_help
       iva_category_help: cli.ledger.classify.iva_category_help
@@ -1274,6 +1274,7 @@ cli:
       help: cli.overview.backlog.help
       to_help: cli.overview.backlog.to_help
     calendar:
+      all_profiles_help: Az összes regisztrált profil naptárát jeleníti meg az aktív helyett. Minden blokk egy profilfejléc-sorral kezdődik.
       allow_incomplete_help: cli.overview.calendar.allow_incomplete_help
       from_help: cli.overview.calendar.from_help
       help: cli.overview.calendar.help
@@ -1387,15 +1388,8 @@ cli:
       help: cli.review.show.help
       id_help: cli.review.show.id_help
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    app_help_help: cli.root.app_help_help
-    debug_help: cli.root.debug_help
-    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: cli.root.errors.did_you_mean_command
-    format_help: cli.root.format_help
-    help_help: cli.root.help_help
     landing:
       headline: cli.root.landing.headline
       help_line: cli.root.landing.help_line
@@ -1416,13 +1410,6 @@ cli:
       tagline: cli.root.landing.tagline
       welcome_no_profile: cli.root.landing.welcome_no_profile
       welcome_profile: cli.root.landing.welcome_profile
-    language_help: cli.root.language_help
-    profile_help: cli.root.profile_help
-    quiet_help: cli.root.quiet_help
-    startup_import_error: cli.root.startup_import_error
-    unavailable_app_help: cli.root.unavailable_app_help
-    verbose_help: cli.root.verbose_help
-    version_help: cli.root.version_help
 dotted:
   key: dotted.key
 entries:
