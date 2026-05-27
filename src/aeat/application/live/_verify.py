@@ -31,7 +31,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...core.config import Settings
+from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
@@ -120,7 +120,7 @@ class VerifyService:
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
-        self._settings = settings or Settings()
+        self._settings = settings or load_settings()
 
     def record(
         self,

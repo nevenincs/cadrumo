@@ -44,7 +44,7 @@ from ...adapters.outbound.aeat.sede._notifications import (
     NotificationsSnapshot,
     RemoteNotification,
 )
-from ...core.config import Settings
+from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ._snapshot_base import (
     JsonlSnapshotRepository,
@@ -123,7 +123,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
-        self._settings = settings or Settings()
+        self._settings = settings or load_settings()
         super().__init__(
             repository_factory=lambda bucket_id: _notifications_repository(self._settings, bucket_id)
         )
