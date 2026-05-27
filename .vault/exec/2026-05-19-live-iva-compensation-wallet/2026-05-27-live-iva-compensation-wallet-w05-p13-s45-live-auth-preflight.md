@@ -29,6 +29,10 @@ and capture-history CLI paths render those fields to stderr before calling the
 live acquisition backend, so the operator can verify the profile and auth
 configuration before any Cl@ve approval wait begins.
 
+Review follow-up extended the same preflight rendering to filed-history
+list/capture/capture-sources, DEHu notifications capture, and expedientes
+capture live-read entrypoints.
+
 ## Tests
 
 - `uv run pytest -q src/aeat/application/auth/test_operator.py src/aeat/application/auth/test_diagnostics.py` passed.
