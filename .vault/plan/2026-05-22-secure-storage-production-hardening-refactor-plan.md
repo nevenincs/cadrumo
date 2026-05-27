@@ -283,7 +283,7 @@ Current register count: `293` production candidate files.
 | `AFR-011` | `src/aeat/adapters/inbound/sanitizer/_errors.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-012` | `src/aeat/adapters/inbound/sanitizer/_pipeline.py` | `plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-013` | `src/aeat/adapters/outbound/aeat/auth/_authenticator.py` | `manifest-bucket, plain-file` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-014` | `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
+| `AFR-014` | `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` | `secure-object, active-profile, manifest-bucket, master-key, plain-file` | `runtime-default` | `W12.P21.S86` | migrated |
 | `AFR-015` | `src/aeat/adapters/outbound/aeat/auth/_session_store.py` | `secure-object, plain-file` | `runtime-default` | `W12.P21.S86` | pending |
 | `AFR-016` | `src/aeat/adapters/outbound/aeat/browser/_factory.py` | `active-profile, manifest-bucket, plain-file, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
 | `AFR-017` | `src/aeat/adapters/outbound/aeat/browser/_site_health.py` | `remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -636,7 +636,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S113` - Close `AFR-011` for `src/aeat/adapters/inbound/sanitizer/_errors.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/inbound/sanitizer/_errors.py`.
 - [ ] `W12.P26.S114` - Close `AFR-012` for `src/aeat/adapters/inbound/sanitizer/_pipeline.py` with signals `plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/inbound/sanitizer/_pipeline.py`.
 - [ ] `W12.P26.S115` - Close `AFR-013` for `src/aeat/adapters/outbound/aeat/auth/_authenticator.py` with signals `manifest-bucket, plain-file`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W12.P26.S116` - Close `AFR-014` for `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` with signals `secure-object, active-profile, manifest-bucket, master-key, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W12.P26.S116` - Close `AFR-014` for `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py` with signals `secure-object, active-profile, manifest-bucket, master-key, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
 - [ ] `W12.P26.S117` - Close `AFR-015` for `src/aeat/adapters/outbound/aeat/auth/_session_store.py` with signals `secure-object, plain-file`, target `runtime-default`, and owner `W12.P21.S86`; `src/aeat/adapters/outbound/aeat/auth/_session_store.py`.
 - [ ] `W12.P26.S118` - Close `AFR-016` for `src/aeat/adapters/outbound/aeat/browser/_factory.py` with signals `active-profile, manifest-bucket, plain-file, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/browser/_factory.py`.
 - [ ] `W12.P26.S119` - Close `AFR-017` for `src/aeat/adapters/outbound/aeat/browser/_site_health.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/adapters/outbound/aeat/browser/_site_health.py`.

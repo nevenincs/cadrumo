@@ -43,7 +43,7 @@ from .....core.config import Settings as _Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
-from ....persistence.storage.sql import SecureObjectRepository
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from . import _session_store
 from ._authenticator import (
@@ -1450,7 +1450,7 @@ class ClaveMovilAuthProvider:
                         payload["screenshot_png_base64"] = base64.b64encode(bytes(image)).decode("ascii")
                 except (TimeoutError, PlaywrightTimeoutError):
                     payload["screenshot_capture_error"] = "timeout"
-            SecureObjectRepository().save(
+            secure_object_repository_for_active_bucket().save(
                 namespace=_DIAGNOSTIC_NAMESPACE,
                 object_key=ts,
                 classification=SensitivityClass.SESSION,
