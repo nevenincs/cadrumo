@@ -183,3 +183,53 @@ reference (no such aggregation op exists today). Tracked
 informally here; the M131 calculation contract for the cap
 rule needs its own ADR/plan if AEAT-cap enforcement is in scope
 for a follow-up campaign.
+
+---
+
+## P07.S42 finding: M353.toml FileNotFoundError loader race
+
+`load_modelo_file` (`src/aeat/domain/calculations/registry/_loader.py:123-128`)
+calls `path.resolve()` then immediately `resolved.stat()`. The
+caller `discover_modelo_sources` enumerates `*.toml` files via
+`glob` and passes each path to `load_modelo_file`. The race
+window: a parallel campaign deletes a `.toml` file (e.g.,
+fragmenting `353.toml` into `353/manifest.toml` +
+`353/revisions/<rev>/...`) between the `glob` enumeration and
+the `stat()` call. The `stat()` raises `FileNotFoundError`; the
+loader propagates it as `FileNotFoundError`, not as a typed
+`RegistryLoadError`.
+
+**Why it surfaced once**: the M353 fragmentation commit
+(`42e9cd4dc`) landed during a 33-minute full-registry suite
+run. The loader's `glob` had already enumerated `353.toml` (still
+present at glob time); by the time the test's lazy
+`_committed_registry_tree` call reached `353.toml`, the file
+was gone. Fresh process reruns succeed because `glob` is
+re-evaluated after the deletion.
+
+**Why it didn't recur**: the race window is small and only
+manifests under concurrent registry-tree mutation. The campaign
+work after this discovery did not trigger another window
+because no further mid-suite registry fragmentations landed.
+
+**Disposition**: this is a shared-worktree operational hazard,
+not a defect in the loader's design intent. Two mitigations
+are recommended:
+
+1. **Operational**: do not launch the full-registry-suite gate
+   while peer campaigns hold uncommitted registry changes. The
+   campaign coordinator should declare a freeze window around
+   long gates.
+2. **Code-level (optional, low priority)**: catch
+   `FileNotFoundError` in `load_modelo_file` and re-raise as a
+   typed `RegistryLoadError("modelo source disappeared between
+   discovery and load: {path}")`. The error surfaces as
+   typed-and-attributable rather than as a bare OSError; the
+   underlying race is unchanged but the diagnostic is
+   actionable. Tracked informally here; not authored in this
+   campaign because the operational mitigation is sufficient
+   and the code change touches a hot path.
+
+The transient FileNotFoundError observed during the campaign
+was correctly identified as race-condition-from-fragmentation,
+not a regression caused by P03 or P07 work.
