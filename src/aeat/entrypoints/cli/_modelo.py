@@ -2354,6 +2354,11 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
             lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
         if finding.source_refs:
             lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
+    if not report.granted_verificado_completo:
+        lines.append(
+            f"next_action\taeat app modelo work verification-report list"
+            f" {report.calculation_revision_id}"
+        )
     return lines
 
 
