@@ -1,11 +1,13 @@
 """Tests for the cross-revision drift validator.
 
 Per the AEAT registry design contract, every casilla id has
-identical legal responsibilities across every revision of a
+identical legal responsibilities across overlapping revisions of a
 modelo. The `_validate_cross_revision_casilla_consistency` gate
-reports drift when two revisions disagree on any
+reports drift when two overlapping revisions disagree on any
 legally-bound field (label, section, data_type, semantic_role,
-legal_refs).
+legal_refs). Non-overlapping revision windows are separate legal
+forms and require an explicit continuity/evolution contract before
+year-to-year drift can be treated as a load-time error.
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
-from ._schema import CasillaDefinition
+from ._schema import CasillaDefinition, PeriodSelector
 from ._validate import (
     RegistryValidator,
 )
@@ -51,11 +53,17 @@ def _casilla(
     })
 
 
-def _modelo(modelo_id: str, revs: dict[str, list[CasillaDefinition]]) -> Any:
+def _modelo(
+    modelo_id: str,
+    revs: dict[str, list[CasillaDefinition]],
+    selectors: dict[str, PeriodSelector] | None = None,
+) -> Any:
     class _Rev:
         def __init__(self, rid: str, cas: list[CasillaDefinition]) -> None:
             self.id = rid
             self.casillas = tuple(cas)
+            if selectors is not None:
+                self.period_selector = selectors[rid]
 
     class _Mod:
         def __init__(self) -> None:
@@ -138,6 +146,35 @@ class TestCrossRevisionConsistency:
         assert len(failures) == 1
         assert "2024" in failures[0]
         assert "2025" in failures[0]
+
+    def test_overlapping_period_selectors_still_catch_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        selector = PeriodSelector(year_from=2024, periods=("0A",))
+        m = _modelo(
+            "100",
+            {"2024-a": [a], "2024-b": [b]},
+            selectors={"2024-a": selector, "2024-b": selector},
+        )
+
+        failures = _validate_cross_revision_casilla_consistency([m])
+
+        assert len(failures) == 1
+        assert "label" in failures[0]
+
+    def test_non_overlapping_period_selectors_are_not_cross_revision_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+        )
+
+        assert _validate_cross_revision_casilla_consistency([m]) == ()
 
 
 def test_cross_revision_validator_accepts_committed_corpus() -> None:
