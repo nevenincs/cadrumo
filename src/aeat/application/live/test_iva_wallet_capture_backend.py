@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sqlite3
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -231,6 +232,8 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         wallet_ref = FiledDeclaracionObservationStore(tmp_path / "remote-iva-evidence").persist_iva_wallet_observation(
             wallet
         )
+        assert _secure_object_namespace_count(profile.paths.db_dir / "aeat.db", wallet_ref.parts[-2]) == 1
+        assert not (tmp_path / "remote-iva-evidence").exists()
 
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
@@ -319,3 +322,12 @@ def _store_prior_compensation(repository: CalculationObservationRepository, *, a
         source_kind="aeat_sede_justificante",
         captured_at=_CAPTURED_AT,
     )
+
+
+def _secure_object_namespace_count(database_path: Path, namespace: str) -> int:
+    with sqlite3.connect(database_path) as connection:
+        row = connection.execute(
+            "SELECT COUNT(*) FROM secure_objects WHERE namespace = ?",
+            (namespace,),
+        ).fetchone()
+    return int(row[0])
