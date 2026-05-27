@@ -1,0 +1,18 @@
+[modelo]
+id = "309"
+title = "IVA. Declaración-liquidación no periódica"
+official_name = "Modelo 309. Impuesto sobre el Valor Añadido. Declaración-liquidación no periódica."
+tax_domain = "iva"
+cadence = "ad_hoc"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-hac-3625-2003:apartado-1",
+    "orden-hac-3625-2003:apartado-3",
+]
+source_refs = [
+    "aeat-dr-309-2023",
+    "aeat-modelo-309-procedure",
+    "boe-modelo-309-2003-form",
+]
+
