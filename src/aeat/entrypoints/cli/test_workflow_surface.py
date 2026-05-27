@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 from typer.testing import CliRunner
 
+from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.diagnostics import build_cli_version_report
+from aeat.core import config as config_module
+from aeat.core.config import SecretStoreBackend, Settings
 from aeat.domain.buckets import BucketEventHistoryRepository, BucketEventType
 from aeat.domain.transactions import TransactionCatalogueRepository
 from aeat.tests.cli_runner import invoke_cached_cli
@@ -37,57 +42,47 @@ def _json_output(result: Result) -> str:
     return match.group(0)
 
 
-def _isolate_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-    from aeat.tests.secure_sql import dev_test_database_password
-
+@contextmanager
+def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
     dispose_engine()
-    for name in (
-        "AEAT_AUTH_PROVIDER",
-        "AEAT_CERTIFICATE_PATH",
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        "AEAT_CLAVE_MOVIL_DNI_NIE",
-        "AEAT_CLAVE_MOVIL_DNI_FECHA",
-        "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
-    ):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
-    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
-    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_ACTIVE_PROFILE", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-
-
-@pytest.fixture
-def encrypted_user_cli(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from aeat.adapters.persistence.storage.master_key._master_key import PASSPHRASE_ENV_VAR
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-    from aeat.tests.secure_sql import dev_test_database_password
-
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "file")
-    monkeypatch.setenv(PASSPHRASE_ENV_VAR, dev_test_database_password())
-    monkeypatch.setenv("AEAT_SECRET_STORE_DIR", str(tmp_path / "secrets"))
-    monkeypatch.delenv("AEAT_ALLOW_UNENCRYPTED", raising=False)
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.delenv("AEAT_ACTIVE_PROFILE", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
+    base_settings = Settings(_env_file=None)
+    settings = Settings(
+        _env_file=None,
+        aeat_auth_provider=None,
+        aeat_certificate_path=None,
+        aeat_certificate_password_secret=None,
+        aeat_clave_movil_dni_nie=None,
+        aeat_clave_movil_dni_fecha=None,
+        aeat_clave_movil_nie_soporte=None,
+        aeat_secret_store_backend=SecretStoreBackend.FILE,
+        aeat_secret_passphrase=base_settings.aeat_dev_test_database_password,
+        aeat_secret_store_dir=tmp_path / "secrets",
+        aeat_allow_unencrypted="",
+        aeat_active_profile=None,
+        aeat_local_storage_root=tmp_path / "storage",
+        aeat_token_dir=tmp_path / "tokens",
+        aeat_runs_dir=tmp_path / "runs",
+        aeat_financial_txs_dir=tmp_path / "txs",
+        aeat_invoices_dir=tmp_path / "invoices",
+        aeat_drafts_dir=tmp_path / "drafts",
+    )
+    token = config_module._settings_override.set(settings)
     try:
         yield tmp_path
     finally:
+        config_module._settings_override.reset(token)
         dispose_engine()
+
+
+@pytest.fixture
+def isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
+    with _isolated_user_cli(tmp_path) as path:
+        yield path
+
+
+@pytest.fixture
+def encrypted_user_cli(isolated_user_cli: Path) -> Path:
+    return isolated_user_cli
 
 
 def _assert_secure_database_payload(tmp_path: Path, *plaintext_canaries: str) -> None:
@@ -275,8 +270,7 @@ def test_root_surface_contains_config_and_app_only() -> None:
         assert removed_command not in commands_section, removed_command
 
 
-def test_root_no_args_renders_help_successfully(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
+def test_root_no_args_renders_help_successfully(isolated_user_cli: Path) -> None:
     result = _invoke([])
 
     assert result.exit_code == 0, result.output
@@ -311,9 +305,7 @@ def test_retired_commands_are_not_registered() -> None:
         assert result.exit_code != 0, command
 
 
-def test_config_repair_is_config_scoped_not_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-
+def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> None:
     root_repair = _invoke(["repair", "--help"])
     help_result = _invoke(["config", "repair", "--help"])
     text_result = _invoke(["config", "repair"])
@@ -548,9 +540,8 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "clave_pin" in unsupported_clear.output
 
 
-def test_ledger_import_accepts_n26_csv_dry_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-    statement = tmp_path / "n26-q1.csv"
+def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:
+    statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
             [
@@ -622,13 +613,10 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
     assert events[0].object_id == stored.transaction_id
 
 
-def test_ledger_import_verify_source_records_original_file_digest(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_ledger_import_verify_source_records_original_file_digest(isolated_user_cli: Path) -> None:
     import hashlib
 
-    _isolate_user_cli(monkeypatch, tmp_path)
-    statement = tmp_path / "n26-q1.csv"
+    statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
             [
@@ -638,7 +626,7 @@ def test_ledger_import_verify_source_records_original_file_digest(
         ),
         encoding="utf-8",
     )
-    source = tmp_path / "n26-q1.pdf"
+    source = isolated_user_cli / "n26-q1.pdf"
     source_bytes = b"original downloaded bank statement"
     source.write_bytes(source_bytes)
 
@@ -670,11 +658,10 @@ def test_ledger_import_verify_source_records_original_file_digest(
 
 
 def test_ledger_import_verify_source_rejects_missing_original_file(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    monkeypatch: pytest.MonkeyPatch, isolated_user_cli: Path
 ) -> None:
-    _isolate_user_cli(monkeypatch, tmp_path)
-    monkeypatch.chdir(tmp_path)
-    statement = tmp_path / "n26-q1.csv"
+    monkeypatch.chdir(isolated_user_cli)
+    statement = isolated_user_cli / "n26-q1.csv"
     statement.write_text(
         "\n".join(
             [
@@ -727,16 +714,13 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
 
 
 def test_config_profile_show_requires_active_profile_with_typed_error(
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
+    isolated_user_cli: Path,
 ) -> None:
     """``aeat config profile show`` rejects inspection when no profile is selected.
 
     The show verb reads the active profile bucket; with no active
     profile, the operation is refused with a typed CLI usage error.
     """
-
-    _isolate_user_cli(monkeypatch, tmp_path)
 
     result = _invoke(["config", "profile", "show"])
 
