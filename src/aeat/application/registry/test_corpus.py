@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from aeat.core.resources import resources
 
 from ...core.config import override_settings
@@ -160,14 +161,14 @@ def test_topic_projection_rejects_unknown_locale_with_application_error(caplog: 
     assert envelope.context == {
         "registry_service": "registry.topics",
         "locale": "zz",
-        "allowed_locales": "es, en, ca, hu",
+        "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
     }
     records = [record for record in caplog.records if getattr(record, "registry_service", "") == "registry.topics"]
     assert len(records) == 1
     record = records[0]
     assert record.levelno == logging.WARNING
     assert record.__dict__["registry_locale"] == "zz"
-    assert record.__dict__["registry_allowed_locales"] == ("es", "en", "ca", "hu")
+    assert record.__dict__["registry_allowed_locales"] == SUPPORTED_OUTPUT_LANGUAGES
 
 
 def test_registry_input_error_builds_central_error_envelope() -> None:
