@@ -718,9 +718,19 @@ cli:
       iva_wallet:
         as_of_year_help: Año de referencia para los cálculos de antigüedad y caducidad
           del saldo arrastrado.
-        balance_help: Muestra el saldo acumulado del crédito IVA por compensación calculado
-          a partir del historial local del Modelo 303.
+        balance_help: Muestra el saldo acumulado del crédito IVA por compensación
+          calculado a partir del historial local del Modelo 303.
         group_help: Comandos de saldo local de la cartera de compensación IVA.
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       project:
@@ -818,6 +828,13 @@ cli:
         create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado se aplicó como renombrado a %{name}.
+        create_stub_modelo_refused: 'Modelo %{modelo} está registrado pero no tiene
+          soporte completo en esta versión. La declaración informativa sobre monedas
+          virtuales situadas en el extranjero (Modelo 721) debe presentarse en la Sede
+          Electrónica de la AEAT (sede.agenciatributaria.gob.es). La obligación nace
+          cuando el valor agregado supera €50.000 a 31 de diciembre (Orden HFP/887/2023,
+          BOE-A-2023-17455). Autoridades: Ley 11/2021 Art. 13 / DA 10ª,
+          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -907,6 +924,9 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
+          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
+        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
@@ -2256,6 +2276,7 @@ errors:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
       asignado.
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que

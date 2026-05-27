@@ -315,3 +315,31 @@ def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_b
     assert "ledger import" not in next_section
     assert "ledger review" in next_section
     assert "modelo work create" in next_section
+
+
+def test_work_create_rejects_revision_that_does_not_cover_filing_year(
+    _isolated_cli_backend: Path,
+) -> None:
+    """Supplying a revision whose period_selector excludes the filing year
+    must be refused with a clear error naming both the revision and the
+    year, not accepted silently.
+
+    M131 revision ``2026`` has ``period_selector.years = [2026]``.
+    Requesting it for ``--year 2024`` crosses that boundary — the 2026
+    DANA rules do not apply to a 2024 filing.
+    """
+
+    _create_profile()
+    result = _invoke(
+        [
+            "app", "modelo", "work", "create",
+            "--modelo", "131", "--year", "2024", "--period", "2T",
+            "--revision", "2026",
+        ]
+    )  # fmt: skip
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    # Both the mismatched revision and the filing year must appear in the
+    # diagnostic so the operator knows what to fix.
+    assert "2026" in result.output
+    assert "2024" in result.output

@@ -14,17 +14,6 @@ source_ref = "aeat-modelo-130-instructions"
 required_text = ["Resultados negativos"]
 
 
-[[revisions."2019-y-siguientes".formulas]]
-id = "modelo-130-rendimiento-neto"
-target = "03"
-expression = { op = "subtract", args = [{ casilla = "01" }, { casilla = "02" }] }
-rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
-
-[[revisions."2019-y-siguientes".formulas.source_citations]]
-source_ref = "aeat-modelo-130-instructions"
-required_text = ["Casilla 03.", "restar el importe de la casilla 02 al importe de la casilla 01"]
 
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-pago-fraccionado-directa"

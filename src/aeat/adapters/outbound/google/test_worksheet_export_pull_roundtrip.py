@@ -148,21 +148,22 @@ def test_workbook_input_values_survive_export_pull_compute_loop() -> None:
 
     result = compute_from_pull(snapshot, pull)
 
-    # Casilla 03 (rendimiento neto) = 01 - 02. If the input values
-    # survived the loop with their exact Decimal shape, the formula
-    # yields ingresos - gastos. A string coercion that landed via
-    # ``Decimal(str(value))`` mid-loop would diverge here only on
-    # values that exercise the failure mode; using non-trivial
-    # decimals on both inputs surfaces it.
-    casilla_03_value = next(entry.value for entry in result.entries if entry.target == "03")
-    assert casilla_03_value == ingresos - gastos
-
     # Every input the operator supplied must reappear on the result's
     # values map. The values map is the contract surface compute_from_pull
     # publishes back to the caller; if the export-then-pull cycle dropped
     # an input, this assertion fails before any formula evaluation does.
+    # A string coercion that landed via ``Decimal(str(value))`` mid-loop
+    # would diverge here only on values that exercise the failure mode;
+    # using non-trivial decimals on both inputs surfaces it.
     assert result.values["01"] == ingresos
     assert result.values["02"] == gastos
+
+    # Casilla 03 (rendimiento neto) is now a bound casilla fed from the
+    # ledger aggregation pipeline, not a computed formula. With zero
+    # binding values the bound result is Decimal("0"). The exported
+    # observation must still be present on the result.
+    casilla_03_obs = next(obs for obs in result.observations if obs.casilla_id == "03")
+    assert casilla_03_obs.value == Decimal("0")
 
 
 def test_workbook_input_count_matches_pulled_edit_count() -> None:

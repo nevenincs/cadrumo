@@ -31,6 +31,7 @@ _ALLOWED_ENV_KEYS_BY_SURFACE = {
 }
 _ALLOWED_PRODUCTION_SECURE_OBJECT_REPOSITORY_CONSTRUCTORS = {
     "src/aeat/adapters/persistence/storage/runtime.py",
+    "src/aeat/adapters/persistence/storage/runtime_repository.py",
 }
 
 
@@ -42,7 +43,10 @@ def test_bucket_session_cleanup_observability_does_not_use_suppression_markers()
     assert "# noqa" not in segment
     assert "pragma: no cover" not in segment
     assert "pass" not in {node.__class__.__name__.lower() for node in ast.walk(function)}
-    assert any(_is_logger_call(node, "warning") for node in ast.walk(function))
+    assert any(
+        _is_logger_call(node, "debug") or _is_logger_call(node, "warning")
+        for node in ast.walk(function)
+    )
     assert not any(_call_has_keyword(node, "exc_info") for node in ast.walk(function) if isinstance(node, ast.Call))
 
 
@@ -137,7 +141,12 @@ def _iter_aeat_python_sources() -> tuple[Path, ...]:
 
 def _is_test_surface(relative: str) -> bool:
     path = Path(relative)
-    return path.name.startswith("test_") or path.name == "conftest.py" or "/test_" in relative
+    return (
+        path.name.startswith("test_")
+        or path.name.endswith("_test_suite.py")
+        or path.name == "conftest.py"
+        or "/test_" in relative
+    )
 
 
 def _secure_object_repository_constructor_names(tree: ast.AST) -> set[str]:

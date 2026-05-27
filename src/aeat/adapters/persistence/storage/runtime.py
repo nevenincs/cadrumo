@@ -21,6 +21,7 @@ from ....core.config import (
     StorageRouteKind,
     classify_storage_route,
     load_settings,
+    settings_for_active_profile_bucket,
 )
 from .errors import StorageValidationError
 from .master_key._active_session import _active_session
@@ -323,14 +324,7 @@ def inspect_bucket_storage_runtime(
         and current_route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL
     ):
         return inspect_storage_runtime(resolved, now=now)
-    bucket_settings = Settings(
-        aeat_local_storage_root=resolved.aeat_local_storage_root,
-        aeat_active_profile=trimmed,
-        aeat_database_url="",
-    )
-    explicit_fields = set(bucket_settings.model_fields_set)
-    explicit_fields.discard("aeat_database_url")
-    object.__setattr__(bucket_settings, "__pydantic_fields_set__", explicit_fields)
+    bucket_settings = settings_for_active_profile_bucket(trimmed, resolved)
     return inspect_storage_runtime(bucket_settings, now=now)
 
 

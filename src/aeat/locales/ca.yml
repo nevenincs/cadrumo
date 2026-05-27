@@ -710,6 +710,16 @@ cli:
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
           a partir de l'historial local del Model 303.
         group_help: Ordres de saldo local de la cartera de compensació IVA.
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       project:
@@ -808,6 +818,13 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
+        create_stub_modelo_refused: 'El model %{modelo} està registrat però no té
+          suport complet en aquesta versió. La declaració informativa sobre monedes
+          virtuals situades a l''estranger (Model 721) s''ha de presentar directament
+          a la Seu Electrònica de l''AEAT (sede.agenciatributaria.gob.es). L''obligació
+          neix quan el valor agregat supera €50.000 el 31 de desembre (Orden HFP/887/2023,
+          BOE-A-2023-17455). Autoritats legals: Llei 11/2021 Art. 13 / DA 10ª,
+          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -896,6 +913,9 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
+          l'exercici %{filing_year}. Revisions aplicables a aquest exercici%{applicable}.
+        revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -2232,6 +2252,7 @@ errors:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que

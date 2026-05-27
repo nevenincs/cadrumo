@@ -178,11 +178,10 @@ def test_compute_from_pull_coerces_string_operator_values_to_decimal() -> None:
     result = compute_from_pull(snapshot, pull)
 
     assert result.modelo == "130"
-    # Casilla 01 ("Ingresos") should reach the runtime as Decimal("10000.50").
-    # The downstream casilla 03 (rendimiento neto = 01 - 02) should
-    # therefore evaluate to 10000.50 - 0 = 10000.50.
-    casilla_03_value = next(entry.value for entry in result.entries if entry.target == "03")
-    assert casilla_03_value == Decimal("10000.50")
+    # Casilla 01 ("Ingresos") is a bound casilla fed via operator edits;
+    # the string "10000.50" must arrive at the runtime as Decimal("10000.50").
+    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == "01")
+    assert casilla_01_obs.value == Decimal("10000.50")
 
 
 def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
@@ -201,5 +200,5 @@ def test_compute_from_pull_coerces_malformed_string_to_zero() -> None:
 
     result = compute_from_pull(snapshot, pull)
 
-    casilla_03_value = next(entry.value for entry in result.entries if entry.target == "03")
-    assert casilla_03_value == Decimal("0")
+    casilla_01_obs = next(obs for obs in result.observations if obs.casilla_id == "01")
+    assert casilla_01_obs.value == Decimal("0")

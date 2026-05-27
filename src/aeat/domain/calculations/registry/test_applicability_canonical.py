@@ -74,23 +74,20 @@ def test_rules_dict_defined_exactly_once() -> None:
     )
 
 
-def test_application_reexport_is_identity_equal_to_domain() -> None:
-    """The application overview re-export resolves to the same object as domain."""
-    domain_mod = importlib.import_module(
-        "aeat.domain.calculations.registry._applicability"
-    )
-    app_mod = importlib.import_module(
-        "aeat.application.overview._applicability"
-    )
-    assert app_mod._MODELO_APPLICABILITY_RULES is domain_mod._MODELO_APPLICABILITY_RULES, (
-        "application.overview._applicability._MODELO_APPLICABILITY_RULES "
-        "is not the same object as the domain definition — "
-        "the re-export is broken or the application module defines its own copy"
-    )
-    assert app_mod.derive_modelo_applicability is domain_mod.derive_modelo_applicability, (
-        "application.overview._applicability.derive_modelo_applicability "
-        "is not the same object as the domain implementation"
-    )
+def test_application_overview_applicability_shim_is_absent() -> None:
+    """The application.overview._applicability re-export shim must not exist.
+
+    The cross-domain-continuity plan (W02.P11 / P07.S34) ratified the
+    removal of ``aeat.application.overview._applicability`` — the
+    application layer consumes the domain rules through the public
+    registry surface directly (``aeat.domain.calculations.registry``)
+    and the standalone re-export shim has no remaining caller. This
+    test replaces the old identity-re-export check: a recurrence of
+    the shim (an accidental restore) must be flagged at the structural
+    boundary, not silently re-introduced.
+    """
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("aeat.application.overview._applicability")
 
 
 def test_facade_reexport_is_identity_equal_to_domain() -> None:

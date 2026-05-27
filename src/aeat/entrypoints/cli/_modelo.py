@@ -1165,7 +1165,33 @@ def _validate_filing_year(year: int) -> None:
         )
 
 
-def _validate_registry_target(modelo: str, revision_id: str) -> None:
+def _revision_covers_year(revision_id: str, year: int, definition: object) -> bool:
+    """Return True when the revision's period_selector applies to *year*.
+
+    Revisions declare their year scope through ``PeriodSelector``:
+    - ``years = [2024]`` — explicit year list
+    - ``year_from = 2019, year_to = 2023`` — closed range
+    - ``year_from = 2024`` (no ``year_to``) — open-ended from that year
+
+    A revision with no year constraints (``year_from`` is None and
+    ``years`` is empty) is treated as applicable to every year.
+    """
+
+    rev = definition.revisions.get(revision_id)  # type: ignore[union-attr]
+    if rev is None:
+        return False
+    selector = rev.period_selector
+    if selector.years:
+        return year in selector.years
+    if selector.year_from is None:
+        # No year constraint — applies to all years.
+        return True
+    if selector.year_to is None:
+        return year >= selector.year_from
+    return selector.year_from <= year <= selector.year_to
+
+
+def _validate_registry_target(modelo: str, revision_id: str, year: int) -> None:
     """Refuse a work-unit create that names an unknown modelo or revision.
 
     Without this gate ``modelo work create --modelo 999 --revision
@@ -1174,6 +1200,11 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
     against the validated registry authority — the single source of
     truth for modelo / revision identity — and refused cleanly with a
     translated error naming the unknown value.
+
+    Additionally, the revision's ``period_selector`` is checked against
+    the supplied filing year.  A 2026 revision (e.g. DANA rules) applied
+    to a 2024 filing silently uses wrong parameters; this guard refuses
+    the cross-year combination with an explicit message.
     """
 
     from ...core.resources import resources
@@ -1200,6 +1231,25 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
                 revision=revision,
                 modelo=modelo_code,
                 declared=declared,
+            )
+        )
+    if not _revision_covers_year(revision, year, definition):
+        # Build a human-readable description of which years each revision covers.
+        applicable = ", ".join(
+            rev_id
+            for rev_id in sorted(definition.revisions)
+            if _revision_covers_year(rev_id, year, definition)
+        ) or tr(
+            "cli.app.modelo.work.revision_year_mismatch_no_match",
+            default="ninguna revisión cubre ese ejercicio",
+        )
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.revision_year_mismatch",
+                revision=revision,
+                modelo=modelo_code,
+                filing_year=year,
+                applicable=applicable,
             )
         )
 
@@ -1261,6 +1311,59 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
             ),
             modelo=modelo.strip(),
             reason=applicability.reason,
+        )
+    )
+
+
+#: Modelos that are registry-registered but NOT yet fully supported for
+#: work-unit creation.  The registry entry records legal authority and
+#: period metadata; the full casilla/formula authoring has not yet been
+#: completed.  ``work create`` is refused with a legallygrounded message
+#: that names the obligation, the threshold, and AEAT Sede as the
+#: operative filing surface.
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"721"})
+
+
+def _guard_stub_modelo(modelo: str) -> None:
+    """Refuse ``work create`` for modelos that are registry stubs only.
+
+    Modelo 721 (declaración informativa sobre monedas virtuales situadas
+    en el extranjero) is registered in the registry with legal authority
+    and period metadata, but the full casilla inventory and calculation
+    engine have not yet been authored.  Without this guard the CLI would
+    silently provision a work unit that cannot be calculated, leaving the
+    taxpayer with no path to a valid filing.
+
+    The refusal cites the three governing legal authorities:
+    - Ley 11/2021 Art. 13 / DA 10ª — obligation basis
+    - Orden HFP/887/2023 — form approval and €50.000 threshold
+    - RD 1065/2007 Art. 42 quáter — reglamento operativo
+
+    Legal refs carried in the error match the registry manifest so the
+    audit trail is grounded in the same authority as the registry itself.
+    """
+
+    from ._errors import CliRefusedBoundaryError
+
+    modelo_code = modelo.strip()
+    if modelo_code not in _STUB_ONLY_MODELOS:
+        return
+    raise CliRefusedBoundaryError(
+        tr(
+            "cli.app.modelo.work.create_stub_modelo_refused",
+            default=(
+                "Modelo {modelo} está registrado pero no tiene soporte completo "
+                "en esta versión de la aplicación. La declaración informativa "
+                "sobre monedas virtuales situadas en el extranjero (Modelo 721) "
+                "requiere su presentación directamente en la Sede Electrónica de "
+                "la AEAT (sede.agenciatributaria.gob.es). La obligación nace "
+                "cuando el valor agregado de monedas virtuales en el extranjero "
+                "supera €50.000 a 31 de diciembre (Orden HFP/887/2023). "
+                "Autoridades legales: Ley 11/2021 Art. 13 / DA 10ª, "
+                "Orden HFP/887/2023 (BOE-A-2023-17455), "
+                "RD 1065/2007 Art. 42 quáter."
+            ),
+            modelo=modelo_code,
         )
     )
 
@@ -1373,7 +1476,8 @@ def work_create(
     # arguments are sound, immediately before the bucket database is
     # opened by create_work_unit.
     _validate_filing_year(year)
-    _validate_registry_target(modelo, revision)
+    _validate_registry_target(modelo, revision, year)
+    _guard_stub_modelo(modelo)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
     # Round-4 M4: refuse a work unit for a modelo the active profile's
@@ -4127,6 +4231,161 @@ def iva_wallet_balance_cmd(
         f"lot_count\t{report.lot_count}",
         f"next_expiry_year\t{report.next_expiry_year}",
         f"unallocated_applied_amount\t{report.unallocated_applied_amount}",
+    ]
+    _emit(ctx, payload, lines)
+
+
+@iva_wallet_app.command(
+    "seed",
+    help=tr(
+        "cli.app.modelo.iva_wallet.seed_help",
+        default=(
+            "Declare a Modelo 303 carry-forward balance for a period that pre-dates "
+            "local history. Use this once to seed the first period so subsequent "
+            "M303 prefill resolves modelo-303-compensacion-pendiente-anteriores correctly. "
+            "Refuses if a record already exists for the period."
+        ),
+    ),
+)
+def iva_wallet_seed_cmd(
+    ctx: typer.Context,
+    filing_year: Annotated[
+        int,
+        typer.Option(
+            "--filing-year",
+            min=2000,
+            max=2099,
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_filing_year_help",
+                default="Filing year of the Modelo 303 period to seed.",
+            ),
+        ),
+    ],
+    period: Annotated[
+        str,
+        typer.Option(
+            "--period",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_period_help",
+                default="Period of the Modelo 303 filing (e.g. 4T, 3T).",
+            ),
+        ),
+    ],
+    amount: Annotated[
+        str,
+        typer.Option(
+            "--amount",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_amount_help",
+                default=(
+                    "Carry-forward balance amount in EUR (decimal, e.g. 1200.50). "
+                    "This is the compensación pendiente de periodos anteriores for the "
+                    "NEXT period after the seeded one."
+                ),
+            ),
+        ),
+    ],
+    confirm: Annotated[
+        bool,
+        typer.Option(
+            "--confirm",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_confirm_help",
+                default=(
+                    "Required confirmation flag. Acknowledge that seeding declares a "
+                    "carry-forward balance and filing accuracy depends on the value supplied."
+                ),
+            ),
+        ),
+    ] = False,
+) -> None:
+    """Declare a Modelo 303 carry-forward balance for bootstrapping local history."""
+
+    from decimal import Decimal, InvalidOperation
+
+    from ...application.calculations._iva_compensation_history import (
+        IvaCompensationSeedConflictError,
+        seed_iva_compensation_period,
+    )
+
+    if not confirm:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_confirm_required",
+                default=(
+                    "Pass --confirm to acknowledge: this declares the M303 carry-forward "
+                    "balance for the specified period. Filing accuracy depends on correct seeding."
+                ),
+            )
+        )
+
+    try:
+        seed_amount = Decimal(amount)
+    except InvalidOperation as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_invalid_amount",
+                amount=amount,
+                default=f"Amount {amount!r} is not a valid decimal.",
+            )
+        ) from exc
+
+    if seed_amount < Decimal("0"):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_negative_amount",
+                default="Amount must be non-negative.",
+            )
+        )
+
+    bucket_id = _active_bucket_id()
+
+    from ...application.modelo._actions import _taxpayer_nif_for_bucket
+
+    taxpayer_nif = _taxpayer_nif_for_bucket(bucket_id)
+    if taxpayer_nif is None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_no_nif",
+                default="Active profile has no identity.tax_id configured. Set it via config profile.",
+            )
+        )
+
+    try:
+        state = seed_iva_compensation_period(
+            taxpayer_nif=taxpayer_nif,
+            filing_year=filing_year,
+            period=period,
+            amount=seed_amount,
+        )
+    except IvaCompensationSeedConflictError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_conflict",
+                filing_year=filing_year,
+                period=period,
+                default=(
+                    f"A compensation state for {filing_year}/{period} already exists. "
+                    "Seeding is refused to prevent overwriting."
+                ),
+            )
+        ) from exc
+
+    payload = {
+        "operation": "modelo.iva-wallet.seed",
+        "filing_year": state.filing_year,
+        "period": state.period,
+        "taxpayer_nif": state.taxpayer_nif,
+        "amount": str(state.available_end_amount),
+        "status": state.status,
+    }
+    lines = [
+        "operation\tmodelo.iva-wallet.seed",
+        f"filing_year\t{state.filing_year}",
+        f"period\t{state.period}",
+        f"taxpayer_nif\t{state.taxpayer_nif}",
+        f"amount\t{state.available_end_amount}",
+        f"status\t{state.status}",
     ]
     _emit(ctx, payload, lines)
 

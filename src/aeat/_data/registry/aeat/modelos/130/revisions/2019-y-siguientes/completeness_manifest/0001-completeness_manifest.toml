@@ -6,8 +6,12 @@ source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 number = "01"
 
-[[revisions."2019-y-siguientes".completeness_manifest.casillas]]
-number = "02"
+# C02 (Gastos) was previously in the closure as an operand of the
+# C03 rendimiento-neto formula. A parallel campaign converted C03
+# from input_kind='computed' to input_kind='bound' (actividad-
+# economica cumulative-rendimiento-neto binding), so C02 no longer
+# enters the calculation closure as a formula operand. Removed from
+# the manifest to match the current closure surface.
 
 [[revisions."2019-y-siguientes".completeness_manifest.casillas]]
 number = "03"

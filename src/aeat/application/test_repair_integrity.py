@@ -12,13 +12,14 @@ report aggregation regressed, these tests fail.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
+from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, has_active_bucket_session
+from aeat.adapters.persistence.storage.master_key._active_session import _active_session
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.application.repair_integrity import (
@@ -31,6 +32,7 @@ from aeat.application.repair_integrity import (
 )
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import override_settings
+from aeat.tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -41,10 +43,13 @@ _KEY_A = b"\xa1" * 32
 _KEY_B = b"\xb2" * 32
 
 
-@contextmanager
-def _explicit_storage(tmp_path: Path) -> Iterator[None]:
-    """Bind the repair test to one explicit database through settings."""
+@pytest.fixture(autouse=True)
+def _isolated_default_secure_sql(tmp_path: Path, request: pytest.FixtureRequest) -> Iterator[None]:
+    """Bind each repair integrity test to one explicit database through settings."""
 
+    if request.node.name == "test_list_opens_active_bucket_session_for_bootstrap_exempt_repair":
+        yield
+        return
     db_path = tmp_path / "repair-integrity.db"
     with override_settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}") as settings:
         dispose_engine(settings)
@@ -74,27 +79,26 @@ def _save_rows(namespace: str, count: int, *, tag: str) -> None:
 
 
 class TestBuildIntegrityReport:
-    def test_clean_install_reports_ok(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+    def test_clean_install_reports_ok(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("aeat.workflow", 5, tag="a")
             _save_rows("aeat.profile.bucket", 3, tag="a")
-            report = build_repair_integrity_report()
+            report = build_repair_integrity_report(repository=SecureObjectRepository())
         assert report.readable_total == 8
         assert report.unreadable_total == 0
         assert report.check.status == "ok"
         assert report.check.next_action is None or report.check.next_action == ""
         assert report.check.dead_end is None or report.check.dead_end == ""
 
-    def test_undecryptable_rows_surface_fail_with_next_action(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path):
-            # Two rows written under key A become undecryptable once the
-            # active master key rotates to B.
-            with EphemeralMasterKeyProvider(key=_KEY_A):
-                _save_rows("aeat.workflow", 2, tag="stale")
-            with EphemeralMasterKeyProvider(key=_KEY_B):
-                _save_rows("aeat.workflow", 5, tag="current")
-                _save_rows("aeat.profile.bucket", 3, tag="current")
-                report = build_repair_integrity_report()
+    def test_undecryptable_rows_surface_fail_with_next_action(self) -> None:
+        # Two rows written under key A become undecryptable once the
+        # active master key rotates to B.
+        with EphemeralMasterKeyProvider(key=_KEY_A):
+            _save_rows("aeat.workflow", 2, tag="stale")
+        with EphemeralMasterKeyProvider(key=_KEY_B):
+            _save_rows("aeat.workflow", 5, tag="current")
+            _save_rows("aeat.profile.bucket", 3, tag="current")
+            report = build_repair_integrity_report(repository=SecureObjectRepository())
         workflow = next(ns for ns in report.namespaces if ns.namespace == "aeat.workflow")
         assert workflow.readable == 5
         assert workflow.unreadable == 2
@@ -102,14 +106,16 @@ class TestBuildIntegrityReport:
         assert report.check.status == "fail"
         assert report.check.next_action == "aeat config repair quarantine --yes"
 
-    def test_namespace_filter_restricts_scope(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path):
-            with EphemeralMasterKeyProvider(key=_KEY_A):
-                _save_rows("aeat.workflow", 2, tag="stale")
-            with EphemeralMasterKeyProvider(key=_KEY_B):
-                _save_rows("aeat.workflow", 5, tag="current")
-                _save_rows("aeat.profile.bucket", 3, tag="current")
-                report = build_repair_integrity_report(namespace="aeat.profile.bucket")
+    def test_namespace_filter_restricts_scope(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
+            _save_rows("aeat.workflow", 2, tag="stale")
+        with EphemeralMasterKeyProvider(key=_KEY_B):
+            _save_rows("aeat.workflow", 5, tag="current")
+            _save_rows("aeat.profile.bucket", 3, tag="current")
+            report = build_repair_integrity_report(
+                namespace="aeat.profile.bucket",
+                repository=SecureObjectRepository(),
+            )
         # Filtering to the clean namespace excludes the workflow
         # namespace's stale rows entirely.
         assert len(report.namespaces) == 1
@@ -119,10 +125,10 @@ class TestBuildIntegrityReport:
 
 
 class TestBuildListReport:
-    def test_list_returns_all_keys_in_namespace(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+    def test_list_returns_all_keys_in_namespace(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("aeat.workflow", 3, tag="a")
-            report = build_repair_list_report(namespace="aeat.workflow")
+            report = build_repair_list_report(namespace="aeat.workflow", repository=SecureObjectRepository())
         assert report.namespace == "aeat.workflow"
         assert report.rows_total == 3
         digests = tuple(row.object_key_digest for row in report.rows)
@@ -132,8 +138,8 @@ class TestBuildListReport:
         assert all(digest for digest in digests)
         assert report.integrity.readable == 3
 
-    def test_list_filter_mode_reflects_flag_selection(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+    def test_list_filter_mode_reflects_flag_selection(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
             repo = SecureObjectRepository()
             default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
             assert default.filter_mode == "default"
@@ -150,14 +156,14 @@ class TestBuildListReport:
             )
             assert unreadable_mode.filter_mode == "unreadable"
 
-    def test_list_unreadable_filters_to_only_failed_decryption_rows(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path):
-            with EphemeralMasterKeyProvider(key=_KEY_A):
-                _save_rows("aeat.workflow", 2, tag="stale")
-            with EphemeralMasterKeyProvider(key=_KEY_B):
-                _save_rows("aeat.workflow", 3, tag="current")
-                default = build_repair_list_report(namespace="aeat.workflow")
-                unreadable = build_repair_list_report(namespace="aeat.workflow", only_unreadable=True)
+    def test_list_unreadable_filters_to_only_failed_decryption_rows(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
+            _save_rows("aeat.workflow", 2, tag="stale")
+        with EphemeralMasterKeyProvider(key=_KEY_B):
+            repo = SecureObjectRepository()
+            _save_rows("aeat.workflow", 3, tag="current")
+            default = build_repair_list_report(namespace="aeat.workflow", repository=repo)
+            unreadable = build_repair_list_report(namespace="aeat.workflow", only_unreadable=True, repository=repo)
 
         assert default.rows_total == 5
         assert default.integrity.readable == 3
@@ -170,9 +176,28 @@ class TestBuildListReport:
             {row.object_key_digest for row in default.rows}
         )
 
-    def test_list_refuses_when_both_flags_passed(self, tmp_path: Path) -> None:
+    def test_list_opens_active_bucket_session_for_bootstrap_exempt_repair(self, tmp_path: Path) -> None:
+        with isolated_runtime_profile(tmp_path=tmp_path):
+            secure_object_repository_for_active_bucket().save(
+                namespace="aeat.workflow",
+                object_key="workflow:repair-list",
+                classification=SensitivityClass.OPERATIONAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"repair-list-sessionless",
+            )
+            token = _active_session.set(None)
+            assert not has_active_bucket_session()
+            try:
+                report = build_repair_list_report(namespace="aeat.workflow")
+            finally:
+                _active_session.reset(token)
+
+        assert report.rows_total == 1
+        assert report.integrity.readable + report.integrity.unreadable == 1
+
+    def test_list_refuses_when_both_flags_passed(self) -> None:
         with (
-            _explicit_storage(tmp_path),
             EphemeralMasterKeyProvider(key=_KEY_A),
             pytest.raises(ValueError, match="cannot combine"),
         ):
@@ -182,26 +207,26 @@ class TestBuildListReport:
                 only_unreadable=True,
             )
 
-    def test_list_empty_namespace_returns_zero_rows(self, tmp_path: Path) -> None:
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
-            report = build_repair_list_report(namespace="empty.ns")
+    def test_list_empty_namespace_returns_zero_rows(self) -> None:
+        with EphemeralMasterKeyProvider(key=_KEY_A):
+            report = build_repair_list_report(namespace="empty.ns", repository=SecureObjectRepository())
         assert report.rows_total == 0
         assert report.rows == ()
 
 
 class TestReportInvariants:
-    def test_integrity_report_is_frozen(self, tmp_path: Path) -> None:
+    def test_integrity_report_is_frozen(self) -> None:
         from pydantic import ValidationError
 
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+        with EphemeralMasterKeyProvider(key=_KEY_A):
             _save_rows("aeat.workflow", 1, tag="a")
-            report = build_repair_integrity_report()
+            report = build_repair_integrity_report(repository=SecureObjectRepository())
         with pytest.raises(ValidationError):
             report.readable_total = 99  # type: ignore[misc]
 
 
 class TestRepairRemediationDecisionRepository:
-    def test_load_refuses_decision_payload_when_content_hash_does_not_match(self, tmp_path: Path) -> None:
+    def test_load_refuses_decision_payload_when_content_hash_does_not_match(self) -> None:
         decided_at = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
         original_id = repair_remediation_decision_id(
             target_namespace="aeat.workflow",
@@ -226,7 +251,7 @@ class TestRepairRemediationDecisionRepository:
             replacement_evidence_requirements=("export",),
             verified_replacement_evidence_refs=(),
         )
-        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+        with EphemeralMasterKeyProvider(key=_KEY_A):
             secure_repository = SecureObjectRepository()
             secure_repository.save(
                 namespace=_REPAIR_DECISION_NAMESPACE,

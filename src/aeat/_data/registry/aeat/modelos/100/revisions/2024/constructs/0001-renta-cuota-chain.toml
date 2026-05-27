@@ -35,6 +35,7 @@ legal_refs = [
     "rd-439-2007:art-109",
 ]
 source_refs = [
+    "aeat-dr-100-2024-dictionary",
     "aeat-renta-2024-manual-parte1",
     "boe-modelo-100-2024-form",
     "lirpf-cuota-chain-authority",
@@ -52,6 +53,7 @@ formulas = [
     "renta-2024-base-imponible-general",
     "renta-2024-base-imponible-del-ahorro",
     "renta-2024-base-liquidable-general",
+    "renta-2024-base-liquidable-general-sometida-a-gravamen",
     "renta-2024-base-liquidable-del-ahorro",
     "renta-2024-cuota-escala-autonomica-sobre-base-liquidable-general",
     "renta-2024-cuota-escala-autonomica-sobre-minimo-personal-familiar",

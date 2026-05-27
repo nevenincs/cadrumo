@@ -18,6 +18,7 @@ formulas = [
     "renta-2025-cambio-residencia-extranjero-suma",
     "renta-2025-cambio-residencia-ganancias-reducidas",
     "renta-2025-criptomonedas-ganancia-no-exenta",
+    "renta-2025-ganancia-cripto-imputable",
     "renta-2025-criptomonedas-ganancias-suma",
     "renta-2025-criptomonedas-perdidas-suma",
     "renta-2025-derechos-suscripcion-ganancias-reducidas",

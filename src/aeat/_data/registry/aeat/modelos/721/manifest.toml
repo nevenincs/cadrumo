@@ -1,0 +1,19 @@
+[modelo]
+id = "721"
+title = "Monedas virtuales en el extranjero (informativa anual)"
+official_name = "Modelo 721. Declaración informativa sobre monedas virtuales situadas en el extranjero."
+tax_domain = "informative"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "ley-11-2021:da-10",
+    "orden-hfp-887-2023:art-1",
+    "orden-hfp-887-2023:art-2",
+    "orden-hfp-887-2023:art-3",
+    "rd-1065-2007:art-42-quater",
+]
+source_refs = [
+    "aeat-modelo-721-procedure",
+    "boe-modelo-721-2023-form",
+]

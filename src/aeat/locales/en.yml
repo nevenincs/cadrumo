@@ -650,9 +650,19 @@ cli:
       history_help: Show the chronological lifecycle audit for one modelo
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
-        balance_help: Show aggregated IVA compensation carry-forward balance computed from
-          local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+        balance_help: Show aggregated IVA compensation carry-forward balance computed
+          from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
         group_help: Local IVA compensation wallet balance commands.
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       project:
@@ -742,6 +752,13 @@ cli:
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name was applied as a rename to
           %{name}.
+        create_stub_modelo_refused: 'Modelo %{modelo} is registered but not yet fully
+          supported in this version. The informative declaration on virtual currencies
+          held abroad (Modelo 721) must be filed directly at the AEAT Sede Electrónica
+          (sede.agenciatributaria.gob.es). The obligation arises when the aggregate
+          value of virtual currencies abroad exceeds €50,000 at 31 December (Orden
+          HFP/887/2023, BOE-A-2023-17455). Legal authorities: Ley 11/2021 Art. 13 /
+          DA 10ª, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -823,6 +840,9 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
+          cover filing year %{filing_year}. Revisions applicable to that year%{applicable}.
+        revision_year_mismatch_no_match: no revision covers that filing year
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -2143,6 +2163,7 @@ errors:
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
     bound_casilla_binding_value_missing: Binding {binding_id} has no supplied value.
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
