@@ -198,32 +198,6 @@ treated as broadly hardened.
 - [ ] `W07.P14.S60` - Repair the next bounded residual slice without fakes, stubs, monkeypatches, private taxpayer data, or root-database cross-contamination; `src/aeat`.
 - [ ] `W07.P14.S61` - Run the secure-SQL guard plus focused residual-slice tests after each repair and persist the review result; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py .vault/audit`.
 
-### Phase `W07.P27` - ModeloDraft roundtrip fixture hardening
-
-Populate all optional ModeloDraft fields with non-default values in roundtrip fixtures so a save-drops-field / load-re-defaults-field regression cannot pass vacuously. Extend the anti-tautology companion with parametrized field-drop proofs for each previously-defaulted optional field.
-
-- [x] `W07.P27.S396` - Populate 6 optional ModeloDraft fields (casilla_provenance, notes, approved_at, approved_by, review_checksum, approval_basis) with non-default values in both roundtrip fixtures; `extend anti-tautology suite with 6 parametrized field-drop cases; all 9 tests pass, ruff clean; `src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py`.
-
-## Wave `W08` - fresh CLI persona findings adoption
-
-This Wave adopts testimonial-driven CLI findings that affect storage readiness, repair guidance, and operator confidence. Findings must be reconciled against existing persona audits and capability research before any repair is assigned to this plan.
-
-### Phase `W08.P14` - testimonial disposition reconciliation
-
-Reconcile fresh persona testimony with current secure-storage, readiness, repair, and CLI workflow plans so each finding has exactly one owning plan row or an explicit deferred disposition.
-
-- [ ] `W08.P14.S56` - Reconcile fresh persona audits and repair plans with secure-storage readiness ownership; `.vault/audit`.
-- [ ] `W08.P14.S57` - Record research requirements for persona findings that lack enough architectural backing; `.vault/research`.
-- [ ] `W08.P14.S58` - Classify unresolved persona findings as secure-storage, CLI workflow, capability, or separate-plan work; `.vault/plan`.
-
-### Phase `W08.P15` - testimonial retest and repair adoption
-
-Run fresh persona retests only after ownership is explicit, then add or execute secure-storage-owned repair rows with isolated scratch roots and CLI-only operator paths.
-
-- [ ] `W08.P15.S59` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
-- [ ] `W08.P15.S60` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
-- [ ] `W08.P15.S61` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
-
 ## Wave `W09` - worktree coverage reconciliation
 
 This Wave closes the tracking gap for dirty or untracked secure-storage-related artifacts. It inventories the worktree, maps each relevant artifact to an owning plan row, and records separate-plan or deferred dispositions for unrelated slices.
@@ -938,3 +912,33 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S393` - Close `AFR-291` for `src/aeat/locales/_ast_scanner.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/locales/_ast_scanner.py`.
 - [ ] `W12.P26.S394` - Close `AFR-292` for `src/aeat/locales/cli.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/locales/cli.py`.
 - [ ] `W12.P26.S395` - Close `AFR-293` for `src/aeat/locales/manager.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/locales/manager.py`.
+
+## Wave `W13` - fresh CLI persona findings adoption
+
+This Wave adopts testimonial-driven CLI findings that affect storage readiness, repair guidance, and operator confidence. Findings must be reconciled against existing persona audits and capability research before any repair is assigned to this plan.
+
+### Phase `W13.P27` - testimonial disposition reconciliation
+
+Reconcile fresh persona testimony with current secure-storage, readiness, repair, and CLI workflow plans so each finding has exactly one owning plan row or an explicit deferred disposition.
+
+- [ ] `W13.P27.S396` - Reconcile fresh persona audits and repair plans with secure-storage readiness ownership; `.vault/audit`.
+- [ ] `W13.P27.S397` - Record research requirements for persona findings that lack enough architectural backing; `.vault/research`.
+- [ ] `W13.P27.S398` - Classify unresolved persona findings as secure-storage, CLI workflow, capability, or separate-plan work; `.vault/plan`.
+
+### Phase `W13.P28` - testimonial retest and repair adoption
+
+Run fresh persona retests only after ownership is explicit, then add or execute secure-storage-owned repair rows with isolated scratch roots and CLI-only operator paths.
+
+- [ ] `W13.P28.S399` - Dispatch fresh persona retests for secure-storage-owned workflows with isolated scratch roots; `.vault/exec`.
+- [ ] `W13.P28.S400` - Adopt secure-storage-owned testimonial repairs into plan rows before implementation; `.vault/plan`.
+- [ ] `W13.P28.S401` - Persist testimonial retest synthesis and final finding dispositions; `.vault/audit`.
+
+## Wave `W14` - ModeloDraft roundtrip fixture hardening
+
+This Wave records late roundtrip-fixture hardening work that was originally grafted into W07 with a high step number. It now sits after the W12 inventory so canonical step identifiers remain unique and monotonic.
+
+### Phase `W14.P29` - ModeloDraft roundtrip fixture hardening
+
+Populate all optional ModeloDraft fields with non-default values in roundtrip fixtures so a save-drops-field / load-re-defaults-field regression cannot pass vacuously. Extend the anti-tautology companion with parametrized field-drop proofs for each previously-defaulted optional field.
+
+- [x] `W14.P29.S402` - Populate 6 optional ModeloDraft fields (casilla_provenance, notes, approved_at, approved_by, review_checksum, approval_basis) with non-default values in both roundtrip fixtures; `extend anti-tautology suite with 6 parametrized field-drop cases; all 9 tests pass, ruff clean; `src/aeat/domain/filing/test_secure_storage_roundtrip.py src/aeat/domain/filing/test_roundtrip_anti_tautology.py`.
