@@ -148,8 +148,17 @@ class FormulaPayload(OutputSchema):
 
 
 @register_schema("modelo.work.create")
+@register_schema("modelo.work.reuse")
 class WorkCreateResult(OutputSchema):
+    # ``operation`` is either ``modelo.work.create`` (a fresh unit was
+    # created) or ``modelo.work.reuse`` (an existing unit matching the
+    # natural-key tuple was returned unchanged); the same shape covers
+    # both lanes so the command surface keeps a single typed contract.
     operation: str = "modelo.work.create"
+    status: str
+    status_message: str
+    name_applied: str
+    applicability_guard_bypassed: bool
     work_unit_id: str
     bucket_id: str
     modelo: str
@@ -265,6 +274,37 @@ class WorkRevisionsResult(OutputSchema):
     revisions: list[CalculationRevisionPayload]
 
 
+@register_schema("modelo.work.revision")
+class WorkRevisionResult(OutputSchema):
+    """Single-revision shape returned by ``aeat app modelo work revision``.
+
+    Carries the same calculation-revision fields as
+    :class:`WorkCalculateResult` minus the persistence-confirmation
+    pair (``saved`` / ``saved_confirmation``). Modelo 202 modality
+    surfaces on the same optional fields so the inspection verb stays
+    contract-compatible with the calculate verb's output.
+    """
+
+    operation: str = "modelo.work.revision"
+    calculation_revision_id: str
+    work_unit_id: str
+    state: str
+    casilla_values: dict[str, str]
+    observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
+    binding_overrides: dict[str, str]
+    inputs_snapshot: dict[str, object]
+    created_at: str
+    updated_at: str
+    verified_at: str | None = None
+    verified_by: str | None = None
+    filed_at: str | None = None
+    filed_by: str | None = None
+    superseded_at: str | None = None
+    modality: str | None = None
+    modality_reason: str | None = None
+
+
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
@@ -305,6 +345,8 @@ class WorkAmendResult(OutputSchema):
     operation: str = "modelo.work.amend"
     amendment_kind: str
     amends_filing_record_id: str
+    # amend uses the same filing-record body as work.file but always
+    # carries the amendment metadata pair above.
     filing_record_id: str
     work_unit_id: str
     calculation_revision_id: str
