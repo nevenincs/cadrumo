@@ -371,21 +371,21 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: cli.app.live.iva_wallet.acquisition.outcome.aeat_403
-            authenticated: cli.app.live.iva_wallet.acquisition.outcome.authenticated
-            certificate_required: cli.app.live.iva_wallet.acquisition.outcome.certificate_required
-            dom_drift: cli.app.live.iva_wallet.acquisition.outcome.dom_drift
-            live_navigation_failed: cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed
-            no_clave_prompt: cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt
-            operator_timeout: cli.app.live.iva_wallet.acquisition.outcome.operator_timeout
-            pending_clave_request: cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request
-            qr_required: cli.app.live.iva_wallet.acquisition.outcome.qr_required
-            unknown: cli.app.live.iva_wallet.acquisition.outcome.unknown
-            wrong_identity: cli.app.live.iva_wallet.acquisition.outcome.wrong_identity
+            aeat_403: 'بوابة AEAT 403/المصادقة'
+            authenticated: 'مصادق عليه'
+            certificate_required: 'الشهادة مطلوبة'
+            dom_drift: 'تغير شكل صفحة AEAT'
+            live_navigation_failed: 'فشل التنقل المباشر'
+            no_clave_prompt: 'لا توجد مطالبة Cl@ve'
+            operator_timeout: 'انتهت مهلة موافقة المشغل'
+            pending_clave_request: 'طلب Cl@ve معلق'
+            qr_required: 'موافقة QR مطلوبة'
+            unknown: 'غير معروف'
+            wrong_identity: 'هوية غير صحيحة'
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        capture_remote_state_help: cli.app.live.iva_wallet.capture_remote_state_help
+        capture_remote_state_help: 'يلتقط مباشرة سجل نموذج 303 المقدم ويحاول قراءة محفظة ضريبة القيمة المضافة لدى AEAT كعملية استحواذ مصنفة للقراءة فقط.'
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help

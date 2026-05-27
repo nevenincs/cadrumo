@@ -546,17 +546,17 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: porta AEAT 403/autenticació
-            authenticated: autenticat
-            certificate_required: certificat requerit
-            dom_drift: la forma de la pàgina AEAT ha canviat
-            live_navigation_failed: navegació en directe fallida
-            no_clave_prompt: sense avís de Cl@ve
-            operator_timeout: temps d'aprovació esgotat
-            pending_clave_request: petició Cl@ve pendent
-            qr_required: aprovació QR requerida
-            unknown: desconegut
-            wrong_identity: identitat incorrecta
+            aeat_403: 'porta AEAT 403/autenticació'
+            authenticated: 'autenticat'
+            certificate_required: 'certificat requerit'
+            dom_drift: 'la forma de la pàgina AEAT ha canviat'
+            live_navigation_failed: 'navegació en directe fallida'
+            no_clave_prompt: 'sense avís de Cl@ve'
+            operator_timeout: 'temps d''aprovació esgotat'
+            pending_clave_request: 'petició Cl@ve pendent'
+            qr_required: 'aprovació QR requerida'
+            unknown: 'desconegut'
+            wrong_identity: 'identitat incorrecta'
         app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura;
           només permet representació en nom propi i la consulta de lectura protegida
           de cartera).
@@ -565,9 +565,7 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
-        capture_remote_state_help: Captura en directe l'historial de Model 303 presentat
-          i intenta la lectura de la cartera d'IVA AEAT com una adquisició tipada
-          de només lectura.
+        capture_remote_state_help: 'Captura en directe l''historial de Model 303 presentat i intenta la lectura de la cartera d''IVA AEAT com una adquisició tipada de només lectura.'
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.

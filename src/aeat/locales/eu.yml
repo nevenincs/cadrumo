@@ -371,21 +371,21 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: cli.app.live.iva_wallet.acquisition.outcome.aeat_403
-            authenticated: cli.app.live.iva_wallet.acquisition.outcome.authenticated
-            certificate_required: cli.app.live.iva_wallet.acquisition.outcome.certificate_required
-            dom_drift: cli.app.live.iva_wallet.acquisition.outcome.dom_drift
-            live_navigation_failed: cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed
-            no_clave_prompt: cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt
-            operator_timeout: cli.app.live.iva_wallet.acquisition.outcome.operator_timeout
-            pending_clave_request: cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request
-            qr_required: cli.app.live.iva_wallet.acquisition.outcome.qr_required
-            unknown: cli.app.live.iva_wallet.acquisition.outcome.unknown
-            wrong_identity: cli.app.live.iva_wallet.acquisition.outcome.wrong_identity
+            aeat_403: 'AEAT 403/autentifikazio atea'
+            authenticated: 'autentifikatuta'
+            certificate_required: 'ziurtagiria behar da'
+            dom_drift: 'AEAT orriaren egitura aldatu da'
+            live_navigation_failed: 'zuzeneko nabigazioak huts egin du'
+            no_clave_prompt: 'Cl@ve abisurik ez'
+            operator_timeout: 'onarpenaren denbora agortu da'
+            pending_clave_request: 'Cl@ve eskaera zain'
+            qr_required: 'QR bidezko onarpena behar da'
+            unknown: 'ezezaguna'
+            wrong_identity: 'identitate okerra'
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        capture_remote_state_help: cli.app.live.iva_wallet.capture_remote_state_help
+        capture_remote_state_help: 'Aurkeztutako 303 ereduko historiala zuzenean atzitzen du eta AEATeko BEZ zorroaren irakurketa irakurtzeko soilik den eskuratze tipatu gisa saiatzen du.'
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
@@ -1022,9 +1022,9 @@ cli:
       errors:
         conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
       help: 'Inventory the secure-object index by namespace.'
-      list_help: cli.diagnostics.secure_objects.list_help
-      namespace_help: cli.diagnostics.secure_objects.namespace_help
-      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
+      list_help: 'List secure-object keys stored under one namespace.'
+      namespace_help: 'Namespace to inventory.'
+      unreadable_help: 'Restrict the listing to undecryptable rows.'
     summary:
       auth_no_session: cli.diagnostics.summary.auth_no_session
       auth_none: cli.diagnostics.summary.auth_none
