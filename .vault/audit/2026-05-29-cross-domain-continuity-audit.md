@@ -2397,3 +2397,95 @@ categories. Logged as FU-S104-A.
 | ID | Step | Description |
 |----|------|-------------|
 | FU-S104-A | S277 | Annotate `merged` in `_import_ledger_transactions` as `dict[str, Transaction]` or extract `upsert_transaction` helper; resolves D3 inconsistency |
+
+---
+
+## Task #89 — W06.P29.S108-S109 import idempotency (e5a7979a5 + 07f14dfcc)
+
+**Review date:** 2026-05-27
+
+### Scope
+
+Two commits: `e5a7979a5` (S109 regression test) and `07f14dfcc` (exec records +
+plan closure). S108 carries no new source — the claim is that the S106 implementation
+already satisfies the idempotency contract. Primary verification: confirm the live
+import path in `config_profile_import` actually delivers what S108 specified;
+confirm S109 tests that contract without tautology.
+
+### S108 — Idempotency contract satisfied by S106
+
+S108 specified: "add idempotency mode that respects bundle `profile_id` when no
+local profile of that id exists and refuses or upserts when one does."
+
+The live path in `config_profile_import` (already audited in Task #85) delivers
+exactly this:
+
+- UUID preserved: `_atomic_create_profile(..., profile_id=bundle_profile_id)` passes
+  the bundle's UUID directly to `register_active_profile`; a fresh UUID is minted
+  only when `profile_id=None`. **Covers "respects bundle profile_id when no local
+  profile exists".**
+- Tier-1 UUID collision: `read_profile_bucket_by_id(bundle_profile_id) is not None`
+  → `CliRefusedBoundaryError` citing "already registered". **Covers "refuses when
+  one does".**
+- The `ProfileAlreadyRegisteredError` catch downstream is insurance; the Tier-1
+  guard fires first in the happy-collision path.
+- No "upsert" in the S108 sense is implemented — the spec text "refuses or upserts"
+  was ambiguous; the implementation chose the safer "refuse" path, which is correct
+  per ADR D5 (the `delete` + re-import recovery path is documented in the refusal
+  message). **No gap.**
+
+**S108 contract: SATISFIED by S106. Correct to close without new source.**
+
+### S109 — Regression tests
+
+`src/aeat/entrypoints/cli/test_profile_import_idempotency.py` (222 lines,
+`e5a7979a5`):
+
+**`test_reimport_same_bundle_is_refused`:** Creates a minimal profile, exports it,
+attempts import into the same root (UUID collision — refused immediately), then opens
+a fresh `isolated_profile_storage_root`, imports once (succeeds), imports again
+(refused). Confirms via `profile list` and `profile show` that exactly one profile
+exists and its UUID matches the exported one. Real CLI path throughout. **PASS.**
+
+**`test_label_collision_different_uuid_refused_even_with_explicit_label`:** Occupies
+a label in a fresh root with a locally-minted profile (different UUID), then imports
+the bundle without `--label` (refused), with `--label <same>` (refused), and with
+`--label <free>` (succeeds). Exercises Tier-2 guard explicitly. **PASS.**
+
+**`test_mutated_profile_id_creates_second_profile` (anti-tautology):** Mutates the
+bundle's `profile_id` to a fresh `uuid.uuid4()` before the second import. Both
+imports succeed (different UUIDs, different labels). `profile show` for each label
+returns the matching UUID, proving the UUID is the genuine discriminator. If the
+guard were tautological (never checking UUID), the second import would collide on
+label rather than succeeding — the test would fail, exposing the broken contract.
+**Anti-tautology mandate: PASS.**
+
+Fixture choice: `isolated_profile_storage_root` throughout — correct, because
+`_create_minimal_profile_and_export` calls `config profile create` and `config
+profile export` via CLI before any import. The test exercises the full create path,
+not a pre-provisioned session. **PASS.**
+
+No mocks, no `unsecured` monkeypatches, no `skip`/`xfail`. **PASS.**
+
+### Exec record (07f14dfcc)
+
+Step record `2026-05-27-cross-domain-continuity-W06-P29-S108-S109.md` is honest: it
+names the S106 commit (`af81954a6`) as the implementation basis, enumerates all
+three S109 tests, and documents the fixture choice rationale. No inflated claims.
+**PASS.**
+
+### Verdict
+
+| Check | Status |
+|-------|--------|
+| S108 contract satisfied by S106 live path | PASS |
+| UUID preservation in `_atomic_create_profile` | PASS |
+| Tier-1 UUID collision guard fires before `ProfileAlreadyRegisteredError` | PASS |
+| S109 reimport-refused test | PASS |
+| S109 label-collision-with-explicit-label test | PASS |
+| S109 anti-tautology (UUID mutation creates second profile) | PASS |
+| Fixture: `isolated_profile_storage_root` (create-path correct) | PASS |
+| No mocks / no unsecured backends | PASS |
+| Exec record honest about S108 no-code closure | PASS |
+
+**Overall: APPROVE.** W06.P29 closes cleanly. No follow-ups.
