@@ -76,9 +76,12 @@ from ._common import (
     _emit,
     _no_active_profile_refusal,
     _parse_iso_date,
+    _profile_to_taxpayer,
     _state,
     _tx_repo,
 )
+from ...domain.deadlines._models import IrpfSpecialRegime
+from ...domain.profile._renta_codes import FiscalResidency
 
 app = typer.Typer(
     name="ledger",
@@ -373,6 +376,12 @@ def ledger_add(
         category_id=validated_category_id,
         operator_supplied=_parse_decimal(business_pct, label="business-pct"),
     )
+    active_taxpayer = _profile_to_taxpayer(current_state)
+    resolved_source_jurisdiction = _resolve_source_jurisdiction(
+        source_jurisdiction,
+        fiscal_residency=active_taxpayer.fiscal_residency,
+        irpf_special_regime=active_taxpayer.irpf_special_regime,
+    )
     try:
         command = ManualLedgerTransactionCommand(
             bucket_id=transaction_repository.bucket_id,
@@ -398,7 +407,7 @@ def ledger_add(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger add",
             idempotency_key=idempotency_key,
-            source_jurisdiction=source_jurisdiction,
+            source_jurisdiction=resolved_source_jurisdiction,
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
@@ -1916,6 +1925,41 @@ def _emit_ratios_event(
             ),
         )
     )
+
+
+def _resolve_source_jurisdiction(
+    operator_value: str | None,
+    *,
+    fiscal_residency: FiscalResidency | None,
+    irpf_special_regime: IrpfSpecialRegime | None,
+) -> str | None:
+    """Stamp the profile-conditional default for ``--source-jurisdiction``.
+
+    Future entrypoints (importer, bulk classify, etc.) must pre-validate
+    profile-conditional defaults via this helper. Resolution rules track
+    the regulatory branching anchored in LIRPF Art. 8 (universal-base
+    presumption for Spanish residents), TRLIRNR Art. 2 / Art. 10
+    (non-residents must declare jurisdiction explicitly), and Art. 93
+    LIRPF (impatriados must declare; the Beckham regime treats Spanish-
+    and foreign-source income distinctly so a silent ES default would
+    quietly include foreign-source amounts in the IRPF base).
+
+    Returns:
+        - The operator-supplied value (after stripping) when present.
+        - ``"ES"`` when the profile is RESIDENT_IRPF / GENERAL and no
+          operator value was given.
+        - Raises ``typer.BadParameter`` via :func:`_bad` for
+          NON_RESIDENT_IRNR or RESIDENT_IRPF / IMPATRIADO when no
+          operator value was given.
+    """
+
+    if operator_value is not None:
+        return operator_value
+    if fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR:
+        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_irnr"))
+    if irpf_special_regime is IrpfSpecialRegime.IMPATRIADO:
+        raise _bad(tr("cli.ledger.add.source_jurisdiction_required_beckham"))
+    return "ES"
 
 
 def _resolve_business_pct_with_census(
