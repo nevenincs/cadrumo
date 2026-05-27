@@ -61,6 +61,8 @@ logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_4033_PATH = _EXTERNAL.aeat.sede_paths.auth_gate_4033
 _AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
+_GROI_AUTH_UNLOCK_DESCRIPTOR = _EXTERNAL.aeat.oracles.groi_auth_unlock_descriptor
+_NIF_IVA_AUTH_LOCKED_DESCRIPTOR = _EXTERNAL.aeat.oracles.nif_iva_auth_locked_descriptor
 _NIF_IVA_ENTRY_HOST = urlsplit(str(AEAT_NIF_IVA_ENTRY_URL)).netloc
 _NIF_IVA_VERIFICATION_HOST = urlsplit(str(AEAT_NIF_IVA_VERIFICATION_URL)).netloc
 
@@ -335,14 +337,15 @@ async def collect_nif_iva_check_observations(
                     "landing_url": page.url,
                     "expected_url": str(AEAT_NIF_IVA_VERIFICATION_URL),
                     "auth_tested": "clave_movil",
-                    "auth_tested_unlocks": "www2 GROI ConsultaOperadorSedeGroiServlet",
-                    "auth_tested_does_not_unlock": "www1 IXVI ConsultaIntracomunitarios",
+                    "auth_tested_unlocks": _GROI_AUTH_UNLOCK_DESCRIPTOR,
+                    "auth_tested_does_not_unlock": _NIF_IVA_AUTH_LOCKED_DESCRIPTOR,
                 },
                 suggestion=(
                     "Empirical finding (live probe 2026-05-07 via DefaultBrowserSession + "
-                    "cl@ve-movil): the same authenticated session that unlocks the www2 "
-                    "GROI Spanish-ROI consult surface is REJECTED by the www1 IXVI "
-                    "foreign-EU surface. Next auth tier to test is X.509 certificate "
+                    f"cl@ve-movil): the same authenticated session that unlocks the "
+                    f"{_GROI_AUTH_UNLOCK_DESCRIPTOR} Spanish-ROI consult surface is REJECTED by the "
+                    f"{_NIF_IVA_AUTH_LOCKED_DESCRIPTOR} foreign-EU surface. Next auth tier to test is "
+                    "X.509 certificate "
                     "(via the certificate auth provider). If certificate also 4033s, the "
                     "IXVI surface likely requires the caller's own NIF to be ROI-registered "
                     "(modelo 036/037 box 582). Until either path lands, use the GROI "

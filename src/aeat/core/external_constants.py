@@ -141,6 +141,7 @@ class AeatHelpPages(_Frozen):
     csv_verification: str
     renta_web_open_landing: str
     nif_iva_landing: str
+    manual_practicos_root: str
 
 
 class AeatOracles(_Frozen):
@@ -149,6 +150,8 @@ class AeatOracles(_Frozen):
     nif_iva_verification: str
     groi_check: str
     renta_web_open_app_template: str
+    groi_auth_unlock_descriptor: str
+    nif_iva_auth_locked_descriptor: str
 
 
 class AeatLiveSafety(_Frozen):
