@@ -1,0 +1,24 @@
+[[revisions."2008-y-siguientes".casillas]]
+id = "decl.ejercicio"
+number = "ejercicio"
+label = "Ejercicio al que se refiere la declaracion"
+section = ["declarante"]
+data_type = "year"
+semantic_role = "filing_year"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+number = "tipo-declaracion"
+label = "Tipo de declaracion (originaria / sustitutiva / complementaria)"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_declaracion"
+required = true
+input_kind = "informational"
+legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
