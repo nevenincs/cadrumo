@@ -3039,6 +3039,10 @@ filing:
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: "S'ha aplicat prorrata 50 %% (Art. 59 LIRPF) per
+      custòdia compartida en %{count} descendent(s). Cada progenitor declara la meitat
+      del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516)."
   errors:
     foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
       en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
@@ -3358,6 +3362,9 @@ wizard:
       taxpayer-marital-status:
         help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
           4 = separat/da o divorciat/da.'
+      taxpayer-marriage-date:
+        help: 'Data d''inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil = 2 (casat/da).
+          Calcula caselles 0245/0246/0247 (matrimoni sobrevingut, art. 82 LIRPF).'
       taxpayer-sex:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
@@ -3572,6 +3579,8 @@ wizard:
           viudo:
             label: 3 - vidu
         prompt: Estat civil del primer declarant
+      taxpayer-marriage-date:
+        prompt: Data d'inici del matrimoni (AAAA-MM-DD)
       taxpayer-sex:
         prompt: Sexe del primer declarant
       title: Primer declarant

@@ -2879,6 +2879,10 @@ filing:
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: '50 %% prorrata (Art. 59 LIRPF) applied for shared
+      custody in %{count} dependent(s). Each parent declares half the applicable mínimo
+      (casillas 0513/0514 and, where applicable, 0515/0516).'
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
@@ -3194,6 +3198,9 @@ wizard:
       taxpayer-marital-status:
         help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
           4 = separated or divorced.'
+      taxpayer-marriage-date:
+        help: 'Start date of the current marriage (YYYY-MM-DD). Only when marital status = 2 (married).
+          Derives casillas 0245/0246/0247 (matrimonio sobrevenido, Art. 82 LIRPF).'
       taxpayer-sex:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
@@ -3407,6 +3414,8 @@ wizard:
           viudo:
             label: 3 - widowed
         prompt: First taxpayer marital status
+      taxpayer-marriage-date:
+        prompt: Marriage start date (YYYY-MM-DD)
       taxpayer-sex:
         prompt: First taxpayer sex code
       title: First taxpayer
