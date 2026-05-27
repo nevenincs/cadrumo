@@ -373,3 +373,102 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
 # smuggle-via-inputs-only pattern. The new
 # test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected
 # above is the harder gate.
+
+
+# ---------------------------------------------------------------------------
+# Art. 110.3.b RIRPF: high-retention exemption formula (casilla 17)
+# ---------------------------------------------------------------------------
+
+
+def test_modelo_130_art110_3b_casilla_17_is_zero_when_retention_ratio_meets_threshold(
+    modelo_130_registry,
+) -> None:
+    """Art. 110.3.b RIRPF: casilla 17 = 0 when retenciones/rendimientos >= 70%.
+
+    Oracle values: rendimientos íntegros (c01) = 15000, retenciones (c06) = 10500.
+    Ratio = 10500 / 15000 = 0.70 — exactly at the Art. 110.3.b threshold.
+    The formula for casilla 17 (modelo-130-diferencia) must produce Decimal(0)
+    because the autónomo is exempt from the quarterly payment.
+
+    Expected value derivation: Art. 110.3.b RD 439/2007 mandates zero payment
+    when the accumulated retention ratio >= 70% of gross income. This is not
+    derived from the formula under test; it is derived from the regulatory rule.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot_130(modelo_130_registry),
+        inputs={
+            "01": Decimal("15000"),
+            "02": Decimal("5000"),
+            "05": Decimal("250"),
+            "06": Decimal("10500"),  # 10500/15000 = exactly 70%
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={"filing_period": date(2026, 4, 20)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+    )
+
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == "17")
+    assert casilla_17.value == Decimal("0"), (
+        f"Art. 110.3.b: casilla 17 must be zero when retention ratio >= 70%; got {casilla_17.value}"
+    )
+
+
+def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_below_threshold(
+    modelo_130_registry,
+) -> None:
+    """Anti-tautology: casilla 17 equals the standard subtraction when retenciones/rendimientos < 70%.
+
+    Oracle values: ingresos (c01) = 50000, gastos (c02) = 10000, retenciones (c06) = 1000.
+    Ratio = 1000 / 50000 = 0.02 (2%) — well below the 70% threshold.
+    Formula chain: c03=40000, c04=8000, c07=7000, c12=7000, c13=0, c14=7000,
+    c15=0, c16=0 → c17 = 7000 (standard subtraction, NOT the exemption zero).
+
+    The ratio is deliberately far from 70% so this test is sensitive to any
+    accidental triggering of the exemption branch. A regression that applied
+    the exemption at 2% retention would produce c17=0, failing the assertion.
+
+    Expected value derivation: standard M130 formula chain — not the Art. 110.3.b
+    exemption rule under test. This is the anti-tautology proof that the formula
+    branch condition is real and the exemption only fires at >= 70%.
+    """
+    result = calculate_registry_snapshot(
+        _snapshot_130(modelo_130_registry),
+        inputs={
+            "01": Decimal("50000"),
+            "02": Decimal("10000"),
+            "03": Decimal("40000"),  # c03 = rendimiento neto = c01 - c02 (user-supplied input)
+            "05": Decimal("0"),
+            "06": Decimal("1000"),  # 1000/50000 = 2% — well below threshold; c04=8000 > c06
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        date_context={"filing_period": date(2026, 4, 20)},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+    )
+
+    casilla_17 = next(obs for obs in result.observations if obs.casilla_id == "17")
+    casilla_14 = next(obs for obs in result.observations if obs.casilla_id == "14")
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    casilla_16 = next(obs for obs in result.observations if obs.casilla_id == "16")
+
+    # The standard subtraction formula: (c14 - c15) - c16
+    expected = casilla_14.value - casilla_15.value - casilla_16.value
+    assert casilla_17.value == expected, (
+        f"Below-threshold case: casilla 17 must equal (c14-c15)-c16 = {expected}; got {casilla_17.value}"
+    )
+    # Anti-tautology: standard formula must yield a positive payment when income > costs
+    # and retenciones are small. If c17 = 0 here, the exemption branch fired incorrectly.
+    assert casilla_17.value != Decimal("0"), (
+        "Below-threshold case: casilla 17 must not be zero when income=50000 and retenciones=1000 (2% ratio)"
+    )
