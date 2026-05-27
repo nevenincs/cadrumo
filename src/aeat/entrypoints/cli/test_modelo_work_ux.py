@@ -44,6 +44,25 @@ def _invoke(args: list[str]):
     return invoke_cached_cli(args)
 
 
+def _payload(output: str) -> dict:
+    """Return the payload from a CLI JSON line, unwrapping the SchemaEnvelope.
+
+    Post-P09.S43 every migrated ``modelo.work.*`` command emits the
+    bare payload wrapped in
+    ``{"schema_version": ..., "command": ..., "result": ..., "warnings": []}``.
+    Tests in this file all hit migrated commands, so the helper
+    transparently unwraps to the ``result`` mapping. Bare-payload
+    commands (not migrated) pass through unchanged: the envelope-vs-bare
+    detection keys on the ``schema_version`` marker which only the
+    envelope shape carries.
+    """
+
+    raw = json.loads(output)
+    if isinstance(raw, dict) and "schema_version" in raw and "result" in raw:
+        return raw["result"]
+    return raw
+
+
 def _create_profile() -> None:
     result = _invoke(
         [
@@ -67,7 +86,7 @@ def _create_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 def _create_calculable_work_unit() -> str:
@@ -84,7 +103,7 @@ def _create_calculable_work_unit() -> str:
         ]
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return json.loads(result.output)["work_unit_id"]
+    return _payload(result.output)["work_unit_id"]
 
 
 def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> None:
@@ -96,7 +115,7 @@ def test_work_history_records_creation_event(_isolated_cli_backend: Path) -> Non
 
     history = _invoke(["--format", "json", "app", "modelo", "work", "history", work_unit_id])
     assert history.exit_code == 0, history.output
-    payload = json.loads(history.output)
+    payload = _payload(history.output)
 
     assert payload["event_count"] == 1
     event = payload["events"][0]
@@ -140,7 +159,7 @@ def test_work_revisions_accepts_a_positional_work_unit_id(_isolated_cli_backend:
 
     result = _invoke(["--format", "json", "app", "modelo", "work", "revisions", work_unit_id])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["work_unit_id_filter"] == work_unit_id
 
 
@@ -156,7 +175,7 @@ def test_work_calculate_confirms_the_draft_was_saved(_isolated_cli_backend: Path
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = _payload(result.output)
     assert payload["saved"] is True
     confirmation = payload["saved_confirmation"]
     assert payload["calculation_revision_id"] in confirmation
@@ -175,12 +194,12 @@ def test_work_revision_shows_persisted_casilla_values(_isolated_cli_backend: Pat
         ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
     )
     assert calculated.exit_code == 0, calculated.output
-    revision_id = json.loads(calculated.output)["calculation_revision_id"]
-    saved_values = json.loads(calculated.output)["casilla_values"]
+    revision_id = _payload(calculated.output)["calculation_revision_id"]
+    saved_values = _payload(calculated.output)["casilla_values"]
 
     shown = _invoke(["--format", "json", "app", "modelo", "work", "revision", revision_id])
     assert shown.exit_code == 0, shown.output
-    payload = json.loads(shown.output)
+    payload = _payload(shown.output)
     assert payload["operation"] == "modelo.work.revision"
     assert payload["calculation_revision_id"] == revision_id
     # The shown casilla values are exactly the persisted ones.
@@ -214,7 +233,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
         ]
     )  # fmt: skip
     assert first.exit_code == 0, first.output
-    first_payload = json.loads(first.output)
+    first_payload = _payload(first.output)
     assert first_payload["status"] == "created"
     assert first_payload["operation"] == "modelo.work.create"
 
@@ -227,7 +246,7 @@ def test_idempotent_work_create_reports_reuse(_isolated_cli_backend: Path) -> No
         ]
     )  # fmt: skip
     assert second.exit_code == 0, second.output
-    second_payload = json.loads(second.output)
+    second_payload = _payload(second.output)
     assert second_payload["status"] == "reused"
     assert second_payload["operation"] == "modelo.work.reuse"
     assert second_payload["work_unit_id"] == first_payload["work_unit_id"]
@@ -257,7 +276,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
         ]
     )  # fmt: skip
     assert renamed.exit_code == 0, renamed.output
-    payload = json.loads(renamed.output)
+    payload = _payload(renamed.output)
     assert payload["status"] == "reused"
     assert payload["name_applied"] == "Renamed Unit"
     assert payload["name"] == "Renamed Unit"
@@ -267,7 +286,7 @@ def test_idempotent_work_create_applies_a_new_name_as_a_rename(_isolated_cli_bac
         ["--format", "json", "app", "modelo", "work", "status", payload["work_unit_id"]]
     )
     assert status.exit_code == 0, status.output
-    assert json.loads(status.output)["name"] == "Renamed Unit"
+    assert _payload(status.output)["name"] == "Renamed Unit"
 
 
 def test_overview_next_step_not_import_after_manual_ledger_entry(_isolated_cli_backend: Path) -> None:
