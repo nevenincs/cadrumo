@@ -4131,4 +4131,159 @@ def iva_wallet_balance_cmd(
     _emit(ctx, payload, lines)
 
 
+@iva_wallet_app.command(
+    "seed",
+    help=tr(
+        "cli.app.modelo.iva_wallet.seed_help",
+        default=(
+            "Declare a Modelo 303 carry-forward balance for a period that pre-dates "
+            "local history. Use this once to seed the first period so subsequent "
+            "M303 prefill resolves modelo-303-compensacion-pendiente-anteriores correctly. "
+            "Refuses if a record already exists for the period."
+        ),
+    ),
+)
+def iva_wallet_seed_cmd(
+    ctx: typer.Context,
+    filing_year: Annotated[
+        int,
+        typer.Option(
+            "--filing-year",
+            min=2000,
+            max=2099,
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_filing_year_help",
+                default="Filing year of the Modelo 303 period to seed.",
+            ),
+        ),
+    ],
+    period: Annotated[
+        str,
+        typer.Option(
+            "--period",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_period_help",
+                default="Period of the Modelo 303 filing (e.g. 4T, 3T).",
+            ),
+        ),
+    ],
+    amount: Annotated[
+        str,
+        typer.Option(
+            "--amount",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_amount_help",
+                default=(
+                    "Carry-forward balance amount in EUR (decimal, e.g. 1200.50). "
+                    "This is the compensación pendiente de periodos anteriores for the "
+                    "NEXT period after the seeded one."
+                ),
+            ),
+        ),
+    ],
+    confirm: Annotated[
+        bool,
+        typer.Option(
+            "--confirm",
+            help=tr(
+                "cli.app.modelo.iva_wallet.seed_confirm_help",
+                default=(
+                    "Required confirmation flag. Acknowledge that seeding declares a "
+                    "carry-forward balance and filing accuracy depends on the value supplied."
+                ),
+            ),
+        ),
+    ] = False,
+) -> None:
+    """Declare a Modelo 303 carry-forward balance for bootstrapping local history."""
+
+    from decimal import Decimal, InvalidOperation
+
+    from ...application.calculations._iva_compensation_history import (
+        IvaCompensationSeedConflictError,
+        seed_iva_compensation_period,
+    )
+
+    if not confirm:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_confirm_required",
+                default=(
+                    "Pass --confirm to acknowledge: this declares the M303 carry-forward "
+                    "balance for the specified period. Filing accuracy depends on correct seeding."
+                ),
+            )
+        )
+
+    try:
+        seed_amount = Decimal(amount)
+    except InvalidOperation as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_invalid_amount",
+                amount=amount,
+                default=f"Amount {amount!r} is not a valid decimal.",
+            )
+        ) from exc
+
+    if seed_amount < Decimal("0"):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_negative_amount",
+                default="Amount must be non-negative.",
+            )
+        )
+
+    bucket_id = _active_bucket_id()
+
+    from ...application.modelo._actions import _taxpayer_nif_for_bucket
+
+    taxpayer_nif = _taxpayer_nif_for_bucket(bucket_id)
+    if taxpayer_nif is None:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_no_nif",
+                default="Active profile has no identity.tax_id configured. Set it via config profile.",
+            )
+        )
+
+    try:
+        state = seed_iva_compensation_period(
+            taxpayer_nif=taxpayer_nif,
+            filing_year=filing_year,
+            period=period,
+            amount=seed_amount,
+        )
+    except IvaCompensationSeedConflictError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.iva_wallet.seed_conflict",
+                filing_year=filing_year,
+                period=period,
+                default=(
+                    f"A compensation state for {filing_year}/{period} already exists. "
+                    "Seeding is refused to prevent overwriting."
+                ),
+            )
+        ) from exc
+
+    payload = {
+        "operation": "modelo.iva-wallet.seed",
+        "filing_year": state.filing_year,
+        "period": state.period,
+        "taxpayer_nif": state.taxpayer_nif,
+        "amount": str(state.available_end_amount),
+        "status": state.status,
+    }
+    lines = [
+        "operation\tmodelo.iva-wallet.seed",
+        f"filing_year\t{state.filing_year}",
+        f"period\t{state.period}",
+        f"taxpayer_nif\t{state.taxpayer_nif}",
+        f"amount\t{state.available_end_amount}",
+        f"status\t{state.status}",
+    ]
+    _emit(ctx, payload, lines)
+
+
 __all__ = ["app"]

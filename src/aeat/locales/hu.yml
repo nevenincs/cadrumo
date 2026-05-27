@@ -532,9 +532,19 @@ cli:
       history_help: cli.app.modelo.history_help
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
-        balance_help: Show aggregated IVA compensation carry-forward balance computed from
-          local Modelo 303 history.
+        balance_help: Show aggregated IVA compensation carry-forward balance computed
+          from local Modelo 303 history.
         group_help: Local IVA compensation wallet balance commands.
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
       list:
         year_help: cli.app.modelo.list.year_help
       project:
@@ -1615,6 +1625,7 @@ errors:
   calc:
     binding_value_missing: errors.calc.binding_value_missing
     bound_casilla_binding_value_missing: A(z) {binding_id} kötés értéke nincs megadva.
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window

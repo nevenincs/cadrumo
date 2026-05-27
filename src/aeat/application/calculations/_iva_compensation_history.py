@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import ClassVar
@@ -82,6 +82,10 @@ class IvaCompensationCarryForwardReport(BaseModel):
 
 class IvaCompensationCarryForwardPolicyError(ValueError):
     """Raised when IVA compensation carry-forward lots violate policy."""
+
+
+class IvaCompensationSeedConflictError(ValueError):
+    """Raised when a seed is attempted for a period that already has a stored state."""
 
 
 def iva_compensation_period_key(filing_year: int, period: str) -> str:
@@ -219,6 +223,60 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         return tuple(sorted(self.iter_records(), key=lambda item: (item.filing_year, _period_sort_key(item.period))))
 
 
+_SEED_STATUS = "seeded"
+_SEED_EXPEDIENTE_ID = "manual-seed"
+_SEED_SOURCE_OBS_PREFIX = "303:seed"
+
+
+def seed_iva_compensation_period(
+    *,
+    taxpayer_nif: str,
+    filing_year: int,
+    period: str,
+    amount: Decimal,
+    repository: IvaCompensationHistoryRepository | None = None,
+    seeded_at: datetime | None = None,
+) -> IvaCompensationPeriodState:
+    """Persist a manually declared carry-forward balance for one Modelo 303 period.
+
+    Intended for first-time users whose historical M303 carry-forward pre-dates
+    the local compensation history. The seeded state is structurally identical
+    to a filed-observation state but carries ``status='seeded'`` and synthetic
+    provenance so downstream diagnostics can distinguish seed from filed records.
+
+    Raises ``IvaCompensationSeedConflictError`` if a state already exists for
+    the specified period — seeding must not overwrite an existing record.
+    """
+
+    repo = repository if repository is not None else IvaCompensationHistoryRepository()
+    existing = repo.load_period(filing_year, period)
+    if existing is not None:
+        raise IvaCompensationSeedConflictError(
+            f"IVA compensation state for {filing_year}/{period} already exists "
+            f"(status={existing.status!r}); seeding would overwrite it"
+        )
+    when = seeded_at if seeded_at is not None else datetime.now(UTC)
+    state = IvaCompensationPeriodState(
+        taxpayer_nif=taxpayer_nif,
+        filing_year=filing_year,
+        period=period,
+        expediente_id=_SEED_EXPEDIENTE_ID,
+        status=_SEED_STATUS,
+        presented_at=when,
+        prior_pending_amount=None,
+        applied_amount=None,
+        pending_for_later_amount=amount,
+        period_result_amount=None,
+        final_result_amount=None,
+        generated_amount=_ZERO,
+        available_end_amount=amount,
+        source_observation_key=f"{_SEED_SOURCE_OBS_PREFIX}:{filing_year}:{period}",
+        source_artefact_sha256=None,
+    )
+    repo.save_period(state)
+    return state
+
+
 def iva_compensation_state_from_filed_observation(
     observation: FiledDeclaracionObservation,
 ) -> IvaCompensationPeriodState:
@@ -307,8 +365,10 @@ __all__ = [
     "IvaCompensationExpiryReviewState",
     "IvaCompensationHistoryRepository",
     "IvaCompensationPeriodState",
+    "IvaCompensationSeedConflictError",
     "build_iva_compensation_carry_forward_report",
     "enforce_iva_compensation_four_year_window",
     "iva_compensation_period_key",
     "iva_compensation_state_from_filed_observation",
+    "seed_iva_compensation_period",
 ]
