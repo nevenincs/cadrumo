@@ -501,23 +501,24 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: 'AEAT 403/auth gate'
-            authenticated: 'authenticated'
-            certificate_required: 'certificate required'
-            dom_drift: 'AEAT page shape changed'
-            live_navigation_failed: 'live navigation failed'
-            no_clave_prompt: 'no Cl@ve prompt'
-            operator_timeout: 'operator approval timed out'
-            pending_clave_request: 'pending Cl@ve request'
-            qr_required: 'QR approval required'
-            unknown: 'unknown'
-            wrong_identity: 'wrong identity'
+            aeat_403: AEAT 403/auth gate
+            authenticated: authenticated
+            certificate_required: certificate required
+            dom_drift: AEAT page shape changed
+            live_navigation_failed: live navigation failed
+            no_clave_prompt: no Cl@ve prompt
+            operator_timeout: operator approval timed out
+            pending_clave_request: pending Cl@ve request
+            qr_required: QR approval required
+            unknown: unknown
+            wrong_identity: wrong identity
         app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
           representation and the guarded wallet read query).
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         capture_history_help: Live-capture filed Modelo 303 history and persist secure
           IVA compensation state. No AEAT filing or wallet form choices are submitted.
-        capture_remote_state_help: 'Live-capture filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one typed read-only acquisition.'
+        capture_remote_state_help: Live-capture filed Modelo 303 history and attempt
+          the AEAT IVA wallet/cartera read as one typed read-only acquisition.
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
@@ -1315,12 +1316,6 @@ cli:
         (or all).
       integrity_registry_help: Run full registry validation (the opt-in cross-domain
         integrity probe).
-      list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
-        or neither.
-      list_help: List secure-object keys stored under one namespace.
-      list_namespace_help: Namespace to inventory.
-      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Show the log file path and recent lines
       logs_lines_help: Number of recent log lines to show
       plan_help: Dry-run preserve-first remediation planning for unreadable secure-object
@@ -3018,6 +3013,10 @@ errors:
         storage route and try again.
       empty_database_url: The configured database URL is empty. Select a profile or
         configure storage before trying again.
+    namespace:
+      classification_mismatch: 'Secure-object namespace %{namespace} is registered for sensitivity %{expected}, but the caller used %{classification}.'
+      schema_mismatch: 'Secure-object namespace %{namespace} is registered for schema %{expected}, but the caller used schema %{schema_version}.'
+      unregistered: 'Secure-object namespace %{namespace} is not registered for runtime storage.'
     runtime:
       cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
         before an active profile bucket is selected.

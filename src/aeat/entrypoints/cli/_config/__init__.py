@@ -362,7 +362,7 @@ def repair_profile(
         lines = [
             f"dry_run\t{result.dry_run}",
             f"repaired\t{result.repaired}",
-            f"active_profile\t{health.active_profile or ''}",
+            f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
             f"status\t{health.status}",
             f"manifest_status\t{result.status or ''}",
             f"reason\t{result.reason}",
@@ -371,15 +371,15 @@ def repair_profile(
             lines.append(f"profile_record_error\t{health.profile_record_error}")
         if health.next_action:
             lines.append(f"next_action\t{health.next_action}")
-        _emit(ctx, result.model_dump(mode="json"), lines)
+        _emit(ctx, _redact_profile_repair_payload(result.model_dump(mode="json")), lines)
         return
     result = repair_active_profile_pointer(clear_active=clear_active, confirmed=yes)
     health = result.after or result.before
-    payload = result.model_dump(mode="json")
+    payload = _redact_profile_repair_payload(result.model_dump(mode="json"))
     lines = [
         f"dry_run\t{result.dry_run}",
         f"cleared_pointer\t{result.cleared_pointer}",
-        f"active_profile\t{health.active_profile or ''}",
+        f"active_profile\t{_redacted_profile_identifier(health.active_profile)}",
         f"source\t{health.source}",
         f"status\t{health.status}",
         f"registered_bucket\t{health.registered_bucket}",
@@ -391,6 +391,28 @@ def repair_profile(
     if health.next_action:
         lines.append(f"next_action\t{health.next_action}")
     _emit(ctx, payload, lines)
+
+
+def _redacted_profile_identifier(value: str | None) -> str:
+    return "<profile-id>" if value else ""
+
+
+def _redact_profile_repair_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
+    """Return a paste-safe repair payload with internal profile ids removed."""
+
+    redacted = dict(payload)
+    for key in ("before", "after"):
+        nested = redacted.get(key)
+        if isinstance(nested, dict):
+            redacted[key] = _redact_profile_health_payload(nested)
+    return redacted
+
+
+def _redact_profile_health_payload(payload: dict[str, typing.Any]) -> dict[str, typing.Any]:
+    redacted = dict(payload)
+    if redacted.get("active_profile"):
+        redacted["active_profile"] = "<profile-id>"
+    return redacted
 
 
 def _profile_record_missing_next_action(profile_id: str, *, label: str) -> str:
@@ -414,8 +436,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         record = _read_profile_record(profile_id=profile_id, bucket_id=profile_id)
     except ProfileNotFoundError:
         payload = {
-            "profile_id": profile_id,
-            "bucket_id": pointer.bucket_id,
+            "profile_id": "<profile-id>",
+            "bucket_id": "<profile-id>",
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -427,8 +449,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             payload,
             (
                 "readiness\tmissing_profile_record",
-                f"profile_id\t{profile_id}",
-                f"bucket_id\t{pointer.bucket_id}",
+                "profile_id\t<profile-id>",
+                "bucket_id\t<profile-id>",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tmissing",
@@ -438,8 +460,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         raise typer.Exit(code=2) from None
     except Exception as exc:
         payload = {
-            "profile_id": profile_id,
-            "bucket_id": pointer.bucket_id,
+            "profile_id": "<profile-id>",
+            "bucket_id": "<profile-id>",
             "display_name": pointer.label,
             "registered_bucket": True,
             "profile_record_present": False,
@@ -452,8 +474,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             payload,
             (
                 "readiness\tprofile_record_unreadable",
-                f"profile_id\t{profile_id}",
-                f"bucket_id\t{pointer.bucket_id}",
+                "profile_id\t<profile-id>",
+                "bucket_id\t<profile-id>",
                 f"display_name\t{pointer.label}",
                 "registered_bucket\tpresent",
                 "profile_record\tunreadable",
@@ -462,8 +484,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         )
         raise typer.Exit(code=2) from exc
     payload = {
-        "profile_id": record.profile_id,
-        "bucket_id": pointer.bucket_id,
+        "profile_id": "<profile-id>",
+        "bucket_id": "<profile-id>",
         "display_name": record.display_name,
         "registered_bucket": True,
         "profile_record_present": True,
@@ -476,8 +498,8 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
         (
             "readiness\tready",
             f"display_name\t{record.display_name}",
-            f"profile_id\t{record.profile_id}",
-            f"bucket_id\t{pointer.bucket_id}",
+            "profile_id\t<profile-id>",
+            "bucket_id\t<profile-id>",
             "registered_bucket\tpresent",
             "profile_record\tpresent",
             f"status\t{record.status.value}",

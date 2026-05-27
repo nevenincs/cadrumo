@@ -96,6 +96,30 @@ def test_config_repair_cli_redacts_active_profile_identifier() -> None:
     assert not _UUID_PATTERN.search(summaries)
 
 
+def test_config_repair_profile_cli_redacts_profile_identifiers() -> None:
+    """Profile repair diagnostics must be paste-safe in text and JSON modes."""
+
+    _create_operator_profile()
+    active_bucket_id = resolve_active_bucket_id()
+    assert active_bucket_id is not None
+
+    commands = (
+        ["config", "repair", "profile"],
+        ["config", "repair", "profile", "--profile", "operator"],
+        ["config", "repair", "profile", "--repair-manifest-status", "--yes"],
+    )
+    for command in commands:
+        text = invoke_cached_cli(command)
+        payload_result = invoke_cached_cli(["--format", "json", *command])
+
+        assert text.exit_code in {0, 2}, text.output
+        assert payload_result.exit_code in {0, 2}, payload_result.output
+        assert active_bucket_id not in text.output
+        assert active_bucket_id not in payload_result.output
+        assert not _UUID_PATTERN.search(text.output)
+        assert not _UUID_PATTERN.search(payload_result.output)
+
+
 def test_diagnostics_secure_objects_list_redacts_active_profile_identifier_in_row_context() -> None:
     """Engineer inventory exposes only the stored lookup digest."""
 

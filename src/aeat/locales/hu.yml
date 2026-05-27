@@ -409,21 +409,23 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: 'AEAT 403/hitelesítési kapu'
-            authenticated: 'hitelesítve'
-            certificate_required: 'tanúsítvány szükséges'
-            dom_drift: 'az AEAT oldal szerkezete megváltozott'
-            live_navigation_failed: 'élő navigáció sikertelen'
-            no_clave_prompt: 'nincs Cl@ve értesítés'
-            operator_timeout: 'jóváhagyási időtúllépés'
-            pending_clave_request: 'függő Cl@ve kérés'
-            qr_required: 'QR-jóváhagyás szükséges'
-            unknown: 'ismeretlen'
-            wrong_identity: 'hibás személyazonosság'
+            aeat_403: AEAT 403/hitelesítési kapu
+            authenticated: hitelesítve
+            certificate_required: tanúsítvány szükséges
+            dom_drift: az AEAT oldal szerkezete megváltozott
+            live_navigation_failed: élő navigáció sikertelen
+            no_clave_prompt: nincs Cl@ve értesítés
+            operator_timeout: jóváhagyási időtúllépés
+            pending_clave_request: függő Cl@ve kérés
+            qr_required: QR-jóváhagyás szükséges
+            unknown: ismeretlen
+            wrong_identity: hibás személyazonosság
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        capture_remote_state_help: 'Élőben rögzíti a benyújtott Modelo 303 előzményeket, és egy típusos, csak olvasható beszerzésként megkísérli az AEAT IVA cartera lekérdezését.'
+        capture_remote_state_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
+          és egy típusos, csak olvasható beszerzésként megkísérli az AEAT IVA cartera
+          lekérdezését.
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
@@ -1064,11 +1066,6 @@ cli:
       integrity_namespace_help: cli.config.repair.integrity_namespace_help
       integrity_objects_help: cli.config.repair.integrity_objects_help
       integrity_registry_help: cli.config.repair.integrity_registry_help
-      list_all_help: cli.config.repair.list_all_help
-      list_conflicting_flags: cli.config.repair.list_conflicting_flags
-      list_help: cli.config.repair.list_help
-      list_namespace_help: cli.config.repair.list_namespace_help
-      list_unreadable_help: cli.config.repair.list_unreadable_help
       logs_help: cli.config.repair.logs_help
       logs_lines_help: cli.config.repair.logs_lines_help
       plan_help: cli.config.repair.plan_help
@@ -1138,17 +1135,18 @@ cli:
         ambiguous_profile: 'Ambiguous profile label: %{profile}'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        no_active_profile: 'No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first.'
-        profile_empty: '--profile must not be empty when supplied.'
+        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
+          config profile switch NAME` first.
+        profile_empty: --profile must not be empty when supplied.
         unknown_profile: 'Unknown profile: %{profile}'
         unknown_profile_key: 'Unknown profile key: %{key}'
-      get_help: 'Read one profile key stored value.'
-      help: 'Engineer-only profile field inspection and surgical edits.'
-      key_help: 'Profile key.'
-      profile_help: 'Profile to use; defaults to the active profile.'
-      set_help: 'Write one profile key value, validated against the wizard descriptor.'
-      unset_help: 'Clear one profile key value.'
-      value_help: 'Value to store.'
+      get_help: Read one profile key stored value.
+      help: Engineer-only profile field inspection and surgical edits.
+      key_help: Profile key.
+      profile_help: Profile to use; defaults to the active profile.
+      set_help: Write one profile key value, validated against the wizard descriptor.
+      unset_help: Clear one profile key value.
+      value_help: Value to store.
     repair:
       audience_internal: cli.diagnostics.repair.audience_internal
       auth_label: cli.diagnostics.repair.auth_label
@@ -1165,13 +1163,14 @@ cli:
       python_label: cli.diagnostics.repair.python_label
       version_label: cli.diagnostics.repair.version_label
     secure_objects:
-      all_help: 'Return every key, including unreadable rows.'
+      all_help: Return every key, including unreadable rows.
       errors:
-        conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
-      help: 'Inventory the secure-object index by namespace.'
-      list_help: 'List secure-object keys stored under one namespace.'
-      namespace_help: 'Namespace to inventory.'
-      unreadable_help: 'Restrict the listing to undecryptable rows.'
+        conflicting_filters: --all and --unreadable cannot be combined; pass one or
+          neither.
+      help: Inventory the secure-object index by namespace.
+      list_help: List secure-object keys stored under one namespace.
+      namespace_help: Namespace to inventory.
+      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: cli.diagnostics.summary.auth_no_session
       auth_none: cli.diagnostics.summary.auth_none
@@ -1999,7 +1998,7 @@ errors:
     casilla_referenced_before_evaluation: errors.calc.casilla_referenced_before_evaluation
     computed_supplied_as_input: errors.calc.computed_supplied_as_input
     date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
-    date_binding_value_missing: errors.calc.date_binding_value_missing
+    date_binding_value_missing: 'Hianyzik a datumkotes erteke.'
     dispatch_key_unknown: errors.calc.dispatch_key_unknown
     dispatch_parameter_kind: errors.calc.dispatch_parameter_kind
     divide_by_zero: errors.calc.divide_by_zero
@@ -2010,8 +2009,8 @@ errors:
     parameter_unknown: errors.calc.parameter_unknown
     relation_value_missing: errors.calc.relation_value_missing
     unknown_input_casillas: errors.calc.unknown_input_casillas
-    unsupported_comparison_op: errors.calc.unsupported_comparison_op
-    unsupported_op: errors.calc.unsupported_op
+    unsupported_comparison_op: 'Nem tamogatott osszehasonlito muvelet.'
+    unsupported_op: 'Nem tamogatott muvelet.'
   censo:
     no_snapshot_captured: errors.censo.no_snapshot_captured
     profile_not_found: errors.censo.profile_not_found
@@ -2032,7 +2031,7 @@ errors:
     error_categories: errors.error.error_categories
     error_categories_validation: errors.error.error_categories_validation
     error_deadlines_deadline: errors.error.error_deadlines_deadline
-    error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
+    error_deadlines_missing_windows: 'Hianyoznak a hatarido-ablakok.'
     error_deadlines_profile: errors.error.error_deadlines_profile
     error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
     error_deadlines_validation: errors.error.error_deadlines_validation
@@ -2301,8 +2300,8 @@ errors:
     refused_application_registry_input: errors.refused.refused_application_registry_input
     refused_auth_configure_dangling_active_profile: Az aktív profilmutató nem oldható
       fel regisztrált tárolóegységre.
-    refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
-    refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
+    refused_auth_login_live_tests_disabled: 'Az eles bejelentkezesi probak le vannak tiltva.'
+    refused_auth_login_precondition: 'A bejelentkezes elofeltetele nem teljesul.'
     refused_auth_provider_reserved: A kiválasztott hitelesítési szolgáltató fenntartott,
       de nincs megvalósítva.
     refused_calculations_casilla_constraint: errors.refused.refused_calculations_casilla_constraint
@@ -2387,18 +2386,20 @@ errors:
     refused_workflow_resume: errors.refused.refused_workflow_resume
     unsupported_currency: errors.refused.unsupported_currency
   snapshot:
-    modelo_not_registered: errors.snapshot.modelo_not_registered
+    modelo_not_registered: 'A modelo nincs regisztralva.'
   storage:
     engine:
       create_failed: Nem sikerült létrehozni a tárolási adatbázismotort. Ellenőrizd
         a beállított tárolási útvonalat, majd próbáld újra.
       empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy állítsd
         be a tárolást, mielőtt újra próbálkozol.
+    namespace:
+      classification_mismatch: 'A(z) %{namespace} secure-object névtér %{expected} érzékenységgel van regisztrálva, de a hívó %{classification} értéket használt.'
+      schema_mismatch: 'A(z) %{namespace} secure-object névtér %{expected} sémával van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.'
+      unregistered: 'A(z) %{namespace} secure-object névtér nincs regisztrálva runtime tároláshoz.'
     runtime:
-      cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
-        before an active profile bucket is selected.
-      cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
-        an explicit database route.
+      cold_bootstrap_active_profile_refused: 'Hideginditasi tarhely csak aktiv profil kivalasztasa elott hasznalhato.'
+      cold_bootstrap_explicit_database_refused: 'Hideginditasi tarhely nem kerulheti meg az explicit adatbazis-utvonalat.'
       no_active_session: Nincs aktív bucket-munkamenet. Futtasd az `aeat config profile
         switch NAME` parancsot egy profil feloldásához.
       no_detail: Nem érkezett részletes készenléti hiba.
@@ -2698,21 +2699,21 @@ wizard:
       situacion-familiar:
         choices:
           casado:
-            description: wizard.setup.flags.situacion-familiar.choices.casado.description
-            label: wizard.setup.flags.situacion-familiar.choices.casado.label
+            description: 'Hazas szemely'
+            label: 'Hazas'
           pareja-hecho-no-registrada:
-            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.description
-            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.label
+            description: 'Nem regisztralt elettarsi kapcsolat'
+            label: 'Nem regisztralt elettars'
           pareja-hecho-registrada:
-            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.description
-            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.label
+            description: 'Regisztralt elettarsi kapcsolat'
+            label: 'Regisztralt elettars'
           separado-divorciado:
-            label: wizard.setup.flags.situacion-familiar.choices.separado-divorciado.label
+            label: 'Kulon elo vagy elvalt'
           soltero:
-            label: wizard.setup.flags.situacion-familiar.choices.soltero.label
+            label: 'Egyedulallo'
         help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
-        prompt: wizard.setup.flags.situacion-familiar.prompt
+        prompt: 'Adja meg a csaladi allapotot'
       spouse-birth-date:
         help: wizard.setup.flags.spouse-birth-date.help
       spouse-disability-grade:
