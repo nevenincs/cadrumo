@@ -17,6 +17,7 @@ from __future__ import annotations
 import typer
 
 from ..application.repair_integrity import build_repair_list_report
+from ..core.i18n import tr
 
 
 def register(app: typer.Typer) -> None:
@@ -24,23 +25,23 @@ def register(app: typer.Typer) -> None:
 
     sub = typer.Typer(
         name="secure-objects",
-        help="Inventory the secure-object index by namespace.",
+        help=tr("cli.diagnostics.secure_objects.help"),
         no_args_is_help=True,
     )
 
-    @sub.command("list", help="List secure-object keys stored under one namespace.")
+    @sub.command("list", help=tr("cli.diagnostics.secure_objects.list_help"))
     def _list(
-        namespace: str = typer.Argument(..., help="Namespace to inventory."),
+        namespace: str = typer.Argument(..., help=tr("cli.diagnostics.secure_objects.namespace_help")),
         include_all: bool = typer.Option(
-            False, "--all", help="Return every key, including unreadable rows."
+            False, "--all", help=tr("cli.diagnostics.secure_objects.all_help")
         ),
         only_unreadable: bool = typer.Option(
-            False, "--unreadable", help="Restrict the listing to undecryptable rows."
+            False, "--unreadable", help=tr("cli.diagnostics.secure_objects.unreadable_help")
         ),
     ) -> None:
         if include_all and only_unreadable:
             raise typer.BadParameter(
-                "--all and --unreadable cannot be combined; pass one or neither.",
+                tr("cli.diagnostics.secure_objects.errors.conflicting_filters"),
             )
         report = build_repair_list_report(
             namespace=namespace,

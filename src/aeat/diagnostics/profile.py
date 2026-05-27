@@ -20,6 +20,7 @@ import typer
 from ..application.user_profile._orchestration import (
     build_lifecycle_service,
     fact_value,
+    profile_storage_session,
     set_active_field,
 )
 from ..application.wizard._catalogue import WIZARD_FLOWS
@@ -27,6 +28,7 @@ from ..application.wizard._errors import WizardValidationError
 from ..application.wizard._widgets import validate_widget_answer
 from ..application.workflow._models import resolve_active_bucket_id
 from ..application.workflow._persistence import workflow_state_repository
+from ..core.i18n import tr
 from ..domain.profile import get_profile_key
 from ..domain.user_profile import ProfileNotFoundError, UserProfileFact
 
@@ -40,6 +42,10 @@ def _question_for_profile_key(profile_key: str):
                 if question.profile_key == profile_key:
                     return question
     return None
+
+
+def _profile_bad_parameter(key: str, /, **context: object) -> typer.BadParameter:
+    return typer.BadParameter(tr(f"cli.diagnostics.profile.errors.{key}", **context))
 
 
 def _resolve_target_profile(profile: str | None):
@@ -59,22 +65,20 @@ def _resolve_target_profile(profile: str | None):
     if profile is not None:
         target = profile.strip()
         if not target:
-            raise typer.BadParameter("--profile must not be empty when supplied.")
+            raise _profile_bad_parameter("profile_empty")
         try:
             pointer = read_profile_bucket(target)
         except ValueError as exc:
-            raise typer.BadParameter(f"ambiguous profile label: {target}") from exc
+            raise _profile_bad_parameter("ambiguous_profile", profile=target) from exc
         if pointer is None:
-            raise typer.BadParameter(f"unknown profile: {target}")
+            raise _profile_bad_parameter("unknown_profile", profile=target)
         return pointer
     active = resolve_active_bucket_id()
     if active is None:
-        raise typer.BadParameter(
-            "No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first."
-        )
+        raise _profile_bad_parameter("no_active_profile")
     pointer = read_profile_bucket_by_id(active)
     if pointer is None:
-        raise typer.BadParameter(f"unknown profile: {active}")
+        raise _profile_bad_parameter("unknown_profile", profile=active)
     return pointer
 
 
@@ -83,38 +87,39 @@ def register(app: typer.Typer) -> None:
 
     sub = typer.Typer(
         name="profile",
-        help="Engineer-only profile field inspection and surgical edits.",
+        help=tr("cli.diagnostics.profile.help"),
         no_args_is_help=True,
     )
 
-    @sub.command("get", help="Read one profile key's stored value.")
+    @sub.command("get", help=tr("cli.diagnostics.profile.get_help"))
     def _get(
-        key: str = typer.Argument(..., help="Profile key (e.g. iva.regime)."),
-        profile: str | None = typer.Option(None, "--profile", help="Profile to read; defaults to the active profile."),
+        key: str = typer.Argument(..., help=tr("cli.diagnostics.profile.key_help")),
+        profile: str | None = typer.Option(None, "--profile", help=tr("cli.diagnostics.profile.profile_help")),
     ) -> None:
         try:
             get_profile_key(key)
         except KeyError as exc:
-            raise typer.BadParameter(f"unknown profile key: {key}") from exc
+            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
         pointer = _resolve_target_profile(profile)
-        service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-        try:
-            record = service.read(pointer.bucket_id)
-        except ProfileNotFoundError as exc:
-            raise typer.BadParameter(f"unknown profile: {pointer.label}") from exc
+        with profile_storage_session(pointer.bucket_id):
+            service = build_lifecycle_service(bucket_id=pointer.bucket_id)
+            try:
+                record = service.read(pointer.bucket_id)
+            except ProfileNotFoundError as exc:
+                raise _profile_bad_parameter("unknown_profile", profile=pointer.label) from exc
         value = fact_value(record, key) or ""
         typer.echo(f"{key}\t{value or '<unset>'}")
 
-    @sub.command("set", help="Write one profile key value, validated against the wizard descriptor.")
+    @sub.command("set", help=tr("cli.diagnostics.profile.set_help"))
     def _set(
-        key: str = typer.Argument(..., help="Profile key."),
-        value: str = typer.Argument(..., help="Value to store."),
-        profile: str | None = typer.Option(None, "--profile", help="Profile to write; defaults to the active profile."),
+        key: str = typer.Argument(..., help=tr("cli.diagnostics.profile.key_help")),
+        value: str = typer.Argument(..., help=tr("cli.diagnostics.profile.value_help")),
+        profile: str | None = typer.Option(None, "--profile", help=tr("cli.diagnostics.profile.profile_help")),
     ) -> None:
         try:
             registered = get_profile_key(key)
         except KeyError as exc:
-            raise typer.BadParameter(f"unknown profile key: {key}") from exc
+            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
         canonical_key = registered.key
         question = _question_for_profile_key(canonical_key)
         coerced = value
@@ -123,38 +128,39 @@ def register(app: typer.Typer) -> None:
                 coerced = validate_widget_answer(question, value)
             except WizardValidationError as exc:
                 choices = ", ".join(choice.value for choice in question.choices)
-                translated = exc.translated_message or f"invalid value for {key}: {value!r}"
+                translated = exc.translated_message or tr(
+                    "cli.diagnostics.profile.errors.invalid_value_fallback",
+                    key=key,
+                    value=value,
+                )
                 raise typer.BadParameter(
-                    f"{translated} ({choices})" if choices else translated
+                    tr("cli.diagnostics.profile.errors.invalid_value_with_choices", message=translated, choices=choices)
+                    if choices
+                    else translated
                 ) from exc
         pointer = _resolve_target_profile(profile)
         fact = UserProfileFact(path=canonical_key, value=coerced)
-        repository = workflow_state_repository()
-        updated = repository.update(lambda current: set_active_field(current, fact))
-        record = (
-            updated.active_profile_record()
-            if pointer.bucket_id == resolve_active_bucket_id()
-            else None
-        )
-        if record is None:
-            service = build_lifecycle_service(bucket_id=pointer.bucket_id)
-            record = service.read(pointer.bucket_id)
+        with profile_storage_session(pointer.bucket_id):
+            repository = workflow_state_repository()
+            updated = repository.update(lambda current: set_active_field(current, fact))
+            record = updated.active_profile_record()
         stored_value = fact_value(record, canonical_key) or ""
         typer.echo(f"{canonical_key}\t{stored_value}")
 
-    @sub.command("unset", help="Clear one profile key value.")
+    @sub.command("unset", help=tr("cli.diagnostics.profile.unset_help"))
     def _unset(
-        key: str = typer.Argument(..., help="Profile key."),
-        profile: str | None = typer.Option(None, "--profile", help="Profile to clear; defaults to the active profile."),
+        key: str = typer.Argument(..., help=tr("cli.diagnostics.profile.key_help")),
+        profile: str | None = typer.Option(None, "--profile", help=tr("cli.diagnostics.profile.profile_help")),
     ) -> None:
         try:
             get_profile_key(key)
         except KeyError as exc:
-            raise typer.BadParameter(f"unknown profile key: {key}") from exc
-        _resolve_target_profile(profile)
+            raise _profile_bad_parameter("unknown_profile_key", key=key) from exc
         fact = UserProfileFact(path=key, value=None)
-        repository = workflow_state_repository()
-        repository.update(lambda current: set_active_field(current, fact))
+        pointer = _resolve_target_profile(profile)
+        with profile_storage_session(pointer.bucket_id):
+            repository = workflow_state_repository()
+            repository.update(lambda current: set_active_field(current, fact))
         typer.echo(f"{key}\t<unset>")
 
     app.add_typer(sub)
