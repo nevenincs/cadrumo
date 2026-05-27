@@ -56,10 +56,18 @@ from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
-from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
+from ...domain.modelos._row_models import (
+    M347_THRESHOLD_EUR,
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    ModeloDetailRow,
+    validate_m349_nif_format,
+)
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.profile import ForalRegimeError, parse_tax_region
+from ...domain.profile import parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -700,8 +708,10 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
 # form ``TYPE FIELD=value [FIELD=value ...]``.
 # ---------------------------------------------------------------------------
 
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada"})
-_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset({"porcentaje", "importe"})
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
+_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
+    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"}
+)
 
 
 def _parse_row_spec(spec: str) -> ModeloDetailRow:
@@ -759,8 +769,31 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         }
         if row_type == "miembro":
             return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
-        else:
+        elif row_type == "vinculada":
             return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+        elif row_type == "operador":
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
+            # NIF format check is advisory at parse time — invalid format raises BadParameter.
+            nif = str(kv_pairs.get("nif_comunitario", ""))
+            pais = str(kv_pairs.get("codigo_pais", ""))
+            if nif and pais and not validate_m349_nif_format(nif, pais):
+                raise typer.BadParameter(
+                    tr(
+                        "cli.app.modelo.work.row_m349_invalid_nif",
+                        default=(
+                            f"--row operador: nif_comunitario {nif!r} does not match "
+                            f"the expected NIF-IVA format for country {pais!r} "
+                            f"(Council Directive 2006/112/EC Annex XI)"
+                        ),
+                        nif=nif,
+                        pais=pais,
+                    )
+                )
+            return row_m349
+        else:
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
+    except typer.BadParameter:
+        raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
         raise typer.BadParameter(
             tr(
@@ -1290,7 +1323,7 @@ def _work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
             modelo=str(unit.modelo),
             period=unit.period,
         )
-    except (ValueError, Exception):  # noqa: BLE001
+    except (ValueError, Exception):
         out.append(
             tr(
                 "cli.app.modelo.work.plazo_vencido_warning",

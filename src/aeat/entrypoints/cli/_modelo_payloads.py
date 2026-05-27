@@ -443,6 +443,28 @@ class FormulasResult(OutputSchema):
     rows: tuple[FormulaPayload, ...]
 
 
+@register_schema("modelo.work.compare_taxation")
+class WorkCompareTaxationResult(OutputSchema):
+    """Result payload for ``aeat app modelo work compare-taxation``.
+
+    Surfaces cuota resultante autoliquidación (0595) and cuota
+    diferencial / resultado (0610) for both conjunta and individual
+    filing modes, plus the delta and recommendation.
+    """
+
+    operation: str = "modelo.work.compare_taxation"
+    filing_year: int
+    modelo: str
+    revision: str
+    conjunta_cuota_resultante: str
+    individual_cuota_resultante: str
+    conjunta_resultado: str
+    individual_resultado: str
+    delta_resultado: str
+    recommendation: str
+    recommendation_reason: str
+
+
 __all__ = [
     "CalculationRevisionPayload",
     "FindingPayload",
@@ -457,6 +479,7 @@ __all__ = [
     "VerificationReportShowResult",
     "WorkAmendResult",
     "WorkCalculateResult",
+    "WorkCompareTaxationResult",
     "WorkCreateResult",
     "WorkDiscardResult",
     "WorkFileResult",
