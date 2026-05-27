@@ -19,12 +19,14 @@ expanding the registry parameter lookup surface.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal
 from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.resources import bundled_path
+from ._errors import FincaValidationError
 
 
 class LirpfArt85ImputacionParameters(BaseModel):
@@ -67,8 +69,8 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     direct ``os.environ`` reads.
 
     Raises:
-        KeyError: If any of the three expected parameter ids is absent.
-        ValueError: If any value cannot be parsed as the expected type.
+        FincaValidationError: If any expected parameter is absent or
+            cannot be parsed as the expected type.
     """
     # load_legal_parameters_only is the cycle-safe entry point — the full
     # load_registry_tree path pulls in registry._bindings which imports
@@ -77,20 +79,40 @@ def _load_parameters() -> LirpfArt85ImputacionParameters:
     from ..calculations.registry._loader import load_legal_parameters_only
 
     parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
+    return _parameters_from_catalogue(parameters)
+
+
+def _parameters_from_catalogue(
+    parameters: Mapping[str, object],
+) -> LirpfArt85ImputacionParameters:
+    """Build the typed art. 85 parameter record from validated registry entries."""
+
     try:
-        recent_raw = parameters[_RECENT_REVISION_PARAM_ID].value
-        old_raw = parameters[_OLD_OR_NO_REVISION_PARAM_ID].value
-        lookback_raw = parameters[_LOOKBACK_PARAM_ID].value
+        recent_raw = _parameter_value(parameters, _RECENT_REVISION_PARAM_ID)
+        old_raw = _parameter_value(parameters, _OLD_OR_NO_REVISION_PARAM_ID)
+        lookback_raw = _parameter_value(parameters, _LOOKBACK_PARAM_ID)
     except KeyError as exc:
-        raise KeyError(
+        raise FincaValidationError(
             f"the IRPF legal-parameter catalogue is missing LIRPF art. 85 parameter {exc.args[0]!r}"
         ) from exc
 
-    return LirpfArt85ImputacionParameters(
-        recent_revision_rate=Decimal(recent_raw),
-        old_or_no_revision_rate=Decimal(old_raw),
-        catastral_revision_lookback_years=int(lookback_raw),
-    )
+    try:
+        return LirpfArt85ImputacionParameters(
+            recent_revision_rate=Decimal(recent_raw),
+            old_or_no_revision_rate=Decimal(old_raw),
+            catastral_revision_lookback_years=int(lookback_raw),
+        )
+    except (ArithmeticError, ValueError) as exc:
+        raise FincaValidationError(f"invalid LIRPF art. 85 parameter value: {exc}") from exc
+
+
+def _parameter_value(parameters: Mapping[str, object], parameter_id: str) -> str:
+    """Return one legal-parameter value from the validated registry mapping."""
+
+    value = getattr(parameters[parameter_id], "value", None)
+    if not isinstance(value, str):
+        raise FincaValidationError(f"LIRPF art. 85 parameter {parameter_id!r} has no string value")
+    return value
 
 
 def load_imputacion_parameters() -> LirpfArt85ImputacionParameters:

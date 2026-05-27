@@ -31,7 +31,10 @@ def load_category_profile_file(path: Path) -> Mapping[SpendingCategory, Category
     """Load one year-keyed spending-category profile TOML file."""
 
     resolved = path.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise CategoryValidationError(f"{resolved}: cannot stat category profile registry: {exc}") from exc
     return _load_category_profile_file_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
