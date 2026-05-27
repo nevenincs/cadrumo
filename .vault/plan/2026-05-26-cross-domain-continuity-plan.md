@@ -278,9 +278,9 @@ ledger classify accepts BUSINESS PERSONAL MIXED but no enums for entrega intraco
 
 Single-id classify unusable for hundreds of movements. Add bulk path.
 
-- [ ] `W05.P25.S96` - implement ledger classify --from-csv parsing CSV into typed BulkClassifyRow pydantic model; `partial-success semantics matching ledger import pattern; BulkClassifyRow BulkClassifyResult BulkClassifyFailure in _models.py; unknown CSV columns rejected pre-persistence; source_command edit_lineage; per architect #118 grounding; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W05.P25.S97` - implement rule-based classifier surface ledger rule add description-pattern classification BUSINESS; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W05.P25.S98` - regression tests for bulk and rule paths; `src/aeat/entrypoints/cli/test_ledger_bulk_classify.py`.
+- [x] `W05.P25.S96` - implement ledger classify --from-csv parsing CSV into typed BulkClassifyRow pydantic model; `partial-success semantics matching ledger import pattern; BulkClassifyRow BulkClassifyResult BulkClassifyFailure in _models.py; unknown CSV columns rejected pre-persistence; source_command edit_lineage; per architect #118 grounding; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W05.P25.S97` - implement rule-based classifier surface ledger rule add description-pattern classification BUSINESS; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W05.P25.S98` - regression tests for bulk and rule paths; `src/aeat/entrypoints/cli/test_ledger_bulk_classify.py`.
 - [x] `W05.P25.S315` - author rule-engine ADR for W05.P25.S97 ledger classification rules — pattern engine choice (regex/substring/glob), storage backend (profile-scoped SecureBoundRepository), conflict policy, rule apply scope (ACTIVE NOT_YET_PROCESSED only), reaffirm interaction; `per architect #118 grounding S97 cannot start until this ADR lands; `.vault/adr/`.
 
 ### Phase `W05.P26` - IVA-wallet inspector verb
@@ -519,6 +519,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S326` - FU-S306-A annotate all_calendars list as list[dict[str, object]] or carry an inline third-party-boundary comment per aeat-calculation-grounding; `minor non-blocking from #131 review of dd8934c72; `src/aeat/entrypoints/cli/_overview.py`.
 - [ ] `W09.P41.S327` - FU-S318-A simplify _collect_revision_verification_findings — casillas_by_id dict lookup is redundant when casilla is already in scope from the snapshot iteration; `pure cleanup not a regression; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W09.P41.S334` - FU-S278-B tighten LedgerTransactionReviewPayload.classified_by type from str|None to str; `Transaction.classified_by is non-nullable so the None is unreachable at runtime; type imprecision flagged by architect #136; `src/aeat/application/ledger/_models.py`.
+- [ ] `W09.P41.S338` - CRITICAL incident log — S278 commit c25b14a54 + c94ed9a38 used HEAD-based reconstruction + restore pattern to isolate from peer WIP per coder1 step record; functionally equivalent to forbidden git-discipline operations; the correct cross-commit pattern is git commit -- only-my-files with cross-authorship note in message never separation by destructive means; code content stands no rollback (rolling back would itself be destructive); incident is the process not the code; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -684,7 +685,7 @@ At every Wave terminus coordinator dispatches code-reviewer fresh persona fleet 
 - [ ] `W11.P59.S195` - vault plan check must remain green after every plan expansion and after every Step close; `red blocks next Wave dispatch; green = no broken wiki-links no malformed frontmatter no identifier gaps no orphaned Steps; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 - [ ] `W11.P59.S335` - durable maintenance gate one — vault check all CI-equivalent runs on every commit to chore branch; `blocks merge if structural drift surfaces; `.github/workflows/`.
 - [ ] `W11.P59.S336` - durable maintenance gate two — ledger and storage roundtrip test suite remains in CI; `the S108-S109 S254 S273 work built it; never deprecate without explicit replacement; `.github/workflows/`.
-- [ ] `W11.P59.S337` - durable maintenance gate three — scheduled quarterly persona re-run of 3+ shapes (not ad-hoc); catches UX drift tests cannot; produces a checkpoint-review audit document each quarter; `.vault/audit/`.
+- [ ] `W11.P59.S337` - durable maintenance gate three — scheduled quarterly persona re-run of 3+ shapes (not ad-hoc); `catches UX drift tests cannot; produces a checkpoint-review audit document each quarter; `.vault/audit/`.
 
 ### Phase `W11.P60` - termination criteria
 
