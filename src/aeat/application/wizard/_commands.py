@@ -151,6 +151,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=click.Choice(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
     ),
+    "taxpayer-marriage-date": typer.Option(
+        "--taxpayer-marriage-date",
+        help=tr("wizard.setup.flags.taxpayer-marriage-date.help"),
+    ),
     "taxpayer-birth-date": typer.Option(
         "--taxpayer-birth-date",
         help=tr("wizard.setup.flags.taxpayer-birth-date.help"),
