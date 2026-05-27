@@ -56,10 +56,18 @@ from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
-from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
+from ...domain.modelos._row_models import (
+    M347_THRESHOLD_EUR,
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    ModeloDetailRow,
+    validate_m349_nif_format,
+)
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
-from ...domain.profile import ForalRegimeError, parse_tax_region
+from ...domain.profile import parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -700,8 +708,10 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
 # form ``TYPE FIELD=value [FIELD=value ...]``.
 # ---------------------------------------------------------------------------
 
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada"})
-_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset({"porcentaje", "importe"})
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "contraparte"})
+_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
+    {"porcentaje", "importe", "importe_Q1", "importe_Q2", "importe_Q3", "importe_Q4"}
+)
 
 
 def _parse_row_spec(spec: str) -> ModeloDetailRow:
@@ -759,8 +769,31 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
         }
         if row_type == "miembro":
             return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
-        else:
+        elif row_type == "vinculada":
             return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+        elif row_type == "operador":
+            row_m349 = Modelo349OperadorRow(row_type="operador", **kv_pairs)  # type: ignore[arg-type]
+            # NIF format check is advisory at parse time — invalid format raises BadParameter.
+            nif = str(kv_pairs.get("nif_comunitario", ""))
+            pais = str(kv_pairs.get("codigo_pais", ""))
+            if nif and pais and not validate_m349_nif_format(nif, pais):
+                raise typer.BadParameter(
+                    tr(
+                        "cli.app.modelo.work.row_m349_invalid_nif",
+                        default=(
+                            f"--row operador: nif_comunitario {nif!r} does not match "
+                            f"the expected NIF-IVA format for country {pais!r} "
+                            f"(Council Directive 2006/112/EC Annex XI)"
+                        ),
+                        nif=nif,
+                        pais=pais,
+                    )
+                )
+            return row_m349
+        else:
+            return Modelo347ContraparteRow(row_type="contraparte", **kv_pairs)  # type: ignore[arg-type]
+    except typer.BadParameter:
+        raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
         raise typer.BadParameter(
             tr(
@@ -797,6 +830,33 @@ def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
                 count=str(len(member_rows)),
             )
         )
+
+
+def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
+    """Raise BadParameter when any M347 contraparte row is below the €3,005.06 threshold.
+
+    RD 1065/2007 art. 31.1: only counterparties with annual operations exceeding
+    €3,005.06 must be declared.  The check applies per-row, not as a sum across
+    rows, because each row is one declared counterparty.
+    """
+
+    contraparte_rows = [r for r in rows if isinstance(r, Modelo347ContraparteRow)]
+    for row in contraparte_rows:
+        total = row.importe_total
+        if total <= M347_THRESHOLD_EUR:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_m347_below_threshold",
+                    default=(
+                        f"M347 contraparte row (nif={row.nif!r}): importe total {total} "
+                        f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
+                        f"required by RD 1065/2007 art. 31.1"
+                    ),
+                    nif=row.nif,
+                    total=str(total),
+                    threshold=str(M347_THRESHOLD_EUR),
+                )
+            )
 
 
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
@@ -1290,7 +1350,7 @@ def _work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
             modelo=str(unit.modelo),
             period=unit.period,
         )
-    except (ValueError, Exception):  # noqa: BLE001
+    except (ValueError, Exception):
         out.append(
             tr(
                 "cli.app.modelo.work.plazo_vencido_warning",
@@ -2798,6 +2858,22 @@ def work_calculate(
             ),
         ),
     ] = None,
+    autoconsumo_promotor_base: Annotated[
+        str | None,
+        typer.Option(
+            "--autoconsumo-promotor-base",
+            help=tr(
+                "cli.app.modelo.work.autoconsumo_promotor_base_help",
+                default=(
+                    "Base imponible del autoconsumo del promotor inmobiliario "
+                    "(Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o "
+                    "rehabilitación de inmuebles afectados al patrimonio de arrendamiento. "
+                    "El asistente aplica automáticamente el 21% (Art. 90 LISIVA) para "
+                    "calcular la cuota devengada. Sólo aplicable a Modelo 303."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2950,6 +3026,23 @@ def work_calculate(
         sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
         casilla_inputs[sal_casilla_id] = sal_dotacion
 
+    # --autoconsumo-promotor-base injects the Art. 9.1.c LISIVA construction-cost
+    # base directly into the profile binding for M303.  The registry formula
+    # modelo-303-autoconsumo-promotor-cuota multiplies it by 0.21 (Art. 90 LISIVA).
+    _AUTOCONSUMO_PROMOTOR_BINDING = "modelo-303-autoconsumo-promotor-base"
+    autoconsumo_decimal: Decimal | None = None
+    if autoconsumo_promotor_base is not None:
+        try:
+            autoconsumo_decimal = Decimal(autoconsumo_promotor_base)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.autoconsumo_promotor_base_not_decimal",
+                    value=autoconsumo_promotor_base,
+                    default="--autoconsumo-promotor-base must be a decimal amount; received: {value}",
+                )
+            ) from exc
+
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -2960,6 +3053,8 @@ def work_calculate(
             # Non-decimal binding overrides flow into the enum-binding
             # channel (e.g. profile-sourced enums like CCAA).
             enum_binding_values[k] = v
+    if autoconsumo_decimal is not None:
+        binding_values[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_decimal
     relation_values: dict[str, Decimal] = {}
     for spec in relation or ():
         key, raw_value = _parse_kv_spec(spec, flag="--relation", transform=lambda value: value)
@@ -2970,6 +3065,7 @@ def work_calculate(
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
     if detail_rows:
         _validate_m184_share_sum(detail_rows)
+        _validate_m347_threshold(detail_rows)
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
@@ -3055,6 +3151,101 @@ def work_calculate(
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
+
+
+@work_app.command(
+    "compare-taxation",
+    help=tr("cli.app.modelo.work.compare_taxation_help"),
+)
+def work_compare_taxation(
+    ctx: typer.Context,
+    work_unit_id: Annotated[
+        str,
+        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
+    ],
+    output_language: str | None = typer.Option(
+        None,
+        "--output-language",
+        help=tr(
+            "cli.app.modelo.work.output_language_help",
+            default="Override the output language (e.g. es, en, ca).",
+        ),
+    ),
+) -> None:
+    """Compare conjunta vs. individual IRPF cuota for an existing Modelo 100 work unit.
+
+    Runs the registry formula engine twice — once with
+    ``declaration_type=2`` (tributación conjunta) and once with
+    ``declaration_type=1`` (tributación individual) — over the
+    same casilla inputs and profile bindings derived from the stored
+    work unit. Outputs the cuota resultante autoliquidación (0595)
+    and cuota diferencial (0610) for each mode plus the delta and a
+    recommendation.
+
+    This is an ephemeral operation: no revision is persisted.
+    """
+    from ._common import _emit_envelope, activate_subcommand_output_language
+
+    activate_subcommand_output_language(ctx, output_language)
+
+    from ...application.modelo import (
+        TaxationComparisonError,
+        WorkUnitNotFoundError,
+        compare_taxation_for_work_unit,
+    )
+
+    try:
+        comparison = compare_taxation_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.compare_taxation_work_unit_not_found",
+                work_unit_id=work_unit_id,
+                default="Work unit {work_unit_id} not found; check 'aeat app modelo work list'.",
+            )
+        ) from exc
+    except TaxationComparisonError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.compare_taxation_error",
+                detail=str(exc),
+                default="Taxation comparison failed: {detail}",
+            )
+        ) from exc
+
+    from ._modelo_payloads import WorkCompareTaxationResult
+
+    result = WorkCompareTaxationResult(
+        filing_year=comparison.filing_year,
+        modelo=comparison.modelo,
+        revision=comparison.revision,
+        conjunta_cuota_resultante=str(comparison.conjunta_cuota_resultante),
+        individual_cuota_resultante=str(comparison.individual_cuota_resultante),
+        conjunta_resultado=str(comparison.conjunta_resultado),
+        individual_resultado=str(comparison.individual_resultado),
+        delta_resultado=str(comparison.delta_resultado),
+        recommendation=comparison.recommendation.value,
+        recommendation_reason=comparison.recommendation_reason,
+    )
+    lines = [
+        "operation\tmodelo.work.compare_taxation",
+        f"filing_year\t{comparison.filing_year}",
+        f"modelo\t{comparison.modelo}",
+        f"revision\t{comparison.revision}",
+        f"conjunta_cuota_resultante\t{comparison.conjunta_cuota_resultante}",
+        f"individual_cuota_resultante\t{comparison.individual_cuota_resultante}",
+        f"conjunta_resultado\t{comparison.conjunta_resultado}",
+        f"individual_resultado\t{comparison.individual_resultado}",
+        f"delta_resultado\t{comparison.delta_resultado}",
+        f"recommendation\t{comparison.recommendation.value}",
+        tr(
+            "cli.app.modelo.work.compare_taxation_recommendation_line",
+            recommendation=comparison.recommendation.value,
+            reason=comparison.recommendation_reason,
+            default="RECOMENDACIÓN: {recommendation} — {reason}",
+        ),
+    ]
+    _emit_envelope(ctx, command="modelo.work.compare_taxation", result=result, lines=lines)
 
 
 @work_app.command("revisions", help=tr("cli.app.modelo.work.revisions_help"))

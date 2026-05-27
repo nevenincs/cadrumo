@@ -24,6 +24,8 @@ from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
 from ._models import RecargoBand, Recovery
@@ -42,14 +44,16 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
         ``min_days_late`` ascending.
 
     Raises:
-        ValueError: When the TOML is missing rows or carries an
-            inverted band window. Pydantic validation errors propagate
-            verbatim from :class:`RecargoBand`.
+        DeadlineValidationError: When the TOML cannot be read, is
+            malformed, is missing rows, or carries an invalid band.
     """
 
     target = path if path is not None else _DEFAULT_BRACKET_PATH
     resolved = target.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise DeadlineValidationError(f"{resolved}: cannot stat recargo bracket registry: {exc}") from exc
     return _load_recargo_bands_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 
@@ -57,21 +61,29 @@ def load_recargo_bands(path: Path | None = None) -> tuple[RecargoBand, ...]:
 def _load_recargo_bands_cached(path: str, byte_count: int, modified_ns: int) -> tuple[RecargoBand, ...]:
     del byte_count, modified_ns
     target = Path(path)
-    raw = tomllib.loads(target.read_text(encoding="utf-8"))
+    try:
+        raw = tomllib.loads(target.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise DeadlineValidationError(f"{target}: cannot read recargo bracket registry: {exc}") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise DeadlineValidationError(f"{target}: invalid recargo bracket TOML: {exc}") from exc
     rows = raw.get("band", [])
     if not rows:
         raise DeadlineValidationError(f"recargo bracket TOML at {target} declares no bands")
-    bands = tuple(
-        RecargoBand(
-            id=str(row["id"]),
-            min_days_late=int(row["min_days_late"]),
-            max_days_late=int(row["max_days_late"]) if row.get("max_days_late") not in (None, "") else None,
-            surcharge_pct=Decimal(str(row["surcharge_pct"])),
-            interest_applies=bool(row.get("interest_applies", False)),
-            legal_ref=str(row["legal_ref"]),
+    try:
+        bands = tuple(
+            RecargoBand(
+                id=str(row["id"]),
+                min_days_late=int(row["min_days_late"]),
+                max_days_late=int(row["max_days_late"]) if row.get("max_days_late") not in (None, "") else None,
+                surcharge_pct=Decimal(str(row["surcharge_pct"])),
+                interest_applies=bool(row.get("interest_applies", False)),
+                legal_ref=str(row["legal_ref"]),
+            )
+            for row in rows
         )
-        for row in rows
-    )
+    except (ArithmeticError, KeyError, TypeError, ValueError, ValidationError) as exc:
+        raise DeadlineValidationError(f"{target}: invalid recargo bracket row: {exc}") from exc
     return tuple(sorted(bands, key=lambda band: band.min_days_late))
 
 

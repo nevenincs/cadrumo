@@ -26,7 +26,10 @@ def load_iva_rate_table(path: Path | None = None) -> Mapping[EUMemberState, tupl
 
     target = path if path is not None else bundled_path("registry", "aeat", "iva", "rates.toml")
     resolved = target.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise IvaCatalogueError(f"{resolved}: cannot stat VAT rate registry: {exc}") from exc
     return _load_iva_rate_table_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 

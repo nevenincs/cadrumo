@@ -21,7 +21,10 @@ def load_iva_catalogue(path: Path) -> IvaCatalogue:
     """Load one VAT catalogue TOML file."""
 
     resolved = path.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except OSError as exc:
+        raise IvaCatalogueError(f"{resolved}: cannot stat VAT catalogue: {exc}") from exc
     return _load_iva_catalogue_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
 
 

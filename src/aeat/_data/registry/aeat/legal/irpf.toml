@@ -194,6 +194,26 @@ required_text = [
     "trimestres anteriores del mismo año",
 ]
 
+[legal."rd-439-2007:art-110-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-110-3-b"
+document_id = "BOE-A-2007-6820"
+article = "110.3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Exención de presentar M130 cuando las retenciones e ingresos a cuenta del trimestre (y anteriores del año) superen el 70% de los rendimientos íntegros del mismo período. Autónomo exento de pago fraccionado."
+required_text = [
+    "70 por ciento",
+    "retenciones e ingresos a cuenta",
+    "rendimientos íntegros",
+]
+
 [legal."orden-eha-586-2011:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -2073,6 +2093,26 @@ required_text = [
     "base liquidable general",
     "base imponible general",
     "base liquidable del ahorro",
+]
+
+[legal."ley-35-2006:art-52"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Limite maximo a las reducciones por aportaciones y contribuciones a sistemas de prevision social (planes de pensiones, planes de empleo, PPSE, mutualidades). Aplicable a las reducciones que confluyen en casilla 0468."
+required_text = [
+    "planes de pensiones",
+    "reducción",
+    "límite",
 ]
 
 [legal."ley-35-2006:art-79"]

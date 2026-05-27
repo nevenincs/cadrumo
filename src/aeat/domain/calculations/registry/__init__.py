@@ -189,6 +189,7 @@ from ._runtime_graph import (
     enum_consumed_binding_ids,
     expression_binding_refs,
     expression_casilla_refs,
+    expression_date_binding_refs,
     input_casilla_alias_map,
 )
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
@@ -449,6 +450,7 @@ __all__ = [
     "export_fields_for_casilla",
     "expression_binding_refs",
     "expression_casilla_refs",
+    "expression_date_binding_refs",
     "extract_record_design",
     "extract_record_design_pdf",
     "extract_record_design_pdf_bytes",

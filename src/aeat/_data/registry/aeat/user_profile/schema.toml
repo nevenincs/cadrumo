@@ -613,6 +613,15 @@ model_selectors = ["iva.redeme_enrolled"]
 schedule_predicates = ["iva.redeme_enrolled"]
 legal_refs = ["RIVA RD 1624/1992 Art. 30 (BOE-A-1992-28925)"]
 
+[[sections.fields]]
+key = "autoconsumo_promotor_base"
+type = "money"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Base imponible del autoconsumo Art. 9.1.c LISIVA para promotores inmobiliarios: coste de construccion o rehabilitacion de inmuebles afectados al patrimonio de arrendamiento. Corresponde a casilla iva.autoconsumo.promotor.base de Modelo 303."
+legal_refs = ["LIVA Ley 37/1992 Art. 9.1.c (BOE-A-1992-28740)", "LIVA Ley 37/1992 Art. 79.4 (BOE-A-1992-28740)"]
+
 [[sections]]
 key = "obligations"
 title = "Filing obligation thresholds"

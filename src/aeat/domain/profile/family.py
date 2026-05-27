@@ -52,6 +52,15 @@ class DescendantInfo(BaseModel):
         them (Art. 59 prorrata). Default ``False`` (sole custody / not
         applicable). Setting this flag on a non-cohabiting descendant has no
         additional effect because eligibility already fails.
+    meses_madre_trabajo_2024
+        Months the mother worked while this child was under 3 years old during
+        the 2024 filing year.  Used by Art. 81 LIRPF deducción maternidad:
+        ``min(meses × 100, 1_200)`` per eligible child.  Valid range: 0–12.
+        Default ``0`` (no deducción contribution from this child).
+    gastos_guarderia_euros
+        Actual guardería / centro educación infantil autorizado expenses paid
+        for this child (Art. 81 bis LIRPF).  Integer euros, ≥ 0.
+        Default ``0`` (no guardería expenses declared for this child).
     nif
         Optional NIF/NIE; validated for shape when present.
     """
@@ -63,6 +72,8 @@ class DescendantInfo(BaseModel):
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
     custodia_compartida: bool = False
+    meses_madre_trabajo_2024: int = Field(default=0, ge=0, le=12)
+    gastos_guarderia_euros: int = Field(default=0, ge=0)
     nif: str | None = None
 
     @field_validator("birth_date", "adoption_date", mode="before")
@@ -210,6 +221,14 @@ class RentaFamilyProfile(BaseModel):
     descendants: tuple[RentaDescendantProfile, ...] = ()
     ascendants: tuple[RentaAscendantProfile, ...] = ()
     descendientes: tuple[DescendantInfo, ...] = ()
+    cotizaciones_ss_madre_2024: int = Field(default=0, ge=0)
+    """SS cotizaciones paid by the mother during 2024 (mirrors casilla 0013).
+
+    Used as the statutory cap for the Art. 81 bis guardería incremento:
+    0613 = min(gastos_guarderia_reales, hijos_menores_3 × 1000,
+               cotizaciones_ss_madre_2024).
+    Default ``0`` (cap not declared; guardería incremento will be zero).
+    """
     """Structured per-descendant data for Art. 58 mínimo calculation.
 
     Each entry carries birth / adoption date, discapacidad grade, and
@@ -250,6 +269,31 @@ class RentaFamilyProfile(BaseModel):
     def descendientes_menores_3_year_end(self, filing_year: int) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.3)."""
         return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year))
+
+    @property
+    def descendientes_menores_3_2024(self) -> int:
+        """Count of descendants eligible for the bajo-3-años supplement in 2024.
+
+        Binding-compatible property (no argument) for the 2024 registry binding
+        ``renta-2024-profile-descendientes-menores-3``.
+        """
+        return self.descendientes_menores_3_year_end(2024)
+
+    @property
+    def gastos_guarderia_reales_2024(self) -> int:
+        """Sum of Art. 81 bis guardería expenses across eligible children under 3 in 2024.
+
+        Only children eligible for the bajo-3-años supplement (age < 3 at
+        year-end 2024 AND cohabiting) contribute their ``gastos_guarderia_euros``.
+        Used as the ``gastos_reales`` term in the 0613 formula:
+        ``min(gastos_guarderia_reales_2024, descendientes_menores_3_2024 × 1000,
+             cotizaciones_ss_madre_2024)``.
+        """
+        return sum(
+            d.gastos_guarderia_euros
+            for d in self.descendientes
+            if d.is_eligible_menor_tres(2024)
+        )
 
     def descendientes_eligible_minimum(self, filing_year: int) -> int:
         """Count of descendientes eligible for the ordinary Art. 58.1 mínimo.
@@ -312,6 +356,85 @@ class RentaFamilyProfile(BaseModel):
             return tr(
                 "profile.descendiente.custodia_compartida_prorrata_applied",
                 count=count,
+            )
+        return None
+
+    # ------------------------------------------------------------------
+    # Art. 81 LIRPF deducción maternidad (casilla 0611)
+    # ------------------------------------------------------------------
+
+    def deduccion_maternidad_0611(self, filing_year: int) -> int:
+        """Compute the Art. 81 LIRPF deducción maternidad for casilla 0611.
+
+        Formula: ``sum(min(meses_madre_trabajo_2024 × 100, 1_200))`` for each
+        descendant that is eligible for the bajo-3-años supplement (age < 3 at
+        year-end AND cohabiting with the taxpayer).
+
+        Returns an integer euros amount (casilla 0611 carries no decimal places
+        on the official form).  Returns ``0`` when no eligible child has a
+        non-zero ``meses_madre_trabajo_2024``.
+        """
+        total = 0
+        for d in self.descendientes:
+            if d.is_eligible_menor_tres(filing_year) and d.meses_madre_trabajo_2024 > 0:
+                total += min(d.meses_madre_trabajo_2024 * 100, 1200)
+        return total
+
+    # ------------------------------------------------------------------
+    # Art. 81 bis LIRPF guardería incremento (casilla 0613)
+    # ------------------------------------------------------------------
+
+    def incremento_guarderia_0613(self, filing_year: int) -> int:
+        """Compute the Art. 81 bis LIRPF guardería incremento for casilla 0613.
+
+        Formula (Art. 81 bis LIRPF):
+            min(gastos_guarderia_reales, hijos_menores_3 × 1_000,
+                cotizaciones_ss_madre_2024)
+
+        Only the 2024 filing year is supported by the profile fields
+        (``gastos_guarderia_euros`` and ``cotizaciones_ss_madre_2024``); for
+        other years, returns 0.
+
+        Returns an integer euros amount.  Returns 0 when no eligible child has
+        ``gastos_guarderia_euros > 0`` or ``cotizaciones_ss_madre_2024 == 0``.
+        """
+        if filing_year != 2024:
+            return 0
+        gastos_reales = self.gastos_guarderia_reales_2024
+        hijos_menores_3 = self.descendientes_menores_3_2024
+        cotizaciones = self.cotizaciones_ss_madre_2024
+        if gastos_reales == 0 or hijos_menores_3 == 0 or cotizaciones == 0:
+            return 0
+        return min(gastos_reales, hijos_menores_3 * 1000, cotizaciones)
+
+    def incremento_guarderia_advisory(self, filing_year: int) -> str | None:
+        """Return a translated advisory string when 0613 can be auto-populated.
+
+        Returns ``None`` when the incremento is zero.
+        """
+        from ...core.i18n import tr
+
+        amount = self.incremento_guarderia_0613(filing_year)
+        if amount > 0:
+            return tr(
+                "profile.descendiente.incremento_guarderia_applied",
+                amount=amount,
+            )
+        return None
+
+    def deduccion_maternidad_advisory(self, filing_year: int) -> str | None:
+        """Return a translated advisory string when 0611 can be auto-populated.
+
+        Returns ``None`` when no descendant under 3 carries
+        ``meses_madre_trabajo_2024 > 0``, i.e. the computation produces zero.
+        """
+        from ...core.i18n import tr
+
+        amount = self.deduccion_maternidad_0611(filing_year)
+        if amount > 0:
+            return tr(
+                "profile.descendiente.deduccion_maternidad_applied",
+                amount=amount,
             )
         return None
 

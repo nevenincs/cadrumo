@@ -27,8 +27,8 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.domain.deadlines import (
-    CalendarCCAA,
     MODELOS_WITHOUT_SHIFT,
+    CalendarCCAA,
     DeadlineShift,
     Holiday,
     HolidayCalendar,

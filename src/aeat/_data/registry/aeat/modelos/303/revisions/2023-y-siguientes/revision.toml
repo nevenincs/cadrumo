@@ -143,6 +143,22 @@ source_period_offset_from_target = -1
 [revisions.2023-y-siguientes.bindings.aggregation]
 op = "copy"
 
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-303-autoconsumo-promotor-base"
+source = "profile"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
+
+[revisions.2023-y-siguientes.bindings.selector]
+profile_key = "iva.autoconsumo_promotor_base"
+
+[revisions.2023-y-siguientes.bindings.aggregation]
+op = "copy"
+
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-devengada-total"
 target = "iva.cuota-devengada-total"
@@ -168,6 +184,29 @@ casilla = "iva.repercutido.super-reducido"
 
 [[revisions.2023-y-siguientes.formulas.expression.args]]
 casilla = "iva.autorepercutido.intracomunitaria"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla = "iva.autoconsumo.promotor.cuota"
+
+[[revisions.2023-y-siguientes.formulas]]
+id = "modelo-303-autoconsumo-promotor-cuota"
+target = "iva.autoconsumo.promotor.cuota"
+rounding = "money-2"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["boe-modelo-303-2008-form"]
+
+[[revisions.2023-y-siguientes.formulas.source_citations]]
+source_ref = "boe-modelo-303-2008-form"
+required_text = ["modelo 303 de autoliquidación del Impuesto sobre el Valor Añadido"]
+
+[revisions.2023-y-siguientes.formulas.expression]
+op = "multiply"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+casilla = "iva.autoconsumo.promotor.base"
+
+[[revisions.2023-y-siguientes.formulas.expression.args]]
+literal = "0.21"
 
 [[revisions.2023-y-siguientes.formulas]]
 id = "modelo-303-iva-cuota-deducible-total"
@@ -670,7 +709,7 @@ source_refs = ["boe-modelo-303-2008-form"]
 [[revisions.2023-y-siguientes.constructs]]
 id = "modelo-303-iva-autoliquidacion"
 title = "Modelo 303 IVA quarterly autoliquidacion"
-legal_refs = ["orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110"]
+legal_refs = ["orden-eha-3786-2008:art-1", "orden-eha-3786-2008:art-7", "ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-84", "ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "ley-37-1992:art-92", "rd-1624-1992:art-71", "ley-37-1992:art-99", "ley-37-1992:art-115", "ley-37-1992:art-116", "rd-1624-1992:art-29", "rd-1624-1992:art-30", "ley-37-1992:art-102", "ley-37-1992:art-104", "ley-37-1992:art-107", "ley-37-1992:art-108", "ley-37-1992:art-109", "ley-37-1992:art-110"]
 source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
 casillas = [
     "iva.repercutido.general",
@@ -678,6 +717,8 @@ casillas = [
     "iva.repercutido.super-reducido",
     "iva.soportado.interiores",
     "iva.autorepercutido.intracomunitaria",
+    "iva.autoconsumo.promotor.base",
+    "iva.autoconsumo.promotor.cuota",
     "iva.cuota-devengada-total",
     "iva.cuota-deducible-total",
     "iva.resultado-regimen-general",
@@ -694,8 +735,8 @@ casillas = [
     "decl.ejercicio",
     "decl.periodo",
 ]
-formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
-bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-compensacion-pendiente-anteriores"]
+formulas = ["modelo-303-iva-cuota-devengada-total", "modelo-303-autoconsumo-promotor-cuota", "modelo-303-iva-cuota-deducible-total", "modelo-303-iva-resultado-regimen-general", "modelo-303-compensacion-aplicada-periodo", "modelo-303-compensacion-pendiente-periodos-posteriores", "modelo-303-iva-resultado", "modelo-303-compensacion-generada-periodo", "modelo-303-compensacion-disponible-fin-periodo", "modelo-303-iva-prorrata-porcentaje"]
+bindings = ["modelo-303-iva-repercutido-general-cuota", "modelo-303-iva-repercutido-reducido-cuota", "modelo-303-iva-repercutido-super-reducido-cuota", "modelo-303-iva-soportado-interiores-cuota", "modelo-303-iva-autorepercutido-intracomunitaria-cuota", "modelo-303-compensacion-pendiente-anteriores", "modelo-303-autoconsumo-promotor-base"]
 relations = ["modelo-303-rel-self-compensacion-anteriores"]
 dependency_classifications = ["modelo-303-dep-self-prior-quarter"]
 workbook_parity_refs = ["modelo-303-dr-2025"]

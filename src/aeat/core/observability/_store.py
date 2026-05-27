@@ -27,7 +27,7 @@ from pydantic import ValidationError
 
 from ..config import Settings, load_settings
 from ..logging import get_logger
-from ._errors import RunTraceValidationError
+from ._errors import RunTracePersistenceError, RunTraceValidationError
 from ._models import RunEvent, RunTrace
 from ._redaction_rules import diagnostic_rules
 
@@ -43,6 +43,11 @@ _EVENTS_FILENAME = "events.jsonl"
 # ``/etc/passwd``) cannot cause ``runs_dir / run_id`` to escape the
 # configured runs directory.
 _RUN_ID_PATTERN = re.compile(r"^[0-9a-f]{16}$")
+
+
+def _raise_persistence_error(operation: str, target: Path, exc: OSError) -> None:
+    """Raise a registered observability persistence error from ``exc``."""
+    raise RunTracePersistenceError(operation=operation, path=target) from exc
 
 
 def _validate_run_id(run_id: str) -> str:
@@ -84,7 +89,10 @@ def runs_dir(settings: Settings | None = None) -> Path:
     """
     cfg = settings or load_settings()
     target = cfg.aeat_runs_dir
-    target.mkdir(parents=True, exist_ok=True)
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        _raise_persistence_error("runs_dir", target, exc)
     return target
 
 
@@ -101,7 +109,10 @@ def _run_dir(run_id: str, *, settings: Settings | None = None) -> Path:
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id
-    target.mkdir(parents=True, exist_ok=True)
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        _raise_persistence_error("_run_dir", target, exc)
     return target
 
 
@@ -125,7 +136,10 @@ def save_trace(trace: RunTrace, *, settings: Settings | None = None) -> Path:
 
     target = _run_dir(trace.run_id, settings=settings) / _TRACE_FILENAME
     redacted = redact_structured(trace.model_dump(mode="json"), rules=diagnostic_rules())
-    target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
+    try:
+        target.write_text(json.dumps(redacted, indent=2, sort_keys=True), encoding="utf-8")
+    except OSError as exc:
+        _raise_persistence_error("save_trace", target, exc)
     _logger.info(
         "save_trace: persisted run trace for run_id=%s outcome=%s at %s",
         trace.run_id,
@@ -156,9 +170,16 @@ def load_trace(run_id: str, *, settings: Settings | None = None) -> RunTrace:
     """
     _validate_run_id(run_id)
     target = runs_dir(settings) / run_id / _TRACE_FILENAME
-    if not target.exists():
+    try:
+        exists = target.exists()
+    except OSError as exc:
+        _raise_persistence_error("load_trace.exists", target, exc)
+    if not exists:
         raise RunTraceValidationError(f"trace.json not found for run {run_id!r} at {target}")
-    raw = target.read_text(encoding="utf-8")
+    try:
+        raw = target.read_text(encoding="utf-8")
+    except OSError as exc:
+        _raise_persistence_error("load_trace", target, exc)
     try:
         return RunTrace.model_validate_json(raw)
     except ValidationError as exc:
@@ -196,9 +217,12 @@ def save_events_append(
     target = _run_dir(run_id, settings=settings) / _EVENTS_FILENAME
     redacted = redact_structured(event.model_dump(mode="json"), rules=diagnostic_rules())
     line = json.dumps(redacted, sort_keys=True, separators=(",", ":")) + "\n"
-    with target.open("a", encoding="utf-8", newline="") as handle:
-        handle.write(line)
-        handle.flush()
+    try:
+        with target.open("a", encoding="utf-8", newline="") as handle:
+            handle.write(line)
+            handle.flush()
+    except OSError as exc:
+        _raise_persistence_error("save_events_append", target, exc)
     return target
 
 
@@ -233,19 +257,26 @@ def iter_events(
     target = runs_dir(settings) / run_id / _EVENTS_FILENAME
 
     def _stream() -> Iterator[RunEvent]:
-        if not target.exists():
+        try:
+            exists = target.exists()
+        except OSError as exc:
+            _raise_persistence_error("iter_events.exists", target, exc)
+        if not exists:
             return
-        with target.open("r", encoding="utf-8") as handle:
-            for lineno, raw in enumerate(handle, start=1):
-                stripped = raw.strip()
-                if not stripped:
-                    continue
-                try:
-                    yield RunEvent.model_validate_json(stripped)
-                except ValidationError as exc:
-                    raise RunTraceValidationError(
-                        f"events.jsonl line {lineno} for run {run_id!r} failed strict validation: {exc}",
-                    ) from exc
+        try:
+            with target.open("r", encoding="utf-8") as handle:
+                for lineno, raw in enumerate(handle, start=1):
+                    stripped = raw.strip()
+                    if not stripped:
+                        continue
+                    try:
+                        yield RunEvent.model_validate_json(stripped)
+                    except ValidationError as exc:
+                        raise RunTraceValidationError(
+                            f"events.jsonl line {lineno} for run {run_id!r} failed strict validation: {exc}",
+                        ) from exc
+        except OSError as exc:
+            _raise_persistence_error("iter_events", target, exc)
 
     return _stream()
 
@@ -295,16 +326,35 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     """
     base = runs_dir(settings)
     pairs: list[tuple[str, RunTrace]] = []
-    for entry in base.iterdir():
-        if not entry.is_dir():
+    try:
+        entries = tuple(base.iterdir())
+    except OSError as exc:
+        _raise_persistence_error("iter_runs", base, exc)
+    for entry in entries:
+        try:
+            is_dir = entry.is_dir()
+        except OSError:
+            _logger.warning("iter_runs: skipping unreadable entry %s", entry, exc_info=True)
+            continue
+        if not is_dir:
+            _logger.debug("iter_runs: skipping non-directory entry %s", entry)
             continue
         if not _RUN_ID_PATTERN.fullmatch(entry.name):
+            _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
             continue
         trace_path = entry / _TRACE_FILENAME
         if not trace_path.exists():
+            _logger.debug("iter_runs: skipping run directory %s without trace.json", entry.name)
             continue
         try:
             trace = RunTrace.model_validate_json(trace_path.read_text(encoding="utf-8"))
+        except OSError:
+            _logger.warning(
+                "iter_runs: skipping run directory %s — trace.json could not be read",
+                entry.name,
+                exc_info=True,
+            )
+            continue
         except ValidationError:
             _logger.warning(
                 "iter_runs: skipping run directory %s — trace.json failed strict validation",

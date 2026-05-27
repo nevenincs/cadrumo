@@ -9,11 +9,13 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from . import (
     EUMemberState,
+    IvaCatalogueError,
     IvaRateKind,
     IvaRateNotFoundError,
     load_iva_rate_table,
@@ -73,3 +75,10 @@ def test_every_rate_window_is_well_ordered() -> None:
         for rate in rates:
             if rate.effective_until is not None:
                 assert rate.effective_from <= rate.effective_until
+
+
+def test_load_iva_rate_table_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-rates.toml"
+
+    with pytest.raises(IvaCatalogueError, match=r"cannot stat VAT rate registry"):
+        load_iva_rate_table(missing)

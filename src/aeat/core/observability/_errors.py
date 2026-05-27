@@ -8,6 +8,8 @@ declares the leaf error types raised inside the observability layer.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from ..errors import AeatObservabilityError
 
 
@@ -31,6 +33,24 @@ class RunTraceValidationError(AeatObservabilityError):
     """
 
     pass
+
+
+class RunTracePersistenceError(AeatObservabilityError):
+    """Raised when run-trace files cannot be created, read, or written."""
+
+    def __init__(self, *, operation: str, path: Path) -> None:
+        """Build a registered persistence error with structured context.
+
+        Args:
+            operation: Stable operation label, e.g. ``"save_trace"``.
+            path: Filesystem path whose access failed.
+        """
+        super().__init__(
+            context={"operation": operation, "path": str(path)},
+            translated_message="errors.fail.fail_observability_run_trace_persistence",
+        )
+        self.operation = operation
+        self.path = path
 
 
 class AeatCorpusDriftError(AeatObservabilityError):
@@ -79,5 +99,6 @@ __all__ = [
     "AeatCorpusDriftError",
     "AeatObservabilityError",
     "RunContextMissingError",
+    "RunTracePersistenceError",
     "RunTraceValidationError",
 ]

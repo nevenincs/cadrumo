@@ -285,6 +285,14 @@ cache/
 # agent workspaces). Same role as scratch/ — ephemeral, never in git.
 /.tmp/
 /.tmp_*/
+/.tmp-*/
+
+# Top-level scratch outputs (one-shot agent runs, encoded blobs,
+# tmp text dumps, accidental absolute-path filenames). Never durable.
+/tmp_*.txt
+/*.b64
+/write_*.py
+/C\:*
 
 
 # >>> vaultspec-managed (do not edit this block) >>>

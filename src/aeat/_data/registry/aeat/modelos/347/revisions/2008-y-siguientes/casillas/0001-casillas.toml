@@ -22,3 +22,101 @@ input_kind = "informational"
 legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-347-2025"]
 
+# --- Per-counterparty detail fields (Tipo 2 contraparte declarada) ---
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.nif"
+number = "contraparte.nif"
+label = "NIF de la contraparte declarada"
+section = ["contraparte", "identificacion"]
+data_type = "nif"
+semantic_role = "contraparte_nif"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.nombre"
+number = "contraparte.nombre"
+label = "Nombre o razon social de la contraparte declarada"
+section = ["contraparte", "identificacion"]
+data_type = "text"
+semantic_role = "contraparte_nombre"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.clave-operacion"
+number = "contraparte.clave-operacion"
+label = "Clave de operacion con la contraparte (A=entregas/prestaciones, B=adquisiciones/recepciones, ...)"
+section = ["contraparte", "operacion"]
+data_type = "text"
+semantic_role = "contraparte_clave_operacion"
+required = true
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-Q1"
+number = "contraparte.importe-Q1"
+label = "Importe de operaciones con la contraparte en primer trimestre"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q1"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-Q2"
+number = "contraparte.importe-Q2"
+label = "Importe de operaciones con la contraparte en segundo trimestre"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q2"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-Q3"
+number = "contraparte.importe-Q3"
+label = "Importe de operaciones con la contraparte en tercer trimestre"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q3"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.importe-Q4"
+number = "contraparte.importe-Q4"
+label = "Importe de operaciones con la contraparte en cuarto trimestre"
+section = ["contraparte", "importes"]
+data_type = "money"
+semantic_role = "contraparte_importe_q4"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+
+[[revisions."2008-y-siguientes".casillas]]
+id = "contraparte.pais-codigo"
+number = "contraparte.pais-codigo"
+label = "Codigo de pais de la contraparte (ISO 3166-1 alfa-2; vacio para contrapartes nacionales)"
+section = ["contraparte", "identificacion"]
+data_type = "country_code"
+semantic_role = "contraparte_pais_codigo"
+required = false
+input_kind = "manual"
+legal_refs = ["orden-eha-3012-2008:art-1", "rd-1065-2007:art-31", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-347-2025"]
+

@@ -10,19 +10,23 @@ Supported row types:
   (``--row miembro nif=X share=Y importe=Z``)
 * ``Modelo232VinculadaRow`` — operación vinculada for modelo 232
   (``--row vinculada nif=X tipo_vinculacion=Y importe=Z metodo=M pais=P``)
+* ``Modelo349OperadorRow`` — operador intracomunitario for modelo 349
+  (``--row operador codigo_pais=DE nif_comunitario=DE123456789 razon_social=X clave_operacion=E importe=Y``)
+  Used when no collectible-invoice ledger exists; maps directly to the
+  Tipo-2 operador record layout (Orden HAC/174/2020 Anexo II).
+* ``Modelo347ContraparteRow`` — contraparte declarada for modelo 347
+  (``--row contraparte nif=X nombre=Y importe_Q1=Z clave_operacion=A``)
+  One row per counterparty. Annual importe threshold check (> €3,005.06)
+  is performed by the CLI validator, not the model, so partial row sets
+  accumulate correctly before final validation.
 
 These models are the CLI boundary layer. They validate operator input
-and carry enough fields to construct the matching
-``AtributionMemberObservation`` / ``RelatedPartyOperationObservation``
-that the registry row-resolver consumes.
-
-Modelo 349 (operador intracomunitario) is NOT wired through this
-mechanism: its per-operator rows are derived automatically from the
-collectible-invoice ledger; there is no manual-entry path.
+before being carried into ``detail_rows`` on the ``CalculationRevision``.
 """
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 from typing import Annotated, Literal
 
@@ -162,13 +166,185 @@ class Modelo232VinculadaRow(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Modelo 349 - operador intracomunitario row (manual-entry path)
+#
+# Legal authority: Orden HAC/174/2020 (Anexo II — Tipo 2 operador record);
+# Orden EHA/769/2010 art. 3; Ley 58/2003 art. 93; Ley 37/1992 arts. 66-70
+# (operaciones intracomunitarias).
+# One row per counterparty + clave_operacion combination.
+# NIF-IVA format validation enforces country-specific patterns from
+# Council Directive 2006/112/EC Annex XI (the VIES registry format rules).
+# ---------------------------------------------------------------------------
+
+# Country-specific NIF-IVA format patterns.
+# Pattern values are anchored regexes applied to the full NIF string
+# including the two-letter country prefix.
+_M349_NIF_PATTERNS: dict[str, re.Pattern[str]] = {
+    "DE": re.compile(r"^DE\d{9}$"),
+    "FR": re.compile(r"^FR[0-9A-Z]{2}\d{9}$"),
+    "IT": re.compile(r"^IT\d{11}$"),
+    "PT": re.compile(r"^PT\d{9}$"),
+    "NL": re.compile(r"^NL\d{9}B\d{2}$"),
+    "BE": re.compile(r"^BE0\d{9}$"),
+    "AT": re.compile(r"^ATU\d{8}$"),
+    "IE": re.compile(r"^IE(\d{7}[A-W]|\d[A-Z]\d{5}[A-W])$"),
+    "PL": re.compile(r"^PL\d{10}$"),
+    "SE": re.compile(r"^SE\d{12}$"),
+    "DK": re.compile(r"^DK\d{8}$"),
+    "FI": re.compile(r"^FI\d{8}$"),
+    "LU": re.compile(r"^LU\d{8}$"),
+    "GB": re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$"),
+}
+# Fallback: 2-letter country code + 2-15 alphanumeric characters.
+_M349_NIF_FALLBACK: re.Pattern[str] = re.compile(r"^[A-Z]{2}[A-Z0-9]{2,15}$")
+
+# Valid clave de operación codes per Orden HAC/174/2020 Anexo II.
+_M349_CLAVE_OPERACION = Literal["E", "S", "T", "R", "A", "I", "M"]
+
+
+class Modelo349OperadorRow(BaseModel):
+    """One operador intracomunitario row for Modelo 349 (manual-entry path).
+
+    Fields mirror the Tipo-2 operador record layout declared in
+    ``349/revisions/2020-y-siguientes/bindings/0007-bindings.toml``.
+
+    This row is used when the collectible-invoice ledger is absent and
+    the operator declares intracom counterparties directly via the CLI.
+
+    Parity assertions:
+    * ``codigo_pais`` → ``op.codigo-pais`` (casilla 76-77)
+    * ``nif_comunitario`` → ``op.nif-comunitario`` (casilla 78-92)
+    * ``razon_social`` → ``op.apellidos-razon-social`` (casilla 93-132)
+    * ``clave_operacion`` → ``op.clave-operacion`` (casilla 133)
+    * ``importe`` → ``op.base-imponible`` (casilla 134-146)
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    row_type: Literal["operador"] = "operador"
+    codigo_pais: _IsoCountryCode
+    nif_comunitario: _NifStr
+    razon_social: _NameStr = Field(default="")
+    clave_operacion: _M349_CLAVE_OPERACION
+    importe: Decimal = Field(description="Base imponible o importe de la operacion en EUR")
+
+    @field_validator("codigo_pais")
+    @classmethod
+    def _codigo_pais_uppercase_alpha(cls, value: str) -> str:
+        if value != value.upper() or not value.replace(" ", "").isalpha():
+            raise ValueError("codigo_pais must be an uppercase two-letter ISO 3166-1 country code (e.g. DE, FR, IT)")
+        return value
+
+    @field_validator("nif_comunitario")
+    @classmethod
+    def _nif_comunitario_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("nif_comunitario cannot be blank")
+        return value.upper()
+
+    @field_validator("importe")
+    @classmethod
+    def _importe_non_negative(cls, value: Decimal) -> Decimal:
+        if value < Decimal("0"):
+            raise ValueError(f"importe must be non-negative per Orden HAC/174/2020 Anexo II constraint; got {value}")
+        return value
+
+
+def validate_m349_nif_format(nif: str, pais: str) -> bool:
+    """Return True when ``nif`` matches the expected NIF-IVA format for ``pais``.
+
+    Uses country-specific patterns where known; falls back to the generic
+    EU VAT format (2-letter prefix + 2-15 alphanumerics) for other countries.
+    The NIF string must already include the two-letter country prefix.
+    """
+    pattern = _M349_NIF_PATTERNS.get(pais.upper(), _M349_NIF_FALLBACK)
+    return bool(pattern.match(nif.upper()))
+
+
+# ---------------------------------------------------------------------------
+# Modelo 347 - contraparte declarada row
+#
+# Legal authority: Orden EHA/3012/2008 art. 1; RD 1065/2007 arts. 31-35
+# (reglamento de gestión e inspección tributaria, obligación de informar
+# sobre operaciones con terceros); Ley 58/2003 art. 93.
+# Threshold: total annual importe > €3,005.06 per counterparty (RD
+# 1065/2007 art. 31.1).  The threshold check is performed at the CLI
+# validator level, not here, so that partial row accumulation works.
+# ---------------------------------------------------------------------------
+
+# Minimum importe total per counterparty (RD 1065/2007 art. 31.1).
+M347_THRESHOLD_EUR: Decimal = Decimal("3005.06")
+
+# Valid clave de operacion codes per M347 form / Orden EHA/3012/2008.
+_M347_CLAVE_OPERACION = Literal["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+
+
+class Modelo347ContraparteRow(BaseModel):
+    """One contraparte declarada row for Modelo 347.
+
+    Fields mirror the per-counterparty Tipo-2 record layout declared in
+    ``347/revisions/2008-y-siguientes``.
+
+    One row per counterparty. The annual total importe (sum of Q1-Q4)
+    must exceed €3,005.06 per RD 1065/2007 art. 31.1.
+
+    Parity assertions:
+    * ``nif`` → ``contraparte.nif`` (counterparty tax id)
+    * ``nombre`` → ``contraparte.nombre`` (legal name)
+    * ``importe_Q1/Q2/Q3/Q4`` → quarterly importe slots
+    * ``clave_operacion`` → operation type code
+    * ``pais_codigo`` → ``contraparte.pais`` (ISO 3166-1; None = domestic)
+    """
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    row_type: Literal["contraparte"] = "contraparte"
+    nif: _NifStr
+    nombre: _NameStr = Field(default="")
+    importe_Q1: Decimal = Field(default=Decimal("0"))
+    importe_Q2: Decimal = Field(default=Decimal("0"))
+    importe_Q3: Decimal = Field(default=Decimal("0"))
+    importe_Q4: Decimal = Field(default=Decimal("0"))
+    clave_operacion: _M347_CLAVE_OPERACION = "A"
+    pais_codigo: _IsoCountryCode | None = None
+
+    @field_validator("nif")
+    @classmethod
+    def _nif_not_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("nif cannot be blank")
+        return value.upper()
+
+    @field_validator("pais_codigo")
+    @classmethod
+    def _pais_codigo_uppercase_alpha(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        v = value.strip().upper()
+        if not v.isalpha() or len(v) != 2:
+            raise ValueError(
+                "pais_codigo must be an uppercase two-letter ISO 3166-1 country code or None for domestic"
+            )
+        return v
+
+    @property
+    def importe_total(self) -> Decimal:
+        """Sum of quarterly importes — used for M347 threshold check."""
+        return self.importe_Q1 + self.importe_Q2 + self.importe_Q3 + self.importe_Q4
+
+
+# ---------------------------------------------------------------------------
 # Discriminated union — single type accepted by the CLI --row argument
 # ---------------------------------------------------------------------------
 
-ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow
+ModeloDetailRow = Modelo184MemberRow | Modelo232VinculadaRow | Modelo349OperadorRow | Modelo347ContraparteRow
 
 __all__ = [
     "Modelo184MemberRow",
     "Modelo232VinculadaRow",
+    "Modelo349OperadorRow",
+    "Modelo347ContraparteRow",
     "ModeloDetailRow",
+    "M347_THRESHOLD_EUR",
+    "validate_m349_nif_format",
 ]

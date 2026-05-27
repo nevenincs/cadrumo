@@ -105,12 +105,29 @@ required_text = ["casilla 14", "Casilla 12", "Casilla 13"]
 [[revisions."2019-y-siguientes".formulas]]
 id = "modelo-130-diferencia"
 target = "17"
-expression = { op = "subtract", args = [
-    { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
-    { casilla = "16" },
+# Art. 110.3.b RIRPF: when retenciones acumuladas (c06) / ingresos (c01) >= 70%
+# the autónomo is exempt and casilla 17 is zero. The zero branch only activates
+# when c01 > 0 (denominator guard); otherwise the standard subtraction applies.
+expression = { op = "if_then_else", args = [
+    { op = "greater_than", args = [{ casilla = "01" }, { literal = "0" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_equal", args = [
+            { op = "divide", args = [{ casilla = "06" }, { casilla = "01" }] },
+            { literal = "0.70" },
+        ] },
+        { literal = "0" },
+        { op = "subtract", args = [
+            { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
+            { casilla = "16" },
+        ] },
+    ] },
+    { op = "subtract", args = [
+        { op = "subtract", args = [{ casilla = "14" }, { casilla = "15" }] },
+        { casilla = "16" },
+    ] },
 ] }
 rounding = "money-2"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-110-3-b", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 
 [[revisions."2019-y-siguientes".formulas.source_citations]]

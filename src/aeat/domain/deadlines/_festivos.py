@@ -46,7 +46,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, ValidationError
 
 from ...core.resources import bundled_path
 from ._errors import DeadlineValidationError
@@ -219,8 +219,13 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         raise DeadlineValidationError(
             f"holiday calendar for year {year} not registered (expected file: {path.name})"
         )
-    with path.open("rb") as fp:
-        raw = tomllib.load(fp)
+    try:
+        with path.open("rb") as fp:
+            raw = tomllib.load(fp)
+    except OSError as exc:
+        raise DeadlineValidationError(f"{path}: cannot read holiday calendar: {exc}") from exc
+    except tomllib.TOMLDecodeError as exc:
+        raise DeadlineValidationError(f"{path}: invalid holiday calendar TOML: {exc}") from exc
 
     declared_year = raw.get("year")
     if declared_year != year:
@@ -228,32 +233,34 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
             f"holiday calendar year mismatch: filename declares {year} but TOML declares {declared_year!r}"
         )
 
-    national_entries = tuple(
-        Holiday(
-            holiday_date=entry["date"],
-            jurisdiction=HolidayJurisdiction.NATIONAL,
-            ccaa_code=None,
-            name=entry["name"],
+    try:
+        national_entries = tuple(
+            Holiday(
+                holiday_date=entry["date"],
+                jurisdiction=HolidayJurisdiction.NATIONAL,
+                ccaa_code=None,
+                name=entry["name"],
+            )
+            for entry in raw.get("national", ())
         )
-        for entry in raw.get("national", ())
-    )
-    ccaa_entries = tuple(
-        Holiday(
-            holiday_date=entry["date"],
-            jurisdiction=HolidayJurisdiction.CCAA,
-            ccaa_code=CalendarCCAA(entry["ccaa_code"]),
-            name=entry["name"],
+        ccaa_entries = tuple(
+            Holiday(
+                holiday_date=entry["date"],
+                jurisdiction=HolidayJurisdiction.CCAA,
+                ccaa_code=CalendarCCAA(entry["ccaa_code"]),
+                name=entry["name"],
+            )
+            for entry in raw.get("ccaa", ())
         )
-        for entry in raw.get("ccaa", ())
-    )
-
-    return HolidayCalendar(
-        year=year,
-        boe_ref=raw["boe_ref"],
-        boe_url=raw.get("boe_url"),
-        national=national_entries,
-        ccaa=ccaa_entries,
-    )
+        return HolidayCalendar(
+            year=year,
+            boe_ref=raw["boe_ref"],
+            boe_url=raw.get("boe_url"),
+            national=national_entries,
+            ccaa=ccaa_entries,
+        )
+    except (KeyError, TypeError, ValueError, ValidationError) as exc:
+        raise DeadlineValidationError(f"{path}: invalid holiday calendar row: {exc}") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -451,8 +458,8 @@ def shift_deadline(
 
 
 __all__ = (
-    "CalendarCCAA",
     "MODELOS_WITHOUT_SHIFT",
+    "CalendarCCAA",
     "DeadlineShift",
     "Holiday",
     "HolidayCalendar",

@@ -182,12 +182,17 @@ def test_anti_tautology_mutating_regime_changes_projection(
     from ...domain.user_profile import UserProfileRecord
 
     def _build_record(regime_value: str) -> UserProfileRecord:
+        extra: list[UserProfileFact] = [UserProfileFact(path="irpf.special_regime", value=regime_value)]
+        if regime_value == "impatriado":
+            # special_regime_start_date is now required when irpf_special_regime
+            # is IMPATRIADO (TaxpayerProfile SCHEMA-001 validator, task #191).
+            extra.append(UserProfileFact(path="irpf.special_regime_start_date", value="2023-01-01"))
         facts = (
             *(
                 UserProfileFact(path="iva.regime", value="GENERAL") if f.path == "iva.regime" else f
                 for f in _required_facts(schema)
             ),
-            UserProfileFact(path="irpf.special_regime", value=regime_value),
+            *extra,
         )
         state = register_active_profile(
             WorkflowState(),

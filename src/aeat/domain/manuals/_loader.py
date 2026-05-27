@@ -90,7 +90,12 @@ def _read_text(path: Path) -> str:
         stat = resolved.stat()
     except FileNotFoundError as exc:
         raise ManualNotFoundError(f"missing required file: {path}") from exc
-    return _read_text_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot stat required file ({exc})") from exc
+    try:
+        return _read_text_cached(str(resolved), stat.st_size, stat.st_mtime_ns)
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot read required file ({exc})") from exc
 
 
 @lru_cache(maxsize=1024)
@@ -186,7 +191,12 @@ def load_manual(
 
 def _path_fingerprint(path: Path) -> tuple[str, int, int]:
     resolved = path.resolve()
-    stat = resolved.stat()
+    try:
+        stat = resolved.stat()
+    except FileNotFoundError as exc:
+        raise ManualNotFoundError(f"missing required file: {path}") from exc
+    except OSError as exc:
+        raise ManualParseError(f"{path}: cannot stat required file ({exc})") from exc
     return (str(resolved), stat.st_size, stat.st_mtime_ns)
 
 

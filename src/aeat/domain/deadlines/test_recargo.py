@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
+from ._errors import DeadlineValidationError
 from ._recargo import build_recovery_for_overdue, load_recargo_bands, resolve_recargo_band
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -83,3 +85,10 @@ def test_build_recovery_carries_runnable_next_command() -> None:
     assert recovery.recargo_band.id == "within_30_days"
     assert "ley-58-2003" in recovery.legal_ref
     assert recovery.next_command == "aeat app modelo work --help"
+
+
+def test_load_recargo_bands_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-recargo-bands.toml"
+
+    with pytest.raises(DeadlineValidationError, match=r"cannot stat recargo bracket registry"):
+        load_recargo_bands(missing)

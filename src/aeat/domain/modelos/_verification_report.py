@@ -80,6 +80,7 @@ class ModeloVerificationFindingKind(StrEnum):
     UNRESOLVED_BINDING = "unresolved_binding"
     INVALID_WAIVER = "invalid_waiver"
     BLOCKING_RULE = "blocking_rule"
+    ADVISORY = "advisory"
 
 
 class ModeloVerificationFindingSeverity(StrEnum):

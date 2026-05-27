@@ -411,6 +411,8 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
         "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
         "modelo-303-compensacion-pendiente-anteriores": Decimal("1200.00"),
+        # No autoconsumo promotor in this period; zero disables the formula path.
+        "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
     }
     bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
@@ -506,6 +508,93 @@ def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() 
     quarterly_ids = {s.id for s in quarterly_schedules}
     assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
     assert "modelo-303-mensual-sii" not in quarterly_ids, "monthly SII schedule must NOT match standard quarterly profile"
+
+
+def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:
+    """Oracle: Ramón has construction cost €1,400,000 and converts the building
+    to his rental estate.  Art. 9.1.c LISIVA triggers the autoconsumo; Art. 79.4
+    LISIVA sets the base at cost; Art. 90 LISIVA sets the tipo at 21%.
+
+    Expected cuota = 1,400,000 × 0.21 = 294,000.00.
+
+    The expected value is derived from the statutory formula (Art. 90 LISIVA:
+    tipo general = 21%), NOT from the registry implementation under test; this
+    test would fail if the formula were mis-wired or the tipo were wrong.
+    """
+    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+
+    modelo, catalogues = _load_modelo_303()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+
+    binding_values = {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+        "modelo-303-autoconsumo-promotor-base": Decimal("1400000"),
+    }
+    bound_inputs = resolve_bound_casilla_inputs(snapshot.revision, binding_values)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=bound_inputs,
+        binding_values=binding_values,
+        date_context={"filing_period": date(2025, 3, 31)},
+    )
+
+    # Art. 90 LISIVA tipo general 21%: 1,400,000 × 0.21 = 294,000.00
+    assert result.values["iva.autoconsumo.promotor.base"] == Decimal("1400000"), (
+        "base casilla must carry the supplied construction cost"
+    )
+    assert result.values["iva.autoconsumo.promotor.cuota"] == Decimal("294000.00"), (
+        "cuota must equal 1,400,000 × 21% = 294,000.00 per Art. 90 LISIVA"
+    )
+    # The autoconsumo cuota must also flow into the total devengada.
+    cuota_devengada_total = result.values["iva.cuota-devengada-total"]
+    assert cuota_devengada_total == Decimal("294000.00"), (
+        "cuota-devengada-total must include the autoconsumo promotor cuota"
+    )
+
+
+def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
+    """Anti-tautology: halving the construction base must halve the cuota.
+
+    The assertion is derived from the statutory multiplication (Art. 90 LISIVA
+    tipo 21%), not from a second call to the same formula.  If the formula
+    constant were changed to, say, 0.10, this test would catch it immediately.
+    """
+    from aeat.domain.calculations.registry import calculate_registry_snapshot, resolve_bound_casilla_inputs
+
+    modelo, catalogues = _load_modelo_303()
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
+
+    zero_bindings: dict[str, Decimal] = {
+        "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
+        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
+        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
+        "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+    }
+
+    def _run(base: Decimal) -> Decimal:
+        bv = {**zero_bindings, "modelo-303-autoconsumo-promotor-base": base}
+        bound = resolve_bound_casilla_inputs(snapshot.revision, bv)
+        r = calculate_registry_snapshot(
+            snapshot,
+            inputs=bound,
+            binding_values=bv,
+            date_context={"filing_period": date(2025, 3, 31)},
+        )
+        return r.values["iva.autoconsumo.promotor.cuota"]
+
+    # Statutory expectation from Art. 90 LISIVA (tipo general 21%):
+    #   700,000 × 0.21 = 147,000.00
+    assert _run(Decimal("700000")) == Decimal("147000.00")
+    # Cross-check: result at 1,400,000 is exactly double — if the registry formula
+    # were wrong the ratio would differ.
+    assert _run(Decimal("1400000")) == Decimal("2") * _run(Decimal("700000"))
 
 
 def test_modelo_303_workbook_parity_ref_anchors_record_design_layout() -> None:

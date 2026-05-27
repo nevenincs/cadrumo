@@ -26,14 +26,21 @@ from pathlib import Path
 
 import pytest
 
+from ..config import Settings
 from . import (
     NavigationPayload,
     RunEvent,
     RunEventKind,
     RunEventPayload,
+    RunOutcome,
+    RunTrace,
+    RunTracePersistenceError,
     RunTraceValidationError,
+    iter_runs,
     load_events,
+    load_trace,
     save_events_append,
+    save_trace,
 )
 from ._sink import JsonlRunSink
 from ._store import _EVENTS_FILENAME, runs_dir
@@ -212,6 +219,65 @@ class TestStoreRunIdValidation:
         with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
             load_trace("0" * 16)
         assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
+
+
+class TestStorePersistenceErrors:
+    def _trace(self, run_id: str = "0123456789abcdef") -> RunTrace:
+        return RunTrace(
+            run_id=run_id,
+            started_at=datetime(2026, 4, 14, tzinfo=UTC),
+            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+            entrypoint="aeat test",
+            arguments=(),
+            corpus_sha256="a" * 64,
+            db_sha256="b" * 64,
+            cert_fingerprint="",
+            outcome=RunOutcome.OK,
+        )
+
+    def test_save_trace_wraps_unusable_runs_root(self, tmp_path: Path) -> None:
+        runs_root = tmp_path / "runs"
+        runs_root.write_text("not a directory", encoding="utf-8")
+        settings = Settings(aeat_runs_dir=runs_root)
+
+        with pytest.raises(RunTracePersistenceError) as excinfo:
+            save_trace(self._trace(), settings=settings)
+
+        error = excinfo.value
+        assert error.operation == "runs_dir"
+        assert error.path == runs_root
+        assert isinstance(error.__cause__, OSError)
+
+    def test_load_trace_wraps_unreadable_trace_file(self, tmp_path: Path) -> None:
+        run_id = "abcdef0123456789"
+        runs_root = tmp_path / "runs"
+        trace_path = runs_root / run_id / "trace.json"
+        trace_path.mkdir(parents=True)
+        settings = Settings(aeat_runs_dir=runs_root)
+
+        with pytest.raises(RunTracePersistenceError) as excinfo:
+            load_trace(run_id, settings=settings)
+
+        error = excinfo.value
+        assert error.operation == "load_trace"
+        assert error.path == trace_path
+        assert isinstance(error.__cause__, OSError)
+
+    def test_iter_runs_logs_skipped_entries(self, tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+        runs_root = tmp_path / "runs"
+        runs_root.mkdir()
+        (runs_root / "plain.txt").write_text("not a run", encoding="utf-8")
+        (runs_root / "not-a-run").mkdir()
+        (runs_root / "0123456789abcdef").mkdir()
+        settings = Settings(aeat_runs_dir=runs_root)
+
+        caplog.set_level(logging.DEBUG, logger="aeat.core.observability._store")
+
+        assert list(iter_runs(settings=settings)) == []
+        messages = [record.getMessage() for record in caplog.records]
+        assert any("skipping non-directory entry" in message and "plain.txt" in message for message in messages)
+        assert any("skipping non-run directory not-a-run" in message for message in messages)
+        assert any("skipping run directory 0123456789abcdef without trace.json" in message for message in messages)
 
 
 class TestIterEvents:

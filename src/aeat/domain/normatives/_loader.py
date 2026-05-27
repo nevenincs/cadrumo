@@ -57,7 +57,10 @@ def load_catalogue(*, settings: Settings | None = None) -> NormativeCatalogue:
 
 
 def _file_fingerprint(path: Path) -> tuple[str, int, int]:
-    stat = path.stat()
+    try:
+        stat = path.stat()
+    except OSError as exc:
+        raise NormativeParseError(f"{path}: unable to stat file ({exc})") from exc
     return (path.name, stat.st_size, stat.st_mtime_ns)
 
 

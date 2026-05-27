@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 from types import MappingProxyType
 
 import pytest
 
-from . import load_iva_catalogues, IvaCatalogueError, resolve_catalogue
+from . import IvaCatalogueError, load_iva_catalogues, resolve_catalogue
+from ._catalogue import load_iva_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -29,3 +31,10 @@ def test_resolve_catalogue_2025_returns_committed_entry() -> None:
 def test_resolve_catalogue_requires_exact_year() -> None:
     with pytest.raises(IvaCatalogueError, match="year=2024"):
         resolve_catalogue(on=date(2024, 6, 15))
+
+
+def test_load_iva_catalogue_wraps_missing_path_as_domain_error(tmp_path: Path) -> None:
+    missing = tmp_path / "missing-iva-catalogue.toml"
+
+    with pytest.raises(IvaCatalogueError, match=r"cannot stat VAT catalogue"):
+        load_iva_catalogue(missing)

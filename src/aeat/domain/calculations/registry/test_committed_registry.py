@@ -38,6 +38,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
         },
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
@@ -46,7 +47,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
     assert {entry.target for entry in result.entries} == {
-        "03", "04", "07", "09", "11", "12", "13", "14", "17", "19",
+        "04", "07", "09", "11", "12", "13", "14", "17", "19",
         "saldo-negativo-fin-periodo",
     }
     assert "rd-439-2007:art-110" in snapshot.legal

@@ -9,6 +9,7 @@ silently dropped, swapped, or short-circuited.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -105,9 +106,15 @@ def _scenario_2025(scenario_id: str, overrides: dict[str, Decimal], expected: tu
             # declaration_type = 1 (individual) → 0461 = 0 by default in all base scenarios
             "renta-2025-profile-declaration-type": Decimal("1"),
             "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            # not married → marriage casillas = 0
+            "renta-2025-profile-marriage-full-year": Decimal("0"),
+            "renta-2025-profile-marriage-month-start": Decimal("0"),
+            "renta-2025-profile-marriage-month-end": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
+        # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=expected,
     )
 
@@ -215,14 +222,76 @@ def test_base_liquidable_general_applies_reductions() -> None:
             # declaration_type = 2 (conjunta) + minor_children_in_unit = 0 → 0461 = 3400
             "renta-2025-profile-declaration-type": Decimal("2"),
             "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
+            # married full year (required by marriage-axis formulas in revision)
+            "renta-2025-profile-marriage-full-year": Decimal("1"),
+            "renta-2025-profile-marriage-month-start": Decimal("0"),
+            "renta-2025-profile-marriage-month-end": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         relation_values=_RELATION_ZERO_VALUES_2025,
+        # Age 44 at year-end 2025 → no age increment → 0511 = 5,550 base only.
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         expected_outputs=(
             RegistryScenarioExpectedOutput(target="0435", value=Decimal("40000.00")),
             RegistryScenarioExpectedOutput(target="0461", value=Decimal("3400.00")),
             # 0500 = 0435 - 0461 - 0501 = 40000 - 3400 - 1000 = 35600
             RegistryScenarioExpectedOutput(target="0500", value=Decimal("35600.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_plan_de_empleo_reduccion_below_caps_full_amount() -> None:
+    """0468 = min(0467, 10000, 30% * 0432) — aportación below both caps, full reducción applies.
+
+    Oracle derivation (Art. 52 LIRPF, AEAT Renta 2025 Manual Parte 1):
+      trabajo rendimientos (0003) = 56,500 → 0025 = 0432 = 56,500
+      30% cap = 0.30 * 56,500 = 16,950
+      plan de empleo aportación (0426) = 4,200 → 0467 = 4,200
+      0468 = min(4200, 10000, 16950) = 4,200   (below both caps)
+      0435 = 56,500 (no negative G/P balance)
+      0461 = 0 (individual declaration)
+      0501 = 0 (no prior negative bases)
+      0500 = 56,500 - 4,200 - 0 - 0 = 52,300
+    """
+    scenario = _scenario_2025(
+        "plan-empleo-reduccion-below-caps",
+        overrides={
+            "0003": Decimal("56500.00"),   # trabajo → 0432 = 56,500
+            "0426": Decimal("4200.00"),    # plan de empleo aportación → 0467 = 4,200
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0467", value=Decimal("4200.00")),
+            RegistryScenarioExpectedOutput(target="0468", value=Decimal("4200.00")),
+            RegistryScenarioExpectedOutput(target="0500", value=Decimal("52300.00")),
+        ),
+    )
+    report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())
+    assert_registry_scenario_matches(report)
+
+
+def test_plan_de_empleo_reduccion_capped_at_10000() -> None:
+    """0468 capped at €10,000 absolute limit when aportación exceeds the cap.
+
+    Oracle derivation (Art. 52 LIRPF):
+      trabajo rendimientos (0003) = 80,000 → 0432 = 80,000
+      30% cap = 0.30 * 80,000 = 24,000
+      plan de empleo aportación (0426) = 15,000 → 0467 = 15,000
+      0468 = min(15000, 10000, 24000) = 10,000   (€10k absolute cap applies)
+      0500 = 80,000 - 10,000 = 70,000
+    """
+    scenario = _scenario_2025(
+        "plan-empleo-reduccion-capped-10k",
+        overrides={
+            "0003": Decimal("80000.00"),   # trabajo → 0432 = 80,000
+            "0426": Decimal("15000.00"),   # plan de empleo aportación → 0467 = 15,000
+        },
+        expected=(
+            RegistryScenarioExpectedOutput(target="0467", value=Decimal("15000.00")),
+            # 0468 = min(15000, 10000, 24000) = 10,000
+            RegistryScenarioExpectedOutput(target="0468", value=Decimal("10000.00")),
+            RegistryScenarioExpectedOutput(target="0500", value=Decimal("70000.00")),
         ),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=bundled_path())

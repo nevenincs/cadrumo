@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -50,7 +51,9 @@ class AuthDiagnosticSummary(BaseModel):
     timeout_ms: int | None = None
     route_label: str = ""
     active_profile_id: str = ""
+    active_profile_ref: str = ""
     active_profile_label: str = ""
+    active_profile_label_present: bool | None = None
     active_profile_registered: bool | None = None
     profile_record_present: bool | None = None
     profile_tax_id_present: bool | None = None
@@ -227,8 +230,12 @@ def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummar
         prefer_non_qr=_optional_bool(auth_attempt.get("prefer_non_qr")),
         timeout_ms=_optional_int(auth_attempt.get("timeout_ms")),
         route_label=_diagnostic_route_label(str(payload.get("url") or "")),
-        active_profile_id=str(auth_attempt.get("active_profile_id") or ""),
-        active_profile_label=str(auth_attempt.get("active_profile_label") or ""),
+        active_profile_id="",
+        active_profile_ref=_redacted_ref(
+            auth_attempt.get("active_profile_ref") or auth_attempt.get("active_profile_id")
+        ),
+        active_profile_label="",
+        active_profile_label_present=_optional_bool(auth_attempt.get("active_profile_label_present")),
         active_profile_registered=_optional_bool(auth_attempt.get("active_profile_registered")),
         profile_record_present=_optional_bool(auth_attempt.get("profile_record_present")),
         profile_tax_id_present=_optional_bool(auth_attempt.get("profile_tax_id_present")),
@@ -244,6 +251,15 @@ def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummar
         phone_state_reported_at=phone_state_reported_at,
     )
     return summary
+
+
+def _redacted_ref(value: object) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    if text.startswith("sha256:"):
+        return text
+    return f"sha256:{hashlib.sha256(text.encode('utf-8')).hexdigest()}"
 
 
 def _optional_bool(value: object) -> bool | None:

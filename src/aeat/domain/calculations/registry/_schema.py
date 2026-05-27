@@ -1997,6 +1997,23 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
     return _FICHERO_BOE_ENCODING_ALIASES.get(declared.strip().lower(), declared.strip().lower())
 
 
+# P10.S68: single source of truth for the predicate-DSL operator
+# names. The registry-load validator
+# (_validate_surfaces.validate_verification_expectation_section)
+# uses this set to reject unknown operators at authoring time.
+# The runtime evaluator
+# (aeat.application.modelo._actions._evaluate_predicate_expression)
+# carries its own regex per operator but MUST keep its set of
+# operators identical to this constant — drift between the two
+# sets is a silent-pass hazard at the predicate layer (a typo
+# would silently pass the gate that's missing the operator). A
+# gate test asserts the runtime evaluator recognises every name
+# in this constant.
+KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
+    {"all_nonzero", "any_nonzero", "cap_le_when_positive", "advisory_when_ratio_ge"}
+)
+
+
 class VerificationPredicateDefinition(RegistryModel):
     """A cross-casilla invariant that must hold for VERIFICADO_COMPLETO to be granted.
 
@@ -2027,7 +2044,7 @@ class VerificationPredicateDefinition(RegistryModel):
     predicate_id: str = Field(min_length=1, max_length=128)
     legal_refs: LegalRefs
     expression: str = Field(min_length=1, max_length=512)
-    finding_kind: Literal["BLOCKING_RULE"] = "BLOCKING_RULE"
+    finding_kind: Literal["BLOCKING_RULE", "ADVISORY"] = "BLOCKING_RULE"
 
 
 class ModeloRevision(RegistryModel):

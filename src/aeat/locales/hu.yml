@@ -723,14 +723,20 @@ cli:
           formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
         row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz.
-          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor)
-          vagy ''vinculada'' (M232 kapcsolt fél). Több sor megadásához ismételje.
-          M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          M232 példa: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor),
+          ''vinculada'' (M232 kapcsolt fél), ''operador'' (M349 közösségi operátor)
+          vagy ''contraparte'' (M347 bejelentett ellenoldal). Több sor megadásához
+          ismételje. M184 példa: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. M349 példa: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
         row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének
           pontosan 100%-nak kell lennie; {count} sorból {total} jött ki.'
+        row_m347_below_threshold: 'M347 contraparte sor (nif={nif}): {total} összimport
+          nem haladja meg a RD 1065/2007 art. 31.1 által előírt €{threshold} küszöböt'
+        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
+          {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
@@ -755,9 +761,16 @@ cli:
         sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
         sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
         sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza a 21%-ot (LISIVA 90. cikk) az esedékes ÁFA kiszámításához. Csak a 303-as modellre alkalmazható.'
+        autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek decimális összegnek kell lennie; kapott érték: {value}'
         sal_reserva_casilla_not_found: 'A --sal-beneficio-neto nem támogatott ennél a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.'
         sal_reserva_incomplete: 'A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social opciókat együtt kell megadni.'
         sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell lenniük.'
+        compare_taxation_help: 'Összehasonlítja az IRPF kvótát közös (conjunta, Art. 82-84 LIRPF) és egyéni adóbevallás esetén egy meglévő 100-as modelo munkaegységre. A nyilvántartási motort kétszer futtatja — egyszer 2-es (conjunta) és egyszer 1-es (individual) nyilatkozattípussal — azonos profilkötéseken, és közli a kvóta-különbözetet és a javaslatot. Efemer: nem ment revíziót.'
+        compare_taxation_work_unit_not_found: 'A(z) {work_unit_id} munkaegység nem található; ellenőrizd az aktív egységeket az ''aeat app modelo work list'' paranccsal.'
+        compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető el: {detail}'
+        compare_taxation_recommendation_line: 'JAVASLAT: {recommendation} — {reason}'
+        output_language_help: 'A megjelenített üzenetek kimeneti nyelve.'
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date
@@ -1497,6 +1510,11 @@ cli:
       verify_help: cli.registry.manuals.verify_help
       view_help: cli.registry.manuals.view_help
       year_help: cli.registry.manuals.year_help
+      verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name} fordítási kulcsa'
+      verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik: %{target}'
+      verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik: %{target}'
+      verify_missing_manifest: '%{manifest_path} hiányzik; futtasd az ''aeat manual fetch'' parancsot a létrehozásához'
+      verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}: %{messages}'
     observation_help: cli.registry.observation_help
     parity_app_help: cli.registry.parity_app_help
     parity_output_help: cli.registry.parity_output_help
@@ -1959,6 +1977,7 @@ errors:
     profile_import: errors.fail.profile_import
     reconciliation: errors.fail.reconciliation
     stale_exchange_rate: errors.fail.stale_exchange_rate
+    fail_observability_run_trace_persistence: 'A futási nyomkövetési tároló nem tudta befejezni a fájlrendszer-műveletet.'
   financial:
     source_file_not_found: errors.financial.source_file_not_found
   identity:

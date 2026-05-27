@@ -158,6 +158,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.core.observability._errors.RunTracePersistenceError",
+        ErrorCode(
+            code="FAIL_OBSERVABILITY_RUN_TRACE_PERSISTENCE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_observability_run_trace_persistence",
+            default_suggestion=None,
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.core.identity._documents.IdentityError",
         ErrorCode(
             code="INTEGRITY_IDENTITY_DOCUMENT",

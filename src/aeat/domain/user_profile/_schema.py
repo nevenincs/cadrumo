@@ -55,6 +55,7 @@ class ProfileFieldType(StrEnum):
     BOOLEAN = "boolean"
     INTEGER = "integer"
     DECIMAL = "decimal"
+    MONEY = "money"
     DATE = "date"
     EMAIL = "email"
     ENUM = "enum"

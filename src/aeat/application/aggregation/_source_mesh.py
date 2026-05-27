@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Literal, Protocol, runtime_checkable
@@ -69,6 +69,7 @@ class CalculationSourceResolution(BaseModel):
     owned_sources: tuple[str, ...] = Field(default_factory=tuple)
     binding_values: Mapping[str, Decimal] = Field(default_factory=dict)
     enum_binding_values: Mapping[str, str] = Field(default_factory=dict)
+    date_binding_values: Mapping[str, date] = Field(default_factory=dict)
     relation_values: Mapping[str, Decimal] = Field(default_factory=dict)
     bound_casilla_inputs: Mapping[str, Decimal] = Field(default_factory=dict)
     source_transaction_ids: Sequence[str] = Field(default_factory=tuple)

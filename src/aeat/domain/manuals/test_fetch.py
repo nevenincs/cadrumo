@@ -77,6 +77,15 @@ class TestManifestIO:
         reloaded = load_manifest(path)
         assert reloaded == manifest
 
+    def test_write_manifest_wraps_io_failure_as_manifest_error(self, tmp_path: Path) -> None:
+        """Manifest persistence failures stay inside the manual error family."""
+        manifest = _manifest()
+        directory_target = tmp_path / "manifest-dir"
+        directory_target.mkdir()
+
+        with pytest.raises(ManifestError, match=r"cannot write manifest"):
+            write_manifest(directory_target, manifest)
+
     def test_load_manifest_missing_raises(self, tmp_path: Path) -> None:
         """load_manifest raises ManifestError when the file is absent."""
         with pytest.raises(ManifestError, match=r"manifest|absent|missing|not found"):

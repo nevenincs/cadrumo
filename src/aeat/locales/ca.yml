@@ -982,12 +982,20 @@ cli:
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més
-          files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Exemple M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador
+          intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir
+          més files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. Exemple M349: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
           han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
+        row_m347_below_threshold: 'M347 fila contraparte (nif={nif}): importe total
+          {total} no supera el llindar de €{threshold} exigit per RD 1065/2007 art.
+          31.1'
+        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
+          amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
+          Annex XI)'
         row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
           {supported}.'
         row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
@@ -1021,9 +1029,16 @@ cli:
         sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada pel llindar del 50% del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
         sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si ja s''ha assolit el límit del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
         sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
+        autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable al Model 303.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de ser un import decimal; rebut: {value}'
         sal_reserva_casilla_not_found: '--sal-beneficio-neto no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reserva especial de Societat Laboral. Fes servir --casilla per subministrar els valors directament.'
         sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social s''han de subministrar conjuntament.'
         sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals.'
+        compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art. 82-84 LIRPF) respecte a tributació individual per a una unitat de treball Model 100 existent. Executa el motor de càlcul del registre dues vegades — una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual) — sobre les mateixes dades de perfil, i emet el diferencial de quota i la recomanació. Operació efímera: no es persisteix cap revisió.'
+        compare_taxation_work_unit_not_found: 'Unitat de treball {work_unit_id} no trobada; consulta les unitats actives amb ''aeat app modelo work list''.'
+        compare_taxation_error: 'La comparació conjunta vs. individual no és disponible: {detail}'
+        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
+        output_language_help: 'Idioma de sortida per als missatges renderitzats.'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -2024,6 +2039,11 @@ cli:
       verify_help: Verificar la integritat del manual contra el seu contracte
       view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
+      verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció de %{field_name}'
+      verify_dangling_section_ref: 'la secció %{section_id} referencia una secció desconeguda %{target}'
+      verify_dangling_rule_section_ref: 'la regla %{rule_id} referencia una secció desconeguda %{target}'
+      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual fetch'' per materialitzar-lo'
+      verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -2707,6 +2727,7 @@ errors:
       amb el resum anual.
     stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
       acceptable.
+    fail_observability_run_trace_persistence: 'El magatzem de traces d''execució no ha pogut completar una operació del sistema de fitxers.'
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   identity:

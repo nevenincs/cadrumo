@@ -38,7 +38,7 @@ from ._models import (
     StepBoundaryPayload,
 )
 from ._sink import JsonlRunSink
-from ._store import _validate_run_id, runs_dir, save_trace
+from ._store import _run_dir, _validate_run_id, save_trace
 
 _log = get_logger(__name__)
 
@@ -227,9 +227,7 @@ def run_context(
         run_id=run_id,
         step_id=step_id,
     )
-    runs_root = runs_dir()
-    target = runs_root / info.run_id
-    target.mkdir(parents=True, exist_ok=True)
+    target = _run_dir(info.run_id)
     sink = JsonlRunSink(target / _EVENTS_FILENAME, run_id=info.run_id)
     root_logger = logging.getLogger()
 
@@ -280,6 +278,10 @@ def run_context(
         try:
             replay_of_env = load_settings().aeat_replay_active or None
         except (KeyError, ValueError, AttributeError):
+            _log.debug(
+                "run_context: replay marker resolution failed; replay_of omitted",
+                exc_info=True,
+            )
             replay_of_env = None
         replay_of: str | None = None
         if replay_of_env and len(replay_of_env) == 16:
@@ -289,6 +291,7 @@ def run_context(
                 replay_of = None
             else:
                 replay_of = replay_of_env.lower()
+        persistence_error: Exception | None = None
         try:
             trace = RunTrace(
                 run_id=info.run_id,
@@ -303,10 +306,8 @@ def run_context(
                 replay_of=replay_of,
             )
             save_trace(trace)
-        except Exception:
-            # Persisting the trace is best-effort — a disk-full at exit
-            # must never mask the real exception the caller is
-            # propagating. Log and move on.
+        except Exception as exc:
+            persistence_error = exc
             _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
         finally:
             # Detach the sink BEFORE resetting the contextvars so a
@@ -315,7 +316,7 @@ def run_context(
             # ordering above.
             try:
                 root_logger.removeHandler(sink)
-            except Exception:  # pragma: no cover - logging lock is infallible in practice
+            except Exception:
                 _log.warning("failed to detach sink for run %s", info.run_id, exc_info=True)
             STEP_CONTEXT_VAR.reset(step_token)
             RUN_CONTEXT_VAR.reset(run_token)
@@ -328,6 +329,8 @@ def run_context(
                 # surface OSError, ValueError, or RuntimeError depending
                 # on platform and sink lifecycle state.
                 _log.warning("failed to close sink for run %s", info.run_id, exc_info=True)
+            if persistence_error is not None and outcome is RunOutcome.OK:
+                raise persistence_error
 
 
 __all__ = [
