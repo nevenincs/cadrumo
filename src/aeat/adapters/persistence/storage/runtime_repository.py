@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....core.config import Settings, load_settings
+from ....core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from .errors import StorageValidationError
 from .runtime import inspect_bucket_storage_runtime
 from .sql import SecureObjectRepository
@@ -32,7 +32,43 @@ def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
     return secure_object_repository_for_bucket(bucket_id)
 
 
+def secure_object_repository_for_cold_bootstrap_state(
+    settings: Settings | None = None,
+) -> SecureObjectRepository:
+    """Return the process-default repository for cold-root recovery reads.
+
+    This is the narrow bootstrap exception used before any active
+    profile bucket pointer exists. Normal profile-bound code must use
+    ``secure_object_repository_for_active_bucket`` or
+    ``secure_object_repository_for_bucket`` so route/session mismatches
+    fail closed at the storage runtime boundary.
+    """
+
+    from ....core._bucket_pointer_io import resolve_active_bucket_id
+    from ....core.i18n import tr
+
+    source = settings or load_settings()
+    if classify_storage_route(source).kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
+        raise StorageValidationError(
+            tr(
+                "errors.storage.runtime.cold_bootstrap_explicit_database_refused",
+                default="Cold-bootstrap storage cannot bypass an explicit database route.",
+            ),
+            translated_message="errors.storage.runtime.not_ready",
+        )
+    if resolve_active_bucket_id() is not None:
+        raise StorageValidationError(
+            tr(
+                "errors.storage.runtime.cold_bootstrap_active_profile_refused",
+                default="Cold-bootstrap storage is only available before an active profile bucket is selected.",
+            ),
+            translated_message="errors.storage.runtime.not_ready",
+        )
+    return SecureObjectRepository()
+
+
 __all__ = [
     "secure_object_repository_for_active_bucket",
     "secure_object_repository_for_bucket",
+    "secure_object_repository_for_cold_bootstrap_state",
 ]
