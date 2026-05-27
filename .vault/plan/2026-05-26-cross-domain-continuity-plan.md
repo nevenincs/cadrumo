@@ -149,7 +149,7 @@ derive_modelo_202_modality is orphaned in the domain. Casillas 03 and 32 compute
 - [x] `W02.P12.S48` - add the modality gate as a registry-level applicability condition on casillas 03 and 32; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/casillas/`.
 - [x] `W02.P12.S49` - wire derive_modelo_202_modality into registry formula composition as a guard predicate OR remove the orphan function; `src/aeat/domain/calculations/registry/_applicability.py`.
 - [x] `W02.P12.S50` - end-to-end CLI test: SL with INCN above 6.000.000 EUR gets only Art. 40.3; `below threshold both modalities reachable; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
-- [ ] `W02.P12.S220` - R7-003 reject invalid period token at modelo work create time not at calculate time; `M202 currently accepts --period 1T at create then fails calculate with no-revision-for-period; period validation must fire at create using the modelo revision's declared period catalogue; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W02.P12.S220` - R7-003 reject invalid period token at modelo work create time not at calculate time; `M202 currently accepts --period 1T at create then fails calculate with no-revision-for-period; period validation must fire at create using the modelo revision's declared period catalogue; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W02.P13` - Wave-2 review and persona re-run and plan expansion BREAKPOINT
 
