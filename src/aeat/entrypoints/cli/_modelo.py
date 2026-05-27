@@ -7,7 +7,7 @@ import re
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
@@ -56,8 +56,10 @@ from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
+from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
+from ...domain.profile import ForalRegimeError, parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -688,6 +690,115 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
     )
 
 
+# ---------------------------------------------------------------------------
+# --row TYPE FIELD=value FIELD=value parsing helpers
+#
+# Supports multi-row entry for informational modelos whose filing
+# content is a list of records rather than scalar casilla values.
+# Supported types: miembro (M184 atribución member), vinculada (M232
+# operación vinculada).  Each ``--row`` flag takes a string of the
+# form ``TYPE FIELD=value [FIELD=value ...]``.
+# ---------------------------------------------------------------------------
+
+_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada"})
+_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset({"porcentaje", "importe"})
+
+
+def _parse_row_spec(spec: str) -> ModeloDetailRow:
+    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model.
+
+    The first whitespace-separated token is the row type (``miembro`` or
+    ``vinculada``). Remaining tokens are ``KEY=VALUE`` pairs.  Raises
+    :class:`typer.BadParameter` on any parse or validation error.
+    """
+
+    parts = spec.split()
+    if not parts:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_empty_spec",
+                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
+            )
+        )
+    row_type = parts[0].lower()
+    if row_type not in _ROW_TYPES_SUPPORTED:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_unknown_type",
+                default=(
+                    f"--row type {row_type!r} is not recognised; "
+                    f"supported types: {sorted(_ROW_TYPES_SUPPORTED)}"
+                ),
+                row_type=row_type,
+                supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
+            )
+        )
+    kv_raw: dict[str, str] = {}
+    for token in parts[1:]:
+        if "=" not in token:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_kv_format_error",
+                    default=f"--row field {token!r} must be in KEY=VALUE format",
+                    token=token,
+                )
+            )
+        key, _, value = token.partition("=")
+        if not key:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_empty_key",
+                    default=f"--row field key cannot be empty in {token!r}",
+                    token=token,
+                )
+            )
+        kv_raw[key] = value
+    try:
+        kv_pairs: dict[str, str | Decimal] = {
+            k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
+        }
+        if row_type == "miembro":
+            return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
+        else:
+            return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
+    except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row {row_type!r} failed validation: {exc}",
+                row_type=row_type,
+                error=str(exc),
+            )
+        ) from exc
+
+
+def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
+    """Raise BadParameter when M184 member shares do not sum to 100%.
+
+    Only checked when at least one miembro row is present and all
+    miembro rows have been supplied (cannot check partial sets).
+    The AEAT rule: the sum of all member share_percentages MUST equal
+    exactly 100% per filing.
+    """
+
+    member_rows = [r for r in rows if isinstance(r, Modelo184MemberRow)]
+    if not member_rows:
+        return
+    total = sum(r.porcentaje for r in member_rows)
+    if total != Decimal("100"):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_m184_shares_not_100",
+                default=(
+                    f"M184 miembro rows: share percentages must sum to exactly 100%; "
+                    f"got {total} across {len(member_rows)} rows"
+                ),
+                total=str(total),
+                count=str(len(member_rows)),
+            )
+        )
+
+
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
 def bindings_list(
     ctx: typer.Context,
@@ -1109,6 +1220,7 @@ def _work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
         discarded_at=unit.discarded_at.isoformat() if unit.discarded_at else None,
         discarded_by=unit.discarded_by,
         discard_reason=unit.discard_reason,
+        causante_ccaa=unit.causante_ccaa.value if unit.causante_ccaa is not None else None,
     )
 
 
@@ -1131,7 +1243,80 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
         lines.append(f"discarded_by\t{unit.discarded_by}")
     if unit.discard_reason is not None:
         lines.append(f"discard_reason\t{unit.discard_reason}")
+    if unit.causante_ccaa is not None:
+        lines.append(f"causante_ccaa\t{unit.causante_ccaa.value}")
+    lines.extend(_work_unit_plazo_lines(unit))
     return lines
+
+
+def _work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
+    """Return plazo voluntario and extemporaneidad lines for the work unit.
+
+    Appends zero lines when the registry has no deadline window for the
+    unit's (modelo, filing_year, period) combination — a benign data gap
+    that must not surface as an error.  When the plazo is known and
+    already closed, appends recargo Art. 27 LGT information so the
+    operator can see the applicable surcharge before filing.
+    """
+    from ...domain.deadlines._plazo import resolve_filing_closes_on
+    from ...domain.deadlines._recargo import build_recovery_for_overdue
+
+    closes_on = resolve_filing_closes_on(str(unit.modelo), unit.filing_year, unit.period)
+    if closes_on is None:
+        return []
+
+    today = date.today()
+    out: list[str] = [f"plazo_closes_on\t{closes_on.isoformat()}"]
+
+    if today <= closes_on:
+        days_remaining = (closes_on - today).days
+        out.append(
+            tr(
+                "cli.app.modelo.work.plazo_days_remaining",
+                default="days_remaining\t{days_remaining}",
+                days_remaining=days_remaining,
+            )
+        )
+        return out
+
+    days_late = (today - closes_on).days
+    if days_late < 1:
+        return out
+
+    out.append(f"days_overdue\t{days_late}")
+    try:
+        recovery = build_recovery_for_overdue(
+            days_late=days_late,
+            modelo=str(unit.modelo),
+            period=unit.period,
+        )
+    except (ValueError, Exception):  # noqa: BLE001
+        out.append(
+            tr(
+                "cli.app.modelo.work.plazo_vencido_warning",
+                default=(
+                    "AVISO: plazo voluntario vencido. Presenta con recargo "
+                    "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+                ),
+            )
+        )
+        return out
+
+    band = recovery.recargo_band
+    out.extend([
+        f"recargo_band\t{band.id}",
+        f"recargo_pct\t{band.surcharge_pct}",
+        f"recargo_interest_applies\t{band.interest_applies}",
+        f"recargo_legal_ref\t{band.legal_ref}",
+        tr(
+            "cli.app.modelo.work.plazo_vencido_warning",
+            default=(
+                "AVISO: plazo voluntario vencido. Presenta con recargo "
+                "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+            ),
+        ),
+    ])
+    return out
 
 
 _FILING_YEAR_MIN = 2000
@@ -1315,32 +1500,77 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     )
 
 
-#: Modelos that are registry-registered but NOT yet fully supported for
-#: work-unit creation.  The registry entry records legal authority and
-#: period metadata; the full casilla/formula authoring has not yet been
-#: completed.  ``work create`` is refused with a legallygrounded message
-#: that names the obligation, the threshold, and AEAT Sede as the
-#: operative filing surface.
-_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"721"})
+#: Modelos that are not yet fully supported for work-unit creation.
+#: Includes both registry-registered stubs (casilla/formula authoring
+#: incomplete) and autonomic/non-resident modelos that are filed outside
+#: the national AEAT CLI surface.  ``work create`` is refused with a
+#: legally-grounded message that names the obligation and the operative
+#: filing surface.
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset(
+    {"151", "210", "600", "620", "650", "660", "714", "721"}
+)
+
+#: Maps each stub-only modelo code to its dedicated locale key so that the
+#: refusal message cites the correct legal authorities for that modelo.
+_STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
+    "151": "cli.app.modelo.work.create_stub_modelo_151_refused",
+    "210": "cli.app.modelo.work.create_stub_modelo_210_refused",
+    "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
+    "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
+    "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
+    "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
+    "714": "cli.app.modelo.work.create_stub_modelo_714_refused",
+    "721": "cli.app.modelo.work.create_stub_modelo_refused",
+}
+
+# Parity guard: every frozenset entry must have a locale key mapping.
+# This fires at import time during tests rather than silently at runtime.
+assert set(_STUB_MODELO_LOCALE_KEYS) == _STUB_ONLY_MODELOS, (
+    f"_STUB_MODELO_LOCALE_KEYS keys {set(_STUB_MODELO_LOCALE_KEYS)} "
+    f"do not match _STUB_ONLY_MODELOS {_STUB_ONLY_MODELOS}"
+)
 
 
 def _guard_stub_modelo(modelo: str) -> None:
-    """Refuse ``work create`` for modelos that are registry stubs only.
+    """Refuse ``work create`` for stub and autonomic modelos.
 
-    Modelo 721 (declaración informativa sobre monedas virtuales situadas
-    en el extranjero) is registered in the registry with legal authority
-    and period metadata, but the full casilla inventory and calculation
-    engine have not yet been authored.  Without this guard the CLI would
-    silently provision a work unit that cannot be calculated, leaving the
-    taxpayer with no path to a valid filing.
+    Stubs registered in the AEAT registry (casilla/formula authoring
+    incomplete):
 
-    The refusal cites the three governing legal authorities:
-    - Ley 11/2021 Art. 13 / DA 10ª — obligation basis
-    - Orden HFP/887/2023 — form approval and €50.000 threshold
-    - RD 1065/2007 Art. 42 quáter — reglamento operativo
+    - Modelo 721 (declaración informativa sobre monedas virtuales situadas
+      en el extranjero): Legal refs: Ley 11/2021 Art. 13 / DA 10ª,
+      Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.
 
-    Legal refs carried in the error match the registry manifest so the
-    audit trail is grounded in the same authority as the registry itself.
+    - Modelo 151 (régimen especial impatriados, "Ley Beckham"): Legal refs:
+      Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
+
+    - Modelo 714 (Impuesto sobre el Patrimonio): Legal refs: Ley 19/1991
+      Art. 28, Orden HAC/1023/2021.
+
+    Autonomic / non-resident modelos (filed outside national AEAT CLI):
+
+    - Modelo 210 (IRNR no residentes): RD Legislativo 5/2004 (TRLIRNR),
+      Art. 28.  Filed via AEAT Sede Electrónica G320.
+
+    - Modelo 600 (ITP-AJD transmisiones patrimoniales): Ley 28/1990
+      ITPyAJD.  Filed at the Hacienda of the CCAA where the asset is
+      located (impuesto cedido).
+
+    - Modelo 620 (ITP-AJD transmisiones medios de transporte usados):
+      Ley 28/1990 ITPyAJD.  Filed at the Hacienda of the CCAA where the
+      asset is located (impuesto cedido).
+
+    - Modelo 650 (ISD Sucesiones): Ley 29/1987 LISyD, Art. 67 RISD
+      (plazo 6 meses, prorrogable 6 meses).  Filed at the autonomic
+      Hacienda of the CCAA where the causante had habitual residence
+      (Ley 22/2009 Art. 32).
+
+    - Modelo 660 (ISD informativa caudal relicto): Ley 29/1987 LISyD.
+      Accompanies Modelo 650 for sociedades o conjunto declarations.
+
+    Without this guard the CLI would attempt registry lookups for modelos
+    it does not model, leaving the taxpayer with no path to a valid filing.
+    Legal refs carried in the error match the governing statute.
     """
 
     from ._errors import CliRefusedBoundaryError
@@ -1348,24 +1578,20 @@ def _guard_stub_modelo(modelo: str) -> None:
     modelo_code = modelo.strip()
     if modelo_code not in _STUB_ONLY_MODELOS:
         return
-    raise CliRefusedBoundaryError(
-        tr(
-            "cli.app.modelo.work.create_stub_modelo_refused",
-            default=(
-                "Modelo {modelo} está registrado pero no tiene soporte completo "
-                "en esta versión de la aplicación. La declaración informativa "
-                "sobre monedas virtuales situadas en el extranjero (Modelo 721) "
-                "requiere su presentación directamente en la Sede Electrónica de "
-                "la AEAT (sede.agenciatributaria.gob.es). La obligación nace "
-                "cuando el valor agregado de monedas virtuales en el extranjero "
-                "supera €50.000 a 31 de diciembre (Orden HFP/887/2023). "
-                "Autoridades legales: Ley 11/2021 Art. 13 / DA 10ª, "
-                "Orden HFP/887/2023 (BOE-A-2023-17455), "
-                "RD 1065/2007 Art. 42 quáter."
-            ),
-            modelo=modelo_code,
-        )
-    )
+
+    # Literal tr() call per stub so the locale scaffold can discover each
+    # key and populate all four locale files.
+    _refusals: dict[str, str] = {
+        "151": tr("cli.app.modelo.work.create_stub_modelo_151_refused", modelo=modelo_code),
+        "210": tr("cli.app.modelo.work.create_stub_modelo_210_refused", modelo=modelo_code),
+        "600": tr("cli.app.modelo.work.create_stub_modelo_600_refused", modelo=modelo_code),
+        "620": tr("cli.app.modelo.work.create_stub_modelo_620_refused", modelo=modelo_code),
+        "650": tr("cli.app.modelo.work.create_stub_modelo_650_refused", modelo=modelo_code),
+        "660": tr("cli.app.modelo.work.create_stub_modelo_660_refused", modelo=modelo_code),
+        "714": tr("cli.app.modelo.work.create_stub_modelo_714_refused", modelo=modelo_code),
+        "721": tr("cli.app.modelo.work.create_stub_modelo_refused", modelo=modelo_code),
+    }
+    raise CliRefusedBoundaryError(_refusals[modelo_code])
 
 
 #: Registry-validation translated-message keys that signal an
@@ -1467,17 +1693,38 @@ def work_create(
             ),
         ),
     ] = False,
+    causante_ccaa_raw: Annotated[
+        str | None,
+        typer.Option(
+            "--causante-ccaa",
+            help=tr(
+                "cli.app.modelo.work.causante_ccaa_help",
+                default=(
+                    "CCAA de residencia habitual del causante (ISD Modelo 650/660) o CCAA donde se ubica el bien "
+                    "transmitido (ITPyAJD Modelo 600/620). Determina la Hacienda competente (Ley 22/2009 Art. 32). "
+                    "País Vasco y Navarra son regímenes forales; consulta la Hacienda autonómica correspondiente."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
-    # User-input validation (filing year, registry target, period
-    # token) runs first so an operator gets that feedback even before a
-    # profile exists. The no-active-profile guard fires only once the
-    # arguments are sound, immediately before the bucket database is
-    # opened by create_work_unit.
+    # User-input validation order: stub guard runs before registry lookup
+    # because several stub modelos (210, 600, 620, 650, 660) are not
+    # registry-registered; _validate_registry_target would refuse them
+    # with a generic "Modelo desconocido" before the legally-grounded
+    # refusal fires.  Registry-registered stubs (151, 714, 721) are
+    # intercepted equally early.
     _validate_filing_year(year)
-    _validate_registry_target(modelo, revision, year)
+    # Foral guard: parse before the stub guard so the operator receives a
+    # domain-correct ForalRegimeError rather than a generic "modelo not yet
+    # supported" message when a foral CCAA is supplied.  The
+    # command_error_boundary decorator surfaces AeatError (including
+    # ForalRegimeError) on stderr and exits; no try/except needed here.
+    causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
     _guard_stub_modelo(modelo)
+    _validate_registry_target(modelo, revision, year)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
     # Round-4 M4: refuse a work unit for a modelo the active profile's
@@ -1517,6 +1764,7 @@ def work_create(
         revision_id=revision,
         name=name,
         actor=resolved_actor,
+        causante_ccaa=causante_ccaa,
     )
 
     # A --name supplied on a reuse is not silently dropped: it is applied
@@ -1582,6 +1830,25 @@ def work_create(
         *_work_unit_lines(unit),
         status_message,
     ]
+    # Pre-calificación Art. 96.3 LIRPF: when the operator creates a Modelo 100
+    # work unit and the profile declares multiple pagadores with secondary income
+    # exceeding €1,500, surface the filing-obligation advisory so they know the
+    # income-threshold exemption does not apply.
+    if modelo == "100":
+        from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
+        from ...application.user_profile._projections import record_to_values
+        from ...application.workflow._models import resolve_active_bucket_id
+
+        _bucket = resolve_active_bucket_id()
+        if _bucket is not None:
+            from ...application.user_profile._orchestration import profile_storage_session
+            from ...application.user_profile._profile_repository import ProfileRepository
+
+            with profile_storage_session(_bucket):
+                _rec = ProfileRepository().load(_bucket)
+            _raw = record_to_values(_rec.record) if _rec is not None else None
+            for _advisory_key in _build_filing_obligation_advisories(_raw):
+                lines.append(tr(_advisory_key))
     _emit_envelope(ctx, command=operation, result=result, lines=lines)
 
 
@@ -1956,6 +2223,39 @@ def _validate_casilla_key(key: str, spec: str) -> None:
         )
 
 
+# Casilla data_types that accept a Decimal override via --casilla.
+# Non-numeric types (text, boolean, nif, date, etc.) must be supplied
+# through --binding or profile sources, not as raw decimal overrides.
+_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset(
+    {"decimal", "money", "integer", "ratio"}
+)
+
+
+def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
+    """Raise BadParameter when the casilla is non-numeric.
+
+    Supplying a decimal value for a text, boolean, or identifier casilla
+    silently produces wrong results because the engine stores the Decimal
+    but the casilla's formula chain treats its absence as zero.  Surface
+    the misuse early with the label and the correct input channel.
+    """
+    casilla_def = next(
+        (c for c in revision.casillas if str(c.id) == casilla_id),
+        None,
+    )
+    if casilla_def is None:
+        return  # unknown casilla will fail later in the engine
+    if casilla_def.data_type not in _NUMERIC_CASILLA_DATA_TYPES:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.casilla_non_numeric_data_type",
+                key=casilla_id,
+                data_type=casilla_def.data_type,
+                label=casilla_def.label,
+            )
+        )
+
+
 def _parse_casilla_override(spec: str) -> tuple[str, str]:
     return _parse_kv_spec(
         spec,
@@ -1984,6 +2284,264 @@ def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
         period=unit.period,
     )
     return snapshot.revision
+
+
+#: Semantic role that identifies the INSS maternidad/paternidad exempt casilla.
+_INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
+
+#: Semantic role that identifies the Art. 81 deducción maternidad casilla (0611).
+_DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
+
+#: Semantic role that identifies the trabajo reducción casilla (0011, DT 12ª/DT 25ª LIRPF).
+_REDUCCION_TRABAJO_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_reduccion"
+
+
+def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the INSS maternidad/paternidad exempt slot.
+
+    Looks up the casilla by its registry ``semantic_role`` so the
+    correct id is resolved for every M100 revision regardless of the
+    physical casilla number (0058 for 2024, 0059 for 2025).
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found
+    (e.g. when ``--prestacion-inss-exenta`` is used against a modelo
+    that does not declare the exempt-INSS casilla).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _INSS_EXENTA_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.prestacion_inss_exenta_casilla_not_found",
+            modelo=revision.id if hasattr(revision, "id") else "unknown",
+            default=(
+                "--prestacion-inss-exenta is not supported for this modelo revision; "
+                "no Art. 7.h exempt-INSS casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _resolve_deduccion_maternidad_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the Art. 81 deducción maternidad slot (0611).
+
+    Looks up by ``semantic_role`` so future M100 revisions that renumber the
+    casilla still resolve correctly.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found.
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.deduccion_maternidad_casilla_not_found",
+            default=(
+                "--meses-trabajo-con-hijo-menor-3 is not supported for this modelo revision; "
+                "no Art. 81 deducción maternidad casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _resolve_reduccion_trabajo_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the rendimiento trabajo reducción slot (0011).
+
+    Looks up by ``semantic_role`` so future M100 revisions that renumber the
+    casilla still resolve correctly.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found (e.g.
+    when ``--rescate-plan-pensiones-capital`` is used against a modelo that
+    does not declare the reducción slot).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _REDUCCION_TRABAJO_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.rescate_plan_pensiones_casilla_not_found",
+            default=(
+                "--rescate-plan-pensiones-capital is not supported for this modelo revision; "
+                "no DT 12ª trabajo reducción casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _compute_dt12_reduccion_plan_pensiones(
+    *,
+    gross_rescate: Decimal,
+    aportaciones_pre_2007: Decimal,
+    aportaciones_totales: Decimal,
+) -> Decimal:
+    """Compute the DT 12ª LIRPF 40% reducción for a plan-de-pensiones capital rescate.
+
+    Formula (LIRPF DT 12ª): ``pre_2007 / totales * gross_rescate * 40%``.
+    The result is rounded to 2 decimal places (money-2 per registry convention).
+
+    Raises :exc:`ValueError` when ``aportaciones_totales`` is zero or negative
+    (division by zero guard) or when any input is negative.
+    """
+
+    if aportaciones_totales <= Decimal(0):
+        raise ValueError(
+            f"aportaciones_totales must be positive; got {aportaciones_totales}"
+        )
+    if gross_rescate < Decimal(0):
+        raise ValueError(f"gross_rescate must be non-negative; got {gross_rescate}")
+    if aportaciones_pre_2007 < Decimal(0):
+        raise ValueError(f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}")
+
+    reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
+    # money-2 rounding matches the registry convention for all M100 casillas.
+    return reduccion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+_SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
+
+
+def _resolve_sal_reserva_especial_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the SAL reserva especial dotacion slot.
+
+    Looks up by ``semantic_role`` so it resolves across M200 revision changes.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found (e.g.
+    when used against a modelo other than M200).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.sal_reserva_casilla_not_found",
+            default=(
+                "--sal-beneficio-neto is not supported for this modelo revision; "
+                "no SAL reserva especial casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _compute_sal_reserva_especial_dotacion(
+    *,
+    beneficio_neto: Decimal,
+    reserva_dotada: Decimal,
+    capital_social: Decimal,
+) -> Decimal:
+    """Compute the Ley 44/2015 Art. 14 SAL/SLL reserva especial dotacion.
+
+    Formula: dotacion = min(beneficio_neto * 10%, cap_headroom), where
+    cap_headroom = max(0, capital_social * 50% - reserva_dotada).
+
+    Once the accumulated reserva equals or exceeds 50% of capital social
+    the dotacion is zero (cap reached). The result is rounded to 2
+    decimal places (money-2 per registry convention).
+
+    Raises :exc:`ValueError` when capital_social is zero or negative,
+    or when any input is negative.
+    """
+
+    if capital_social <= Decimal(0):
+        raise ValueError(
+            f"capital_social must be positive; got {capital_social}"
+        )
+    if beneficio_neto < Decimal(0):
+        raise ValueError(
+            f"beneficio_neto must be non-negative; got {beneficio_neto}"
+        )
+    if reserva_dotada < Decimal(0):
+        raise ValueError(
+            f"reserva_dotada must be non-negative; got {reserva_dotada}"
+        )
+
+    cap = (capital_social * Decimal("0.50")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    headroom = max(Decimal("0.00"), cap - reserva_dotada)
+    dotacion_obligatoria = (beneficio_neto * Decimal("0.10")).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    dotacion = min(dotacion_obligatoria, headroom)
+    return dotacion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
+    """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``.
+
+    Returns ``(hijo_id_str, meses_int)``.  Raises :exc:`typer.BadParameter` on
+    malformed input or out-of-range meses (must be 0–12).
+    """
+
+    if "=" not in spec:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_bad_format",
+                spec=spec,
+                default="--meses-trabajo-con-hijo-menor-3 requires HIJO_ID=MESES format; got: {spec}",
+            )
+        )
+    hijo_id, _, meses_raw = spec.partition("=")
+    hijo_id = hijo_id.strip()
+    meses_raw = meses_raw.strip()
+    try:
+        meses = int(meses_raw)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_not_integer",
+                spec=spec,
+                default="--meses-trabajo-con-hijo-menor-3 MESES must be an integer 0–12; got: {spec}",
+            )
+        ) from exc
+    if not (0 <= meses <= 12):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_out_of_range",
+                spec=spec,
+                meses=meses,
+                default="--meses-trabajo-con-hijo-menor-3 MESES must be 0–12; got {meses} in: {spec}",
+            )
+        )
+    return hijo_id, meses
+
+
+def _compute_deduccion_maternidad_0611(meses_por_hijo: list[tuple[str, int]]) -> int:
+    """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
+
+    Formula: ``sum(min(meses × 100, 1_200))`` for each ``(hijo_id, meses)`` pair.
+    Returns an integer euros amount.
+    """
+    return sum(min(meses * 100, 1200) for _, meses in meses_por_hijo)
 
 
 def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
@@ -2099,6 +2657,147 @@ def work_calculate(
             ),
         ),
     ] = None,
+    row: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--row",
+            help=tr(
+                "cli.app.modelo.work.row_help",
+                default=(
+                    "Typed detail row for multi-record informational modelos. "
+                    "Format: TYPE FIELD=value [FIELD=value ...]. "
+                    "TYPE is 'miembro' (M184 atribución member) or "
+                    "'vinculada' (M232 operación vinculada). "
+                    "Repeat to add multiple rows. "
+                    "M184 example: --row 'miembro nif=12345678A porcentaje=40 importe=10000'. "
+                    "M232 example: --row 'vinculada nif=A12345678 tipo_operacion=01 importe=50000'."
+                ),
+            ),
+        ),
+    ] = None,
+    prestacion_inss_exenta: Annotated[
+        str | None,
+        typer.Option(
+            "--prestacion-inss-exenta",
+            help=tr(
+                "cli.app.modelo.work.prestacion_inss_exenta_help",
+                default=(
+                    "Importe íntegro de prestaciones INSS maternidad/paternidad "
+                    "exentas (Art. 7.h LIRPF). Se registra en casilla 0058 (rev. 2024) "
+                    "o 0059 (rev. 2025) y se descuenta del total de ingresos computables. "
+                    "Introduce el importe bruto recibido de la Seguridad Social por "
+                    "baja de maternidad o paternidad. NO lo incluyas en --casilla 0003."
+                ),
+            ),
+        ),
+    ] = None,
+    meses_trabajo_con_hijo_menor_3: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--meses-trabajo-con-hijo-menor-3",
+            help=tr(
+                "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
+                default=(
+                    "Meses trabajados mientras el hijo menor de 3 años estaba en la unidad "
+                    "familiar (Art. 81 LIRPF deducción maternidad). Formato: HIJO_ID=MESES. "
+                    "Repetible por cada hijo. HIJO_ID es un identificador libre (p. ej. 0, 1, 'laia'). "
+                    "Se calcula sum(min(MESES × 100, 1200)) y se inyecta en casilla 0611. "
+                    "Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 "
+                    "→ 0611 = 1800."
+                ),
+            ),
+        ),
+    ] = None,
+    rescate_plan_pensiones_capital: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-capital",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_capital_help",
+                default=(
+                    "Importe bruto del rescate del plan de pensiones en forma de capital "
+                    "(DT 12ª LIRPF). Úsalo junto con "
+                    "--rescate-plan-pensiones-aportaciones-pre-2007 y "
+                    "--rescate-plan-pensiones-aportaciones-totales para que el asistente "
+                    "calcule automáticamente la reducción del 40% y la inyecte en casilla 0011."
+                ),
+            ),
+        ),
+    ] = None,
+    rescate_plan_pensiones_aportaciones_pre_2007: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-aportaciones-pre-2007",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_pre_2007_help",
+                default=(
+                    "Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 "
+                    "(base prorrateo DT 12ª LIRPF). Necesario junto con "
+                    "--rescate-plan-pensiones-capital y "
+                    "--rescate-plan-pensiones-aportaciones-totales."
+                ),
+            ),
+        ),
+    ] = None,
+    rescate_plan_pensiones_aportaciones_totales: Annotated[
+        str | None,
+        typer.Option(
+            "--rescate-plan-pensiones-aportaciones-totales",
+            help=tr(
+                "cli.app.modelo.work.rescate_plan_pensiones_aportaciones_totales_help",
+                default=(
+                    "Total de aportaciones al plan de pensiones (denominador del prorrateo "
+                    "DT 12ª LIRPF). Necesario junto con "
+                    "--rescate-plan-pensiones-capital y "
+                    "--rescate-plan-pensiones-aportaciones-pre-2007."
+                ),
+            ),
+        ),
+    ] = None,
+    sal_beneficio_neto: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-beneficio-neto",
+            help=tr(
+                "cli.app.modelo.work.sal_beneficio_neto_help",
+                default=(
+                    "Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL) "
+                    "(Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación "
+                    "obligatoria a la reserva especial, limitada por el umbral del 50% del "
+                    "capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social."
+                ),
+            ),
+        ),
+    ] = None,
+    sal_reserva_dotada: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-reserva-dotada",
+            help=tr(
+                "cli.app.modelo.work.sal_reserva_dotada_help",
+                default=(
+                    "Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). "
+                    "Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. "
+                    "Necesario junto con --sal-beneficio-neto y --sal-capital-social."
+                ),
+            ),
+        ),
+    ] = None,
+    sal_capital_social: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-capital-social",
+            help=tr(
+                "cli.app.modelo.work.sal_capital_social_help",
+                default=(
+                    "Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). "
+                    "Denominador del test del 50%: la dotación se anula cuando la reserva "
+                    "acumulada alcanza el 50% del capital social. "
+                    "Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2129,12 +2828,128 @@ def work_calculate(
         except WorkUnitNotFoundError as exc:
             raise _bad_parameter_from_error(exc) from exc
         casilla_pairs = {_normalise_casilla_key(k, revision): v for k, v in casilla_pairs.items()}
+        for resolved_key in casilla_pairs:
+            _guard_casilla_data_type(resolved_key, revision)
     casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
+
+    # --prestacion-inss-exenta injects the Art. 7.h exempt INSS amount into the
+    # revision-specific casilla (0058 for 2024, 0059 for 2025).  The casilla is
+    # looked up by semantic_role so it resolves correctly for any future revision
+    # that carries the same role.
+    if prestacion_inss_exenta is not None:
+        try:
+            inss_decimal = Decimal(prestacion_inss_exenta)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
+                    value=prestacion_inss_exenta,
+                    default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
+                )
+            ) from exc
+        inss_casilla_id = _resolve_inss_exenta_casilla_id(work_unit_id)
+        casilla_inputs[inss_casilla_id] = inss_decimal
+
+    # --meses-trabajo-con-hijo-menor-3 computes the Art. 81 LIRPF deducción
+    # maternidad as sum(min(meses × 100, 1_200)) per eligible child and
+    # injects the result into the revision-specific casilla 0611, resolved
+    # by semantic_role so future revisions that renumber the casilla still
+    # work correctly.
+    if meses_trabajo_con_hijo_menor_3:
+        meses_pairs = [
+            _parse_meses_trabajo_hijo_spec(spec)
+            for spec in meses_trabajo_con_hijo_menor_3
+        ]
+        deduccion_amount = _compute_deduccion_maternidad_0611(meses_pairs)
+        maternidad_casilla_id = _resolve_deduccion_maternidad_casilla_id(work_unit_id)
+        casilla_inputs[maternidad_casilla_id] = Decimal(deduccion_amount)
+
+    # --rescate-plan-pensiones-* computes the DT 12ª LIRPF 40% reducción for a
+    # capital lump-sum pension rescate and injects it into the revision-specific
+    # casilla 0011, resolved by semantic_role.  All three flags must be supplied
+    # together; partial supply raises BadParameter.
+    rescate_supplied = (
+        rescate_plan_pensiones_capital,
+        rescate_plan_pensiones_aportaciones_pre_2007,
+        rescate_plan_pensiones_aportaciones_totales,
+    )
+    if any(rescate_supplied):
+        if not all(rescate_supplied):
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.rescate_plan_pensiones_incomplete",
+                    default=(
+                        "--rescate-plan-pensiones-capital, "
+                        "--rescate-plan-pensiones-aportaciones-pre-2007, and "
+                        "--rescate-plan-pensiones-aportaciones-totales must all be supplied together."
+                    ),
+                )
+            )
+        try:
+            dt12_gross = Decimal(rescate_plan_pensiones_capital)  # type: ignore[arg-type]
+            dt12_pre_2007 = Decimal(rescate_plan_pensiones_aportaciones_pre_2007)  # type: ignore[arg-type]
+            dt12_totales = Decimal(rescate_plan_pensiones_aportaciones_totales)  # type: ignore[arg-type]
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.rescate_plan_pensiones_not_decimal",
+                    default="--rescate-plan-pensiones-* values must be decimals.",
+                )
+            ) from exc
+        try:
+            dt12_reduccion = _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=dt12_gross,
+                aportaciones_pre_2007=dt12_pre_2007,
+                aportaciones_totales=dt12_totales,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        reduccion_casilla_id = _resolve_reduccion_trabajo_casilla_id(work_unit_id)
+        casilla_inputs[reduccion_casilla_id] = dt12_reduccion
+
+    # --sal-beneficio-neto / --sal-reserva-dotada / --sal-capital-social compute
+    # the Ley 44/2015 Art. 14 SAL/SLL reserva especial obligatory dotacion and
+    # inject it into the revision-specific SAL casilla, resolved by semantic_role.
+    # All three flags must be supplied together; partial supply raises BadParameter.
+    sal_supplied = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
+    if any(sal_supplied):
+        if not all(sal_supplied):
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.sal_reserva_incomplete",
+                    default=(
+                        "--sal-beneficio-neto, --sal-reserva-dotada, and "
+                        "--sal-capital-social must all be supplied together."
+                    ),
+                )
+            )
+        try:
+            sal_bn = Decimal(sal_beneficio_neto)  # type: ignore[arg-type]
+            sal_rd = Decimal(sal_reserva_dotada)  # type: ignore[arg-type]
+            sal_cs = Decimal(sal_capital_social)  # type: ignore[arg-type]
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.sal_reserva_not_decimal",
+                    default="--sal-* values must be decimals.",
+                )
+            ) from exc
+        try:
+            sal_dotacion = _compute_sal_reserva_especial_dotacion(
+                beneficio_neto=sal_bn,
+                reserva_dotada=sal_rd,
+                capital_social=sal_cs,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
+        casilla_inputs[sal_casilla_id] = sal_dotacion
+
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -2152,6 +2967,9 @@ def work_calculate(
             relation_values[key] = Decimal(raw_value)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(tr("cli.app.modelo.work.relation_not_decimal", key=key, value=raw_value)) from exc
+    detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
+    if detail_rows:
+        _validate_m184_share_sum(detail_rows)
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(
@@ -2162,6 +2980,7 @@ def work_calculate(
             enum_binding_values=enum_binding_values or None,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
             relation_values=relation_values or None,
+            detail_rows=detail_rows,
         )
     except RegistryValidationError as exc:
         # A formula that consumes an unsatisfied binding / enum-binding /
@@ -2227,10 +3046,12 @@ def work_calculate(
             **modality_payload,
         }
     )
+    plazo_lines = _work_unit_plazo_lines(unit_for_modality)
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
         *modality_lines,
+        *plazo_lines,
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
@@ -2627,9 +3448,10 @@ def _resolve_workflow_run_id(target: str) -> str:
             "cli.app.modelo.work.resume_invalid_target",
             default=(
                 "resume target must be a 16-character workflow run id or a "
-                f"64-character work-unit id; got {target!r}. "
+                "64-character work-unit id; got {target!r}. "
                 "Run `aeat app modelo work runs` to list run ids."
             ),
+            target=target,
         )
     )
 
@@ -3871,10 +4693,15 @@ def modelo_project(
         except (InvalidOperation, ValueError):
             extra_enum_bindings[k] = v
 
-    # M100 inputs: projected base liquidable general from M130 rendimiento neto,
-    # pagos fraccionados from M130 casilla 19 sum.
+    # M100 inputs: inject M130 rendimiento neto as EDS ingresos de explotación
+    # (casilla 0171, manual-kind). With all gastos casillas at zero the formula
+    # chain 0171 → 0180 → 0224 → 0226 → 0231 → 0235 → 0432 → 0435 → 0500 → 0505
+    # propagates the projected net income through base liquidable general.
+    # Casilla 0505 is computed (max(0, 0500 − 0527)); supplying it directly as an
+    # input raises RegistryValidationError — hence the injection at the leaf casilla.
+    # Pagos fraccionados go to 0604 (manual-kind, actividades económicas).
     m100_inputs: dict[str, Decimal] = {
-        "0505": projected_rendimiento_neto,  # base liquidable general
+        "0171": projected_rendimiento_neto,  # EDS ingresos explotación (projection leaf)
         "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
     }

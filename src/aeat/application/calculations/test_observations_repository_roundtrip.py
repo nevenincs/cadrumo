@@ -93,6 +93,66 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
         assert loaded_computed.legal_refs == ("liva.art-94",)
 
 
+def test_calculation_observation_absent_by_design_flag_survives_encrypted_storage_roundtrip(
+    tmp_path: Path,
+) -> None:
+    """P08.S61 (M2 from code review): CasillaObservation.absent_by_design survives the full encrypted-storage roundtrip.
+
+    The P08.S51 pydantic-roundtrip test pinned the model_dump_json
+    round trip. The production persistence path goes through
+    SecureObjectRepository + encrypted SQLite + envelope, which
+    adds serialization layers the pydantic gate doesn't exercise.
+    This test exercises the full path: construct an observation
+    with absent_by_design=True (e.g., M130 C15 at 1T), persist via
+    CalculationObservationRepository, reload, assert the flag
+    survives verbatim.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        absent_by_design_observation = RegistryModeloObservation(
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            observations=(
+                CasillaObservation(
+                    casilla_id="15",
+                    value=Decimal("0"),
+                    absent_by_design=True,
+                    legal_refs=("rd-439-2007:art-110",),
+                    source_refs=("aeat-modelo-130-instructions",),
+                ),
+                CasillaObservation(
+                    casilla_id="14",
+                    value=Decimal("500.00"),
+                    absent_by_design=False,
+                    legal_refs=("rd-439-2007:art-110",),
+                    source_refs=("aeat-modelo-130-instructions",),
+                ),
+            ),
+        )
+
+        captured_at = datetime.now(UTC).replace(microsecond=0)
+        repo = CalculationObservationRepository()
+        repo.save_observation(
+            absent_by_design_observation,
+            source_kind="aeat_sede_justificante",
+            captured_at=captured_at,
+        )
+        loaded = repo.load_observation("130", 2026, "1T")
+
+        assert loaded is not None
+        assert loaded.observation == absent_by_design_observation
+
+        casilla_15 = next(obs for obs in loaded.observation.observations if obs.casilla_id == "15")
+        casilla_14 = next(obs for obs in loaded.observation.observations if obs.casilla_id == "14")
+
+        # The absent_by_design discrimination must survive the
+        # encrypted-storage roundtrip. A regression that dropped
+        # the field would collapse both observations to False.
+        assert casilla_15.absent_by_design is True
+        assert casilla_14.absent_by_design is False
+
+
 def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
     tmp_path: Path,
 ) -> None:

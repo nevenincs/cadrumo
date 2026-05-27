@@ -185,3 +185,50 @@ def test_gate_fires_no_fixture_no_flag(tmp_path: Path) -> None:
     assert validator._justificante_corpus_root is not None, "corpus root must be set; gate would be silent"
     with pytest.raises(RegistryValidationError, match="provisional_pending_specimen"):
         validator.validate_modelo(mutated_modelo)
+
+
+def test_gate_fires_via_production_path() -> None:
+    """Specimen gate exercises: pure-production wiring with source_root=bundled_path() only.
+
+    NOTE ON COVERAGE BOUNDARY: The specimen gate fires when no corpus fixture exists
+    for a model with a declaracion_pdf profile and provisional_pending_specimen=False.
+    All real modelos with declaracion_pdf profiles have at least one real fixture
+    under tests/fixtures/justificantes/, so the specimen-gate "fires" scenario
+    (no fixture + no flag) cannot be triggered via pure-production wiring without
+    direct corpus_root injection.  This is a structural property of the fixture
+    inventory, not a gap in derivation logic.
+
+    What pure-production wiring CAN assert about the specimen gate:
+      - The derivation resolves to a real directory (guarding against silent None).
+      - The gate is silent for M130 when provisional_pending_specimen=True (Scenario B).
+      - The gate is silent for M130 when corpus + round_trip_verified satisfies both
+        gates (Scenario C), confirming no spurious specimen-gate firing on verified
+        profiles.
+
+    The "gate fires" scenario (Scenario A) is covered by test_gate_fires_no_fixture_no_flag
+    which injects an empty corpus root to isolate that branch from fixture inventory.
+    """
+    modelo, catalogues = _committed_130()
+
+    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
+    assert validator._justificante_corpus_root is not None, (
+        "corpus root derivation returned None; specimen gate is silently disabled in production"
+    )
+    assert validator._justificante_corpus_root.is_dir(), (
+        f"derived corpus root {validator._justificante_corpus_root} is not a directory"
+    )
+
+    # Scenario B via production wiring: provisional flag opts out → no error
+    revision = modelo.revisions["2019-y-siguientes"]
+    profile_provisional = _committed_profile(provisional=True)
+    mutated = revision.model_copy(update={"extraction_profiles": (profile_provisional,)})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
+    validator.validate_modelo(mutated_modelo)
+
+    # Scenario C via production wiring: verified + source satisfies both gates → no error
+    profile_verified = _committed_profile(provisional=False).model_copy(
+        update={"corpus_round_trip_verified": True, "verification_source": "real_aeat_corpus_pdf"}
+    )
+    mutated_c = revision.model_copy(update={"extraction_profiles": (profile_verified,)})
+    mutated_modelo_c = modelo.model_copy(update={"revisions": {**modelo.revisions, mutated_c.id: mutated_c}})
+    validator.validate_modelo(mutated_modelo_c)

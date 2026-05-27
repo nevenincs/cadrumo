@@ -1,6 +1,22 @@
 {
   "articulos": [
     {
+      "numero": "7",
+      "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7",
+      "summary": {
+        "ca": "Enumera les rendes exemptes de l'IRPF, incloent-hi les prestacions publiques per maternitat i paternitat reconegudes per la Seguretat Social (lletra h).",
+        "en": "Lists income exempt from IRPF, including public maternity and paternity benefits recognised by Social Security (letter h).",
+        "es": "Enumera las rentas exentas del IRPF, incluyendo las prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (letra h).",
+        "hu": "Felsorolja az IRPF-mentes jovedelmeket, beleertve a Tarsadalombiztositas altal elismert anyasagi es apasagi juttatasokat (h. pont)."
+      },
+      "titulo": {
+        "ca": "Rendes exemptes",
+        "en": "Exempt income",
+        "es": "Rentas exentas",
+        "hu": "Mentes jovedelmek"
+      }
+    },
+    {
       "numero": "17",
       "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a17",
       "summary": {

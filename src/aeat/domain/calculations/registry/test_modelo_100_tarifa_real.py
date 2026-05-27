@@ -113,6 +113,9 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) ->
             "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            # declaration_type = 1 (individual) → 0461 computed = 0
+            "renta-2024-profile-declaration-type": Decimal("1"),
+            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         },
     )
 
@@ -149,6 +152,9 @@ def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot
             "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            # declaration_type = 1 (individual) → 0461 computed = 0
+            "renta-2024-profile-declaration-type": Decimal("1"),
+            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         },
     )
 
@@ -180,6 +186,9 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
             "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            # declaration_type = 1 (individual) → 0461 computed = 0
+            "renta-2024-profile-declaration-type": Decimal("1"),
+            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         },
     )
 
@@ -209,6 +218,9 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
             "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
             "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+            # declaration_type = 1 (individual) → 0461 computed = 0
+            "renta-2024-profile-declaration-type": Decimal("1"),
+            "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
         },
     )
 

@@ -1209,3 +1209,189 @@ def test_verification_report_lines_omits_next_action_when_granted() -> None:
     lines = _verification_report_lines(report)
 
     assert not any(l.startswith("next_action\t") for l in lines)
+
+
+class TestDt12ReduccionPlanPensiones:
+    """DT12-001: _compute_dt12_reduccion_plan_pensiones oracle + anti-tautology.
+
+    Expected values derived from LIRPF DT 12ª formula:
+    pre_2007 / totales * gross_rescate * 40%.
+    Carla oracle: 9600 / 33000 * 60000 * 40% = 6983.636... rounded to 6983.64.
+    """
+
+    def test_carla_oracle_shape(self) -> None:
+        """Carla round-19 B: 9600/33000 * 60000 * 40% (LIRPF DT 12ª).
+
+        Derivation: 9600 / 33000 * 60000 * 0.40
+          = 0.29090909... * 60000 * 0.40
+          = 17454.5454... * 0.40
+          = 6981.8181...
+          rounded HALF_UP (money-2) → 6981.82
+        """
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("9600"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result == Decimal("6981.82")
+
+    def test_anti_tautology_different_ratio_different_reduccion(self) -> None:
+        """Changing the pre/post ratio produces a different reducción amount."""
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result_carla = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("9600"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        # Halve the pre-2007 fraction → ~half the reducción
+        result_half = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("4800"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result_carla != result_half
+        # 4800/33000 * 60000 * 0.40 = 3490.9090... → 3490.91
+        assert result_half == Decimal("3490.91")
+
+    def test_zero_pre_2007_yields_zero_reduccion(self) -> None:
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        result = _compute_dt12_reduccion_plan_pensiones(
+            gross_rescate=Decimal("60000"),
+            aportaciones_pre_2007=Decimal("0"),
+            aportaciones_totales=Decimal("33000"),
+        )
+        assert result == Decimal("0.00")
+
+    def test_zero_totales_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        with pytest.raises(ValueError, match="aportaciones_totales must be positive"):
+            _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=Decimal("60000"),
+                aportaciones_pre_2007=Decimal("9600"),
+                aportaciones_totales=Decimal("0"),
+            )
+
+    def test_negative_gross_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_dt12_reduccion_plan_pensiones
+
+        with pytest.raises(ValueError, match="gross_rescate must be non-negative"):
+            _compute_dt12_reduccion_plan_pensiones(
+                gross_rescate=Decimal("-1"),
+                aportaciones_pre_2007=Decimal("9600"),
+                aportaciones_totales=Decimal("33000"),
+            )
+
+
+class TestSalReservaEspecialDotacion:
+    """Oracle tests for _compute_sal_reserva_especial_dotacion (Ley 44/2015 Art. 14)."""
+
+    def test_aitor_oracle_shape_below_cap(self) -> None:
+        """Spec oracle: beneficio=120k, capital=100k, reserva=30k.
+
+        cap = 100k * 50% = 50k
+        headroom = 50k - 30k = 20k
+        dotacion_obligatoria = 120k * 10% = 12k
+        dotacion = min(12k, 20k) = 12k
+        """
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        result = _compute_sal_reserva_especial_dotacion(
+            beneficio_neto=Decimal("120000"),
+            reserva_dotada=Decimal("30000"),
+            capital_social=Decimal("100000"),
+        )
+        assert result == Decimal("12000.00")
+
+    def test_anti_tautology_next_year_cap_partial(self) -> None:
+        """Spec oracle: reserva=42k (after year 1), capital=100k.
+
+        cap = 50k
+        headroom = 50k - 42k = 8k
+        dotacion_obligatoria = 120k * 10% = 12k
+        dotacion = min(12k, 8k) = 8k  (capped by headroom)
+        """
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        result = _compute_sal_reserva_especial_dotacion(
+            beneficio_neto=Decimal("120000"),
+            reserva_dotada=Decimal("42000"),
+            capital_social=Decimal("100000"),
+        )
+        assert result == Decimal("8000.00")
+
+    def test_cap_reached_yields_zero(self) -> None:
+        """Spec oracle: reserva=50k (at cap), capital=100k => dotacion=0."""
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        result = _compute_sal_reserva_especial_dotacion(
+            beneficio_neto=Decimal("120000"),
+            reserva_dotada=Decimal("50000"),
+            capital_social=Decimal("100000"),
+        )
+        assert result == Decimal("0.00")
+
+    def test_reserva_exceeds_cap_also_yields_zero(self) -> None:
+        """Reserva above 50% cap (overfunded from prior period) => dotacion=0."""
+        from decimal import Decimal
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        result = _compute_sal_reserva_especial_dotacion(
+            beneficio_neto=Decimal("120000"),
+            reserva_dotada=Decimal("55000"),
+            capital_social=Decimal("100000"),
+        )
+        assert result == Decimal("0.00")
+
+    def test_zero_capital_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        with pytest.raises(ValueError, match="capital_social must be positive"):
+            _compute_sal_reserva_especial_dotacion(
+                beneficio_neto=Decimal("120000"),
+                reserva_dotada=Decimal("30000"),
+                capital_social=Decimal("0"),
+            )
+
+    def test_negative_beneficio_raises_value_error(self) -> None:
+        from decimal import Decimal
+
+        import pytest
+
+        from aeat.entrypoints.cli._modelo import _compute_sal_reserva_especial_dotacion
+
+        with pytest.raises(ValueError, match="beneficio_neto must be non-negative"):
+            _compute_sal_reserva_especial_dotacion(
+                beneficio_neto=Decimal("-1"),
+                reserva_dotada=Decimal("30000"),
+                capital_social=Decimal("100000"),
+            )

@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1126"
 number = "1126"
-label = "Marque una {2}X{2} si en la casilla [1125] ha consignado un NIF de otro país"
+label = "Marque una 'X' si en la casilla [1125] ha consignado un NIF de otro país"
 section = ["resultados", "datos_adicionales_anexo_b", "an_b_inf_adc_arr"]
 data_type = "boolean"
 semantic_role = "irpf_anexo_b_foreign_nif_flag"

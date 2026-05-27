@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1070"
 number = "1070"
-label = "NIF de la persona empleada del{0} hogar,Escuela, Centro o Guardería Infantil"
+label = "NIF de la persona empleada del hogar,Escuela, Centro o Guardería Infantil"
 section = ["resultados", "deduccion_autonomica_res", "la_rioja_res"]
 data_type = "nif"
 semantic_role = "irpf_deduccion_autonomica_empleada_hogar_nif"

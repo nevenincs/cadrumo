@@ -40,6 +40,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 
 
 _SHA = "0" * 64
+_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NIF_CANARY = "99999999R"
+_REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
+_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NIF = "12345678Z"
+_SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
 class TestNifReplacement:
@@ -47,25 +53,25 @@ class TestNifReplacement:
 
     def test_accepts_valid_synthetic_nie(self) -> None:
         replacement = NifReplacement(
-            real=SecretStr("Y4113523X"),
-            synthetic="Y0000001S",
+            real=SecretStr(_REAL_NIE_CANARY),
+            synthetic=_SYNTHETIC_NIE,
             surface_label="taxpayer NIE",
         )
         # A silent-acceptance regression would still match "no exception
         # raised"; pinning the synthetic and real fields catches a
         # validator that wrongly normalises (trim, lowercase) the input.
-        assert replacement.synthetic == "Y0000001S"
-        assert replacement.real.get_secret_value() == "Y4113523X"
+        assert replacement.synthetic == _SYNTHETIC_NIE
+        assert replacement.real.get_secret_value() == _REAL_NIE_CANARY
 
     def test_accepts_valid_synthetic_nif(self) -> None:
         # 12345678 % 23 == 14 → letter Z
         replacement = NifReplacement(
-            real=SecretStr("99999999R"),
-            synthetic="12345678Z",
+            real=SecretStr(_REAL_NIF_CANARY),
+            synthetic=_SYNTHETIC_NIF,
             surface_label="taxpayer NIF",
         )
-        assert replacement.synthetic == "12345678Z"
-        assert replacement.real.get_secret_value() == "99999999R"
+        assert replacement.synthetic == _SYNTHETIC_NIF
+        assert replacement.real.get_secret_value() == _REAL_NIF_CANARY
 
     def test_rejects_synthetic_with_bad_checksum(self) -> None:
         # validate_spanish_tax_id raises IdentityError, which does NOT
@@ -74,7 +80,7 @@ class TestNifReplacement:
         # would silently never match — pin the actual class.
         with pytest.raises(IdentityError, match=r"NIE checksum letter is invalid"):
             NifReplacement(
-                real=SecretStr("Y4113523X"),
+                real=SecretStr(_REAL_NIE_CANARY),
                 synthetic="Y0000001Z",  # wrong checksum letter
                 surface_label="taxpayer NIE",
             )
@@ -85,7 +91,7 @@ class TestNifReplacement:
         # runs — pydantic surfaces this through ValidationError.
         with pytest.raises(ValidationError, match=r"at least 1 character"):
             NifReplacement(
-                real=SecretStr("Y4113523X"),
+                real=SecretStr(_REAL_NIE_CANARY),
                 synthetic="",
                 surface_label="taxpayer NIE",
             )
@@ -96,16 +102,16 @@ class TestNameReplacement:
 
     def test_accepts_uppercased_name(self) -> None:
         replacement = NameReplacement(
-            real=SecretStr("Wootsch Gergely Domokos"),
-            synthetic="APELLIDO APELLIDO NOMBRE",
+            real=SecretStr(_REAL_NAME_CANARY),
+            synthetic=_SYNTHETIC_NAME,
             surface_label="taxpayer name",
         )
-        assert replacement.synthetic == "APELLIDO APELLIDO NOMBRE"
+        assert replacement.synthetic == _SYNTHETIC_NAME
 
     def test_rejects_mixed_case(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic name must be uppercase"):
             NameReplacement(
-                real=SecretStr("Wootsch Gergely Domokos"),
+                real=SecretStr(_REAL_NAME_CANARY),
                 synthetic="Apellido Nombre",
                 surface_label="taxpayer name",
             )
@@ -113,7 +119,7 @@ class TestNameReplacement:
     def test_rejects_digits(self) -> None:
         with pytest.raises(ValidationError, match=r"synthetic name must not contain digits"):
             NameReplacement(
-                real=SecretStr("Wootsch Gergely Domokos"),
+                real=SecretStr(_REAL_NAME_CANARY),
                 synthetic="APELLIDO 1",
                 surface_label="taxpayer name",
             )
@@ -333,13 +339,13 @@ class TestTokenMapShape:
 class TestSecretStrRepr:
     """The cleartext ``real`` value must NOT surface through repr/str/dump."""
 
-    _CLEARTEXT_NIF = "Y4113523X"
-    _CLEARTEXT_NAME = "WOOTSCH GERGELY DOMOKOS"
+    _CLEARTEXT_NIF = _REAL_NIE_CANARY
+    _CLEARTEXT_NAME = _REAL_NAME_CANARY
 
     def test_repr_does_not_leak_cleartext_nif(self) -> None:
         record = NifReplacement(
             real=SecretStr(self._CLEARTEXT_NIF),
-            synthetic="Y0000001S",
+            synthetic=_SYNTHETIC_NIE,
             surface_label="taxpayer NIE",
         )
         rendering = repr(record)
@@ -348,7 +354,7 @@ class TestSecretStrRepr:
     def test_str_does_not_leak_cleartext_name(self) -> None:
         record = NameReplacement(
             real=SecretStr(self._CLEARTEXT_NAME),
-            synthetic="APELLIDO APELLIDO NOMBRE",
+            synthetic=_SYNTHETIC_NAME,
             surface_label="taxpayer name",
         )
         assert self._CLEARTEXT_NAME not in str(record)
@@ -356,7 +362,7 @@ class TestSecretStrRepr:
     def test_model_dump_default_does_not_leak_cleartext(self) -> None:
         record = NifReplacement(
             real=SecretStr(self._CLEARTEXT_NIF),
-            synthetic="Y0000001S",
+            synthetic=_SYNTHETIC_NIE,
             surface_label="taxpayer NIE",
         )
         # mode="python" default returns SecretStr objects, not raw values.
@@ -373,7 +379,7 @@ class TestSecretStrRepr:
         # "json"`` and ``model_dump_json`` mask the cleartext.
         record = NifReplacement(
             real=SecretStr(self._CLEARTEXT_NIF),
-            synthetic="Y0000001S",
+            synthetic=_SYNTHETIC_NIE,
             surface_label="taxpayer NIE",
         )
         json_dump = record.model_dump(mode="json")
@@ -386,14 +392,14 @@ class TestSecretStrRepr:
             nif=(
                 NifReplacement(
                     real=SecretStr(self._CLEARTEXT_NIF),
-                    synthetic="Y0000001S",
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
             name=(
                 NameReplacement(
                     real=SecretStr(self._CLEARTEXT_NAME),
-                    synthetic="APELLIDO APELLIDO NOMBRE",
+                    synthetic=_SYNTHETIC_NAME,
                     surface_label="taxpayer name",
                 ),
             ),

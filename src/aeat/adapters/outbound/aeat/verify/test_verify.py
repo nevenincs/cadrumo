@@ -14,9 +14,7 @@ import pytest
 
 import aeat.adapters.outbound.aeat.verify as verify_module
 from aeat.adapters.outbound.aeat.verify import (
-    VerifyBrowserContextLike,
     VerifyBrowserKeyboardLike,
-    VerifyBrowserPageLike,
     verify_csv,
 )
 from aeat.domain.calculations.registry import RegistryValidationError

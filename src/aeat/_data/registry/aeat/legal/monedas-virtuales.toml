@@ -121,3 +121,16 @@ published_at = 2023-07-29
 applies_from = 2023-08-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679"
 review_status = "reviewed"
+
+[sources."boe-modelo-721-2023-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-887-2023.html"
+sha256 = "85f769782a1cb68f98e7697d197696b18985314fdde4bd4e4dbcfabede70e050"
+bytes = 743
+retrieved_at = 2026-05-27
+published_at = 2023-07-29
+applies_from = 2023-08-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679"
+review_status = "reviewed"

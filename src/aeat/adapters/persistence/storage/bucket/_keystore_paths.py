@@ -19,16 +19,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
 from ._layout import BucketPaths, bucket_paths
-
-_KEYSTORE_DIRNAME = "keystore"
-_BUCKETS_DIRNAME = "buckets"
 
 
 def keystore_root(root: Path) -> Path:
     """Return the keystore parent ``<root>/keystore/`` (no IO)."""
 
-    return root / _KEYSTORE_DIRNAME
+    return root / KEYSTORE_DIRNAME
 
 
 def keystore_path(root: Path, bucket_id: str) -> Path:
@@ -90,7 +88,7 @@ def validate_keystore_separation(
     paths: BucketPaths = bucket_paths(root, bucket_id)
     target = configured_keystore if configured_keystore is not None else keystore_path(root, bucket_id)
 
-    buckets_parent = root / _BUCKETS_DIRNAME
+    buckets_parent = root / BUCKETS_DIRNAME
     if _is_under(target, buckets_parent):
         raise ValueError(
             f"keystore path {target!s} resolves under buckets parent {buckets_parent!s}",

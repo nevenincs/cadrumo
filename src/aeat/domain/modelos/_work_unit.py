@@ -27,6 +27,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
+from ..profile._ccaa import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 
@@ -198,6 +199,10 @@ class WorkUnit(BaseModel):
     current_filing_record_id: _OptionalHex64 = None
     census_stamped_stale_at: datetime | None = None
     census_stale_reason: _StaleReason | None = None
+    # ISD (Modelo 650/660) and ITPyAJD (Modelo 600/620) context axis:
+    # CCAA of the causante (Ley 22/2009 Art. 32) or the bien-location CCAA.
+    # None for modelos where jurisdiction follows the declarant's profile CCAA.
+    causante_ccaa: CCAA | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod

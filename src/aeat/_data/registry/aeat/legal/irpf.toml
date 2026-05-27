@@ -1544,6 +1544,26 @@ required_text = [
     "cónyuges",
 ]
 
+[legal."ley-35-2006:art-84"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a84"
+document_id = "BOE-A-2006-20764"
+article = "84"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a84"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Reducción en la base imponible por tributación conjunta: €3.400 para unidades familiares tipo 1 (matrimonio, Art. 82.1) y €2.150 para unidades familiares tipo 2 (monoparental, Art. 82.2). Casilla 0461 Modelo 100."
+required_text = [
+    "Normas aplicables en la tributación conjunta",
+    "se reducirá en 3.400 euros anuales",
+    "se reducirá en 2.150 euros anuales",
+]
+
 [legal."ley-35-2006:art-86"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -1894,6 +1914,26 @@ required_text = [
     "deducciones",
     "cuota íntegra estatal",
     "inversión",
+]
+
+[legal."ley-35-2006:art-7-h"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006.html#a7"
+document_id = "BOE-A-2006-20764"
+article = "7"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a7"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 7.h: rentas exentas — prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (INSS) y por las Comunidades Autonomas. Las prestaciones de la Seguridad Social por baja de maternidad y paternidad son integras del IRPF (art 7.h ley 35/2006, en vigor tras la STC 207/2013 que declaro inconstitucional la exencion para funcionarios). Desde 2018 la exencion vuelve para todos los contribuyentes. El importe de estas prestaciones NO debe incluirse en la casilla 0003 (Retribuciones dinerarias) ya que no constituye rendimiento de trabajo tributable conforme al art 17."
+required_text = [
+    "Rentas exentas",
+    "Las prestaciones por maternidad o paternidad",
+    "Igualmente estarán exentas las demás prestaciones públicas",
 ]
 
 [legal."ley-35-2006:art-73"]

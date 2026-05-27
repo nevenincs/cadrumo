@@ -77,6 +77,7 @@ from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
 )
+from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -96,6 +97,7 @@ from ...domain.modelos._work_unit import (
     derive_work_unit_id,
 )
 from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.profile._ccaa import CCAA
 from ...domain.submission import SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..filing import (
@@ -528,6 +530,7 @@ def create_work_unit(
     revision_id: str,
     name: str | None = None,
     actor: str = "system",
+    causante_ccaa: CCAA | None = None,
     repository: WorkUnitCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
@@ -593,6 +596,7 @@ def create_work_unit(
         name=name.strip() if name else _default_name(modelo=modelo, filing_year=filing_year, period=period),
         created_at=now,
         updated_at=now,
+        causante_ccaa=causante_ccaa,
     )
     updated = upsert_work_unit(catalogue, unit)
     repo.save(updated)
@@ -859,6 +863,7 @@ def calculate_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine and persist a draft revision.
@@ -977,6 +982,7 @@ def calculate_modelo_revision(
             }.items()
         )
     )
+    resolved_date_bindings = dict(sorted(profile_result.date_binding_values.items()))
     _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
     resolved_relations = dict(relation_values or {})
     relation_binding_values = materialize_relation_binding_values(
@@ -985,6 +991,18 @@ def calculate_modelo_revision(
         period=work_unit.period,
     )
     resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
+    # When the operator supplies --casilla for a previous_filing-bound casilla (e.g.
+    # M130 casilla 15 resultados negativos, M131 casilla 11) and no upstream resolver has
+    # provided the corresponding binding value, promote the casilla override into the
+    # binding_values map.  The engine requires that inputs[casilla_id] and
+    # binding_values[binding_id] agree; this promotion makes them agree by construction.
+    resolved_bindings = dict(
+        sorted(
+            _lift_previous_filing_casilla_overrides_to_bindings(
+                snapshot.revision, casilla_inputs, resolved_bindings
+            ).items()
+        )
+    )
     declaration_period_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
@@ -1011,6 +1029,7 @@ def calculate_modelo_revision(
         binding_values=resolved_bindings,
         enum_binding_values=resolved_enum_bindings,
         relation_values=resolved_relations,
+        date_binding_values=resolved_date_bindings or None,
     )
 
     inputs_snapshot: dict[str, str] = dict(
@@ -1033,6 +1052,7 @@ def calculate_modelo_revision(
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
+        detail_rows=detail_rows,
     )
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
@@ -1050,6 +1070,7 @@ def calculate_modelo_revision(
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         observations=typed_observations,
+        detail_rows=detail_rows,
         created_at=now,
         updated_at=now,
     )
@@ -1133,7 +1154,8 @@ def _apply_iva_compensation_decision_binding(
             or backend_casilla_value is not None
         ):
             raise ModeloIvaWalletReconciliationBlocked(
-                "Modelo 303 prior compensation requires a persisted IVA wallet reconciliation decision"
+                translated_message="application.modelo.errors.iva_wallet_not_seeded",
+                suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
             )
         return
 
@@ -1200,7 +1222,8 @@ def _require_persisted_iva_compensation_decision_for_work_unit(
     persisted = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            "Modelo 303 IVA wallet reconciliation decisions must be persisted before calculation"
+            translated_message="application.modelo.errors.iva_wallet_not_seeded",
+            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
         )
     if persisted != supplied_decision:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -1273,12 +1296,32 @@ def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     return value.strip()
 
 
+def _iva_regime_for_bucket(bucket_id: str) -> str | None:
+    """Return the profile's ``iva.regime`` value, or ``None`` if unset or profile absent."""
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    value = record_to_path_values(record).get("iva.regime")
+    if value is None or not str(value).strip():
+        return None
+    return str(value).strip()
+
+
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
     }
 )
+# IVA regimes that do not use ledger aggregation for IVA repercutido; these
+# clients supply régimen-simplificado casillas (47-58) directly as manual
+# inputs rather than deriving them from the transaction ledger.
+_IVA_LEDGER_EXEMPT_REGIMES = frozenset({"SIMPLIFICADO"})
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
@@ -1289,6 +1332,11 @@ def _raise_if_ledger_preflight_blocks_calculation(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> None:
     if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
+        return
+    # Régimen simplificado clients supply casillas 47-58 as manual inputs;
+    # they have no transaction ledger to satisfy the IVA aggregation preflight.
+    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
+    if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
         return
     from ..ledger import preflight_ledger_tax_readiness
 
@@ -1338,6 +1386,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
@@ -1442,6 +1491,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
+        detail_rows=detail_rows,
         clock=clock,
     )
 
@@ -1490,8 +1540,13 @@ def _resolve_profile_bindings_for_calculation(
     return ProfileSourcedBindingResult(
         binding_values=resolution.binding_values,
         enum_binding_values=resolution.enum_binding_values,
+        date_binding_values=resolution.date_binding_values,
         bindings_sourced_from_profile=tuple(
-            sorted(set(resolution.binding_values) | set(resolution.enum_binding_values))
+            sorted(
+                set(resolution.binding_values)
+                | set(resolution.enum_binding_values)
+                | set(resolution.date_binding_values)
+            )
         ),
     )
 
@@ -1594,6 +1649,46 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
         if value is not None:
             resolved[casilla.id] = value
     return resolved
+
+
+def _lift_previous_filing_casilla_overrides_to_bindings(
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[str, Decimal],
+    resolved_bindings: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    """Promote operator ``--casilla`` overrides for ``previous_filing``-bound casillas into bindings.
+
+    When an operator supplies ``--casilla "15=2694"`` for a casilla whose registry
+    binding declares ``source = "previous_filing"``, and no upstream resolver (borrador,
+    profile, ledger, or caller ``--binding``) has already populated the binding, the
+    override becomes the authoritative value for that binding.
+
+    This satisfies the engine's twin invariants enforced by ``_initial_values``:
+    - The smuggle-rejection guard requires that any ``previous_filing``-bound casilla in
+      ``inputs`` ALSO appears in ``binding_values`` under its binding id.
+    - The consistency check requires ``inputs[casilla_id] == binding_values[binding_id]``.
+
+    The returned dict extends ``resolved_bindings`` with the promoted entries.
+    Bindings already present in ``resolved_bindings`` (from ``--binding``, borrador, or
+    the profile layer) are never overwritten — the operator used the correct channel.
+    """
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    promoted: dict[str, Decimal] = {}
+    for casilla_id, value in casilla_inputs.items():
+        casilla = casillas_by_id.get(casilla_id)
+        if casilla is None or casilla.input_kind != "bound" or not casilla.binding:
+            continue
+        binding = bindings_by_id.get(casilla.binding)
+        if binding is None or binding.source != "previous_filing":
+            continue
+        if casilla.binding in resolved_bindings:
+            # The binding was already provided via --binding or a resolver; do not
+            # override it.  The consistency check in _initial_values will surface any
+            # divergence between inputs[casilla_id] and binding_values[binding_id].
+            continue
+        promoted[casilla.binding] = value
+    return {**resolved_bindings, **promoted}
 
 
 _FILING_PERIOD_ORDINALS: Mapping[str, int] = {
@@ -1730,13 +1825,14 @@ def _reject_caller_overrides_of_source_bindings(
     if rejected_bindings:
         # For the IVA compensation binding the operator should use the seed verb, not
         # a manual override, to set the prior carry-forward balance.
-        seed_hint = (
-            " To set the M303 carry-forward balance use: aeat app modelo iva-wallet seed"
+        seed_suggestion = (
+            "aeat app modelo iva-wallet seed"
             if any("compensacion-pendiente-anteriores" in b for b in rejected_bindings)
-            else ""
+            else None
         )
         raise ModeloAggregationBindingError(
-            f"caller binding values cannot override bucket-derived source bindings: {rejected_bindings!r}.{seed_hint}"
+            translated_message="errors.error.error_modelo_aggregation_binding",
+            suggestion=seed_suggestion,
         )
     rejected_casillas = sorted(
         set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources))
@@ -2214,6 +2310,9 @@ def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+_PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
+    r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$"
+)
 
 
 def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
@@ -2251,6 +2350,24 @@ def _evaluate_predicate_expression(
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))
         return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_CAP_LE_WHEN_POSITIVE.match(expr)
+    if m:
+        # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
+        # ceiling casilla is strictly positive, the limited casilla value
+        # MUST NOT exceed the ceiling. P08.S47/S48: enforces AEAT cap rules
+        # like Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
+        # caso podrá figurar... un importe superior a la cantidad positiva
+        # consignada".
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return True
+        limited_id, ceiling_id = ids[0], ids[1]
+        ceiling = casilla_values.get(ceiling_id, Decimal(0))
+        if ceiling <= Decimal(0):
+            return True
+        limited = casilla_values.get(limited_id, Decimal(0))
+        return limited <= ceiling
 
     return True
 
@@ -2543,7 +2660,73 @@ def _collect_revision_verification_findings(
         )
     )
 
+    # Advisory: DT 12ª LIRPF — warn when a large trabajo income (0003 > 20 000)
+    # is present but the trabajo reducción slot (0011) is zero / absent.
+    # This heuristic surfaces the DT_12A_REDUCCION_POSSIBLE advisory so
+    # retirees do not silently lose the 40% reducción for pre-2007 aportaciones.
+    dt12_finding = _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
+    if dt12_finding is not None:
+        findings.append(dt12_finding)
+
     return findings, resolved_casillas, missing_required
+
+
+_DT12_TRABAJO_INGRESO_ROLE = "irpf_rendimiento_trabajo_importe_integro_dinerario"
+_DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
+#: Heuristic threshold above which DT 12ª advisory fires (large lump-sum pension).
+_DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
+
+
+def _dt12_reduccion_advisory_finding(
+    revision: object,
+    casilla_values: Mapping[str, Decimal],
+) -> ModeloVerificationFinding | None:
+    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when a large trabajo income is
+    present but no trabajo reducción has been declared.
+
+    The check is advisory only (WARNING severity); it does not block VERIFICADO_COMPLETO.
+    Heuristic: casilla with semantic_role ``irpf_rendimiento_trabajo_importe_integro_dinerario``
+    value > 20 000 AND casilla with role ``irpf_rendimiento_trabajo_reduccion`` is zero/absent.
+    Returns ``None`` when the advisory does not apply or when the snapshot revision
+    does not carry the required semantic roles (non-M100 modelos).
+    """
+
+    ingreso_id: str | None = None
+    reduccion_id: str | None = None
+    for casilla in getattr(revision, "casillas", ()):
+        role = getattr(casilla, "semantic_role", None)
+        if role == _DT12_TRABAJO_INGRESO_ROLE:
+            ingreso_id = str(casilla.id)
+        elif role == _DT12_TRABAJO_REDUCCION_ROLE:
+            reduccion_id = str(casilla.id)
+
+    if ingreso_id is None or reduccion_id is None:
+        return None
+
+    ingreso_value = casilla_values.get(ingreso_id, Decimal(0))
+    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
+
+    if ingreso_value > _DT12_LARGE_TRABAJO_THRESHOLD and reduccion_value == Decimal(0):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=reduccion_id,
+            message=(
+                f"DT_12A_REDUCCION_POSSIBLE: casilla {ingreso_id} = {ingreso_value} "
+                f"but casilla {reduccion_id} (reducción trabajo) is zero. "
+                f"If this income includes a plan-de-pensiones capital rescate with "
+                f"pre-31-Dec-2006 aportaciones, a 40%% DT 12ª LIRPF reducción may apply."
+            ),
+            next_action=(
+                "Supply --rescate-plan-pensiones-capital IMPORTE "
+                "--rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE "
+                "--rescate-plan-pensiones-aportaciones-totales IMPORTE "
+                "to aeat app modelo work calculate to auto-inject the DT 12ª reducción "
+                "into casilla 0011 (ley-35-2006:dt-12)."
+            ),
+            legal_refs=("ley-35-2006:dt-12",),
+        )
+    return None
 
 
 def _missing_required_casilla_finding(

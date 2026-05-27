@@ -156,7 +156,7 @@ def test_corpus_root_derived_from_bundled_path() -> None:
 def test_round_trip_gate_fires_via_production_path() -> None:
     """Round-trip gate must fire via the production wiring (no direct injection).
 
-    M130 has real corpus fixtures under tests/fixtures/justificantes/130/.
+    Scenario A: M130 has real corpus fixtures under tests/fixtures/justificantes/130/.
     A profile with corpus_round_trip_verified=False and
     provisional_pending_specimen=False must raise RegistryValidationError
     when validated through the production RegistryValidator path where the
@@ -178,6 +178,58 @@ def test_round_trip_gate_fires_via_production_path() -> None:
     )
     with pytest.raises(RegistryValidationError, match="corpus_round_trip_verified"):
         validator.validate_modelo(mutated_modelo)
+
+
+def test_round_trip_gate_provisional_flag_silences_via_production_path() -> None:
+    """Scenario B: provisional_pending_specimen=True must silence the round-trip gate.
+
+    M130 has real corpus fixtures, so the gate would fire for an unverified profile.
+    Setting provisional_pending_specimen=True is the explicit opt-out; the gate must
+    not raise even when corpus exists and corpus_round_trip_verified=False.
+
+    Pure-production wiring: no justificante_corpus_root injected.  A derivation
+    bug returning None would cause the gate to pass silently for the wrong reason;
+    the pre-assertion guards against that false positive.
+    """
+    modelo, catalogues = _committed_130()
+    profile = _committed_profile(provisional=True, round_trip_verified=False)
+    mutated_modelo = _build_mutated_modelo(modelo, profile)
+
+    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
+    assert validator._justificante_corpus_root is not None, (
+        "corpus root derivation returned None; gate is silently disabled — "
+        "the provisional-flag opt-out cannot be verified against the derived path"
+    )
+    # No exception raised: provisional flag opts out of the round-trip gate
+    validator.validate_modelo(mutated_modelo)
+
+
+def test_round_trip_gate_verified_profile_passes_via_production_path() -> None:
+    """Scenario C: corpus_round_trip_verified=True + verification_source set must pass.
+
+    M130 has real corpus fixtures.  A profile declaring corpus_round_trip_verified=True
+    with a valid verification_source satisfies both the round-trip gate and the
+    provenance gate.  The validator must not raise.
+
+    Pure-production wiring: no justificante_corpus_root injected.  The pre-assertion
+    ensures the derivation path resolved a real corpus directory so the gate was
+    actually evaluated, not silently bypassed.
+    """
+    modelo, catalogues = _committed_130()
+    profile = _committed_profile(
+        provisional=False,
+        round_trip_verified=True,
+        verification_source="real_aeat_corpus_pdf",
+    )
+    mutated_modelo = _build_mutated_modelo(modelo, profile)
+
+    validator = RegistryValidator(catalogues, source_root=_DATA_ROOT)
+    assert validator._justificante_corpus_root is not None, (
+        "corpus root derivation returned None; gate is silently disabled — "
+        "the verified-profile pass cannot be confirmed against the derived path"
+    )
+    # No exception raised: verified + verification_source satisfies both gates
+    validator.validate_modelo(mutated_modelo)
 
 
 # --- (d) no fixture → this gate is dormant; specimen gate handles it ---------

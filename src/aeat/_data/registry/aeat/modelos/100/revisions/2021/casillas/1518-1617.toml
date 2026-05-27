@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1617"
 number = "1617"
-label = "{2}RU{2}.- Rústica"
+label = "'RU'.- Rústica"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "boolean"
 semantic_role = "irpf_re_atrib_inmueble_rustica_flag"

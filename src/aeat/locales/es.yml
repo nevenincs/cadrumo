@@ -217,10 +217,9 @@ application:
           profile switch NAME` o `aeat config profile create NAME`.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
-        unreadable_active_profile: El perfil activo '%{active_profile}' tiene un manifiesto
-          de bucket pero no tiene un registro de perfil legible (status=%{status}).
-          Ejecuta `aeat config repair profile --clear-active --yes` y después cambia
-          a un perfil válido o créalo antes de configurar autenticación.
+        unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
+          manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          Siguiente acción: %{next_action}.'
       login:
         refused_certificate_file_missing: 'No se puede iniciar sesión: el archivo
           de certificado configurado (%{path}) no existe. Recupera el archivo o vuelve
@@ -323,6 +322,10 @@ application:
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
+        IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
+        el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
+        YEAR --period PERIOD --amount 0 --confirm`.'
       reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
         aún no está disponible; usa --from-justificante PATH hasta que el parser de
         declaración esté implementado.
@@ -399,10 +402,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nueva factura cobrable
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que un cliente te debe pagar
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas cobrables registradas
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
+          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualiza los datos de una factura cobrable
         view_help: Muestra los datos de una factura cobrable
@@ -448,10 +456,15 @@ cli:
         year_help: Ejercicio fiscal
       payable_invoice:
         add_help: Registra una nueva factura pagable
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que debes pagar a un proveedor
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas pagables registradas
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
+          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualiza los datos de una factura pagable
         view_help: Muestra los datos de una factura pagable
@@ -593,7 +606,7 @@ cli:
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
-        json_validation_error: cli.app.modelo.aggregate.json_validation_error
+        json_validation_error: '%{flag} no es un objeto de observación válido: %{details}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -724,10 +737,11 @@ cli:
         seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
         seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
         seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
-        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
+          no se puede sembrar otro.
         seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
         seed_help: cli.app.modelo.iva_wallet.seed_help
-        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
         seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
         seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
         seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
@@ -812,7 +826,15 @@ cli:
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
+        casilla_non_numeric_data_type: La casilla {key} ("{label}") tiene tipo de
+          dato {data_type} y no acepta valores decimales directos. Usa --binding para
+          este tipo de entrada o consulta `aeat app modelo casillas` para identificar
+          la casilla numérica correcta.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
+        causante_ccaa_help: CCAA de residencia habitual del causante (ISD Modelo 650/660)
+          o CCAA donde se ubica el bien transmitido (ITPyAJD Modelo 600/620). Determina
+          la Hacienda competente (Ley 22/2009 Art. 32). País Vasco y Navarra son regímenes
+          forales; consulta la Hacienda autonómica correspondiente.
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
           periodo, revisión)
@@ -828,13 +850,49 @@ cli:
         create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado se aplicó como renombrado a %{name}.
-        create_stub_modelo_refused: 'Modelo %{modelo} está registrado pero no tiene
-          soporte completo en esta versión. La declaración informativa sobre monedas
-          virtuales situadas en el extranjero (Modelo 721) debe presentarse en la Sede
-          Electrónica de la AEAT (sede.agenciatributaria.gob.es). La obligación nace
-          cuando el valor agregado supera €50.000 a 31 de diciembre (Orden HFP/887/2023,
-          BOE-A-2023-17455). Autoridades: Ley 11/2021 Art. 13 / DA 10ª,
-          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
+        create_stub_modelo_151_refused: 'Modelo %{modelo} (régimen especial de impatriados
+          "Ley Beckham") no está soportado para crear unidades de trabajo en este
+          CLI. Base legal: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden
+          EHA/2887/2008. Presenta la declaración en sede.agenciatributaria.gob.es.'
+        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR — Impuesto sobre la
+          Renta de No Residentes) no está soportado para crear unidades de trabajo
+          en este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR, Art. 28 TRLIRNR
+          (plazo trimestral: 1T/2T/3T/4T). Tipo general: 19 % UE/EEE, 24 % resto.
+          Presenta la declaración en sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
+        create_stub_modelo_600_refused: Modelo %{modelo} (ITP-AJD — Impuesto sobre
+          Transmisiones Patrimoniales y Actos Jurídicos Documentados) no está soportado
+          para crear unidades de trabajo en este CLI. Es un impuesto cedido a las
+          CCAA (Ley 28/1990 ITPyAJD). Presenta la autoliquidación en la Hacienda CCAA
+          donde se ubica el bien transmitido.
+        create_stub_modelo_620_refused: Modelo %{modelo} (ITP-AJD — transmisiones
+          específicas de medios de transporte usados) no está soportado para crear
+          unidades de trabajo en este CLI. Es un impuesto cedido a las CCAA (Ley 28/1990
+          ITPyAJD). Presenta la autoliquidación en la Hacienda CCAA donde se ubica
+          el bien transmitido.
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD Sucesiones — declaración
+          de adquisición por herencia) no está soportado para crear unidades de trabajo
+          en este CLI. Base legal: Ley 29/1987 LISyD. Plazo: 6 meses desde el fallecimiento,
+          prorrogable 6 meses (Art. 67 RISD). La declaración se presenta en la Hacienda
+          de la CCAA donde el causante tenía su residencia habitual (Ley 22/2009 Art.
+          32). Consulta la Hacienda autonómica correspondiente.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD — declaración informativa
+          del caudal relicto, se acompaña al Modelo 650) no está soportado para crear
+          unidades de trabajo en este CLI. Base legal: Ley 29/1987 LISyD, plazo de
+          6 meses (Art. 67 RISD). La declaración se presenta en la Hacienda de la
+          CCAA donde el causante tenía su residencia habitual (Ley 22/2009 Art. 32).
+          Consulta la Hacienda autonómica correspondiente.'
+        create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
+          no está soportado para crear unidades de trabajo en este CLI. Base legal:
+          Ley 19/1991 Art. 28, Orden HAC/1023/2021. Presenta la declaración en sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
+          monedas virtuales situadas en el extranjero) no está soportado para crear
+          unidades de trabajo en este CLI. Obligación: saldos superiores a 50.000
+          € a 31 de diciembre (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD 1065/2007
+          Art. 42 quáter). Presenta la declaración en sede.agenciatributaria.gob.es.'
+        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 no
+          está soportado para esta revisión; no se ha declarado ninguna casilla de
+          deducción maternidad (Art. 81 LIRPF). Usa --casilla para suministrar los
+          valores directamente.
         discard_help: Marcar una unidad de trabajo como descartada (transición de
           estado auditable)
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
@@ -865,6 +923,18 @@ cli:
           se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por bucket
+        meses_trabajo_con_hijo_menor_3_help: 'Meses trabajados mientras el hijo menor
+          de 3 años estaba en la unidad familiar (Art. 81 LIRPF deducción maternidad).
+          Formato: HIJO_ID=MESES. Repetible por cada hijo. HIJO_ID es un identificador
+          libre (p. ej. 0, 1, ''laia''). Se calcula sum(min(MESES × 100, 1200)) e
+          inyecta en casilla 0611. Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12
+          --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requiere
+          formato HIJO_ID=MESES; se recibió: {spec}.'
+        meses_trabajo_hijo_not_integer: 'MESES en --meses-trabajo-con-hijo-menor-3
+          debe ser un entero 0–12; se recibió: {spec}.'
+        meses_trabajo_hijo_out_of_range: 'MESES en --meses-trabajo-con-hijo-menor-3
+          debe estar entre 0 y 12; se recibió {meses} en: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor con --binding KEY=VALUE
           en este comando, o ejecuta `%{discover}` para ver todos los bindings que
           el cálculo todavía necesita.'
@@ -884,6 +954,17 @@ cli:
           reconocido. --year y --period se componen por separado: pasa --year %{year}
           para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
           trimestre o MM para un mes) en --period.'
+        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no está
+          soportado para el modelo %{modelo} en esta revisión; no se ha declarado
+          ninguna casilla exenta de prestaciones INSS (Art. 7.h). Usa --casilla para
+          suministrar los valores directamente.
+        prestacion_inss_exenta_help: Importe íntegro de prestaciones INSS maternidad/paternidad
+          exentas (Art. 7.h LIRPF). Se registra en la casilla de exención correspondiente
+          a la revisión y se descuenta del total de ingresos computables. Introduce
+          el importe bruto recibido de la Seguridad Social por baja de maternidad
+          o paternidad. NO lo incluyas en --casilla 0003 (Retribuciones dinerarias).
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta debe ser un
+          importe decimal; se recibió: {value}.'
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
@@ -905,8 +986,27 @@ cli:
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
+        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
+          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
+        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
+        row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
+          el formato CLAVE=VALOR.
+        row_empty_spec: --row no puede estar vacío; se esperaba TIPO CAMPO=valor [...]
+        row_help: 'Fila de detalle tipada para modelos informativos con registros
+          repetibles. Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro''
+          (socio/partícipe M184) o ''vinculada'' (operación vinculada M232). Repetir
+          para añadir más filas. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. Ejemplo M232: --row ''vinculada nif=A12345678 tipo_operacion=01
+          importe=50000''.'
+        row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
+        row_m184_shares_not_100: 'M184 filas miembro: los porcentajes de participación
+          deben sumar exactamente 100%; se obtuvo {total} con {count} filas.'
+        row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
+          {supported}.'
+        row_validation_error: 'Validación fallida para fila --row tipo {row_type!r}:
+          {error}'
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
           de la más reciente a la más antigua. Usa un id de ejecución con `aeat app
           modelo work resume`. Solo local; nunca contacta con AEAT.
@@ -921,17 +1021,30 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: "AVISO: plazo voluntario vencido (Art. 27 LGT). Presenta\
+          \ con recargo antes de recibir requerimiento de la AEAT."
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
-          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
-        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
+        rescate_plan_pensiones_capital_help: 'Importe bruto del rescate del plan de pensiones en forma de capital (DT 12ª LIRPF). Úsalo junto con --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule automáticamente la reducción del 40% y la inyecte en casilla 0011.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'Total de aportaciones al plan de pensiones (denominador del prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-pre-2007.'
+        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reducción del rendimiento del trabajo por DT 12ª LIRPF. Usa --casilla para suministrar los valores directamente.'
+        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales deben suministrarse conjuntamente.'
+        rescate_plan_pensiones_not_decimal: 'Los valores --rescate-plan-pensiones-* deben ser importes decimales.'
+        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada por el umbral del 50% del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
+        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: '--sal-beneficio-neto no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.'
+        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social deben suministrarse conjuntamente.'
+        sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales.'
   common:
     errors:
-      invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
+      invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
+        ISO 8601 (AAAA-MM-DD).'
       period_empty: El periodo fiscal no puede estar vacío
-      period_unrecognised: Periodo no reconocido
+      period_unrecognised: 'Periodo no reconocido: %{raw}.'
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -1191,6 +1304,10 @@ cli:
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
+      logout_session_warning: El cierre de sesión limpió el puntero del perfil
+        activo. Los verbos posteriores en este terminal serán rechazados con
+        NoActiveBucketSessionError hasta que ejecutes `aeat config profile switch
+        NOMBRE` (o abras un nuevo terminal y vuelvas a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -1277,7 +1394,7 @@ cli:
       help: Reiniciar ámbitos de configuración introducidos por el operador
       invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
       requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
-      scope_help: Ámbito a reiniciar (all, profile, auth)
+      scope_help: 'Ámbito a reiniciar. profile: borra todos los buckets de perfil (manifiestos, DEKs, declaraciones, revisiones de libro mayor y facturas). auth: limpia la sesión de autenticación AEAT/SEDE persistida. data: pone en cuarentena las filas de objetos seguros ilegibles en todos los espacios de nombres. all: aplica profile, auth y data juntos.'
       yes_help: Confirmar explícitamente la operación de reinicio
     set:
       help: Asignar un valor a una clave de configuración
@@ -1347,18 +1464,19 @@ cli:
       auth_session_ready: Sesión de autenticación lista para %{provider}
       auth_state_unreadable: No se puede comprobar la preparación de autenticación
         hasta que el estado seguro del flujo sea legible.
-      profile_keys_set: cli.diagnostics.summary.profile_keys_set
-      profile_missing_keys: cli.diagnostics.summary.profile_missing_keys
+      profile_keys_set: '%{present}/%{total} claves de perfil configuradas.'
+      profile_missing_keys: '%{count} claves de perfil ausentes.'
       profile_none: No hay perfil configurado
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'No se puede leer el perfil: %{status}'
-      registry_counts: cli.diagnostics.summary.registry_counts
+      registry_counts: '%{modelos} modelos y %{casillas} casillas en el registro.'
       registry_integrity_failed: cli.diagnostics.summary.registry_integrity_failed
       registry_integrity_ok: cli.diagnostics.summary.registry_integrity_ok
       registry_integrity_skipped: cli.diagnostics.summary.registry_integrity_skipped
       registry_unavailable: cli.diagnostics.summary.registry_unavailable
       secure_objects_empty: cli.diagnostics.summary.secure_objects_empty
-      secure_objects_readable: cli.diagnostics.summary.secure_objects_readable
+      secure_objects_readable: '%{readable} namespaces de objetos seguros legibles:
+        %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
       state_backend_readable: cli.diagnostics.summary.state_backend_readable
@@ -1367,8 +1485,9 @@ cli:
       venv_stale: cli.diagnostics.summary.venv_stale
     version:
       no_revisions: cli.diagnostics.version.no_revisions
-      registry_summary: cli.diagnostics.version.registry_summary
-      registry_unavailable: cli.diagnostics.version.registry_unavailable
+      registry_summary: '%{package} %{version}: %{modelos} modelos, %{casillas} casillas,
+        %{formulas} fórmulas, %{revisions} revisiones.'
+      registry_unavailable: '%{package} %{version}: registro no disponible (%{error}).'
   ledger:
     add:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -1475,7 +1594,8 @@ cli:
       command_input_invalid_fallback: uno o más campos no superaron la validación
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro,
         o usa --dry-run primero
-      filter_parse_error: Fallo al analizar el filtro del libro
+      filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
+        %{reason}.'
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
         %{candidates}. Amplía el prefijo para desambiguar.'
       id_prefix_empty: El prefijo de id de transacción está vacío; indica al menos
@@ -1673,6 +1793,11 @@ cli:
   locales:
     app_help: Auditar y generar catálogos de traducción
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Código de locale a actualizar.'
+    remove_key_help: 'Clave de locale con puntos que se eliminará.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -1681,7 +1806,8 @@ cli:
   operator_surface:
     errors:
       accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
-      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
+      contract_not_accepted: 'La superficie %{surface} no aceptó el contrato del operador:
+        %{reason}.'
       source_kind_options: cli.operator_surface.errors.source_kind_options
       unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
     help:
@@ -1783,9 +1909,9 @@ cli:
         setup_create_profile: cli.operator_surface.help.root.setup_create_profile
         setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
     landing:
-      active_profile_message: cli.operator_surface.landing.active_profile_message
+      active_profile_message: 'Perfil activo: %{profile}.'
       no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
-      text_template: cli.operator_surface.landing.text_template
+      text_template: '%{message} Comando sugerido: %{command}'
     retired:
       archive_reason: cli.operator_surface.retired.archive_reason
       data_reason: cli.operator_surface.retired.data_reason
@@ -2031,7 +2157,10 @@ cli:
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`.'
+        --help`. Los modificadores globales (`--format json`, `--language es`,
+        `--profile NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del
+        subcomando, p. ej. `aeat --format json app ledger list` (no `aeat app
+        ledger list --format json`).'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
         csv` - añadir tus movimientos bancarios.'
@@ -2273,10 +2402,12 @@ errors:
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
+    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
       asignado.
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
+    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
@@ -2289,6 +2420,8 @@ errors:
       de evaluar su fórmula.
     computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
       calculadas: {casilla_ids}.'
+    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
+    date_binding_value_missing: errors.calc.date_binding_value_missing
     dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
       del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
     dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
@@ -2979,8 +3112,22 @@ filing:
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 %% (Art. 59 LIRPF)
+      por custodia compartida en %{count} descendiente(s). Cada progenitor declara
+      la mitad del mínimo correspondiente (casillas 0513/0514 y, si procede, 0515/0516).
+    deduccion_maternidad_applied: 'Deducción maternidad Art. 81 LIRPF calculada: %{amount}
+      € (casilla 0611). Comprobada la fórmula sum(min(meses × 100, 1.200)) por descendiente
+      menor de 3 años con meses de trabajo declarados.'
+    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81 bis LIRPF
+      calculado: %{amount} € (casilla 0613). Límite mínimo de gastos reales, hijos
+      menores de 3 años × 1.000 € y cotizaciones SS satisfechas.'
   errors:
-    foral_regime: '{tax_region} es un régimen foral fuera del alcance de este perfil.'
+    foral_regime: Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente
+      bajo el Concierto Económico (Ley 12/2002), no ante la AEAT. Este CLI no modela
+      declaraciones forales. Consulte sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
+      (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es (Navarra) según su
+      territorio.
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
   keys:
     description: Profile configuration keys and their descriptions
@@ -3135,7 +3282,7 @@ wizard:
     select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\
       \ esta ejecución no la tiene.\nTodavía no se ha guardado nada.\n\nPuedes terminar\
-      \ de crear este perfil de dos maneras:\n\n1. Ejecuta el comando otra vez desde\
+      \ de crear este perfil de dos maneras:\n \n1. Ejecuta el comando otra vez desde\
       \ una terminal interactiva para usar el asistente guiado:\n     aeat config\
       \ profile create NAME\n\n2. O créalo en un solo paso indicando los datos obligatorios\
       \ como flags:\n     aeat config profile create NAME --quiet --tax-id NIF"
@@ -3199,6 +3346,12 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      country-of-fiscal-residence:
+        help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE, FR).
+          Obligatorio cuando fiscal-residency es non_resident_irnr.
+      descendiente:
+        help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible).
+          Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:
@@ -3211,6 +3364,9 @@ wizard:
         help: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
         help: Hijos menores en unidad familiar
+      fiscal-residency:
+        help: 'Categoría de residencia fiscal: resident_irpf (residente habitual en
+          España) o non_resident_irnr (no residente, tributación por IRNR RDLeg 5/2004).'
       has-employees:
         help: Tiene empleados y paga salarios con retención
       incn-prior-12-months:
@@ -3222,6 +3378,14 @@ wizard:
       irpf-income-categories:
         help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
           categoría
+      irpf-special-regime:
+        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes. "impatriado"
+          para trabajadores desplazados a España acogidos a la Ley Beckham (Art. 93
+          LIRPF), aplicable los primeros 6 años tras el traslado.
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
+          Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
+          expira al finalizar el 6.º año natural.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
@@ -3255,6 +3419,32 @@ wizard:
         help: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         help: Al menos 70% de los ingresos profesionales con retención previa
+      representante-fiscal-nif:
+        help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
+          fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nombre y apellidos del representante fiscal en España.
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimonio vigente — tributación conjunta disponible (Art.
+              82.1.1°)
+            label: Casado/a
+          pareja-hecho-no-registrada:
+            description: Convivencia sin inscripción registral — tributación conjunta
+              NO disponible
+            label: Pareja de hecho no registrada
+          pareja-hecho-registrada:
+            description: Inscrita en el registro autonómico — tributación conjunta
+              disponible (Art. 82.1.2°)
+            label: Pareja de hecho registrada
+          separado-divorciado:
+            label: Separado/a o divorciado/a
+          soltero:
+            label: Soltero/a
+        help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
+          optarse por la declaración conjunta y qué unidad familiar aplica.'
+        prompt: Situación familiar (Art. 82 LIRPF)
       spouse-birth-date:
         help: Fecha de nacimiento del cónyuge
       spouse-disability-grade:
@@ -3294,6 +3484,10 @@ wizard:
       taxpayer-marital-status:
         help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3
           = viudo/a, 4 = separado/a o divorciado/a.'
+      taxpayer-marriage-date:
+        help: Fecha de inicio del matrimonio actual (AAAA-MM-DD). Solo cuando estado
+          civil = 2 (casado/a). Calcula casillas 0245/0246/0247 (matrimonio sobrevenido,
+          art. 82 LIRPF).
       taxpayer-sex:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
@@ -3349,6 +3543,19 @@ wizard:
         help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
           Modelo 130 o 131
         prompt: Régimen de estimación IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Régimen general
+          impatriado:
+            label: Impatriado — Ley Beckham (Art. 93 LIRPF)
+        help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
+          6 años tras el traslado. La mayoría tributa en régimen general.
+        prompt: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (RIRPF
+          Art. 116). El régimen expira al finalizar el 6.º año natural.
+        prompt: Fecha de inicio del régimen especial (AAAA-MM-DD)
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -3446,6 +3653,19 @@ wizard:
             label: Madrid
           murcia:
             label: Murcia
+      country-of-fiscal-residence:
+        prompt: País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: No residente — IRNR (RDLeg 5/2004)
+          resident_irpf:
+            label: Residente habitual en España — IRPF
+        prompt: Categoría de residencia fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representante fiscal en España (obligatorio fuera UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nombre del representante fiscal en España
       tax-residence-ccaa:
         prompt: Comunidad autónoma de residencia fiscal
       title: Residencia fiscal
@@ -3470,6 +3690,27 @@ wizard:
         prompt: NIF/NIE del cónyuge
       title: Cónyuge
     taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimonio vigente — tributación conjunta disponible (Art.
+              82.1.1°)
+            label: Casado/a
+          pareja-hecho-no-registrada:
+            description: Convivencia sin inscripción registral — tributación conjunta
+              NO disponible
+            label: Pareja de hecho no registrada
+          pareja-hecho-registrada:
+            description: Inscrita en el registro autonómico — tributación conjunta
+              disponible (Art. 82.1.2°)
+            label: Pareja de hecho registrada
+          separado-divorciado:
+            label: Separado/a o divorciado/a
+          soltero:
+            label: Soltero/a
+        help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
+          optarse por la declaración conjunta y qué unidad familiar aplica.'
+        prompt: Situación familiar (Art. 82 LIRPF)
       taxpayer-birth-date:
         prompt: Fecha de nacimiento del primer declarante
       taxpayer-death-date:
@@ -3487,6 +3728,8 @@ wizard:
           viudo:
             label: 3 - viudo
         prompt: Estado civil del primer declarante
+      taxpayer-marriage-date:
+        prompt: Fecha de inicio del matrimonio (AAAA-MM-DD)
       taxpayer-sex:
         prompt: Sexo del primer declarante
       title: Primer declarante
@@ -3554,6 +3797,18 @@ wizard:
         la UE o el EEE pero falta el país. Añade el país de residencia.'
       eu_eea_country_ok: 'Residencia del cónyuge: el país de residencia en la UE o
         el EEE es coherente.'
+      joint_taxation_situacion_familiar_ok: 'Situación familiar: la declaración conjunta
+        es compatible con la situación familiar declarada.'
+      joint_taxation_situacion_familiar_refused: 'Situación familiar: la declaración
+        conjunta no está permitida para pareja de hecho no registrada (Art. 82.1.2°
+        LIRPF). Cambia la situación familiar o elige tributación individual.'
+      monoparental_requires_hijos_ok: 'Unidad familiar monoparental: requisitos de
+        hijos a cargo verificados.'
+      monoparental_requires_hijos_warning: 'Unidad familiar monoparental: la tributación
+        conjunta como monoparental (Art. 82.1.2° LIRPF) requiere hijos menores a cargo
+        en la unidad familiar. Sin hijos a cargo, la declaración conjunta no es posible
+        para esta situación familiar. Activa «hijos menores a cargo» o cambia a tributación
+        individual.'
       obligations_consistency_ok: 'Obligaciones de retención: las respuestas sobre
         retenciones son coherentes.'
       obligations_inconsistent: 'Obligaciones de retención: has declarado retenciones

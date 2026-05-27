@@ -24,7 +24,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage import (
+    LIVE_CENSUS_SNAPSHOT_NAMESPACE as CENSUS_SNAPSHOT_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    Envelope,
+)
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
@@ -50,8 +55,9 @@ class CensoSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-CENSUS_SNAPSHOT_NAMESPACE = "aeat.application.live.census_snapshot"
-_CENSUS_SNAPSHOT_VERSION = 1
+CENSUS_SNAPSHOT_NAMESPACE = CENSUS_SNAPSHOT_STORAGE_NAMESPACE.namespace
+_CENSUS_SNAPSHOT_VERSION = CENSUS_SNAPSHOT_STORAGE_NAMESPACE.schema_version
+_CENSUS_SNAPSHOT_SENSITIVITY = CENSUS_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 
 # censo_facts values are always strings: enum values, ISO date strings,
 # NIF strings, and decimal-as-string for the vivienda_office m2 inputs.
@@ -166,11 +172,11 @@ def _snapshot_from_record(
     requested_snapshot_id: str | None = None,
 ) -> CensoSnapshot:
     envelope = Envelope[CensoSnapshot].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not SensitivityClass.IDENTITY:
+    if envelope.classification is not _CENSUS_SNAPSHOT_SENSITIVITY:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
         raise ClassificationError(
             f"census snapshot {snapshot_label!r} has classification {envelope.classification}; "
-            f"consumer expected {SensitivityClass.IDENTITY}",
+            f"consumer expected {_CENSUS_SNAPSHOT_SENSITIVITY}",
         )
     if envelope.schema_version > _CENSUS_SNAPSHOT_VERSION:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
@@ -210,7 +216,7 @@ class CensoSnapshotRepository:
         record = self._repository.load(
             CENSUS_SNAPSHOT_NAMESPACE,
             census_snapshot_object_key(self._bucket_id, snapshot_id),
-            expected_class=SensitivityClass.IDENTITY,
+            expected_class=_CENSUS_SNAPSHOT_SENSITIVITY,
             max_supported_version=_CENSUS_SNAPSHOT_VERSION,
         )
         if record is None:
@@ -236,7 +242,7 @@ class CensoSnapshotRepository:
             snapshot
             for record in self._repository.list_records(
                 CENSUS_SNAPSHOT_NAMESPACE,
-                expected_class=SensitivityClass.IDENTITY,
+                expected_class=_CENSUS_SNAPSHOT_SENSITIVITY,
                 max_supported_version=_CENSUS_SNAPSHOT_VERSION,
             )
             for snapshot in (_snapshot_from_record(record),)
@@ -275,13 +281,13 @@ class CensoSnapshotRepository:
         envelope = Envelope[CensoSnapshot](
             schema_version=_CENSUS_SNAPSHOT_VERSION,
             written_at=datetime.now(UTC),
-            classification=SensitivityClass.IDENTITY,
+            classification=_CENSUS_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )
         self._repository.save(
             namespace=CENSUS_SNAPSHOT_NAMESPACE,
             object_key=census_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=SensitivityClass.IDENTITY,
+            classification=_CENSUS_SNAPSHOT_SENSITIVITY,
             schema_version=_CENSUS_SNAPSHOT_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),

@@ -1,0 +1,11 @@
+# AEAT M131 Casilla 11 cap rule: when C10 is strictly positive, C11
+# (resultados negativos de trimestres anteriores) MUST NOT exceed C10
+# (cuota positiva del trimestre). Source: AEAT M131 instructions
+# "en ningún caso podrá figurar en la casilla 11 un importe superior a
+# la cantidad positiva consignada en la casilla 10". P08.S47 enforces
+# this via the cap_le_when_positive predicate DSL operator.
+[[revisions."2019-2023".verification_predicates]]
+predicate_id = "modelo-131-2019-2023-c11-cap-by-c10"
+expression = 'cap_le_when_positive(["11", "10"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["rd-439-2007:art-110"]

@@ -63,6 +63,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                     "captured_at": newer.isoformat(),
                     "auth_attempt": {
                         "auth_mode": "non_qr",
+                        "auth_route": "clave_movil_non_qr_request",
                         "identity_kind": "NIE",
                         "headless": True,
                         "prefer_non_qr": True,
@@ -99,6 +100,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].html_captured is True
         assert listed.rows[0].screenshot_captured is False
         assert listed.rows[0].auth_mode == "non_qr"
+        assert listed.rows[0].auth_route == "clave_movil_non_qr_request"
         assert listed.rows[0].identity_kind == "NIE"
         assert listed.rows[0].headless is True
         assert listed.rows[0].prefer_non_qr is True
@@ -125,6 +127,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.diagnostic_id == "diag-new"
         assert detail.url == listed.rows[0].url
         assert detail.auth_mode == "non_qr"
+        assert detail.auth_route == "clave_movil_non_qr_request"
         assert detail.identity_kind == "NIE"
         assert detail.profile_tax_id_fingerprint == "sha256:profiletax"
         assert detail.clave_identity_fingerprint == "sha256:clavetax"

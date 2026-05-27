@@ -1,7 +1,7 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "47"
 number = "47"
-label = "Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS (DF 4a LIS)"
+label = "Mod. 40.3 LIS B1 — Dotaciones del art. 11.12 LIS"
 section = ["liquidacion", "modalidad_40_3_lis", "b1_caso_general"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_b1_dotaciones_art_11_12"

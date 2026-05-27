@@ -7,7 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from ...adapters.persistence.storage import StorageValidationError
+from ...adapters.persistence.storage import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    StorageValidationError,
+)
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import override_settings
 from ...domain.user_profile import (
@@ -159,6 +167,6 @@ def test_snapshot_load_missing_raises_snapshot_not_found(secure_objects: SecureO
         repo.load("missing")
 
 
-def test_lifecycle_namespace_is_stable() -> None:
-    assert USER_PROFILE_VALUE_NAMESPACE == "aeat.application.user_profile.value"
-    assert USER_PROFILE_SNAPSHOT_NAMESPACE == "aeat.application.user_profile.snapshot"
+def test_lifecycle_namespace_uses_storage_registry() -> None:
+    assert USER_PROFILE_VALUE_STORAGE_NAMESPACE.namespace == USER_PROFILE_VALUE_NAMESPACE
+    assert USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace == USER_PROFILE_SNAPSHOT_NAMESPACE

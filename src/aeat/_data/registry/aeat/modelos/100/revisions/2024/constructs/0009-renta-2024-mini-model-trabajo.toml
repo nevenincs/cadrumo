@@ -2,6 +2,7 @@
 id = "renta-2024-mini-model-trabajo"
 title = "Modelo 100 2024 rendimientos del trabajo aggregators"
 legal_refs = [
+    "ley-35-2006:art-7-h",
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",
     "ley-35-2006:art-19",
@@ -10,6 +11,7 @@ legal_refs = [
 ]
 source_refs = [
     "lirpf-cuota-chain-authority",
+    "aeat-dr-100-2024-dictionary",
 ]
 formulas = [
     "renta-2024-trabajo-especie-importe-integro",

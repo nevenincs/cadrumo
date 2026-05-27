@@ -17,7 +17,6 @@ import pytest
 
 from .....core.config import Settings
 from . import (
-    CertificateBackend,
     CertificateBundle,
     HandshakeResult,
     load_certificate,

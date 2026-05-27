@@ -17,7 +17,7 @@ are implementation details.
 Examples:
     >>> from aeat.adapters.inbound.sanitizer import sanitize_pdf, TokenMap, NifReplacement  # doctest: +SKIP
     >>> mapping = TokenMap(  # doctest: +SKIP
-    ...     nif=(NifReplacement(real="Y4113523X", synthetic="Y0000001Z", surface_label="taxpayer NIE"),),
+    ...     nif=(NifReplacement(real="Y1234567X", synthetic="Y0000001S", surface_label="taxpayer NIE"),),
     ... )
     >>> result = sanitize_pdf(source_bytes, mapping)  # doctest: +SKIP
 """

@@ -10,6 +10,7 @@ from aeat.core.resources import bundled_path
 from . import build_snapshot, discover_modelo_sources, load_registry_tree
 from ._coverage import build_model_law_coverage_ledger
 from ._errors import RegistrySnapshotError
+from ._loader import load_modelo_directory
 from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._sources import verify_source_file
 from ._temporal import select_revision
@@ -102,3 +103,68 @@ def test_modelo_036_rejects_unknown_census_event_period() -> None:
 def test_no_committed_modelo_037_toml_can_revive_active_support() -> None:
     sources = discover_modelo_sources(bundled_path("registry", "aeat", "modelos"))
     assert "037" not in {source.modelo_id for source in sources}
+
+
+def _assert_periods_lowercase(label: str, periods: tuple[str, ...]) -> None:
+    """Raise AssertionError if any period value contains an uppercase character.
+
+    AEAT publishes event-kind values uppercase in Anexo 3 HTML tables (ALTA,
+    MODIFICACION, BAJA). CENSUS_MODELO_EVENT_KINDS canonicalises them lowercase.
+    A registry author mirroring AEAT display text would silently re-introduce
+    uppercase, which passes the _temporal.py case-insensitive mask but breaks
+    _active_036_ownership_from_registry whose equality guard is case-sensitive.
+    History: commit 33783e00c (drift introduced), 472de9c02 (reverted, 21 min later).
+    """
+    non_lowercase = [p for p in periods if p != p.lower()]
+    assert not non_lowercase, (
+        f"{label}: period values must be lowercase canonical "
+        f"(CENSUS_MODELO_EVENT_KINDS = {('alta', 'modificacion', 'baja')!r}); "
+        f"found non-lowercase: {non_lowercase!r}. "
+        "Registry authors: do not mirror AEAT Anexo 3 HTML display casing."
+    )
+
+
+def test_m036_revision_periods_are_lowercase_canonical() -> None:
+    """Guard against re-introduction of uppercase ALTA/MODIFICACION/BAJA in M036 TOML.
+
+    AEAT publishes period values uppercase in Anexo 3 HTML tables, but the domain
+    layer CENSUS_MODELO_EVENT_KINDS canonicalises them lowercase. A registry author
+    mirroring AEAT display text would re-introduce uppercase (history: commit
+    33783e00c, fixed 21 min later in 472de9c02). _active_036_ownership_from_registry
+    has a case-sensitive equality guard that the _temporal.py case-insensitive mask
+    does not protect, so this lint must fire at snapshot build.
+
+    Loads M036 in isolation via load_modelo_directory so the lint is not affected
+    by unrelated registry failures in other modelo directories.
+    """
+    modelo = load_modelo_directory(bundled_path("registry", "aeat", "modelos", "036"))
+
+    for revision_id, revision in modelo.revisions.items():
+        label_prefix = f"M036 revision {revision_id!r}"
+
+        _assert_periods_lowercase(
+            f"{label_prefix} period_selector.periods",
+            revision.period_selector.periods,
+        )
+
+        for schedule in revision.filing_schedules:
+            _assert_periods_lowercase(
+                f"{label_prefix} filing_schedule {schedule.id!r}.periods",
+                schedule.periods,
+            )
+
+
+def test_m036_period_case_lint_detects_uppercase_drift() -> None:
+    """Prove the lint fires on uppercase ALTA/MODIFICACION/BAJA.
+
+    This is the anti-evasion proof: if _assert_periods_lowercase passes
+    silently for uppercase inputs, every test in this module is tautological.
+    Mixed-case ("Alta") is also covered because the check uses p != p.lower().
+    """
+    import pytest as _pytest
+
+    with _pytest.raises(AssertionError, match="non-lowercase"):
+        _assert_periods_lowercase("proof", ("ALTA", "MODIFICACION", "BAJA"))
+
+    with _pytest.raises(AssertionError, match="non-lowercase"):
+        _assert_periods_lowercase("proof-mixed", ("Alta", "modificacion", "Baja"))

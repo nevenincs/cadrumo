@@ -1434,8 +1434,15 @@ def config_profile_logout(ctx: typer.Context) -> None:
     before = logout_active_profile()
     _emit(
         ctx,
-        {"logged_out_profile": before or "", "active_profile": None},
-        (f"logged_out_profile\t{before or '<none>'}",),
+        {
+            "logged_out_profile": before or "",
+            "active_profile": None,
+            "session_warning": _tr("cli.config.profile.logout_session_warning"),
+        },
+        (
+            f"logged_out_profile\t{before or '<none>'}",
+            _tr("cli.config.profile.logout_session_warning"),
+        ),
     )
 
 

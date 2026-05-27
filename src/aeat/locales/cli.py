@@ -9,7 +9,7 @@ import typer
 
 from aeat.core.i18n import tr
 
-from .manager import LocaleManager
+from .manager import LocaleError, LocaleManager
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 
@@ -60,6 +60,50 @@ def scaffold(
         return
     _default_manager().scaffold()
     typer.echo("locale scaffold updated")
+
+
+@app.command("set")
+def set_value(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_key_help", default="Dotted locale key to update.")),
+    ],
+    value: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.set_value_help", default="Replacement locale value.")),
+    ],
+) -> None:
+    """Set one locale string leaf."""
+
+    try:
+        path = _default_manager().set_locale_value(locale, key, value)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"updated {path.name}:{key}")
+
+
+@app.command("remove")
+def remove_value(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.remove_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.remove_key_help", default="Dotted locale key to remove.")),
+    ],
+) -> None:
+    """Remove one locale string leaf."""
+
+    try:
+        path = _default_manager().remove_locale_value(locale, key)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"removed {path.name}:{key}")
 
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:

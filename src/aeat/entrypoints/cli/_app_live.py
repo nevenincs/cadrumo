@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 import typer
 
@@ -20,6 +20,9 @@ from ...application.live import (
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ._common import _emit
+
+if TYPE_CHECKING:
+    from ...application.auth import LiveAuthPreflightReport
 
 _VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -69,6 +72,42 @@ def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
 
 
+def _emit_live_auth_preflight(provider: str | None = None) -> None:
+    from ...application.auth import build_live_auth_preflight_report
+
+    report = build_live_auth_preflight_report(provider)
+    for line in _live_auth_preflight_lines(report):
+        typer.echo(line, err=True)
+
+
+def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ...]:
+    return (
+        _metric_line("auth_preflight", "redacted"),
+        _metric_line("auth_provider", report.provider),
+        _metric_line("auth_configured", report.configured),
+        _metric_line("auth_available", report.available),
+        _metric_line("auth_active_profile", report.active_profile),
+        _metric_line("auth_active_profile_status", report.active_profile_status),
+        _metric_line("auth_active_profile_registered", report.active_profile_registered),
+        _metric_line("auth_active_profile_record_present", report.active_profile_record_present),
+        _metric_line("auth_profile_tax_id", "present" if report.profile_tax_id_present else "missing"),
+        _metric_line("auth_provider_identity", "present" if report.provider_identity_present else "missing"),
+        _metric_line("auth_identity_alignment", report.identity_alignment),
+        _metric_line("auth_identity_kind", report.identity_kind),
+        _metric_line("auth_mode", report.auth_mode),
+        _metric_line("auth_prefer_non_qr", report.prefer_non_qr),
+        _metric_line("auth_timeout_ms", report.timeout_ms),
+        _metric_line("auth_dni_fecha", "present" if report.dni_fecha_configured else "missing"),
+        _metric_line("auth_nie_soporte", "present" if report.nie_soporte_configured else "missing"),
+        _metric_line("auth_certificate_path", "present" if report.certificate_path_configured else "missing"),
+        _metric_line("auth_certificate_file", "present" if report.certificate_file_present else "missing"),
+        _metric_line("auth_certificate_backend", report.certificate_backend),
+        _metric_line("auth_persisted_session", "present" if report.persisted_session_present else "missing"),
+        _metric_line("auth_persisted_session_expired", report.persisted_session_expired),
+        _metric_line("auth_probe_result", report.probe_result),
+    )
+
+
 _IVA_WALLET_LIVE_SAFETY_LINES = (
     _metric_line("safety_policy", "read_only_fail_closed"),
     _metric_line("representation_gate_policy", "own_name_only_no_represented_taxpayer_choice"),
@@ -116,6 +155,7 @@ def iva_wallet_pull_cmd(
 
     from ...application.live import capture_iva_compensation_wallet
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_wallet(
             target_year=year,
@@ -281,6 +321,7 @@ def iva_wallet_capture_history_cmd(
 
     from ...application.live import capture_iva_compensation_history
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_iva_compensation_history(
             year_from=year_from,
@@ -330,6 +371,7 @@ def filed_list_cmd(
     modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
     total_count = 0
+    _emit_live_auth_preflight()
     for code in modelos:
         report = asyncio.run(
             list_filed_data(
@@ -391,6 +433,7 @@ def filed_capture_cmd(
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_filed_data(
             modelo=modelo,
@@ -454,6 +497,7 @@ def filed_capture_sources_cmd(
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_source_filed_data(
             modelo=modelo,
@@ -521,6 +565,7 @@ def notifications_capture(ctx: typer.Context) -> None:
     from ...application.live import capture_notifications
 
     bucket_id = _active_bucket_id()
+    _emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     payload = {
         "bucket_id": bucket_id,
@@ -751,6 +796,7 @@ def expedientes_capture(
     from ...application.live import capture_expedientes
 
     bucket_id = _active_bucket_id()
+    _emit_live_auth_preflight()
     persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year))
     payload = {
         "bucket_id": bucket_id,

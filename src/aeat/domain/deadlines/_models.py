@@ -17,6 +17,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ..profile._renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from ._errors import DeadlineValidationError
 
 
@@ -78,6 +79,12 @@ class LegalEntityForm(StrEnum):
     Attributes:
         SL: Sociedad de responsabilidad limitada (S.L. / S.R.L.).
         SA: Sociedad anónima (S.A.).
+        SAL: Sociedad Anónima Laboral (Ley 44/2015 Art. 1). Majority of
+            share capital held by worker-shareholders. Eligible for
+            reserva especial dotación under Ley 44/2015 Art. 14.
+        SLL: Sociedad Limitada Laboral (Ley 44/2015 Art. 1). Same
+            régimen as SAL but limited-liability form. Eligible for
+            the same reserva especial under Ley 44/2015 Art. 14.
         COOPERATIVA: Sociedad cooperativa — IS with a reduced rate.
         SOCIEDAD_CIVIL_MERCANTIL: Sociedad civil con personalidad
             jurídica y objeto mercantil — an IS contribuyente since 2016.
@@ -88,6 +95,8 @@ class LegalEntityForm(StrEnum):
 
     SL = "sl"
     SA = "sa"
+    SAL = "sal"
+    SLL = "sll"
     COOPERATIVA = "cooperativa"
     SOCIEDAD_CIVIL_MERCANTIL = "sociedad_civil_mercantil"
     SIN_FINES_LUCRATIVOS = "sin_fines_lucrativos"
@@ -147,6 +156,32 @@ class IrpfEstimationRegime(StrEnum):
     DIRECTA_NORMAL = "directa_normal"
     DIRECTA_SIMPLIFICADA = "directa_simplificada"
     OBJETIVA = "objetiva"
+
+
+class IrpfSpecialRegime(StrEnum):
+    """IRPF special-regime category for natural persons.
+
+    Most taxpayers file under the general IRPF regime. The ``IMPATRIADO``
+    value represents the régimen especial aplicable a los trabajadores
+    desplazados a territorio español (LIRPF Art. 93, "Ley Beckham"),
+    introduced by Ley 62/2003 and extended by Ley 26/2014. Under this
+    regime the taxpayer files Modelo 151 (not Modelo 100) and is taxed
+    at the flat IRNR rate on Spanish-source income.
+
+    Grounded in LIRPF Ley 35/2006 Art. 93 (BOE-A-2006-20764) and
+    RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820).
+
+    Attributes:
+        GENERAL: Standard IRPF — files Modelo 100, subject to the
+            progressive tarifa general / del ahorro.
+        IMPATRIADO: Régimen especial impatriados (Art. 93 LIRPF) —
+            files Modelo 151, taxed at the flat IRNR rate. The regime
+            has a six-year window triggered by the opt-in election date
+            (``special_regime_start_date`` on the profile).
+    """
+
+    GENERAL = "general"
+    IMPATRIADO = "impatriado"
 
 
 class ObligationStatus(StrEnum):
@@ -263,6 +298,26 @@ class TaxpayerProfile(BaseModel):
         enrollment: AEAT enrollment facts that can change filing cadence.
         notes: Free-form notes for the user. Never consumed by the
             engine.
+        irpf_special_regime: The IRPF special regime in effect for
+            this taxpayer. ``None`` when undeclared (treated as
+            ``GENERAL`` by engine consumers). ``IMPATRIADO`` activates
+            the Ley Beckham path (LIRPF Art. 93): the CLI refuses
+            Modelo 100 in favour of Modelo 151 and the obligation
+            engine suppresses Modelo 100 deadlines.
+        special_regime_start_date: The date of the opt-in election for
+            the special regime. Required to compute the six-year window
+            for ``IMPATRIADO`` (RIRPF Art. 116). ``None`` when
+            undeclared or when ``irpf_special_regime`` is ``GENERAL``.
+        fiscal_residency: Fiscal residency category. ``None`` treated as
+            ``RESIDENT_IRPF`` by engine consumers. ``NON_RESIDENT_IRNR``
+            routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004 Art. 2):
+            the engine suppresses IRPF-resident deadlines and will
+            activate IRNR obligations (Modelos 210/216/247) when
+            their registry entries are wired.
+        country_of_fiscal_residence: ISO 3166-1 alpha-2 code of the
+            country of fiscal residence. Required when
+            ``fiscal_residency`` is ``NON_RESIDENT_IRNR``; ``None`` is
+            valid only for IRPF residents.
     """
 
     model_config = _STRICT_FROZEN
@@ -290,12 +345,45 @@ class TaxpayerProfile(BaseModel):
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
     new_entity_first_two_profit_periods: bool | None = None
+    tributacion_estado_porcentaje: Decimal | None = None
     establecimiento_type: str = ""
     elected_withholding_pct: str = ""
     vivienda_office_total_m2: Decimal | None = None
     vivienda_office_office_m2: Decimal | None = None
     iae_epigraph: str = ""
     notes: str = ""
+    irpf_special_regime: IrpfSpecialRegime | None = None
+    special_regime_start_date: date | None = None
+    fiscal_residency: FiscalResidency | None = None
+    country_of_fiscal_residence: str | None = None
+    representante_fiscal_nif: str | None = None
+    """NIF/NIE of the fiscal representative in Spain.
+
+    Required when ``fiscal_residency`` is ``NON_RESIDENT_IRNR`` and the
+    country is outside the EU/EEA (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
+    """
+    representante_fiscal_nombre: str | None = None
+    """Full name of the fiscal representative in Spain.
+
+    Required together with ``representante_fiscal_nif`` for the same cases.
+    """
+    sal_socios_trabajadores_count: int | None = None
+    sal_reserva_especial_dotada: Decimal | None = None
+    sal_capital_social: Decimal | None = None
+    irpf_pagadores_count: int | None = None
+    """Number of pagadores (income payers) the taxpayer received income from.
+
+    When ``>= 2`` and ``irpf_pagadores_secondary_income > 1500``, filing
+    Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total
+    income threshold. ``None`` when not declared (treated as "not known").
+    """
+    irpf_pagadores_secondary_income: Decimal | None = None
+    """Sum of income received from the 2nd and subsequent pagadores.
+
+    Art. 96.3 LIRPF: declaración obligatoria when this value exceeds
+    €1,500. Only meaningful when ``irpf_pagadores_count >= 2``; ``None``
+    when not declared.
+    """
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod
@@ -345,6 +433,76 @@ class TaxpayerProfile(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _check_impatriado_requires_start_date(self) -> Self:
+        """Reject an IMPATRIADO regime declared without a start date.
+
+        The six-year Beckham window (RIRPF Art. 116) cannot be computed
+        without the opt-in election date. Any caller that constructs an
+        IMPATRIADO profile without a ``special_regime_start_date`` has an
+        incomplete model — reject it at the boundary so downstream
+        consumers never see a nil start date for an active impatriado.
+        """
+
+        if (
+            self.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
+            and self.special_regime_start_date is None
+        ):
+            raise DeadlineValidationError(
+                "special_regime_start_date is required when "
+                "irpf_special_regime is IMPATRIADO (Art. 93 LIRPF / RIRPF Art. 116)"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_non_resident_requires_country(self) -> Self:
+        """Reject a NON_RESIDENT_IRNR profile declared without a country code.
+
+        The IRNR regime (TRLIRNR RDLeg 5/2004 Art. 2) is defined by the
+        absence of habitual residence in Spain; the country of actual fiscal
+        residence is therefore mandatory for any meaningful downstream
+        computation (EU/EEA status, convenio lookup, Modelo 210 routing).
+        """
+
+        if (
+            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and self.country_of_fiscal_residence is None
+        ):
+            raise DeadlineValidationError(
+                "country_of_fiscal_residence is required when "
+                "fiscal_residency is NON_RESIDENT_IRNR (TRLIRNR RDLeg 5/2004 Art. 2)"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _check_representante_fiscal_required(self) -> Self:
+        """Require a fiscal representative for non-EU/EEA non-residents.
+
+        Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004: taxpayers fiscally
+        resident outside the EU/EEA (and outside Spain) must appoint a
+        representative in Spain. Both NIF and name are required together;
+        partial declaration is rejected.
+        """
+
+        if (
+            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and not self.ue_eee_status
+            and self.country_of_fiscal_residence is not None
+        ):
+            nif_missing = self.representante_fiscal_nif is None
+            nombre_missing = self.representante_fiscal_nombre is None
+            if nif_missing or nombre_missing:
+                missing = []
+                if nif_missing:
+                    missing.append("representante_fiscal_nif")
+                if nombre_missing:
+                    missing.append("representante_fiscal_nombre")
+                raise DeadlineValidationError(
+                    f"{' and '.join(missing)} required for non-EU/EEA non-resident "
+                    "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)"
+                )
+        return self
+
     @model_validator(mode="before")
     @classmethod
     def _derive_objective_estimation_flag(cls, data: object) -> object:
@@ -367,6 +525,109 @@ class TaxpayerProfile(BaseModel):
         derived = dict(data)
         derived["uses_objective_estimation_irpf"] = parsed is IrpfEstimationRegime.OBJETIVA
         return derived
+
+    def beckham_window_active(self, today: date) -> bool:
+        """Return True if the Beckham window (Art. 93 LIRPF) is active on *today*.
+
+        The window covers the year of election and the following five
+        calendar years — six years total (RIRPF Art. 116.1). Year-7 and
+        beyond return False; the taxpayer reverts to the general IRPF regime.
+        Returns False for any non-IMPATRIADO profile regardless of date.
+
+        Args:
+            today: Reference date for the window check (caller supplies
+                ``date.today()`` in production; tests supply a fixed date).
+
+        Returns:
+            True only when ``irpf_special_regime is IMPATRIADO`` and
+            ``start_date.year <= today.year <= start_date.year + 5``.
+        """
+
+        if (
+            self.irpf_special_regime is not IrpfSpecialRegime.IMPATRIADO
+            or self.special_regime_start_date is None
+        ):
+            return False
+        return self.special_regime_start_date.year <= today.year <= self.special_regime_start_date.year + 5
+
+    @property
+    def ue_eee_status(self) -> bool:
+        """True when ``country_of_fiscal_residence`` is in the EU + EEA (post-Brexit).
+
+        ``GB`` is excluded from 2021-01-01 (Brexit transition end).
+        Returns ``False`` when ``country_of_fiscal_residence`` is ``None``
+        (i.e., for IRPF-resident profiles).
+        """
+
+        if self.country_of_fiscal_residence is None:
+            return False
+        return self.country_of_fiscal_residence.upper() in UE_EEA_COUNTRY_CODES
+
+    @property
+    def convenio_aplicable(self) -> str | None:
+        """BOE reference for the applicable double-taxation treaty, or ``None``.
+
+        Derived from ``country_of_fiscal_residence`` via a static lookup
+        of treaties signed by Spain. Returns ``None`` when no treaty is
+        registered for the country or when the country is not set.
+
+        The lookup covers treaties that are most frequently encountered
+        in IRNR practice; it is not exhaustive. The BOE identifiers
+        follow the ``BOE-A-YYYY-NNNNN`` scheme used in the official Boletín
+        Oficial del Estado. References:
+        - España-UK: BOE-A-2014-5171
+        - España-Alemania: BOE-A-2012-3669
+        - España-Francia: BOE-A-1997-21331
+        - España-EE.UU.: BOE-A-1990-28246
+        - España-Países Bajos: BOE-A-1972-674
+        """
+
+        if self.country_of_fiscal_residence is None:
+            return None
+        return _CONVENIO_BY_COUNTRY.get(self.country_of_fiscal_residence.upper())
+
+
+_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
+
+
+def evaluate_multiple_pagadores_obligation(
+    pagadores_count: int | None,
+    secondary_income: Decimal | None,
+) -> bool:
+    """Return True when Art. 96.3 LIRPF mandates Modelo 100 filing.
+
+    Art. 96.3 LIRPF (Ley 35/2006) establishes that a natural person whose
+    rendimientos del trabajo come from more than one pagador is obliged to
+    file if the aggregate income received from the 2nd and subsequent
+    pagadores exceeds €1,500. The rule applies independently of the general
+    income thresholds in Art. 96.2.
+
+    Args:
+        pagadores_count: Number of pagadores the taxpayer received work
+            income from during the year. ``None`` means undeclared.
+        secondary_income: Sum of income from the 2nd and subsequent
+            pagadores. ``None`` means undeclared.
+
+    Returns:
+        ``True`` when both conditions are confirmed (count >= 2 AND
+        secondary_income > 1,500); ``False`` in every other case,
+        including when either value is undeclared.
+    """
+
+    if pagadores_count is None or secondary_income is None:
+        return False
+    return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD
+
+
+# Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
+# signed by Spain. Source: AEAT Convenios de doble imposición.
+_CONVENIO_BY_COUNTRY: dict[str, str] = {
+    "GB": "BOE-A-2014-5171 España-UK",
+    "DE": "BOE-A-2012-3669 España-Alemania",
+    "FR": "BOE-A-1997-21331 España-Francia",
+    "US": "BOE-A-1990-28246 España-EE.UU.",
+    "NL": "BOE-A-1972-674 España-Países Bajos",
+}
 
 
 class RecargoBand(BaseModel):

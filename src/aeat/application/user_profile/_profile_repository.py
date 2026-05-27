@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
 from ...adapters.persistence.storage.bucket._layout import bucket_paths, provision_bucket_directory
 from ...adapters.persistence.storage.bucket._manifest import (
@@ -68,9 +69,6 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-_BUCKETS_DIRNAME = "buckets"
-
 
 _TAX_ID_FACT_PATH = "identity.tax_id"
 """Profile-fact path carrying the taxpayer's Spanish NIF / NIE / CIF."""
@@ -258,7 +256,7 @@ class ProfileRepository:
 
         kdf_params = _default_kdf_params()
         created_at = datetime.now(UTC)
-        bucket_dek_path = keystore_path(self._root, resolved_id) / "bucket.dek.json"
+        bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
         key_schedule = (
             BucketKeySchedule.BUCKET_DEK_V1 if bucket_dek_path.is_file() else BucketKeySchedule.LEGACY_MASTER_KEY
         )
@@ -584,7 +582,7 @@ class ProfileRepository:
         audit) see them; live-surface callers filter on ``status``.
         """
 
-        buckets_root = self._root / _BUCKETS_DIRNAME
+        buckets_root = self._root / BUCKETS_DIRNAME
         if not buckets_root.is_dir():
             return ()
         summaries: list[ProfileSummary] = []

@@ -50,20 +50,34 @@ from ._runner import run_flow
 
 
 def _ccaa_choice_values() -> list[str]:
-    """Return the CCAA choice tokens from the canonical ``CCAA`` enum.
+    """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
 
-    Derived from the domain enum rather than a hand-kept literal list
-    so the ``--tax-residence-ccaa`` choices never drift from the
-    autonomous-community catalogue the rest of the domain validates
-    against.
+    The list includes all 15 common-regime values from the ``CCAA`` enum
+    plus the two foral-regime tokens (``pais_vasco``, ``navarra``).  The
+    foral tokens are accepted by Click so the operator receives a
+    localised redirect rather than a generic "not one of" error, but they
+    are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
 
     from ...domain.profile._ccaa import CCAA
 
-    return [member.value for member in CCAA]
+    common = [member.value for member in CCAA]
+    foral = ["pais_vasco", "navarra"]
+    return common + foral
 
 
 _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
+
+
+def _fiscal_residency_choice_values() -> list[str]:
+    """Return the FiscalResidency choice tokens accepted by ``--fiscal-residency``."""
+
+    from ...domain.deadlines._models import FiscalResidency
+
+    return [member.value for member in FiscalResidency]
+
+
+_FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = _fiscal_residency_choice_values()
 
 
 def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], list[str]]:
@@ -98,6 +112,30 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
     _IRPF_INCOME_CATEGORY_CHOICE_VALUES,
     _IRPF_ESTIMATION_REGIME_CHOICE_VALUES,
 ) = _taxpayer_type_choice_values()
+
+
+def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
+    """Return choice tokens for IRPF-personal enums.
+
+    Derived from the canonical domain enums (``IrpfSpecialRegime``,
+    ``SituacionFamiliar``) so the ``--irpf-special-regime`` and
+    ``--situacion-familiar`` flag choices never drift from the values
+    the wizard catalogue and the profile schema validate against.
+    """
+
+    from ...domain.deadlines._models import IrpfSpecialRegime
+    from ...domain.profile import SituacionFamiliar
+
+    return (
+        [member.value for member in IrpfSpecialRegime],
+        [member.value for member in SituacionFamiliar],
+    )
+
+
+(
+    _IRPF_SPECIAL_REGIME_CHOICE_VALUES,
+    _SITUACION_FAMILIAR_CHOICE_VALUES,
+) = _irpf_personal_choice_values()
 
 
 def _flag_name(question: WizardQuestion) -> str:
@@ -147,6 +185,10 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--taxpayer-marital-status",
         click_type=click.Choice(["1", "2", "3", "4"]),
         help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
+    ),
+    "taxpayer-marriage-date": typer.Option(
+        "--taxpayer-marriage-date",
+        help=tr("wizard.setup.flags.taxpayer-marriage-date.help"),
     ),
     "taxpayer-birth-date": typer.Option(
         "--taxpayer-birth-date",
@@ -259,6 +301,23 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
         help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
     ),
+    "fiscal-residency": typer.Option(
+        "--fiscal-residency",
+        click_type=click.Choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.fiscal-residency.help"),
+    ),
+    "country-of-fiscal-residence": typer.Option(
+        "--country-of-fiscal-residence",
+        help=tr("wizard.setup.flags.country-of-fiscal-residence.help"),
+    ),
+    "representante-fiscal-nif": typer.Option(
+        "--representante-fiscal-nif",
+        help=tr("wizard.setup.flags.representante-fiscal-nif.help"),
+    ),
+    "representante-fiscal-nombre": typer.Option(
+        "--representante-fiscal-nombre",
+        help=tr("wizard.setup.flags.representante-fiscal-nombre.help"),
+    ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",
         click_type=click.Choice(_CCAA_CHOICE_VALUES),
@@ -303,6 +362,20 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
+    "irpf-special-regime": typer.Option(
+        "--irpf-special-regime",
+        click_type=click.Choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-special-regime.help"),
+    ),
+    "irpf-special-regime-start-date": typer.Option(
+        "--irpf-special-regime-start-date",
+        help=tr("wizard.setup.flags.irpf-special-regime-start-date.help"),
+    ),
+    "situacion-familiar": typer.Option(
+        "--situacion-familiar",
+        click_type=click.Choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.situacion-familiar.help"),
+    ),
     "iva-sii-enrolled": typer.Option(
         "--iva-sii-enrolled/--no-iva-sii-enrolled",
         help=tr("wizard.setup.flags.iva-sii-enrolled.help"),
@@ -312,6 +385,23 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
     ),
 }
+
+# Guard against future catalogue / dict drift: every question id that
+# the SETUP_FLOW catalogue exposes must have a matching OptionInfo entry.
+# This assert fires at import time so a missing entry is discovered
+# immediately rather than as a runtime KeyError buried inside a Typer
+# command factory call.
+_SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
+    question.id
+    for section in SETUP_FLOW.sections
+    for question in section.questions
+)
+_missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(_SETUP_OPTION_INFOS)
+assert not _missing_option_infos, (
+    f"_SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
+    f"{sorted(_missing_option_infos)!r}. "
+    "Add a typer.Option entry for each missing id."
+)
 
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
@@ -760,6 +850,22 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         explicit_flags: dict[str, str] = dict(canonical)
         non_interactive = quiet or accept_defaults
         patch_edit = mode == "edit" and non_interactive
+
+        # Refuse foral CCAA tokens before any persistence or prompt.
+        # `pais_vasco` and `navarra` are accepted by Click (so the
+        # operator receives a redirect rather than a generic choice
+        # error) but are not valid AEAT-jurisdiction residence CCAAs.
+        _ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
+        if _ccaa_token is not None:
+            from ...domain.profile import ForalRegimeError, parse_tax_region
+
+            try:
+                parse_tax_region(_ccaa_token)
+            except ForalRegimeError as _foral_exc:
+                raise typer.BadParameter(
+                    tr("profile.errors.foral_regime", tax_region=_foral_exc.value),
+                    param_hint="'--tax-residence-ccaa'",
+                ) from _foral_exc
 
         if patch_edit:
             _run_patch_edit(flow, explicit_flags, profile_id=profile_id)

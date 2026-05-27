@@ -16,7 +16,9 @@ from decimal import Decimal, InvalidOperation
 
 from ._errors import ProfileError
 from ._models import (
+    FiscalResidency,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -142,6 +144,28 @@ def taxpayer_profile_from_mapping(
         vivienda_office_office_m2=_parse_decimal(canonical.get("vivienda_office.office_m2")),
         iae_epigraph=canonical.get("activities.iae_epigraph", ""),
         notes=typed.notes,
+        irpf_special_regime=_resolve_special_regime(
+            # Prefer the typed wizard answer; fall back to the canonical
+            # path-keyed value from record_to_path_values so the field is
+            # reachable from persisted facts even before a wizard question is
+            # added to the SETUP_FLOW.
+            typed.irpf_special_regime or canonical.get("irpf.special_regime", "")
+        ),
+        special_regime_start_date=_parse_date(
+            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date")
+        ),
+        fiscal_residency=_resolve_fiscal_residency(
+            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", "")
+        ),
+        country_of_fiscal_residence=_coerce_country_code(
+            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", "")
+        ),
+        representante_fiscal_nif=canonical.get("taxpayer_type.representante_fiscal_nif") or None,
+        representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
+        irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
+        irpf_pagadores_secondary_income=_parse_decimal(
+            canonical.get("irpf.pagadores_secondary_income")
+        ),
     )
 
 
@@ -189,6 +213,15 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
         raise ProfileError(f"invalid census decimal {raw!r}") from exc
 
 
+def _parse_optional_int(raw: str | None) -> int | None:
+    if not raw:
+        return None
+    try:
+        return int(raw.strip())
+    except ValueError:
+        return None
+
+
 def _stringify(raw: object) -> str:
     if raw is None:
         return ""
@@ -214,3 +247,40 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
         return default
     canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
+
+
+def _resolve_fiscal_residency(raw: FiscalResidency | str) -> FiscalResidency | None:
+    """Project the SetupAnswers fiscal-residency field to a typed enum or None.
+
+    A blank string means the operator has not declared fiscal residency
+    (treated as RESIDENT_IRPF by engine consumers); typed ``None`` signals that.
+    """
+
+    if raw == "" or raw is None:
+        return None
+    if isinstance(raw, FiscalResidency):
+        return raw
+    return FiscalResidency(raw)
+
+
+def _coerce_country_code(raw: str) -> str | None:
+    """Normalise a raw country-code token to upper-case or None when absent."""
+
+    if not raw or raw.strip() == "":
+        return None
+    return raw.strip().upper()
+
+
+def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime | None:
+    """Project the SetupAnswers special-regime field to a typed enum or None.
+
+    A blank string means the operator has not declared a special regime
+    (equivalent to the general case); the typed ``None`` signals that
+    to downstream consumers.
+    """
+
+    if raw == "" or raw is None:
+        return None
+    if isinstance(raw, IrpfSpecialRegime):
+        return raw
+    return IrpfSpecialRegime(raw)

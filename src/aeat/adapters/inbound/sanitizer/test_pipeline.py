@@ -33,6 +33,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_inbound]
 # fixtures.SANITIZED_SHAS, so the already-sanitised refuse guard fires
 # against it without any test-side patching of the known-SHA set.
 _SANITISED_FIXTURE_PDF = FIXTURES_DIR / "justificantes" / "100" / "2021-0A.pdf"
+_REAL_NIE_CANARY = "Y1234567X"
+_REAL_NAME_CANARY = "PERSONA PRUEBA UNO"
+_SYNTHETIC_NIE = "Y0000001S"
+_SYNTHETIC_NAME = "APELLIDO APELLIDO NOMBRE"
 
 
 def _decompressed_content_bytes(pdf_bytes: bytes) -> bytes:
@@ -70,12 +74,13 @@ def _build_real_world_like_pdf() -> bytes:
     pdf = pikepdf.Pdf.new()
     pdf.add_blank_page(page_size=(612, 792))
     pdf.pages[0].contents_add(
-        b"BT /F1 12 Tf 100 700 Td (Y4113523X) Tj ET\nBT /F1 12 Tf 100 680 Td (WOOTSCH GERGELY DOMOKOS) Tj ET\n",
+        b"BT /F1 12 Tf 100 700 Td (Y1234567X) Tj ET\n"
+        b"BT /F1 12 Tf 100 680 Td (PERSONA PRUEBA UNO) Tj ET\n",
     )
-    pdf.docinfo["/Title"] = pikepdf.String("Justificante AEAT Y4113523X")
-    pdf.docinfo["/Author"] = pikepdf.String("WOOTSCH GERGELY DOMOKOS")
+    pdf.docinfo["/Title"] = pikepdf.String(f"Justificante AEAT {_REAL_NIE_CANARY}")
+    pdf.docinfo["/Author"] = pikepdf.String(_REAL_NAME_CANARY)
     with pdf.open_metadata(set_pikepdf_as_editor=False) as metadata:
-        metadata["dc:title"] = "Justificante AEAT Y4113523X"
+        metadata["dc:title"] = f"Justificante AEAT {_REAL_NIE_CANARY}"
         metadata["pdfaid:part"] = "1"
         metadata["pdfaid:conformance"] = "B"
     pdf.Root["/OpenAction"] = pikepdf.Dictionary(S=pikepdf.Name.JavaScript, JS="alert();")
@@ -94,15 +99,15 @@ class TestSanitizePdfHappyPath:
         mapping = TokenMap(
             nif=(
                 NifReplacement(
-                    real=SecretStr("Y4113523X"),
-                    synthetic="Y0000001S",
+                    real=SecretStr(_REAL_NIE_CANARY),
+                    synthetic=_SYNTHETIC_NIE,
                     surface_label="taxpayer NIE",
                 ),
             ),
             name=(
                 NameReplacement(
-                    real=SecretStr("WOOTSCH GERGELY DOMOKOS"),
-                    synthetic="APELLIDO APELLIDO NOMBRE",
+                    real=SecretStr(_REAL_NAME_CANARY),
+                    synthetic=_SYNTHETIC_NAME,
                     surface_label="taxpayer name",
                 ),
             ),
@@ -119,14 +124,14 @@ class TestSanitizePdfHappyPath:
         # streams (the view a ``pdftotext`` / ``pdfgrep`` attacker
         # sees) and the synthetic landed in its place.
         decompressed = _decompressed_content_bytes(result_a.output_bytes)
-        assert b"Y4113523X" not in decompressed
-        assert b"WOOTSCH GERGELY DOMOKOS" not in decompressed
-        assert b"Y0000001S" in decompressed
-        assert b"APELLIDO APELLIDO NOMBRE" in decompressed
+        assert _REAL_NIE_CANARY.encode("utf-8") not in decompressed
+        assert _REAL_NAME_CANARY.encode("utf-8") not in decompressed
+        assert _SYNTHETIC_NIE.encode("utf-8") in decompressed
+        assert _SYNTHETIC_NAME.encode("utf-8") in decompressed
         # Non-stream PDF bytes (DocInfo, XMP, trailer) must also be
         # cleartext-free.
-        assert b"Y4113523X" not in result_a.output_bytes
-        assert b"WOOTSCH GERGELY DOMOKOS" not in result_a.output_bytes
+        assert _REAL_NIE_CANARY.encode("utf-8") not in result_a.output_bytes
+        assert _REAL_NAME_CANARY.encode("utf-8") not in result_a.output_bytes
 
         # Every audit-log surface is recorded (presence or absence).
         scrubbed_surfaces = {row.surface for row in result_a.surfaces_scrubbed}

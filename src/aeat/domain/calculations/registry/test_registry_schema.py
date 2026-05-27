@@ -29,6 +29,7 @@ from ._schema import (
     ModeloDefinition,
     ModeloRevision,
     SupportRemovalDecisionDefinition,
+    VerificationPredicateDefinition,
 )
 from ._validate import RegistryValidator
 
@@ -229,6 +230,43 @@ def test_committed_snapshot_lists_single_verification_expectation(_modelo_130_sn
 
 def test_committed_snapshot_declares_no_support_removal_decisions(_modelo_130_snapshot) -> None:  # type: ignore[no-untyped-def]
     assert _modelo_130_snapshot.support_removal_decisions == {}
+
+
+def test_committed_registry_contains_no_zero_casilla_revisions() -> None:
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+
+    zero_casilla_revisions = [
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if not revision.casillas
+    ]
+
+    assert zero_casilla_revisions == []
+
+
+def test_revision_without_casillas_is_registry_validation_failure() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    empty_revision = revision.model_copy(
+        update={
+            "casillas": (),
+            "formulas": (),
+            "bindings": (),
+            "relations": (),
+            "export_layouts": (),
+            "extraction_profiles": (),
+            "verification_expectations": (),
+        }
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="revision must declare at least one casilla",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, empty_revision)
+        )
 
 
 _EXPECTED_DEADLINE_WINDOWS = (
@@ -925,6 +963,77 @@ def test_validator_allows_modelo_145_communication_link_for_non_filing_casillas(
     modelo_145 = modelo.model_copy(update={"id": "145"})
 
     RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(_with_revision(modelo_145, mutated))
+
+
+def test_validator_rejects_verification_predicate_with_unknown_operator() -> None:
+    """P09.S63: predicate with an unknown DSL operator must fail at registry-load.
+
+    The runtime DSL evaluator falls through to ``return True`` for any
+    unrecognised expression — silent-pass is the documented behaviour
+    so unknown DSL extensions don't block. That same behaviour means
+    a typo like ``cap_lt_when_positive`` for ``cap_le_when_positive``
+    silently passes the predicate gate and the cap rule is lost
+    without diagnostic.
+
+    The P09.S63 hardening rejects unknown operators at registry-load
+    time. The known set is enumerated in
+    ``_validate_surfaces._KNOWN_VERIFICATION_PREDICATE_OPERATORS``:
+    ``all_nonzero``, ``any_nonzero``, ``cap_le_when_positive``.
+    Typos are caught before any calculation runs.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    typo_predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-typo-predicate",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='cap_lt_when_positive(["15", "14"])',  # typo: lt instead of le
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, typo_predicate)}
+    )
+
+    with pytest.raises(RegistryValidationError, match="unknown operator 'cap_lt_when_positive'"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, mutated)
+        )
+
+
+def test_validator_rejects_verification_predicate_with_malformed_expression() -> None:
+    """P09.S63: predicate whose expression is not a parseable DSL call fails."""
+
+    modelo, catalogues = _committed_modelo("130")
+    revision = next(iter(modelo.revisions.values()))
+    malformed_predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-malformed-predicate",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='just a string with no call shape',
+        finding_kind="BLOCKING_RULE",
+    )
+    mutated = revision.model_copy(
+        update={"verification_predicates": (*revision.verification_predicates, malformed_predicate)}
+    )
+
+    with pytest.raises(RegistryValidationError, match="not a recognised DSL call"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, mutated)
+        )
+
+
+def test_validator_accepts_known_verification_predicate_operators() -> None:
+    """P09.S63: the cap_le_when_positive predicate declared by P08.S48 must pass.
+
+    Pins that the committed M130 cap predicate
+    (modelo-130-c15-cap-by-c14, expression
+    cap_le_when_positive(["15", "14"])) validates cleanly. A
+    future operator-set reduction that drops cap_le_when_positive
+    from the known set would surface here, not at runtime.
+    """
+
+    modelo, catalogues = _committed_modelo("130")
+    # No mutation — committed M130 carries the predicate from P08.S48.
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_validator_rejects_non_145_communication_link_for_casillas() -> None:

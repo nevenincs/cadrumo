@@ -39,30 +39,58 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from aeat.domain.calculations.registry.applicability import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    derive_modelo_applicability,
+)
+from aeat.domain.calculations.registry.applicability import (
+    PayerFact as _PayerFact,
+)
+from aeat.domain.calculations.registry.applicability import (
+    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
+)
+from aeat.domain.calculations.registry.applicability import (
+    taxpayer_model_is_declared as _taxpayer_model_is_declared,
+)
+
 from ...core.i18n import tr as _tr
 from ...domain.deadlines import (
     DeadlineEngine as _DeadlineEngine,
+)
+from ...domain.deadlines import (
     HolidayJurisdiction as _HolidayJurisdiction,
+)
+from ...domain.deadlines import (
     ModeloDeadline as _ModeloDeadline,
+)
+from ...domain.deadlines import (
     ObligationStatus as _ObligationStatus,
+)
+from ...domain.deadlines import (
     Recovery as _Recovery,
+)
+from ...domain.deadlines import (
     Schedule as _Schedule,
+)
+from ...domain.deadlines import (
     ScheduleProducer as _ScheduleProducer,
+)
+from ...domain.deadlines import (
     TaxpayerProfile as _TaxpayerProfile,
+)
+from ...domain.deadlines import (
+    evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation,
+)
+from ...domain.deadlines import (
     shift_deadline as _shift_deadline,
 )
 from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
-from aeat.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    ModeloApplicability,
-    PayerFact as _PayerFact,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
-    taxpayer_model_is_declared as _taxpayer_model_is_declared,
-)
 from ...domain.deadlines.taxpayer_model import (
     IrpfEstimationRegime as _IrpfEstimationRegime,
+)
+from ...domain.deadlines.taxpayer_model import (
     IrpfIncomeCategory as _IrpfIncomeCategory,
 )
 from ._errors import (
@@ -404,6 +432,14 @@ class OverviewStatusReport(BaseModel):
     calculation_revisions: int = Field(default=0, ge=0)
     """Count of ``CalculationRevisionCatalogue`` entries written by ``modelo work calculate``."""
     unreadable_rows: int = Field(ge=0)
+    filing_obligation_advisories: tuple[str, ...] = Field(default=())
+    """Locale-key advisory strings for filing obligations derived from the profile.
+
+    Each entry is a ``tr()``-resolvable locale key whose rendered text
+    explains a mandatory filing obligation the profile data implies.
+    Currently populated for the Art. 96.3 LIRPF multiple-pagadores rule.
+    Empty when no obligation evidence is present in the profile.
+    """
 
 
 def _entry_intersects_range(
@@ -724,13 +760,66 @@ def build_overview_calendar(
     )
 
 
-def overview_status_report_from_projection(projection: OperatorStateProjection) -> OverviewStatusReport:
+def build_filing_obligation_advisories(
+    raw_values: Mapping[str, object] | None,
+) -> tuple[str, ...]:
+    """Derive filing-obligation advisory locale keys from the profile values.
+
+    Currently implements the Art. 96.3 LIRPF multiple-pagadores rule:
+    when the operator has declared ``irpf.pagadores_count >= 2`` and
+    ``irpf.pagadores_secondary_income > 1500``, Modelo 100 filing is
+    mandatory regardless of the general income thresholds.
+
+    Returns a tuple of ``tr()``-resolvable locale keys, empty when no
+    evidence of a mandatory obligation is present.
+    """
+
+    if raw_values is None:
+        return ()
+
+    def _to_int(v: object) -> int | None:
+        if v is None or str(v).strip() == "":
+            return None
+        try:
+            return int(str(v).strip())
+        except ValueError:
+            return None
+
+    def _to_decimal(v: object) -> object | None:
+        from decimal import Decimal, InvalidOperation
+
+        if v is None or str(v).strip() == "":
+            return None
+        try:
+            return Decimal(str(v).strip())
+        except InvalidOperation:
+            return None
+
+    pagadores_count = _to_int(raw_values.get("irpf.pagadores_count"))
+    secondary_income = _to_decimal(raw_values.get("irpf.pagadores_secondary_income"))
+
+    if _evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income):
+        return ("cli.overview.status.filing_obligation_multiple_pagadores",)
+    return ()
+
+
+def overview_status_report_from_projection(
+    projection: OperatorStateProjection,
+    *,
+    raw_values: Mapping[str, object] | None = None,
+) -> OverviewStatusReport:
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
     the one :class:`OperatorStateProjection`; it is not a second
     state-assembly path. Both the legacy ``ModeloDraft`` count and the
     ``WorkUnitCatalogue`` count are carried distinctly.
+
+    Args:
+        projection: The canonical state projection to project.
+        raw_values: Optional profile raw values mapping. When supplied,
+            used to evaluate filing-obligation advisories (e.g., the
+            Art. 96.3 LIRPF multiple-pagadores rule).
     """
 
     return OverviewStatusReport(
@@ -743,12 +832,14 @@ def overview_status_report_from_projection(projection: OperatorStateProjection) 
         discarded_work_units=projection.workspace.discarded_work_units,
         calculation_revisions=projection.workspace.calculation_revisions,
         unreadable_rows=projection.workspace.unreadable_rows,
+        filing_obligation_advisories=build_filing_obligation_advisories(raw_values),
     )
 
 
 def build_overview_status_report(
     *,
     state: WorkflowState | None = None,
+    raw_values: Mapping[str, object] | None = None,
 ) -> OverviewStatusReport:
     """Build the typed readiness report used by root and overview status.
 
@@ -762,7 +853,7 @@ def build_overview_status_report(
     from ..state_projection import build_operator_state_projection
 
     projection = build_operator_state_projection(state=state)
-    return overview_status_report_from_projection(projection)
+    return overview_status_report_from_projection(projection, raw_values=raw_values)
 
 
 def render_overview_status_lines(report: OverviewStatusReport) -> tuple[str, ...]:
@@ -792,13 +883,14 @@ __all__ = [
     "OverviewBacklogError",
     "OverviewCalendar",
     "OverviewCalendarEntry",
-    "SuppressedCalendarEntry",
     "OverviewCalendarError",
     "OverviewCalendarRange",
     "OverviewError",
     "OverviewExplainError",
     "OverviewPeriodState",
     "OverviewStatusReport",
+    "SuppressedCalendarEntry",
+    "build_filing_obligation_advisories",
     "build_overview_calendar",
     "build_overview_status_report",
     "derive_modelo_applicability",

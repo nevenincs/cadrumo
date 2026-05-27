@@ -32,6 +32,7 @@ from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
 )
 from ...domain.calculations.registry._aeat_nif_iva_oracle import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
+from ...domain.calculations.registry._legal import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry._filed_state import (
     RegistryFiledStateComparison as _RegistryFiledStateComparison,
     compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
@@ -213,10 +214,17 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
 
 
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
-    """Load and fail-fast validate every registry modelo against shared catalogues."""
+    """Load and fail-fast validate every registry modelo against shared catalogues.
+
+    Runs a full strict audit including ``required_text`` corpus checks on
+    every legal reference — the checks that the production authority skips
+    so that pending corpus annotations never abort user-facing workflows.
+    """
 
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
+    # Run the strict corpus-text check that the production authority omits.
+    _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root, corpus_strict=True)
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)

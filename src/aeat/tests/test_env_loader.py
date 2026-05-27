@@ -32,10 +32,10 @@ class TestParseEnvText:
         assert parse_env_text("COLOR=#ffaabb") == {"COLOR": "#ffaabb"}
 
     def test_double_quoted_value_unquoted(self) -> None:
-        assert parse_env_text('NAME="Gergely Wootsch"') == {"NAME": "Gergely Wootsch"}
+        assert parse_env_text('NAME="Persona Prueba"') == {"NAME": "Persona Prueba"}
 
     def test_single_quoted_value_unquoted(self) -> None:
-        assert parse_env_text("NAME='Gergely Wootsch'") == {"NAME": "Gergely Wootsch"}
+        assert parse_env_text("NAME='Persona Prueba'") == {"NAME": "Persona Prueba"}
 
     def test_quoted_value_preserves_inline_hash(self) -> None:
         # Inside quotes, ``#`` is not a comment marker.

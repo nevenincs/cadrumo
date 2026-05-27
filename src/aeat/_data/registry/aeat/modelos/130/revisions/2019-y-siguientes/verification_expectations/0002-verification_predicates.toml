@@ -1,0 +1,20 @@
+# AEAT M130 Casilla 15 cap rule: when C14 (cuota positiva del
+# trimestre) is strictly positive, C15 (resultados negativos de
+# trimestres anteriores) MUST NOT exceed C14.
+#
+# Source: AEAT M130 instructions, "En la casilla 15 ... solamente
+# si en la casilla 14 anterior se hubiera obtenido una cantidad
+# positiva, debemos hacer constar el importe ... teniendo en cuenta
+# que en ningún caso podrá figurar en la casilla 15 un importe
+# superior a la cantidad positiva consignada en la casilla 14".
+# Corpus path: corpus/aeat_official/instructions/modelo_130/files/.
+#
+# P08.S48 enforces this via the cap_le_when_positive predicate DSL
+# operator introduced in P08.S47. The carry-forward binding
+# straight-copies the prior period's saldo seed; this predicate
+# catches the residual case where the seed exceeds the current C14.
+[[revisions."2019-y-siguientes".verification_predicates]]
+predicate_id = "modelo-130-c15-cap-by-c14"
+expression = 'cap_le_when_positive(["15", "14"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["rd-439-2007:art-110"]

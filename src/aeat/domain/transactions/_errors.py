@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pydantic import ValidationError
+
 from ...core.errors import AeatError
 
 
@@ -15,6 +17,30 @@ class TransactionCatalogueError(TransactionError):
 
 class TransactionPersistenceError(TransactionCatalogueError):
     """Raised when catalogue persistence cannot be completed."""
+
+
+class StoredTransactionDriftError(TransactionPersistenceError):
+    """Raised when a persisted transaction catalogue fails schema validation on load.
+
+    Mirrors :class:`~aeat.domain.user_profile.StoredProfileDriftError`:
+    the catalogue was valid when written; schema evolution or an
+    out-of-band edit caused the on-disk envelope payload to drift from
+    the current :class:`~aeat.domain.transactions.TransactionCatalogue`
+    schema. The original :exc:`pydantic.ValidationError` is preserved
+    on :attr:`original_exception` so callers can inspect the typed
+    field errors without losing the deserialization detail.
+
+    Attributes:
+        bucket_id: Identifier of the bucket whose catalogue drifted.
+        original_exception: The underlying :exc:`pydantic.ValidationError`.
+    """
+
+    def __init__(self, bucket_id: str, error: ValidationError) -> None:
+        super().__init__(
+            f"transaction catalogue for bucket {bucket_id!r} failed schema validation on load: {error}"
+        )
+        self.bucket_id = bucket_id
+        self.original_exception = error
 
 
 class LedgerStorageError(TransactionPersistenceError):

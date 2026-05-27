@@ -324,6 +324,10 @@ application:
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
+      iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
+        IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
+        el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
+        YEAR --period PERIOD --amount 0 --confirm`.'
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
@@ -400,10 +404,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nova factura cobrable
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que un client t'ha de pagar
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures cobrables registrades
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
+          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualitza les dades d'una factura cobrable
         view_help: Mostra les dades d'una factura cobrable
@@ -449,10 +458,15 @@ cli:
         year_help: Exercici fiscal
       payable_invoice:
         add_help: Registra una nova factura pagable
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que has de pagar a un proveïdor
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures pagables registrades
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
+          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualitza les dades d'una factura pagable
         view_help: Mostra les dades d'una factura pagable
@@ -801,8 +815,13 @@ cli:
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
           admet l'id de casella, el número del registre o el número de casella imprès
           al BOE mostrats per `aeat app modelo casillas`.
+        casilla_non_numeric_data_type: La casilla {key} ("{label}") té tipus de dada
+          {data_type} i no accepta valors decimals directes. Usa --binding per a aquest
+          tipus d'entrada o consulta `aeat app modelo casillas` per identificar la
+          casilla numèrica correcta.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
+        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
         create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
@@ -818,13 +837,50 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
-        create_stub_modelo_refused: 'El model %{modelo} està registrat però no té
-          suport complet en aquesta versió. La declaració informativa sobre monedes
-          virtuals situades a l''estranger (Model 721) s''ha de presentar directament
-          a la Seu Electrònica de l''AEAT (sede.agenciatributaria.gob.es). L''obligació
-          neix quan el valor agregat supera €50.000 el 31 de desembre (Orden HFP/887/2023,
-          BOE-A-2023-17455). Autoritats legals: Llei 11/2021 Art. 13 / DA 10ª,
-          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
+        create_stub_modelo_151_refused: 'El model %{modelo} (règim especial d''impatriats
+          "Llei Beckham") no és compatible amb la creació d''unitats de treball en
+          aquest CLI. Base legal: Llei 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113,
+          Ordre EHA/2887/2008. Presenta la declaració a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR — Impost sobre la
+          Renda de No Residents) no és compatible amb la creació d''unitats de treball
+          en aquest CLI. Base legal: RD Legislatiu 5/2004 TRLIRNR, Art. 28 TRLIRNR
+          (termini trimestral: 1T/2T/3T/4T). Tipus general: 19 % UE/EEE, 24 % resta.
+          Presenta la declaració a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
+        create_stub_modelo_600_refused: El model %{modelo} (ITP-AJD — Impost sobre
+          Transmissions Patrimonials i Actes Jurídics Documentats) no és compatible
+          amb la creació d'unitats de treball en aquest CLI. És un impost cedit a
+          les comunitats autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació
+          a la Hisenda de la CA on es troba el bé transmès.
+        create_stub_modelo_620_refused: El model %{modelo} (ITP-AJD — transmissions
+          específiques de vehicles de motor usats) no és compatible amb la creació
+          d'unitats de treball en aquest CLI. És un impost cedit a les comunitats
+          autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació a la Hisenda
+          de la CA on es troba el bé transmès.
+        create_stub_modelo_650_refused: 'El model %{modelo} (ISD Successions — declaració
+          de béns adquirits per herència) no és compatible amb la creació d''unitats
+          de treball en aquest CLI. Base legal: Llei 29/1987 LISyD. Termini: 6 mesos
+          des de la defunció, prorrogable 6 mesos més (Art. 67 RISD). Presenta la
+          declaració a la Hisenda de la CA on el causant tenia la residència habitual
+          (Llei 22/2009 Art. 32). Consulta la Hisenda autonòmica corresponent.'
+        create_stub_modelo_660_refused: 'El model %{modelo} (ISD — declaració informativa
+          del cabal relicte, acompanya el model 650) no és compatible amb la creació
+          d''unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD, termini
+          6 mesos (Art. 67 RISD). Presenta la declaració a la Hisenda de la CA on
+          el causant tenia la residència habitual (Llei 22/2009 Art. 32). Consulta
+          la Hisenda autonòmica corresponent.'
+        create_stub_modelo_714_refused: 'El model %{modelo} (Impost sobre el Patrimoni)
+          no és compatible amb la creació d''unitats de treball en aquest CLI. Base
+          legal: Llei 19/1991 Art. 28, Ordre HAC/1023/2021. Presenta la declaració
+          a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
+          monedes virtuals situades a l''estranger) no és compatible amb la creació
+          d''unitats de treball en aquest CLI. Obligació: saldos superiors a 50.000
+          € a 31 de desembre (Llei 11/2021 Art. 13, Ordre HFP/887/2023, RD 1065/2007
+          Art. 42 quáter). Presenta la declaració a sede.agenciatributaria.gob.es.'
+        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 no
+          és compatible amb aquesta revisió del model; no s'ha declarat cap casella
+          de deducció maternitat (Art. 81 LIRPF). Usa --casilla per subministrar els
+          valors directament.
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -855,6 +911,17 @@ cli:
           s''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per bucket
+        meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
+          de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
+          Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
+          lliure (p. ex. 0, 1, ''laia''). Es calcula sum(min(MESOS × 100, 1200)) i
+          s''injecta a la casella 0611.'
+        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requereix
+          format FILL_ID=MESOS; s''ha rebut: {spec}.'
+        meses_trabajo_hijo_not_integer: 'MESOS a --meses-trabajo-con-hijo-menor-3
+          ha de ser un enter 0–12; s''ha rebut: {spec}.'
+        meses_trabajo_hijo_out_of_range: 'MESOS a --meses-trabajo-con-hijo-menor-3
+          ha d''estar entre 0 i 12; s''ha rebut {meses} a: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
@@ -874,6 +941,17 @@ cli:
           reconegut. --year i --period es componen per separat: passa --year %{year}
           per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
           trimestre o MM per a un mes) a --period.'
+        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no és compatible
+          amb aquesta revisió del model; no s'ha declarat cap casella d'exempció INSS
+          (Art. 7.h). Usa --casilla per subministrar els valors directament.
+        prestacion_inss_exenta_help: Import íntegre de les prestacions de la Seguretat
+          Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es registra
+          a la casella d''exempció corresponent a la revisió i es resta del total
+          d''ingressos computables. Introdueix l''import brut rebut de la Seguretat
+          Social per baixa de maternitat o paternitat. NO l''incloguis a --casilla
+          0003 (Retribucions dineràries).
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
+          import decimal; s''ha rebut: {value}.'
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
@@ -894,8 +972,26 @@ cli:
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
+        revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
+          l'exercici %{filing_year}. Revisions aplicables a aquest exercici%{applicable}.
+        revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
+          format CLAU=VALOR.
+        row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
+        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
+          Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
+          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més
+          files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          Exemple M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+        row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
+        row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
+          han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
+        row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
+          {supported}.'
+        row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
+          {error}'
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
@@ -910,12 +1006,24 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: "AVÍS: termini voluntari vençut (Art. 27 LGT). Presenteu\
+          \ amb recàrrec abans de rebre un requeriment de l'AEAT."
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
-          l'exercici %{filing_year}. Revisions aplicables a aquest exercici%{applicable}.
-        revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
+        rescate_plan_pensiones_capital_help: 'Import brut del rescat del pla de pensions en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales perquè l''assistent calculi la reducció del 40% i l''injecti a la casella 0011.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportacions fetes al pla de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-totales.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'Total d''aportacions al pla de pensions (denominador del prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-pre-2007.'
+        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reducció del rendiment del treball per DT 12a LIRPF. Fes servir --casilla per subministrar els valors directament.'
+        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales s''han de subministrar conjuntament.'
+        rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-* han de ser imports decimals.'
+        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada pel llindar del 50% del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
+        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si ja s''ha assolit el límit del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: '--sal-beneficio-neto no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reserva especial de Societat Laboral. Fes servir --casilla per subministrar els valors directament.'
+        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social s''han de subministrar conjuntament.'
+        sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals.'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -1179,6 +1287,10 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
+      logout_session_warning: El tancament de sessió ha esborrat el punter del
+        perfil actiu. Els verbs posteriors en aquest terminal seran rebutjats amb
+        NoActiveBucketSessionError fins que executis `aeat config profile switch
+        NOM` (o obris un terminal nou i tornis a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -1264,7 +1376,7 @@ cli:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
       requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: Àmbit a reiniciar (all, profile, auth)
+      scope_help: 'Àmbit a reiniciar. profile: esborra tots els buckets de perfil (manifests, DEKs, declaracions, revisions de llibre major i factures). auth: neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica profile, auth i data junts.'
       yes_help: Confirmar explícitament l'operació de reinici
     set:
       help: Assignar un valor a una clau de configuració
@@ -1656,6 +1768,11 @@ cli:
   locales:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Codi de locale que s''ha d''actualitzar.'
+    remove_key_help: 'Clau de locale amb punts que s''eliminarà.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -2008,7 +2125,10 @@ cli:
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
-        app --help`.'
+        app --help`. Els modificadors globals (`--format json`, `--language ca`,
+        `--profile NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS
+        del subcomandament, p. ex. `aeat --format json app ledger list` (no `aeat
+        app ledger list --format json`).'
       quick_start_heading: Inici rapid
       quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
         csv` - afegir els moviments bancaris.'
@@ -2249,10 +2369,12 @@ errors:
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
   calc:
+    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
+    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
@@ -2265,6 +2387,8 @@ errors:
       abans d''avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
       calculades: {casilla_ids}.'
+    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
+    date_binding_value_missing: errors.calc.date_binding_value_missing
     dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
       l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
     dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador
@@ -2965,8 +3089,20 @@ filing:
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 59 LIRPF)
+      per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
+      meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
+    deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
+      € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
+      de 3 anys amb mesos de treball declarats.'
+    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
   errors:
-    foral_regime: '{tax_region} és un règim foral fora de l''abast d''aquest perfil.'
+    foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
+      en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
+      no modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
+      (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
+      el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
   keys:
     description: Profile configuration keys and their descriptions
@@ -3184,6 +3320,12 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      country-of-fiscal-residence:
+        help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
+          FR). Obligatori quan fiscal-residency és non_resident_irnr.
+      descendiente:
+        help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible).
+          Format: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:
@@ -3196,6 +3338,9 @@ wizard:
         help: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:
         help: Fills menors en unitat familiar
+      fiscal-residency:
+        help: 'Categoria de residència fiscal: resident_irpf (resident habitual a
+          Espanya) o non_resident_irnr (no resident, tributació per IRNR RDLeg 5/2004).'
       has-employees:
         help: Té empleats i paga salaris amb retenció
       incn-prior-12-months:
@@ -3207,6 +3352,14 @@ wizard:
       irpf-income-categories:
         help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
           per categoria
+      irpf-special-regime:
+        help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
+          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art. 93
+          LIRPF), aplicable els primers 6 anys des del trasllat.
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
+          Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
+          expira en acabar el 6è any natural.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
@@ -3239,6 +3392,14 @@ wizard:
         help: Paga lloguer de local amb retenció
       professional-income-withholding-ge-70pct:
         help: Almenys 70% dels ingressos professionals amb retenció prèvia
+      representante-fiscal-nif:
+        help: NIF/NIE del representant fiscal a Espanya. Obligatori per a no residents
+          fora de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nom i cognoms del representant fiscal a Espanya.
+      situacion-familiar:
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar aplica.'
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
@@ -3277,6 +3438,10 @@ wizard:
       taxpayer-marital-status:
         help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
           4 = separat/da o divorciat/da.'
+      taxpayer-marriage-date:
+        help: Data d'inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil
+          = 2 (casat/da). Calcula caselles 0245/0246/0247 (matrimoni sobrevingut,
+          art. 82 LIRPF).
       taxpayer-sex:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
@@ -3332,6 +3497,19 @@ wizard:
         help: Com es determina el rendiment net de l'activitat econòmica; selecciona
           Model 130 o 131
         prompt: Règim d'estimació IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Règim general
+          impatriado:
+            label: Impatriat — Llei Beckham (Art. 93 LIRPF)
+        help: El règim d'impatriats (Llei Beckham) s'aplica durant els primers 6 anys
+          des del trasllat. La majoria tributa en règim general.
+        prompt: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (RIRPF Art.
+          116). El règim expira en acabar el 6è any natural.
+        prompt: Data d'inici del règim especial (AAAA-MM-DD)
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -3430,6 +3608,19 @@ wizard:
             label: Madrid
           murcia:
             label: Múrcia
+      country-of-fiscal-residence:
+        prompt: País de residència fiscal (codi ISO 3166-1 alfa-2, p.ex. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: No resident — IRNR (RDLeg 5/2004)
+          resident_irpf:
+            label: Resident habitual a Espanya — IRPF
+        prompt: Categoria de residència fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representant fiscal a Espanya (obligatori fora UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nom del representant fiscal a Espanya
       tax-residence-ccaa:
         prompt: Comunitat autònoma de residència fiscal
       title: Residència fiscal
@@ -3454,6 +3645,26 @@ wizard:
         prompt: NIF/NIE del cònjuge
       title: Cònjuge
     taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimoni vigent — tributació conjunta disponible (Art. 82.1.1°)
+            label: Casat/ada
+          pareja-hecho-no-registrada:
+            description: Convivència sense inscripció registral — tributació conjunta
+              NO disponible
+            label: Parella de fet no registrada
+          pareja-hecho-registrada:
+            description: Inscrita al registre autonòmic — tributació conjunta disponible
+              (Art. 82.1.2°)
+            label: Parella de fet registrada
+          separado-divorciado:
+            label: Separat/ada o divorciat/ada
+          soltero:
+            label: Solter/a
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar s''aplica.'
+        prompt: Situació familiar (Art. 82 LIRPF)
       taxpayer-birth-date:
         prompt: Data de naixement del primer declarant
       taxpayer-death-date:
@@ -3471,6 +3682,8 @@ wizard:
           viudo:
             label: 3 - vidu
         prompt: Estat civil del primer declarant
+      taxpayer-marriage-date:
+        prompt: Data d'inici del matrimoni (AAAA-MM-DD)
       taxpayer-sex:
         prompt: Sexe del primer declarant
       title: Primer declarant
@@ -3537,6 +3750,18 @@ wizard:
         UE o l''EEE però falta el país. Afegeix el país de residència.'
       eu_eea_country_ok: 'Residència del cònjuge: el país de residència a la UE o
         l''EEE és coherent.'
+      joint_taxation_situacion_familiar_ok: 'Situació familiar: la declaració conjunta
+        és compatible amb la situació familiar declarada.'
+      joint_taxation_situacion_familiar_refused: 'Situació familiar: la declaració
+        conjunta no està permesa per a parella de fet no registrada (Art. 82.1.2°
+        LIRPF). Canvia la situació familiar o tria tributació individual.'
+      monoparental_requires_hijos_ok: 'Unitat familiar monoparental: requisit de fills
+        a càrrec verificat.'
+      monoparental_requires_hijos_warning: 'Unitat familiar monoparental: la tributació
+        conjunta com a monoparental (Art. 82.1.2° LIRPF) requereix fills menors a
+        càrrec a la unitat familiar. Sense fills a càrrec, la declaració conjunta
+        no és possible per a aquesta situació familiar. Activa «fills menors a càrrec»
+        o canvia a tributació individual.'
       obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
         són coherents.'
       obligations_inconsistent: 'Obligacions de retenció: has declarat retencions

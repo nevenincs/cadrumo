@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage import LEDGER_CLASSIFICATION_RULES_NAMESPACE, SensitivityClass
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...domain.transactions._classification_rule import LedgerClassificationRule
 
@@ -19,9 +19,9 @@ class LedgerClassificationRuleRepository(SecureBoundRepository[LedgerClassificat
     Follows the same pattern as ``IvaCompensationHistoryRepository``.
     """
 
-    namespace: ClassVar[str] = "aeat.ledger.classification.rules"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = LEDGER_CLASSIFICATION_RULES_NAMESPACE.schema_version
     payload_type: ClassVar[type[LedgerClassificationRule]] = LedgerClassificationRule
 
     def extract_identifier(self, payload: LedgerClassificationRule) -> str:

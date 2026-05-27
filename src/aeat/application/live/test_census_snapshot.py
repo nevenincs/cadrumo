@@ -18,6 +18,7 @@ from typing import TypedDict
 
 import pytest
 
+from aeat.adapters.persistence.storage import LIVE_CENSUS_SNAPSHOT_NAMESPACE
 from aeat.application.live._censo import (
     CENSUS_SNAPSHOT_NAMESPACE,
     CensoSnapshot,
@@ -348,11 +349,10 @@ def test_discard_marks_snapshot_discarded_with_audit(
     assert service.latest_active(profile_id="operator") is None
 
 
-def test_namespace_constant_matches_documented_value() -> None:
-    """Boundary regression: the namespace string is documented in the
-    ADR amendment and must not silently drift."""
+def test_namespace_constant_uses_storage_registry() -> None:
+    """Boundary regression: snapshot persistence must use the registry entry."""
 
-    assert CENSUS_SNAPSHOT_NAMESPACE == "aeat.application.live.census_snapshot"
+    assert LIVE_CENSUS_SNAPSHOT_NAMESPACE.namespace == CENSUS_SNAPSHOT_NAMESPACE
 
 
 def test_fixture_built_superseded_snapshot_roundtrips_with_successor_pointer(

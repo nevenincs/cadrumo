@@ -15,17 +15,16 @@ import tomllib
 from datetime import datetime
 from pathlib import Path
 
+from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._layout import BucketPaths
 from ._manifest import BucketManifest
-
-_MANIFEST_FILENAME = "manifest.toml"
 
 
 def manifest_path(paths: BucketPaths) -> Path:
     """Return the canonical manifest path for the bucket."""
 
-    return paths.bucket_dir / _MANIFEST_FILENAME
+    return paths.bucket_dir / BUCKET_MANIFEST_FILENAME
 
 
 def _format_scalar(value: object) -> str:

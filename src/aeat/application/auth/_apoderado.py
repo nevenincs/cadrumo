@@ -25,7 +25,11 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ...adapters.persistence.storage import SensitivityClass, safe_repository_id
+from ...adapters.persistence.storage import (
+    AUTH_APODERADO_CONFIGURATION_NAMESPACE,
+    SensitivityClass,
+    safe_repository_id,
+)
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.config import Settings
 from ...core.errors import AeatError
@@ -79,9 +83,9 @@ class _ApoderadoConfigRepository(SecureBoundRepository[ApoderadoConfiguration]):
     apoderado configuration.
     """
 
-    namespace: ClassVar[str] = "aeat.auth.apoderado"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.IDENTITY
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = AUTH_APODERADO_CONFIGURATION_NAMESPACE.schema_version
     payload_type: ClassVar[type[ApoderadoConfiguration]] = ApoderadoConfiguration
 
     def extract_identifier(self, payload: ApoderadoConfiguration) -> str:
@@ -104,24 +108,26 @@ class ApoderadoService:
     ) -> None:
         self._settings = settings or Settings()
         self._catalogue = catalogue or load_default_catalogue()
-        # The config repository opens a per-bucket SQLAlchemy engine.
-        # Build it lazily so catalogue-only verbs (``scopes list``)
-        # never touch storage — they must run cleanly on a
-        # profile-less root where no engine URL resolves.
-        self._repository_instance: _ApoderadoConfigRepository | None = None
+        # Build repositories lazily per requested bucket so catalogue-only
+        # verbs never touch storage and a long-lived service cannot route
+        # bucket B's apoderado NIF into bucket A's database.
+        self._repository_instances: dict[str, _ApoderadoConfigRepository] = {}
 
-    @property
-    def _repository(self) -> _ApoderadoConfigRepository:
-        if self._repository_instance is None:
-            self._repository_instance = _ApoderadoConfigRepository()
-        return self._repository_instance
+    def _repository_for(self, bucket_id: str) -> _ApoderadoConfigRepository:
+        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
+        repository = self._repository_instances.get(safe_bucket_id)
+        if repository is None:
+            repository = _ApoderadoConfigRepository(bucket_id=safe_bucket_id)
+            self._repository_instances[safe_bucket_id] = repository
+        return repository
 
     @property
     def catalogue(self) -> ApoderamientosCatalogue:
         return self._catalogue
 
     def status(self, *, bucket_id: str) -> ApoderadoStatus:
-        config = self._repository.load(safe_repository_id(bucket_id, context="bucket_id"))
+        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
+        config = self._repository_for(safe_bucket_id).load(safe_bucket_id)
         if config is None:
             return ApoderadoStatus(bucket_id=bucket_id, configured=False)
         return ApoderadoStatus(
@@ -151,12 +157,13 @@ class ApoderadoService:
             configured_at=datetime.now(tz=UTC),
             notes=notes,
         )
-        self._repository.save(config)
+        self._repository_for(config.bucket_id).save(config)
         return config
 
     def clear(self, *, bucket_id: str) -> bool:
         """Retire the configuration. Returns True iff a record was removed."""
-        return self._repository.delete(safe_repository_id(bucket_id, context="bucket_id"))
+        safe_bucket_id = safe_repository_id(bucket_id, context="bucket_id")
+        return self._repository_for(safe_bucket_id).delete(safe_bucket_id)
 
     def check(self, *, bucket_id: str) -> ApoderadoStatus:
         """Read-only live verification (sealed pending live-read wiring).

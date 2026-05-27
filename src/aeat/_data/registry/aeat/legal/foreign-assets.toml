@@ -1,3 +1,22 @@
+[legal."ley-7-2012:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-7-2012-da-1.html#da-1"
+document_id = "BOE-A-2012-13416"
+article = "DA-1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-13416#a1"
+published_at = 2012-10-30
+effective_from = 2012-10-31
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 7/2012 DA 1ª — introduce la disposición adicional decimoctava de la Ley 58/2003 LGT que establece la obligación de información sobre bienes y derechos situados en el extranjero (origen normativo del Modelo 720)."
+required_text = [
+    "Modificación de la Ley 58/2003",
+    "bienes y derechos situados en el extranjero",
+]
+
 [legal."ley-58-2003:da-18"]
 evidence_tier = "legal_authority"
 authority = "boe"

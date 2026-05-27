@@ -61,8 +61,10 @@ from ._festivos import (
 )
 from ._models import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
     ModeloDeadline,
@@ -73,7 +75,9 @@ from ._models import (
     Recovery,
     Schedule,
     TaxpayerProfile,
+    evaluate_multiple_pagadores_obligation,
 )
+from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
 from ._recargo import (
     build_recovery_for_overdue,
@@ -88,12 +92,14 @@ __all__ = [
     "DeadlineError",
     "DeadlineShift",
     "EntityType",
+    "FiscalResidency",
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
     "IVARegime",
     "IrpfEstimationRegime",
     "IrpfIncomeCategory",
+    "IrpfSpecialRegime",
     "LegalEntityForm",
     "ModeloDeadline",
     "ModeloEnrollment",
@@ -108,8 +114,10 @@ __all__ = [
     "ScheduleComputationError",
     "ScheduleProducer",
     "TaxpayerProfile",
+    "evaluate_multiple_pagadores_obligation",
     "applies_to",
     "build_recovery_for_overdue",
+    "resolve_filing_closes_on",
     "compute_obligation_schedule",
     "explain",
     "is_business_day",

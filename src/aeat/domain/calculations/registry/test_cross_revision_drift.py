@@ -1,11 +1,13 @@
 """Tests for the cross-revision drift validator.
 
 Per the AEAT registry design contract, every casilla id has
-identical legal responsibilities across every revision of a
+identical legal responsibilities across overlapping revisions of a
 modelo. The `_validate_cross_revision_casilla_consistency` gate
-reports drift when two revisions disagree on any
+reports drift when two overlapping revisions disagree on any
 legally-bound field (label, section, data_type, semantic_role,
-legal_refs).
+legal_refs). Non-overlapping revision windows are separate legal
+forms and require an explicit continuity/evolution contract before
+year-to-year drift can be treated as a load-time error.
 """
 
 from __future__ import annotations
@@ -18,12 +20,13 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
-from ._schema import CasillaDefinition
+from ._schema import CasillaDefinition, PeriodSelector
 from ._validate import (
     RegistryValidator,
 )
 from ._validate_cross_revision import (
     _validate_cross_revision_casilla_consistency,
+    summarize_non_overlapping_cross_revision_casilla_drift,
     validate_cross_revision_casilla_consistency,
 )
 
@@ -51,11 +54,17 @@ def _casilla(
     })
 
 
-def _modelo(modelo_id: str, revs: dict[str, list[CasillaDefinition]]) -> Any:
+def _modelo(
+    modelo_id: str,
+    revs: dict[str, list[CasillaDefinition]],
+    selectors: dict[str, PeriodSelector] | None = None,
+) -> Any:
     class _Rev:
         def __init__(self, rid: str, cas: list[CasillaDefinition]) -> None:
             self.id = rid
             self.casillas = tuple(cas)
+            if selectors is not None:
+                self.period_selector = selectors[rid]
 
     class _Mod:
         def __init__(self) -> None:
@@ -139,11 +148,89 @@ class TestCrossRevisionConsistency:
         assert "2024" in failures[0]
         assert "2025" in failures[0]
 
+    def test_overlapping_period_selectors_still_catch_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        selector = PeriodSelector(year_from=2024, periods=("0A",))
+        m = _modelo(
+            "100",
+            {"2024-a": [a], "2024-b": [b]},
+            selectors={"2024-a": selector, "2024-b": selector},
+        )
+
+        failures = _validate_cross_revision_casilla_consistency([m])
+
+        assert len(failures) == 1
+        assert "label" in failures[0]
+
+    def test_non_overlapping_period_selectors_are_not_cross_revision_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+        )
+
+        assert _validate_cross_revision_casilla_consistency([m]) == ()
+
+    def test_non_overlapping_period_selectors_are_reported_as_advisory_inventory(self) -> None:
+        a = _casilla(cid="0700", label="Old", legal_refs=("ley-58-2003:art-29",))
+        b = _casilla(cid="0700", label="New", legal_refs=("ley-58-2003:art-30",))
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+        )
+
+        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
+
+        assert {
+            (summary.modelo_id, summary.left_revision_id, summary.right_revision_id, summary.field)
+            for summary in summaries
+        } == {
+            ("100", "2024", "2025", "label"),
+            ("100", "2024", "2025", "legal_refs"),
+        }
+        assert all(summary.drift_count == 1 for summary in summaries)
+        assert all(summary.example_casilla_ids == ("0700",) for summary in summaries)
+
+    def test_non_overlapping_inventory_does_not_duplicate_hard_validator_scope(self) -> None:
+        selector = PeriodSelector(year_from=2024, periods=("0A",))
+        m = _modelo(
+            "100",
+            {"2024-a": [_casilla(cid="0700", label="Old")], "2024-b": [_casilla(cid="0700", label="New")]},
+            selectors={"2024-a": selector, "2024-b": selector},
+        )
+
+        assert summarize_non_overlapping_cross_revision_casilla_drift([m]) == ()
+
+    def test_non_overlapping_inventory_requires_positive_example_limit(self) -> None:
+        with pytest.raises(ValueError, match="example_limit"):
+            summarize_non_overlapping_cross_revision_casilla_drift([], example_limit=0)
+
 
 def test_cross_revision_validator_accepts_committed_corpus() -> None:
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
 
     validate_cross_revision_casilla_consistency(modelos)
+
+
+def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visible() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+
+    summaries = summarize_non_overlapping_cross_revision_casilla_drift(modelos)
+
+    m100_summaries = [summary for summary in summaries if summary.modelo_id == "100"]
+    assert m100_summaries
+    assert {summary.field for summary in m100_summaries}.issuperset({"label", "legal_refs"})
+    assert all(summary.example_casilla_ids for summary in m100_summaries)
 
 
 def test_backend_registry_validation_accepts_committed_corpus_drift_gate() -> None:

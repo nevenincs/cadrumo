@@ -150,6 +150,21 @@ def _emit_casilla_identity_failures(
             )
 
 
+def _emit_revision_payload_failures(
+    failures: list[str],
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Reject registry revisions that carry no casilla payload at all."""
+
+    if revision.casillas:
+        return
+    failures.append(
+        f"{prefix}: revision must declare at least one casilla; zero-casilla "
+        "revisions are unsupported placeholder definitions"
+    )
+
+
 def _emit_completeness_gate_failures(
     failures: list[str],
     prefix: str,

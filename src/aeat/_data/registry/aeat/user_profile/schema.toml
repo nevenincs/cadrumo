@@ -260,9 +260,9 @@ required = false
 sensitivity = "identity"
 effective_dated = true
 description = "Recognised legal form when entity_type is legal_entity. Drives the Impuesto sobre Sociedades rate schedule per LIS Art. 29."
-enum_values = ["sl", "sa", "cooperativa", "sociedad_civil_mercantil", "sin_fines_lucrativos", "other"]
+enum_values = ["sl", "sa", "sal", "sll", "cooperativa", "sociedad_civil_mercantil", "sin_fines_lucrativos", "other"]
 model_selectors = ["taxpayer.legal_entity_form"]
-legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley 44/2015 Art. 1 (BOE-A-2015-11071)"]
 
 [[sections.fields]]
 key = "incn_prior_12_months"
@@ -285,6 +285,46 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
 
 [[sections.fields]]
+key = "tributacion_estado_porcentaje"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de tributación al Estado for Modelo 200 casilla DP200026:00625. Standard (régimen común) entities are 100. Foral entities (Bizkaia, Gipuzkoa, Álava, Navarra) declare a partial percentage. An undeclared value is treated as 100 by the engine binding default so common-regime SLs file without configuring this field."
+model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley Orgánica 8/1980 LOFCA Art. 3 (BOE-A-1980-22492)"]
+
+[[sections.fields]]
+key = "sal_socios_trabajadores_count"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Number of worker-shareholders (socios trabajadores) in a Sociedad Laboral (SAL/SLL). Must constitute a majority of the share capital under Ley 44/2015 Art. 1. Used together with sal_reserva_especial_dotada and sal_capital_social to gate the reserva especial dotacion."
+model_selectors = ["taxpayer.sal_socios_trabajadores_count"]
+legal_refs = ["Ley 44/2015 Art. 1 (BOE-A-2015-11071)", "Ley 44/2015 Art. 2 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "sal_reserva_especial_dotada"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Accumulated reserva especial balance already dotada in prior periods (Ley 44/2015 Art. 14). Used to test the 50 percent capital social cap: dotacion = 0 once reserva_dotada >= 0.50 * capital_social."
+model_selectors = ["taxpayer.sal_reserva_especial_dotada"]
+legal_refs = ["Ley 44/2015 Art. 14 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
+key = "sal_capital_social"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Capital social of the Sociedad Laboral. Denominator of the 50 percent cap test under Ley 44/2015 Art. 14. Dotacion is capped such that accumulated reserva does not exceed 50 percent of capital social."
+model_selectors = ["taxpayer.sal_capital_social"]
+legal_refs = ["Ley 44/2015 Art. 14 (BOE-A-2015-11071)"]
+
+[[sections.fields]]
 key = "irpf_income_categories"
 type = "string"
 required = false
@@ -294,6 +334,38 @@ description = "Comma-separated set of IRPF income categories a natural person de
 model_selectors = ["taxpayer.irpf_income_categories"]
 schedule_predicates = ["taxpayer.irpf_income_categories"]
 legal_refs = ["LIRPF Arts. 17-39 (BOE-A-2006-20764)"]
+
+[[sections.fields]]
+key = "fiscal_residency"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply."
+enum_values = ["resident_irpf", "non_resident_irnr"]
+model_selectors = ["taxpayer.fiscal_residency"]
+schedule_predicates = ["taxpayer.fiscal_residency"]
+legal_refs = ["LIRPF Art. 9 (BOE-A-2006-20764)", "TRLIRNR RDLeg 5/2004 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "country_of_fiscal_residence"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR)."
+model_selectors = ["taxpayer.country_of_fiscal_residence"]
+legal_refs = ["TRLIRNR Art. 25 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "representante_fiscal_nif"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents."
+model_selectors = ["taxpayer.representante_fiscal_nif"]
+legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
 
 [[sections]]
 key = "vivienda_office"
@@ -392,6 +464,28 @@ enum_values = ["directa_normal", "directa_simplificada", "objetiva"]
 model_selectors = ["irpf.estimation_regime"]
 schedule_predicates = ["irpf.estimation_regime"]
 legal_refs = ["LIRPF Arts. 16, 28-31 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 30-31 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "special_regime"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IRPF special regime. general is the standard tarifa progressive IRPF (Modelo 100). impatriado is the regimen especial aplicable a los trabajadores desplazados a territorio espanol (Ley Beckham, LIRPF Art. 93): the taxpayer files Modelo 151 at the flat IRNR rate and the obligation engine suppresses Modelo 100 deadlines. The regime window is six fiscal years from the opt-in election (RIRPF Art. 116); record the election date in special_regime_start_date."
+enum_values = ["general", "impatriado"]
+model_selectors = ["irpf.special_regime"]
+schedule_predicates = ["irpf.special_regime"]
+legal_refs = ["LIRPF Art. 93 Ley 35/2006 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "special_regime_start_date"
+type = "date"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect."
+model_selectors = ["irpf.special_regime_start_date"]
+legal_refs = ["RIRPF RD 439/2007 Art. 116 (BOE-A-2007-6820)"]
 
 [[sections]]
 key = "withholding"
@@ -668,6 +762,47 @@ nullable = true
 description = "Taxpayer death date when Modelo 100 requires it."
 model_selectors = ["taxpayer.death_date"]
 
+[[sections.fields]]
+key = "marriage_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+nullable = true
+description = "Date the current marriage began (ISO-8601). Used when marital_status = 2 (casado/a) to derive casillas 0245 (vigente todo el año), 0246 (primer mes), and 0247 (último mes completo) via the profile binding resolver."
+model_selectors = ["renta_taxpayer.marriage_date"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_start"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. First month married in the filing year (1-12). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_start"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_end"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date. Last full month married in the filing year (always 12 when married). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_end"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_full_year"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. 1 when marriage predates the filing year, 0 otherwise. Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_full_year"]
+legal_refs = ["ley-35-2006:art-82"]
+
 [[sections]]
 key = "renta_spouse"
 title = "Renta spouse"
@@ -780,6 +915,51 @@ sensitivity = "identity"
 effective_dated = true
 description = "EU/EEA descendant deduction flag for Modelo 100."
 model_selectors = ["family.descendants_eu_eea_deduction"]
+
+[[sections.fields]]
+key = "descendientes_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of descendants represented in Renta family facts."
+model_selectors = ["RentaFamilyProfile.descendientes_count"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2024 aggregate minimum for descendants."
+model_selectors = ["family.descendientes_minimos_aggregate_2024"]
+
+[[sections.fields]]
+key = "descendientes_menores_3_2024"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of descendants eligible for the bajo-3-años supplement at year-end 2024 (Art. 58.3 LIRPF)."
+model_selectors = ["family.descendientes_menores_3_2024"]
+
+[[sections.fields]]
+key = "gastos_guarderia_reales_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Sum of Art. 81 bis guardería expenses across children under 3 at year-end 2024."
+model_selectors = ["family.gastos_guarderia_reales_2024"]
+
+[[sections.fields]]
+key = "cotizaciones_ss_madre_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Mother's Social Security cotizaciones paid in 2024 (Art. 81 bis LIRPF cap term)."
+model_selectors = ["family.cotizaciones_ss_madre_2024"]
 
 [[sections.fields]]
 key = "descendants"

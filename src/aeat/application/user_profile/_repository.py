@@ -22,7 +22,15 @@ from datetime import UTC, datetime
 
 from pydantic import ValidationError
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage import (
+    USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    USER_PROFILE_VALUE_NAMESPACE as USER_PROFILE_VALUE_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    Envelope,
+)
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...domain.user_profile import (
@@ -33,10 +41,12 @@ from ...domain.user_profile import (
     UserProfileSnapshot,
 )
 
-USER_PROFILE_VALUE_NAMESPACE = "aeat.application.user_profile.value"
-USER_PROFILE_SNAPSHOT_NAMESPACE = "aeat.application.user_profile.snapshot"
-_USER_PROFILE_VALUE_VERSION = 1
-_USER_PROFILE_SNAPSHOT_VERSION = 1
+USER_PROFILE_VALUE_NAMESPACE = USER_PROFILE_VALUE_STORAGE_NAMESPACE.namespace
+USER_PROFILE_SNAPSHOT_NAMESPACE = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.namespace
+_USER_PROFILE_VALUE_VERSION = USER_PROFILE_VALUE_STORAGE_NAMESPACE.schema_version
+_USER_PROFILE_VALUE_SENSITIVITY = USER_PROFILE_VALUE_STORAGE_NAMESPACE.sensitivity
+_USER_PROFILE_SNAPSHOT_VERSION = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.schema_version
+_USER_PROFILE_SNAPSHOT_SENSITIVITY = USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
@@ -131,7 +141,7 @@ class UserProfileLifecycleRepository:
         record = self._objects.load(
             USER_PROFILE_VALUE_NAMESPACE,
             user_profile_value_object_key(profile_id),
-            expected_class=SensitivityClass.IDENTITY,
+            expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         )
         if record is None:
@@ -140,10 +150,10 @@ class UserProfileLifecycleRepository:
             envelope = Envelope[UserProfileRecord].model_validate_json(record.payload.decode("utf-8"))
         except ValidationError as exc:
             raise StoredProfileDriftError(profile_id, exc) from exc
-        if envelope.classification is not SensitivityClass.IDENTITY:
+        if envelope.classification is not _USER_PROFILE_VALUE_SENSITIVITY:
             raise ClassificationError(
                 f"profile {profile_id!r} has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.IDENTITY}",
+                f"consumer expected {_USER_PROFILE_VALUE_SENSITIVITY}",
             )
         if envelope.schema_version > _USER_PROFILE_VALUE_VERSION:
             raise EnvelopeVersionError(
@@ -156,13 +166,13 @@ class UserProfileLifecycleRepository:
         envelope = Envelope[UserProfileRecord](
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=datetime.now(UTC),
-            classification=SensitivityClass.IDENTITY,
+            classification=_USER_PROFILE_VALUE_SENSITIVITY,
             payload=record,
         )
         self._objects.save(
             namespace=USER_PROFILE_VALUE_NAMESPACE,
             object_key=user_profile_value_object_key(record.profile_id),
-            classification=SensitivityClass.IDENTITY,
+            classification=_USER_PROFILE_VALUE_SENSITIVITY,
             schema_version=_USER_PROFILE_VALUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
@@ -181,7 +191,7 @@ class UserProfileLifecycleRepository:
 
         for raw in self._objects.list_records(
             USER_PROFILE_VALUE_NAMESPACE,
-            expected_class=SensitivityClass.IDENTITY,
+            expected_class=_USER_PROFILE_VALUE_SENSITIVITY,
             max_supported_version=_USER_PROFILE_VALUE_VERSION,
         ):
             # Extract the profile_id from the hashed object key is not
@@ -229,16 +239,16 @@ class UserProfileSnapshotRepository:
         record = self._objects.load(
             USER_PROFILE_SNAPSHOT_NAMESPACE,
             user_profile_snapshot_object_key(self._bucket_id, snapshot_id),
-            expected_class=SensitivityClass.IDENTITY,
+            expected_class=_USER_PROFILE_SNAPSHOT_SENSITIVITY,
             max_supported_version=_USER_PROFILE_SNAPSHOT_VERSION,
         )
         if record is None:
             raise ProfileSnapshotNotFoundError(f"snapshot {snapshot_id!r} not found in bucket {self._bucket_id!r}")
         envelope = Envelope[UserProfileSnapshot].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.IDENTITY:
+        if envelope.classification is not _USER_PROFILE_SNAPSHOT_SENSITIVITY:
             raise ClassificationError(
                 f"snapshot {snapshot_id!r} has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.IDENTITY}",
+                f"consumer expected {_USER_PROFILE_SNAPSHOT_SENSITIVITY}",
             )
         if envelope.schema_version > _USER_PROFILE_SNAPSHOT_VERSION:
             raise EnvelopeVersionError(
@@ -251,13 +261,13 @@ class UserProfileSnapshotRepository:
         envelope = Envelope[UserProfileSnapshot](
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
             written_at=datetime.now(UTC),
-            classification=SensitivityClass.IDENTITY,
+            classification=_USER_PROFILE_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )
         self._objects.save(
             namespace=USER_PROFILE_SNAPSHOT_NAMESPACE,
             object_key=user_profile_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=SensitivityClass.IDENTITY,
+            classification=_USER_PROFILE_SNAPSHOT_SENSITIVITY,
             schema_version=_USER_PROFILE_SNAPSHOT_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),

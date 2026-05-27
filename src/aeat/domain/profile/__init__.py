@@ -23,9 +23,22 @@ from ._keys import (
     optional_profile_keys,
     required_profile_keys,
 )
+from ._marriage_facts import (
+    marriage_date_from_facts,
+    marriage_derived_facts,
+    marriage_full_year,
+    marriage_month_start,
+    parse_marriage_date_flag,
+)
 from ._normalise import normalise_key
-from ._renta_codes import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
-from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from ._renta_codes import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
+from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
@@ -148,6 +161,7 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "DescendantInfo",
     "ForalRegimeError",
     "ProfileKey",
     "ProfileKeyRequirement",
@@ -162,11 +176,17 @@ __all__ = [
     "RentaMaritalStatus",
     "RentaSexCode",
     "ResidenceChange",
+    "SituacionFamiliar",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "get_profile_key",
+    "marriage_date_from_facts",
+    "marriage_derived_facts",
+    "marriage_full_year",
+    "marriage_month_start",
     "normalise_key",
     "optional_profile_keys",
+    "parse_marriage_date_flag",
     "parse_tax_region",
     "required_profile_keys",
 ]

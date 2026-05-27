@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -47,6 +48,14 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.outbound.aeat.sede import (
     shared_playwright as _shared_playwright,
 )
+from ...adapters.persistence.storage import (
+    LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE as _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage.envelope import SecureBoundRepository as _SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
+)
+from ...adapters.persistence.storage.sql import SecureObjectRepository as _SecureObjectRepository
 from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import (
     CalculationObservationRepository as _CalculationObservationRepository,
@@ -253,6 +262,22 @@ class StoredIvaWalletObservationRow(BaseModel):
     raw_sha256: str | None
 
 
+class StoredIvaRemoteStateAcquisitionRow(BaseModel):
+    """One redacted stored live IVA acquisition manifest summary."""
+
+    model_config = ConfigDict(frozen=True)
+
+    acquisition_ref: str
+    captured_at: datetime
+    year_from: int
+    year_to: int
+    target_year: int
+    target_period: str
+    filed_history_succeeded: bool
+    wallet_succeeded: bool
+    surfaces: tuple[str, ...]
+
+
 class IvaRemoteStateStoredEvidenceReport(BaseModel):
     """Stored remote IVA evidence available without a live AEAT read."""
 
@@ -261,6 +286,8 @@ class IvaRemoteStateStoredEvidenceReport(BaseModel):
     history: IvaCompensationHistoryReport
     wallet_observation_count: int
     wallet_observations: tuple[StoredIvaWalletObservationRow, ...]
+    acquisition_manifest_count: int = 0
+    acquisition_manifests: tuple[StoredIvaRemoteStateAcquisitionRow, ...] = ()
 
 
 class IvaCompensationHistoryCaptureReport(BaseModel):
@@ -313,6 +340,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
+    acquisition_manifest_id: str | None = None
     output_root: str
     year_from: int
     year_to: int
@@ -335,6 +363,58 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
             outcome.surface is LiveIvaReadSurface.WALLET_CARTERA and outcome.status is LiveIvaReadStatus.SUCCEEDED
             for outcome in self.outcomes
         )
+
+
+class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
+    """One persisted redacted surface outcome from a live IVA acquisition."""
+
+    model_config = ConfigDict(frozen=True)
+
+    surface: LiveIvaReadSurface
+    status: LiveIvaReadStatus
+    failure_mode: LiveIvaAcquisitionFailureMode | None = None
+    failure_type: str | None = None
+    captured_count: int | None = None
+    calculation_observation_count: int | None = None
+    reloaded_history_count: int | None = None
+    wallet_row_count: int | None = None
+    decision_ref: str | None = None
+    selected_authority: str | None = None
+    divergence: str | None = None
+    blocked: bool | None = None
+
+
+class IvaRemoteStateAcquisitionManifest(BaseModel):
+    """Encrypted profile-local manifest for one read-only live IVA acquisition."""
+
+    model_config = ConfigDict(frozen=True)
+
+    acquisition_id: str
+    captured_at: datetime
+    year_from: int
+    year_to: int
+    target_year: int
+    target_period: str
+    filed_history_succeeded: bool
+    wallet_succeeded: bool
+    surfaces: tuple[IvaRemoteStateAcquisitionSurfaceManifest, ...]
+
+
+class IvaRemoteStateAcquisitionManifestRepository(
+    _SecureBoundRepository[IvaRemoteStateAcquisitionManifest]
+):
+    """Repository for encrypted live IVA acquisition manifests."""
+
+    namespace: ClassVar[str] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.namespace
+    sensitivity: ClassVar = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = _LIVE_IVA_REMOTE_STATE_ACQUISITIONS_STORAGE_NAMESPACE.schema_version
+    payload_type: ClassVar[type[IvaRemoteStateAcquisitionManifest]] = IvaRemoteStateAcquisitionManifest
+
+    def __init__(self, *, objects: _SecureObjectRepository | None = None) -> None:
+        super().__init__(objects=objects or _secure_object_repository_for_active_bucket())
+
+    def extract_identifier(self, payload: IvaRemoteStateAcquisitionManifest) -> str:
+        return payload.acquisition_id
 
 
 class FiledDataListingRow(BaseModel):
@@ -667,10 +747,15 @@ def load_iva_remote_state(
     wallet_rows = tuple(
         _stored_wallet_observation_row(observation) for observation in store.list_iva_wallet_observations()
     )
+    acquisition_rows = tuple(
+        _stored_acquisition_manifest_row(manifest) for manifest in list_iva_remote_state_acquisition_manifests()
+    )
     return IvaRemoteStateStoredEvidenceReport(
         history=history,
         wallet_observation_count=len(wallet_rows),
         wallet_observations=wallet_rows,
+        acquisition_manifest_count=len(acquisition_rows),
+        acquisition_manifests=acquisition_rows,
     )
 
 
@@ -817,6 +902,47 @@ def _stored_wallet_observation_row(observation: _IvaCompensationWalletObservatio
         captured_at=observation.captured_at,
         raw_sha256=observation.raw_sha256,
     )
+
+
+def _stored_acquisition_manifest_row(
+    manifest: IvaRemoteStateAcquisitionManifest,
+) -> StoredIvaRemoteStateAcquisitionRow:
+    return StoredIvaRemoteStateAcquisitionRow(
+        acquisition_ref=_evidence_ref(manifest.acquisition_id),
+        captured_at=manifest.captured_at,
+        year_from=manifest.year_from,
+        year_to=manifest.year_to,
+        target_year=manifest.target_year,
+        target_period=manifest.target_period,
+        filed_history_succeeded=manifest.filed_history_succeeded,
+        wallet_succeeded=manifest.wallet_succeeded,
+        surfaces=tuple(_stored_acquisition_surface_text(surface) for surface in manifest.surfaces),
+    )
+
+
+def _stored_acquisition_surface_text(surface: IvaRemoteStateAcquisitionSurfaceManifest) -> str:
+    parts = [surface.surface.value, f"status={surface.status.value}"]
+    if surface.failure_mode is not None:
+        parts.append(f"failure_mode={surface.failure_mode.value}")
+    if surface.failure_type is not None:
+        parts.append(f"failure_type={surface.failure_type}")
+    if surface.captured_count is not None:
+        parts.append(f"captured={surface.captured_count}")
+    if surface.calculation_observation_count is not None:
+        parts.append(f"calculation_observations={surface.calculation_observation_count}")
+    if surface.reloaded_history_count is not None:
+        parts.append(f"reloaded_history={surface.reloaded_history_count}")
+    if surface.wallet_row_count is not None:
+        parts.append(f"wallet_rows={surface.wallet_row_count}")
+    if surface.decision_ref is not None:
+        parts.append(f"decision_ref={surface.decision_ref}")
+    if surface.selected_authority is not None:
+        parts.append(f"authority={surface.selected_authority}")
+    if surface.divergence is not None:
+        parts.append(f"divergence={surface.divergence}")
+    if surface.blocked is not None:
+        parts.append(f"blocked={surface.blocked}")
+    return " ".join(parts)
 
 
 def _authority_source_text(source: _IvaCompensationAuthoritySource) -> str:
@@ -1203,7 +1329,7 @@ async def capture_iva_remote_state(
     except Exception as exc:
         wallet_error = exc
 
-    return build_iva_remote_state_acquisition_report(
+    report = build_iva_remote_state_acquisition_report(
         output_root=store_root,
         year_from=year_from,
         year_to=year_to,
@@ -1214,6 +1340,8 @@ async def capture_iva_remote_state(
         filed_history_error=filed_error,
         wallet_error=wallet_error,
     )
+    manifest = persist_iva_remote_state_acquisition_report(report)
+    return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
 
 
 def build_iva_remote_state_acquisition_report(
@@ -1223,6 +1351,7 @@ def build_iva_remote_state_acquisition_report(
     year_to: int,
     target_year: int,
     target_period: str,
+    acquisition_manifest_id: str | None = None,
     filed_history: IvaCompensationHistoryCaptureReport | None = None,
     wallet: IvaWalletCaptureReport | None = None,
     filed_history_error: BaseException | None = None,
@@ -1243,6 +1372,7 @@ def build_iva_remote_state_acquisition_report(
         ),
     )
     return IvaRemoteStateAcquisitionReport(
+        acquisition_manifest_id=acquisition_manifest_id,
         output_root=str(output_root),
         year_from=year_from,
         year_to=year_to,
@@ -1251,6 +1381,105 @@ def build_iva_remote_state_acquisition_report(
         filed_history=filed_history,
         wallet=wallet,
         outcomes=outcomes,
+    )
+
+
+def persist_iva_remote_state_acquisition_report(
+    report: IvaRemoteStateAcquisitionReport,
+    *,
+    captured_at: datetime | None = None,
+    repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
+) -> IvaRemoteStateAcquisitionManifest:
+    """Persist a redacted encrypted manifest for a live IVA acquisition report."""
+
+    resolved_captured_at = captured_at if captured_at is not None else datetime.now(UTC)
+    manifest = _iva_remote_state_acquisition_manifest(report, captured_at=resolved_captured_at)
+    repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
+    repo.save(manifest)
+    return manifest
+
+
+def load_iva_remote_state_acquisition_manifest(
+    acquisition_id: str,
+    *,
+    repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
+) -> IvaRemoteStateAcquisitionManifest | None:
+    """Load one encrypted live IVA acquisition manifest by id."""
+
+    repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
+    return repo.load(acquisition_id)
+
+
+def list_iva_remote_state_acquisition_manifests(
+    *,
+    repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
+) -> tuple[IvaRemoteStateAcquisitionManifest, ...]:
+    """List encrypted live IVA acquisition manifests for the active profile."""
+
+    repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
+    return tuple(sorted(repo.iter_records(), key=lambda item: item.captured_at, reverse=True))
+
+
+def _iva_remote_state_acquisition_manifest(
+    report: IvaRemoteStateAcquisitionReport,
+    *,
+    captured_at: datetime,
+) -> IvaRemoteStateAcquisitionManifest:
+    surfaces = tuple(_iva_remote_state_surface_manifest(report, outcome) for outcome in report.outcomes)
+    manifest_seed = "|".join(
+        (
+            str(report.year_from),
+            str(report.year_to),
+            str(report.target_year),
+            report.target_period,
+            captured_at.isoformat(),
+            *(surface.model_dump_json() for surface in surfaces),
+        )
+    )
+    digest = hashlib.sha256(manifest_seed.encode("utf-8")).hexdigest()
+    timestamp = captured_at.astimezone(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    acquisition_id = f"live-iva-acquisition:{report.target_year}:{report.target_period}:{timestamp}:{digest}"
+    return IvaRemoteStateAcquisitionManifest(
+        acquisition_id=acquisition_id,
+        captured_at=captured_at,
+        year_from=report.year_from,
+        year_to=report.year_to,
+        target_year=report.target_year,
+        target_period=report.target_period,
+        filed_history_succeeded=report.filed_history_succeeded,
+        wallet_succeeded=report.wallet_succeeded,
+        surfaces=surfaces,
+    )
+
+
+def _iva_remote_state_surface_manifest(
+    report: IvaRemoteStateAcquisitionReport,
+    outcome: LiveIvaReadOutcome,
+) -> IvaRemoteStateAcquisitionSurfaceManifest:
+    if outcome.surface is LiveIvaReadSurface.FILED_HISTORY:
+        filed = report.filed_history
+        return IvaRemoteStateAcquisitionSurfaceManifest(
+            surface=outcome.surface,
+            status=outcome.status,
+            failure_mode=outcome.failure_mode,
+            failure_type=outcome.failure_type,
+            captured_count=outcome.captured_count,
+            calculation_observation_count=outcome.calculation_observation_count,
+            reloaded_history_count=filed.reloaded_history_count if filed is not None else None,
+        )
+    wallet = report.wallet
+    return IvaRemoteStateAcquisitionSurfaceManifest(
+        surface=outcome.surface,
+        status=outcome.status,
+        failure_mode=outcome.failure_mode,
+        failure_type=outcome.failure_type,
+        captured_count=outcome.captured_count,
+        calculation_observation_count=outcome.calculation_observation_count,
+        wallet_row_count=wallet.row_count if wallet is not None else None,
+        decision_ref=_evidence_ref(wallet.decision_key) if wallet is not None else None,
+        selected_authority=wallet.selected_authority if wallet is not None else None,
+        divergence=wallet.divergence if wallet is not None else None,
+        blocked=wallet.blocked if wallet is not None else None,
     )
 
 
@@ -1311,7 +1540,10 @@ __all__ = [
     "IvaCompensationHistoryCaptureReport",
     "IvaCompensationHistoryReport",
     "IvaCompensationHistoryRow",
+    "IvaRemoteStateAcquisitionManifest",
+    "IvaRemoteStateAcquisitionManifestRepository",
     "IvaRemoteStateAcquisitionReport",
+    "IvaRemoteStateAcquisitionSurfaceManifest",
     "IvaRemoteStateStoredEvidenceReport",
     "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
@@ -1323,6 +1555,7 @@ __all__ = [
     "LiveIvaReadSurface",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
+    "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",
@@ -1337,8 +1570,11 @@ __all__ = [
     "filed_data_listing_row",
     "list_filed_data",
     "list_iva_compensation_history",
+    "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
+    "load_iva_remote_state_acquisition_manifest",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_filed_calculation_observation",
+    "persist_iva_remote_state_acquisition_report",
     "select_declarations_for_capture",
 ]

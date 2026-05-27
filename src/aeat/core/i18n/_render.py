@@ -18,6 +18,7 @@ import i18n
 import yaml
 
 from ..config import PROJECT_ROOT, _settings_override, load_settings
+from ..errors import CoreError
 from ..logging import get_logger
 
 _log = get_logger(__name__)
@@ -34,7 +35,7 @@ _I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar(
 )
 
 
-class UnmatchedPlaceholderError(Exception):
+class UnmatchedPlaceholderError(CoreError):
     """Raised in strict-placeholder mode when a locale value retains a {name} token.
 
     Indicates that a ``tr()`` call site supplies a key whose locale value
@@ -210,13 +211,14 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
     if interpolation:
         rendered = _interpolate(rendered, interpolation)
-    if _I18N_STRICT_PLACEHOLDERS.get():
-        if match := _SURVIVING_PLACEHOLDER_RE.search(rendered):
-            raise UnmatchedPlaceholderError(
-                key=translation_key,
-                name=match.group("name"),
-                rendered=rendered,
-            )
+    if _I18N_STRICT_PLACEHOLDERS.get() and (
+        match := _SURVIVING_PLACEHOLDER_RE.search(rendered)
+    ):
+        raise UnmatchedPlaceholderError(
+            key=translation_key,
+            name=match.group("name"),
+            rendered=rendered,
+        )
     return rendered
 
 

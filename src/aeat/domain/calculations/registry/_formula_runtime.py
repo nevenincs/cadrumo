@@ -134,6 +134,7 @@ def calculate_registry_snapshot(
     binding_values: Mapping[str, Decimal] | None = None,
     enum_binding_values: Mapping[str, str] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
+    date_binding_values: Mapping[str, date] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas in a validated registry snapshot.
 
@@ -142,6 +143,11 @@ def calculate_registry_snapshot(
     :func:`lookup_bracket_by_ccaa` op routes against. They are kept in
     a separate mapping from ``binding_values`` so the Decimal-only
     contract on numeric bindings stays intact.
+
+    ``date_binding_values`` carries date-valued profile facts (e.g.
+    birth_date) consumed by the ``age_at_year_end`` op.  Date facts
+    cannot flow through the Decimal ``binding_values`` channel; keeping
+    them in a dedicated channel preserves the Decimal-only invariant.
     """
 
     _reject_non_decimal(inputs, "input")
@@ -153,6 +159,7 @@ def calculate_registry_snapshot(
     _reject_non_string(resolved_enum_bindings, "enum_binding")
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
+    resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
 
     revision = snapshot.revision
     _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
@@ -195,6 +202,8 @@ def calculate_registry_snapshot(
                 operand_refs=operand_refs,
                 operand_values=operand_values,
                 enum_binding_values=resolved_enum_bindings,
+                date_binding_values=resolved_date_bindings,
+                filing_year=snapshot.filing_year,
             )
             value = _apply_rounding(value, formula.rounding)
             target_casilla = casillas_by_id.get(target)
@@ -346,6 +355,38 @@ def _initial_values(
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
             context={"casilla_ids": ",".join(smuggled_previous_filing_bound)},
         )
+    # P08.S50 hardening: when BOTH inputs[bound_casilla_id] AND
+    # binding_values[binding_id] are populated, the two values MUST
+    # match. A divergence means the fixture (or production caller's
+    # projection helper) declared two contradictory values for the
+    # same casilla; the runtime would silently pick binding_values
+    # as source of truth and the inconsistency would never surface.
+    # Reject the inconsistency loudly so the caller fixes the
+    # projection at its origin.
+    inconsistent_previous_filing_projections: list[str] = []
+    for casilla_id, input_value in inputs.items():
+        casilla = casillas[casilla_id]
+        if casilla.input_kind != "bound" or casilla.binding is None:
+            continue
+        binding = bindings_by_id.get(casilla.binding)
+        if binding is None or binding.source != "previous_filing":
+            continue
+        binding_value = binding_values.get(binding.id)
+        if binding_value is None:
+            continue
+        if input_value != binding_value:
+            inconsistent_previous_filing_projections.append(
+                f"casilla {casilla_id!r}: inputs={input_value!r} vs binding_values[{binding.id!r}]={binding_value!r}"
+            )
+    if inconsistent_previous_filing_projections:
+        raise RegistryValidationError(
+            "previous-filing bound casilla projection is inconsistent between "
+            "inputs and binding_values; the binding_values entry is the source "
+            "of truth and the inputs projection must match it: "
+            + "; ".join(inconsistent_previous_filing_projections),
+            translated_message="errors.calc.bound_projection_inconsistent",
+            context={"casilla_ids": ",".join(c.split(":")[0].split("'")[1] for c in inconsistent_previous_filing_projections)},
+        )
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()
     for casilla in revision.casillas:
@@ -436,8 +477,11 @@ def _evaluate_expression(
     operand_refs: list[str],
     operand_values: list[Decimal],
     enum_binding_values: Mapping[str, str] | None = None,
+    date_binding_values: Mapping[str, date] | None = None,
+    filing_year: int = 0,
 ) -> Decimal:
     resolved_enum_bindings: Mapping[str, str] = enum_binding_values or {}
+    resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -448,6 +492,8 @@ def _evaluate_expression(
             relation_values=relation_values,
             operand_refs=operand_refs,
             operand_values=operand_values,
+            date_binding_values=resolved_date_bindings,
+            filing_year=filing_year,
         )
     ctx = _EvalContext(
         values=values,
@@ -458,6 +504,8 @@ def _evaluate_expression(
         operand_refs=operand_refs,
         operand_values=operand_values,
         enum_binding_values=resolved_enum_bindings,
+        date_binding_values=resolved_date_bindings,
+        filing_year=filing_year,
     )
     op = expression.op
     if op == "lookup_bracket":
@@ -470,6 +518,8 @@ def _evaluate_expression(
         return _evaluate_lookup_bracket_by_entity_type(expression, ctx)
     if op == "if_then_else":
         return _evaluate_if_then_else(expression, ctx)
+    if op == "age_at_year_end":
+        return _evaluate_age_at_year_end(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
     return _evaluate_args_op(op, args)
 
@@ -492,6 +542,8 @@ class _EvalContext:
     operand_refs: list[str]
     operand_values: list[Decimal]
     enum_binding_values: Mapping[str, str]
+    date_binding_values: Mapping[str, date]
+    filing_year: int
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -506,6 +558,8 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         operand_refs=ctx.operand_refs,
         operand_values=ctx.operand_values,
         enum_binding_values=ctx.enum_binding_values,
+        date_binding_values=ctx.date_binding_values,
+        filing_year=ctx.filing_year,
     )
 
 
@@ -733,6 +787,44 @@ def _evaluate_if_then_else(expression: FormulaExpression, ctx: _EvalContext) -> 
     return _evaluate_with_ctx(selected_branch, ctx)
 
 
+def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Compute age at the fiscal year-end from a date-channel binding.
+
+    Expects exactly one arg which must be a ``date_binding`` leaf — the
+    id of a date-valued profile fact (e.g. taxpayer birth_date).
+    Returns ``Decimal(filing_year - birth_date.year)``.
+
+    Art. 57.1.b LIRPF ages the taxpayer at 31 December of the tax year
+    (fin del período impositivo).  Because birth month/day cannot be
+    after 31 December of any year, the simplistic
+    ``filing_year - birth_year`` formula is correct for all cases.
+    """
+    if len(expression.args) != 1:
+        raise RegistryValidationError("formula op 'age_at_year_end' expects exactly 1 arg")
+    arg = expression.args[0]
+    if arg.date_binding is None:
+        raise RegistryValidationError(
+            "formula op 'age_at_year_end' requires args[0] to be a date_binding leaf"
+        )
+    binding_id = str(arg.date_binding)
+    if binding_id not in ctx.date_binding_values:
+        raise RegistryValidationError(
+            f"date_binding {binding_id!r} has no supplied value; required by age_at_year_end",
+            translated_message="errors.calc.date_binding_value_missing",
+            context={"binding_id": binding_id},
+        )
+    birth_date = ctx.date_binding_values[binding_id]
+    if ctx.filing_year == 0:
+        raise RegistryValidationError(
+            "age_at_year_end requires a non-zero filing_year in evaluation context",
+            translated_message="errors.calc.age_at_year_end_no_filing_year",
+        )
+    age = Decimal(ctx.filing_year - birth_date.year)
+    ctx.operand_refs.append(binding_id)
+    ctx.operand_values.append(age)
+    return age
+
+
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})
 _UNARY_PASSTHROUGH_OPS = frozenset({"copy", "lookup_parameter", "previous_period_value", "cross_model_sum"})
 
@@ -800,6 +892,8 @@ def _evaluate_leaf(
     relation_values: Mapping[str, Decimal],
     operand_refs: list[str],
     operand_values: list[Decimal],
+    date_binding_values: Mapping[str, date] | None = None,
+    filing_year: int = 0,
 ) -> Decimal:
     if expression.literal is not None:
         return expression.literal
@@ -825,6 +919,17 @@ def _evaluate_leaf(
         operand_refs.append(expression.binding)
         operand_values.append(value)
         return value
+    if expression.date_binding is not None:
+        # A date_binding leaf is consumed exclusively by the age_at_year_end op.
+        # As a bare leaf (outside age_at_year_end) it has no Decimal projection;
+        # callers should never reach here for a standalone date_binding leaf
+        # without wrapping it in age_at_year_end.  Raise descriptively.
+        raise RegistryValidationError(
+            f"date_binding {expression.date_binding!r} leaf must be consumed inside an "
+            "'age_at_year_end' op, not used as a standalone Decimal leaf",
+            translated_message="errors.calc.date_binding_used_as_decimal_leaf",
+            context={"binding_id": str(expression.date_binding)},
+        )
     if expression.parameter is not None:
         parameter = parameters[expression.parameter]
         value = _resolve_parameter(parameter, date_context)

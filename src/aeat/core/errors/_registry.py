@@ -117,6 +117,13 @@ class ErrorEnvelope(BaseModel):
 _ERROR_REGISTRY_MUTABLE: dict[str, ErrorCode] = {}
 _CLASS_CODE_REGISTRY: dict[type[BaseException], ErrorCode] = {}
 
+# Collects AeatError subclasses whose bind_error_code call arrived before
+# _DECLARED_CODE_BY_QUALNAME was fully populated (i.e. during the circular-
+# import window while this module is still initialising).  get_registered_
+# error_code drains this set on every call so deferred classes are bound
+# at first runtime use rather than at class-creation time.
+_DEFERRED_BIND: set[type[BaseException]] = set()
+
 
 def register(code: ErrorCode) -> ErrorCode:
     """Register ``code`` in the global catalogue.
@@ -146,24 +153,63 @@ _DECLARED_CODE_BY_QUALNAME: Mapping[str, ErrorCode] = MappingProxyType(
 ERROR_REGISTRY: Mapping[str, ErrorCode] = MappingProxyType(_ERROR_REGISTRY_MUTABLE)
 
 
+def _flush_deferred_binds() -> None:
+    """Attempt to bind any classes whose registration was deferred.
+
+    Called at the start of get_registered_error_code so that classes
+    defined during the circular-import window (before
+    _DECLARED_CODE_BY_QUALNAME was ready) are bound on first runtime use.
+    """
+
+    if not _DEFERRED_BIND:
+        return
+    still_pending: set[type[BaseException]] = set()
+    for error_type in list(_DEFERRED_BIND):
+        qualname = _qualname(error_type)
+        # _DECLARED_CODE_BY_QUALNAME is guaranteed populated by the time
+        # any runtime call reaches here; failures here are genuine gaps.
+        code = _DECLARED_CODE_BY_QUALNAME.get(qualname)
+        if code is not None:
+            _CLASS_CODE_REGISTRY[error_type] = code
+            type.__setattr__(error_type, "code", code)
+        else:
+            still_pending.add(error_type)
+    _DEFERRED_BIND.clear()
+    _DEFERRED_BIND.update(still_pending)
+
+
 def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
     """Bind a stable :class:`ErrorCode` to ``error_type``.
+
+    Called from :meth:`AeatError.__init_subclass__` at class-creation
+    time.  If the global :data:`_DECLARED_CODE_BY_QUALNAME` mapping is
+    not yet available (the module is still initialising due to a circular
+    import) the class is added to :data:`_DEFERRED_BIND` and bound
+    lazily on first use via :func:`get_registered_error_code`.
 
     Args:
         error_type: Error class being declared.
 
     Returns:
-        The registered :class:`ErrorCode` for ``error_type``.
-
-    Raises:
-        ValueError: If ``error_type`` has no declared registry entry.
+        The registered :class:`ErrorCode` for ``error_type``, or raises
+        :exc:`ValueError` if the mapping is available and contains no
+        entry for this class.
     """
 
     bound = _CLASS_CODE_REGISTRY.get(error_type)
     if bound is not None:
         return bound
+    # _DECLARED_CODE_BY_QUALNAME is assigned at module level after the
+    # registry submodule import on the line above.  During the circular-
+    # import window (when another module triggers AeatError subclass
+    # creation while _registry.py is still executing) this name does not
+    # yet exist in the module globals.  Defer rather than crash.
+    declared = globals().get("_DECLARED_CODE_BY_QUALNAME")
+    if declared is None:
+        _DEFERRED_BIND.add(error_type)
+        return  # type: ignore[return-value]  # deferred; no code available yet
     qualname = _qualname(error_type)
-    code = _DECLARED_CODE_BY_QUALNAME.get(qualname)
+    code = declared.get(qualname)
     if code is None:
         raise ValueError(f"AeatError subclass {qualname} is missing a declared ErrorCode registry entry")
     _CLASS_CODE_REGISTRY[error_type] = code
@@ -172,8 +218,15 @@ def bind_error_code(error_type: type[BaseException]) -> ErrorCode:
 
 
 def get_registered_error_code(error: BaseException | type[BaseException]) -> ErrorCode:
-    """Return the registered :class:`ErrorCode` for ``error``."""
+    """Return the registered :class:`ErrorCode` for ``error``.
 
+    Drains any deferred binds accumulated during the circular-import
+    window before attempting the lookup, so classes defined before
+    ``_DECLARED_CODE_BY_QUALNAME`` was populated are bound here on first
+    runtime use.
+    """
+
+    _flush_deferred_binds()
     error_type = error if isinstance(error, type) else type(error)
     code = _CLASS_CODE_REGISTRY.get(error_type)
     if code is None:

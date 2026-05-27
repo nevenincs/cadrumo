@@ -88,6 +88,78 @@ def test_any_nonzero_fails_when_all_absent() -> None:
     assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values) is False
 
 
+def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
+    """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
+    values: dict[str, Decimal] = {"11": Decimal("300"), "10": Decimal("500")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is True
+
+
+def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
+    """cap_le_when_positive: fails when ceiling > 0 AND limited > ceiling.
+
+    P08.S47 case: M131 C11 (resultados negativos anteriores) MUST NOT
+    exceed C10 (cuota positiva del trimestre) per AEAT instructions
+    "en ningún caso podrá figurar en la casilla 11 un importe superior
+    a la cantidad positiva consignada en la casilla 10".
+    """
+    values: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("500")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is False
+
+
+def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
+    """P08.S60 integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
+
+    Constructs the exact M130 C15-cap predicate used in the
+    registry (modelo-130-c15-cap-by-c14) and runs it through
+    _evaluate_verification_predicates with a casilla_values map
+    where C15 (limited) exceeds C14 (ceiling). The predicate must
+    fire with a BLOCKING_RULE finding citing the predicate_id and
+    the legal_refs from the registry declaration.
+    """
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-c15-cap-by-c14",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='cap_le_when_positive(["15", "14"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    # C14 = 1000 (positive ceiling), C15 = 1500 (exceeds cap)
+    casilla_values = {"14": Decimal("1000"), "15": Decimal("1500")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert "modelo-130-c15-cap-by-c14" in findings[0].message
+
+
+def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
+    """P08.S60 integration test: a satisfied cap predicate produces no finding."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-c15-cap-by-c14",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='cap_le_when_positive(["15", "14"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    # C14 = 1000, C15 = 600 — within cap
+    casilla_values = {"14": Decimal("1000"), "15": Decimal("600")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    assert findings == []
+
+
+def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
+    """cap_le_when_positive: predicate holds (no cap) when ceiling ≤ 0.
+
+    The AEAT cap rule only applies when the operator's gross liability
+    is positive. A zero or negative cuota means there's no cap to
+    enforce; the predicate must NOT block in that case.
+    """
+    values_zero: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("0")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero) is True
+    values_negative: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("-50")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative) is True
+
+
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
@@ -227,6 +299,86 @@ def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
 
     missing_kinds = {f.kind for f in report.findings}
     assert ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA in missing_kinds
+
+
+def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
+    """P09.S64: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
+
+    Drives the full registry-load → snapshot → calculate_modelo_revision →
+    verify_modelo_revision pipeline with a scenario where the prior-quarter
+    saldo seed (supplied via binding_values for casilla 15) exceeds C14
+    (computed from operator-supplied inputs). The verification report MUST
+    surface a BLOCKING_RULE finding citing the
+    modelo-130-c15-cap-by-c14 predicate.
+
+    The earlier S60 test exercised the predicate evaluator with literal
+    casilla values; this test exercises the FULL production pipeline —
+    a registry-load typo / binding-aggregation regression / predicate-
+    declaration drift would all surface here.
+    """
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="130",
+        filing_year=2026,
+        period="2T",
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    # Modest operator inputs so C14 stays small + positive.
+    casilla_inputs: dict[str, Decimal] = {
+        "02": Decimal("0"),
+        "05": Decimal("0"),
+        "06": Decimal("0"),
+        "08": Decimal("0"),
+        "10": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+    # Carry-forward seed deliberately large — exceeds the computed C14.
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("99999"),
+            # M130 C03 is a ledger-aggregated cumulative binding; supply
+            # a small value so C14 stays small + positive (the cap rule
+            # only fires when C14 > 0).
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("1000"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    # The cap predicate fires when C14 > 0 AND C15 > C14. The carry-
+    # forward seed (99999) exceeds any plausible C14 computed from
+    # the small inputs above; the predicate MUST emit a BLOCKING_RULE.
+    blocking_findings = [
+        f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    ]
+    cap_findings = [f for f in blocking_findings if "modelo-130-c15-cap-by-c14" in f.message]
+    assert cap_findings, (
+        "M130 C15-cap-by-C14 predicate must fire when carry-forward exceeds positive C14; "
+        f"got blocking findings: {[f.message for f in blocking_findings]}"
+    )
+    assert report.granted_verificado_completo is False
 
 
 # ---------------------------------------------------------------------------

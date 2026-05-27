@@ -12,12 +12,20 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ...domain.deadlines._models import (
     EntityType,
+    FiscalResidency,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
+from ...domain.profile import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
 from ...domain.profile._ccaa import CCAA
 
 
@@ -83,6 +91,12 @@ class SetupAnswers(BaseModel):
     # ── taxpayer biographic ──────────────────────────────────────────────
     taxpayer_sex: RentaSexCode | str = ""
     taxpayer_marital_status: RentaMaritalStatus | str = ""
+    taxpayer_marriage_date: str = ""
+    """ISO-8601 date when the current marriage began.
+
+    Optional; only relevant when ``taxpayer_marital_status`` is ``"2"``
+    (casado/a).  Used to derive casillas 0245/0246/0247 (matrimonio
+    sobrevenido) during profile-binding resolution."""
     taxpayer_birth_date: str = ""
     taxpayer_disability_grade: RentaDisabilityGrade | str = ""
     taxpayer_death_date: str = ""
@@ -101,6 +115,19 @@ class SetupAnswers(BaseModel):
     # ── family ───────────────────────────────────────────────────────────
     family_descendants_eu_eea_deduction: bool = False
     family_minor_children_in_unit: bool = False
+    situacion_familiar: SituacionFamiliar | str = ""
+    """Art. 82 LIRPF family situation governing conjunta eligibility.
+
+    Blank when undeclared. The verifier checks this against
+    ``taxation_type`` and emits an ERROR when conjunta is requested
+    but the declared situation does not permit it (e.g.
+    ``pareja_hecho_no_registrada``)."""
+    unidad_familiar_descendientes_exclusivos: bool | str = ""
+    """In custodia compartida, the progenitor who claims the children
+    for the monoparental unidad familiar (Art. 82.1.2° LIRPF second
+    indent). Only relevant when ``situacion_familiar`` is
+    ``separado_divorciado`` or ``soltero`` and ``taxation_type`` is
+    ``"2"``. Blank when undeclared."""
 
     # ── IVA ──────────────────────────────────────────────────────────────
     iva_regime: IVARegime = IVARegime.GENERAL
@@ -122,12 +149,23 @@ class SetupAnswers(BaseModel):
     pays_capital_income_with_retencion: bool = False
     uses_objective_estimation_irpf: bool = False
     irpf_estimation_regime: IrpfEstimationRegime | str = ""
+    irpf_special_regime: IrpfSpecialRegime | str = ""
+    """IRPF special-regime axis. Blank for the general regime; ``impatriado``
+    activates the Ley Beckham path (LIRPF Art. 93)."""
+    irpf_special_regime_start_date: str = ""
+    """ISO-8601 opt-in election date for the special regime. Blank when undeclared."""
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: CCAA = CCAA.MADRID
+    fiscal_residency: FiscalResidency | str = ""
+    """Fiscal residency category. Blank for the default RESIDENT_IRPF path;
+    ``non_resident_irnr`` routes the taxpayer to IRNR (TRLIRNR RDLeg 5/2004)."""
+    country_of_fiscal_residence: str = ""
+    """ISO 3166-1 alpha-2 code of the country of fiscal residence.
+    Required when ``fiscal_residency`` is ``non_resident_irnr``."""
 
     # ── notes ────────────────────────────────────────────────────────────
     notes: str = ""
@@ -173,6 +211,53 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return IrpfEstimationRegime(value)
         raise TypeError("irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank")
+
+    @field_validator("situacion_familiar", mode="before")
+    @classmethod
+    def _parse_situacion_familiar(cls, value: object) -> SituacionFamiliar | str:
+        if value == "":
+            return ""
+        if isinstance(value, SituacionFamiliar):
+            return value
+        if isinstance(value, str):
+            return SituacionFamiliar(value)
+        raise TypeError("situacion_familiar must be a SituacionFamiliar member, string token, or blank")
+
+    @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
+    @classmethod
+    def _parse_unidad_familiar_descendientes_exclusivos(cls, value: object) -> bool | str:
+        if value == "":
+            return ""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            if value.lower() == "true":
+                return True
+            if value.lower() == "false":
+                return False
+        raise TypeError("unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank")
+
+    @field_validator("irpf_special_regime", mode="before")
+    @classmethod
+    def _parse_irpf_special_regime(cls, value: object) -> IrpfSpecialRegime | str:
+        if value == "":
+            return ""
+        if isinstance(value, IrpfSpecialRegime):
+            return value
+        if isinstance(value, str):
+            return IrpfSpecialRegime(value)
+        raise TypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
+
+    @field_validator("fiscal_residency", mode="before")
+    @classmethod
+    def _parse_fiscal_residency(cls, value: object) -> FiscalResidency | str:
+        if value == "":
+            return ""
+        if isinstance(value, FiscalResidency):
+            return value
+        if isinstance(value, str):
+            return FiscalResidency(value)
+        raise TypeError("fiscal_residency must be a FiscalResidency member, string token, or blank")
 
     @field_validator("irpf_income_categories")
     @classmethod
@@ -222,6 +307,28 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return RentaMaritalStatus(value)
         raise TypeError("taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank")
+
+    @field_validator("taxpayer_marriage_date")
+    @classmethod
+    def _validate_taxpayer_marriage_date(cls, value: str) -> str:
+        """Reject a non-ISO marriage date at the typed boundary.
+
+        Optional: a blank string is accepted unchanged.  A non-blank
+        value must be a valid ISO-8601 date so the profile binding
+        resolver can derive the matrimonio-sobrevenido facts.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"taxpayer_marriage_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
 
     @field_validator("taxpayer_disability_grade", "spouse_disability_grade", mode="before")
     @classmethod
@@ -312,6 +419,28 @@ class SetupAnswers(BaseModel):
         except ValueError as exc:
             raise ValueError(
                 f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
+            ) from exc
+        return value
+
+    @field_validator("irpf_special_regime_start_date")
+    @classmethod
+    def _validate_irpf_special_regime_start_date(cls, value: str) -> str:
+        """Reject a non-ISO special-regime election date at the typed boundary.
+
+        Optional: a blank string is accepted unchanged.  A non-blank
+        value must be a valid ISO-8601 date so the beckham-window gate
+        and ``TaxpayerProfile.beckham_window_active`` receive a parseable date.
+        """
+
+        from datetime import date
+
+        if value == "":
+            return value
+        try:
+            date.fromisoformat(value)
+        except ValueError as exc:
+            raise ValueError(
+                f"special_regime_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
             ) from exc
         return value
 

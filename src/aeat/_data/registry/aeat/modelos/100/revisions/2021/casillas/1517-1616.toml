@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "1616"
 number = "1616"
-label = "{2}UR{2}.- Urbana"
+label = "'UR'.- Urbana"
 section = ["toma_datos_ampliada", "regimenes_especiales", "re_at_rentas"]
 data_type = "boolean"
 semantic_role = "irpf_re_atrib_inmueble_urbana_flag"

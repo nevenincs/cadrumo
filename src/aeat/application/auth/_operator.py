@@ -127,6 +127,35 @@ class AuthTestResult(AuthStatusResult):
     probe_result: str = ""
 
 
+class LiveAuthPreflightReport(BaseModel):
+    """Redacted live-auth readiness report rendered before operator approval waits."""
+
+    model_config = _STRICT_FROZEN
+
+    provider: str = ""
+    configured: bool = False
+    available: bool = False
+    active_profile: str = ""
+    active_profile_status: str = ""
+    active_profile_registered: bool = False
+    active_profile_record_present: bool = False
+    profile_tax_id_present: bool = False
+    provider_identity_present: bool = False
+    identity_alignment: str = ""
+    identity_kind: str = ""
+    auth_mode: str = ""
+    prefer_non_qr: bool | None = None
+    timeout_ms: int | None = None
+    dni_fecha_configured: bool | None = None
+    nie_soporte_configured: bool | None = None
+    certificate_path_configured: bool | None = None
+    certificate_file_present: bool | None = None
+    certificate_backend: str = ""
+    persisted_session_present: bool = False
+    persisted_session_expired: bool | None = None
+    probe_result: str = ""
+
+
 class AuthLoginResult(BaseModel):
     """Result of an operator-triggered live authentication attempt."""
 
@@ -545,6 +574,115 @@ def test_operator_auth(provider: str | None = None) -> AuthTestResult:
     )
 
 
+def build_live_auth_preflight_report(
+    provider: str | None = None,
+    *,
+    settings: Settings | None = None,
+) -> LiveAuthPreflightReport:
+    """Return a redacted preflight report before a live read may trigger auth."""
+
+    resolved_settings = settings or Settings()
+    provider_kind = _provider_kind_or_none(provider)
+    if provider_kind is None:
+        try:
+            provider_kind = _configured_or_default_provider(resolved_settings)
+        except ValueError:
+            provider_kind = None
+    probe = test_operator_auth(provider_kind.value if provider_kind is not None else provider)
+    profile_tax_id_present, provider_identity_present, identity_alignment = _live_auth_identity_state(
+        provider_kind,
+        settings=resolved_settings,
+    )
+    return LiveAuthPreflightReport(
+        provider=probe.provider,
+        configured=probe.configured,
+        available=probe.available,
+        active_profile=probe.active_profile,
+        active_profile_status=probe.active_profile_status,
+        active_profile_registered=probe.active_profile_registered,
+        active_profile_record_present=probe.active_profile_record_present,
+        profile_tax_id_present=profile_tax_id_present,
+        provider_identity_present=provider_identity_present,
+        identity_alignment=identity_alignment,
+        identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
+        auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
+        prefer_non_qr=(
+            resolved_settings.aeat_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
+        ),
+        timeout_ms=resolved_settings.aeat_clave_movil_timeout_ms
+        if provider_kind is AuthProviderKind.CLAVE_MOVIL
+        else None,
+        dni_fecha_configured=bool((resolved_settings.aeat_clave_movil_dni_fecha or "").strip())
+        if provider_kind is AuthProviderKind.CLAVE_MOVIL
+        else None,
+        nie_soporte_configured=bool((resolved_settings.aeat_clave_movil_nie_soporte or "").strip())
+        if provider_kind is AuthProviderKind.CLAVE_MOVIL
+        else None,
+        certificate_path_configured=resolved_settings.aeat_certificate_path is not None,
+        certificate_file_present=bool(
+            resolved_settings.aeat_certificate_path is not None
+            and resolved_settings.aeat_certificate_path.is_file()
+        ),
+        certificate_backend=resolved_settings.aeat_certificate_backend.value,
+        persisted_session_present=probe.persisted_session_present,
+        persisted_session_expired=probe.persisted_session_expired,
+        probe_result=probe.probe_result,
+    )
+
+
+def _live_auth_identity_state(
+    provider_kind: AuthProviderKind | None,
+    *,
+    settings: Settings,
+) -> tuple[bool, bool, str]:
+    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return False, provider_kind is AuthProviderKind.CERTIFICATE, "not_applicable"
+    try:
+        from ..user_profile._projections import record_to_path_values
+        from ..workflow._persistence import workflow_state_repository
+
+        record = workflow_state_repository().load().active_profile_record()
+        values = record_to_path_values(record) if record is not None else {}
+        profile_tax_id = (values.get("identity.tax_id") or "").strip().upper()
+    except Exception:
+        profile_tax_id = ""
+    provider_identity = (settings.aeat_clave_movil_dni_nie or "").strip().upper()
+    if not profile_tax_id and not provider_identity:
+        alignment = "profile_tax_id_missing_and_clave_identity_missing"
+    elif not profile_tax_id:
+        alignment = "profile_tax_id_missing"
+    elif not provider_identity:
+        alignment = "clave_identity_missing"
+    elif profile_tax_id == provider_identity:
+        alignment = "matches"
+    else:
+        alignment = "mismatch"
+    return bool(profile_tax_id), bool(provider_identity), alignment
+
+
+def _live_auth_identity_kind(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
+    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return ""
+    from ...adapters.outbound.aeat.auth._clave_movil import (
+        ClaveMovilConfigurationError,
+        _classify_identity,
+    )
+
+    identity = (settings.aeat_clave_movil_dni_nie or "").strip()
+    try:
+        return _classify_identity(identity)
+    except ClaveMovilConfigurationError:
+        return "invalid_or_missing"
+
+
+def _live_auth_mode(provider_kind: AuthProviderKind | None, *, settings: Settings) -> str:
+    if provider_kind is AuthProviderKind.CLAVE_MOVIL:
+        return "non_qr" if settings.aeat_clave_prefer_non_qr else "qr"
+    if provider_kind is AuthProviderKind.CERTIFICATE:
+        return "certificate"
+    return ""
+
+
 class _LocalSessionProbe(BaseModel):
     """Outcome of the on-disk persisted-session probe run by ``auth test``."""
 
@@ -736,7 +874,7 @@ def _try_load_certificate_metadata(
     path: Path,
     bundle_bytes: bytes,
     settings: Settings,
-) -> "LoadedCertificate | None":
+) -> LoadedCertificate | None:
     """Parse the PKCS#12 envelope and return a :class:`LoadedCertificate` or ``None``.
 
     Returns ``None`` when the bundle cannot be parsed for any reason

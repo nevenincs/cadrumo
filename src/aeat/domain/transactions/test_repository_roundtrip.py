@@ -27,6 +27,7 @@ from . import (
     RawProvenance,
     RawTransaction,
     SourceFormat,
+    StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
     TransactionDirection,
@@ -179,5 +180,11 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError):
+        with pytest.raises(StoredTransactionDriftError) as exc_info:
             TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        # Wave-3 W09.P41.S214: the load boundary now wraps the raw pydantic
+        # ValidationError in StoredTransactionDriftError so the CLI surface
+        # routes the failure to the repair-oriented stored-data-validation
+        # path. The original ValidationError is preserved for inspection.
+        assert isinstance(exc_info.value.original_exception, ValidationError)
+        assert exc_info.value.bucket_id == profile.bucket_id

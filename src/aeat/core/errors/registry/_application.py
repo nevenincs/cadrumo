@@ -812,6 +812,61 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            default_suggestion="aeat app live iva-wallet history",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_compensation_history.IvaCompensationSeedConflictError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_SEED_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_filing_calculate",
+            default_suggestion="aeat app live iva-wallet history",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_wallet_reconciliation.IvaCompensationReconciliationInputError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_RECONCILIATION_INPUT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.reconciliation_evidence_invalid",
+            default_suggestion="aeat app live iva-wallet pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.storage.calc_sheets._translator.TranslationError",
+        ErrorCode(
+            code="ERROR_CALC_SHEETS_TRANSLATION",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            default_suggestion="aeat app modelo calc export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.user_profile._bundle.UnsupportedBundleSchemaVersionError",
+        ErrorCode(
+            code="REFUSED_USER_PROFILE_BUNDLE_SCHEMA_VERSION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_application_registry_input",
+            default_suggestion="aeat config profile import --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.user_profile._errors.StoredProfileDriftError",
         ErrorCode(
             code="INTEGRITY_STORED_PROFILE_DRIFT",

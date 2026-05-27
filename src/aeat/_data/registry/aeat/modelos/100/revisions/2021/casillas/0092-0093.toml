@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "0093"
 number = "0093"
-label = "Fecha del {0}contrato (*)"
+label = "Fecha del contrato (*)"
 section = ["toma_datos_ampliada", "inmuebles", "inmueble"]
 data_type = "text"
 semantic_role = "irpf_inmueble_fecha_contrato_arrendamiento"

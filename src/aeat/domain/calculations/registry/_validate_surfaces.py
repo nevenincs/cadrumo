@@ -73,6 +73,30 @@ def validate_workbook_parity_section(
             )
 
 
+# P09.S63: the known VerificationPredicateDefinition.expression
+# operator set the runtime DSL evaluator (_evaluate_predicate_expression
+# in src/aeat/application/modelo/_actions.py) recognises. Any
+# predicate whose expression begins with a token outside this set
+# silently passes the runtime gate ("unknown predicates do not
+# block"); a typo like 'cap_lt_when_positive' is therefore the
+# silent-zero hazard at the predicate layer. The registry-load
+# validator rejects unknown expression-prefixes so authoring-time
+# catches the typo, not gate-run-time silent-pass.
+_KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
+    {"all_nonzero", "any_nonzero", "cap_le_when_positive"}
+)
+
+
+def _predicate_operator_name(expression: str) -> str | None:
+    """Return the leading operator name of a predicate expression, or None."""
+
+    stripped = expression.strip()
+    paren_idx = stripped.find("(")
+    if paren_idx <= 0:
+        return None
+    return stripped[:paren_idx]
+
+
 def validate_verification_expectation_section(
     failures: list[str],
     *,
@@ -99,6 +123,21 @@ def validate_verification_expectation_section(
                 failures.append(
                     f"{prefix}: {owner} reconciliation total {total_kind!r} must be one of computed_casillas"
                 )
+
+    for predicate in revision.verification_predicates:
+        owner = f"verification predicate {predicate.predicate_id}"
+        failures.extend(_missing_refs(prefix, owner, predicate.legal_refs, legal_refs, "legal"))
+        op_name = _predicate_operator_name(predicate.expression)
+        if op_name is None:
+            failures.append(
+                f"{prefix}: {owner} expression {predicate.expression!r} is not a recognised "
+                "DSL call (missing operator name or opening paren)"
+            )
+        elif op_name not in _KNOWN_VERIFICATION_PREDICATE_OPERATORS:
+            failures.append(
+                f"{prefix}: {owner} expression uses unknown operator {op_name!r}; known operators: "
+                f"{sorted(_KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}"
+            )
 
 
 def validate_application_link_section(

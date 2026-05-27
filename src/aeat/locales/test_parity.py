@@ -1,9 +1,13 @@
+import logging
 from pathlib import Path
 
 import pytest
 import yaml
+from typer.testing import CliRunner
 
-from aeat.locales.manager import LocaleManager
+from aeat.locales._ast_scanner import scan_namespace_markers, scan_source_tree
+from aeat.locales.cli import app
+from aeat.locales.manager import LocaleError, LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -43,6 +47,130 @@ def test_locale_integrity(manager):
 
     if errors:
         pytest.fail("\n".join(errors))
+
+
+def test_set_locale_value_updates_one_leaf(tmp_path: Path):
+    """The locale CLI write path updates a concrete leaf in a real YAML file."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  app:\n"
+        "    modelo:\n"
+        "      aggregate:\n"
+        "        json_validation_error: cli.app.modelo.aggregate.json_validation_error\n"
+        "        json_parse_error: '{flag} debe ser un objeto JSON.'\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    written_path = temp_manager.set_locale_value(
+        "es",
+        "cli.app.modelo.aggregate.json_validation_error",
+        "%{flag} no es válido: %{details}.",
+    )
+
+    assert written_path == locale_path
+    data = temp_manager.load_locale(locale_path)
+    aggregate = data["cli"]["app"]["modelo"]["aggregate"]
+    assert aggregate["json_validation_error"] == "%{flag} no es válido: %{details}."
+    assert aggregate["json_parse_error"] == "{flag} debe ser un objeto JSON."
+
+
+def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
+    """The locale setter can repair a missing leaf without rebuilding the file."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  locales:\n"
+        "    app_help: Auditar y generar catálogos de traducción\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.set_locale_value("es", "cli.locales.set_locale_help", "Código de locale.")
+
+    assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
+    data = temp_manager.load_locale(locale_path)
+    assert data["cli"]["locales"]["set_locale_help"] == "Código de locale."
+
+
+def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
+    """The locale remover deletes a stale leaf and leaves siblings intact."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  locales:\n"
+        "    stale: Obsoleto\n"
+        "    app_help: Auditar y generar catálogos de traducción\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("es", "cli.locales.stale")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "stale" not in text
+    assert "    app_help: Auditar y generar catálogos de traducción\n" in text
+
+
+def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
+    """The locale setter only writes locale files under its configured root."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    (locales_dir / "es.yml").write_text("cli:\n  label: correcto\n", encoding="utf-8")
+    outside = tmp_path / "outside.yml"
+    outside.write_text("cli:\n  label: fuera\n", encoding="utf-8")
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    with pytest.raises(LocaleError):
+        temp_manager.set_locale_value("../outside", "cli.label", "no escribir")
+
+    assert outside.read_text(encoding="utf-8") == "cli:\n  label: fuera\n"
+
+
+def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
+    """The canonical locale CLI rejects traversal-shaped locale arguments."""
+
+    result = CliRunner().invoke(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
+
+    assert result.exit_code != 0
+    assert "Invalid locale code" in result.output
+
+
+def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, caplog) -> None:
+    """A broken module is debug-logged and does not hide valid locale keys nearby."""
+
+    (tmp_path / "valid_surface.py").write_text(
+        "from aeat.core.i18n import tr\n"
+        "\n"
+        "def render(reason):\n"
+        "    return tr('cli.locales.app_help') + tr(f'wizard.errors.{reason}')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "broken_surface.py").write_text("def broken(:\n", encoding="utf-8")
+
+    caplog.set_level(logging.DEBUG, logger="aeat.locales._ast_scanner")
+
+    assert "cli.locales.app_help" in scan_source_tree(tmp_path)
+    assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
+    assert any(
+        "locale ast scan: parse failure" in record.getMessage()
+        and "broken_surface.py" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def _namespace_covers(key: str, prefix: str) -> bool:

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from ...core.errors import AeatError
 
-class BucketsError(Exception):
+
+class BucketsError(AeatError):
     """Base error for the bucket-event-history domain."""
 
 

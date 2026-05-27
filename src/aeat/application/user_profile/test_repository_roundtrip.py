@@ -74,17 +74,17 @@ def _populated_record() -> UserProfileRecord:
         schema_id="aeat.user_profile",
         schema_version=2,
         profile_id=_PROFILE_UUID,
-        display_name="Gergely Wootsch - 2024 IRPF",
+        display_name="Persona Prueba - 2024 IRPF",
         status=UserProfileStatus.ACTIVE,
         facts=(
             UserProfileFact(
                 path="identity.given_name",
-                value="Gergely",
+                value="Persona",
                 source="manual_cli",
             ),
             UserProfileFact(
                 path="identity.family_name",
-                value="Wootsch",
+                value="Prueba",
                 source="manual_cli",
             ),
             UserProfileFact(
@@ -127,7 +127,7 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     assert loaded_record == original_record
     # The UUID identity and the operator label survive the encrypted boundary as independent fields.
     assert loaded_record.profile_id == _PROFILE_UUID
-    assert loaded_record.display_name == "Gergely Wootsch - 2024 IRPF"
+    assert loaded_record.display_name == "Persona Prueba - 2024 IRPF"
     assert loaded_record.profile_id != loaded_record.display_name
     assert len(loaded_record.facts) == 5
     assert tuple(f.path for f in loaded_record.facts) == (

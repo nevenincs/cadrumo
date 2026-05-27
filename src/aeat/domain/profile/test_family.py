@@ -15,7 +15,7 @@ def test_renta_family_profile_round_trips_descendants_and_ascendants() -> None:
     profile = RentaFamilyProfile(
         descendants=(
             RentaDescendantProfile(
-                tax_id="12345678Z",
+                tax_id="TAXIDABCD",
                 display_name="Test Descendant",
                 birth_date=date(2018, 1, 2),
                 disability_grade="1",
@@ -23,7 +23,7 @@ def test_renta_family_profile_round_trips_descendants_and_ascendants() -> None:
         ),
         ascendants=(
             RentaAscendantProfile(
-                tax_id="87654321X",
+                tax_id="TAXIDWXYZ",
                 display_name="Test Ascendant",
                 birth_date=date(1940, 3, 4),
                 cohabiting_descendant_count=1,

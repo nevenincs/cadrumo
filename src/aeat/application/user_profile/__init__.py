@@ -272,11 +272,6 @@ class ProfileStaleCheckReport(BaseModel):
 # Portable export / import
 # ---------------------------------------------------------------------------
 
-# ProfileExportBundle consolidated onto UserProfilePortableExport (domain).
-# Callers should import UserProfilePortableExport from aeat.domain.user_profile
-# or from this module; the canonical definition lives in domain/_values.py.
-
-
 class ProfileImportResult(BaseModel):
     """Outcome of importing a portable bundle."""
 

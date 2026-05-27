@@ -343,3 +343,43 @@ def test_work_create_rejects_revision_that_does_not_cover_filing_year(
     # diagnostic so the operator knows what to fix.
     assert "2026" in result.output
     assert "2024" in result.output
+
+
+def test_work_calculate_rejects_decimal_override_for_text_casilla(
+    _isolated_cli_backend: Path,
+) -> None:
+    """Supplying a numeric value for a text-type casilla via --casilla must
+    be refused before reaching the engine.
+
+    M100 2024 casilla ``0001`` has ``data_type = "text"`` (it names the
+    declarante, not a numeric income amount).  Passing ``--casilla "0001=38000"``
+    silently stored Decimal(38000) in the text slot, which the formula chain
+    ignores, producing a negative base imponible when combined with a
+    subtraction-convention casilla like ``0006``.  The guard must fire early
+    with a diagnostic naming the casilla, its label, its data_type, and the
+    correct input channel.
+    """
+
+    _create_profile()
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "100", "--year", "2024", "--period", "anual",
+            "--revision", "2024",
+        ]
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    result = _invoke(
+        [
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "0001=38000",
+        ]
+    )  # fmt: skip
+    assert result.exit_code != 0
+    assert "Traceback" not in result.output
+    # The diagnostic must name the casilla and its non-numeric data_type.
+    assert "0001" in result.output
+    assert "text" in result.output

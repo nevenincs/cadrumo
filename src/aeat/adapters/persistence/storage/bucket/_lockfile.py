@@ -24,19 +24,19 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .....core.config import Settings as _Settings
+from .._namespace_registry import BUCKET_LOCK_FILENAME
 from ._errors import BucketBusyError
 
 if TYPE_CHECKING:
     from ._layout import BucketPaths
 
-_LOCK_FILENAME = ".lock"
 _POLL_INTERVAL_SECONDS = _Settings().aeat_bucket_lock_poll_interval_s
 
 
 def lock_path(paths: BucketPaths) -> Path:
     """Return the canonical lockfile path for the bucket."""
 
-    return paths.bucket_dir / _LOCK_FILENAME
+    return paths.bucket_dir / BUCKET_LOCK_FILENAME
 
 
 def _read_pid(target: Path) -> int | None:

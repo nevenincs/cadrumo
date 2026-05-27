@@ -1,9 +1,0 @@
-[[revisions."2023-y-siguientes".workbook_parity_refs]]
-id = "modelo-721-boe-form-layout"
-workbook_source = "boe-modelo-721-2023-form"
-fixture_id = "modelo-721-boe-form-static-layout"
-formula_coverage = "static_layout"
-runner_required = false
-tolerance = "0.00"
-legal_refs = ["orden-hfp-887-2023:art-1", "ley-11-2021:da-10"]
-source_refs = ["boe-modelo-721-2023-form"]

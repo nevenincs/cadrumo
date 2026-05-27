@@ -1,7 +1,7 @@
 [[revisions."2021".casillas]]
 id = "0912"
 number = "0912"
-label = "Marque una {2}X{2} si en la casilla [0911] ha consignado un NIF de otro país"
+label = "Marque una 'X' si en la casilla [0911] ha consignado un NIF de otro país"
 section = ["resultados", "deduccion_autonomica_res", "i_baleares_res"]
 data_type = "boolean"
 semantic_role = "irpf_deduccion_baleares_arrendador_nif_extranjero_flag"

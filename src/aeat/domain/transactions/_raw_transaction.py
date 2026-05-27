@@ -168,3 +168,22 @@ class RawTransaction(BaseModel):
     def _serialize_raw_fields(self, value: Mapping[str, str]) -> dict[str, str]:
         """Serialise the immutable mapping back to a JSON-friendly dict."""
         return dict(value)
+
+    @property
+    def display_counterparty(self) -> str:
+        """Return :attr:`counterparty` coerced to an empty string when absent.
+
+        CSV importers may produce :class:`TransactionRaw` rows whose
+        counterparty column is blank; :func:`_normalize_counterparty`
+        collapses those to ``None`` so the domain model carries the
+        true absent signal. The CLI ledger surface (list / view / payable
+        / collectible) renders the field through a typed payload that
+        expects ``str`` rather than ``str | None`` so the display layer
+        can keep its column contract uniform. Routing the coercion
+        through this property removes three identical
+        ``raw.counterparty or ""`` call-site repeats and centralises the
+        decision so future display tweaks (placeholder strings, ellipses)
+        land in one place.
+        """
+
+        return self.counterparty or ""

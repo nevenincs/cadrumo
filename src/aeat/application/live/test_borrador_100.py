@@ -10,6 +10,9 @@ from pathlib import Path
 import pytest
 
 from aeat.adapters.persistence.storage import (
+    LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
+)
+from aeat.adapters.persistence.storage import (
     Envelope,
     SensitivityClass,
 )
@@ -76,7 +79,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         binding_values={},
     )
     envelope = Envelope[Borrador100Snapshot](
-        schema_version=1,
+        schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
         written_at=datetime.now(UTC),
         classification=SensitivityClass.FINANCIAL,
         payload=payload,
@@ -85,7 +88,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         namespace=BORRADOR_100_SNAPSHOT_NAMESPACE,
         object_key=borrador_100_snapshot_object_key(_BUCKET_ID, "requested-id"),
         classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
+        schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,
         written_at=envelope.written_at,
         payload=envelope.model_dump_json().encode("utf-8"),
     )

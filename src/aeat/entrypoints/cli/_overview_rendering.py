@@ -16,6 +16,7 @@ def render_cli_overview_status_lines(report: OverviewStatusReport) -> tuple[str,
         _drafts_line(report),
         _work_units_line(report),
         *_storage_lines(report),
+        *_filing_obligation_lines(report),
         "",
         tr("cli.overview.status.next_heading"),
         *_next_step_lines(report),
@@ -145,6 +146,17 @@ def _storage_lines(report: OverviewStatusReport) -> tuple[str, ...]:
         tr("cli.overview.status.storage_warning", count=report.unreadable_rows),
         tr("cli.overview.status.integrity_next"),
     )
+
+
+def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
+    """Return advisory lines for filing obligations derived from the profile."""
+
+    if not report.filing_obligation_advisories:
+        return ()
+    lines: list[str] = [""]
+    for key in report.filing_obligation_advisories:
+        lines.append(tr(key))
+    return tuple(lines)
 
 
 __all__ = ["render_cli_overview_status_lines"]

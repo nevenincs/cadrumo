@@ -491,6 +491,7 @@ FormulaOperator = Literal[
     "previous_period_value",
     "previous_period_sum",
     "cross_model_sum",
+    "age_at_year_end",
 ]
 
 
@@ -1257,6 +1258,7 @@ class FormulaExpression(RegistryModel):
     args: tuple[FormulaExpression, ...] = ()
     casilla: CasillaId | None = None
     binding: BindingId | None = None
+    date_binding: BindingId | None = None
     parameter: ParameterId | None = None
     relation: RelationId | None = None
     literal: DecimalValue | None = None
@@ -1272,6 +1274,7 @@ class FormulaExpression(RegistryModel):
         populated_leaves = [
             self.casilla is not None,
             self.binding is not None,
+            self.date_binding is not None,
             self.parameter is not None,
             self.relation is not None,
             self.literal is not None,
@@ -2009,8 +2012,16 @@ class VerificationPredicateDefinition(RegistryModel):
       and non-zero simultaneously).
     - ``any_nonzero(["id1", "id2", ...])`` — at least one listed casilla
       value must be non-zero.
+    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the
+      ceiling casilla is strictly positive, the limited casilla MUST NOT
+      exceed the ceiling. Added by P08.S47 to enforce AEAT cap rules like
+      Modelo 131 C11 ≤ C10 and Modelo 130 C15 ≤ C14 ("en ningún caso podrá
+      figurar... un importe superior a la cantidad positiva consignada").
+      Predicate holds when ceiling ≤ 0; the cap applies only when the
+      operator's gross liability is positive.
 
-    Complex DSL (conditional, arithmetic, threshold) is deferred to W09.
+    Complex DSL (conditional, arithmetic, threshold beyond the above) is
+    deferred to W09.
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)

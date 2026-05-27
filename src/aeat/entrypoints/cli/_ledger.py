@@ -2017,7 +2017,7 @@ def _resolve_category(raw: str):
         return SpendingCategory(raw.strip())
     except ValueError as exc:
         raise _bad(
-            tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}").format(raw=raw)
+            tr("cli.app.ledger.ratios.unknown_category", default="Unknown spending category: {raw!r}", raw=raw)
         ) from exc
 
 
@@ -2138,7 +2138,9 @@ def ratios_unset(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
                 default="No persisted override for category {category!r} on bucket {bucket_id!r}",
-            ).format(category=category_enum.value, bucket_id=bucket_id)
+                category=category_enum.value,
+                bucket_id=bucket_id,
+            )
         )
     prior = profile.ratios.get(category_enum)
     updated = profile.without_ratio(category_enum)
@@ -2715,8 +2717,10 @@ def inventory_movement_add(
         kind_enum = MovementKind(kind)
     except ValueError as exc:
         raise _bad(
-            tr("cli.app.ledger.inventory.unknown_movement_kind", default="Unknown movement kind: {kind!r}").format(
-                kind=kind
+            tr(
+                "cli.app.ledger.inventory.unknown_movement_kind",
+                default="Unknown movement kind: {kind!r}",
+                kind=kind,
             )
         ) from exc
 

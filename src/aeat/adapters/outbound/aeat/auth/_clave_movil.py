@@ -690,8 +690,14 @@ class ClaveMovilAuthProvider:
         except ClaveMovilConfigurationError:
             identity_kind = "invalid_or_missing"
         auth_mode = "non_qr" if self._settings.aeat_clave_prefer_non_qr else "qr"
+        auth_route = (
+            "clave_movil_non_qr_request"
+            if self._settings.aeat_clave_prefer_non_qr
+            else "clave_movil_qr_request"
+        )
         context: dict[str, object] = {
             "auth_mode": auth_mode,
+            "auth_route": auth_route,
             "identity_kind": identity_kind,
             "clave_identity_configured": bool(identity),
             "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
@@ -896,9 +902,13 @@ class ClaveMovilAuthProvider:
             use_non_qr = self._settings.aeat_clave_prefer_non_qr
             verification_code: str | None = None
             log.info(
-                "ClaveMovilAuthProvider: starting fresh login mode=%s identity_kind=%s headless=%s",
+                "ClaveMovilAuthProvider: starting fresh login mode=%s route=%s identity_kind=%s "
+                "identity_alignment=%s profile_present=%s headless=%s",
                 attempt_context["auth_mode"],
+                attempt_context["auth_route"],
                 attempt_context["identity_kind"],
+                attempt_context["identity_alignment"],
+                attempt_context["profile_tax_id_present"],
                 attempt_context["headless"],
             )
 

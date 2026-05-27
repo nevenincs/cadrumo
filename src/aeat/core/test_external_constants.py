@@ -160,6 +160,17 @@ def test_pre303_surface_constants_are_typed() -> None:
     assert "clave PIN" in surface.official_access_auth_methods
 
 
+def test_manual_and_oracle_auxiliary_routes_are_centralized() -> None:
+    """Manual corpus paths and cross-oracle auth diagnostics live in TOML."""
+
+    constants = load_external_constants().aeat
+
+    assert constants.help_pages.manual_practicos_root.startswith("/static_files/")
+    assert "Manual/Practicos" in constants.help_pages.manual_practicos_root
+    assert "ConsultaOperadorSedeGroiServlet" in constants.oracles.groi_auth_unlock_descriptor
+    assert "ConsultaIntracomunitarios" in constants.oracles.nif_iva_auth_locked_descriptor
+
+
 def test_live_safety_action_patterns_are_centralized() -> None:
     """Audited live AEAT browser-action labels live in the external registry."""
 
@@ -278,10 +289,13 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
     checked_paths = (
         repo_root / "src/aeat/core/config.py",
         repo_root / "src/aeat/adapters/outbound/aeat/auth/_clave_movil.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_groi_check.py",
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py",
         repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py",
         repo_root / "src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py",
         repo_root / "src/aeat/adapters/outbound/aeat/sede/_parse.py",
         repo_root / "src/aeat/adapters/outbound/aeat/verify/__init__.py",
+        repo_root / "src/aeat/domain/manuals/_fetch.py",
     )
     volatile_tokens = (
         "agenciatributaria.gob.es",
@@ -290,6 +304,10 @@ def test_live_sede_executable_route_literals_stay_centralized() -> None:
         "static_files",
         "SelectorAccesos",
         "CarteraCuotas",
+        "ConsultaIntracomunitarios",
+        "ConsultaOperadorSedeGroiServlet",
+        "www1 IXVI",
+        "www2 GROI",
     )
 
     offenders: list[str] = []

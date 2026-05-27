@@ -19,7 +19,12 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...adapters.persistence.storage import Envelope, SensitivityClass
+from ...adapters.persistence.storage import (
+    LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE as BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    Envelope,
+)
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
@@ -34,8 +39,9 @@ from ._snapshot_base import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-BORRADOR_100_SNAPSHOT_NAMESPACE = "aeat.application.live.borrador_100_snapshot"
-_BORRADOR_100_SNAPSHOT_VERSION = 1
+BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
+_BORRADOR_100_SNAPSHOT_VERSION = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version
+_BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sensitivity
 type _BorradorValue = Decimal | str
 
 
@@ -126,11 +132,11 @@ def derive_borrador_100_snapshot_id(
 
 def _snapshot_from_record(record: SecureObjectRecord, requested_snapshot_id: str | None = None) -> Borrador100Snapshot:
     envelope = Envelope[Borrador100Snapshot].model_validate_json(record.payload.decode("utf-8"))
-    if envelope.classification is not SensitivityClass.FINANCIAL:
+    if envelope.classification is not _BORRADOR_100_SNAPSHOT_SENSITIVITY:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
         raise ClassificationError(
             f"borrador snapshot {snapshot_label!r} has classification {envelope.classification}; "
-            f"consumer expected {SensitivityClass.FINANCIAL}",
+            f"consumer expected {_BORRADOR_100_SNAPSHOT_SENSITIVITY}",
         )
     if envelope.schema_version > _BORRADOR_100_SNAPSHOT_VERSION:
         snapshot_label = requested_snapshot_id or envelope.payload.snapshot_id
@@ -164,7 +170,7 @@ class Borrador100SnapshotRepository:
         record = self._objects.load(
             BORRADOR_100_SNAPSHOT_NAMESPACE,
             borrador_100_snapshot_object_key(self._bucket_id, snapshot_id),
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
             max_supported_version=_BORRADOR_100_SNAPSHOT_VERSION,
         )
         if record is None:
@@ -190,7 +196,7 @@ class Borrador100SnapshotRepository:
             snapshot
             for record in self._objects.list_records(
                 BORRADOR_100_SNAPSHOT_NAMESPACE,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
                 max_supported_version=_BORRADOR_100_SNAPSHOT_VERSION,
             )
             for snapshot in (_snapshot_from_record(record),)
@@ -228,13 +234,13 @@ class Borrador100SnapshotRepository:
         envelope = Envelope[Borrador100Snapshot](
             schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
             written_at=datetime.now(UTC),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
             payload=snapshot,
         )
         self._objects.save(
             namespace=BORRADOR_100_SNAPSHOT_NAMESPACE,
             object_key=borrador_100_snapshot_object_key(self._bucket_id, snapshot.snapshot_id),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_BORRADOR_100_SNAPSHOT_SENSITIVITY,
             schema_version=_BORRADOR_100_SNAPSHOT_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),

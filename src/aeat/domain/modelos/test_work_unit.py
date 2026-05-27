@@ -268,7 +268,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period="1T",
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
@@ -277,7 +277,7 @@ def test_create_work_unit_is_idempotent_on_the_four_axis_key(repo: WorkUnitCatal
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period="1T",
         revision_id="2009-y-siguientes",
         name="ignored-because-already-exists",
         repository=repo,
@@ -298,12 +298,12 @@ def test_create_work_unit_uses_default_name_when_no_name_supplied(repo: WorkUnit
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period="1T",
         revision_id="2009-y-siguientes",
         repository=repo,
         clock=_T0,
     )
-    assert unit.name == "303-2026-Q1"
+    assert unit.name == "303-2026-1T"
 
 
 def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepository) -> None:
@@ -311,13 +311,13 @@ def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepositor
         bucket_id="default",
         modelo="303",
         filing_year=2026,
-        period="Q1",
+        period="1T",
         revision_id="2009-y-siguientes",
-        name="renta-q1-2026-draft",
+        name="renta-1t-2026-draft",
         repository=repo,
         clock=_T0,
     )
-    assert unit.name == "renta-q1-2026-draft"
+    assert unit.name == "renta-1t-2026-draft"
 
 
 # ---------------------------------------------------------------------------
@@ -326,35 +326,37 @@ def test_create_work_unit_honours_explicit_name(repo: WorkUnitCatalogueRepositor
 
 
 def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalogueRepository) -> None:
-    for bucket, modelo, year, period in (
-        ("bucket-B", "303", 2026, "Q1"),
-        ("bucket-A", "303", 2026, "Q2"),
-        ("bucket-A", "130", 2026, "Q1"),
+    for bucket, modelo, year, period, revision_id in (
+        ("bucket-B", "303", 2026, "1T", "2009-y-siguientes"),
+        ("bucket-A", "303", 2026, "2T", "2009-y-siguientes"),
+        ("bucket-A", "130", 2026, "1T", "2019-y-siguientes"),
     ):
         create_work_unit(
             bucket_id=bucket,
             modelo=modelo,
             filing_year=year,
             period=period,
-            revision_id="rev",
+            revision_id=revision_id,
             repository=repo,
             clock=_T0,
         )
     units = list_work_units(repository=repo)
     keys = tuple((u.bucket_id, str(u.modelo), u.period) for u in units)
     assert keys == (
-        ("bucket-A", "130", "Q1"),
-        ("bucket-A", "303", "Q2"),
-        ("bucket-B", "303", "Q1"),
+        ("bucket-A", "130", "1T"),
+        ("bucket-A", "303", "2T"),
+        ("bucket-B", "303", "1T"),
     )
 
 
 def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository) -> None:
     create_work_unit(
-        bucket_id="bucket-A", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="bucket-A", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     create_work_unit(
-        bucket_id="bucket-B", modelo="303", filing_year=2026, period="Q2", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="bucket-B", modelo="303", filing_year=2026, period="2T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     only_a = list_work_units(bucket_id="bucket-A", repository=repo)
     assert len(only_a) == 1
@@ -368,7 +370,8 @@ def test_get_work_unit_raises_when_id_is_absent(repo: WorkUnitCatalogueRepositor
 
 def test_rename_work_unit_preserves_work_unit_id_and_bumps_updated_at(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     later = datetime(2026, 2, 1, 12, 0, 0, tzinfo=UTC)
     renamed = rename_work_unit(
@@ -399,7 +402,8 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
     metadata captured (actor + reason + timestamp)."""
 
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     discard_time = datetime(2026, 3, 1, 12, 0, 0, tzinfo=UTC)
     discarded = discard_work_unit(
@@ -419,7 +423,8 @@ def test_discard_work_unit_transitions_to_discarded_state(repo: WorkUnitCatalogu
 
 def test_discard_work_unit_accepts_omitted_reason(repo: WorkUnitCatalogueRepository) -> None:
     original = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     discarded = discard_work_unit(
         original.work_unit_id,
@@ -441,7 +446,8 @@ def test_discard_work_unit_raises_when_already_discarded(repo: WorkUnitCatalogue
     timestamp so the operator can correlate."""
 
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     discard_work_unit(
         unit.work_unit_id,
@@ -464,7 +470,8 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
     the operator can correct course (create a fresh work unit)."""
 
     unit = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     discard_work_unit(
         unit.work_unit_id,
@@ -478,10 +485,12 @@ def test_rename_refuses_to_mutate_a_discarded_work_unit(repo: WorkUnitCatalogueR
 
 def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="130", filing_year=2026, period="1T",
+        revision_id="2019-y-siguientes", repository=repo, clock=_T0,
     )
     discard_work_unit(
         unit_to_discard.work_unit_id,
@@ -495,10 +504,12 @@ def test_list_work_units_excludes_discarded_by_default(repo: WorkUnitCatalogueRe
 
 def test_list_work_units_includes_discarded_when_flag_set(repo: WorkUnitCatalogueRepository) -> None:
     unit_draft = create_work_unit(
-        bucket_id="default", modelo="303", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="303", filing_year=2026, period="1T",
+        revision_id="2009-y-siguientes", repository=repo, clock=_T0,
     )
     unit_to_discard = create_work_unit(
-        bucket_id="default", modelo="130", filing_year=2026, period="Q1", revision_id="rev", repository=repo, clock=_T0
+        bucket_id="default", modelo="130", filing_year=2026, period="1T",
+        revision_id="2019-y-siguientes", repository=repo, clock=_T0,
     )
     discard_work_unit(
         unit_to_discard.work_unit_id,
@@ -570,10 +581,18 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
 
     source_root = PROJECT_ROOT / "src" / "aeat"
     canonical = source_root / "domain" / "modelos" / "_repository.py"
+    # _namespace_registry.py is the centralised namespace declaration table;
+    # it legitimately holds every storage namespace string as a registry entry
+    # and is not a competing storage location.
+    canonical_namespace_registry = (
+        source_root / "adapters" / "persistence" / "storage" / "_namespace_registry.py"
+    )
     forbidden_namespace = '"aeat.domain.modelos.work_units"'
     offenders = []
     for py_file in source_root.rglob("*.py"):
         if py_file == canonical:
+            continue
+        if py_file == canonical_namespace_registry:
             continue
         if py_file.name.startswith("test_"):
             continue
@@ -604,8 +623,8 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
             bucket_id="default",
             modelo="303",
             filing_year=2026,
-            period="Q1",
-            revision_id="rev",
+            period="1T",
+            revision_id="2009-y-siguientes",
             repository=wu_repo,
             clock=_T0,
         )
@@ -625,3 +644,85 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
         assert rename_event.object_id == renamed.work_unit_id
         assert rename_event.payload["previous_name"] == unit.name
         assert rename_event.payload["new_name"] == "renta-q1-renamed"
+
+
+# ---------------------------------------------------------------------------
+# causante_ccaa axis — roundtrip + identity isolation
+# ---------------------------------------------------------------------------
+
+
+def test_causante_ccaa_roundtrips_through_repository(repo: WorkUnitCatalogueRepository) -> None:
+    """causante_ccaa is persisted and reloaded without data loss.
+
+    A non-default (non-None) value must survive the full save/load
+    cycle through the real encrypted repository so that the annotation
+    is not silently dropped at the persistence boundary.
+    """
+
+    from aeat.domain.profile._ccaa import CCAA
+
+    unit = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        causante_ccaa=CCAA.MADRID,
+        repository=repo,
+        clock=_T0,
+    )
+    assert unit.causante_ccaa is CCAA.MADRID
+
+    reloaded = repo.load().get(unit.work_unit_id)
+    assert reloaded is not None
+    assert reloaded.causante_ccaa is CCAA.MADRID
+
+
+def test_causante_ccaa_does_not_affect_work_unit_identity(repo: WorkUnitCatalogueRepository) -> None:
+    """causante_ccaa is an annotation, not part of the content-addressing key.
+
+    Two ``create_work_unit`` calls with the same four-axis key but
+    different causante_ccaa values are idempotent — the second call
+    returns the first record unchanged; the annotation from the first
+    call is not overwritten.
+    """
+
+    from aeat.domain.profile._ccaa import CCAA
+
+    first = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        causante_ccaa=CCAA.MADRID,
+        repository=repo,
+        clock=_T0,
+    )
+    second = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        causante_ccaa=CCAA.CATALUNA,
+        repository=repo,
+        clock=_T0,
+    )
+    # Idempotency: same work_unit_id, first creation wins.
+    assert first.work_unit_id == second.work_unit_id
+
+
+def test_causante_ccaa_none_by_default(repo: WorkUnitCatalogueRepository) -> None:
+    """causante_ccaa defaults to None for modelos that do not require it."""
+
+    unit = create_work_unit(
+        bucket_id="default",
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        revision_id="2009-y-siguientes",
+        repository=repo,
+        clock=_T0,
+    )
+    assert unit.causante_ccaa is None
