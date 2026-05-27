@@ -14,3 +14,6 @@ RELOAD-001 | HIGH | Rule application must not hide write failures as no-match
 
 RELOAD-002 | HIGH | Wallet secure-storage tests must not use valid-looking taxpayer identifiers
 The wallet backend test used a plausible taxpayer identifier literal as synthetic input. Resolved 2026-05-27 by replacing it with a non-identifier synthetic reference and preserving the privacy assertions that raw taxpayer references are not emitted by stored reports or secure SQL bytes.
+
+RELOAD-003 | HIGH | Wallet privacy guard must cover implementation code and CIF-shaped identifiers
+The initial static guard covered wallet-named test/source files but not the live application module that contains the wallet reload and capture functions, and it matched DNI/NIE-shaped identifiers without CIF-style entity identifiers. Resolved 2026-05-27 by scanning the live application module and extending the identifier detector to personal and legal-entity Spanish taxpayer shapes.

@@ -12,8 +12,8 @@ Safety boundary: no live AEAT command was executed. No real taxpayer secret was 
 
 Commands:
 
-- `uv run aeat config profile create persona-autonomo --quiet --accept-defaults --tax-id 00000000T --name Persona --surnames Autonomo --iva-regime GENERAL --tax-residence-ccaa madrid`
-- `uv run aeat config profile create persona-autonomo --quiet --accept-defaults --tax-id 00000000T --name Persona --surnames Autonomo --activity consultoria --iva-regime GENERAL --tax-residence-ccaa madrid`
+- `uv run aeat config profile create persona-autonomo --quiet --accept-defaults --tax-id <synthetic-taxpayer-ref> --name Persona --surnames Autonomo --iva-regime GENERAL --tax-residence-ccaa madrid`
+- `uv run aeat config profile create persona-autonomo --quiet --accept-defaults --tax-id <synthetic-taxpayer-ref> --name Persona --surnames Autonomo --activity consultoria --iva-regime GENERAL --tax-residence-ccaa madrid`
 - `uv run aeat app modelo work create --modelo 303 --year 2026 --period 1T --revision 2009-y-siguientes --by persona-autonomo`
 - `uv run aeat app modelo work calculate <work-unit-id> --by persona-autonomo`
 
@@ -97,4 +97,3 @@ Testimonial:
 - No live wallet pull was executed.
 - `modelo work file` help explicitly says it marks an internal filing and does not submit to AEAT.
 - `modelo export` help explicitly says local-only and never contacts AEAT, but export remains legally sensitive because it creates a submission-ready local artifact.
-
