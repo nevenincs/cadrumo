@@ -66,3 +66,32 @@ the consolidated text, and extend
 fragment. Cross-check that the AEAT Manual de la Renta para
 empresarios y profesionales 2025 cites the same article paragraph
 to confirm the substrate.
+
+---
+
+## P07.S40 finding: M036 manifest informational-exclusion validated
+
+S26 removed `vigencia` (M036 casilla declared with `input_kind =
+"informational"`) from the calculation-completeness manifest. The
+honesty review at 2026-05-27 questioned whether the fix matched
+the architectural rule or just the test expectation.
+
+**Resolution**: validated against the documented closure rule in
+`_record_design.py:1299-1346` (`calculation_closure_numbers`
+docstring). The calculation closure is the set of casillas the
+engine traverses: formula targets, formula-expression refs,
+formula/binding endpoints, verification operands. A casilla
+declared with `input_kind = "informational"` and NO `formula` and
+NO `binding` and NOT referenced by any formula expression and NOT
+named as a verification operand is, by definition, outside the
+closure.
+
+`decl.vigencia-2025` carries `input_kind = "informational"`, no
+`formula`, no `binding`, and is not referenced by any formula
+expression or verification expectation in M036's revision. It is
+correctly excluded from the calculation closure and therefore
+correctly absent from the calculation-completeness manifest.
+
+The S26 fix is architecturally sound; the manifest gate firing
+on the prior `vigencia` entry was correctly catching real drift,
+not a false-positive. No revisit needed.
