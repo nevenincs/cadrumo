@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.logging import get_logger
 from ._errors import BucketsError
@@ -25,7 +26,7 @@ class BucketEventHistoryRepository:
     """Read / write the bucket-event-history catalogue."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects or secure_object_repository_for_active_bucket()
 
     @property
     def secure_object_repository(self) -> SecureObjectRepository:
