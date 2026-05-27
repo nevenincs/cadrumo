@@ -1,0 +1,15 @@
+[[revisions.2025-y-siguientes.filing_schedules]]
+id = "modelo-202-2025-y-siguientes-trimestral"
+period_kind = "quarterly"
+periods = ["1P", "2P", "3P"]
+profile_condition_mode = "all"
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions"]
+
+[[revisions.2025-y-siguientes.filing_schedules.profile_conditions]]
+field = "taxpayer.entity_type"
+op = "equals"
+value = "legal_entity"
+explanation = "Las entidades juridicas contribuyentes del Impuesto sobre Sociedades presentan el Modelo 202 en abril, octubre y diciembre."
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions"]

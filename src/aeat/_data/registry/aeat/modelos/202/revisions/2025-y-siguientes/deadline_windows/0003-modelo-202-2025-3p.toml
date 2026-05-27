@@ -1,0 +1,10 @@
+[[revisions.2025-y-siguientes.deadline_windows]]
+id = "modelo-202-2025-3p"
+filing_year = 2025
+period = "2025-3P"
+period_kind = "quarterly"
+opens_on = 2025-12-01
+closes_on = 2025-12-22
+payment_cutoff_on = 2025-12-15
+legal_refs = ["ley-27-2014:art-40"]
+source_refs = ["aeat-modelo-202-instructions"]
