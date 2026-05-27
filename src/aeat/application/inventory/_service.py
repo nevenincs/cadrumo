@@ -174,7 +174,11 @@ class InventoryService:
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepository | None = None,
     ) -> None:
-        self._settings = settings or Settings()
+        # `Settings()` bypasses `override_settings`; route through
+        # `load_settings()` so CLI surface tests that override
+        # `aeat_inventories_dir` see their tmp_path isolation.
+        from ...core.config import load_settings as _load_settings
+        self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def create(

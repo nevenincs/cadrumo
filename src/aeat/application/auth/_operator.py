@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
-from ...core.config import Settings
+from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.i18n import tr
 from . import AuthProviderKind
@@ -581,7 +581,7 @@ def build_live_auth_preflight_report(
 ) -> LiveAuthPreflightReport:
     """Return a redacted preflight report before a live read may trigger auth."""
 
-    resolved_settings = settings or Settings()
+    resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
         try:
@@ -790,7 +790,7 @@ def _probe_certificate_bundle(certificate_path: str) -> _ProviderProbeOutcome:
         CertificateHealthSeverity,
         evaluate_loaded_certificate_health,
     )
-    from ...core.config import Settings
+    from ...core.config import Settings, load_settings
 
     settings = Settings()
     raw = (certificate_path or "").strip() or (
@@ -973,7 +973,7 @@ async def login_operator_auth(
     (certificate path unset / file missing / unreadable). Round-5 B2.
     """
 
-    resolved_settings = settings or Settings()
+    resolved_settings = settings or load_settings()
     provider_kind = _provider_kind_or_none(provider)
     if provider_kind is None:
         provider_kind = _configured_or_default_provider(resolved_settings)
@@ -1043,7 +1043,7 @@ def clear_operator_auth(
     """Clear workflow auth state, persisted sessions, and acquisition locks."""
 
     provider_kind = _provider_kind_or_none(provider)
-    resolved_settings = settings or Settings()
+    resolved_settings = settings or load_settings()
     removed_sessions: list[Path] = []
     session_event_count = 0
     if sessions or all_providers:
