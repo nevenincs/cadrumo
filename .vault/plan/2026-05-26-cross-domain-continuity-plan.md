@@ -287,7 +287,7 @@ Single-id classify unusable for hundreds of movements. Add bulk path.
 compensacion-pendiente-anteriores binding consumes previous-filing value but no operator-visible verb queries wallet balance.
 
 - [ ] `W05.P26.S99` - add aeat app modelo iva-wallet balance verb; `balance computed from IvaCompensationPeriodState records via build_iva_compensation_carry_forward_report; next_expiry_year=nearest source_filing_year+4 among ACTIVE lots; new IvaWalletBalanceReport in application calculations _iva_wallet_balance.py; per architect #118 grounding; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W05.P26.S100` - test sequence Q1-2024 1200 + Q2-2024 apply 300 + Q1-2025 apply 500 with as_of_year=2028 asserts total_balance=400 next_expiry_year=2028; anti-tautology via mutated applied_amount triggers model_validator ValueError; per architect #118 grounding; `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`.
+- [ ] `W05.P26.S100` - test sequence Q1-2024 1200 + Q2-2024 apply 300 + Q1-2025 apply 500 with as_of_year=2028 asserts total_balance=400 next_expiry_year=2028; `anti-tautology via mutated applied_amount triggers model_validator ValueError; per architect #118 grounding; `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`.
 
 ### Phase `W05.P27` - Wave-5 review and persona re-run BREAKPOINT
 
@@ -509,6 +509,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent; `explicit-pathspec staging is mandatory per the parallel-worktree explicit_path_staging memory; brief subsequent peer dispatches with stronger language; `.vaultspec/`.
 - [ ] `W09.P41.S313` - remove 6 genuine unused imports flagged by F401: test_certificate_live.py CertificateBackend; `test_verify.py VerifyBrowserContextLike + VerifyBrowserPageLike; test_fx_conversion.py ExchangeRateProvider; test_calendar_applicability_consistency.py derive_modelo_applicability; review _adapters.py TransactionDirection — straightforward refactor; `src/aeat/`.
 - [ ] `W09.P41.S314` - investigate _legacy_iva_wallet_decision_key at _observations_repository.py line 131 — only TRUE shim candidate from discovery2 sweep; `verify if non-legacy v2 exists; if active callers remain document the migration path; if dead retire per aeat-architecture-boundaries; `src/aeat/application/calculations/_observations_repository.py`.
+- [ ] `W09.P41.S318` - BLOCKER per discovery3 #121: verification provenance chain broken — _verification_report_payload at _modelo.py:2248 does NOT emit legal_refs and source_refs on findings; `operator cannot trace a MISSING_REQUIRED_CASILLA finding back to its legal source; W04.P19 ADR mandates provenance preservation through the verify path; extend _verification_report_payload to include per-finding casilla legal_refs + source_refs lookup; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P41.S320` - G4 retroactive violation in commit c27f35398 — added iva_category_help and counterparty_eu_member_state_help keys by hand to en/es/ca/hu.yml without scaffold evidence; re-scaffold these four keys via python -m aeat.locales scaffold then verify their structural shape matches the canonical pattern; per architect standing-gate enforcement; `src/aeat/locales/`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -558,6 +560,9 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S295` - W09 wording follow-up Tier-2 import-collision tr() default text reads 'already taken by a different profile' regardless of fresh_uuid_mode; `misleading in the fresh-copy path; distinguish UUID-collision vs label-collision messages; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W09.P45.S303` - R8-ROSA-G when profile create rejects a combination of flags surface the SPECIFIC field that failed validation not a generic La entrada del comando no supero la validacion message; `Rosa hit this with taxation-type 2 plus family-minor-children-in-unit and could not identify which pair conflicted; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W09.P45.S312` - FU-W05-D add hu.yml locale key-path fallbacks for the two new W05.P24 IVA classification reject reasons (DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION + EU_MEMBER_STATE_ON_EXPORT_TRANSACTION); `architect non-blocking follow-up from Task #115 review; `src/aeat/locales/hu.yml`.
+- [ ] `W09.P45.S316` - register --output-language on work_list work_status work_history work_revisions work_revision and the bare work_runs which currently has no parameters at all; `per discovery3 #121 CLI completeness audit; S144 parity regression test must catch these but currently doesn't; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S317` - add NEXT_ACTION guidance hints to work_verify work_list work_status work_history success/failure outputs per discovery3 #121; `work_calculate already has this pattern (lines 2082-2093 emit explicit next-step guidance) — mirror it across the sibling verbs; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S319` - standardise explicit --json flag across CLI verbs; `today _emit_envelope and _emit handle JSON internally without a visible signature parameter; expose --json explicitly so operators know per-verb whether structured output is available; document the flag in --help text; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
