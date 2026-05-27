@@ -114,8 +114,9 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     """Stable, sort-canonical projection of detail rows for the hash payload.
 
     Each row is serialised as a sorted dict of its string/decimal fields.
-    Rows are sorted by (row_type, nif) so insertion order does not affect
-    the revision id — operators can supply rows in any order.
+    Rows are sorted by (row_type, nif-like) so insertion order does not affect
+    the revision id — operators can supply rows in any order. The nif-like field
+    varies by row type: nif (M184/M232/M347) or nif_comunitario (M349).
     """
 
     def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
@@ -127,7 +128,10 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
                 d[field_name] = str(field_value)
         return dict(sorted(d.items()))
 
-    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, r.nif))]
+    def _nif_key(row: ModeloDetailRow) -> str:
+        return getattr(row, "nif", None) or getattr(row, "nif_comunitario", "")
+
+    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _nif_key(r)))]
 
 
 def derive_calculation_revision_id(
@@ -280,11 +284,12 @@ class CalculationRevision(BaseModel):
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
-    # values (M184 atribución members, M232 operaciones vinculadas).
+    # values (M184 atribución members, M232 operaciones vinculadas,
+    # M349 operadores intracomunitarios, M347 contrapartes).
     # Defaults to () so existing persisted revisions load without schema
     # migration. Included in the content-addressed revision id so
     # structurally identical re-runs with the same rows are idempotent.
-    detail_rows: tuple[Modelo184MemberRow | Modelo232VinculadaRow, ...] = Field(default_factory=tuple)
+    detail_rows: tuple[ModeloDetailRow, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
     verified_at: datetime | None = None
