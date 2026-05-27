@@ -106,6 +106,47 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is False
 
 
+def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
+    """P08.S60 integration test: a violated cap_le_when_positive predicate produces a BLOCKING_RULE finding.
+
+    Constructs the exact M130 C15-cap predicate used in the
+    registry (modelo-130-c15-cap-by-c14) and runs it through
+    _evaluate_verification_predicates with a casilla_values map
+    where C15 (limited) exceeds C14 (ceiling). The predicate must
+    fire with a BLOCKING_RULE finding citing the predicate_id and
+    the legal_refs from the registry declaration.
+    """
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-c15-cap-by-c14",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='cap_le_when_positive(["15", "14"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    # C14 = 1000 (positive ceiling), C15 = 1500 (exceeds cap)
+    casilla_values = {"14": Decimal("1000"), "15": Decimal("1500")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert "modelo-130-c15-cap-by-c14" in findings[0].message
+
+
+def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
+    """P08.S60 integration test: a satisfied cap predicate produces no finding."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-c15-cap-by-c14",
+        legal_refs=("rd-439-2007:art-110",),
+        expression='cap_le_when_positive(["15", "14"])',
+        finding_kind="BLOCKING_RULE",
+    )
+    # C14 = 1000, C15 = 600 — within cap
+    casilla_values = {"14": Decimal("1000"), "15": Decimal("600")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    assert findings == []
+
+
 def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     """cap_le_when_positive: predicate holds (no cap) when ceiling ≤ 0.
 
