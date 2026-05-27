@@ -1366,3 +1366,106 @@ side-effect (cosmetic spacing / Step close). ACCEPT.
 - FU-W07-F: Document or test that `resources().modelos.authority` and
   `_service()._authority` yield the same snapshot for the same registry
   fingerprint.
+
+---
+
+## W07.P33 `aeat app modelo compare` verb (Task #73) — S118-S119 commit review
+
+**Scope:** Four commits — `604bf217d` (S118: compare verb + S116 lint fixes),
+`f4108869d` (period derivation fix), `e934f020d` (S119: regression test),
+`ee0fbc69e` (exec records + plan closure).
+
+### Commit `604bf217d` — S118: compare verb
+
+**Hexagonal direction — CLEAN (contrast with FU-W07-E).**
+
+The compare verb does NOT call `calculate_registry_snapshot` or any domain
+engine function directly. It reads stored `casilla_values` from persisted
+`CalculationRevision` records via `list_calculation_revisions` (imported from
+`application.modelo`). Snapshot acquisition for casilla metadata uses
+`_service()._authority` — the established application-layer path. The only
+domain import is `CalculationRevisionState` (a typed enum from
+`domain.modelos._calculation_revision`) — importing a domain model type is
+correct. FU-W07-E does NOT apply here.
+
+**Revision selection logic — SOUND.**
+
+`_best_revision()` prefers `VERIFICADO_COMPLETO`, falls back to `BORRADOR`,
+raises `typer.BadParameter` if neither exists. Draft fallback surfaced in
+payload (`year_a_is_draft`, `year_b_is_draft`) and tabular output. Selection
+via `max(..., key=lambda r: r.created_at)` is deterministic and correct.
+
+**Period derivation — HARDCODED IN THIS COMMIT, FIXED IN `f4108869d`.**
+
+Initial commit hardcodes `period="0A"` for snapshot metadata lookup. This
+would fail for M130 (quarterly periods 1T-4T). Fixed in the next commit.
+
+**Payload shape — ADEQUATE.**
+
+`operation`, `modelo`, `year_a/b`, `year_a/b_revision_id`, `year_a/b_is_draft`,
+`sections` (section-grouped), `delta_rows` (flat). Per-casilla rows have
+`casilla_id`, `label`, `section`, `year_a_value`, `year_b_value`, `delta`,
+`pct_change`. The `sections` + `delta_rows` dual representation is intentional.
+No `legal_refs`/`source_refs` at casilla level — same FU-W07-D carry-forward.
+
+S116 lint fixes co-landed (sum() start value, unused variables): correct fixes
+but belong in their own commit. FU-W07-G (convention note).
+
+**Verdict: ACCEPT-WITH-FOLLOWUP** (FU-W07-D carry-forward, FU-W07-G).
+
+### Commit `f4108869d` — period derivation fix
+
+Surgical fix: `_best_revision()` extended to return `(revision, is_draft, period)`;
+period derived from `period_by_unit` map built from work units; snapshot calls
+updated. Fallback `"0A"` safe for annual modelos. Fix is minimal and correct.
+
+**Verdict: ACCEPT.**
+
+### Commit `e934f020d` — S119: regression test
+
+**Tautology check — CLEAN with strong anti-tautology proof.**
+
+Drive: two M130 work units (2025: ingresos=12,000; 2026: ingresos=20,000),
+identical gastos (4,000) both years. Oracle: `work calculate` JSON per year —
+independent CLI path that runs engine + persists revisions. Delta assertions:
+`compare` output vs `(year_b_value − year_a_value)` from independent calculate
+calls.
+
+Anti-tautology proof: casilla 02 (gastos identical across years) must produce
+`delta = 0`. Directly tests the verb does not manufacture differences.
+
+Oracle value assertions: casilla 07 = 1,600.00 (2025) and 3,200.00 (2026)
+derived from AEAT DR 130 Casilla 07 formula (20% × (01−02)): 20% × 8,000 =
+1,600; 20% × 16,000 = 3,200. Authority cited (AEAT DR 130, RD 439/2007
+Art. 110, IRPF Art. 99 BOE-A-2006-20764).
+
+**Real-adapter fixture — CLEAN.** `isolated_runtime_profile` with explicit
+`monkeypatch.delenv("AEAT_SECRET_STORE_BACKEND")` + `delenv("AEAT_ALLOW_UNENCRYPTED")`.
+Consistent with S208→S209 direction.
+
+**Verdict: ACCEPT.**
+
+### Commit `ee0fbc69e` — exec records + plan closure
+
+ACCEPT.
+
+### Cross-commit summary
+
+| Commit | Steps | Verdict | Notes |
+|--------|-------|---------|-------|
+| `604bf217d` | S118 + S116 lint | ACCEPT-WITH-FOLLOWUP | FU-W07-D (legal_refs), FU-W07-G (S116 fixes co-landed) |
+| `f4108869d` | S118 fix | ACCEPT | Period derivation correct |
+| `e934f020d` | S119 | ACCEPT | Strong anti-tautology; clean fixture |
+| `ee0fbc69e` | records | ACCEPT | |
+
+**Key architectural difference from project verb:** compare is hexagonally clean —
+no direct domain engine calls. Reads stored revisions via application layer.
+FU-W07-E does not apply.
+
+**Follow-up Steps for W09:**
+
+- FU-W07-D (carry-forward): Surface `legal_refs`/`source_refs` on delta-row
+  casilla values.
+- FU-W07-G: Convention note — `604bf217d` + `f4108869d` both land on S118;
+  fixes to a Step's code should be a separate Step or rolled into the original.
+  Documentation-only.
