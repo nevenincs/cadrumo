@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from aeat.locales.manager import LocaleManager
+from aeat.locales.manager import LocaleError, LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -43,6 +43,53 @@ def test_locale_integrity(manager):
 
     if errors:
         pytest.fail("\n".join(errors))
+
+
+def test_set_locale_value_updates_one_leaf(tmp_path: Path):
+    """The locale CLI write path updates a concrete leaf in a real YAML file."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  app:\n"
+        "    modelo:\n"
+        "      aggregate:\n"
+        "        json_validation_error: cli.app.modelo.aggregate.json_validation_error\n"
+        "        json_parse_error: '{flag} debe ser un objeto JSON.'\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+    written_path = temp_manager.set_locale_value(
+        "es",
+        "cli.app.modelo.aggregate.json_validation_error",
+        "%{flag} no es válido: %{details}.",
+    )
+
+    assert written_path == locale_path
+    data = temp_manager.load_locale(locale_path)
+    aggregate = data["cli"]["app"]["modelo"]["aggregate"]
+    assert aggregate["json_validation_error"] == "%{flag} no es válido: %{details}."
+    assert aggregate["json_parse_error"] == "{flag} debe ser un objeto JSON."
+
+
+def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
+    """The locale setter only writes locale files under its configured root."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    (locales_dir / "es.yml").write_text("cli:\n  label: correcto\n", encoding="utf-8")
+    outside = tmp_path / "outside.yml"
+    outside.write_text("cli:\n  label: fuera\n", encoding="utf-8")
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    with pytest.raises(LocaleError):
+        temp_manager.set_locale_value("../outside", "cli.label", "no escribir")
+
+    assert outside.read_text(encoding="utf-8") == "cli:\n  label: fuera\n"
 
 
 def _namespace_covers(key: str, prefix: str) -> bool:
