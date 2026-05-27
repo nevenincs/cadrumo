@@ -544,6 +544,19 @@ cli:
       filed_app_help: Observacions de declaracions presentades de només lectura
       from_year_help: Primer exercici de presentació
       iva_wallet:
+        acquisition:
+          outcome:
+            aeat_403: porta AEAT 403/autenticació
+            authenticated: autenticat
+            certificate_required: certificat requerit
+            dom_drift: la forma de la pàgina AEAT ha canviat
+            live_navigation_failed: navegació en directe fallida
+            no_clave_prompt: sense avís de Cl@ve
+            operator_timeout: temps d'aprovació esgotat
+            pending_clave_request: petició Cl@ve pendent
+            qr_required: aprovació QR requerida
+            unknown: desconegut
+            wrong_identity: identitat incorrecta
         app_help: Captura de la cartera de compensació d'IVA de l'AEAT (només lectura;
           només permet representació en nom propi i la consulta de lectura protegida
           de cartera).
@@ -552,6 +565,9 @@ cli:
         capture_history_help: Captura en directe l'historial de Modelo 303 presentats
           i persisteix l'estat segur de compensació d'IVA. No s'envien opcions de
           presentació AEAT ni formularis de cartera.
+        capture_remote_state_help: Captura en directe l'historial de Model 303 presentat
+          i intenta la lectura de la cartera d'IVA AEAT com una adquisició tipada
+          de només lectura.
         history_help: Llista l'historial local segur de compensació d'IVA, saldos
           arrossegats i decisions d'autoritat de cartera persistides derivades de
           les captures de Modelo 303 presentats.
@@ -1336,12 +1352,15 @@ cli:
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
       import_help: Registra un paquet portable de perfil des d'un JSON
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
         amb `--label NOM_NOU` per importar-lo amb un nom diferent.
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
       logout_session_warning: El tancament de sessió ha esborrat el punter del perfil
         actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
@@ -1486,12 +1505,12 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
+        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
         invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
         invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
-        profile_empty: cli.diagnostics.profile.errors.profile_empty
-        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
-        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
         no_active_profile: cli.diagnostics.profile.errors.no_active_profile
+        profile_empty: cli.diagnostics.profile.errors.profile_empty
+        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
         unknown_profile_key: cli.diagnostics.profile.errors.unknown_profile_key
       get_help: cli.diagnostics.profile.get_help
       help: cli.diagnostics.profile.help
@@ -2215,8 +2234,15 @@ cli:
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: Volíeu dir '%{command}'?
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
@@ -2248,6 +2274,13 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
