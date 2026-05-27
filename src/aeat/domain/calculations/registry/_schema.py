@@ -1986,6 +1986,31 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
     return _FICHERO_BOE_ENCODING_ALIASES.get(declared.strip().lower(), declared.strip().lower())
 
 
+class VerificationPredicateDefinition(RegistryModel):
+    """A cross-casilla invariant that must hold for VERIFICADO_COMPLETO to be granted.
+
+    Layer 2 of the hybrid verification strategy.  Layer 1 handles
+    single-casilla required gates via ``CasillaDefinition.required``; this
+    class handles multi-casilla structural invariants (e.g. ``if ingresos
+    is non-zero then rendimiento neto must also be present``).
+
+    ``expression`` uses a minimal W04 DSL:
+
+    - ``all_nonzero(["id1", "id2", ...])`` — every listed casilla value must
+      be non-zero (i.e. the filing invariant requires them all to be present
+      and non-zero simultaneously).
+    - ``any_nonzero(["id1", "id2", ...])`` — at least one listed casilla
+      value must be non-zero.
+
+    Complex DSL (conditional, arithmetic, threshold) is deferred to W09.
+    """
+
+    predicate_id: str = Field(min_length=1, max_length=128)
+    legal_refs: LegalRefs
+    expression: str = Field(min_length=1, max_length=512)
+    finding_kind: Literal["BLOCKING_RULE"] = "BLOCKING_RULE"
+
+
 class ModeloRevision(RegistryModel):
     id: RevisionId
     label: str | None = None
@@ -2013,6 +2038,7 @@ class ModeloRevision(RegistryModel):
     constructs: tuple[ConstructDefinition, ...] = ()
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
+    verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:

@@ -822,4 +822,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "aeat.application.modelo._actions.StoredCalculationDriftError",
+        ErrorCode(
+            code="INTEGRITY_STORED_CALCULATION_DRIFT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.storage.stored_data_validation_boundary",
+            default_suggestion="aeat app modelo work calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )
