@@ -35,12 +35,14 @@ source_refs = [
     "aeat-renta-2025-manual-deducciones-autonomicas",
     "aeat-renta-2025-manual-parte1",
     "boe-modelo-100-2025-form",
+    "lirpf-cuota-chain-authority",
 ]
 formulas = [
     "renta-2025-base-imponible-del-ahorro",
     "renta-2025-base-imponible-general",
     "renta-2025-base-liquidable-del-ahorro",
     "renta-2025-base-liquidable-general",
+    "renta-2025-base-liquidable-general-sometida-a-gravamen",
     "renta-2025-cuota-base-liquidable-general-autonomica",
     "renta-2025-cuota-base-liquidable-general-estatal",
     "renta-2025-cuota-escala-autonomica-sobre-base-liquidable-general",
