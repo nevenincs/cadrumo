@@ -97,7 +97,7 @@ Create the typed registry and migrate constants to it without changing encrypted
 
 - [x] `W03.P05.S20` - define secure-object namespace registry models; `src/aeat/adapters/persistence/storage`.
 - [x] `W03.P05.S21` - register profile, ledger, invoice, filing, wallet, and calculation namespaces; `src/aeat/adapters/persistence/storage`.
-- [ ] `W03.P05.S22` - register auth, session, cache, evidence, inventory, and remote-sync namespaces; `src/aeat/adapters/persistence/storage`.
+- [x] `W03.P05.S22` - register auth, session, cache, evidence, inventory, and remote-sync namespaces; `src/aeat/adapters/persistence/storage`.
 - [ ] `W03.P05.S23` - replace local namespace string constants in application repositories with registry entries; `src/aeat/application`.
 
 ### Phase `W03.P06` - namespace policy enforcement
@@ -481,10 +481,10 @@ Current register count: `293` production candidate files.
 | `AFR-209` | `src/aeat/core/resources/_boundary.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-210` | `src/aeat/core/resources/_repos/legal_parameters.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
 | `AFR-211` | `src/aeat/core/resources/_repos/modelos.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | closed |
-| `AFR-212` | `src/aeat/diagnostics/__main__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
-| `AFR-213` | `src/aeat/diagnostics/profile.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
-| `AFR-214` | `src/aeat/domain/_secure_storage_runtime.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
-| `AFR-215` | `src/aeat/domain/attachments/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
+| `AFR-212` | `src/aeat/diagnostics/__main__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | closed |
+| `AFR-213` | `src/aeat/diagnostics/profile.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
+| `AFR-214` | `src/aeat/domain/_secure_storage_runtime.py` | `secure-object, runtime, active-profile, manifest-bucket` | `runtime-default` | `W12.P21.S84` | closed |
+| `AFR-215` | `src/aeat/domain/attachments/_models.py` | `manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | closed |
 | `AFR-216` | `src/aeat/domain/auth/apoderamientos/_catalogue.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-217` | `src/aeat/domain/buckets/__init__.py` | `secure-object` | `runtime-default` | `W12.P21.S83` | pending |
 | `AFR-218` | `src/aeat/domain/buckets/_event.py` | `manifest-bucket, remote-provider` | `remote-mirror` | `W12.P24.S98` | pending |
@@ -834,10 +834,10 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [x] `W12.P26.S311` - Close `AFR-209` for `src/aeat/core/resources/_boundary.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_boundary.py`.
 - [x] `W12.P26.S312` - Close `AFR-210` for `src/aeat/core/resources/_repos/legal_parameters.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/legal_parameters.py`.
 - [x] `W12.P26.S313` - Close `AFR-211` for `src/aeat/core/resources/_repos/modelos.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/core/resources/_repos/modelos.py`.
-- [ ] `W12.P26.S314` - Close `AFR-212` for `src/aeat/diagnostics/__main__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S83`; `src/aeat/diagnostics/__main__.py`.
-- [ ] `W12.P26.S315` - Close `AFR-213` for `src/aeat/diagnostics/profile.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/diagnostics/profile.py`.
-- [ ] `W12.P26.S316` - Close `AFR-214` for `src/aeat/domain/_secure_storage_runtime.py` with signals `secure-object, runtime, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/_secure_storage_runtime.py`.
-- [ ] `W12.P26.S317` - Close `AFR-215` for `src/aeat/domain/attachments/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/attachments/_models.py`.
+- [x] `W12.P26.S314` - Close `AFR-212` for `src/aeat/diagnostics/__main__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S83`; `src/aeat/diagnostics/__main__.py`.
+- [x] `W12.P26.S315` - Close `AFR-213` for `src/aeat/diagnostics/profile.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/diagnostics/profile.py`.
+- [x] `W12.P26.S316` - Close `AFR-214` for `src/aeat/domain/_secure_storage_runtime.py` with signals `secure-object, runtime, active-profile, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/_secure_storage_runtime.py`.
+- [x] `W12.P26.S317` - Close `AFR-215` for `src/aeat/domain/attachments/_models.py` with signals `manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/attachments/_models.py`.
 - [ ] `W12.P26.S318` - Close `AFR-216` for `src/aeat/domain/auth/apoderamientos/_catalogue.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/auth/apoderamientos/_catalogue.py`.
 - [ ] `W12.P26.S319` - Close `AFR-217` for `src/aeat/domain/buckets/__init__.py` with signals `secure-object`, target `runtime-default`, and owner `W12.P21.S83`; `src/aeat/domain/buckets/__init__.py`.
 - [ ] `W12.P26.S320` - Close `AFR-218` for `src/aeat/domain/buckets/_event.py` with signals `manifest-bucket, remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`; `src/aeat/domain/buckets/_event.py`.
@@ -989,3 +989,22 @@ Close the process gap left by fast shared-worktree execution by recording the pu
 
 - [x] `W15.P34.S415` - Persist step records for the pushed storage test-enrollment commits and their validation results; `.vault/exec`.
 - [x] `W15.P34.S416` - Persist closeout audit for residual storage blockers, intentional guard hits, and required code-review follow-up; `.vault/audit`.
+
+## Wave `W16` - audit observation pool reconciliation
+
+Ensure every secure-storage audit observation is inventoried, mapped to an owning plan row or disposition, and guarded for future execution waves.
+
+### Phase `W16.P35` - observation inventory and ownership map
+
+Extract all open audit observations and assign each to an existing step, a new step, or an explicit disposition.
+
+- [ ] `W16.P35.S417` - Inventory secure-storage audit artifacts and extract each open observation, blocker, residual risk, review follow-up, and approved exception into a single observation pool; `.vault/audit`.
+- [ ] `W16.P35.S418` - Map every observation-pool item to an existing Step id, newly required Step id, or explicit out-of-scope disposition; `.vault/plan`.
+
+### Phase `W16.P36` - observation adoption and closeout
+
+Persist remaining owners, add missing executable rows, and enforce review-time owner linkage for future secure-storage findings.
+
+- [ ] `W16.P36.S419` - Persist observation-pool closeout with remaining owners, deferrals, and review signoff; `.vault/audit`.
+- [ ] `W16.P36.S420` - Add missing plan rows or wave assignments for secure-storage observations that lack an existing executable owner; `.vault/plan`.
+- [ ] `W16.P36.S421` - Add a recurring guard that future secure-storage audit findings cite an owning plan row before execution continues; `.vault/audit`.
