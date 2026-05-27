@@ -33,6 +33,9 @@ W15.P33 inventories the secure-storage hierarchy constants that still define per
 | `workflow_runs` | `aeat.application.workflow.runs` | FINANCIAL | 1 | `{run_id}` |
 | `user_profile_value` | `aeat.application.user_profile.value` | IDENTITY | 1 | `user-profile:{profile_id}` |
 | `user_profile_snapshot` | `aeat.application.user_profile.snapshot` | IDENTITY | 1 | `user-profile-snapshot:{profile_id}:{snapshot_id}` |
+| `profile_inventory_ledger` | `aeat.persistence.profile.inventory` | FINANCIAL | 1 | `default` |
+| `profile_assets_ledger` | `aeat.persistence.profile.assets` | FINANCIAL | 1 | `default` |
+| `profile_assets_amortization_ledger` | `aeat.persistence.profile.assets.amortization` | FINANCIAL | 1 | `default` |
 | `repair_integrity_decisions` | `aeat.application.repair_integrity.decisions` | AUDIT | 1 | `{decision_id_sha256_hex}` |
 | `application_filing_history` | `aeat.application.filing.history` | AUDIT | 1 | `{modelo}` |
 | `auth_apoderado_configuration` | `aeat.auth.apoderado` | IDENTITY | 1 | `{bucket_id}` |
