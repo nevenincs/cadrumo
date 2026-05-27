@@ -23,6 +23,7 @@ from aeat.application.modelo import (
 )
 from aeat.application.modelo._actions import (
     StoredCalculationDriftError,
+    _evaluate_advisory_predicate_fires,
     _evaluate_predicate_expression,
     _evaluate_verification_predicates,
 )
@@ -198,6 +199,95 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
     )
     values: dict[str, Decimal] = {"01": Decimal("1000"), "02": Decimal("500")}
     findings = _evaluate_verification_predicates((predicate,), values)
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# Art. 110.3.b RIRPF advisory predicate unit tests
+# ---------------------------------------------------------------------------
+
+
+def test_advisory_when_ratio_ge_fires_when_ratio_meets_threshold() -> None:
+    """advisory_when_ratio_ge fires when numerator/denominator >= threshold and denominator > 0.
+
+    Oracle values: retenciones 10500 / rendimientos 15000 = 0.70 — exactly the
+    Art. 110.3.b 70% threshold. The predicate must return True (advisory fires).
+    """
+    values: dict[str, Decimal] = {"06": Decimal("10500"), "01": Decimal("15000")}
+    assert _evaluate_advisory_predicate_fires(
+        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
+    ) is True
+
+
+def test_advisory_when_ratio_ge_fires_when_ratio_exceeds_threshold() -> None:
+    """advisory_when_ratio_ge fires when ratio strictly exceeds threshold."""
+    # 12000 / 15000 = 0.80 > 0.70
+    values: dict[str, Decimal] = {"06": Decimal("12000"), "01": Decimal("15000")}
+    assert _evaluate_advisory_predicate_fires(
+        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
+    ) is True
+
+
+def test_advisory_when_ratio_ge_does_not_fire_below_threshold() -> None:
+    """advisory_when_ratio_ge does NOT fire when ratio < threshold.
+
+    Anti-tautology oracle: retenciones 9000 / rendimientos 15000 = 0.60 < 0.70.
+    The predicate must return False (no advisory).
+    """
+    values: dict[str, Decimal] = {"06": Decimal("9000"), "01": Decimal("15000")}
+    assert _evaluate_advisory_predicate_fires(
+        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
+    ) is False
+
+
+def test_advisory_when_ratio_ge_does_not_fire_when_denominator_zero() -> None:
+    """advisory_when_ratio_ge: denominator guard prevents division by zero."""
+    values: dict[str, Decimal] = {"06": Decimal("5000"), "01": Decimal("0")}
+    assert _evaluate_advisory_predicate_fires(
+        'advisory_when_ratio_ge(["06", "01", "0.70"])', values
+    ) is False
+
+
+def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() -> None:
+    """Art. 110.3.b ADVISORY predicate produces a WARNING-severity ADVISORY finding when ratio >= 70%.
+
+    The predicate is constructed with finding_kind='ADVISORY' (the new value added
+    in this task). When the ratio condition holds, _evaluate_verification_predicates
+    must produce exactly one finding of kind ADVISORY and severity WARNING.
+    No BLOCKING_RULE finding is produced; the operator can still receive
+    VERIFICADO_COMPLETO if all other gates pass.
+    """
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-art110-3b-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-110-3-b",),
+        expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
+        finding_kind="ADVISORY",
+    )
+    # Exactly 70% ratio: retenciones 10500 / rendimientos 15000
+    casilla_values: dict[str, Decimal] = {"06": Decimal("10500"), "01": Decimal("15000")}
+
+    from aeat.domain.modelos._verification_report import ModeloVerificationFindingSeverity
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+
+    assert len(findings) == 1
+    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
+    assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
+    assert "rd-439-2007:art-110-3-b" in findings[0].legal_refs
+
+
+def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
+    """ADVISORY predicate produces no finding when ratio < 70%."""
+    predicate = VerificationPredicateDefinition(
+        predicate_id="modelo-130-art110-3b-exencion-alta-retencion",
+        legal_refs=("rd-439-2007:art-110-3-b",),
+        expression='advisory_when_ratio_ge(["06", "01", "0.70"])',
+        finding_kind="ADVISORY",
+    )
+    # 60% ratio: retenciones 9000 / rendimientos 15000
+    casilla_values: dict[str, Decimal] = {"06": Decimal("9000"), "01": Decimal("15000")}
+
+    findings = _evaluate_verification_predicates((predicate,), casilla_values)
     assert findings == []
 
 
@@ -438,6 +528,72 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     assert cap_findings, (
         "M130 C15-cap-by-C14 predicate must fire when carry-forward exceeds positive C14; "
         f"got blocking findings: {[f.message for f in blocking_findings]}"
+    )
+    assert report.granted_verificado_completo is False
+
+
+def test_m131_c11_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c10(repos) -> None:
+    """P10.S69: M131 cap-predicate end-to-end integration (symmetry with S64).
+
+    M131 declares modelo-131-<rev>-c11-cap-by-c10 on all 4 revisions
+    via cap_le_when_positive(["11", "10"]). P09.S64 covered M130;
+    this Step extends parallel coverage to M131. AEAT M131
+    instructions cite the same cap rule verbatim: "en ningún caso
+    podrá figurar en la casilla 11 un importe superior a la
+    cantidad positiva consignada en la casilla 10".
+    """
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="131",
+        filing_year=2026,
+        period="2T",
+        revision_id="2026",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    # 04, 06, 07, 13 are computed casillas on the M131 2026 revision;
+    # only the operator-input (manual) casillas may appear in inputs.
+    casilla_inputs: dict[str, Decimal] = {
+        "01": Decimal("100"),
+        "02": Decimal("50"),
+        "03": Decimal("0"),
+        "05": Decimal("0"),
+        "08": Decimal("0"),
+        "09": Decimal("0"),
+        "12": Decimal("0"),
+        "14": Decimal("0"),
+    }
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "modelo-131-2026-resultados-negativos-anteriores": Decimal("99999"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    blocking = [f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE]
+    cap_findings = [f for f in blocking if "modelo-131-2026-c11-cap-by-c10" in f.message]
+    assert cap_findings, (
+        "M131 C11-cap-by-C10 predicate must fire when carry-forward exceeds positive C10; "
+        f"got blocking findings: {[f.message for f in blocking]}"
     )
     assert report.granted_verificado_completo is False
 
