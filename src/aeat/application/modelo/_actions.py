@@ -2660,7 +2660,73 @@ def _collect_revision_verification_findings(
         )
     )
 
+    # Advisory: DT 12ª LIRPF — warn when a large trabajo income (0003 > 20 000)
+    # is present but the trabajo reducción slot (0011) is zero / absent.
+    # This heuristic surfaces the DT_12A_REDUCCION_POSSIBLE advisory so
+    # retirees do not silently lose the 40% reducción for pre-2007 aportaciones.
+    dt12_finding = _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values)
+    if dt12_finding is not None:
+        findings.append(dt12_finding)
+
     return findings, resolved_casillas, missing_required
+
+
+_DT12_TRABAJO_INGRESO_ROLE = "irpf_rendimiento_trabajo_importe_integro_dinerario"
+_DT12_TRABAJO_REDUCCION_ROLE = "irpf_rendimiento_trabajo_reduccion"
+#: Heuristic threshold above which DT 12ª advisory fires (large lump-sum pension).
+_DT12_LARGE_TRABAJO_THRESHOLD = Decimal("20000")
+
+
+def _dt12_reduccion_advisory_finding(
+    revision: object,
+    casilla_values: Mapping[str, Decimal],
+) -> ModeloVerificationFinding | None:
+    """Return a DT_12A_REDUCCION_POSSIBLE WARNING when a large trabajo income is
+    present but no trabajo reducción has been declared.
+
+    The check is advisory only (WARNING severity); it does not block VERIFICADO_COMPLETO.
+    Heuristic: casilla with semantic_role ``irpf_rendimiento_trabajo_importe_integro_dinerario``
+    value > 20 000 AND casilla with role ``irpf_rendimiento_trabajo_reduccion`` is zero/absent.
+    Returns ``None`` when the advisory does not apply or when the snapshot revision
+    does not carry the required semantic roles (non-M100 modelos).
+    """
+
+    ingreso_id: str | None = None
+    reduccion_id: str | None = None
+    for casilla in getattr(revision, "casillas", ()):
+        role = getattr(casilla, "semantic_role", None)
+        if role == _DT12_TRABAJO_INGRESO_ROLE:
+            ingreso_id = str(casilla.id)
+        elif role == _DT12_TRABAJO_REDUCCION_ROLE:
+            reduccion_id = str(casilla.id)
+
+    if ingreso_id is None or reduccion_id is None:
+        return None
+
+    ingreso_value = casilla_values.get(ingreso_id, Decimal(0))
+    reduccion_value = casilla_values.get(reduccion_id, Decimal(0))
+
+    if ingreso_value > _DT12_LARGE_TRABAJO_THRESHOLD and reduccion_value == Decimal(0):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=reduccion_id,
+            message=(
+                f"DT_12A_REDUCCION_POSSIBLE: casilla {ingreso_id} = {ingreso_value} "
+                f"but casilla {reduccion_id} (reducción trabajo) is zero. "
+                f"If this income includes a plan-de-pensiones capital rescate with "
+                f"pre-31-Dec-2006 aportaciones, a 40%% DT 12ª LIRPF reducción may apply."
+            ),
+            next_action=(
+                "Supply --rescate-plan-pensiones-capital IMPORTE "
+                "--rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE "
+                "--rescate-plan-pensiones-aportaciones-totales IMPORTE "
+                "to aeat app modelo work calculate to auto-inject the DT 12ª reducción "
+                "into casilla 0011 (ley-35-2006:dt-12)."
+            ),
+            legal_refs=("ley-35-2006:dt-12",),
+        )
+    return None
 
 
 def _missing_required_casilla_finding(
