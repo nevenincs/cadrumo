@@ -282,3 +282,24 @@ Conclusion: there is no current line-count-driven "next split" comparable to
 M200. The remaining structural decision is M100 authoring duplication: physical
 fragments are already in place, but template expansion would be a new compiler
 feature and remains blocked on a future ADR.
+
+## Follow-up: M100 Template Decision
+
+P07.S22 decision: keep M100 on physical fragments only for now. The accepted
+fragment architecture ADR already allows physical fragmentation and explicitly
+defers template expansion to a later ADR. Current M100 drift research shows that
+non-overlapping annual revisions have mixed drift causes: legal-reference
+retrofit debt, legitimate annual label evolution, repurposed numeric casilla
+ids, and extraction-normalisation debt.
+
+Compile-time templates would need to know which repeated casilla ids represent
+the same regulatory concept across years and which ids are annual repurposings.
+The current schema has no generic continuity/evolution contract for that
+distinction, and adding M100-specific template rules would violate the registry
+hardening constraint against ad-hoc per-modelo definitions.
+
+No template-expansion ADR is created in this slice because the decision is not
+to add a new authoring compiler feature yet. The next ADR-class substrate is a
+generic casilla continuity/evolution model for non-overlapping annual revisions;
+until that exists, M100 remains explicit fragmented TOML and template expansion
+stays blocked.
