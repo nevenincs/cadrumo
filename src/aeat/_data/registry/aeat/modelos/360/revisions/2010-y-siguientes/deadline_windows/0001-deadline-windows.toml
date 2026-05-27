@@ -1,0 +1,24 @@
+# Per art 4 the plazo concludes on 30 September of the following year. The
+# representative deadline window models that closure date for the 2024 and
+# 2025 ejercicios; the opens_on captures the day after the period closes
+# (Jan 1 of the year following the ejercicio).
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-360-2024-ad-hoc"
+filing_year = 2024
+period = "2024-AD-HOC"
+period_kind = "ad_hoc"
+opens_on = 2025-01-01
+closes_on = 2025-09-30
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["boe-modelo-360-2010-form"]
+
+[[revisions."2010-y-siguientes".deadline_windows]]
+id = "modelo-360-2025-ad-hoc"
+filing_year = 2025
+period = "2025-AD-HOC"
+period_kind = "ad_hoc"
+opens_on = 2026-01-01
+closes_on = 2026-09-30
+legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
+source_refs = ["boe-modelo-360-2010-form"]
+
