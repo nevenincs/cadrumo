@@ -308,7 +308,9 @@ application:
           los identificadores de binding resueltos.
     errors:
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
-      computed_casilla_binding_conflict: "Las entradas procedentes del bucket tienen como destino casillas calculadas; no se pueden sobreescribir con binding externo. Casillas afectadas: %{computed}."
+      computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
+        como destino casillas calculadas; no se pueden sobreescribir con binding externo.
+        Casillas afectadas: %{computed}.'
       export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de exportar una revisión de modelo.
       external_filing_evidence_reference_blank: La importación de declaración externa
@@ -321,9 +323,14 @@ application:
         declaración esté implementado.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
-      verification_report_not_found: No existe ningún informe de verificación con id=%{verification_report_id}.
-      work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el mismo modelo, ejercicio y periodo para continuar.
-      work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el mismo modelo, ejercicio y periodo para continuar.
+      verification_report_not_found: No existe ningún informe de verificación con
+        id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: La unidad de trabajo %{work_unit_id} está
+        descartada y no puede calcularse. Crea una nueva unidad de trabajo sobre el
+        mismo modelo, ejercicio y periodo para continuar.
+      work_unit_discarded_cannot_import: La unidad de trabajo %{work_unit_id} está
+        descartada y no puede importarse. Crea una nueva unidad de trabajo sobre el
+        mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
   overview:
     explain:
@@ -615,6 +622,21 @@ cli:
         period_help: Token de periodo; para Modelo 036 usa alta, modificacion o baja;
           ejemplos periodicos incluyen 2026Q1 y 2026-01
         required_help: Mostrar solo las casillas marcadas como obligatorias
+      compare:
+        modelo_help: Número de modelo a comparar (p. ej. 100, 130).
+        need_two_years: Se requieren exactamente dos valores --year (p. ej. --year
+          2024 --year 2025).
+        no_revisions: Las unidades de trabajo del Modelo %{modelo} para el ejercicio
+          %{filing_year} no tienen revisiones de cálculo. Ejecuta `aeat app modelo
+          work calculate` primero.
+        no_usable_revisions: El Modelo %{modelo} para el ejercicio %{filing_year}
+          no tiene revisiones VERIFICADO_COMPLETO ni BORRADOR disponibles para comparar.
+        no_work_units: No se encontraron unidades de trabajo del Modelo %{modelo}
+          para el ejercicio %{filing_year}. Crea y calcula una unidad de trabajo primero.
+        year_help: Ejercicio fiscal a incluir en la comparación. Especifica exactamente
+          dos veces (--year 2024 --year 2025).
+      compare_help: Compara las revisiones de cálculo de dos ejercicios para el mismo
+        modelo. Emite diferencias por casilla (año_b - año_a) agrupadas por sección.
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)

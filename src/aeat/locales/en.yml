@@ -275,7 +275,8 @@ application:
         source_trace_mismatch: Borrador source trace must match resolved binding ids.
     errors:
       calculation_revision_not_found: No calculation revision found with id=%{calculation_revision_id}.
-      computed_casilla_binding_conflict: "Bucket-derived inputs target computed casillas and cannot be overridden by external binding. Affected casillas: %{computed}."
+      computed_casilla_binding_conflict: 'Bucket-derived inputs target computed casillas
+        and cannot be overridden by external binding. Affected casillas: %{computed}.'
       export_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before exporting a modelo revision.
       external_filing_evidence_reference_blank: External-filing import requires a
@@ -288,8 +289,12 @@ application:
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       verification_report_not_found: No verification report found with id=%{verification_report_id}.
-      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded and cannot be calculated. Create a fresh work unit on the same modelo, year, and period to continue.
-      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and cannot be imported. Create a fresh work unit on the same modelo, year, and period to continue.
+      work_unit_discarded_cannot_calculate: Work unit %{work_unit_id} is discarded
+        and cannot be calculated. Create a fresh work unit on the same modelo, year,
+        and period to continue.
+      work_unit_discarded_cannot_import: Work unit %{work_unit_id} is discarded and
+        cannot be imported. Create a fresh work unit on the same modelo, year, and
+        period to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
   overview:
     explain:
@@ -561,6 +566,20 @@ cli:
         period_help: Period token; for Modelo 036 use alta, modificacion, or baja;
           periodic examples include 2026Q1 and 2026-01
         required_help: Show only casillas the modelo marks as required
+      compare:
+        modelo_help: Modelo number to compare (e.g. 100, 130).
+        need_two_years: Exactly two --year values are required (e.g. --year 2024 --year
+          2025).
+        no_revisions: Modelo %{modelo} work units for year %{filing_year} have no
+          calculation revisions. Run `aeat app modelo work calculate` first.
+        no_usable_revisions: Modelo %{modelo} for year %{filing_year} has no VERIFICADO_COMPLETO
+          or BORRADOR revisions available for comparison.
+        no_work_units: No Modelo %{modelo} work units found for year %{filing_year}.
+          Create and calculate a work unit first.
+        year_help: Filing year to include in the comparison. Specify exactly twice
+          (--year 2024 --year 2025).
+      compare_help: Compare two filing-year calculation revisions for the same modelo.
+        Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
         modelo_help: Tax form code (e.g. 303, 130, 100)

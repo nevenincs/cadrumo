@@ -3828,8 +3828,8 @@ def modelo_compare(
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.compare.no_work_units",
-                    default=f"No Modelo {modelo} work units found for year {filing_year}. "
-                    "Create and calculate a work unit first.",
+                    modelo=modelo,
+                    filing_year=filing_year,
                 )
             )
 
@@ -3841,8 +3841,8 @@ def modelo_compare(
             raise typer.BadParameter(
                 tr(
                     "cli.app.modelo.compare.no_revisions",
-                    default=f"Modelo {modelo} work units for year {filing_year} have no "
-                    "calculation revisions. Run `aeat app modelo work calculate` first.",
+                    modelo=modelo,
+                    filing_year=filing_year,
                 )
             )
 
@@ -3864,8 +3864,8 @@ def modelo_compare(
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.compare.no_usable_revisions",
-                default=f"Modelo {modelo} for year {filing_year} has no VERIFICADO_COMPLETO "
-                "or BORRADOR revisions available for comparison.",
+                modelo=modelo,
+                filing_year=filing_year,
             )
         )
 
