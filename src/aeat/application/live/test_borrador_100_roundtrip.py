@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ...adapters.persistence.storage.errors import StorageValidationError
 from ...tests.secure_sql import isolated_runtime_profile
 from ._borrador_100 import (
     Borrador100Snapshot,
@@ -82,6 +83,16 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
         # And the str entries are still str (not coerced to Decimal).
         assert loaded.binding_values["casilla.identity.declarant_label"] == "Gergely Wootsch"
         assert isinstance(loaded.binding_values["casilla.identity.declarant_label"], str)
+
+
+def test_borrador_100_repository_default_refuses_active_bucket_mismatch(tmp_path: Path) -> None:
+    """A repository for bucket-b must not write logical bucket-b rows into bucket-a storage."""
+
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-a"),
+        pytest.raises(StorageValidationError, match="storage runtime is not ready"),
+    ):
+        Borrador100SnapshotRepository(bucket_id="bucket-b")
 
 
 def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
