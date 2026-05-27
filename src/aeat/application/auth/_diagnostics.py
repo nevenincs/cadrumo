@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
@@ -181,14 +182,16 @@ def _secure_objects() -> SecureObjectRepository:
     return secure_object_repository_for_active_bucket()
 
 
-def _payload(raw: bytes) -> dict[str, object]:
+def _payload(raw: bytes) -> Mapping[str, object]:
+    # Legitimate internal boundary: deserializes encrypted JSON blob; dict[str, object]
+    # is the correct structural type from json.loads, exposed as Mapping to callers.
     payload = json.loads(raw.decode("utf-8"))
     if not isinstance(payload, dict):
         raise ValueError("auth diagnostic payload is not a JSON object")
     return {str(key): value for key, value in payload.items()}
 
 
-def _json_object(value: object) -> dict[str, object]:
+def _json_object(value: object) -> Mapping[str, object]:
     """Narrow a JSON value to a string-keyed object, or an empty one."""
 
     if not isinstance(value, dict):
@@ -196,7 +199,7 @@ def _json_object(value: object) -> dict[str, object]:
     return {str(key): item for key, item in value.items()}
 
 
-def _summary_from_payload(payload: dict[str, object]) -> AuthDiagnosticSummary:
+def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummary:
     captured_at = payload.get("captured_at")
     if not isinstance(captured_at, str):
         raise ValueError("auth diagnostic payload is missing captured_at")
@@ -249,7 +252,7 @@ def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-def _detail_fingerprints_from_payload(payload: dict[str, object]) -> dict[str, str]:
+def _detail_fingerprints_from_payload(payload: Mapping[str, object]) -> dict[str, str]:
     raw_auth_attempt = payload.get("auth_attempt")
     if not isinstance(raw_auth_attempt, dict):
         return {}

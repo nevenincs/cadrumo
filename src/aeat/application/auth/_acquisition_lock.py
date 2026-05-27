@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import os
 import socket
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -214,7 +214,10 @@ def auth_lock_ttl_seconds(settings: Settings, kind: AuthProviderKind) -> int:
     return settings.aeat_auth_certificate_lock_ttl_s
 
 
-def _status_context(status: AuthAcquisitionLockStatus) -> dict[str, object]:
+def _status_context(status: AuthAcquisitionLockStatus) -> Mapping[str, object]:
+    # Builds a structured context dict passed to AeatError(context=...).
+    # dict[str, object] is the concrete type; Mapping is the narrowest correct
+    # annotation since AeatError accepts Mapping[str, object] | None.
     context: dict[str, object] = {
         "state": status.state.value,
         "path": str(status.path),
