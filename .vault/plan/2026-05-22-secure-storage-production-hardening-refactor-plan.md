@@ -538,7 +538,7 @@ Current register count: `293` production candidate files.
 | `AFR-266` | `src/aeat/domain/transactions/_raw_transaction.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-267` | `src/aeat/domain/transactions/_repository.py` | `secure-object, runtime, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
 | `AFR-268` | `src/aeat/domain/usage_ratios/_model.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
-| `AFR-269` | `src/aeat/domain/usage_ratios/_service.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | pending |
+| `AFR-269` | `src/aeat/domain/usage_ratios/_service.py` | `secure-object, manifest-bucket` | `runtime-default` | `W12.P21.S84` | migrated |
 | `AFR-270` | `src/aeat/domain/user_profile/_loader.py` | `plain-file` | `plaintext-exception` | `W12.P24.S96` | pending |
 | `AFR-271` | `src/aeat/domain/user_profile/_values.py` | `active-profile, manifest-bucket` | `manifest-discovery` | `W12.P22.S90` | pending |
 | `AFR-272` | `src/aeat/entrypoints/cli/__init__.py` | `active-profile, manifest-bucket, master-key, sql-route, plain-file` | `bootstrap-custody` | `W12.P22.S89` | pending |
@@ -891,7 +891,7 @@ These rows duplicate the `AFR-*` register as vaultspec plan steps so `vaultspec-
 - [ ] `W12.P26.S368` - Close `AFR-266` for `src/aeat/domain/transactions/_raw_transaction.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/transactions/_raw_transaction.py`.
 - [ ] `W12.P26.S369` - Close `AFR-267` for `src/aeat/domain/transactions/_repository.py` with signals `secure-object, runtime, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/transactions/_repository.py`.
 - [ ] `W12.P26.S370` - Close `AFR-268` for `src/aeat/domain/usage_ratios/_model.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/usage_ratios/_model.py`.
-- [ ] `W12.P26.S371` - Close `AFR-269` for `src/aeat/domain/usage_ratios/_service.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/usage_ratios/_service.py`.
+- [x] `W12.P26.S371` - Close `AFR-269` for `src/aeat/domain/usage_ratios/_service.py` with signals `secure-object, manifest-bucket`, target `runtime-default`, and owner `W12.P21.S84`; `src/aeat/domain/usage_ratios/_service.py`.
 - [ ] `W12.P26.S372` - Close `AFR-270` for `src/aeat/domain/user_profile/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`; `src/aeat/domain/user_profile/_loader.py`.
 - [ ] `W12.P26.S373` - Close `AFR-271` for `src/aeat/domain/user_profile/_values.py` with signals `active-profile, manifest-bucket`, target `manifest-discovery`, and owner `W12.P22.S90`; `src/aeat/domain/user_profile/_values.py`.
 - [ ] `W12.P26.S374` - Close `AFR-272` for `src/aeat/entrypoints/cli/__init__.py` with signals `active-profile, manifest-bucket, master-key, sql-route, plain-file`, target `bootstrap-custody`, and owner `W12.P22.S89`; `src/aeat/entrypoints/cli/__init__.py`.

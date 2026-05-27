@@ -30,7 +30,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
 @pytest.fixture(autouse=True)
 def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="b1") as profile:
         yield profile
 
 
