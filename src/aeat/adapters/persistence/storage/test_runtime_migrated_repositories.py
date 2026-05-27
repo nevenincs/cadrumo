@@ -31,6 +31,7 @@ from aeat.adapters.persistence.profile.assets import (
 )
 from aeat.adapters.persistence.profile.inventory import load_inventory, save_inventory
 from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, SensitivityClass
+from aeat.adapters.persistence.storage._namespace_registry import LLM_USAGE_NAMESPACE
 from aeat.adapters.persistence.storage.attachment import AttachmentStore
 from aeat.adapters.persistence.storage.errors import StorageValidationError
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
@@ -65,8 +66,7 @@ from aeat.domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from aeat.domain.calculations.registry import RegistrySnapshotRef
-from aeat.domain.calculations.registry import RegistryModeloObservation
+from aeat.domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotRef
 from aeat.domain.categories import SpendingCategory
 from aeat.domain.filing import (
     AmendmentKind,
@@ -698,10 +698,10 @@ def _save_auth_diagnostic(label: str) -> None:
 
 def _save_diagnostic_probe_row(label: str) -> None:
     secure_object_repository_for_active_bucket().save(
-        namespace="aeat.test.runtime.migrated.diagnostics",
+        namespace=LLM_USAGE_NAMESPACE.namespace,
         object_key=f"diagnostic-probe-{label}",
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
+        classification=LLM_USAGE_NAMESPACE.sensitivity,
+        schema_version=LLM_USAGE_NAMESPACE.schema_version,
         written_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         payload=f"diagnostic-probe-{label}".encode(),
     )
@@ -1107,7 +1107,7 @@ def test_s85_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Pa
     assert tuple(decision.reason for decision in decisions) == ("runtime migrated repair decision bucket-a",)
     assert auth_report.row_count == 1
     assert tuple(row.diagnostic_id for row in auth_report.rows) == ("diagnostic-bucket-a",)
-    assert "aeat.test.runtime.migrated.diagnostics" in tuple(item.namespace for item in diagnostic_report.namespaces)
+    assert LLM_USAGE_NAMESPACE.namespace in tuple(item.namespace for item in diagnostic_report.namespaces)
 
 
 def test_adapter_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:

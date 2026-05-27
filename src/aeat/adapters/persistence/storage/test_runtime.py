@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
+from aeat.adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from aeat.adapters.persistence.storage.errors import StorageValidationError
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
@@ -24,7 +24,6 @@ from aeat.adapters.persistence.storage.runtime_repository import (
 )
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
-from aeat.core.classification import SensitivityClass
 from aeat.core.config import Settings, StorageRouteKind, override_settings
 from aeat.core.errors import resolve_error_message
 
@@ -199,23 +198,25 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
         assert repo.namespace_registry is STORAGE_NAMESPACE_REGISTRY
+        namespace = WORKFLOW_STATE_NAMESPACE.namespace
+        object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
         repo.save_many(
             (
                 SecureObjectWrite(
-                    namespace="aeat.test.runtime",
-                    object_key="object-1",
-                    classification=SensitivityClass.FINANCIAL,
-                    schema_version=1,
+                    namespace=namespace,
+                    object_key=object_key,
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
                     written_at=_NOW,
                     payload=b"runtime-payload",
                 ),
             )
         )
         loaded = repo.load(
-            "aeat.test.runtime",
-            "object-1",
-            expected_class=SensitivityClass.FINANCIAL,
-            max_supported_version=1,
+            namespace,
+            object_key,
+            expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+            max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
         )
 
     assert loaded is not None

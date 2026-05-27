@@ -157,6 +157,14 @@ class StorageHierarchyRegistry(BaseModel):
                 return namespace
         raise KeyError(key)
 
+    def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
+        """Return a namespace definition by persisted namespace value."""
+
+        for namespace in self.namespaces:
+            if namespace.namespace == value:
+                return namespace
+        raise KeyError(value)
+
     def path_by_key(self, key: str) -> StoragePathDefinition:
         """Return a path definition by registry key."""
 

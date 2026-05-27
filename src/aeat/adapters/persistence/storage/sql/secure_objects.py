@@ -13,8 +13,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .....core.classification import SensitivityClass
+from .....core.i18n import tr
 from .....core.logging import get_logger
-from .._namespace_registry import StorageHierarchyRegistry
+from .._namespace_registry import SecureObjectNamespaceDefinition, StorageHierarchyRegistry
 from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 from ..errors import (
     ClassificationError,
@@ -184,6 +185,111 @@ class SecureObjectRepository:
         """Return the namespace registry bound to this repository, if any."""
 
         return self._namespace_registry
+
+    def _registered_namespace_definition(self, namespace: str) -> SecureObjectNamespaceDefinition | None:
+        """Return the registry contract for ``namespace`` when policy is bound."""
+
+        if self._namespace_registry is None:
+            return None
+        try:
+            return self._namespace_registry.namespace_by_value(namespace)
+        except KeyError as exc:
+            raise StorageValidationError(
+                tr("errors.storage.namespace.unregistered", namespace=namespace),
+                context={"namespace": namespace},
+                translated_message="errors.storage.namespace.unregistered",
+            ) from exc
+
+    def _enforce_registered_write_policy(
+        self,
+        *,
+        namespace: str,
+        classification: SensitivityClass,
+        schema_version: int,
+    ) -> None:
+        definition = self._registered_namespace_definition(namespace)
+        if definition is None:
+            return
+        if classification is not definition.sensitivity:
+            raise ClassificationError(
+                tr(
+                    "errors.storage.namespace.classification_mismatch",
+                    namespace=namespace,
+                    classification=classification.value,
+                    expected=definition.sensitivity.value,
+                ),
+                context={
+                    "namespace": namespace,
+                    "classification": classification.value,
+                    "expected": definition.sensitivity.value,
+                },
+                translated_message="errors.storage.namespace.classification_mismatch",
+            )
+        if schema_version != definition.schema_version:
+            raise EnvelopeVersionError(
+                tr(
+                    "errors.storage.namespace.schema_mismatch",
+                    namespace=namespace,
+                    schema_version=schema_version,
+                    expected=definition.schema_version,
+                ),
+                context={
+                    "namespace": namespace,
+                    "schema_version": schema_version,
+                    "expected": definition.schema_version,
+                },
+                translated_message="errors.storage.namespace.schema_mismatch",
+            )
+
+    def _enforce_registered_read_policy(
+        self,
+        *,
+        namespace: str,
+        expected_class: SensitivityClass,
+    ) -> SecureObjectNamespaceDefinition | None:
+        definition = self._registered_namespace_definition(namespace)
+        if definition is None:
+            return None
+        if expected_class is not definition.sensitivity:
+            raise ClassificationError(
+                tr(
+                    "errors.storage.namespace.classification_mismatch",
+                    namespace=namespace,
+                    classification=expected_class.value,
+                    expected=definition.sensitivity.value,
+                ),
+                context={
+                    "namespace": namespace,
+                    "classification": expected_class.value,
+                    "expected": definition.sensitivity.value,
+                },
+                translated_message="errors.storage.namespace.classification_mismatch",
+            )
+        return definition
+
+    def _enforce_registered_row_schema(
+        self,
+        *,
+        namespace: str,
+        schema_version: int,
+        definition: SecureObjectNamespaceDefinition | None,
+    ) -> None:
+        if definition is None or schema_version <= definition.schema_version:
+            return
+        raise EnvelopeVersionError(
+            tr(
+                "errors.storage.namespace.schema_mismatch",
+                namespace=namespace,
+                schema_version=schema_version,
+                expected=definition.schema_version,
+            ),
+            context={
+                "namespace": namespace,
+                "schema_version": schema_version,
+                "expected": definition.schema_version,
+            },
+            translated_message="errors.storage.namespace.schema_mismatch",
+        )
 
     def _check_session_freshness(self) -> None:
         """Refuse the operation when the active session has crossed its idle deadline.
@@ -610,6 +716,10 @@ class SecureObjectRepository:
         prevent rows ``> N`` from being inspected. Consumers count the
         failures and decide how to report them; nothing is auto-deleted.
         """
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
         with session_scope(self._engine) as session:
             stmt = (
                 text(
@@ -658,6 +768,11 @@ class SecureObjectRepository:
                     f"secure object {namespace}/{object_key.hex()} is at version "
                     f"{schema_version}; consumer supports up to {max_supported_version}",
                 )
+            self._enforce_registered_row_schema(
+                namespace=namespace,
+                schema_version=schema_version,
+                definition=namespace_definition,
+            )
             try:
                 payload_plain = decrypt_encrypted_bytes_column(payload_wire)
             except DecryptionError as exc:
@@ -691,6 +806,10 @@ class SecureObjectRepository:
         """Load and decrypt one object, returning ``None`` when absent."""
 
         self._check_session_freshness()
+        namespace_definition = self._enforce_registered_read_policy(
+            namespace=namespace,
+            expected_class=expected_class,
+        )
         with session_scope(self._engine) as session:
             row = session.execute(
                 select(_orm.SecureObjectRow).where(
@@ -704,6 +823,7 @@ class SecureObjectRepository:
                 row,
                 expected_class=expected_class,
                 max_supported_version=max_supported_version,
+                namespace_definition=namespace_definition,
             )
 
     def save(
@@ -739,6 +859,12 @@ class SecureObjectRepository:
         if not writes:
             return
         self._check_session_freshness()
+        for write in writes:
+            self._enforce_registered_write_policy(
+                namespace=write.namespace,
+                classification=write.classification,
+                schema_version=write.schema_version,
+            )
         with session_scope(self._engine) as session:
             for write in writes:
                 self._save_internal_in_session(
@@ -808,6 +934,11 @@ class SecureObjectRepository:
         payload: bytes,
     ) -> None:
         """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
+        self._enforce_registered_write_policy(
+            namespace=namespace,
+            classification=classification,
+            schema_version=schema_version,
+        )
         with session_scope(self._engine) as session:
             self._save_internal_in_session(
                 session,
@@ -932,6 +1063,7 @@ class SecureObjectRepository:
         *,
         expected_class: SensitivityClass,
         max_supported_version: int,
+        namespace_definition: SecureObjectNamespaceDefinition | None = None,
     ) -> SecureObjectRecord:
         try:
             classification = SensitivityClass(row.classification)
@@ -950,6 +1082,11 @@ class SecureObjectRepository:
                 f"secure object {row.namespace}/{bytes(row.object_key).hex()} is at version {row.schema_version}; "
                 f"consumer supports up to {max_supported_version}",
             )
+        self._enforce_registered_row_schema(
+            namespace=row.namespace,
+            schema_version=row.schema_version,
+            definition=namespace_definition,
+        )
         return SecureObjectRecord(
             namespace=row.namespace,
             object_key=bytes(row.object_key),
