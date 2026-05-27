@@ -678,17 +678,20 @@ Campaign governance scaffolding. Does not complete in the conventional sense; co
 
 At every Wave terminus coordinator dispatches code-reviewer fresh persona fleet Haiku drift sweep Sonnet grounding; each terminus produces a new audit document and expands THIS plan in place.
 
-- [ ] `W11.P59.S192` - at every Wave terminus dispatch code-reviewer on every Wave commit fresh persona fleet of at least five distinct tax shapes Haiku drift sweep on touched files Sonnet grounding on any new BLOCKER or MAJOR; `.vault/exec/`.
-- [ ] `W11.P59.S193` - each Wave terminus produces new audit document via vaultspec CLI; `.vault/audit/`.
-- [ ] `W11.P59.S194` - each Wave terminus expands THIS plan in place every new BLOCKER MAJOR drift becomes a new Step or Phase or Wave; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
-- [ ] `W11.P59.S195` - vault plan check must remain green after every plan expansion; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [ ] `W11.P59.S192` - at every Wave terminus dispatch one code-reviewer pass on all Wave commits one fresh persona fleet of at least five distinct tax shapes one Haiku drift sweep on all files touched in the Wave and Sonnet grounding on any new BLOCKER or MAJOR; `produce exec record; cadence target one Wave terminus per active sprint roughly weekly during execution monthly in maintenance; `.vault/exec/`.
+- [ ] `W11.P59.S193` - each Wave terminus produces exactly one new audit document via vaultspec CLI; `records persona findings tiered BLOCKER MAJOR MINOR maps each to plan Step or proposes new; explicitly states whether closed findings regressed; audit documents never modified after initial commit regression evidence goes in next audit; `.vault/audit/`.
+- [ ] `W11.P59.S194` - each Wave terminus expands THIS plan in place every new BLOCKER and MAJOR becomes a new Step in the appropriate Wave or a new Wave if scope exceeds capacity; `vault plan check must be re-run after every expansion and pass before terminus declared closed; PM executes all structural edits via vault CLI verbs never hand-edit; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [ ] `W11.P59.S195` - vault plan check must remain green after every plan expansion and after every Step close; `red blocks next Wave dispatch; green = no broken wiki-links no malformed frontmatter no identifier gaps no orphaned Steps; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [ ] `W11.P59.S335` - durable maintenance gate one — vault check all CI-equivalent runs on every commit to chore branch; `blocks merge if structural drift surfaces; `.github/workflows/`.
+- [ ] `W11.P59.S336` - durable maintenance gate two — ledger and storage roundtrip test suite remains in CI; `the S108-S109 S254 S273 work built it; never deprecate without explicit replacement; `.github/workflows/`.
+- [ ] `W11.P59.S337` - durable maintenance gate three — scheduled quarterly persona re-run of 3+ shapes (not ad-hoc); catches UX drift tests cannot; produces a checkpoint-review audit document each quarter; `.vault/audit/`.
 
 ### Phase `W11.P60` - termination criteria
 
 Campaign terminates only when full persona-fleet pass returns zero BLOCKER zero MAJOR AND full Haiku drift sweep returns zero in-scope drift AND vault check all returns clean of new campaign-introduced findings.
 
-- [ ] `W11.P60.S196` - campaign terminates only when full persona-fleet pass minimum five distinct shapes returns zero BLOCKER and zero MAJOR AND full Haiku drift sweep returns zero in-scope drift across 1400 plus Python files AND vault check all reports vault clean of new findings; `.vault/audit/`.
-- [ ] `W11.P60.S197` - until termination criteria hold every complete claim is treated as premature; `plan re-expands at next loop; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [ ] `W11.P60.S196` - rolling checkpoint declared when ALL five conditions hold: C1 all BLOCKER findings from most-recent persona round closed or have accepted remediation Step; `C2 no new BLOCKER without accepted Step; C3 in-progress coder tasks committed and architect-reviewed; C4 vault plan check green; C5 vault check all reports no new structural drift; checkpoint is NOT termination — cadence pause only; loop resumes on next BLOCKER or scheduled persona round; `.vault/audit/`.
+- [ ] `W11.P60.S197` - until a valid checkpoint declaration is on record any claim of campaign complete or done is premature; `after a checkpoint at-rest is valid but finished is not; checkpoint declaration itself is a vault audit document authored by architecture-specialist after verifying C1-C5 in sequence; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W12` - structural debt cleanup
 
