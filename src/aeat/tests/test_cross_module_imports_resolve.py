@@ -248,9 +248,7 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 # new file enters the set (regression — new ``__init__.py`` skipped
 # the discipline). Trim caps as packages clean up; the W09.P20 close
 # state is an empty mapping.
-_INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
-    "aeat/entrypoints/cli/__init__.py": 1,
-}
+_INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {}
 
 
 def _collect_init_missing_from_all() -> list[tuple[str, str]]:
