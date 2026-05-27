@@ -476,6 +476,10 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S259` - FU-W07-G S118 + S118-fix co-landing convention note: 604bf217d and f4108869d both touch the S118 scope without an intervening Step record; `documentation-only note for W09; `.vaultspec/`.
 - [ ] `W09.P41.S261` - FU-W08-C drop unsecured-backend monkeypatches from test_output_language_parity _isolated_state fixture; `--help tests reach no storage layer so no replacement fixture needed; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
 - [ ] `W09.P41.S262` - FU-W08-D broader --output-language surface sweep: enumerate CLI commands not yet covered by S144 test and assert coverage or document deliberate exclusion; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
+- [ ] `W09.P41.S263` - FU-W08-A coordination incident note: coder1 and coder2 raced on W08.P36 S141-S144 producing duplicate commit pairs (03016c382/dcc774795 vs 925d8fb0f/02813c853) before coder2 was redirected to Task #72; `establish a task-claim protocol so the same Step cannot be picked off the shared list by two agents simultaneously; `.vaultspec/`.
+- [ ] `W09.P41.S264` - FU-W08-B remove redundant _activate_subcommand_output_language wrapper in src/aeat/entrypoints/cli/_config/__init__.py; `it is now a one-line shim around the shared helper after the W08.P36 promotion landed; collapse to direct calls; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W09.P41.S265` - FU-W08-C drop unsecured-backend AEAT_SECRET_STORE_BACKEND=unsecured and AEAT_ALLOW_UNENCRYPTED=1 monkeypatches from _isolated_state autouse fixture in test_output_language_parity.py; `--help never reaches storage so these env-vars serve no purpose; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
+- [ ] `W09.P41.S266` - FU-W08-D broader --output-language surface sweep beyond the 10 commands covered by S144 regression test; identify every Typer command across the CLI and confirm flag presence; expand the test to enforce parity over the full set; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W09.P42` - twin function merge
 
