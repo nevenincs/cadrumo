@@ -344,7 +344,7 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
             "--tax-id", "00000001R", "--activity", "freelance",
         ],
     )
-    _set_profile_axis("taxpayer.fiscal_residency", "non_resident_irnr")
+    _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
 
     result = _RUNNER.invoke(
         app,
