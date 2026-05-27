@@ -2711,12 +2711,16 @@ def work_amend(
     ) as exc:
         raise _bad_parameter_from_error(exc) from exc
 
-    payload = {
-        "operation": "modelo.work.amend",
-        "amendment_kind": amendment_kind.value,
-        "amends_filing_record_id": from_filing_record_id,
-        **_filing_record_payload(record),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkAmendResult
+
+    result = WorkAmendResult.model_validate(
+        {
+            "amendment_kind": amendment_kind.value,
+            "amends_filing_record_id": from_filing_record_id,
+            **_filing_record_payload(record),
+        }
+    )
     lines = [
         "operation\tmodelo.work.amend",
         f"amendment_kind\t{amendment_kind.value}",
@@ -2724,7 +2728,7 @@ def work_amend(
         *_filing_record_lines(record),
     ]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.amend", result=result, lines=lines)
 
 
 @filing_record_app.command("list", help=tr("cli.app.modelo.filing_record.list_help"))
