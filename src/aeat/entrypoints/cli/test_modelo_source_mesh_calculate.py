@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.transactions import (
     BusinessClassification,
@@ -23,27 +22,15 @@ from aeat.domain.transactions import (
     TransactionDirection,
 )
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    with EphemeralMasterKeyProvider():
-        try:
-            yield
-        finally:
-            dispose_engine()
+def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _create_profile() -> None:
@@ -139,6 +126,8 @@ def _transaction(
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
+    from aeat.application.user_profile._orchestration import profile_storage_session
+
     _create_profile()
     work_unit = _create_303_work_unit()
     bucket_id = str(work_unit["bucket_id"])
@@ -156,9 +145,43 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
     )
-    TransactionCatalogueRepository(bucket_id=bucket_id).save(
-        TransactionCatalogue.from_transactions((sale, purchase))
-    )
+
+    # Seed ledger data and a zero-amount IVA wallet decision via a live
+    # profile session.  The CLI runner resets the ContextVar on each
+    # invocation exit so direct repository calls that depend on an active
+    # bucket session must enter their own session block.
+    # The IVA wallet decision is required by the Modelo 303 reconciliation
+    # guard: it blocks calculation when ``compensacion-pendiente-anteriores``
+    # is supplied without a persisted decision, even when the amount is zero.
+    # A local_recurrence decision with selected_amount=0 satisfies the guard
+    # while leaving the ledger mesh assertions meaningful.
+    with profile_storage_session(bucket_id):
+        from datetime import UTC, datetime
+
+        from aeat.application.calculations._iva_wallet_reconciliation import (
+            IvaCompensationReconciliationDecision,
+        )
+        from aeat.application.calculations._observations_repository import IvaWalletDecisionRepository
+
+        TransactionCatalogueRepository(bucket_id=bucket_id).save(
+            TransactionCatalogue.from_transactions((sale, purchase))
+        )
+        decision = IvaCompensationReconciliationDecision(
+            taxpayer_nif="12345678Z",
+            target_year=2026,
+            target_period="1T",
+            selected_authority="local_recurrence",
+            selected_amount=Decimal("0"),
+            wallet_amount=None,
+            local_recurrence_amount=Decimal("0"),
+            override_amount=None,
+            divergence="wallet_missing",
+            blocked=False,
+            stale_wallet=False,
+            reason="test: no prior IVA compensation",
+            decided_at=datetime.now(UTC),
+        )
+        IvaWalletDecisionRepository().save_decision(decision)
 
     result = invoke_cached_cli(
         [
@@ -174,7 +197,9 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     revision_id = payload["calculation_revision_id"]
-    persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
+
+    with profile_storage_session(bucket_id):
+        persisted = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
 
     assert persisted.source_transaction_ids == tuple(sorted((sale.transaction_id, purchase.transaction_id)))
     assert Decimal(persisted.binding_overrides["modelo-303-iva-repercutido-general-cuota"]) == sale.iva_amount

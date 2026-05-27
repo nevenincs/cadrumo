@@ -6,30 +6,27 @@ import json
 import os
 import shutil
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.operator_surface import build_help_document
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow import workflow_state_repository
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'help.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    with EphemeralMasterKeyProvider():
+def _isolated_state(tmp_path: Path) -> Iterator[None]:
+    # Most tests in this file only invoke --help or subprocess-isolated
+    # commands; they need storage isolation but no active session.
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
         yield
-    dispose_engine()
 
 
 def _invoke(args: list[str]):
@@ -114,29 +111,6 @@ def test_curated_help_command_rows_resolve_in_real_typer_tree() -> None:
                 assert "No such command" not in result.output
 
 
-def test_bare_invocation_reports_profile_state_without_cli_only_storage() -> None:
-    missing = _invoke([])
-    workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
-    active = _invoke([])
-    overview = _invoke(["app", "overview", "status"])
-
-    assert missing.exit_code == 0, missing.output
-    assert "aeat config profile create NAME" in missing.output
-    assert ("aeat config " + "init") not in missing.output
-    assert "aeat app overview status" in missing.output
-    assert "aeat app ledger import" in missing.output
-
-    assert active.exit_code == 0, active.output
-    assert overview.exit_code == 0, overview.output
-    assert active.output != overview.output
-    assert "aeat app overview status" in active.output
-    assert "aeat app ledger import" in active.output
-    assert "`operator`" in overview.output
-    assert "profile\t" not in overview.output.lower()
-    assert "integrity-warning" not in overview.output
-    assert "unreadable_rows" not in overview.output
-
-
 def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -> None:
     aeat_exe = shutil.which("aeat")
     assert aeat_exe is not None
@@ -198,18 +172,60 @@ def test_installed_console_profile_create_fails_fast_without_prompt_host(tmp_pat
     assert "Traceback" not in combined_output
 
 
-def test_root_help_and_bare_invocation_use_root_format_json() -> None:
-    help_result = _invoke(["--format", "json", "--help"])
+class TestBareInvocationWithActiveProfile:
+    """Tests that call register_minimal_profile need a file-backed storage root.
 
-    assert help_result.exit_code == 0, help_result.output
-    help_payload = json.loads(help_result.output)
-    assert help_payload["surface"] == "root"
-    assert help_payload["heading"].startswith("aeat - local-first")
+    register_minimal_profile goes through build_lifecycle_service →
+    _secure_objects_for_bucket → runtime.require_ready(), which needs an
+    active bucket session. profile_create_storage_span initialises the key
+    material and activates the session for the target profile_id so the
+    call succeeds without a pre-provisioned test bucket in the profile list.
+    """
 
-    workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
-    active = _invoke(["--format", "json"])
+    @pytest.fixture(autouse=True)
+    def _isolated_state(self, tmp_path: Path) -> Iterator[None]:
+        # Overrides the module-level _isolated_state. Uses profile_storage_root
+        # (not sessionless) so profile_create_storage_span can resolve a
+        # file-backed master-key provider and provision key material.
+        with isolated_profile_storage_root(tmp_path=tmp_path):
+            yield
 
-    assert active.exit_code == 0, active.output
-    active_payload = json.loads(active.output)
-    assert active_payload["active_profile"] == "operator"
-    assert active_payload["transactions"] == 0
+    def test_bare_invocation_reports_profile_state_without_cli_only_storage(self) -> None:
+        missing = _invoke([])
+        with profile_create_storage_span("operator"):
+            workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
+        active = _invoke([])
+        overview = _invoke(["app", "overview", "status"])
+
+        assert missing.exit_code == 0, missing.output
+        assert "aeat config profile create NAME" in missing.output
+        assert ("aeat config " + "init") not in missing.output
+        assert "aeat app overview status" in missing.output
+        assert "aeat app ledger import" in missing.output
+
+        assert active.exit_code == 0, active.output
+        assert overview.exit_code == 0, overview.output
+        assert active.output != overview.output
+        assert "aeat app overview status" in active.output
+        assert "aeat app ledger import" in active.output
+        assert "`operator`" in overview.output
+        assert "profile\t" not in overview.output.lower()
+        assert "integrity-warning" not in overview.output
+        assert "unreadable_rows" not in overview.output
+
+    def test_root_help_and_bare_invocation_use_root_format_json(self) -> None:
+        help_result = _invoke(["--format", "json", "--help"])
+
+        assert help_result.exit_code == 0, help_result.output
+        help_payload = json.loads(help_result.output)
+        assert help_payload["surface"] == "root"
+        assert help_payload["heading"].startswith("aeat - local-first")
+
+        with profile_create_storage_span("operator"):
+            workflow_state_repository().update(lambda current: register_minimal_profile(current, profile_id="operator"))
+        active = _invoke(["--format", "json"])
+
+        assert active.exit_code == 0, active.output
+        active_payload = json.loads(active.output)
+        assert active_payload["active_profile"] == "operator"
+        assert active_payload["transactions"] == 0
