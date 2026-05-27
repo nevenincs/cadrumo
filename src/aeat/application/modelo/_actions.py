@@ -1083,9 +1083,7 @@ def calculate_modelo_revision(
             "formula_count": str(len(engine_result.entries)),
             "source_transaction_count": str(len(source_transaction_ids)),
             "borrador_snapshot_id": borrador_result.borrador_snapshot_id or "",
-            "borrador_participated": (
-                "true" if borrador_result.bindings_sourced_from_borrador else "false"
-            ),
+            "borrador_participated": ("true" if borrador_result.bindings_sourced_from_borrador else "false"),
             "borrador_binding_count": str(len(borrador_result.bindings_sourced_from_borrador)),
             "borrador_bindings_trace_sha256": hashlib.sha256(
                 "\n".join(borrador_result.bindings_sourced_from_borrador).encode("utf-8")
@@ -1357,7 +1355,9 @@ def calculate_modelo_revision_from_bucket_aggregation(
     if work_unit is None:
         raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
+        raise WorkUnitMutationRefusedError(
+            tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id)
+        )
 
     try:
         authority = _authority_via_resources()
@@ -1525,9 +1525,7 @@ def _reject_binding_channel_mismatch(
         )
     misrouted_to_enum = sorted(set(enum_binding_values) & {b.id for b in revision.bindings} - enum_consumed)
     misrouted_to_enum = [
-        binding_id
-        for binding_id in misrouted_to_enum
-        if _binding_is_formula_consumed(revision, binding_id)
+        binding_id for binding_id in misrouted_to_enum if _binding_is_formula_consumed(revision, binding_id)
     ]
     if misrouted_to_enum:
         raise ModeloError(
@@ -1542,9 +1540,7 @@ def _reject_binding_channel_mismatch(
 def _binding_is_formula_consumed(revision: ModeloRevision, binding_id: str) -> bool:
     """Return whether any formula expression references ``binding_id``."""
 
-    return any(
-        binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas
-    )
+    return any(binding_id in expression_binding_refs(formula.expression) for formula in revision.formulas)
 
 
 def _resolve_borrador_bindings_for_calculation(
@@ -1583,6 +1579,7 @@ def _resolve_borrador_bindings_for_calculation(
         enum_binding_values=resolution.enum_binding_values,
         bindings_sourced_from_borrador=sourced,
     )
+
 
 def _resolve_bound_casilla_inputs_for_available_bindings(
     revision: ModeloRevision,
@@ -1689,16 +1686,14 @@ def _merge_bucket_bound_inputs(
         if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
     )
     if computed:
-        raise ModeloAggregationBindingError(tr("application.modelo.errors.computed_casilla_binding_conflict", computed=computed))
+        raise ModeloAggregationBindingError(
+            tr("application.modelo.errors.computed_casilla_binding_conflict", computed=computed)
+        )
     return dict(sorted({**bound_inputs, **casilla_inputs}.items()))
 
 
 def _source_owned_binding_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
-    return frozenset(
-        binding.id
-        for binding in revision.bindings
-        if binding.source in owned_sources
-    )
+    return frozenset(binding.id for binding in revision.bindings if binding.source in owned_sources)
 
 
 def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: frozenset[str]) -> frozenset[str]:
@@ -1775,7 +1770,12 @@ def get_calculation_revision(
     catalogue = cr_repo.load()
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
-        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
+        raise CalculationRevisionNotFoundError(
+            tr(
+                "application.modelo.errors.calculation_revision_not_found",
+                calculation_revision_id=calculation_revision_id,
+            )
+        )
     return revision
 
 
@@ -1803,7 +1803,12 @@ def mark_revision_verificado_completo(
     catalogue = cr_repo.load()
     existing = catalogue.get(calculation_revision_id)
     if existing is None:
-        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
+        raise CalculationRevisionNotFoundError(
+            tr(
+                "application.modelo.errors.calculation_revision_not_found",
+                calculation_revision_id=calculation_revision_id,
+            )
+        )
     if existing.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -1838,6 +1843,7 @@ def _registry_root() -> Path:
 def _authority_via_resources() -> ValidatedRegistryAuthority:
     """Return the registry authority via the central resource registry."""
     from ...core.resources import resources
+
     return resources().modelos.authority
 
 
@@ -1863,8 +1869,7 @@ def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
         return
     available = ", ".join(sorted(modelo_def.revisions))
     raise ModeloError(
-        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. "
-        f"Available revisions: {available}"
+        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. Available revisions: {available}"
     )
 
 
@@ -2156,14 +2161,14 @@ def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
             )
 
 
-_PREDICATE_ALL_NONZERO = _re.compile(r'^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
-_PREDICATE_ANY_NONZERO = _re.compile(r'^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$')
+_PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+_PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 
 
 def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
     """Parse the comma-separated quoted-id list from a predicate expression."""
     ids: list[str] = []
-    for token in ids_fragment.split(','):
+    for token in ids_fragment.split(","):
         token = token.strip().strip('"').strip("'")
         if token:
             ids.append(token)
@@ -2188,12 +2193,12 @@ def _evaluate_predicate_expression(
 
     m = _PREDICATE_ALL_NONZERO.match(expr)
     if m:
-        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
         return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
 
     m = _PREDICATE_ANY_NONZERO.match(expr)
     if m:
-        ids = _parse_predicate_casilla_ids(m.group('ids'))
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
         return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
 
     return True
@@ -2214,14 +2219,12 @@ def _evaluate_verification_predicates(
                 ModeloVerificationFinding(
                     kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                     severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    message=(
-                        f"cross-casilla invariant {predicate.predicate_id!r} violated: "
-                        f"{predicate.expression}"
-                    ),
+                    message=(f"cross-casilla invariant {predicate.predicate_id!r} violated: {predicate.expression}"),
                     next_action=(
                         f"Ensure all casillas required by predicate "
                         f"{predicate.predicate_id!r} are non-zero before verifying."
                     ),
+                    legal_refs=tuple(str(r) for r in predicate.legal_refs),
                 )
             )
     return findings
@@ -2304,7 +2307,12 @@ def verify_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
+        raise CalculationRevisionNotFoundError(
+            tr(
+                "application.modelo.errors.calculation_revision_not_found",
+                calculation_revision_id=calculation_revision_id,
+            )
+        )
     if target.state is not CalculationRevisionState.BORRADOR:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2436,12 +2444,16 @@ def _collect_revision_verification_findings(
     resolved_casillas: list[str] = []
     missing_required: list[str] = []
 
-    registry_lookup = _required_input_casillas_for_revision(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-    )
-    if registry_lookup is None:
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        authority = _authority_via_resources()
+        snapshot = authority.snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+        )
+    except (FileNotFoundError, RegistrySnapshotError):
         findings.append(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -2456,36 +2468,50 @@ def _collect_revision_verification_findings(
         )
         return findings, resolved_casillas, missing_required
 
-    required, _optional = registry_lookup
+    casillas_by_id = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
     revision_keys = set(target.inputs_snapshot)
-    for casilla_id in required:
-        if casilla_id in revision_keys:
-            resolved_casillas.append(casilla_id)
-        else:
-            missing_required.append(casilla_id)
-            findings.append(_missing_required_casilla_finding(casilla_id, target.work_unit_id))
+    for casilla in snapshot.revision.casillas:
+        casilla_id = str(casilla.id)
+        if casilla.input_kind == "manual" and casilla.required:
+            if casilla_id in revision_keys:
+                resolved_casillas.append(casilla_id)
+            else:
+                missing_required.append(casilla_id)
+                findings.append(
+                    _missing_required_casilla_finding(
+                        casilla_id,
+                        target.work_unit_id,
+                        casilla_def=casillas_by_id.get(casilla_id),
+                    )
+                )
 
     # Layer 2: cross-casilla predicate gate.
-    predicates = _verification_predicates_for_revision(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+    findings.extend(
+        _evaluate_verification_predicates(
+            snapshot.revision.verification_predicates,
+            target.casilla_values,
+        )
     )
-    findings.extend(_evaluate_verification_predicates(predicates, target.casilla_values))
 
     return findings, resolved_casillas, missing_required
 
 
-def _missing_required_casilla_finding(casilla_id: str, work_unit_id: str) -> ModeloVerificationFinding:
+def _missing_required_casilla_finding(
+    casilla_id: str,
+    work_unit_id: str,
+    *,
+    casilla_def: CasillaDefinition | None = None,
+) -> ModeloVerificationFinding:
+    legal_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.legal_refs) if casilla_def is not None else ()
+    source_refs: tuple[str, ...] = tuple(str(r) for r in casilla_def.source_refs) if casilla_def is not None else ()
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
-        message=(
-            f"required casilla {casilla_id!r} is not present in "
-            f"the calculation revision's inputs_snapshot"
-        ),
+        message=(f"required casilla {casilla_id!r} is not present in the calculation revision's inputs_snapshot"),
         next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
 
 
@@ -2533,7 +2559,9 @@ def _load_work_unit_for_calculation(work_units, *, work_unit_id: str):  # type: 
     if work_unit is None:
         raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id))
+        raise WorkUnitMutationRefusedError(
+            tr("application.modelo.errors.work_unit_discarded_cannot_calculate", work_unit_id=work_unit_id)
+        )
     return work_unit
 
 
@@ -2745,7 +2773,12 @@ def file_modelo_revision(
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
-        raise CalculationRevisionNotFoundError(tr("application.modelo.errors.calculation_revision_not_found", calculation_revision_id=calculation_revision_id))
+        raise CalculationRevisionNotFoundError(
+            tr(
+                "application.modelo.errors.calculation_revision_not_found",
+                calculation_revision_id=calculation_revision_id,
+            )
+        )
     if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
@@ -2947,7 +2980,9 @@ def get_filing_record(
     catalogue = fr_repo.load()
     record = catalogue.get(filing_record_id)
     if record is None:
-        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=filing_record_id))
+        raise ModeloRecordNotFoundError(
+            tr("application.modelo.errors.filing_record_not_found", filing_record_id=filing_record_id)
+        )
     return record
 
 
@@ -2982,7 +3017,9 @@ def get_verification_report(
     catalogue = vr_repo.load()
     report = catalogue.get(verification_report_id)
     if report is None:
-        raise VerificationReportNotFoundError(tr("application.modelo.errors.verification_report_not_found", verification_report_id=verification_report_id))
+        raise VerificationReportNotFoundError(
+            tr("application.modelo.errors.verification_report_not_found", verification_report_id=verification_report_id)
+        )
     return report
 
 
@@ -3043,7 +3080,9 @@ def amend_modelo_revision(
     filing_catalogue = fr_repo.load()
     baseline = filing_catalogue.get(from_filing_record_id)
     if baseline is None:
-        raise ModeloRecordNotFoundError(tr("application.modelo.errors.filing_record_not_found", filing_record_id=from_filing_record_id))
+        raise ModeloRecordNotFoundError(
+            tr("application.modelo.errors.filing_record_not_found", filing_record_id=from_filing_record_id)
+        )
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
             f"filing record {from_filing_record_id!r} has no external_evidence; the "
@@ -3281,21 +3320,19 @@ def import_external_filing_evidence(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
 
     if not casilla_values:
-        raise ExternalModeloImportError(
-            tr("application.modelo.errors.external_filing_no_casilla_values")
-        )
+        raise ExternalModeloImportError(tr("application.modelo.errors.external_filing_no_casilla_values"))
     cleaned_reference = evidence_reference_id.strip()
     if not cleaned_reference:
-        raise ExternalModeloImportError(
-            tr("application.modelo.errors.external_filing_evidence_reference_blank")
-        )
+        raise ExternalModeloImportError(tr("application.modelo.errors.external_filing_evidence_reference_blank"))
 
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(tr("application.modelo.errors.work_unit_not_found", work_unit_id=work_unit_id))
     if work_unit.state is WorkUnitState.DESCARTADO:
-        raise WorkUnitMutationRefusedError(tr("application.modelo.errors.work_unit_discarded_cannot_import", work_unit_id=work_unit_id))
+        raise WorkUnitMutationRefusedError(
+            tr("application.modelo.errors.work_unit_discarded_cannot_import", work_unit_id=work_unit_id)
+        )
 
     snapshot = _reject_unknown_import_casillas(
         modelo=work_unit.modelo,
