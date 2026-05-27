@@ -12,4 +12,5 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-721-procedure",
     "boe-modelo-721-2023-form",
+    "boe-modelo-721-2023-layout",
 ]
