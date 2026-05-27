@@ -2194,6 +2194,81 @@ required_text = [
     "desde el día 3 de abril hasta el 26 de junio de 2024",
 ]
 
+[legal."orden-hac-248-2021:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-248-2021.html#articulo-8"
+document_id = "BOE-A-2021-4238"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-4238"
+published_at = 2021-03-18
+effective_from = 2021-03-18
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declaracion del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "7 de abril y 30 de junio de 2021",
+    "desde el día 7 de abril hasta el 25 de junio de 2021",
+]
+
+[legal."orden-hfp-207-2022:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-207-2022.html#articulo-8"
+document_id = "BOE-A-2022-4296"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-4296"
+published_at = 2022-03-18
+effective_from = 2022-03-18
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declaracion del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "6 de abril y 30 de junio de 2022",
+    "desde el día 6 de abril hasta el 27 de junio de 2022",
+]
+
+[legal."orden-hfp-310-2023:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-310-2023.html#articulo-8"
+document_id = "BOE-A-2023-8118"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-8118"
+published_at = 2023-03-31
+effective_from = 2023-04-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declaracion del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
+required_text = [
+    "Plazo de presentación del borrador de declaración",
+    "11 de abril y 30 de junio de 2023",
+    "desde el día 11 de abril hasta el 27 de junio de 2023",
+]
+
+[legal."orden-hac-242-2025:art-8"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/orden-hac-242-2025.json#articulo-8"
+document_id = "BOE-A-2025-5049"
+article = "8"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5049"
+published_at = 2025-03-14
+effective_from = 2025-03-15
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Articulo 8 de la Orden HAC/242/2025: plazo de presentacion de la declaracion del IRPF ejercicio 2024. El plazo general comprende del 2 de abril al 30 de junio de 2025. La domiciliacion bancaria del pago puede realizarse desde el 2 de abril hasta el 25 de junio de 2025. Corpus contiene solo articulo primero; art-8 pendiente de extraccion al corpus HTML."
+
 [legal."ley-35-2006:art-17"]
 evidence_tier = "legal_authority"
 authority = "boe"
