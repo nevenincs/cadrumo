@@ -2,7 +2,9 @@ from pathlib import Path
 
 import pytest
 import yaml
+from typer.testing import CliRunner
 
+from aeat.locales.cli import app
 from aeat.locales.manager import LocaleError, LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -90,6 +92,15 @@ def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
         temp_manager.set_locale_value("../outside", "cli.label", "no escribir")
 
     assert outside.read_text(encoding="utf-8") == "cli:\n  label: fuera\n"
+
+
+def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
+    """The canonical locale CLI rejects traversal-shaped locale arguments."""
+
+    result = CliRunner().invoke(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
+
+    assert result.exit_code != 0
+    assert "Invalid locale code" in result.output
 
 
 def _namespace_covers(key: str, prefix: str) -> bool:

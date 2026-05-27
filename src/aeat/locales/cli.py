@@ -9,7 +9,7 @@ import typer
 
 from aeat.core.i18n import tr
 
-from .manager import LocaleManager
+from .manager import LocaleError, LocaleManager
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 
@@ -79,7 +79,10 @@ def set_value(
 ) -> None:
     """Set one locale string leaf."""
 
-    path = _default_manager().set_locale_value(locale, key, value)
+    try:
+        path = _default_manager().set_locale_value(locale, key, value)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
     typer.echo(f"updated {path.name}:{key}")
 
 
