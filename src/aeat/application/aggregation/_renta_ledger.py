@@ -33,7 +33,7 @@ from ...domain.transactions import (
 )
 from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
 from . import _shared_issue_reasons
-from ._currency_predicates import is_non_eur_without_conversion
+from ._currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
@@ -277,8 +277,16 @@ def _classify_renta_transaction(
             reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta expenses",
         )
+    # W05.P23 FU-W05-E (S321): use the EUR-projected amount for the
+    # business gate so a non-EUR row that passed the
+    # is_non_eur_without_conversion check (because value_in_eur is set)
+    # contributes its pre-converted EUR equivalent rather than its
+    # raw foreign-currency amount.  EUR rows are unaffected: their
+    # value_in_eur is None and effective_eur_amount falls back to
+    # raw.amount.
+    eur_amount = effective_eur_amount(transaction)
     business_amount = _business_amount(
-        transaction.raw.amount,
+        eur_amount,
         transaction.business_classification,
         transaction.business_pct,
     )
@@ -339,7 +347,7 @@ def _classify_renta_transaction(
         transaction_id=transaction_id,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
         category_id=category_id,
-        signed_transaction_amount=transaction.raw.amount,
+        signed_transaction_amount=eur_amount,
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload
