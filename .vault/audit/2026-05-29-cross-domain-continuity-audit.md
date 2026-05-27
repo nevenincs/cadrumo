@@ -1764,3 +1764,133 @@ decision.
 serialisation contract, (d) idempotency strategy (profile-id-first). This
 architecture grounding document serves as the research basis; the ADR must be
 authored before the first S104 commit is reviewed.
+
+---
+
+## W08.P36 `--output-language` parity (S141-S144) — architecture review (Task #78)
+
+### Commits reviewed
+
+| Commit | Author | Files | Description |
+|--------|--------|-------|-------------|
+| `03016c382` | coder2 | `_config/__init__.py`, `_modelo.py` | S141-S143 verb-level flag registrations |
+| `dcc774795` | coder2 | `test_output_language_parity.py` | S144 regression test |
+| `925d8fb0f` | coder1 | `_common.py`, exec records | Shared helper promotion + step records |
+| `02813c853` | coder1 | exec record only | S144 step record |
+
+### Coordination incident
+
+Coder2 (`03016c382`, `dcc774795`) landed the complete production work — verb
+registrations and test — before coder1 (`925d8fb0f`, `02813c853`) committed.
+Coder1 was assigned Task #71 (S141-S144); coder2 was supposed to be on Task
+#72 (S208 storage migration). Coder2 executed both tasks in parallel rather
+than waiting for Task #71 to be claimed. The result is a split of the same
+logical Step across two authors:
+
+- Coder2 owns the production verb changes and the test file.
+- Coder1 owns the shared `activate_subcommand_output_language` helper extracted
+  to `_common.py` and the exec step records.
+
+Both halves integrate cleanly at HEAD — `_config/__init__.py` already imports
+`activate_subcommand_output_language` from `_common`, and `_activate_subcommand_output_language`
+in that file is now a one-line wrapper delegating to the shared helper. No
+functional conflict. However, the commit message of `925d8fb0f` claims it
+"Add[ed] --output-language/--language to" the verb commands — which it did
+not (those changes are in `03016c382`). The commit message is inaccurate.
+
+**Follow-up logged (FU-W08-A):** Team-lead to establish a task-claim protocol
+that prevents two coders from landing on the same Step simultaneously. The
+current incident did not corrupt the codebase, but the split authorship and
+inaccurate commit message create traceability debt.
+
+### S141-S143 — Verb registration correctness
+
+**ACCEPT.** All seven target commands now accept `--output-language` /
+`--language` with a `click.Choice(SUPPORTED_OUTPUT_LANGUAGES)` validator.
+The pattern is consistent across `_config/__init__.py` and `_modelo.py`:
+
+- `_OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)` constant
+  defined once per module.
+- Each verb receives `output_language: str | None = typer.Option(...)` as its
+  first body parameter after `ctx`.
+- First line of verb body calls `_activate_subcommand_output_language(ctx, output_language)`
+  (in `_config`) or `activate_subcommand_output_language(ctx, output_language)`
+  (in `_modelo.py`, which imports directly from `_common`).
+
+**Hexagonal compliance: CLEAN.** The flag is handled entirely within the CLI
+entrypoint layer. `activate_subcommand_output_language` in `_common.py` calls
+`override_settings(aeat_output_language=language)` and
+`clear_output_language_cache()` — both are config/i18n infrastructure at the
+CLI boundary. No locale concern leaks to the application layer.
+
+**I18n routing: REAL, not cosmetic.** `activate_subcommand_output_language`
+calls `ctx.with_resource(override_settings(...))` which threads the locale
+through the settings context for the lifetime of the verb invocation, then
+calls `clear_output_language_cache()` to ensure any cached locale from a
+prior invocation is evicted. This is the same mechanism used by the
+pre-existing `auth status` / `auth login` / `auth test` commands, so the
+pattern is consistent and the wiring is real.
+
+The local `_activate_subcommand_output_language` wrapper in
+`_config/__init__.py` is now a one-line shim around the shared helper:
+```python
+def _activate_subcommand_output_language(ctx, language):
+    activate_subcommand_output_language(ctx, language)
+```
+This thin wrapper is harmless but redundant — the verb bodies could call
+`activate_subcommand_output_language` directly (as `_modelo.py` does).
+Logged as **FU-W08-B** (minor: retire the wrapper in a follow-up cleanup).
+
+### S144 — Regression test
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+**Fail-loud pattern: YES.** Each test asserts `result.exit_code == 0` and
+`_OPTION_FLAG in result.output` with an informative failure message naming
+the command and showing the full help output. The test will fail immediately
+if any registered command drops the flag. Consistent with the S32 fail-loud
+pattern.
+
+**Test independence: CLEAN.** Uses `--help` introspection, which Click/Typer
+intercepts before any state access. No active profile, no database, no
+storage session required. The `_isolated_state` fixture is overly defensive
+(sets `AEAT_DATABASE_URL` to a temp path and installs `AEAT_SECRET_STORE_BACKEND`
+/ `AEAT_ALLOW_UNENCRYPTED` monkeypatches) but harmless — `--help` never
+reaches those layers.
+
+**FOLLOW-UP (FU-W08-C / S261):** The `_isolated_state` autouse fixture in
+`test_output_language_parity.py` uses `AEAT_SECRET_STORE_BACKEND=unsecured`
++ `AEAT_ALLOW_UNENCRYPTED=1` monkeypatches — the pattern the S208→S252
+migration chain is retiring. Since `--help` never touches storage, the
+monkeypatches serve no function here. This file is a Category A migration
+candidate: drop `AEAT_SECRET_STORE_BACKEND` + `AEAT_ALLOW_UNENCRYPTED`
+setenv calls entirely (no replacement fixture needed — `--help` tests need no
+storage isolation at all). Absorb into S252 or add as S261.
+
+**Coverage gap (FU-W08-D / S262):** The test covers the seven commands fixed
+in S141-S143 plus three pre-existing auth commands (auth status, auth login,
+auth test) as anti-regression guards. It does NOT cover the full CLI surface —
+commands like `config profile census`, `config profile list`, `app ledger list`,
+`app modelo work list`, etc. A broader sweep was deferred; S262 should
+enumerate the remaining surface and either assert coverage or document the
+deliberate exclusion.
+
+### Plan step closure
+
+All four Steps S141-S144 are marked `[x]` in the plan. CONFIRMED CLOSED.
+
+### Summary
+
+Wave-8 P36 is ACCEPT-WITH-FOLLOWUP. The output-language wiring is real (not
+cosmetic), hexagonally clean, and consistently patterned. The S144 test fails
+loudly. Two coders split the work on the same Steps; the coordination incident
+is documented as FU-W08-A. Three follow-ups logged for W09.
+
+### Follow-ups
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-W08-A | — | Task-claim protocol: prevent two coders landing on same Step simultaneously |
+| FU-W08-B | — | Retire `_activate_subcommand_output_language` wrapper in `_config/__init__.py`; call shared helper directly |
+| FU-W08-C | S261 | `test_output_language_parity.py` `_isolated_state` fixture: drop unsecured-backend monkeypatches (--help tests need no storage isolation) |
+| FU-W08-D | S262 | Broader `--output-language` surface sweep: enumerate remaining commands not yet covered by S144 test |
