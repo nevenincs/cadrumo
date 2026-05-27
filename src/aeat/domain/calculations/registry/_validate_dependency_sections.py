@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 
 from ._schema import (
     ConstructDefinition,
@@ -13,6 +13,7 @@ from ._schema import (
     RelationDefinition,
     SourceReference,
 )
+from ._validate_helpers import _missing_refs
 from ._validate_revision_identity import _duplicates
 
 
@@ -172,11 +173,3 @@ def validate_filing_schedule_section(
             failures.extend(_missing_refs(prefix, condition_owner, condition.source_refs, source_refs, "source"))
 
 
-def _missing_refs(
-    scope: str,
-    owner: str,
-    refs: Iterable[str],
-    catalogue: Mapping[str, LegalReference] | Mapping[str, SourceReference],
-    ref_kind: str,
-) -> list[str]:
-    return [f"{scope}: {owner} references unknown {ref_kind} id {ref!r}" for ref in refs if ref not in catalogue]
