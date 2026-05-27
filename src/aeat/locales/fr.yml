@@ -371,21 +371,21 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: cli.app.live.iva_wallet.acquisition.outcome.aeat_403
-            authenticated: cli.app.live.iva_wallet.acquisition.outcome.authenticated
-            certificate_required: cli.app.live.iva_wallet.acquisition.outcome.certificate_required
-            dom_drift: cli.app.live.iva_wallet.acquisition.outcome.dom_drift
-            live_navigation_failed: cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed
-            no_clave_prompt: cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt
-            operator_timeout: cli.app.live.iva_wallet.acquisition.outcome.operator_timeout
-            pending_clave_request: cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request
-            qr_required: cli.app.live.iva_wallet.acquisition.outcome.qr_required
-            unknown: cli.app.live.iva_wallet.acquisition.outcome.unknown
-            wrong_identity: cli.app.live.iva_wallet.acquisition.outcome.wrong_identity
+            aeat_403: 'porte AEAT 403/authentification'
+            authenticated: 'authentifié'
+            certificate_required: 'certificat requis'
+            dom_drift: 'la structure de la page AEAT a changé'
+            live_navigation_failed: 'navigation en direct échouée'
+            no_clave_prompt: 'aucune demande Cl@ve'
+            operator_timeout: 'délai d''approbation expiré'
+            pending_clave_request: 'demande Cl@ve en attente'
+            qr_required: 'approbation QR requise'
+            unknown: 'inconnu'
+            wrong_identity: 'identité incorrecte'
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
-        capture_remote_state_help: cli.app.live.iva_wallet.capture_remote_state_help
+        capture_remote_state_help: 'Capture en direct l''historique du Modelo 303 déposé et tente la lecture de la cartera IVA AEAT comme une acquisition typée en lecture seule.'
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
@@ -988,20 +988,20 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
-        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
-        invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
-        invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
-        no_active_profile: cli.diagnostics.profile.errors.no_active_profile
-        profile_empty: cli.diagnostics.profile.errors.profile_empty
-        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
-        unknown_profile_key: cli.diagnostics.profile.errors.unknown_profile_key
-      get_help: cli.diagnostics.profile.get_help
-      help: cli.diagnostics.profile.help
-      key_help: cli.diagnostics.profile.key_help
-      profile_help: cli.diagnostics.profile.profile_help
-      set_help: cli.diagnostics.profile.set_help
-      unset_help: cli.diagnostics.profile.unset_help
-      value_help: cli.diagnostics.profile.value_help
+        ambiguous_profile: 'Ambiguous profile label: %{profile}'
+        invalid_value_fallback: 'Invalid value for %{key}: %{value}'
+        invalid_value_with_choices: '%{message} (%{choices})'
+        no_active_profile: 'No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first.'
+        profile_empty: '--profile must not be empty when supplied.'
+        unknown_profile: 'Unknown profile: %{profile}'
+        unknown_profile_key: 'Unknown profile key: %{key}'
+      get_help: 'Read one profile key stored value.'
+      help: 'Engineer-only profile field inspection and surgical edits.'
+      key_help: 'Profile key.'
+      profile_help: 'Profile to use; defaults to the active profile.'
+      set_help: 'Write one profile key value, validated against the wizard descriptor.'
+      unset_help: 'Clear one profile key value.'
+      value_help: 'Value to store.'
     repair:
       audience_internal: cli.diagnostics.repair.audience_internal
       auth_label: cli.diagnostics.repair.auth_label
@@ -1018,13 +1018,13 @@ cli:
       python_label: cli.diagnostics.repair.python_label
       version_label: cli.diagnostics.repair.version_label
     secure_objects:
-      all_help: cli.diagnostics.secure_objects.all_help
+      all_help: 'Return every key, including unreadable rows.'
       errors:
-        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
-      help: cli.diagnostics.secure_objects.help
-      list_help: cli.diagnostics.secure_objects.list_help
-      namespace_help: cli.diagnostics.secure_objects.namespace_help
-      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
+        conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
+      help: 'Inventory the secure-object index by namespace.'
+      list_help: 'List secure-object keys stored under one namespace.'
+      namespace_help: 'Namespace to inventory.'
+      unreadable_help: 'Restrict the listing to undecryptable rows.'
     summary:
       auth_no_session: cli.diagnostics.summary.auth_no_session
       auth_none: cli.diagnostics.summary.auth_none

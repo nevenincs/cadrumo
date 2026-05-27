@@ -501,24 +501,23 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: AEAT 403/auth gate
-            authenticated: authenticated
-            certificate_required: certificate required
-            dom_drift: AEAT page shape changed
-            live_navigation_failed: live navigation failed
-            no_clave_prompt: no Cl@ve prompt
-            operator_timeout: operator approval timed out
-            pending_clave_request: pending Cl@ve request
-            qr_required: QR approval required
-            unknown: unknown
-            wrong_identity: wrong identity
+            aeat_403: 'AEAT 403/auth gate'
+            authenticated: 'authenticated'
+            certificate_required: 'certificate required'
+            dom_drift: 'AEAT page shape changed'
+            live_navigation_failed: 'live navigation failed'
+            no_clave_prompt: 'no Cl@ve prompt'
+            operator_timeout: 'operator approval timed out'
+            pending_clave_request: 'pending Cl@ve request'
+            qr_required: 'QR approval required'
+            unknown: 'unknown'
+            wrong_identity: 'wrong identity'
         app_help: AEAT IVA compensation wallet capture (read-only; allows only own-name
           representation and the guarded wallet read query).
         as_of_year_help: Year used to age IVA compensation carry-forward lots.
         capture_history_help: Live-capture filed Modelo 303 history and persist secure
           IVA compensation state. No AEAT filing or wallet form choices are submitted.
-        capture_remote_state_help: Live-capture filed Modelo 303 history and attempt
-          the AEAT IVA wallet/cartera read as one typed read-only acquisition.
+        capture_remote_state_help: 'Live-capture filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one typed read-only acquisition.'
         history_help: List secure local IVA compensation history, carry-forward lots,
           and persisted wallet authority decisions derived from Modelo 303 captures.
         pull_help: Live-fetch and persist AEAT's IVA compensation wallet. The only
@@ -2868,7 +2867,7 @@ errors:
     refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
     refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: The selected authentication provider is reserved
-      but not implemented.
+      and unavailable.
     refused_calculations_casilla_constraint: A computed casilla value falls outside
       the limits declared for that casilla. Review the calculation inputs.
     refused_cli_boundary: The command refused the request.
