@@ -4776,3 +4776,80 @@ a lower bound of 1. The ADR does not specify a lower bound — this is a
 reasonable defensive constraint (priority=0 would be ambiguous with
 "unset"). No action required.
 
+
+---
+
+## Task #141 — W12.P61.S279+S280 typed-boundary completion (b86b9bddb + 926347705 + be7a18a8b + 40c6a70e8)
+
+**Verdict: APPROVE**
+
+### Git-discipline gate
+
+Both step records contain no destructive-git language — no
+backup-restore, no HEAD-reconstruction, no stash/pop references.
+Commits are clean, no suspicious patterns. **PASS.**
+
+### S279 — Mapping[str, object] annotation (deviation assessment)
+
+The #124 grounding recommended typed pydantic subclasses for CLI
+entrypoint output-direction functions. S279 operates at the application
+service layer (logging extras, AeatError context dicts, internal JSON
+parse boundaries) — a different surface class from the CLI output
+direction.
+
+`Mapping[str, object]` is correct for these sites:
+- `as_extra()` methods feed stdlib logging which accepts `dict[str, object]`
+  at runtime; a pydantic model here would require `.model_dump()` at every
+  log call site — over-constrained and unidiomatic.
+- `_status_context` feeds `AeatError(context=...)` whose parameter is
+  `Mapping[str, object] | None` — annotation matches callee type exactly.
+- `_payload`/`_json_object` are internal deserialization boundaries; read-only
+  callers benefit from the narrower `Mapping` contract.
+- `_detail_fingerprints_from_payload` returns `dict[str, str]` (fully typed).
+- `_review_metadata_reset` retains `dict[str, object]` with inline comment
+  explaining mutation requirement — correct exception documented.
+
+**This is not a quality regression.** The #124 pydantic-subclass recommendation
+applied to CLI payload functions. `Mapping[str, object]` at internal service
+helpers is the right idiom for this surface. No follow-up required.
+
+### S280 — cast() elimination
+
+Six `cast()` calls in `workflow/_adapters.py` replaced with
+`type: ignore[arg-type]` / `type: ignore[return-value]` with inline
+prose documenting the Protocol-boundary bridging reason at each site.
+One `cast("dict[str, object]", value)` in `registry/_loader.py` replaced
+with `type: ignore[return-value]` plus inline TOML-boundary explanation.
+
+Three pydantic `object/Any` field declarations confirmed as legitimate:
+- `split: object = None` in `review/_actions.py` — validation-trap parameter
+  that immediately rejects any non-None value
+- `current: object` in `registry/_schedules.py` — dispatch-table traversal
+  accumulator whose type is narrowed by `isinstance` guards
+- `get(key, default: object = None)` in `workflow/_models.py` — standard
+  dict-protocol signature
+
+This exactly follows the `aeat-calculation-grounding` rule: third-party
+adapter boundaries documented inline, not wrapped in typed helpers.
+**PASS.**
+
+### W12.P61 closure confirmation
+
+`vault plan query --wave W12 --phase P61` confirms:
+- S277 checked (warmup site)
+- S278 checked (CLI payload typed models)
+- S279 checked (service helper Mapping annotations)
+- S280 checked (cast elimination + documentation)
+
+S350 is a new follow-up step (13 remaining CLI payload helpers) appended
+to the plan — this is correct plan-expansion behaviour, not scope debt.
+W12.P61 original four steps are all closed. **CONFIRMED.**
+
+### Follow-up
+
+FU-S279-A (non-blocking): If a future typed-boundary pass visits the
+`as_extra()` surface, consider whether a dedicated `LogExtra` pydantic
+model would add value. The current `Mapping[str, object]` is correct but
+typed log extras would surface schema drift at type-check time. Log as
+low-priority W09 item.
+
