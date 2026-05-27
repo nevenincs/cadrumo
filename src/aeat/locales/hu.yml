@@ -723,14 +723,20 @@ cli:
           formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
         row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz.
-          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor)
-          vagy ''vinculada'' (M232 kapcsolt fél). Több sor megadásához ismételje.
-          M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          M232 példa: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor),
+          ''vinculada'' (M232 kapcsolt fél), ''operador'' (M349 közösségi operátor)
+          vagy ''contraparte'' (M347 bejelentett ellenoldal). Több sor megadásához
+          ismételje. M184 példa: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. M349 példa: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
         row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
           lennie.
         row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének
           pontosan 100%-nak kell lennie; {count} sorból {total} jött ki.'
+        row_m347_below_threshold: 'M347 contraparte sor (nif={nif}): {total} összimport
+          nem haladja meg a RD 1065/2007 art. 31.1 által előírt €{threshold} küszöböt'
+        row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
+          {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
@@ -1971,6 +1977,7 @@ errors:
     profile_import: errors.fail.profile_import
     reconciliation: errors.fail.reconciliation
     stale_exchange_rate: errors.fail.stale_exchange_rate
+    fail_observability_run_trace_persistence: 'A futási nyomkövetési tároló nem tudta befejezni a fájlrendszer-műveletet.'
   financial:
     source_file_not_found: errors.financial.source_file_not_found
   identity:

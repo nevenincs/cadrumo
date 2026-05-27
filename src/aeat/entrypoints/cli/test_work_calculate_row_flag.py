@@ -4,6 +4,7 @@ Tests the CLI boundary layer:
   * ``_parse_row_spec`` parses valid TYPE FIELD=value specs
   * ``_parse_row_spec`` raises BadParameter on malformed input
   * ``_validate_m184_share_sum`` enforces the 100% constraint
+  * ``_validate_m347_threshold`` enforces the €3,005.06 minimum
   * Row type discrimination routes to correct pydantic model
 
 Tests are unit-level (no storage, no registry snapshot) — the parsing
@@ -17,8 +18,13 @@ from decimal import Decimal
 import pytest
 import typer
 
-from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow
-from ._modelo import _parse_row_spec, _validate_m184_share_sum
+from ...domain.modelos._row_models import (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+)
+from ._modelo import _parse_row_spec, _validate_m184_share_sum, _validate_m347_threshold
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -83,7 +89,7 @@ class TestParseRowSpecInvalid:
     def test_unknown_type_raises(self) -> None:
         """Unknown row type raises BadParameter."""
         with pytest.raises(typer.BadParameter, match="not recognised"):
-            _parse_row_spec("operador nif=X12345678 importe=1000")
+            _parse_row_spec("socio nif=X12345678 importe=1000")
 
     def test_missing_equals_in_field_raises(self) -> None:
         """Token without '=' raises BadParameter."""
@@ -178,3 +184,134 @@ class TestValidateM184ShareSum:
         )
         with pytest.raises(typer.BadParameter, match="100"):
             _validate_m184_share_sum(rows_fail)
+
+
+# ---------------------------------------------------------------------------
+# _parse_row_spec — M349 operador + M347 contraparte valid inputs
+# ---------------------------------------------------------------------------
+
+
+class TestParseRowSpecM349:
+    def test_parse_operador_minimal(self) -> None:
+        """Minimal operador spec with required fields parses to Modelo349OperadorRow."""
+        result = _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=50000")
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.codigo_pais == "DE"
+        assert result.nif_comunitario == "DE123456789"
+        assert result.clave_operacion == "E"
+        assert result.importe == Decimal("50000")
+
+    def test_parse_operador_with_razon_social(self) -> None:
+        """operador spec with optional razon_social round-trips."""
+        result = _parse_row_spec(
+            "operador codigo_pais=FR nif_comunitario=FR12345678901 "
+            "razon_social=EntidadFR clave_operacion=S importe=30000"
+        )
+        assert isinstance(result, Modelo349OperadorRow)
+        assert result.razon_social == "EntidadFR"
+        assert result.clave_operacion == "S"
+
+    def test_parse_operador_type_case_insensitive(self) -> None:
+        """TYPE token is lowercased before dispatch."""
+        result = _parse_row_spec("OPERADOR codigo_pais=IT nif_comunitario=IT12345678901 clave_operacion=M importe=1000")
+        assert isinstance(result, Modelo349OperadorRow)
+
+    def test_parse_operador_invalid_nif_format_raises(self) -> None:
+        """operador with NIF not matching the country pattern raises BadParameter."""
+        with pytest.raises(typer.BadParameter, match="NIF-IVA"):
+            # DE requires 9 digits; this has only 8
+            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE12345678 clave_operacion=E importe=1000")
+
+    def test_parse_operador_invalid_clave_raises(self) -> None:
+        """Invalid clave_operacion raises BadParameter."""
+        with pytest.raises(typer.BadParameter):
+            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=Z importe=1000")
+
+    def test_parse_operador_negative_importe_raises(self) -> None:
+        """Negative importe raises BadParameter."""
+        with pytest.raises(typer.BadParameter):
+            _parse_row_spec("operador codigo_pais=DE nif_comunitario=DE123456789 clave_operacion=E importe=-100")
+
+
+class TestParseRowSpecM347:
+    def test_parse_contraparte_minimal(self) -> None:
+        """Minimal contraparte spec with required fields parses to Modelo347ContraparteRow."""
+        result = _parse_row_spec("contraparte nif=12345678A importe_Q1=5000")
+        assert isinstance(result, Modelo347ContraparteRow)
+        assert result.nif == "12345678A"
+        assert result.importe_Q1 == Decimal("5000")
+
+    def test_parse_contraparte_full_quarters(self) -> None:
+        """contraparte spec with all four quarters round-trips."""
+        result = _parse_row_spec(
+            "contraparte nif=12345678A nombre=ProveedorSL "
+            "importe_Q1=3000 importe_Q2=2000 importe_Q3=1500 importe_Q4=1000 "
+            "clave_operacion=B"
+        )
+        assert isinstance(result, Modelo347ContraparteRow)
+        assert result.importe_total == Decimal("7500")
+        assert result.clave_operacion == "B"
+
+    def test_parse_contraparte_blank_nif_raises(self) -> None:
+        """Blank NIF raises BadParameter."""
+        with pytest.raises(typer.BadParameter):
+            _parse_row_spec("contraparte nif=   importe_Q1=5000")
+
+
+# ---------------------------------------------------------------------------
+# _validate_m347_threshold
+# ---------------------------------------------------------------------------
+
+
+class TestValidateM347Threshold:
+    def test_above_threshold_passes(self) -> None:
+        """A contraparte row with total > €3,005.06 passes validation."""
+        rows = (
+            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07")),
+        )
+        _validate_m347_threshold(rows)  # Must not raise
+
+    def test_exactly_threshold_rejected(self) -> None:
+        """A total equal to €3,005.06 is rejected (must exceed, not equal).
+
+        Oracle: RD 1065/2007 art. 31.1 — 'supere' (exceed), not 'iguale'."""
+        rows = (
+            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),
+        )
+        with pytest.raises(typer.BadParameter, match="3005.06"):
+            _validate_m347_threshold(rows)
+
+    def test_below_threshold_rejected(self) -> None:
+        """A total below €3,005.06 is rejected."""
+        rows = (
+            Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),
+        )
+        with pytest.raises(typer.BadParameter, match="threshold"):
+            _validate_m347_threshold(rows)
+
+    def test_no_contraparte_rows_skips_check(self) -> None:
+        """Non-M347 rows do not trigger the threshold check."""
+        rows = (Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("100")),)
+        _validate_m347_threshold(rows)  # Must not raise
+
+    def test_empty_rows_skips_check(self) -> None:
+        """Empty row tuple skips validation."""
+        _validate_m347_threshold(())  # Must not raise
+
+    def test_antitautology_threshold_check_reads_total_not_individual_quarters(self) -> None:
+        """Anti-tautology: the check sums Q1+Q2+Q3+Q4, not just Q1.
+
+        Oracle: RD 1065/2007 art. 31.1 — annual total must exceed €3,005.06.
+        A row with Q1=1000 + Q2=1000 + Q3=1000 + Q4=1005.07 = 4005.07 > 3005.06.
+        If the check only looked at Q1 this would incorrectly fail.
+        """
+        rows = (
+            Modelo347ContraparteRow(
+                nif="12345678A",
+                importe_Q1=Decimal("1000"),
+                importe_Q2=Decimal("1000"),
+                importe_Q3=Decimal("1000"),
+                importe_Q4=Decimal("1005.07"),
+            ),
+        )
+        _validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise

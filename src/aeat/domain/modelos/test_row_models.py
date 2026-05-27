@@ -1,11 +1,12 @@
-"""Unit tests for typed CLI row models (M184 / M232).
+"""Unit tests for typed CLI row models (M184 / M232 / M349 / M347).
 
 These tests verify the pydantic row model contracts that back the
 ``--row`` CLI flag on ``aeat app modelo work calculate``. They are
-oracle-grounded against the AEAT M184 / M232 form field constraints
-documented in:
+oracle-grounded against the AEAT form field constraints documented in:
   - Orden HAP/2250/2015 (M184 atribución de rentas)
   - Orden HFP/816/2017 (M232 operaciones vinculadas)
+  - Orden HAC/174/2020 Anexo II (M349 operador intracomunitario)
+  - Orden EHA/3012/2008 + RD 1065/2007 art. 31 (M347 contraparte)
 """
 
 from __future__ import annotations
@@ -15,7 +16,14 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ._row_models import Modelo184MemberRow, Modelo232VinculadaRow
+from ._row_models import (
+    M347_THRESHOLD_EUR,
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo347ContraparteRow,
+    Modelo349OperadorRow,
+    validate_m349_nif_format,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -299,3 +307,215 @@ class TestRevisionIdWithDetailRows:
         assert base != row1_changed
         assert base != row2_changed
         assert row1_changed != row2_changed
+
+
+# ---------------------------------------------------------------------------
+# Modelo349OperadorRow — operador intracomunitario row (M349 manual-entry)
+# ---------------------------------------------------------------------------
+
+
+class TestModelo349OperadorRow:
+    def test_valid_operador_row_round_trips(self) -> None:
+        """A fully-populated operador row round-trips through the model."""
+        row = Modelo349OperadorRow(
+            codigo_pais="DE",
+            nif_comunitario="DE123456789",
+            razon_social="Müller GmbH",
+            clave_operacion="E",
+            importe=Decimal("50000"),
+        )
+        assert row.codigo_pais == "DE"
+        assert row.nif_comunitario == "DE123456789"
+        assert row.razon_social == "Müller GmbH"
+        assert row.clave_operacion == "E"
+        assert row.importe == Decimal("50000")
+        assert row.row_type == "operador"
+
+    def test_nif_comunitario_uppercased(self) -> None:
+        """nif_comunitario is normalised to uppercase."""
+        row = Modelo349OperadorRow(codigo_pais="FR", nif_comunitario="fr12345678901", clave_operacion="S", importe=Decimal("1"))
+        assert row.nif_comunitario == "FR12345678901"
+
+    def test_razon_social_defaults_empty(self) -> None:
+        """razon_social defaults to empty string."""
+        row = Modelo349OperadorRow(codigo_pais="IT", nif_comunitario="IT12345678901", clave_operacion="M", importe=Decimal("1000"))
+        assert row.razon_social == ""
+
+    def test_importe_zero_is_valid(self) -> None:
+        """importe=0 is valid per Orden HAC/174/2020 (zero-value ops can appear)."""
+        row = Modelo349OperadorRow(codigo_pais="PT", nif_comunitario="PT123456789", clave_operacion="T", importe=Decimal("0"))
+        assert row.importe == Decimal("0")
+
+    def test_importe_negative_rejected(self) -> None:
+        """Negative importe is rejected per Orden HAC/174/2020 non_negative constraint."""
+        with pytest.raises(ValidationError, match="non-negative"):
+            Modelo349OperadorRow(codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("-1"))
+
+    def test_codigo_pais_must_be_uppercase_alpha(self) -> None:
+        """codigo_pais must be uppercase two-letter ISO code."""
+        with pytest.raises(ValidationError):
+            Modelo349OperadorRow(codigo_pais="de", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("1"))
+
+    def test_invalid_clave_operacion_rejected(self) -> None:
+        """Clave not in the Orden HAC/174/2020 catalogue is rejected."""
+        with pytest.raises(ValidationError):
+            Modelo349OperadorRow(codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="Z", importe=Decimal("1"))
+
+    def test_frozen_model_immutable(self) -> None:
+        """Modelo349OperadorRow is frozen."""
+        row = Modelo349OperadorRow(codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("1"))
+        with pytest.raises((ValidationError, TypeError)):
+            row.codigo_pais = "FR"  # type: ignore[misc]
+
+    def test_two_rows_distinguish_by_importe(self) -> None:
+        """Anti-tautology: two rows with different importes are distinct.
+
+        Grounded: M349 filing has one Tipo-2 record per operator + clave pair.
+        Changing one row's importe does not affect the other.
+        """
+        row1 = Modelo349OperadorRow(codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("50000"))
+        row2 = Modelo349OperadorRow(codigo_pais="FR", nif_comunitario="FR12345678901", clave_operacion="S", importe=Decimal("30000"))
+        assert row1.importe != row2.importe
+        row1_modified = Modelo349OperadorRow(codigo_pais="DE", nif_comunitario="DE123456789", clave_operacion="E", importe=Decimal("75000"))
+        assert row1_modified.importe == Decimal("75000")
+        assert row2.importe == Decimal("30000")
+
+
+# ---------------------------------------------------------------------------
+# validate_m349_nif_format — country-specific NIF-IVA format validation
+# Oracle-grounded against Council Directive 2006/112/EC Annex XI patterns.
+# ---------------------------------------------------------------------------
+
+
+class TestValidateM349NifFormat:
+    def test_valid_german_nif(self) -> None:
+        """DE + 9 digits matches the German NIF-IVA pattern."""
+        assert validate_m349_nif_format("DE123456789", "DE") is True
+
+    def test_invalid_german_nif_too_short(self) -> None:
+        """DE + 8 digits does not match (must be exactly 9)."""
+        assert validate_m349_nif_format("DE12345678", "DE") is False
+
+    def test_valid_french_nif(self) -> None:
+        """FR + 2 alphanum + 9 digits is valid."""
+        assert validate_m349_nif_format("FR12345678901", "FR") is True
+
+    def test_valid_italian_nif(self) -> None:
+        """IT + 11 digits is valid."""
+        assert validate_m349_nif_format("IT12345678901", "IT") is True
+
+    def test_valid_dutch_nif(self) -> None:
+        """NL + 9 digits + B + 2 digits matches Dutch pattern."""
+        assert validate_m349_nif_format("NL123456789B01", "NL") is True
+
+    def test_unknown_country_fallback(self) -> None:
+        """Unknown country uses fallback (2-letter prefix + 2-15 alphanum)."""
+        assert validate_m349_nif_format("XX12345", "XX") is True
+
+    def test_unknown_country_too_short_rejected(self) -> None:
+        """Fallback rejects NIF with only 1 character after prefix."""
+        assert validate_m349_nif_format("XX1", "XX") is False
+
+    def test_antitautology_de_pattern_rejects_fr_shaped_nif(self) -> None:
+        """Anti-tautology: a FR-format NIF does not pass the DE validator.
+
+        DE requires exactly 9 digits after the prefix. FR has 2 alphanum + 9 digits.
+        The DE pattern would reject a 13-character FR NIF.
+        """
+        assert validate_m349_nif_format("FR12345678901", "DE") is False
+
+
+# ---------------------------------------------------------------------------
+# Modelo347ContraparteRow — contraparte declarada row (M347)
+# ---------------------------------------------------------------------------
+
+
+class TestModelo347ContraparteRow:
+    def test_valid_contraparte_row_round_trips(self) -> None:
+        """A fully-populated contraparte row round-trips through the model."""
+        row = Modelo347ContraparteRow(
+            nif="12345678A",
+            nombre="Proveedor SL",
+            importe_Q1=Decimal("10000"),
+            importe_Q2=Decimal("5000"),
+            importe_Q3=Decimal("8000"),
+            importe_Q4=Decimal("7000"),
+            clave_operacion="A",
+        )
+        assert row.nif == "12345678A"
+        assert row.nombre == "Proveedor SL"
+        assert row.importe_total == Decimal("30000")
+        assert row.clave_operacion == "A"
+        assert row.pais_codigo is None
+        assert row.row_type == "contraparte"
+
+    def test_nif_uppercased(self) -> None:
+        """NIF is normalised to uppercase."""
+        row = Modelo347ContraparteRow(nif="12345678a", importe_Q1=Decimal("4000"))
+        assert row.nif == "12345678A"
+
+    def test_quarterly_importes_default_zero(self) -> None:
+        """All quarterly importes default to 0."""
+        row = Modelo347ContraparteRow(nif="12345678A")
+        assert row.importe_Q1 == Decimal("0")
+        assert row.importe_Q2 == Decimal("0")
+        assert row.importe_Q3 == Decimal("0")
+        assert row.importe_Q4 == Decimal("0")
+
+    def test_importe_total_sums_quarters(self) -> None:
+        """importe_total property sums all four quarterly importes.
+
+        Oracle: RD 1065/2007 art. 31.1 — the threshold test is against
+        the annual sum, not any individual quarter.
+        """
+        row = Modelo347ContraparteRow(
+            nif="12345678A",
+            importe_Q1=Decimal("1000"),
+            importe_Q2=Decimal("1000"),
+            importe_Q3=Decimal("1000"),
+            importe_Q4=Decimal("1005.06"),
+        )
+        assert row.importe_total == Decimal("4005.06")
+
+    def test_pais_codigo_none_for_domestic(self) -> None:
+        """pais_codigo=None is valid and represents a domestic counterparty."""
+        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo=None)
+        assert row.pais_codigo is None
+
+    def test_pais_codigo_uppercased(self) -> None:
+        """pais_codigo is uppercased and validated as two-letter ISO code."""
+        row = Modelo347ContraparteRow(nif="12345678A", pais_codigo="de")
+        assert row.pais_codigo == "DE"
+
+    def test_invalid_pais_codigo_rejected(self) -> None:
+        """Three-letter pais_codigo is rejected."""
+        with pytest.raises(ValidationError):
+            Modelo347ContraparteRow(nif="12345678A", pais_codigo="ESP")
+
+    def test_nif_blank_rejected(self) -> None:
+        """Blank NIF is rejected."""
+        with pytest.raises(ValidationError):
+            Modelo347ContraparteRow(nif="   ")
+
+    def test_frozen_model_immutable(self) -> None:
+        """Modelo347ContraparteRow is frozen."""
+        row = Modelo347ContraparteRow(nif="12345678A")
+        with pytest.raises((ValidationError, TypeError)):
+            row.nif = "99999999Z"  # type: ignore[misc]
+
+    def test_threshold_constant_matches_rd_1065_2007(self) -> None:
+        """M347_THRESHOLD_EUR equals €3,005.06 per RD 1065/2007 art. 31.1.
+
+        Anti-tautology: checks the constant is correct, not that the constant
+        equals itself. A change in threshold would be a legal change requiring
+        this test to be updated with the new authoritative value.
+        """
+        assert M347_THRESHOLD_EUR == Decimal("3005.06")
+
+    def test_two_rows_distinguish_by_quarterly_importe(self) -> None:
+        """Anti-tautology: two rows with different Q1 importes are distinct."""
+        row1 = Modelo347ContraparteRow(nif="11111111A", importe_Q1=Decimal("5000"))
+        row2 = Modelo347ContraparteRow(nif="11111111A", importe_Q1=Decimal("8000"))
+        assert row1.importe_total != row2.importe_total
+        # Changing Q2 on row1 does not affect row2 (frozen model)
+        assert row2.importe_Q1 == Decimal("8000")

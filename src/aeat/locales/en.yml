@@ -904,12 +904,20 @@ cli:
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]
         row_help: 'Typed detail row for multi-record informational modelos. Format:
           TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
-          member) or ''vinculada'' (M232 related-party operation). Repeat to add multiple
-          rows. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          M232 example: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+          member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
+          intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
+          to add multiple rows. M184 example: --row ''miembro nif=12345678A
+          porcentaje=40 importe=10000''. M349 example: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m184_shares_not_100: 'M184 miembro rows: share percentages must sum to
           exactly 100%; got {total} across {count} rows.'
+        row_m347_below_threshold: 'M347 contraparte row (nif={nif}): importe total
+          {total} does not exceed the €{threshold} threshold required by RD 1065/2007
+          art. 31.1'
+        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
+          the expected NIF-IVA format for country {pais} (Council Directive
+          2006/112/EC Annex XI)'
         row_unknown_type: '--row type {row_type!r} is not recognised; supported types:
           {supported}.'
         row_validation_error: '--row {row_type!r} failed validation: {error}'
@@ -2586,6 +2594,7 @@ errors:
       the annual summary.
     stale_exchange_rate: The only available exchange rate is outside the acceptable
       freshness window.
+    fail_observability_run_trace_persistence: 'The run trace store could not complete a filesystem operation.'
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
   identity:
