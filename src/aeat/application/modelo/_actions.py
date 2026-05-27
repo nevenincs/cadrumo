@@ -97,6 +97,7 @@ from ...domain.modelos._work_unit import (
     derive_work_unit_id,
 )
 from ...domain.period import parse_canonical_period, period_end_date
+from ...domain.profile._ccaa import CCAA
 from ...domain.submission import SubmissionEngine
 from ...domain.transactions import TransactionCatalogue, TransactionCatalogueRepository
 from ..filing import (
@@ -529,6 +530,7 @@ def create_work_unit(
     revision_id: str,
     name: str | None = None,
     actor: str = "system",
+    causante_ccaa: CCAA | None = None,
     repository: WorkUnitCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     clock: datetime | None = None,
@@ -594,6 +596,7 @@ def create_work_unit(
         name=name.strip() if name else _default_name(modelo=modelo, filing_year=filing_year, period=period),
         created_at=now,
         updated_at=now,
+        causante_ccaa=causante_ccaa,
     )
     updated = upsert_work_unit(catalogue, unit)
     repo.save(updated)
