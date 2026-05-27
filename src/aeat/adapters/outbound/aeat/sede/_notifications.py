@@ -326,7 +326,7 @@ def _parse_date(raw: str | None) -> date | None:
 
 
 def _split_nif_name(raw: str) -> tuple[str, str]:
-    """Split ``"Y4113523X WOOTSCH GERGELY DOMOKOS"`` into ``(nif, name)``."""
+    """Split ``"Y1234567X PERSONA PRUEBA UNO"`` into ``(nif, name)``."""
     parts = raw.split(maxsplit=1)
     if not parts:
         return "", ""

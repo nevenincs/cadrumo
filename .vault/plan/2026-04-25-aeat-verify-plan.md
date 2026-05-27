@@ -90,7 +90,7 @@ across-the-board P1 to learn which modelos exist on the account.
 Cost: one Cl@ve session (~17 min budget); the sweep is fast — under
 a minute end-to-end against Kent's account.
 
-### Result (2026-04-25, NIE `Y4113523X`)
+### Result (2026-04-25, redacted operator NIE)
 
 **Partial — walker covers wrong surface for this question.**
 
@@ -109,7 +109,7 @@ Distribution:
 Crucially, the listing **does not include** the routine
 quarterly modelos (130, 303) and informativas (347, 390) that a
 direct-estimación autónomo enrolled per the 036 census file
-every year. The user (NIE `Y4113523X`) confirmed this on
+every year. The user (redacted NIE) confirmed this on
 2026-04-25: as a direct-estimación autónomo he files the usual
 IRPF + IVA quarterly + annual forms plus retentions /
 informativas; only filings outside his 036 census enrolment

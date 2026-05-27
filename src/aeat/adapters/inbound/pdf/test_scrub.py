@@ -147,10 +147,10 @@ class TestEmailRedaction:
     def test_email_replaced(self) -> None:
         """An email address is scrubbed and reported under the ``email`` family."""
         scrubbed, fields = scrub_text(
-            "Email del declarante: operator.wootsch@example.com",
+            "Email del declarante: operator.prueba@example.com",
             filename="operator.pdf",
         )
-        assert "operator.wootsch@example.com" not in scrubbed
+        assert "operator.prueba@example.com" not in scrubbed
         assert "email" in fields
 
 
@@ -177,9 +177,9 @@ class TestNamePrefixGuard:
 
     def test_name_replaced_when_prefixed(self) -> None:
         """Names are replaced when an ``Apellidos y nombre:`` label precedes them."""
-        text = "Apellidos y nombre: KENT WOOTSCH PEREZ"
+        text = "Apellidos y nombre: PERSONA PRUEBA UNO"
         scrubbed, fields = scrub_text(text, filename="operator.pdf")
-        assert "KENT WOOTSCH" not in scrubbed
+        assert "PERSONA PRUEBA" not in scrubbed
         assert "names" in fields
         assert "DEMO AUTONOMO" in scrubbed
 

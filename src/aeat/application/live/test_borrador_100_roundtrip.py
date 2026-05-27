@@ -38,7 +38,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     binding_values = {
         "casilla.0500": Decimal("42500.00"),
         "casilla.0501": Decimal("8750.50"),
-        "casilla.identity.declarant_label": "Gergely Wootsch",
+        "casilla.identity.declarant_label": "Persona Prueba",
     }
     source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522456T"
     snapshot_id = derive_borrador_100_snapshot_id(
@@ -81,7 +81,7 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
         assert loaded.binding_values["casilla.0501"] == Decimal("8750.50")
         assert isinstance(loaded.binding_values["casilla.0501"], Decimal)
         # And the str entries are still str (not coerced to Decimal).
-        assert loaded.binding_values["casilla.identity.declarant_label"] == "Gergely Wootsch"
+        assert loaded.binding_values["casilla.identity.declarant_label"] == "Persona Prueba"
         assert isinstance(loaded.binding_values["casilla.identity.declarant_label"], str)
 
 
@@ -119,7 +119,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
         captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
         binding_values = {
             "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Gergely Wootsch",
+            "casilla.identity.declarant_label": "Persona Prueba",
         }
         source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
         snapshot_id = derive_borrador_100_snapshot_id(
@@ -184,7 +184,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
         binding_values = {
             "casilla.0500": Decimal("39800.00"),
-            "casilla.identity.declarant_label": "Gergely Wootsch",
+            "casilla.identity.declarant_label": "Persona Prueba",
         }
         source_url = "https://www2.agenciatributaria.gob.es/wlpl/PROC-RENTA/borrador/2024?expediente=202410013522401X"
         snapshot_id = derive_borrador_100_snapshot_id(

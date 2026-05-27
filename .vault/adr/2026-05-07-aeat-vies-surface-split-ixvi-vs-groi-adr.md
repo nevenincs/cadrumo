@@ -26,7 +26,7 @@ This ADR is accepted as the operational record of a live-probing
 finding from 2026-05-07. The original AEAT NIF-IVA checker ADR
 (2026-05-06) scoped a single oracle adapter targeting the AEAT-hosted
 foreign-EU VIES proxy at the IXVI servlet on www1. Live probing under
-cl@ve-movil authentication (Identidad Y4113523X, captured via the
+cl@ve-movil authentication (redacted operator identity, captured via the
 project's DefaultBrowserSession) revealed:
 
 - The IXVI servlet at www1 (foreign-EU VIES proxy) returns HTTP 200

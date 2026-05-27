@@ -17,7 +17,7 @@ related:
 
 Live probing on 2026-05-07 via the project's
 `DefaultBrowserSession` + cl@ve-movil authentication
-(Identidad Y4113523X) established two empirical findings:
+(redacted operator identity) established two empirical findings:
 
 1. **GROI servlet on www2** (Spanish-ROI consult, form action
    `ConsultaOperadorSedeGroiServlet`) IS reachable under cl@ve-movil.
@@ -50,7 +50,7 @@ Hypotheses, ranked by likelihood:
 2. **Caller's NIF must itself be ROI-registered** — the IXVI servlet
    verifies foreign NIF-IVAs, but AEAT may restrict the verification
    service to operators who themselves are in the ROI registry
-   (modelo 036/037 with box 582 marked). The probe NIF Y4113523X may
+   (modelo 036/037 with box 582 marked). The redacted probe NIF may
    not be ROI-registered.
 3. **Geo-restriction** — unlikely but not yet ruled out; the live
    probe ran from a Spanish residential IP.

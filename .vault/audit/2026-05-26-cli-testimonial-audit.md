@@ -93,7 +93,7 @@ description is worse than no severity at all.
 
 `aeat config auth configure --provider clave_movil` reports
 `identity_alignment = mismatch` with detail naming a NIF
-`'Y4113523X'` that the persona never typed. The text suggests this
+`<redacted real-shaped NIE>` that the persona never typed. The text suggests this
 is a default fixture leaking into a live session. The proposed
 `next_action` ("switch to the profile whose tax id matches the
 Cl@ve DNI/NIE") is impossible — the persona has one profile and
@@ -153,7 +153,7 @@ naturally as one focused remediation:
   reassuring summary cannot pair with `error`; an `error` summary
   cannot pair with a reassuring severity. Lower severity to
   `warning` / `info` for normal pending states.
-- Remove the phantom DNI `Y4113523X` fixture leak; if the value is
+- Remove the phantom real-shaped DNI/NIE fixture leak; if the value is
   a placeholder it must be obviously such, not a real-shape NIF.
 
 Remediation tracked as the round-5 auth-surface cluster fix.
