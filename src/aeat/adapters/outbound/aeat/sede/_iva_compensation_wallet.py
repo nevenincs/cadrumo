@@ -107,8 +107,8 @@ async def fetch_iva_compensation_wallet(
                         "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
                         failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                         context={
-                            "landing_url": page.url,
-                            "expected_url": _PRE303_PRESENTATION_URL,
+                            "landing_url": _redacted_url(page.url),
+                            "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
                             "surface": "pre303_presentation_service",
                         },
                         suggestion=(
@@ -134,8 +134,8 @@ async def fetch_iva_compensation_wallet(
                     "AEAT IVA compensation wallet rejected the authenticated session with 4033",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                     context={
-                        "landing_url": page.url,
-                        "expected_url": _WALLET_URL,
+                        "landing_url": _redacted_url(page.url),
+                        "expected_url": _redacted_url(_WALLET_URL),
                         "surface": "iva_compensation_wallet",
                     },
                     suggestion=(
@@ -355,8 +355,8 @@ async def _continue_own_name_representation(
             "authenticated profile user.",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={
-                "landing_url": getattr(page, "url", None),
-                "expected_url": expected_url,
+                "landing_url": _redacted_url(getattr(page, "url", None)),
+                "expected_url": _redacted_url(expected_url),
                 "surface": surface,
                 "blocked_operation": "representative_or_unknown_representation_gate",
             },
@@ -458,7 +458,7 @@ async def _submit_wallet_execute_gate_if_present(
                 failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
                 context={
                     **_wallet_page_shape_context(html, landing_url=current_url),
-                    "expected_url": expected_url,
+                    "expected_url": _redacted_url(expected_url),
                     "blocked_operation": "wallet_execute_read_query",
                 },
                 suggestion=(
@@ -544,7 +544,7 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, obje
         for input_node in soup.find_all("input")[:20]
     )
     return {
-        "landing_url": landing_url,
+        "landing_url": _redacted_url(landing_url),
         "wallet_executed_empty_shape": _looks_like_executed_empty_wallet_page(soup),
         "heading_count": len(soup.find_all(["h1", "h2", "h3"])),
         "table_count": len(soup.find_all("table")),
@@ -553,6 +553,21 @@ def _wallet_page_shape_context(html: str, *, landing_url: str) -> dict[str, obje
         "inputs": inputs,
         "raw_sha256": hashlib.sha256(html.encode("utf-8")).hexdigest(),
     }
+
+
+def _redacted_url(value: object) -> str | None:
+    if value is None:
+        return None
+    text = str(value)
+    if not text:
+        return ""
+    try:
+        parsed = urlsplit(text)
+    except ValueError:
+        return ""
+    if not parsed.scheme and not parsed.netloc:
+        return parsed.path
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
 
 
 def _normalised_title(soup: BeautifulSoup) -> str:
