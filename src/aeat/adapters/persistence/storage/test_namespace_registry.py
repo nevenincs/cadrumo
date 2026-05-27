@@ -6,12 +6,23 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.persistence.storage import (
+    AEAT_BROWSER_SESSION_NAMESPACE,
+    AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+    AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+    AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
     BUCKET_LOCK_FILENAME,
     BUCKET_MANIFEST_FILENAME,
     BUCKETS_DIRNAME,
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    GOOGLE_DRIVE_CONFIG_NAMESPACE,
+    GOOGLE_OAUTH_CLIENT_NAMESPACE,
+    GOOGLE_OAUTH_METADATA_NAMESPACE,
+    GOOGLE_OAUTH_TOKEN_NAMESPACE,
     LIVE_CENSUS_SNAPSHOT_NAMESPACE,
+    LLM_CACHE_NAMESPACE,
+    LLM_USAGE_NAMESPACE,
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
     PROFILE_INVENTORY_LEDGER_NAMESPACE,
@@ -98,6 +109,104 @@ def test_w03_s21_namespace_registration_coverage_is_present() -> None:
         "iva_compensation_history",
         "calculation_observations",
         "modelo_calculation_revision_catalogue",
+    } <= registered_keys
+
+
+def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
+    expected_contracts = {
+        "aeat_browser_sessions": (
+            AEAT_BROWSER_SESSION_NAMESPACE,
+            "aeat.outbound.aeat.auth.sessions",
+            SensitivityClass.SESSION,
+            "{storage_state_path_posix}",
+        ),
+        "clave_movil_diagnostics": (
+            CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+            "aeat.outbound.aeat.auth.clave_movil.diagnostics",
+            SensitivityClass.SESSION,
+            "{diagnostic_id_or_timestamp_iso}",
+        ),
+        "google_oauth_client": (
+            GOOGLE_OAUTH_CLIENT_NAMESPACE,
+            "aeat.google.oauth.client",
+            SensitivityClass.SECRET,
+            "{profile}",
+        ),
+        "google_oauth_token": (
+            GOOGLE_OAUTH_TOKEN_NAMESPACE,
+            "aeat.google.oauth.token",
+            SensitivityClass.SECRET,
+            "{profile}",
+        ),
+        "google_oauth_metadata": (
+            GOOGLE_OAUTH_METADATA_NAMESPACE,
+            "aeat.google.oauth.metadata",
+            SensitivityClass.FINANCIAL,
+            "{profile}",
+        ),
+        "google_drive_config": (
+            GOOGLE_DRIVE_CONFIG_NAMESPACE,
+            "aeat.google.drive.config",
+            SensitivityClass.FINANCIAL,
+            "{profile}",
+        ),
+        "llm_cache": (
+            LLM_CACHE_NAMESPACE,
+            "aeat.outbound.llm.cache",
+            SensitivityClass.DIAGNOSTIC,
+            "{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}",
+        ),
+        "llm_usage": (
+            LLM_USAGE_NAMESPACE,
+            "aeat.outbound.llm.usage",
+            SensitivityClass.DIAGNOSTIC,
+            "{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}",
+        ),
+        "aeat_filed_declaration_artefacts": (
+            AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
+            "aeat.outbound.aeat.sede.filed_declaration.artefacts",
+            SensitivityClass.FINANCIAL,
+            "{sha256_hex}",
+        ),
+        "aeat_filed_declaration_observations": (
+            AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
+            "aeat.outbound.aeat.sede.filed_declaration.observations",
+            SensitivityClass.FINANCIAL,
+            "{sha256(modelo,ejercicio,period,expediente_id)}",
+        ),
+        "aeat_iva_wallet_observations": (
+            AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+            "aeat.outbound.aeat.sede.iva_compensation_wallet.observations",
+            SensitivityClass.FINANCIAL,
+            "{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
+        ),
+    }
+
+    for key, (expected, namespace, sensitivity, object_key_grammar) in expected_contracts.items():
+        registered = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(key)
+
+        assert registered == expected
+        assert registered.namespace == namespace
+        assert registered.sensitivity is sensitivity
+        assert registered.schema_version == 1
+        assert registered.object_key_grammar == object_key_grammar
+
+
+def test_w03_s22_namespace_registration_coverage_is_present() -> None:
+    registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
+
+    assert {
+        "aeat_browser_sessions",
+        "clave_movil_diagnostics",
+        "google_oauth_client",
+        "google_oauth_token",
+        "google_oauth_metadata",
+        "google_drive_config",
+        "llm_cache",
+        "llm_usage",
+        "aeat_filed_declaration_artefacts",
+        "aeat_filed_declaration_observations",
+        "aeat_iva_wallet_observations",
     } <= registered_keys
 
 
