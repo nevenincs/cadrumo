@@ -21,6 +21,7 @@ from ._enums import (
 from ._errors import (
     LedgerNoActiveBucketError,
     LedgerStorageError,
+    StoredTransactionDriftError,
     TransactionCatalogueError,
     TransactionError,
     TransactionIdPrefixError,
@@ -144,6 +145,7 @@ __all__ = [
     "TransactionLifecycleLineageEntry",
     "TransactionLifecycleState",
     "TransactionNotFoundError",
+    "StoredTransactionDriftError",
     "TransactionPersistenceError",
     "TransactionValidationError",
     "build_claude_classifier",

@@ -11,14 +11,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository, SecureObjectWrite
 from ...core.classification import SensitivityClass
 from ...core.logging import get_logger
-from ._errors import LedgerStorageError
+from ._errors import LedgerStorageError, StoredTransactionDriftError
 from ._models import BucketTransactionRef, TransactionCatalogue
 
 _log = get_logger(__name__)
@@ -140,6 +140,19 @@ class TransactionCatalogueRepository:
         except (ClassificationError, EnvelopeVersionError):
             _log.error("transaction catalogue integrity error", exc_info=True)
             raise
+        except ValidationError as exc:
+            # Wave-3 audit W09.P41.S214: pydantic ValidationError previously
+            # propagated raw and lost the typed drift signal at the CLI
+            # boundary. Mirror the StoredProfileDriftError pattern so the
+            # CLI can route stored-data-validation failures to the repair-
+            # oriented surface instead of a generic refusal.
+            _log.error(
+                "transaction catalogue schema drift bucket_id=%s object_key=%s",
+                self._bucket_id,
+                self._object_key,
+                exc_info=True,
+            )
+            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
         if envelope.classification is not SensitivityClass.FINANCIAL:
             raise ClassificationError(
                 f"transaction catalogue has classification {envelope.classification}; "
