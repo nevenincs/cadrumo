@@ -68,3 +68,13 @@ before it becomes unreviewable.
 - [x] `P05.S13` - Measure current registry TOML line-count and row-width baselines after M200 and empty-definition cleanup; `src/aeat/_data/registry/aeat`.
 - [x] `P05.S14` - Add reviewability tests for TOML file length and longest-line growth; `src/aeat/domain/calculations/registry`.
 - [x] `P05.S15` - Record the enforced thresholds and passing gate in the schema-hardening exec log; `.vault/exec`.
+
+### Phase `P06` - Cross-WIP registry gate repair
+
+Resolve the registry-validation edges exposed by the broader hardening gate so
+the new drift, empty-revision, and reviewability validators remain actionable
+against the shared committed corpus.
+
+- [x] `P06.S16` - Align M100 2024/2025 reduction casilla data types with the cross-revision drift validator; `src/aeat/_data/registry/aeat/modelos/100/revisions`.
+- [x] `P06.S17` - Update the M130 committed snapshot regression for the current bound-source target shape; `src/aeat/domain/calculations/registry/test_committed_registry.py`.
+- [x] `P06.S18` - Ground the M303 autoconsumo profile binding/formula with legal and official-guidance evidence and rerun the broader registry gate; `src/aeat/_data/registry/aeat/modelos/303`, `src/aeat/_data/registry/aeat/legal`.
