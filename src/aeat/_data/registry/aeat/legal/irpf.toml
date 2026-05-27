@@ -1736,6 +1736,45 @@ required_text = [
     "1.150 euros anuales",
 ]
 
+[legal."ley-35-2006:art-58"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-58.html#a58"
+document_id = "BOE-A-2006-20764"
+article = "58"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a58"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 3.000 euros por descendiente menor de 3 anios."
+required_text = [
+    "Mínimo por descendientes",
+    "2.400 euros",
+    "2.700 euros",
+]
+
+[legal."ley-35-2006:art-59"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-35-2006-art-59.html#a59"
+document_id = "BOE-A-2006-20764"
+article = "59"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a59"
+published_at = 2006-11-29
+effective_from = 2007-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "LIRPF art 59: minimo por ascendientes. 1.150 euros por ascendiente mayor de 65 anios o con discapacidad, 1.400 euros adicionales por ascendiente mayor de 75 anios."
+required_text = [
+    "Mínimo por ascendientes",
+    "1.150 euros",
+]
+
 [legal."ley-35-2006:art-56"]
 evidence_tier = "legal_authority"
 authority = "boe"
