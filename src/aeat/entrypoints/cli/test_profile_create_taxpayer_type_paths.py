@@ -326,10 +326,10 @@ def test_profile_create_refuses_pais_vasco_with_concierto_economico_redirect() -
     assert result.exit_code != 0
     assert "Traceback" not in (result.output or "")
     output = result.output or ""
-    assert any(
-        phrase in output
-        for phrase in ("Concierto", "Ley 12/2002", "Hacienda Foral", "foral")
-    )
+    # Rich box rendering may line-wrap "Ley 12/2002" across two lines; assert
+    # each token independently so the legal citation is definitely present.
+    assert "12/2002" in output, f"Expected 12/2002 (Ley 12/2002) in foral refusal; got: {output!r}"
+    assert "sede.bizkaia.eus" in output, f"Expected Bizkaia URL in foral refusal; got: {output!r}"
 
 
 def test_profile_create_refuses_navarra_with_concierto_economico_redirect() -> None:
@@ -361,7 +361,7 @@ def test_profile_create_refuses_navarra_with_concierto_economico_redirect() -> N
     assert result.exit_code != 0
     assert "Traceback" not in (result.output or "")
     output = result.output or ""
-    assert any(
-        phrase in output
-        for phrase in ("Concierto", "Ley 12/2002", "Hacienda Foral", "foral")
-    )
+    # Rich box rendering may line-wrap "Ley 12/2002" across two lines; assert
+    # each token independently so the legal citation is definitely present.
+    assert "12/2002" in output, f"Expected 12/2002 (Ley 12/2002) in foral refusal; got: {output!r}"
+    assert "hacienda.navarra.es" in output, f"Expected Navarra URL in foral refusal; got: {output!r}"
