@@ -415,3 +415,60 @@ naming is potentially misleading. A future cleanup could rename it
 to `ledger_column` or `ledger_target_casilla` to clarify that it
 identifies the ledger source casilla (Ingresos column), not the
 binding's destination casilla. Out of scope for this campaign.
+
+---
+
+## P08.S57 finding: `vault plan step check` silently drops body prose
+
+**Reproducer**:
+
+1. Author a plan body with `## Proposed Changes`, `## Parallelization`,
+   and `## Verification` sections containing narrative prose
+   (matched against the L2 template at
+   `.vaultspec/rules/templates/plan.md`).
+2. Run `uv run --no-sync vaultspec-core vault plan step check <plan>
+   S<NN>` against any Step in the plan.
+3. The CLI re-canonicalises the plan body. The narrative sections
+   are SILENTLY DROPPED. Only the Step rows, Phase headings, and
+   frontmatter survive.
+
+**Impact**:
+
+The Proposed Changes / Parallelization / Verification prose
+captures the campaign's structural reasoning — sequencing
+constraints, mission-success criteria, hard ordering decisions.
+This information lives nowhere else if the CLI drops it. Future
+plan readers receive a structurally-valid but narratively-empty
+plan document.
+
+**Observed during**: this campaign's P05.S20 and P07.S45 close
+operations both lost their plan-body prose. The L2 plan at
+`.vault/plan/2026-05-26-modelo-130-relation-regression-plan.md`
+no longer carries the narrative sections it was authored with;
+the only surviving copy of the campaign's structural reasoning
+is the ADR and the per-Phase exec summary at
+`.vault/exec/2026-05-26-modelo-130-relation-regression/
+2026-05-26-modelo-130-relation-regression-P07-summary.md`.
+
+**Proposed fix (upstream vaultspec-core)**:
+
+The CLI's plan-body re-canonicalisation should preserve
+non-Step/non-Phase prose blocks within the plan body. The
+canonical-identifier preservation guarantee (Step IDs, Phase IDs)
+should not require dropping author-supplied narrative. The
+parser/serialiser pair should treat unidentified prose blocks as
+opaque and round-trip them through the structural mutation.
+
+**Workaround until fixed**:
+
+Plan authors should mirror Proposed Changes / Parallelization /
+Verification narrative INTO the ADR `Implementation` /
+`Consequences` sections OR into a dedicated per-Phase exec
+summary BEFORE running any `vault plan step check`. The narrative
+survives in those documents even when the plan body is
+re-canonicalised.
+
+**Filed**: this audit document IS the upstream filing for
+internal-campaign tracking. The next vaultspec-core release-train
+should pick this up and produce a fix or document the
+limitation in `.vaultspec/CLI.md`.
