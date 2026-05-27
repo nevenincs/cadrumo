@@ -2298,6 +2298,8 @@ def _verification_report_payload(report: VerificationReport) -> dict[str, object
                 "expectation_id": f.expectation_id,
                 "message": f.message,
                 "next_action": f.next_action,
+                "legal_refs": list(f.legal_refs),
+                "source_refs": list(f.source_refs),
             }
             for f in report.findings
         ],
@@ -2333,6 +2335,10 @@ def _verification_report_lines(report: VerificationReport) -> list[str]:
                 )
             )
         )
+        if finding.legal_refs:
+            lines.append(f"finding_legal_refs\t{casilla}\t{', '.join(finding.legal_refs)}")
+        if finding.source_refs:
+            lines.append(f"finding_source_refs\t{casilla}\t{', '.join(finding.source_refs)}")
     return lines
 
 
