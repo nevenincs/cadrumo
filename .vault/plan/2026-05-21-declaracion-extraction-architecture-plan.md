@@ -428,7 +428,7 @@ cross-campaign sweeps audit + M193 reversal verify + M190 rename ADR amendment +
 _generate.py PDF determinism + suite scope discipline + gate surface generalisation
 
 - [ ] `W08.P36.S190` - Investigate and fix _generate.py PDF metadata determinism eliminate rolling fixture-regen sweep churn; `src/aeat/tests/fixtures/justificantes/_generate.py`.
-- [ ] `W08.P36.S191` - Survey borrador_pdf justificante_pdf export_record official_workbook surfaces for analogous silent-failure class extend gate where warranted; `src/aeat/domain/calculations/registry/_validate_extraction_profiles.py`.
+- [x] `W08.P36.S191` - Survey borrador_pdf justificante_pdf export_record official_workbook surfaces for analogous silent-failure class extend gate where warranted; `src/aeat/domain/calculations/registry/_validate_extraction_profiles.py`.
 
 ### Phase `W08.P37` - Gap-test brittleness fix
 
