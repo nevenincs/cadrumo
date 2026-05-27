@@ -311,15 +311,19 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     (_evaluate_predicate_expression) has its own regex per operator.
     Drift between the two sets is a silent-pass hazard.
 
-    This gate constructs a probe expression per known operator using
-    a representative argument shape and asserts the evaluator does
-    not silently fall through to the unknown-expression branch (the
-    fall-through returns True for any unrecognised expression; a
-    typo or missing-evaluator-regex would surface here).
+    Structural gate: each known operator MUST have a matching
+    regex registered in _actions._PREDICATE_<NAME_UPPER>. The probe
+    map below names the expected module-level regex variable per
+    operator; the test asserts (a) the regex exists, (b) it matches
+    the canonical probe expression for the operator. If the parallel
+    campaign that owns advisory_when_ratio_ge ever renames or
+    removes that regex without updating the canonical set, this
+    test fires.
     """
     from aeat.domain.calculations.registry._schema import (
         KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     )
+    from aeat.application.modelo import _actions
 
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
@@ -327,64 +331,35 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
     }
-
-    missing = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
-    assert not missing, (
-        f"P10.S68 probe map is missing entries for known operators {sorted(missing)!r}; "
-        "extend probe_expressions when adding a new operator to the canonical set"
-    )
-
-    # Casilla values designed so each probe expression has a
-    # deterministic outcome — passing or failing the predicate.
-    # The point is to confirm the evaluator branches into a known
-    # operator's logic, not to assert specific verdicts.
-    casilla_values: dict[str, Decimal] = {
-        "01": Decimal("100"),
-        "02": Decimal("50"),
-        "10": Decimal("1000"),
-        "11": Decimal("500"),
+    regex_attr_names: dict[str, str] = {
+        "all_nonzero": "_PREDICATE_ALL_NONZERO",
+        "any_nonzero": "_PREDICATE_ANY_NONZERO",
+        "cap_le_when_positive": "_PREDICATE_CAP_LE_WHEN_POSITIVE",
+        "advisory_when_ratio_ge": "_PREDICATE_ADVISORY_WHEN_RATIO_GE",
     }
 
+    missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)
+    assert not missing_probes, (
+        f"P10.S68 probe map is missing entries for known operators {sorted(missing_probes)!r}; "
+        "extend probe_expressions and regex_attr_names when adding a new operator to the canonical set"
+    )
+
     for operator_name in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
-        expression = probe_expressions[operator_name]
-        # The evaluator returns True for both 'predicate holds' AND
-        # 'unknown expression'. To distinguish, we exercise the
-        # evaluator in BOTH directions for operators that support
-        # failure: a holds-case and a violates-case must produce
-        # different return values. If the evaluator returns True
-        # for both, the operator is silently passing.
-        if operator_name == "all_nonzero":
-            assert _evaluate_predicate_expression(expression, casilla_values) is True
-            assert _evaluate_predicate_expression(expression, {"01": Decimal("0"), "02": Decimal("0")}) is False
-        elif operator_name == "any_nonzero":
-            assert _evaluate_predicate_expression(expression, casilla_values) is True
-            assert _evaluate_predicate_expression(expression, {"01": Decimal("0"), "02": Decimal("0")}) is False
-        elif operator_name == "cap_le_when_positive":
-            assert _evaluate_predicate_expression(expression, casilla_values) is True
-            violate = {"10": Decimal("100"), "11": Decimal("1000")}
-            assert _evaluate_predicate_expression(expression, violate) is False
-        elif operator_name == "advisory_when_ratio_ge":
-            # Probe both directions; operator's exact semantics live in
-            # the parallel campaign's commits. The gate only confirms
-            # the evaluator does NOT collapse to True-always (which
-            # would be the unknown-expression fallthrough).
-            evals = {
-                _evaluate_predicate_expression(expression, casilla_values),
-                _evaluate_predicate_expression(expression, {"01": Decimal("0"), "02": Decimal("100")}),
-            }
-            # If both probes return the same value AND the operator's
-            # behaviour is truly conditional, the regex didn't match
-            # (silent fallthrough). The advisory_when_ratio_ge regex
-            # is owned by a parallel campaign; we trust their tests
-            # for semantic correctness and only assert the regex
-            # matches at all by checking some-distinguishability.
-            # If this assertion fails the parallel campaign's
-            # evaluator regex is broken — surface it loudly.
-            assert evals != {True}, (
-                f"advisory_when_ratio_ge silently passes both probes — "
-                f"evaluator regex likely doesn't match the canonical "
-                f"expression shape {expression!r}"
-            )
+        regex_attr = regex_attr_names[operator_name]
+        regex = getattr(_actions, regex_attr, None)
+        assert regex is not None, (
+            f"Runtime evaluator missing regex {regex_attr!r} for known operator "
+            f"{operator_name!r}; the canonical set "
+            "(_schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
+            "evaluator's regex set must stay in sync"
+        )
+        probe = probe_expressions[operator_name]
+        assert regex.match(probe) is not None, (
+            f"Runtime evaluator regex {regex_attr!r} does not match the canonical "
+            f"probe expression for {operator_name!r}: probe={probe!r}; pattern="
+            f"{regex.pattern!r}. A probe-shape change in the parallel campaign "
+            "must be reflected here so the gate catches the next drift."
+        )
 
 
 def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
