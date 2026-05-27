@@ -151,7 +151,7 @@ derive_modelo_202_modality is orphaned in the domain. Casillas 03 and 32 compute
 
 Mandated breakpoint. Dispatch code-reviewer, round-8 persona fleet focused on cross-domain applicability, Sonnet grounding on calendar to applicability join, consolidate findings, expand plan in place.
 
-- [ ] `W02.P13.S51` - dispatch vaultspec-code-reviewer against every Wave-2 commit; `.vault/exec/`.
+- [x] `W02.P13.S51` - dispatch vaultspec-code-reviewer against every Wave-2 commit; `.vault/exec/`.
 - [ ] `W02.P13.S52` - dispatch round-8 persona fleet (landlord autonomo SL gestor multi-profile) CLI only; `.vault/audit/`.
 - [ ] `W02.P13.S53` - dispatch Sonnet grounding pass against calendar to applicability join to confirm unification holds; `src/aeat/application/overview/`.
 - [ ] `W02.P13.S54` - consolidate round-8 findings into new audit document via vaultspec CLI and expand this plan in place; `.vault/audit/`.
@@ -454,7 +454,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S216` - add test coverage for _id_resolution.py 95 LOC module; `currently has no dedicated test file; identify callers and write test_id_resolution.py; `src/aeat/application/ledger/_id_resolution.py`.
 - [ ] `W09.P41.S217` - verify transaction_catalogue_object_id at application ledger _actions.py line 2607 has callers and test coverage; `potentially orphan internal helper; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S240` - convention note FU-W04-A: commit d8bec8bd9 co-landed multiple Steps plus exec records plus new test files plus __init__.py changes in a single commit; `future executors should land Step content separately from exec records and from __init__ changes; documentation-only no code change; `.vaultspec/`.
-- [ ] `W09.P41.S241` - FU-W05-A multi-step co-landing convention note from Wave-5 audit; commit 03be9b6f4 bundled exec records and step closures; same pattern as FU-W04-A; documentation-only no code change; `.vaultspec/`.
+- [ ] `W09.P41.S241` - FU-W05-A multi-step co-landing convention note from Wave-5 audit; `commit 03be9b6f4 bundled exec records and step closures; same pattern as FU-W04-A; documentation-only no code change; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
