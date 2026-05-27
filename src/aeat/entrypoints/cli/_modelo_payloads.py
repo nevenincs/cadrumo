@@ -49,6 +49,15 @@ class ObservationPayload(OutputSchema):
     source_refs: tuple[str, ...] = ()
 
 
+class ResultSummaryRowPayload(OutputSchema):
+    """One headline-result summary row (registry-declared lead figure)."""
+
+    role: str
+    casilla_id: str
+    value: str  # serialised Decimal
+    label: str
+
+
 class CalculationRevisionPayload(OutputSchema):
     """Calculation revision fields surfaced by calculate / revisions commands."""
 
@@ -57,6 +66,11 @@ class CalculationRevisionPayload(OutputSchema):
     state: str
     casilla_values: dict[str, str]  # casilla_id → str(Decimal)
     observations: tuple[ObservationPayload, ...]
+    # Registry-declared lead figures (result-to-pay / result-to-refund
+    # plus key computed casillas) surfaced above the full casilla table.
+    # Empty tuple when the modelo carries no summary mapping or the
+    # revision has no values to summarise.
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
     inputs_snapshot: dict[str, object]
     created_at: str
@@ -217,11 +231,16 @@ class WorkDiscardResult(OutputSchema):
 @register_schema("modelo.work.calculate")
 class WorkCalculateResult(OutputSchema):
     operation: str = "modelo.work.calculate"
+    # Persistence-confirmation pair surfaced by the calculate verb so JSON
+    # consumers see the same signal the text-mode confirmation line carries.
+    saved: bool = True
+    saved_confirmation: str
     calculation_revision_id: str
     work_unit_id: str
     state: str
     casilla_values: dict[str, str]
     observations: tuple[ObservationPayload, ...]
+    result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
     inputs_snapshot: dict[str, object]
     created_at: str
@@ -231,6 +250,11 @@ class WorkCalculateResult(OutputSchema):
     filed_at: str | None = None
     filed_by: str | None = None
     superseded_at: str | None = None
+    # Modelo 202 pago-fraccionado modality (Art. 40.2 vs 40.3 lane).
+    # Populated only when the underlying work unit is modelo 202; other
+    # modelos leave these unset.
+    modality: str | None = None
+    modality_reason: str | None = None
 
 
 @register_schema("modelo.work.revisions")
