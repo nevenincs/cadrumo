@@ -3355,3 +3355,96 @@ Batch-3 migration to be clean. `test_root_help_shape.py` is still open.
 - After `test_root_help_shape.py` is clean, close S254, then close S209.
 - Close S264 now (shim deletion landed in `2a897c177`).
 - Log Tier-2 "different profile" wording as a minor W09 follow-up.
+
+---
+
+## coder2 S254 (manifest-status repair) + S282 (auth env-var) — architecture review (Task #109)
+
+**Commits:** `2b37264f4` (code) + `7cfc2b71d` (vault records)
+**Gates applied:** G1, G2, G3, G5, G6
+**Verdict: APPROVE** (with one commit-message inaccuracy noted)
+
+### Overlap with coder1's `2a897c177`
+
+The two S254 commits are **non-overlapping facets**:
+
+- Coder1 `2a897c177` — migrated `test_profile_lifecycle_verbs.py` from unsecured
+  monkeypatch to `isolated_profile_storage_root`; fixed D5 `fresh_uuid_mode`
+  regression in `_config/__init__.py`.
+- Coder2 `2b37264f4` — fixed `_bucket_key_schedule` in
+  `src/aeat/adapters/persistence/storage/master_key/_master_key.py` to tolerate
+  a manifest missing the `status` field (legacy format); fixed S282 auth env-var
+  leak in `_authenticator.py`.
+
+No file overlap. Both commits can coexist without conflict.
+
+### `_bucket_key_schedule` manifest-status tolerance fix
+
+The change catches `StorageValidationError` carrying the message
+`"missing required lifecycle status"` and falls back to parsing `key_schedule`
+directly from raw TOML so the repair command can open a session to backfill the
+missing field. The fallback is tight:
+
+- `"missing required lifecycle status"` string match is narrow — other
+  `StorageValidationError` subtypes fall through to `raise`.
+- `BucketKeySchedule(str(raw))` is strict: `BucketKeySchedule` is a `StrEnum`
+  with only `LEGACY_MASTER_KEY` and `BUCKET_DEK_V1` members; any unknown value
+  raises `ValueError` rather than silently accepting it.
+- The `dict[str, object]` from `tomllib.loads()` is a documented third-party
+  boundary (`tomllib` returns `dict[str, Any]`); not a G2 violation.
+
+**G5 check:** The fix adds no shim or re-export. It extends an existing function
+with a narrow legacy-format fallback that self-destructs once all manifests have
+been repaired. PASS.
+
+### S282 auth env-var leak fix
+
+Both `CertificateLoadError` raises in `_require_bundle` now use `tr()` with new
+locale keys `application.auth.certificate.load.path_unset` and
+`application.auth.certificate.load.password_unset`. The raw
+`AEAT_CERTIFICATE_PATH`, `AEAT_CERTIFICATE_PASSWORD_SECRET`, and
+`CertificateBundle` names are gone from operator-facing output. Four locales
+(en/es/ca/hu) all populated.
+
+**Architecture boundary check:** `login_operator_auth` in `_operator.py` already
+raises `AuthLoginPreconditionError` with `tr()` before `_require_bundle` is
+reached — the LIVE_TESTS gate fires at line 847, then `_assert_login_precondition`
+at line 859 raises `AuthLoginPreconditionError` for missing cert path or file.
+The S282 fix to `_require_bundle` is defence-in-depth for any non-login caller
+that reaches the bundle directly. Correct layering.
+
+**G3 check:** env-var/class-name leakage eliminated at the source in
+`_require_bundle`. The `default=` prose in the `tr()` calls is user-facing
+operator guidance ("Run 'aeat config auth configure --provider certificate
+--file PATH'") — appropriate for the `default=` parameter which is never rendered
+in production (locale key takes precedence). PASS.
+
+**Round-5 B-ROSER BLOCKER:** The round-5 audit flagged this as the specific
+failing message. The fix closes that finding. PASS.
+
+### FU-W08-B (duplicate `_activate_subcommand_output_language`) claim
+
+The commit message for `2b37264f4` states "Also removes the duplicate
+`_activate_subcommand_output_language` definition". This is **inaccurate** — coder1's
+`2a897c177` already deleted the shim. Coder2's commit does not touch
+`_config/__init__.py` at all (`git show 2b37264f4 -- src/aeat/entrypoints/cli/_config/__init__.py`
+produces no output). The claim in the message is a documentation error, not a
+functional issue. S264 is confirmed closed by `2a897c177` (not `2b37264f4`).
+
+### Vault records (`7cfc2b71d`)
+
+The plan diff in `7cfc2b71d` checks only S282. S254 remains open in the plan
+(`[ ]`), consistent with the prior review's finding that `test_root_help_shape.py`
+is still unmigrated.
+
+### Summary
+
+| Item | Status |
+|------|--------|
+| `_bucket_key_schedule` legacy-manifest fallback | CORRECT |
+| S282 `_require_bundle` env-var/class-name elimination | PASS |
+| Four-locale prose (en/es/ca/hu) | PASS |
+| S264 FU-W08-B claim in commit message | INACCURATE (done by `2a897c177`) |
+| S254 plan checkbox | Correctly left open |
+| S282 plan checkbox | Correctly closed |
+| S209 closable? | Still NO — `test_root_help_shape.py` open |
