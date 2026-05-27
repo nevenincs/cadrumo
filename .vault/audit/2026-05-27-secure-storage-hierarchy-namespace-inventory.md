@@ -47,10 +47,21 @@ W15.P33 inventories the secure-storage hierarchy constants that still define per
 | `ledger_classification_rules` | `aeat.ledger.classification.rules` | AUDIT | 1 | `{rule_id}` |
 | `live_borrador_100_snapshot` | `aeat.application.live.borrador_100_snapshot` | FINANCIAL | 1 | `modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}` |
 | `live_census_snapshot` | `aeat.application.live.census_snapshot` | IDENTITY | 1 | `census-snapshot:{bucket_id}:{snapshot_id}` |
+| `aeat_browser_sessions` | `aeat.outbound.aeat.auth.sessions` | SESSION | 1 | `{storage_state_path_posix}` |
+| `clave_movil_diagnostics` | `aeat.outbound.aeat.auth.clave_movil.diagnostics` | SESSION | 1 | `{diagnostic_id_or_timestamp_iso}` |
+| `google_oauth_client` | `aeat.google.oauth.client` | SECRET | 1 | `{profile}` |
+| `google_oauth_token` | `aeat.google.oauth.token` | SECRET | 1 | `{profile}` |
+| `google_oauth_metadata` | `aeat.google.oauth.metadata` | FINANCIAL | 1 | `{profile}` |
+| `google_drive_config` | `aeat.google.drive.config` | FINANCIAL | 1 | `{profile}` |
+| `llm_cache` | `aeat.outbound.llm.cache` | DIAGNOSTIC | 1 | `{logical_root}|{provider}|{model}|{prompt_hash}|{args_hash}` |
+| `llm_usage` | `aeat.outbound.llm.usage` | DIAGNOSTIC | 1 | `{logical_root}|{created_at_iso}|{request_id}|{uuid4_hex}` |
+| `aeat_filed_declaration_artefacts` | `aeat.outbound.aeat.sede.filed_declaration.artefacts` | FINANCIAL | 1 | `{sha256_hex}` |
+| `aeat_filed_declaration_observations` | `aeat.outbound.aeat.sede.filed_declaration.observations` | FINANCIAL | 1 | `{sha256(modelo,ejercicio,period,expediente_id)}` |
+| `aeat_iva_wallet_observations` | `aeat.outbound.aeat.sede.iva_compensation_wallet.observations` | FINANCIAL | 1 | `{sha256(taxpayer_nif,target_year,target_period,captured_at)}` |
 
 ## Domain And Adapter Namespaces Registered
 
-The registry also records discovered domain and adapter namespaces so later W03/W15 follow-up work can replace remaining local constants without redoing discovery: bucket event history, submission records, justificante metadata, filing drafts, filing amendments, invoice catalogue, transaction catalogue, usage ratios, modelo work-unit/calculation/filing/verification catalogues, and attachment blob/manifest namespaces.
+The registry also records discovered domain and adapter namespaces so later W03/W15 follow-up work can replace remaining local constants without redoing discovery: bucket event history, submission records, justificante metadata, filing drafts, filing amendments, invoice catalogue, transaction catalogue, usage ratios, modelo work-unit/calculation/filing/verification catalogues, attachment blob/manifest namespaces, AEAT browser session state, Clave Movil diagnostics, Google OAuth and Drive configuration, LLM cache and usage telemetry, and AEAT Sede filed-declaration and IVA-wallet observation records.
 
 ## Findings
 
@@ -58,6 +69,7 @@ The registry also records discovered domain and adapter namespaces so later W03/
 - Several object-key grammars embed bucket identifiers in storage metadata by design: profile snapshots, live snapshots, transaction catalogues, and usage-ratio profiles. These are now explicit registry grammar strings and remain candidates for future privacy review.
 - Repair decision listing was using `list_keys`, which returns HMAC lookup digests rather than natural object keys. W15.P33 changed listing to enumerate decrypted records and validate each content-addressed decision id.
 - `SecureBoundRepository` now accepts an explicit `bucket_id` route so migrated repositories can bind to a named bucket through the storage runtime instead of relying only on ambient active profile state.
+- Outbound storage-provider `_probe` namespaces remain outside this registry because they are provider-side sentinel paths, not encrypted SQL secure-object namespaces. They remain tracked by the remote-mirror/provider-store waves.
 
 ## Follow-Up
 
