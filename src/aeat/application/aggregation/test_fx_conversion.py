@@ -16,7 +16,7 @@ ECB oracle source:
   Published at: https://data.ecb.europa.eu/data/datasets/EXR
   Series key: EXR.D.USD.EUR.SP00.A, 2024-01-15 = 1.0868
 
-  100.00 USD × (1 / 1.0868) = 92.01 EUR  (rounded half-even to 0.01)
+  100.00 USD * (1 / 1.0868) = 92.01 EUR  (rounded half-even to 0.01)
   Verification: Decimal("100.00") / Decimal("1.0868") → 91.9945... → 92.00?
     Decimal("100.00") * (Decimal("1") / Decimal("1.0868"))
     = 100 * 0.9201384... ≈ 92.01
@@ -50,7 +50,6 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...application.ledger._actions import import_ledger_transactions
 from ...domain.currency import (
     CurrencyNormalizationService,
-    ExchangeRateProvider,
 )
 from ...domain.transactions import (
     RawProvenance,
@@ -75,10 +74,10 @@ _ECB_2024_01_15_USD_RATE = (Decimal("1") / _ECB_2024_01_15_USD_QUOTE).quantize(
     Decimal("0.000001")
 )  # 0.920138 — the multiplier stored by the provider
 
-# Oracle: 100.00 USD × 0.920138 = 92.0138 → rounded half-even 0.01 = 92.01 EUR
+# Oracle: 100.00 USD * 0.920138 = 92.0138 -> rounded half-even 0.01 = 92.01 EUR
 _USD_AMOUNT = Decimal("100.00")
 _EXPECTED_EUR = (_USD_AMOUNT * _ECB_2024_01_15_USD_RATE).quantize(Decimal("0.01"))
-assert _EXPECTED_EUR == Decimal("92.01"), f"Oracle mismatch: {_EXPECTED_EUR}"
+assert Decimal("92.01") == _EXPECTED_EUR, f"Oracle mismatch: {_EXPECTED_EUR}"
 
 
 class _EcbTableRateProvider:
@@ -206,9 +205,6 @@ def test_missing_rate_leaves_fx_fields_absent(
     This verifies the coupling invariant: both absent is valid; partially set
     is not allowed by the Transaction model_validator.
     """
-    # Use a rate provider that returns None for all lookups
-    normalizer = CurrencyNormalizationService(rate_provider=_EcbTableRateProvider(usd_rate=Decimal("0")))
-    # Override get_eur_rate to always return None
     class _NoRateProvider:
         def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
             return None
@@ -226,7 +222,7 @@ def test_missing_rate_leaves_fx_fields_absent(
 
     assert result.summary.imported == 1
     catalogue = repo.load()
-    tx = list(catalogue.values())[0]
+    tx = next(iter(catalogue.values()))
     assert tx.fx_rate is None
     assert tx.value_in_eur is None
 
