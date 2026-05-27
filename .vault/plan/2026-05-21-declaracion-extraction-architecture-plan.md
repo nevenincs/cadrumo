@@ -417,9 +417,9 @@ verification-source schema field + coverage-drift audit + production-path gate t
 
 cross-campaign sweeps audit + M193 reversal verify + M190 rename ADR amendment + _temporal.py case-fix caller audit + .vault-scratch cleanup
 
-- [ ] `W08.P35.S185` - Remove .vault-scratch bound_casilla_sweep.json from git tracking and add path to gitignore; `.vault-scratch/`.
+- [x] `W08.P35.S185` - Remove .vault-scratch bound_casilla_sweep.json from git tracking and add path to gitignore; `.vault-scratch/`.
 - [ ] `W08.P35.S186` - Re-audit M193 _total suffix conclusion against M180 real-corpus extraction behaviour or document remaining uncertainty inline; `src/aeat/_data/registry/aeat/modelos/193.toml`.
-- [ ] `W08.P35.S187` - Audit select_revision callers for case-sensitive period expectations regressed by _temporal.py case-insensitive comparison fix; `src/aeat/domain/calculations/registry/_temporal.py`.
+- [x] `W08.P35.S187` - Audit select_revision callers for case-sensitive period expectations regressed by _temporal.py case-insensitive comparison fix; `src/aeat/domain/calculations/registry/_temporal.py`.
 - [ ] `W08.P35.S188` - Author ADR amendment recording M190 revision rename rationale 2025-y-siguientes to 2024-y-siguientes year_from=2024; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
 - [ ] `W08.P35.S189` - Document cross-campaign plan-doc attribution scatter and consolidate where reasonable; `.vault/plan/`.
 
@@ -434,4 +434,4 @@ _generate.py PDF determinism + suite scope discipline + gate surface generalisat
 
 assert on typed exception attributes instead of message text
 
-- [ ] `W08.P37.S192` - Restructure M111 M130 M131 gap tests to assert on typed exception attributes failure_mode missing tuple instead of message text; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+- [x] `W08.P37.S192` - Restructure M111 M130 M131 gap tests to assert on typed exception attributes failure_mode missing tuple instead of message text; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
