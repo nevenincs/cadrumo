@@ -137,3 +137,49 @@ and round-trips cleanly, or (b) keep the flag with a brief
 comment explaining the specimen's provisional nature. Not
 tracked as a new Step — author-driven authenticity review is
 out of scope for a structural hardening sweep.
+
+---
+
+## P07.S38 finding: M131 carry-forward semantics validated against AEAT
+
+The AEAT Modelo 131 instructions at
+`src/aeat/_data/corpus/aeat_official/instructions/modelo_131/files/modelo-131-instrucciones.html`
+declare the carry-forward rule for casilla 11 verbatim:
+
+> Casilla 11. Si en la casilla 10 anterior se hubiera obtenido
+> una cantidad positiva, se hará constar en la casilla 11 el
+> importe (sin signo) de los resultados negativos que, en su
+> caso, se hubieran obtenido en la casilla 15 de cualquiera de
+> las autoliquidaciones anteriores, modelo 131, del mismo
+> ejercicio y que no hubieran sido deducidos anteriormente,
+> teniendo en cuenta que en ningún caso podrá figurar en la
+> casilla 11 un importe superior a la cantidad positiva
+> consignada en la casilla 10.
+
+The registry binding lands:
+
+- `source_modelo = "131"` — autoliquidaciones anteriores modelo 131 ✓
+- `source_output = "saldo-negativo-fin-periodo"` — prior period
+  saldo seed (formula: `max(0, -C10)`) ✓
+- `source_period_offset_from_target = -1` — anterior (prior) ✓
+- `max_year_delta = 0` — "del mismo ejercicio" same-ejercicio
+  constraint ✓
+- 1T suppression — 1T has no prior period in the same ejercicio ✓
+
+**Verified**. The four M131 cap revisions (2019-2023, 2024,
+2025, 2026) match the AEAT rule structurally.
+
+**Discovered defect not in scope of S38**: the AEAT cap "en
+ningún caso podrá figurar en la casilla 11 un importe superior
+a la cantidad positiva consignada en la casilla 10" is NOT
+enforced. The binding aggregates `op = "copy"` which strait-
+copies the prior period's seed; if the seed exceeds the current
+period's C10, the AEAT cap is violated. This is a verification-
+predicate gap, not a binding-selector defect. Recommended
+follow-up: declare a verification predicate that asserts C11 ≤
+C10 when C10 is positive, OR clamp the binding via an
+aggregation operator that caps to a current-period casilla
+reference (no such aggregation op exists today). Tracked
+informally here; the M131 calculation contract for the cap
+rule needs its own ADR/plan if AEAT-cap enforcement is in scope
+for a follow-up campaign.
