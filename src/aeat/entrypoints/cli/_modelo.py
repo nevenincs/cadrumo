@@ -1956,6 +1956,39 @@ def _validate_casilla_key(key: str, spec: str) -> None:
         )
 
 
+# Casilla data_types that accept a Decimal override via --casilla.
+# Non-numeric types (text, boolean, nif, date, etc.) must be supplied
+# through --binding or profile sources, not as raw decimal overrides.
+_NUMERIC_CASILLA_DATA_TYPES: frozenset[str] = frozenset(
+    {"decimal", "money", "integer", "ratio"}
+)
+
+
+def _guard_casilla_data_type(casilla_id: str, revision: object) -> None:
+    """Raise BadParameter when the casilla is non-numeric.
+
+    Supplying a decimal value for a text, boolean, or identifier casilla
+    silently produces wrong results because the engine stores the Decimal
+    but the casilla's formula chain treats its absence as zero.  Surface
+    the misuse early with the label and the correct input channel.
+    """
+    casilla_def = next(
+        (c for c in revision.casillas if str(c.id) == casilla_id),
+        None,
+    )
+    if casilla_def is None:
+        return  # unknown casilla will fail later in the engine
+    if casilla_def.data_type not in _NUMERIC_CASILLA_DATA_TYPES:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.casilla_non_numeric_data_type",
+                key=casilla_id,
+                data_type=casilla_def.data_type,
+                label=casilla_def.label,
+            )
+        )
+
+
 def _parse_casilla_override(spec: str) -> tuple[str, str]:
     return _parse_kv_spec(
         spec,
@@ -2129,6 +2162,8 @@ def work_calculate(
         except WorkUnitNotFoundError as exc:
             raise _bad_parameter_from_error(exc) from exc
         casilla_pairs = {_normalise_casilla_key(k, revision): v for k, v in casilla_pairs.items()}
+        for resolved_key in casilla_pairs:
+            _guard_casilla_data_type(resolved_key, revision)
     casilla_inputs: dict[str, Decimal] = {}
     for k, v in casilla_pairs.items():
         try:

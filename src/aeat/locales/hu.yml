@@ -600,6 +600,7 @@ cli:
           sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
           használd az `aeat app modelo casillas <MODELO>` parancsot.
         casilla_help: cli.app.modelo.work.casilla_help
+        casilla_non_numeric_data_type: cli.app.modelo.work.casilla_non_numeric_data_type
         casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
         create_created: cli.app.modelo.work.create_created
         create_help: cli.app.modelo.work.create_help

@@ -812,6 +812,10 @@ cli:
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
+        casilla_non_numeric_data_type: 'La casilla {key} ("{label}") tiene tipo de dato
+          {data_type} y no acepta valores decimales directos. Usa --binding para este
+          tipo de entrada o consulta `aeat app modelo casillas` para identificar la
+          casilla numérica correcta.'
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
