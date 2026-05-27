@@ -293,5 +293,8 @@ source_refs = ["aeat-dr-036-2025", "aeat-modelo-036-procedure"]
 [[revisions."2025-02-03-y-siguientes".completeness_manifest.casillas]]
 number = "tipo-declaracion"
 
-[[revisions."2025-02-03-y-siguientes".completeness_manifest.casillas]]
-number = "vigencia"
+# decl.vigencia-2025 was previously listed here but is input_kind =
+# "informational" (records the normative window for the revision)
+# and is not part of any formula, binding, or verification closure.
+# The calculation-completeness manifest reflects only the calculation
+# closure; informational casillas are excluded.
