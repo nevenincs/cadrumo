@@ -924,6 +924,9 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
+          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
+        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
