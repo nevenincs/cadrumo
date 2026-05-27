@@ -324,6 +324,10 @@ application:
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
+      iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
+        IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
+        el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
+        YEAR --period PERIOD --amount 0 --confirm`.'
       reconcile_declaration_unsupported: La reconciliació des de PDF de declaració
         encara no està disponible; fes servir --from-justificante PATH fins que el
         parser de declaració estigui implementat.
@@ -801,10 +805,10 @@ cli:
         casilla_help: Valor de casella amb sintaxi CASILLA=DECIMAL (repetible). CASILLA
           admet l'id de casella, el número del registre o el número de casella imprès
           al BOE mostrats per `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: 'La casilla {key} ("{label}") té tipus de dada
+        casilla_non_numeric_data_type: La casilla {key} ("{label}") té tipus de dada
           {data_type} i no accepta valors decimals directes. Usa --binding per a aquest
-          tipus d''entrada o consulta `aeat app modelo casillas` per identificar la
-          casilla numèrica correcta.'
+          tipus d'entrada o consulta `aeat app modelo casillas` per identificar la
+          casilla numèrica correcta.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
         create_created: Nova unitat de treball creada.
@@ -914,6 +918,9 @@ cli:
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_show_help: Mostrar els valors de casella desats d'una revisió de
           càlcul concreta (sense recalcular)
+        revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
+          l'exercici %{filing_year}. Revisions aplicables a aquest exercici%{applicable}.
+        revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
@@ -933,9 +940,6 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        revision_year_mismatch: La revisió %{revision} del model %{modelo} no cobreix
-          l'exercici %{filing_year}. Revisions aplicables a aquest exercici%{applicable}.
-        revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -2986,11 +2990,11 @@ filing:
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
   errors:
-    foral_regime: 'Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
-      en virtut del Concert Econòmic (Llei 12/2002), no davant l''AEAT. Aquest CLI no
-      modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
-      (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons el
-      vostre territori.'
+    foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
+      en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
+      no modela declaracions forals. Consulteu sede.bizkaia.eus (Biscaia), gipuzkoa.eus/ogasuna
+      (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
+      el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
   keys:
     description: Profile configuration keys and their descriptions

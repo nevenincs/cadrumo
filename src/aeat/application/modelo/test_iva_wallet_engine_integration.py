@@ -354,7 +354,7 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             clock=_DECIDED_AT,
         )
 
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="must be persisted"):
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -367,6 +367,11 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
             )
+        # The error must route through the seed-verb locale key and name the
+        # iva-wallet seed command so the operator knows the unblock path.
+        assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
+        assert exc_info.value.suggestion is not None
+        assert "iva-wallet seed" in exc_info.value.suggestion
         assert len(calc_repo.load()) == 0
 
 

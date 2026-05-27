@@ -1455,6 +1455,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
+        detail_rows=detail_rows,
         clock=clock,
     )
 

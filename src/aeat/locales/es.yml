@@ -323,6 +323,10 @@ application:
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
+        IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
+        el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
+        YEAR --period PERIOD --amount 0 --confirm`.'
       reconcile_declaration_unsupported: La reconciliación desde PDF de declaración
         aún no está disponible; usa --from-justificante PATH hasta que el parser de
         declaración esté implementado.
@@ -812,10 +816,10 @@ cli:
         casilla_help: Valor de casilla con sintaxis CASILLA=DECIMAL (repetible). CASILLA
           admite el id de casilla, el número del registro o el número de casilla impreso
           en el BOE mostrados por `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: 'La casilla {key} ("{label}") tiene tipo de dato
-          {data_type} y no acepta valores decimales directos. Usa --binding para este
-          tipo de entrada o consulta `aeat app modelo casillas` para identificar la
-          casilla numérica correcta.'
+        casilla_non_numeric_data_type: La casilla {key} ("{label}") tiene tipo de
+          dato {data_type} y no acepta valores decimales directos. Usa --binding para
+          este tipo de entrada o consulta `aeat app modelo casillas` para identificar
+          la casilla numérica correcta.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         create_created: Nueva unidad de trabajo creada.
         create_help: Crear o reutilizar una unidad de trabajo para (modelo, ejercicio,
@@ -925,6 +929,9 @@ cli:
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
+        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
+          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
+        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
         runs_help: Listar las ejecuciones de flujo persistidas con sus ids de ejecución,
@@ -944,9 +951,6 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
-        revision_year_mismatch: La revisión %{revision} del modelo %{modelo} no cubre
-          el ejercicio %{filing_year}. Revisiones aplicables a ese ejercicio%{applicable}.
-        revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
   common:
     errors:
       invalid_iso_date: Formato de fecha inválido. Se requiere ISO 8601 (AAAA-MM-DD)
@@ -3000,11 +3004,11 @@ filing:
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
   errors:
-    foral_regime: 'Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente
+    foral_regime: Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente
       bajo el Concierto Económico (Ley 12/2002), no ante la AEAT. Este CLI no modela
       declaraciones forales. Consulte sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
       (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es (Navarra) según su
-      territorio.'
+      territorio.
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
   keys:
     description: Profile configuration keys and their descriptions
