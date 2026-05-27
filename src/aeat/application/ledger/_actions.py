@@ -1089,6 +1089,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
+        source_jurisdiction=transaction.source_jurisdiction,
     )
 
 
@@ -1121,6 +1122,7 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         lifecycle_state=transaction.lifecycle_state.value,
         review_status=ledger_transaction_review_status(transaction),
         classified_by=transaction.classified_by,
+        source_jurisdiction=transaction.source_jurisdiction,
     )
 
 
