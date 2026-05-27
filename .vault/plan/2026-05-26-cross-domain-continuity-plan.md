@@ -304,14 +304,14 @@ Design and implement a bundled-export schema that carries work units calculation
 - [x] `W06.P28.S106` - implement bundled deserializer with provenance preservation; `src/aeat/application/user_profile/`.
 - [x] `W06.P28.S107` - real-CLI roundtrip test export non-trivial profile and re-import to fresh storage root every artefact survives; `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`.
 - [x] `W06.P28.S260` - author profile-portability ADR formalising the bundle decision space; `strip encrypted material refuse-on-profile-id-collision schema-version 2 bump typed-pydantic-throughout; cite the W75 grounding section as research basis; required before S104 implementation lands; `.vault/adr/`.
-- [ ] `W06.P28.S277` - Annotate merged dict in _import_ledger_transactions as dict[str, Transaction] (or extract upsert_transaction helper); resolves D3 inconsistency noted in FU-S104-A; `src/aeat/application/user_profile/_bundle.py`.
+- [ ] `W06.P28.S277` - Annotate merged dict in _import_ledger_transactions as dict[str, Transaction] (or extract upsert_transaction helper); `resolves D3 inconsistency noted in FU-S104-A; `src/aeat/application/user_profile/_bundle.py`.
 
 ### Phase `W06.P29` - idempotent import
 
 Add an idempotency mode that respects the bundle profile_id when no local profile of that id exists.
 
 - [x] `W06.P29.S108` - add idempotency mode that respects bundle profile_id when no local profile of that id exists and refuses or upserts when one does; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W06.P29.S109` - regression test re-importing same bundle twice produces one profile not two; `src/aeat/entrypoints/cli/test_profile_import_idempotency.py`.
+- [x] `W06.P29.S109` - regression test re-importing same bundle twice produces one profile not two; `src/aeat/entrypoints/cli/test_profile_import_idempotency.py`.
 
 ### Phase `W06.P30` - Wave-6 review and persona re-run BREAKPOINT
 
