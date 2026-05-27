@@ -67,6 +67,19 @@ class ManualLedgerTransactionCommand(BaseModel):
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
     classified_by_override: str | None = None
+    source_jurisdiction: str | None = None
+
+    @field_validator("source_jurisdiction")
+    @classmethod
+    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalised = value.strip()
+        if len(normalised) != 2 or not normalised.isalpha() or normalised != normalised.upper():
+            raise ValueError(
+                "source_jurisdiction must be a two-letter ISO 3166-1 alpha-2 uppercase code"
+            )
+        return normalised
 
     @field_validator(
         "bucket_id",
@@ -193,6 +206,14 @@ class ManualLedgerTransactionPatch(BaseModel):
     notes: str | None = None
     iva_category: IvaCategory | None = None
     counterparty_eu_member_state: EUMemberState | None = None
+    source_jurisdiction: str | None = None
+
+    @field_validator("source_jurisdiction")
+    @classmethod
+    def _validate_source_jurisdiction(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return ManualLedgerTransactionCommand._validate_source_jurisdiction(value)
 
     @field_validator(
         "counterparty",

@@ -357,6 +357,11 @@ def ledger_add(
         "--idempotency-key",
         help=tr("cli.ledger.add.idempotency_key_help"),
     ),
+    source_jurisdiction: str | None = typer.Option(
+        None,
+        "--source-jurisdiction",
+        help=tr("cli.ledger.add.source_jurisdiction_help"),
+    ),
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
     current_state = _state()
@@ -393,6 +398,7 @@ def ledger_add(
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command="aeat app ledger add",
             idempotency_key=idempotency_key,
+            source_jurisdiction=source_jurisdiction,
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
