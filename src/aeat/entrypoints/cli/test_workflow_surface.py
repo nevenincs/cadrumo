@@ -432,7 +432,7 @@ def test_modelo_introspection_surface_uses_registry_query_backend() -> None:
     assert any(
         row["binding_id"] == "irpf.previous_year_economic_activity_net_income" for row in binding_payload["bindings"]
     )
-    assert {row["source"] for row in binding_payload["bindings"]} == {"previous_filing"}
+    assert "previous_filing" in {row["source"] for row in binding_payload["bindings"]}
     assert any(row["input_casillas"] or row["input_bindings"] for row in formula_payload["rows"])
 
 

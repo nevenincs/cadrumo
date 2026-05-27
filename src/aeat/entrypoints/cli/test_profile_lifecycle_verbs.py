@@ -18,23 +18,31 @@ from aeat.adapters.persistence.storage.bucket._manifest import (
     ManifestKdfParams,
 )
 from aeat.adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest, write_manifest
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import load_settings
 from aeat.entrypoints.cli import app as root_app
 from aeat.entrypoints.cli._config import profile_app, repair_app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
-    """Stage a bucket directory + manifest with no secure record.
+    """Stage a ``missing_profile_record`` torn-bucket state under a real key.
 
     A bucket directory and plaintext manifest with no encrypted
     profile-value row is exactly the ``missing_profile_record`` torn
     state these CLI verbs must detect; this helper materialises that
     state directly through the bucket-layout primitives, since
     ``ProfileRepository`` always writes the record alongside.
+
+    Unlike the unsecured-backend version, this implementation uses
+    ``profile_create_storage_span`` to provision real key material for
+    the bucket so the CLI can open a ``profile_storage_session`` and
+    reach the point where the missing record is detected. Without key
+    material the session open fails before the torn state is observable.
     """
 
     root = load_settings().aeat_local_storage_root
@@ -60,23 +68,24 @@ def _stage_bucket_manifest(bucket_id: str, *, label: str) -> None:
             status=BucketLifecycleStatus.ACTIVE,
         ),
     )
+    # Provision the master key for the staged bucket so CLI commands can
+    # open a session and reach the profile-record-missing detection point.
+    # Clear the active-profile pointer after provisioning so the staged
+    # profile is not reported as the active one; the torn-state tests
+    # specifically test non-active torn profiles.
+    from aeat.application.user_profile._orchestration import logout_active_profile
+
+    with profile_create_storage_span(bucket_id):
+        pass
+    logout_active_profile()
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from aeat.adapters.persistence.storage import get_master_key_provider
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'profile-verbs.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        with get_master_key_provider():
-            yield
-    finally:
-        dispose_engine()
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
+    # profile_create_storage_span (called inside _seed) resolves the
+    # file-backed master-key provider provisioned by this fixture.
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 @pytest.fixture
@@ -89,10 +98,25 @@ def _seed(name: str = "default", *, tax_id: str | None = None) -> None:
     # default so two ``_seed`` calls never collide on the
     # duplicate-tax-id refusal; a test that asserts a specific tax id
     # passes it explicitly.
+    #
+    # profile_create_storage_span provisions key material for the named
+    # bucket and activates a real session so the profile lifecycle service
+    # can resolve the file-backed secure-object repository.
+    #
+    # enforce_unique_tax_id=False avoids the cross-bucket scan: in
+    # per-bucket-storage mode each profile's encrypted record lives in
+    # its own SQLite file, so loading another bucket's record while a
+    # different session is active would fail. Matches the CLI path.
     overrides = {"identity.tax_id": tax_id} if tax_id is not None else None
-    workflow_state_repository().update(
-        lambda state: register_minimal_profile(state, profile_id=name, overrides=overrides)
-    )
+    with profile_create_storage_span(name):
+        workflow_state_repository().update(
+            lambda state: register_minimal_profile(
+                state,
+                profile_id=name,
+                overrides=overrides,
+                enforce_unique_tax_id=False,
+            )
+        )
 
 
 def _json_payload(result: Result) -> dict[str, object]:
@@ -632,25 +656,19 @@ def test_config_profile_create_nif_error_does_not_leak_internal_keys(cli_runner:
 
 
 @pytest.fixture
-def _per_bucket_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
+def _per_bucket_backend(tmp_path: Path) -> Iterator[Path]:
     """Per-bucket storage (no global AEAT_DATABASE_URL).
 
     Each profile bucket resolves its own SQLite file from the
     active-profile pointer chain, the production cold-start path.
-    Tests using this fixture must NOT also rely on the autouse
-    ``_isolated_backend`` fixture that hard-wires ``AEAT_DATABASE_URL``.
+    The autouse ``_isolated_backend`` fixture runs first and installs
+    an empty isolated_profile_storage_root; this fixture layers on
+    top by yielding the same tmp_path storage root so callers can
+    use _create_via_cli.
     """
-    from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-
-    monkeypatch.delenv("AEAT_DATABASE_URL", raising=False)
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path))
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    dispose_engine()
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+    # _isolated_backend's isolated_profile_storage_root already set
+    # aeat_local_storage_root to tmp_path / "aeat-storage".
+    yield load_settings().aeat_local_storage_root
 
 
 _NIF_CONTROL_LETTERS = "TRWAGMYFPDXBNJZSQVHLCKE"

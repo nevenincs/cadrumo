@@ -18,28 +18,16 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    try:
-        yield tmp_path
-    finally:
-        dispose_engine()
+def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _create_profile() -> None:
@@ -88,18 +76,26 @@ def test_work_verify_accepts_modelo_202_pago_fraccionado_periods(period: str) ->
     work_unit_id = _create_202_work_unit(period)
 
     # First calculate to produce a draft revision the verify step can inspect.
+    # Supply prior-period payments as 0 — the test checks period-token wiring,
+    # not the calculated amounts.
     calc_result = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+        [
+            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
+            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+        ],
     )
     assert calc_result.exit_code == 0, calc_result.output
     assert "cannot map workflow period" not in calc_result.output
     assert "invalid registry period" not in calc_result.output
+    calculation_revision_id = json.loads(calc_result.output)["calculation_revision_id"]
 
-    # verify must accept the same period token without crashing.
+    # verify must accept the same period token without crashing — exit code 0
+    # (fully verified) or 1 (incomplete) are both acceptable; exit code 2
+    # indicates a CLI/period-mapping error, which is what the regression tested.
     verify_result = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "verify", work_unit_id],
+        ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
     )
-    assert verify_result.exit_code == 0, verify_result.output
+    assert verify_result.exit_code in (0, 1), verify_result.output
     assert "cannot map workflow period" not in verify_result.output
     assert "invalid registry period" not in verify_result.output
 
@@ -118,9 +114,17 @@ def test_create_calculate_verify_agree_on_period_token(period: str) -> None:
     work_unit_id = _create_202_work_unit(period)
 
     calc_result = invoke_cached_cli(
-        ["--format", "json", "app", "modelo", "work", "calculate", work_unit_id],
+        [
+            "--format", "json", "app", "modelo", "work", "calculate", work_unit_id,
+            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+        ],
     )
     assert calc_result.exit_code == 0, calc_result.output
-    calc_payload = json.loads(calc_result.output)
+    # Confirm the period token is preserved on the work unit record itself.
+    status_result = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "status", work_unit_id],
+    )
+    assert status_result.exit_code == 0, status_result.output
+    status_payload = json.loads(status_result.output)
     # The work unit period token is preserved end-to-end.
-    assert calc_payload.get("period") == period, calc_payload
+    assert status_payload.get("period") == period, status_payload

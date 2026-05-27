@@ -261,6 +261,7 @@ def modelo_readiness(
         f"revision_id\t{revision_id}",
         f"filing_year\t{filing_year}",
         f"period\t{period or ''}",
+        "readiness_scope\tprofile_and_source_preflight_not_manual_casilla_completeness",
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
         f"missing\t{len(report.missing)}",
@@ -392,6 +393,7 @@ _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
     "ledger_iva_aggregation": "ledger source",
     "ledger_oss_aggregation": "ledger source",
     "ledger_renta_expense_aggregation": "ledger source",
+    "profile": "profile fact",
     "profile_fact": "profile fact",
     "bucket_state": "bucket",
     "waiver": "waiver",
@@ -1233,6 +1235,7 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 _MISSING_INPUT_TRANSLATED_MESSAGES: frozenset[str] = frozenset(
     {
         "errors.calc.binding_value_missing",
+        "errors.calc.bound_casilla_binding_value_missing",
         "errors.calc.enum_binding_value_missing",
         "errors.calc.relation_value_missing",
     }
