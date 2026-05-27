@@ -636,6 +636,18 @@ cli:
         period_help: cli.app.modelo.work.period_help
         period_token_invalid: cli.app.modelo.work.period_token_invalid
         period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
+        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta nem
+          támogatott ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes
+          mezőszám deklarálva. Használja a --casilla opciót az értékek közvetlen
+          megadásához.'
+        prestacion_inss_exenta_help: Az SZJA alól mentes anyasági/apasági INSS-járadék
+          teljes összege (Art. 7.h LIRPF). A revízióhoz tartozó mentességi mezőbe
+          kerül rögzítésre, és levonásra kerül a számítható jövedelmek összesítéséből.
+          Adja meg a Társadalombiztosítástól (Seguridad Social) kapott bruttó
+          anyasági vagy apasági táppénz összegét. NE adja meg a --casilla 0003
+          (Retribuciones dinerarias) opcióban.
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének
+          decimálisnak kell lennie; a kapott érték: {value}.'
         reason_help: cli.app.modelo.work.reason_help
         relation_help: cli.app.modelo.work.relation_help
         relation_not_decimal: cli.app.modelo.work.relation_not_decimal
@@ -649,18 +661,18 @@ cli:
         revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
         revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
         revisions_help: cli.app.modelo.work.revisions_help
-        row_empty_key: 'Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
-          formátumúnak kell lennie.'
+        row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
+          formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
         row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz.
           Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor)
-          vagy ''vinculada'' (M232 kapcsolt fél). Több sor megadásához ismételje. M184
-          példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M232 példa:
-          --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
-        row_kv_format_error: 'A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
-          lennie.'
-        row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének pontosan
-          100%-nak kell lennie; {count} sorból {total} jött ki.'
+          vagy ''vinculada'' (M232 kapcsolt fél). Több sor megadásához ismételje.
+          M184 példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          M232 példa: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+        row_kv_format_error: A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
+          lennie.
+        row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének
+          pontosan 100%-nak kell lennie; {count} sorból {total} jött ki.'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
@@ -2149,6 +2161,9 @@ wizard:
     flags:
       activity:
         help: wizard.setup.flags.activity.help
+      descendiente:
+        help: 'Leszármazott adatai az Art. 58 LIRPF személyi adóalap-minimum számításhoz
+          (ismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       incn-prior-12-months:
         help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR küszöb
           felett a 202-es modell a LIS 40.3 cikk szerinti módozatot írja elő; alatta

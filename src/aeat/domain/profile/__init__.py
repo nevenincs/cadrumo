@@ -25,7 +25,7 @@ from ._keys import (
 )
 from ._normalise import normalise_key
 from ._renta_codes import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
-from .family import RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
+from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 if TYPE_CHECKING:
     # ``PROFILE_KEYS`` is defined lazily via ``__getattr__`` below so the
@@ -148,6 +148,7 @@ def _normalize_region_token(raw: str) -> str:
 __all__ = [
     "CCAA",
     "PROFILE_KEYS",
+    "DescendantInfo",
     "ForalRegimeError",
     "ProfileKey",
     "ProfileKeyRequirement",
