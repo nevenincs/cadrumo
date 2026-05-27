@@ -2313,6 +2313,14 @@ _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
     r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$"
 )
+# implies_nonzero(["antecedent_id", "consequent_id"]) — material implication
+# with a strictly-positive antecedent test: predicate holds iff antecedent
+# is <= 0 OR consequent is non-zero. Authored for AEAT cuota-mínima
+# invariants of the shape "cuando C01 sea positivo, C07 debe ser distinta
+# de cero" (M131 EO cuota mínima, M130/M303 régimen simplificado analogues).
+_PREDICATE_IMPLIES_NONZERO = _re.compile(
+    r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$"
+)
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
@@ -2337,13 +2345,22 @@ def _evaluate_predicate_expression(
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
 
-    Supports the W04 DSL subset:
+    Supports the DSL operators registered in
+    :data:`aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS`:
 
     - ``all_nonzero(["id1", "id2", ...])`` — all ids must have a non-zero value.
     - ``any_nonzero(["id1", "id2", ...])`` — at least one id must have a non-zero value.
+    - ``cap_le_when_positive(["limited_id", "ceiling_id"])`` — when the ceiling
+      casilla is strictly positive, the limited casilla MUST NOT exceed it.
+    - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
+      implication with strictly-positive antecedent: predicate holds iff
+      antecedent <= 0 OR consequent != 0.
 
-    An expression that does not match either pattern is treated as
-    holding (i.e. unknown predicates do not block the operator).
+    An expression that does not match any registered pattern is treated as
+    holding (i.e. unknown predicates do not block the operator). The
+    authoring-time validator in
+    :mod:`aeat.domain.calculations.registry._validate_surfaces` is the gate
+    against typos reaching this branch.
     """
     expr = expression.strip()
 
@@ -2374,6 +2391,31 @@ def _evaluate_predicate_expression(
             return True
         limited = casilla_values.get(limited_id, Decimal(0))
         return limited <= ceiling
+
+    m = _PREDICATE_IMPLIES_NONZERO.match(expr)
+    if m:
+        # implies_nonzero(["antecedent_id", "consequent_id"]) — material
+        # implication "antecedent strictly positive → consequent non-zero".
+        # Predicate holds (returns True) when:
+        #   - the expression is malformed (defensive — same shape as
+        #     cap_le_when_positive),
+        #   - the antecedent is <= 0 (implication trivially holds with
+        #     non-positive antecedent — mirrors AEAT phrasing "cuando C01
+        #     sea positivo"),
+        #   - or the consequent is non-zero.
+        # The violation case (returns False) is "antecedent strictly
+        # positive AND consequent == 0". A missing consequent reads as
+        # Decimal(0) via the .get default — same convention as the other
+        # operators.
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return True
+        antecedent_id, consequent_id = ids[0], ids[1]
+        antecedent = casilla_values.get(antecedent_id, Decimal(0))
+        if antecedent <= Decimal(0):
+            return True
+        consequent = casilla_values.get(consequent_id, Decimal(0))
+        return consequent != Decimal(0)
 
     return True
 
