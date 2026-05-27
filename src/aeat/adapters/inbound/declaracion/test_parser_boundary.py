@@ -30,6 +30,8 @@ _REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "20
 _MODELO_840_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "840" / "2024-0A.pdf"
 _MODELO_036_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "036" / "2025-0A.pdf"
 _MODELO_180_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
+_MODELO_123_2024_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "123" / "2024-1T.pdf"
+_MODELO_123_2023_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "123" / "2023-1T.pdf"
 _MODELO_369_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "369" / "2024-1T.pdf"
 _MODELO_720_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "720" / "2024-0A.pdf"
 _MODELO_347_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "347" / "2024-0A.pdf"
@@ -37,6 +39,8 @@ _MODELO_232_2016_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "232" / "2
 _MODELO_232_2018_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "232" / "2018-0A.pdf"
 _MODELO_193_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "193" / "2024-0A.pdf"
 _MODELO_184_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "184" / "2024-0A.pdf"
+_MODELO_115_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "115" / "2024-1T.pdf"
+_MODELO_131_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
 _MODELO_130_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 20))
 _MODELO_111_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 31))
 _MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 15))
@@ -384,6 +388,156 @@ def test_parser_extracts_modelo_123_historical_registry_profile_targets_from_pdf
     assert filing.period == "4T"
     assert filing.tax_id == "00000000T"
     assert {value.casilla_id: value.printed_value for value in filing.values} == values
+
+
+def test_parser_extracts_modelo_123_2024_corpus_round_trip() -> None:
+    """Round-trip: parse the committed M123 2024-y-siguientes synthetic fixture.
+
+    Ground truth is the AEAT-published Diseño de Registro Modelo 123 v20 available at:
+      https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
+        DR_100_199/archivos/DR123v20.xlsx
+    (source_ref: aeat-dr-123-2024-v20; legal authority: Orden HAC/56/2024)
+
+    Layout verdict (LINE-START box numbers):
+    The M123 2024 autoliquidacion is a simple sequential single-page form.  Each
+    casilla row prints the two-digit box number at LINE START followed by the amount
+    on the same line.  The numeric_casilla match strategy is valid for this form.
+    This is the opposite of M111/M130 where multi-column table structure places box
+    numbers at line END.
+
+    The fixture encodes synthetic amounts satisfying all 5 registry formulas:
+      [03] = [01] + [02] = 5,00 + 3,00 = 8,00
+      [06] = [04] + [05] = 10.000,00 + 5.000,00 = 15.000,00
+      [09] = [07] + [08] = 1.900,00 + 950,00 = 2.850,00
+      [12] = [09] + [11] = 2.850,00 + 0,00 = 2.850,00
+      [14] = [12] - [13] = 2.850,00 - 0,00 = 2.850,00
+
+    Ground truth values are derived from the fixture data in _generate.py (not
+    re-computed from the registry formula), so a formula change that breaks the
+    arithmetic constraint would surface as a test failure here.
+
+    Non-tautology: the numeric_casilla regex anchors on the printed box number at
+    line start.  If the fixture moved box numbers to line end the parse would fail
+    with coverage=0.  If the registry profile casilla IDs changed the fixture
+    would no longer match.
+    """
+    filing = parse_declaracion(
+        _MODELO_123_2024_SYNTHETIC_FIXTURE,
+        modelo_override="123",
+        año_override=2024,
+        period_override="1T",
+    )
+
+    assert filing.modelo == "123"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "123"
+    assert filing.registry_snapshot_ref.revision_id == "2024-y-siguientes"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # All 14 casillas defined by the 2024+ declaracion_pdf profile must be present.
+    assert set(values.keys()) == {str(i).zfill(2) for i in range(1, 15)}, (
+        f"expected exactly the 14 M123 2024+ profile casillas, got {set(values.keys())!r}"
+    )
+
+    # Ground truth: fixture amounts from _generate.py _MODELO_123_2024_CASILLAS.
+    # Integer casillas (01-03) stored as comma-format, parse_spanish_decimal returns Decimal.
+    assert values["01"] == Decimal("5.00"), f"casilla 01: expected Decimal('5.00'), got {values['01']!r}"
+    assert values["02"] == Decimal("3.00"), f"casilla 02: expected Decimal('3.00'), got {values['02']!r}"
+    assert values["03"] == Decimal("8.00"), f"casilla 03: expected Decimal('8.00'), got {values['03']!r}"
+    assert values["04"] == Decimal("10000.00"), f"casilla 04: expected Decimal('10000.00'), got {values['04']!r}"
+    assert values["05"] == Decimal("5000.00"), f"casilla 05: expected Decimal('5000.00'), got {values['05']!r}"
+    assert values["06"] == Decimal("15000.00"), f"casilla 06: expected Decimal('15000.00'), got {values['06']!r}"
+    assert values["07"] == Decimal("1900.00"), f"casilla 07: expected Decimal('1900.00'), got {values['07']!r}"
+    assert values["08"] == Decimal("950.00"), f"casilla 08: expected Decimal('950.00'), got {values['08']!r}"
+    assert values["09"] == Decimal("2850.00"), f"casilla 09: expected Decimal('2850.00'), got {values['09']!r}"
+    assert values["10"] == Decimal("0.00"), f"casilla 10: expected Decimal('0.00'), got {values['10']!r}"
+    assert values["11"] == Decimal("0.00"), f"casilla 11: expected Decimal('0.00'), got {values['11']!r}"
+    assert values["12"] == Decimal("2850.00"), f"casilla 12: expected Decimal('2850.00'), got {values['12']!r}"
+    assert values["13"] == Decimal("0.00"), f"casilla 13: expected Decimal('0.00'), got {values['13']!r}"
+    assert values["14"] == Decimal("2850.00"), f"casilla 14: expected Decimal('2850.00'), got {values['14']!r}"
+
+
+def test_parser_extracts_modelo_123_2023_legacy_corpus_round_trip() -> None:
+    """Round-trip: parse the committed M123 2019-2023 legacy revision synthetic fixture.
+
+    Ground truth is the AEAT-published Orden EHA/3435/2007 and the Diseño de Registro
+    Modelo 123 v13 (source_ref: aeat-dr-123-2019-2023-v13).
+
+    Layout verdict (LINE-START box numbers):
+    The 2019-2023 form is structurally identical to the 2024+ form: simple sequential
+    single-page autoliquidacion with box numbers at line start.  The numeric_casilla
+    strategy is valid for both revisions.
+
+    The 2019-2023 registry revision uses internal casilla IDs with the -legacy suffix
+    (e.g. "01-legacy") to disambiguate them from the 2024+ plain IDs.  The
+    numeric_casilla regex uses re.escape(casilla_id), so the fixture must print
+    "01-legacy  4,00" etc. at line start for the regex to match.
+
+    The fixture encodes synthetic amounts satisfying both registry formulas:
+      [06] = [03] + [05] = 1.520,00 + 0,00 = 1.520,00
+      [08] = [06] - [07] = 1.520,00 - 0,00 = 1.520,00
+
+    Ground truth values are derived from the fixture data in _generate.py
+    _MODELO_123_2023_LEGACY_CASILLAS — not re-computed from the registry formula.
+
+    Non-tautology: a fixture that printed plain "01  4,00" (without -legacy) would
+    produce coverage=0 for the 2019-2023 profile because the regex expects "01-legacy".
+    The test therefore verifies the exact ID-to-printed-text mapping convention used
+    for legacy casilla IDs.
+    """
+    filing = parse_declaracion(
+        _MODELO_123_2023_SYNTHETIC_FIXTURE,
+        modelo_override="123",
+        año_override=2023,
+        period_override="1T",
+    )
+
+    assert filing.modelo == "123"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "123"
+    assert filing.registry_snapshot_ref.revision_id == "2019-2023"
+    assert filing.registry_snapshot_ref.modelo_year == 2023
+    assert filing.registry_snapshot_ref.period == "1T"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # All 8 casillas defined by the 2019-2023 declaracion_pdf profile must be present.
+    assert set(values.keys()) == {f"{i:02d}-legacy" for i in range(1, 9)}, (
+        f"expected exactly the 8 M123 legacy profile casillas, got {set(values.keys())!r}"
+    )
+
+    # Ground truth: fixture amounts from _generate.py _MODELO_123_2023_LEGACY_CASILLAS.
+    assert values["01-legacy"] == Decimal("4.00"), (
+        f"casilla 01-legacy: expected Decimal('4.00'), got {values['01-legacy']!r}"
+    )
+    assert values["02-legacy"] == Decimal("8000.00"), (
+        f"casilla 02-legacy: expected Decimal('8000.00'), got {values['02-legacy']!r}"
+    )
+    assert values["03-legacy"] == Decimal("1520.00"), (
+        f"casilla 03-legacy: expected Decimal('1520.00'), got {values['03-legacy']!r}"
+    )
+    assert values["04-legacy"] == Decimal("0.00"), (
+        f"casilla 04-legacy: expected Decimal('0.00'), got {values['04-legacy']!r}"
+    )
+    assert values["05-legacy"] == Decimal("0.00"), (
+        f"casilla 05-legacy: expected Decimal('0.00'), got {values['05-legacy']!r}"
+    )
+    assert values["06-legacy"] == Decimal("1520.00"), (
+        f"casilla 06-legacy: expected Decimal('1520.00'), got {values['06-legacy']!r}"
+    )
+    assert values["07-legacy"] == Decimal("0.00"), (
+        f"casilla 07-legacy: expected Decimal('0.00'), got {values['07-legacy']!r}"
+    )
+    assert values["08-legacy"] == Decimal("1520.00"), (
+        f"casilla 08-legacy: expected Decimal('1520.00'), got {values['08-legacy']!r}"
+    )
 
 
 def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy() -> None:
@@ -1548,6 +1702,97 @@ def test_parser_extracts_modelo_347_synthetic_fixture_targets() -> None:
     assert values["decl.ejercicio"] == Decimal("2024"), (
         f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, "
         f"got {values['decl.ejercicio']!r}"
+    )
+
+
+def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M115 synthetic fixture and verify all five casillas.
+
+    Ground truth for the label patterns is the AEAT-published Diseno de Registro (DR) XLS:
+      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_115/files/
+        01-115-orden-eha-3435-2007-ejercicios-2019-y-siguientes-actualizado-febrero-2019-172-kb-xls.xls
+    Sheet "DR 11501", rows 16-20 (field descriptions, Windows-1252 decoded):
+      row 16: "Retenciones e ingresos a cuenta. Numero perceptores [01]"
+      row 17: "Retenciones e ingresos a cuenta. Base retenciones e ingresos a cuenta [02]"
+      row 18: "Retenciones e ingresos a cuenta. Retenciones e ingresos a cuenta [03]"
+      row 19: "Retenciones e ingresos a cuenta. Resultado anteriores declaraciones [04]"
+      row 20: "Retenciones e ingresos a cuenta. Resultado a ingresar [03] - [04]"
+
+    Layout verdict: M115 printed form uses the same two-column table layout as M111
+    (box numbers at LINE-END, not LINE-START).  The profile is converted to named_label
+    using the sub-label text after "Retenciones e ingresos a cuenta. ".
+
+    Fixture values:
+      01 (perceptores): 3       — parse_spanish_decimal("3") = Decimal("3")
+      02 (base):        12.000,00 — Decimal("12000.00")
+      03 (retenciones): 2.280,00  — Decimal("2280.00")
+      04 (anteriores):  0,00      — Decimal("0.00")
+      05 (resultado):   2.280,00  — Decimal("2280.00")
+
+    Ground truth: values are read from the printed fixture lines, not re-run from the
+    registry formula.  The 19% retencion rate (2280 = 12000 * 0.19) is consistent with
+    Art. 100 RIRPF but the fixture is grounded on the DR sub-label vocabulary, not on
+    a numeric calculation.
+
+    Non-tautological: the label_patterns are grounded against the DR XLS field
+    descriptions — NOT the registry casilla label fields.  A pattern that drifts from
+    the DR sub-label vocabulary will produce a zero-match parse failure on this fixture.
+    """
+    filing = parse_declaracion(
+        _MODELO_115_SYNTHETIC_FIXTURE,
+        modelo_override="115",
+        año_override=2024,
+        period_override="1T",
+    )
+
+    assert filing.modelo == "115"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "115"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # All five casillas defined by the M115 declaracion_pdf profile must be present.
+    assert set(values.keys()) == {"01", "02", "03", "04", "05"}, (
+        f"expected exactly {{01, 02, 03, 04, 05}}, got {set(values.keys())!r}"
+    )
+
+    # casilla 01 (perceptores): fixture prints "Numero de perceptores 3";
+    # parse_spanish_decimal("3") = Decimal("3").
+    # Ground truth: DR XLS row 16 sub-label "Numero perceptores".
+    assert values["01"] == Decimal("3"), (
+        f"casilla '01': expected Decimal('3'), got {values['01']!r}"
+    )
+
+    # casilla 02 (base): fixture prints "Base de retenciones e ingresos a cuenta 12.000,00";
+    # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
+    # Ground truth: DR XLS row 17 sub-label "Base retenciones e ingresos a cuenta".
+    assert values["02"] == Decimal("12000.00"), (
+        f"casilla '02': expected Decimal('12000.00'), got {values['02']!r}"
+    )
+
+    # casilla 03 (retenciones): fixture prints "Retenciones e ingresos a cuenta 2.280,00";
+    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
+    # Ground truth: DR XLS row 18 sub-label "Retenciones e ingresos a cuenta".
+    assert values["03"] == Decimal("2280.00"), (
+        f"casilla '03': expected Decimal('2280.00'), got {values['03']!r}"
+    )
+
+    # casilla 04 (anteriores): fixture prints "Resultado de anteriores declaraciones 0,00";
+    # parse_spanish_decimal("0,00") = Decimal("0.00").
+    # Ground truth: DR XLS row 19 sub-label "Resultado anteriores declaraciones".
+    assert values["04"] == Decimal("0.00"), (
+        f"casilla '04': expected Decimal('0.00'), got {values['04']!r}"
+    )
+
+    # casilla 05 (resultado): fixture prints "Resultado a ingresar 2.280,00";
+    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
+    # Ground truth: DR XLS row 20 sub-label "Resultado a ingresar".
+    assert values["05"] == Decimal("2280.00"), (
+        f"casilla '05': expected Decimal('2280.00'), got {values['05']!r}"
     )
 
 
