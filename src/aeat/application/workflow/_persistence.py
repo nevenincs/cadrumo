@@ -15,9 +15,10 @@ from ...adapters.persistence.storage.errors import (
     SecretStoreError,
     StorageError,
 )
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.classification import SensitivityClass
-from ...core.config import Settings
+from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import WorkflowError
@@ -54,7 +55,7 @@ class WorkflowStateRepository:
         objects: SecureObjectRepository | None = None,
         emit_reset: Callable[..., object] = emit_workflow_state_reset,
     ) -> None:
-        self._objects = objects if objects is not None else SecureObjectRepository()
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
         # Injectable so the emit-first ordering contract in
         # reset_workflow_state can be exercised with a real failing
         # emitter — no module monkeypatching. Mirrors the injectable
@@ -248,7 +249,7 @@ class WorkflowRunRepository:
     """Encrypted SQL object repository for :class:`WorkflowResult` runs."""
 
     def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects if objects is not None else secure_object_repository_for_active_bucket()
 
     def save(self, result: WorkflowResult, *, runs_dir: Path | None = None) -> Path:
         """Persist one workflow result in the secure object backend."""
@@ -317,36 +318,24 @@ class WorkflowRunRepository:
 def workflow_state_repository() -> WorkflowStateRepository:
     """Return the repository bound to the active-bucket database.
 
-    When an active profile bucket is present the repository is backed by
-    the bucket's own encrypted database, resolved through
+    When an active profile bucket is present, the repository is backed by
+    the bucket's own encrypted database resolved through
     :func:`~aeat.adapters.persistence.storage.runtime_repository.secure_object_repository_for_active_bucket`
     so the URL is derived from the live bucket path rather than the
     settings-override snapshot captured at test-fixture construction
-    time. When no bucket is active the bare :class:`SecureObjectRepository`
-    default is used (it will open the fallback database, consistent with
-    the pre-active-profile bootstrap stage).
+    time. A cold root with no active bucket pointer is the bootstrap
+    exception: it receives an explicit bare :class:`SecureObjectRepository`
+    so bootstrap-exempt recovery reads can still observe an absent state.
     """
 
-    from ...adapters.persistence.storage.runtime_repository import (
-        secure_object_repository_for_active_bucket,
-    )
     from ...core._bucket_pointer_io import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return WorkflowStateRepository()
-    try:
-        objects = secure_object_repository_for_active_bucket()
-    except Exception:
-        # If the bucket repository cannot be opened (e.g. session not yet
-        # established during bootstrap), fall back to the bare repository
-        # so callers that only need an absent-state result still succeed.
-        _logger.debug(
-            "workflow_state_repository: bucket repo unavailable, falling back to default",
-            exc_info=True,
-        )
-        return WorkflowStateRepository()
-    return WorkflowStateRepository(objects=objects)
+        if classify_storage_route(load_settings()).kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
+            return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
+        return WorkflowStateRepository(objects=SecureObjectRepository())
+    return WorkflowStateRepository(objects=secure_object_repository_for_active_bucket())
 
 
 def reset_workflow_state(
