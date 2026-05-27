@@ -2227,7 +2227,7 @@ errors:
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
-    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que

@@ -1587,7 +1587,7 @@ errors:
     auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
   calc:
     binding_value_missing: errors.calc.binding_value_missing
-    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_binding_value_missing: A(z) {binding_id} kötés értéke nincs megadva.
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window
