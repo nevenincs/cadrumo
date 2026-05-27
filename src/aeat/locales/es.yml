@@ -3730,8 +3730,6 @@ wizard:
             label: Inglés
           es:
             label: Español
-          eu:
-            label: Euskera
           hu:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil

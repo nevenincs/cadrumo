@@ -23,7 +23,7 @@ from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
-SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu", "eu", "fr", "ar")
+SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
