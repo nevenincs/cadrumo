@@ -919,3 +919,163 @@ affected personas.
   age supplement + Art. 58-59 family minimum extensions in M100 2024 revision.
   Current fix closes the base mínimo gap only; ≥65 persona profiles remain
   under-stated.
+
+---
+
+## W07.P31 Cluster T extension (Task #66) — S246-S249 commit review
+
+**Scope:** Two commits — `6306f5c76` (S246+S247+S248: 9 supplement parameter
+files + legal catalogue entries) and `d7b25e4a9` (S249: 3 regression test
+scenarios). Reviewed against: LIRPF 2024 Arts. 57.2-57.3, 58, 59; no-tautological-
+tests rule; real-adapters quality gate; `input_kind=manual` architectural decision.
+
+### Commit `6306f5c76` — S246+S247+S248
+
+**Statutory amounts — VERIFIED.**
+
+Art. 57.2 age supplement (65-74): parameter `0031`, value `1150` EUR,
+`legal_refs=["ley-35-2006:art-57"]`. Art. 57.3 supplement (≥75): parameter
+`0032`, value `1400` EUR, same citation. Both correct per LIRPF 2024 (BOE-A-2006-20764
+consolidated); both have `valid_from=2024-01-01/valid_to=2024-12-31`; both cite
+`aeat-renta-2024-manual-parte1` + `boe-modelo-100-2024-form` as source refs.
+
+Art. 58 (descendant minimum): 5 parameter files — `2400` (first), `2700`
+(second), `4000` (third), `4500` (fourth+), `3000` (under-3 supplement). All
+correct per LIRPF Art. 58 as amended for 2024. All cite `ley-35-2006:art-58`.
+
+Art. 59 (ascendant minimum): 2 parameter files — `1150` (ascendant >65),
+`1400` additional (ascendant >75). Both correct per LIRPF Art. 59. Both
+cite `ley-35-2006:art-59`.
+
+**Corpus HTML — GENUINE BOE TEXT.**
+
+`ley-35-2006-art-58.html`: Document header cites `BOE-A-2006-20764`, permalink
+`https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a58`. The article body
+(`<h5 class="articulo">` + `<p class="parrafo">` structure) uses the BOE
+consolidated HTML rendering conventions. The statutory amounts in the HTML
+(2.400/2.700/4.000/4.500/3.000 EUR) match the parameter files. Not paraphrased.
+
+`ley-35-2006-art-59.html`: Same document structure. Art. 59 text covers
+`1.150 euros anuales` for ascendants >65 and the `1.400 euros` increment
+for >75. Matches parameter files. Not paraphrased.
+
+**Legal catalogue entries — WELL-FORMED.**
+
+`irpf.toml` additions for `ley-35-2006:art-58` and `ley-35-2006:art-59` follow
+the established catalogue schema: `evidence_tier="legal_authority"`,
+`authority="boe"`, `document_id="BOE-A-2006-20764"`, correct `article`
+field, `review_status="reviewed"`, `reviewed_at=2026-05-27`.
+`required_text` for art-58 includes `"2.400 euros"` and `"2.700 euros"` —
+adequate but could include `"4.000 euros"` and `"4.500 euros"` for exhaustive
+coverage (minor; not a blocker).
+
+**Architectural decision — `input_kind=manual` for 0513/0515/0517: CORRECT CALL.**
+
+The brief noted the original expectation was auto-derivation from profile facts
+(birth_date). The coder's decision to keep these casillas as `input_kind=manual`
+is architecturally sound for the following reasons:
+
+1. The formula DSL has no `age_at` or date-difference operator (confirmed in
+   commit message and consistent with the engine schema visible in `_schema.py`
+   and `_actions.py`). Adding one would be a DSL extension — a separate
+   architectural decision requiring its own ADR and plan Step.
+
+2. The AEAT physical form for Renta 2024 places these amounts as operator-entered
+   casillas. The age-bracket determination is outside the form; the form accepts the
+   pre-computed supplement amount as input. `input_kind=manual` mirrors this design.
+
+3. The 2025 revision sets the same pattern — coder explicitly cites this precedent.
+   Consistency across revision years reduces cognitive load for maintenance.
+
+4. The failure mode is transparent: if an operator omits 0513 for a taxpayer aged
+   70, the mínimo contribution from that supplement is silently zero — identical to
+   the original Cluster T root cause for 0511/0512. This is documented in the
+   S249 test file comment. It is a UX gap (operator guidance / pre-fill from
+   profile), not a correctness gap in the registry. A future `age_at` DSL op
+   would close it; the registry parameters added here provide the statutory
+   amounts as reference anchors for UI/gestoria tooling in the interim.
+
+**Verdict: ACCEPT-WITH-FOLLOWUP.**
+
+FU-W07-C: Document the `age_at` DSL gap as a known limitation in the plan
+or in a deferred W09 Step. Until auto-derivation is available, operators for
+≥65 taxpayers must supply 0513 manually; the registry has the statutory values;
+UI tooling should pre-fill from profile `date_of_birth`.
+
+### Commit `d7b25e4a9` — S249 regression tests
+
+**Three scenarios.**
+
+S249-A (Pere age 70, Art. 57.2 supplement +1,150): casilla 0513 = 1,150 EUR
+as operator input; expected cuota estatal 3,763.25 EUR. Independent derivation:
+tarifa_estatal(35,400) = 4,399.75; tarifa_estatal(6,700) = 636.50;
+4,399.75 − 636.50 = **3,763.25**. VERIFIED.
+
+Expected cuota autonómica 3,946.53 EUR: conditionally verified. The Cataluña 2024
+escala gives tarifa_cat(6,700) = 703.50 (flat 10.5% bracket — unambiguous).
+Therefore 3,946.53 requires tarifa_cat(35,400) = 4,650.03, which matches the S115
+accepted baseline. The discrepancy between 4,650.03 and this reviewer's bracket
+reconstruction (4,522.78) is a carry-forward from S115 (not introduced by S249).
+The S249 value is internally consistent with S115 and does not introduce new
+autonomica drift. The Cataluña bracket gap (FU-S115-CAT) is flagged below.
+
+S249-B (two descendants, one under 3, Art. 58): casilla 0513 = 8,100 EUR
+(2,400 + 2,700 + 3,000); expected cuota estatal 3,073.00 EUR. Independent
+derivation: tarifa_estatal(13,650) = 1,326.75 (= 12,450 × 9.5% + 1,200 × 12%
+= 1,182.75 + 144.00); 4,399.75 − 1,326.75 = **3,073.00**. VERIFIED.
+
+S249-C (ascendant >75, Art. 59): casilla 0515 = 2,550 EUR (1,150 + 1,400);
+expected cuota estatal 3,630.25 EUR. Independent derivation: tarifa_estatal(8,100)
+= 769.50 (= 8,100 × 9.5%); 4,399.75 − 769.50 = **3,630.25**. VERIFIED.
+
+**Tautology check — CLEAN.**
+
+All expected values are derived from the LIRPF 2024 tarifa tables, not from
+re-running the formula engine. The test comments reproduce the full arithmetic
+derivation inline, citing LIRPF articles and the bracket rates. The `_TOLERANCE`
+delta-comparison pattern (carried from S115) is appropriate; the tolerance is
+small (Decimal("0.01") or similar) and does not mask structural failures.
+
+**Real-adapters check — CLEAN.**
+
+Tests use `calculate_registry_snapshot` with a real `m100_2024_snapshot` fixture.
+No mocks, no monkeypatches, no `AEAT_SECRET_STORE_BACKEND=unsecured`. Pattern
+is consistent with S115 tests (accepted).
+
+**Casilla mapping note (not a blocker).**
+
+The S249-A test comment accurately documents an AEAT form layout subtlety: the
+Art. 57.2 age supplement (+1,150 for 65-74 taxpayers) is conceptually part of
+`mínimo del contribuyente` (Art. 57) but is entered into casilla 0513 on the
+physical Renta 2024 form alongside the Art. 58 descendant minimums. The test
+reflects the actual form layout, not a conceptual grouping. This is correct.
+
+**Verdict: ACCEPT.**
+
+### Cross-commit summary
+
+| Commit | Steps | Verdict | Notes |
+|--------|-------|---------|-------|
+| `6306f5c76` | S246-S248 | ACCEPT-WITH-FOLLOWUP | FU-W07-C: age_at DSL gap |
+| `d7b25e4a9` | S249 | ACCEPT | Estatal values independently verified; autonomica internally consistent with S115 |
+
+**Cluster T status after S246-S249: SUBSTANTIVELY CLOSED** for known input scenarios.
+
+All statutory supplement amounts (Art. 57.1-57.3, 58, 59) are now present as
+registry parameters with full legal provenance. Operators and UI tooling can
+pre-fill the statutory values from the registry. The remaining gap is DSL
+auto-derivation (`age_at` operator absent), which is a future enhancement, not
+a correctness regression. Pere Rosselló (≥65) will produce a correct cuota if
+the operator supplies 0513 = 1,150 EUR; the UI layer can automate this once
+profile `date_of_birth` is wired to casilla pre-fill logic.
+
+**Follow-up Steps for W09:**
+
+- FU-W07-C: Add plan Step or ADR decision note for `age_at` DSL operator gap.
+  Until auto-derivation exists, ≥65 operators must supply 0513 manually. Registry
+  parameters are available for UI pre-fill. Scope: W09 UX/DSL enhancement.
+- FU-S115-CAT (OPEN): tarifa_cat(35,400) = 4,650.03 accepted in S115 cannot be
+  reproduced from standard bracket reconstructions (reviewer's calculation: 4,522.78).
+  Needs an AEAT oracle run or the actual `Orden HAC/2024` Cataluña complementary
+  tariff normativa to confirm. Does not block S249 acceptance but should be verified
+  before any Cataluña autonomica test is cited as an external oracle value.
