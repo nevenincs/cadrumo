@@ -329,6 +329,12 @@ Replace hardcoded literal revision-id strings in tests with live snapshot deriva
 
 - [x] `W07.P22.S146` - replace hardcoded literal revision-id strings in test_compute_from_pull.py, test_pull_adapter_helpers.py, test_build_draft_identity.py, and test_filing.py with live snapshot derivation; `silent-regression Class F fix for M130 (7 sites) and M123 (2 sites); `src/aeat/adapters/outbound/google/ src/aeat/application/filing/`.
 
+### Phase `W07.P23` - M037 historical grounding verification
+
+Verify that Modelo 037 is correctly registered as a historical-only census modelo: the registry has no 037.toml TOML file, the boe-modelo-037-historical-suppression source ref is present, and the M036 period_selector uses lowercase event-period names matching CENSUS_MODELO_EVENT_KINDS. Fix the M036 period case mismatch introduced at commit 33783e00c.
+
+- [x] `W07.P23.S147` - fix M036 period_selector and filing_schedule periods from uppercase ALTA/MODIFICACION/BAJA to lowercase alta/modificacion/baja to align with CENSUS_MODELO_EVENT_KINDS; `the case mismatch caused RegistrySnapshotError on every M036 census-foundation snapshot call; `src/aeat/_data/registry/aeat/modelos/036.toml`.
+
 ## Wave `W08` - fail-fast exception handling
 
 This Wave removes exception swallowing from registry hardening paths.
