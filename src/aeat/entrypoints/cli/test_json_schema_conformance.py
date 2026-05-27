@@ -54,6 +54,18 @@ MIGRATED_COMMANDS: frozenset[str] = frozenset(
     {
         # P09.S42c: first emit-site lifted to the envelope shape.
         "modelo.work.calculate",
+        # P09.S43: the 10 remaining work-lifecycle emit sites.
+        "modelo.work.create",
+        "modelo.work.reuse",
+        "modelo.work.list",
+        "modelo.work.status",
+        "modelo.work.rename",
+        "modelo.work.discard",
+        "modelo.work.revisions",
+        "modelo.work.revision",
+        "modelo.work.verify",
+        "modelo.work.file",
+        "modelo.work.amend",
     }
 )
 
