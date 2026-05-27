@@ -1268,6 +1268,268 @@ Total open W09.P41 + W09.P45 Steps: **54** (S198-S251 + S203-S239, excluding alr
 
 ---
 
+## W09 follow-up rollup — refreshed inventory (2026-05-27)
+
+**Generated from:** `vault plan query --wave W09 --open` (97 open Steps) plus
+`--closed` (7 closed Steps) on the cross-domain-continuity plan.
+**Delta since prior rollup (49554af05):** S252-S291 appended (40 new Steps);
+S208/S244/S252/S253/S273 closed by coder chain. S201 MOOT (verified inline).
+S209 partially satisfied (Batches 1-2+partial-3 done; Batch 3 remainder is S254).
+Total open at this refresh: **97**.
+
+### Closed since prior rollup — no action needed
+
+| Step | Closed by | Note |
+|------|-----------|------|
+| S208 | `cb51d03e7` | Storage regression root fix: `isolated_profile_storage_root` switched to file-backend. Unblocked S252/S253/S273. |
+| S244 | `a69608c47` | M202 monkeypatch MUST-FIX: rewritten with `isolated_runtime_profile`. |
+| S252 | (S209 Batch 1) | Category A (no-active-profile) 5 files migrated to `isolated_profile_storage_root`. |
+| S253 | (S209 Batch 2) | Category B (active-profile) 5 files migrated; plan marked closed prematurely. |
+| S273 | `a69608c47`+`b72f98000` | S253 remainder: 7 Category B files completed. Storage migration chain fully closed. |
+
+### MOOT — already fixed inline, plan Step can be closed
+
+| Step | Status | Evidence |
+|------|--------|---------|
+| S201 | MOOT | `src/aeat/entrypoints/cli/_errors.py` `__all__` (line 453) no longer includes `build_error_envelope` or `json_output_requested`. Fixed incidentally by f864d72fd-era cleanup. |
+
+### Category 1 — MUST-FIX: quality-gate blockers (revised)
+
+S208/S244/S252/S253/S273 are all closed. The storage migration chain is complete.
+One item remains from the original Category 1:
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S209 | W01 drift | Parent umbrella Step for the 20-file migration. Batches 1-2 done; **Batch 3 (S254)** covers `test_profile_lifecycle_verbs`, `test_root_grammar_invariants`, `test_root_help_shape`. `test_root_grammar_invariants` confirmed still carries `AEAT_SECRET_STORE_BACKEND=unsecured`. Close S209 after S254 lands. |
+| S254 | S209 B3 | Batch 3 triage: 3 files needing mixed `isolated_profile_storage_root` / `isolated_runtime_profile` split. Only remaining storage-migration blocker. |
+
+S254 → close S209.
+
+### Category 2 — Error registry correctness (unchanged)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S198 | W01 drift | Delete duplicate `AuthProviderReservedError` registration (lines 62-65 and 106-109 of `src/aeat/core/errors/registry/_application.py`). |
+| S199 | W01 drift | Delete duplicate `AuthConfigureDanglingActiveProfileError` registration (lines 84-92 and 95-103). |
+| S202 | W01 drift | Audit `StoredCalculationDriftError` taxonomy: lives under `errors.refused.*` but is semantically an integrity failure; decide rename vs. documented exception. |
+
+### Category 3 — Source hygiene: dead exports and private symbols (revised)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S201 | W01 | **MOOT** — `build_error_envelope` and `json_output_requested` are no longer in `__all__`. Recommend closing via `vault plan step check`. |
+| S163 | W09.P41 | Delete ghost `ProfileExportBundle` comment in `src/aeat/application/user_profile/__init__.py`. |
+| S164 | W09.P41 | Delete dead alias `_profile_binding_selectors` in `src/aeat/domain/user_profile/_registry_contract.py`. |
+
+### Category 4 — Duplicate / consolidation work (unchanged)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S200 | W01 drift | Consolidate two divergent `_decimal_value` helpers. `src/aeat/application/modelo/`. |
+| S205 | W01 drift | Consolidate `UserProfileLifecycleRepository.__init__` and `UserProfileSnapshotRepository.__init__` into shared base. `src/aeat/application/user_profile/_repository.py`. |
+| S157 | W09.P40 | Extract shared currency-not-EUR guard to `_shared_issue_reasons.py`. `src/aeat/application/aggregation/`. |
+| S158 | W09.P40 | Extract shared `BusinessClassification` branch (`PERSONAL_TRANSACTION` vs `UNCLASSIFIED`). |
+| S159 | W09.P40 | Extract shared business-proportion dispatch. |
+
+S157-S159 are independent aggregation-layer consolidations; can batch in one commit.
+
+### Category 5 — Persistence boundary and domain integrity (unchanged)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S214 | W01/W03 | Add `StoredTransactionDriftError`/`ValidationError` guard to `TransactionCatalogueRepository.load()`. `src/aeat/domain/transactions/_repository.py:139`. |
+| S274 | cf7775ebe | Verify `counterparty=None → ""` side-fix in `cf7775ebe` is complete; evaluate whether `Optional[str]` on `LedgerTransactionPayload` is preferable to coercion. `src/aeat/application/ledger/_actions.py`. |
+| S275 | FU-S274-A | Centralise `counterparty or ""` coercion into `display_counterparty` property on `RawTransaction`; retire two identical call-site coercions. |
+| S267 | FU-S208-A | Verify all `isolated_profile_storage_root` callers pass with file-backend; document `aeat_dev_test_database_password` CI dependency. `src/aeat/tests/secure_sql.py`. |
+| S270 | FU-W09-A | Verify CI sets `AEAT_DEV_TEST_DATABASE_PASSWORD`; without it 8+ test files fail at passphrase resolution. `.github/workflows/`. |
+
+### Category 6 — Typed-boundary violations (G2 gate) — NEW
+
+Surfaced by UNTYPED_BOUNDARY discovery sweep (S97) and existing S215. 24+ public
+`dict[str, object]` sites, 14 `cast()` escapes, 3 `pydantic Any` fields.
+
+**Promotion candidate:** S277-S280 together span 24+ public sites across CLI,
+application, and domain layers. This is Wave-scale work, not a single W09 Step.
+Recommend promoting to a dedicated Wave-10 phase rather than batching into W09.P41.
+
+| Step | Layer | Sites | Description |
+|------|-------|-------|-------------|
+| S215 | Application | 4 | `ledger/_actions.py` lines 1024/1055/1064/1075 — four `dict[str, object]` ledger payload helpers. |
+| S277 | All | 1 | `_bundle.py` `_import_ledger_transactions` `merged: dict[str, object]` — annotate as `dict[str, Transaction]` or extract `upsert_transaction` helper (FU-S104-A). |
+| S278 | CLI entrypoints | 14 | 14 payload functions in `_modelo.py`, `_ledger.py`, `_config/__init__`, `_common.py`, `_app_live.py` returning `dict[str, object]`. |
+| S279 | Application | 10 | 10 payload functions across `auth/`, `filing/`, `aggregation/`, `operator_surface/`, `ledger/` returning `dict[str, object]`. |
+| S280 | Domain/registry | 14 | 14 `cast()` escapes + 3 `pydantic Any/object` fields in `workflow/`, `registry/`, `review/`, `schedules/`, `workflow/_models`. |
+
+S277 is narrowest scope — single file, clear fix. S215 and S277 should land first.
+S278/S279/S280 warrant a Wave-10 typed-boundary phase (see promotion section below).
+
+### Category 7 — Legal data / registry correctness (unchanged + new)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S212 | W03-F | Fix `Real Decreto-ley 4/2004` citation typo in M200 `parameters.toml`. |
+| S251 | W07 | Investigate Cataluña 2024 autonomic tarifa discrepancy (4,522.78 vs 4,650.03 EUR for base 35,400). External oracle required. |
+| S268 | FU-W10-A | Extract HAC/242/2025 art-8 text into corpus HTML and add `required_text`. `src/aeat/_data/registry/aeat/legal/irpf.toml`. |
+| S269 | FU-W10-B | Oracle-verify M202 2025-2P/3P closing dates against AEAT calendar. |
+| S271 | FU-W09-B | Complete HAC/242/2025 art-8 corpus entry with full BOE text. |
+| S272 | FU-W09-C | Verify M202 2025-2P/3P deadline windows via Orden HAC source. |
+
+S268/S271 are the same corpus gap from two angles — merge into one coder task.
+S269/S272 are the same oracle check — merge likewise.
+
+### Category 8 — CLI UX / localisation (unchanged + new)
+
+Prior Category 8 entries (S203/S204/S219-S239) are unchanged. New entries from
+discovery sweeps and round-5 audit (ROSER):
+
+| Step | Source | Severity | Description |
+|------|--------|----------|-------------|
+| S282 | HARDCODED | BLOCKER | Route 2 `auth/_authenticator.py` raises via `tr()`; remove `AEAT_CERTIFICATE_PATH`, `AEAT_CERTIFICATE_PASSWORD_SECRET`, `CertificateBundle` leakage. Per round-5 B-ROSER BLOCKER. `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`. |
+| S283 | HARDCODED | MAJOR | Route 9 `diagnostics/profile.py` `BadParameter` raises via `tr()`. |
+| S284 | HARDCODED | MAJOR | Route `diagnostics/secure_objects.py:42-43`, `locales/cli.py`, `entrypoints/cli/__init__.py:130`, `wizard/_commands.py:800-804` via `tr()`. |
+| S255 | W09 sweep | MAJOR | Convert 120 hardcoded f-string error raises across 43 application files. Batch by surface per locale CLI rule. `src/aeat/application/`. |
+
+S282 is the highest-severity new entry (G3 BLOCKER from round-5 audit). It must land before the auth surface round-8 persona re-run.
+
+Full Category 8 execution order: S282 → S283/S284 (independent batch) → S255 (bulk) → prior S203/S204/S219-S239 as before.
+
+### Category 9 — Test quality (G6 gate) — NEW
+
+Surfaced by TAUTOLOGICAL_TEST_SUSPICION sweep (S98).
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S285 | S98 sweep | `test_cross_dependency_calculations.py` M180/M190 tests: derive expected values from AEAT workbook or grounded fixture, not synthetic Decimal oracles. `src/aeat/domain/calculations/registry/`. |
+| S286 | S98 sweep | `application/auth/test_operator.py` lines 230-260 / 477-521: replace `monkeypatch.setenv` for `AEAT_CERTIFICATE_PATH` / `AEAT_CLAVE_MOVIL_DNI_NIE` with Settings override fixture. |
+
+Both are independent. S285 requires external oracle consultation before code change.
+
+### Category 10 — Settings leak evaluation (G1 gate) — NEW
+
+Three pre-existing `os.environ`/`os.getenv` reads that pre-date the G1 gate.
+Each requires a decision: lift into `Settings` or write an ADR exception note.
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S289 | G1 retroactive | `access_gate/__init__.py` env-var read at pre-Settings bootstrap window. Evaluate lift vs ADR exception. |
+| S290 | G1 retroactive | `core/i18n/_render.py` env-var read for cache-key invalidation. Evaluate Settings route vs documented rationale. |
+| S291 | G1 retroactive | `core/observability/_replay.py` env-var write for replay scope. If test-infrastructure-only: document + restrict import path. If production-touching: lift into Settings. |
+
+All three are evaluation tasks before any code change. They can be batched as a
+single architecture grounding review.
+
+### Category 11 — DSL enhancement (unchanged)
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S250 | W07-C | Add `age_at` formula DSL operator for casillas 0513/0515. Requires ADR first. |
+| S288 | FU-S94 | Criterio de caja (casilla 62) — model Ley 37/1992 art. 163 quinquies cash-accounting regime. Out of scope for W05.P24; tracked here. |
+
+Both require ADR-first before implementation. S288 is smaller in scope than S250.
+
+### Category 12 — Co-landing convention notes (documentation only, expanded)
+
+Prior S240-S243/S245 plus new Wave-7 and Wave-8 entries.
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S240 | W04-A | `d8bec8bd9` multi-step co-landing. |
+| S241 | W05-A | `03be9b6f4` multi-step co-landing. |
+| S242 | W02-A | `30065a92e` S38-S42 co-landed. |
+| S243 | W02-B | `acea52801` S43+S44+S46 co-landed. |
+| S245 | W07-A | `01ac9d698` S113+S114 co-landed. |
+| S259 | W07-G | `604bf217d`/`f4108869d` both touch S118 scope without intervening Step record. |
+| S263 | W08-A | Coordination incident: coder1/coder2 raced on S141-S144; establish task-claim protocol. |
+| S276 | S253-A | `cf7775ebe` commit message says EphemeralMasterKeyProvider but helper uses file backend since `cb51d03e7`. |
+
+All documentation-only. Batch in a single commit.
+
+### Promotion candidates for Wave-10
+
+The following W09.P41 clusters have grown beyond single-Step scope and warrant
+promotion to a dedicated Wave-10 phase:
+
+**Typed-boundary wave (G2):** S278/S279/S280 together cover 24 public
+`dict[str, object]` functions and 14 `cast()` escapes across CLI, application,
+and domain. This is 3-4 coder-weeks of mechanical refactoring with broad surface
+area. Promoting avoids cluttering W09.P41 dispatch slots.
+
+**Validation-helper dedup cluster (G5):** S149-S156 (8 Steps in W09.P39) cover
+the `_missing_refs` duplication across 7 registry-validate modules. These are
+independent but form a natural batch and could be a W09.P39 micro-wave.
+
+**Registry validate-helpers (W09.P39 — S149-S156):** 8 Steps that create a
+shared `_validate_helpers.py` and update 7 sibling files. Batching all 8 into
+one Wave-10 registry-consolidation phase avoids 8 separate tiny commits.
+
+### Execution priority order for W09 (refreshed 2026-05-27)
+
+Priority tiers replace the prior linear list:
+
+**Tier 0 — MUST-FIX before W09 quality-gate sign-off:**
+1. S254 (Batch 3 storage migration — 2 files remain) → closes S209.
+2. S282 (auth BLOCKER — G3 hardcoded env-var/class-name in user-facing message).
+
+**Tier 1 — High-confidence, low-risk, independent:**
+3. S198/S199 (duplicate error registrations — delete).
+4. S277 (FU-S104-A — single dict annotation fix in `_bundle.py`).
+5. S212 (M200 citation typo — one-line data fix).
+6. S163/S164 (dead comment + dead alias — delete).
+7. S270 (CI env-var verification — `AEAT_DEV_TEST_DATABASE_PASSWORD`).
+8. S276 (documentation accuracy — step record correction).
+9. S240-S245/S259/S263 (convention notes — single documentation commit).
+
+**Tier 2 — Medium scope, architecture-boundary corrections:**
+10. S214 (transaction drift guard — mirrors S05 pattern).
+11. S215 + S274/S275 (ledger payload typing + counterparty coercion consolidation).
+12. S157-S159 (aggregation shared-guard extraction).
+13. S267 (CI passphrase dependency documentation).
+14. S286 (auth test monkeypatch → Settings override).
+15. S264 (remove redundant `_activate_subcommand_output_language` wrapper).
+16. S265/S261 (drop unsecured-backend monkeypatches from `test_output_language_parity`).
+
+**Tier 3 — UX / localisation surface:**
+17. S203/S204 (i18n orphan/surplus — fast locale-file fixes).
+18. S229/S232 (output-language parity options — independent CLI additions).
+19. S283/S284 (diagnostics + wizard hardcoded strings — bulk tr() migration).
+20. S220/S235/S236 (CLI UX minor — independent).
+21. S224/S231/S237/S238/S239 (CLI UX major — independent, medium scope each).
+22. S221/S222/S225 (error-locale surface — batch).
+23. S255 (120-file bulk hardcoded-string sweep — largest i18n task).
+24. S266/S262 (output-language surface sweep — enumerate all commands).
+
+**Tier 4 — Investigation-first (block on external oracle or ADR decision):**
+25. S289/S290/S291 (G1 settings-leak evaluation — architecture grounding, batch).
+26. S202 (error taxonomy decision).
+27. S226 (casilla label localisation — registry decision required).
+28. S234 (iva.regime wizard — scope understanding required).
+29. S271/S268 (HAC/242/2025 corpus entry — merge and execute).
+30. S272/S269 (M202 deadline oracle — merge and execute).
+31. S285 (tautological M180/M190 tests — AEAT workbook oracle required).
+32. S251 (Cataluña tarifa investigation — external oracle).
+
+**Tier 5 — ADR-gated or Wave-10 promotion candidates:**
+33. S288 (criterio de caja casilla 62 — ADR-first; W09 or promote to W10).
+34. S250 (age_at DSL operator — ADR-first; deferred to W10).
+35. S278/S279/S280 (typed-boundary bulk — promote to Wave-10 typed-boundary phase).
+36. S149-S156 (registry validate-helper dedup — promote to Wave-10 registry-consolidation).
+37. S216/S217 (ledger coverage gaps — medium effort, deferred).
+38. S258 (registry snapshot equivalence — documentation or test).
+39. S257 (hexagonal violation in modelo project CLI — refactor).
+40. S256 (legal_refs surface in modelo project output).
+
+**Tiers 5 onward** — S165/S166/S167/S168-S175 (P42-P49 structural verifications):
+41-50. P42-P49 consolidation, replacement, coverage, and swarm steps — sequenced
+    by the termination criteria (S171-S175 depend on W09 completion).
+
+Total open W09 Steps: **97**.
+Tier 0 (MUST-FIX): **2**.
+Promotion candidates for Wave-10: **S278/S279/S280** (typed-boundary, 38 sites)
++ **S149-S156** (registry validate-helpers, 8 Steps).
+MOOT Step to close: **S201**.
+
+---
+
 ## W07.P32 `aeat app modelo project` verb (Task #70) — S116-S117 commit review
 
 **Scope:** Three commits — `1f553d99c` (S116: 258-line project verb), `ca0b17c30`
