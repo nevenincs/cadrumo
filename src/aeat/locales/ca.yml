@@ -826,29 +826,6 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
-        create_stub_modelo_refused: 'El model %{modelo} està registrat però no té
-          suport complet en aquesta versió. La declaració informativa sobre monedes
-          virtuals situades a l''estranger (Model 721) s''ha de presentar directament
-          a la Seu Electrònica de l''AEAT (sede.agenciatributaria.gob.es). L''obligació
-          neix quan el valor agregat supera €50.000 el 31 de desembre (Orden HFP/887/2023,
-          BOE-A-2023-17455). Autoritats legals: Llei 11/2021 Art. 13 / DA 10ª,
-          Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
-        create_stub_modelo_151_refused: 'El model %{modelo} està registrat a l''inventari
-          d''obligacions però el motor de càlcul complet (caselles, fórmules, fitxer BOE)
-          encara no ha estat implementat en aquesta versió. El règim especial d''impatriats
-          (Llei Beckham) — Art. 93 LIRPF (Llei 35/2006) i Arts. 113-120 RIRPF
-          (RD 439/2007) — exigeix la presentació del Model 151 directament a la Seu
-          Electrònica de l''AEAT: sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml
-          (Orden EHA/2887/2008, BOE-A-2008-16237). Autoritats: Llei 35/2006 Art. 93,
-          RD 439/2007 Arts. 113-120, Orden EHA/2887/2008.'
-        create_stub_modelo_714_refused: 'El model %{modelo} està registrat a l''inventari
-          d''obligacions però el motor de càlcul complet (caselles, quotes, fitxer BOE)
-          encara no ha estat implementat en aquesta versió. L''Impost sobre el Patrimoni
-          (Llei 19/1991) s''ha de declarar directament a la Seu Electrònica de l''AEAT:
-          sede.agenciatributaria.gob.es/Sede/patrimonio.html (Orden HAC/1023/2021,
-          BOE-A-2021-7593). El llindar d''obligació és patrimoni net > €700.000 amb
-          caràcter general (€600.000 a la Comunitat Valenciana). Autoritats: Llei 19/1991
-          Art. 28, Orden HAC/1023/2021.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -923,6 +900,21 @@ cli:
         revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
+        row_empty_key: 'Clau de camp buida a --row {token}; cada camp ha de tenir
+          el format CLAU=VALOR.'
+        row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
+        row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
+          Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
+          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més files.
+          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          Exemple M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+        row_kv_format_error: 'El camp --row {token} ha de tenir el format CLAU=VALOR.'
+        row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
+          han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
+        row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
+          {supported}.'
+        row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
+          {error}'
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
@@ -2273,10 +2265,12 @@ errors:
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
   calc:
+    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
+    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
@@ -2289,6 +2283,8 @@ errors:
       abans d''avaluar la seva fórmula.
     computed_supplied_as_input: 'No es poden subministrar com a entrada les caselles
       calculades: {casilla_ids}.'
+    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
+    date_binding_value_missing: errors.calc.date_binding_value_missing
     dispatch_key_unknown: 'La clau de despatx {dispatch_key!r} no és a la taula de
       l''operador {op} sobre la vinculació {binding_id} (claus declarades: {available_keys}).'
     dispatch_parameter_kind: El paràmetre {parameter_id} no encaixa amb l''operador

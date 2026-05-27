@@ -60,11 +60,6 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ...domain.modelos._row_models import (
-    Modelo184MemberRow,
-    Modelo232VinculadaRow,
-    ModeloDetailRow,
-)
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
@@ -82,6 +77,7 @@ from ...domain.modelos._repository import (
     WorkUnitCatalogueRepository,
     upsert_work_unit,
 )
+from ...domain.modelos._row_models import ModeloDetailRow
 from ...domain.modelos._verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
