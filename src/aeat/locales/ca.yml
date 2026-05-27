@@ -1488,6 +1488,11 @@ cli:
       errors:
         invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
         invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
+        profile_empty: cli.diagnostics.profile.errors.profile_empty
+        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
+        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
+        no_active_profile: cli.diagnostics.profile.errors.no_active_profile
+        unknown_profile_key: cli.diagnostics.profile.errors.unknown_profile_key
       get_help: cli.diagnostics.profile.get_help
       help: cli.diagnostics.profile.help
       key_help: cli.diagnostics.profile.key_help
