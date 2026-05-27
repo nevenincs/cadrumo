@@ -114,6 +114,30 @@ def _taxpayer_type_choice_values() -> tuple[list[str], list[str], list[str], lis
 ) = _taxpayer_type_choice_values()
 
 
+def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
+    """Return choice tokens for IRPF-personal enums.
+
+    Derived from the canonical domain enums (``IrpfSpecialRegime``,
+    ``SituacionFamiliar``) so the ``--irpf-special-regime`` and
+    ``--situacion-familiar`` flag choices never drift from the values
+    the wizard catalogue and the profile schema validate against.
+    """
+
+    from ...domain.deadlines._models import IrpfSpecialRegime
+    from ...domain.profile import SituacionFamiliar
+
+    return (
+        [member.value for member in IrpfSpecialRegime],
+        [member.value for member in SituacionFamiliar],
+    )
+
+
+(
+    _IRPF_SPECIAL_REGIME_CHOICE_VALUES,
+    _SITUACION_FAMILIAR_CHOICE_VALUES,
+) = _irpf_personal_choice_values()
+
+
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
 
@@ -286,6 +310,14 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         "--country-of-fiscal-residence",
         help=tr("wizard.setup.flags.country-of-fiscal-residence.help"),
     ),
+    "representante-fiscal-nif": typer.Option(
+        "--representante-fiscal-nif",
+        help=tr("wizard.setup.flags.representante-fiscal-nif.help"),
+    ),
+    "representante-fiscal-nombre": typer.Option(
+        "--representante-fiscal-nombre",
+        help=tr("wizard.setup.flags.representante-fiscal-nombre.help"),
+    ),
     "tax-residence-ccaa": typer.Option(
         "--tax-residence-ccaa",
         click_type=click.Choice(_CCAA_CHOICE_VALUES),
@@ -330,6 +362,20 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         click_type=click.Choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
     ),
+    "irpf-special-regime": typer.Option(
+        "--irpf-special-regime",
+        click_type=click.Choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-special-regime.help"),
+    ),
+    "irpf-special-regime-start-date": typer.Option(
+        "--irpf-special-regime-start-date",
+        help=tr("wizard.setup.flags.irpf-special-regime-start-date.help"),
+    ),
+    "situacion-familiar": typer.Option(
+        "--situacion-familiar",
+        click_type=click.Choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.situacion-familiar.help"),
+    ),
     "iva-sii-enrolled": typer.Option(
         "--iva-sii-enrolled/--no-iva-sii-enrolled",
         help=tr("wizard.setup.flags.iva-sii-enrolled.help"),
@@ -339,6 +385,23 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
     ),
 }
+
+# Guard against future catalogue / dict drift: every question id that
+# the SETUP_FLOW catalogue exposes must have a matching OptionInfo entry.
+# This assert fires at import time so a missing entry is discovered
+# immediately rather than as a runtime KeyError buried inside a Typer
+# command factory call.
+_SETUP_CATALOGUE_IDS: frozenset[str] = frozenset(
+    question.id
+    for section in SETUP_FLOW.sections
+    for question in section.questions
+)
+_missing_option_infos = _SETUP_CATALOGUE_IDS - frozenset(_SETUP_OPTION_INFOS)
+assert not _missing_option_infos, (
+    f"_SETUP_OPTION_INFOS is missing entries for catalogue question ids: "
+    f"{sorted(_missing_option_infos)!r}. "
+    "Add a typer.Option entry for each missing id."
+)
 
 
 def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:

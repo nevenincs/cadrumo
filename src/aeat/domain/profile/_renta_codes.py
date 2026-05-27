@@ -49,7 +49,7 @@ class RentaDisabilityGrade(StrEnum):
 # EEA = EU27 + IS, LI, NO.  CH has bilateral agreements but is not EEA.
 UE_EEA_COUNTRY_CODES: frozenset[str] = frozenset({
     # EU 27
-    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "EL", "ES",
+    "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "GR", "ES",
     "FI", "FR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT",
     "NL", "PL", "PT", "RO", "SE", "SI", "SK",
     # EEA non-EU

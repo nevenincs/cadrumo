@@ -778,6 +778,28 @@ _RESIDENCE_SECTION = WizardSection(
             answer_type=str,
         ),
         WizardQuestion(
+            id="representante-fiscal-nif",
+            profile_key="taxpayer_type.representante_fiscal_nif",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.representante-fiscal-nif.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="representante-fiscal-nombre",
+            profile_key="taxpayer_type.representante_fiscal_nombre",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.residence.representante-fiscal-nombre.prompt"),
+            required=False,
+            visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # IRNR non-residents have no CCAA residencia fiscal; only
+            # IRPF residents are assigned a CCAA. Suppress the question
+            # for NON_RESIDENT_IRNR so the wizard never silently defaults
+            # a non-resident onto "madrid".
             id="tax-residence-ccaa",
             profile_key="tax_residence.ccaa",
             widget=WizardWidget.SELECT,
@@ -785,6 +807,10 @@ _RESIDENCE_SECTION = WizardSection(
             choices=_CCAA_CHOICES,
             default=CCAA.MADRID.value,
             required=False,
+            visible_when=WizardCondition(
+                question_id="fiscal-residency",
+                equals=FiscalResidency.RESIDENT_IRPF.value,
+            ),
             answer_type=str,
         ),
     ),
