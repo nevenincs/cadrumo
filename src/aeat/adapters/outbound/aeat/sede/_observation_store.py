@@ -192,6 +192,36 @@ class FiledDeclaracionObservationStore:
             )
         return envelope.payload
 
+    def list_iva_wallet_observations(self) -> tuple[IvaCompensationWalletObservation, ...]:
+        """Return stored IVA wallet observations from the active encrypted backend."""
+
+        observations: list[IvaCompensationWalletObservation] = []
+        with self._crypto_scope():
+            records = self._repository.list_records(
+                _IVA_WALLET_OBSERVATION_NAMESPACE,
+                expected_class=_OBSERVATION_CLASSIFICATION,
+                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
+            )
+        for record in records:
+            envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(record.payload.decode("utf-8"))
+            if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+                raise ClassificationError(
+                    f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
+                    f"consumer expected {_OBSERVATION_CLASSIFICATION}",
+                )
+            if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+                raise EnvelopeVersionError(
+                    f"IVA wallet observation {record.object_key!r} is at version {envelope.schema_version}; "
+                    f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+                )
+            observations.append(envelope.payload)
+        return tuple(
+            sorted(
+                observations,
+                key=lambda item: (item.target_year, item.target_period, item.captured_at),
+            )
+        )
+
     def _observation_key(
         self,
         modelo: str,

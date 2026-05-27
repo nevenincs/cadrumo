@@ -204,9 +204,7 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     a misleading repair hint.
     """
 
-    details = "; ".join(
-        _format_validation_error(item) for item in error.errors()
-    )
+    details = "; ".join(_format_validation_error(item) for item in error.errors())
     return _bad(
         tr(
             "cli.ledger.errors.command_input_invalid",
@@ -491,7 +489,7 @@ def ledger_classify(
         "--from-csv",
         help=tr(
             "cli.ledger.classify.from_csv_help",
-            default="Path to a CSV file with transaction_id and classification columns.",
+            default="Path to a CSV file with columns transaction_id, classification[, category_id].",
         ),
     ),
     business_pct: str | None = typer.Option(
@@ -586,9 +584,21 @@ def ledger_classify(
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     if classification is BusinessClassification.MIXED and business_pct is None:
+        # MIXED demands a proportion; surface the `--business-pct` flag
+        # directly rather than letting the patch validator's generic
+        # message route through the opaque boundary.
         raise _bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
     if classification is not BusinessClassification.MIXED and business_pct is not None:
+        # `--business-pct` only carries meaning for a MIXED row; a
+        # BUSINESS or PERSONAL classification is wholly business or
+        # wholly private. Refuse rather than silently dropping it.
         raise _bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
+    # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
+    # an illegal field combination) is otherwise wrapped by the generic
+    # CLI boundary into "command input failed validation. Run config
+    # repair" — a misleading hint, since `config repair` cannot fix a
+    # bad CLI argument. Catch it here and surface the real validator
+    # cause, matching the `ledger add` / `ledger review --id` treatment.
     try:
         patch = _patch_from_options(
             business_classification=classification,
@@ -1317,9 +1327,7 @@ def ledger_history(
         f"{tr('cli.ledger.labels.id')}\t{resolved_id}",
         f"{tr('cli.ledger.labels.event_count')}\t{len(matches)}",
     ]
-    lines.extend(
-        f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches
-    )
+    lines.extend(f"{event.occurred_at.isoformat()}\t{event.event_type.value}\t{event.event_id}" for event in matches)
     _emit(ctx, payload, lines)
 
 
@@ -1747,9 +1755,7 @@ def ledger_review(
     # every other ledger `--id` verb uses; otherwise the query model
     # rejects the short prefix and the generic boundary masks it as
     # "command input failed validation. Run aeat config repair".
-    resolved_record_id = (
-        _resolve_id(transaction_repository, record_id) if record_id is not None else None
-    )
+    resolved_record_id = _resolve_id(transaction_repository, record_id) if record_id is not None else None
     result = query_ledger_review_rows(
         LedgerReviewQuery(
             bucket_id=transaction_repository.bucket_id,
@@ -1922,7 +1928,6 @@ def _resolve_business_pct_with_census(
     perturbed.
     """
 
-
     from ...application.ledger._ratios import census_business_pct_for
     from ...application.user_profile import CensoSyncService
     from ...domain.categories import SpendingCategory
@@ -2093,11 +2098,15 @@ def ratios_set(
     if profile_id is not None:
         sync_service = CensoSyncService(bucket_id=bucket_id)
         raw_afectacion = sync_service.bound_raw_afectacion_ratio(profile_id=profile_id)
-        warning = census_override_warning(
-            category=category_enum,
-            override_ratio=parsed,
-            raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
-        ) if raw_afectacion is not None else None
+        warning = (
+            census_override_warning(
+                category=category_enum,
+                override_ratio=parsed,
+                raw_afectacion_ratio=raw_afectacion if raw_afectacion is not None else parsed,
+            )
+            if raw_afectacion is not None
+            else None
+        )
         if warning is not None:
             _emit_ratios_census_override_warning(bucket_id=bucket_id, warning=warning)
     payload = {"bucket_id": bucket_id, "category": category_enum.value, "ratio": str(parsed)}
@@ -3000,7 +3009,7 @@ rule_app = typer.Typer(
     name="rule",
     help=tr(
         "cli.app.ledger.rule.group_help",
-        default="Ledger classification rules (add / list / apply).",
+        default="Manage and apply ledger classification rules.",
     ),
     no_args_is_help=True,
 )
@@ -3008,14 +3017,19 @@ app.add_typer(rule_app, name="rule")
 
 
 def _rule_bucket_id() -> str:
-    return _tx_repo(_state()).bucket_id
+    from ...application.workflow._models import active_bucket_id_or_raise
+
+    try:
+        return active_bucket_id_or_raise()
+    except Exception as exc:
+        raise _no_active_profile_refusal() from exc
 
 
 @rule_app.command(
     "add",
     help=tr(
         "cli.app.ledger.rule.add_help",
-        default="Persist a new classification rule.",
+        default="Add a classification rule that auto-classifies matching transactions.",
     ),
 )
 def rule_add(
@@ -3023,75 +3037,67 @@ def rule_add(
     description_pattern: str = typer.Option(
         ...,
         "--description-pattern",
-        help=tr("cli.app.ledger.rule.add.description_pattern_help", default="Regex matched against transaction description (case-insensitive)."),
+        help=tr(
+            "cli.app.ledger.rule.description_pattern_help",
+            default="Regex pattern matched (case-insensitive) against transaction description.",
+        ),
     ),
     classification: BusinessClassification = typer.Option(
         ...,
         "--classification",
-        help=tr("cli.app.ledger.rule.add.classification_help", default="Classification to assign when the pattern matches."),
+        help=tr("cli.app.ledger.rule.classification_help", default="Target classification for matching transactions."),
     ),
     category_id: str | None = typer.Option(
         None,
         "--category-id",
-        help=tr("cli.app.ledger.rule.add.category_id_help", default="Optional spending category id."),
+        help=tr("cli.app.ledger.rule.category_id_help", default="Optional spending category to apply."),
     ),
     priority: int = typer.Option(
         100,
         "--priority",
-        help=tr("cli.app.ledger.rule.add.priority_help", default="Rule priority (lower number wins, default 100)."),
+        help=tr(
+            "cli.app.ledger.rule.priority_help",
+            default="Rule priority (lower number wins). Default 100.",
+        ),
     ),
-    actor: str | None = typer.Option(None, "--actor", hidden=True),
+    actor: str | None = typer.Option(
+        None,
+        "--actor",
+        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
+    ),
 ) -> None:
-    """Persist a new ledger classification rule (idempotent: same pattern+classification returns existing id)."""
+    """Add or idempotently update a ledger classification rule."""
     from ...application.ledger._actions import add_classification_rule
+    from ...application.workflow._models import resolve_active_bucket_id
 
     bucket_id = _rule_bucket_id()
-    resolved_actor = actor or resolve_active_bucket_id() or "operator"
+    validated_category_id = _validate_category_id(category_id)
     try:
         rule = add_classification_rule(
             bucket_id=bucket_id,
             description_pattern=description_pattern,
             classification=classification,
-            category_id=category_id,
+            category_id=validated_category_id,
             priority=priority,
-            actor=resolved_actor,
+            actor=actor or resolve_active_bucket_id() or "operator",
         )
     except ValueError as exc:
         raise _bad(str(exc)) from exc
-    payload = rule.model_dump(mode="json")
-    lines = [
-        tr(
-            "cli.app.ledger.rule.add.added",
-            rule_id=rule.rule_id[:16],
-            pattern=rule.description_pattern,
-            classification=rule.classification.value,
-            default=f"rule added: {rule.rule_id[:16]}... pattern={rule.description_pattern!r} classification={rule.classification.value}",
-        )
-    ]
-    _emit(ctx, payload, lines)
-
-
-@rule_app.command(
-    "list",
-    help=tr(
-        "cli.app.ledger.rule.list_help",
-        default="List stored classification rules.",
-    ),
-)
-def rule_list(ctx: typer.Context) -> None:
-    """List all stored ledger classification rules in priority order."""
-    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
-
-    repo = LedgerClassificationRuleRepository()
-    rules = repo.list_rules()
     payload = {
-        "rules": [r.model_dump(mode="json") for r in rules],
+        "rule_id": rule.rule_id,
+        "description_pattern": rule.description_pattern,
+        "classification": rule.classification.value,
+        "category_id": rule.category_id,
+        "priority": rule.priority,
+        "actor": rule.actor,
+        "created_at": rule.created_at.isoformat(),
     }
-    lines = [tr("cli.app.ledger.rule.list.count", count=len(rules), default=f"{len(rules)} rule(s)")]
-    for rule in rules:
-        lines.append(
-            f"  [{rule.priority}] {rule.description_pattern!r} -> {rule.classification.value}"
-        )
+    lines = [
+        f"rule_id\t{rule.rule_id[:16]}...",
+        f"pattern\t{rule.description_pattern}",
+        f"classification\t{rule.classification.value}",
+        f"priority\t{rule.priority}",
+    ]
     _emit(ctx, payload, lines)
 
 
@@ -3099,60 +3105,71 @@ def rule_list(ctx: typer.Context) -> None:
     "apply",
     help=tr(
         "cli.app.ledger.rule.apply_help",
-        default="Apply classification rules to unclassified transactions.",
+        default="Apply stored classification rules to unclassified ACTIVE transactions.",
     ),
 )
 def rule_apply(
     ctx: typer.Context,
-    dry_run: bool = typer.Option(
-        False,
-        "--dry-run",
-        help=tr("cli.app.ledger.rule.apply.dry_run_help", default="Preview matches without writing."),
-    ),
     reaffirm: bool = typer.Option(
         False,
         "--reaffirm",
-        help=tr("cli.app.ledger.rule.apply.reaffirm_help", default="Re-apply rules over already-classified (manual) rows."),
+        help=tr(
+            "cli.app.ledger.rule.apply_reaffirm_help",
+            default="Also re-classify transactions that were manually classified.",
+        ),
     ),
-    actor: str | None = typer.Option(None, "--actor", hidden=True),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help=tr(
+            "cli.app.ledger.rule.apply_dry_run_help",
+            default="Show what would be classified without persisting changes.",
+        ),
+    ),
+    actor: str | None = typer.Option(
+        None,
+        "--actor",
+        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
+    ),
 ) -> None:
-    """Apply stored classification rules to all in-scope ACTIVE transactions."""
+    """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
     from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
-    from ...domain.transactions import TransactionLifecycleState
+    from ...application.workflow._models import resolve_active_bucket_id
+    from ...domain.transactions import BusinessClassification, TransactionLifecycleState
 
-    resolved_actor = actor or resolve_active_bucket_id() or "operator"
     bucket_id = _rule_bucket_id()
-    tx_repo = _tx_repo(_state())
+    resolved_actor = actor or resolve_active_bucket_id() or "operator"
 
     if dry_run:
+        from ...domain.transactions import TransactionCatalogueRepository
+
         rule_repo = LedgerClassificationRuleRepository()
         rules = rule_repo.list_rules()
+        tx_repo = TransactionCatalogueRepository(bucket_id=bucket_id)
         catalogue = tx_repo.load()
-        would_match: list[dict[str, str]] = []
+        would_match: list[dict] = []
         for tx in catalogue.transactions.values():
             if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
                 continue
-            if tx.business_classification.value != "NOT_YET_PROCESSED":
-                if not (reaffirm and tx.classified_by == "manual"):
-                    continue
+            if tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED and not (
+                reaffirm and tx.classified_by == "manual"
+            ):
+                continue
             for rule in rules:
-                if rule.matches(tx.raw.description or ""):
+                if rule.matches(tx.raw.description):
                     would_match.append(
                         {
                             "transaction_id": tx.transaction_id,
+                            "description": tx.raw.description,
+                            "matched_rule_id": rule.rule_id,
                             "classification": rule.classification.value,
-                            "rule_id": rule.rule_id,
                         }
                     )
                     break
-        payload: dict[str, object] = {
-            "dry_run": True,
-            "count": len(would_match),
-            "matches": would_match,
-        }
+        payload = {"dry_run": True, "would_match": would_match, "count": len(would_match)}
         lines = [
             tr(
-                "cli.app.ledger.rule.apply.dry_run_summary",
+                "cli.app.ledger.rule.apply_dry_run_summary",
                 count=len(would_match),
                 default=f"dry-run: {len(would_match)} transaction(s) would be classified",
             )
@@ -3176,15 +3193,58 @@ def rule_apply(
         "matched": result.matched,
         "skipped_already_classified": result.skipped_already_classified,
         "no_match": result.no_match,
-        "bucket_event_ids": list(result.bucket_event_ids),
+        "applied": [r.model_dump(mode="json") for r in result.applied],
     }
     lines = [
         tr(
-            "cli.app.ledger.rule.apply.summary",
-            matched=result.matched,
+            "cli.app.ledger.rule.apply_summary",
+            rules=result.rules_evaluated,
             scanned=result.transactions_scanned,
-            default=f"apply rules: {result.matched} matched / {result.transactions_scanned} scanned",
+            matched=result.matched,
+            skipped=result.skipped_already_classified,
+            no_match=result.no_match,
+            default=(
+                f"rules: {result.rules_evaluated}, scanned: {result.transactions_scanned}, "
+                f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
+                f"no_match: {result.no_match}"
+            ),
         )
     ]
+    for row in result.applied:
+        lines.append(f"  applied\t{row.transaction_id[:16]}...\t{row.classification.value}")
     _emit(ctx, payload, lines)
 
+
+@rule_app.command(
+    "list",
+    help=tr(
+        "cli.app.ledger.rule.list_help",
+        default="List stored classification rules ordered by priority.",
+    ),
+)
+def rule_list(ctx: typer.Context) -> None:
+    """List all stored ledger classification rules (priority ascending)."""
+    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
+
+    _rule_bucket_id()  # raises if no active profile
+    rules = LedgerClassificationRuleRepository().list_rules()
+    payload = {
+        "rules": [
+            {
+                "rule_id": r.rule_id,
+                "description_pattern": r.description_pattern,
+                "classification": r.classification.value,
+                "category_id": r.category_id,
+                "priority": r.priority,
+                "actor": r.actor,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rules
+        ]
+    }
+    lines: list[str] = [tr("cli.app.ledger.rule.list_header", default="priority\tclassification\tpattern\trule_id")]
+    if not rules:
+        lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
+    for r in rules:
+        lines.append(f"{r.priority}\t{r.classification.value}\t{r.description_pattern}\t{r.rule_id[:16]}...")
+    _emit(ctx, payload, lines)
