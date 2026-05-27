@@ -1,0 +1,20 @@
+[revisions."2013-y-siguientes"]
+label = "Modelo 720 ejercicios 2012 y siguientes (Orden HAP/72/2013)"
+valid_from = 2013-02-01
+period_selector = { year_from = 2012, periods = ["0A"] }
+legal_refs = [
+    "ley-58-2003:da-18",
+    "rd-1065-2007:art-42-bis",
+    "rd-1065-2007:art-42-ter",
+    "rd-1065-2007:art-54-bis",
+    "orden-hap-72-2013:art-1",
+    "orden-hap-72-2013:art-2",
+    "orden-hap-72-2013:art-7",
+    "ley-58-2003:art-93",
+]
+source_refs = [
+    "aeat-dr-720",
+    "aeat-modelo-720-procedure",
+    "boe-modelo-720-2013-form",
+]
+
