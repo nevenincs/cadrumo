@@ -9,4 +9,5 @@ legal_refs = [
 source_refs = [
     "aeat-modelo-151-procedure",
     "boe-modelo-151-form",
+    "boe-modelo-151-layout",
 ]

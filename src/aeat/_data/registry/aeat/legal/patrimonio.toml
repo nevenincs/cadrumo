@@ -50,3 +50,16 @@ published_at = 2021-09-28
 applies_from = 2021-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
 review_status = "reviewed"
+
+[sources."boe-modelo-714-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1023-2021-modelo-714.html"
+sha256 = "d82448c53ad5aad75fc3c59616864356378b980443853942ebcf62971aa73a8d"
+bytes = 859
+retrieved_at = 2026-05-27
+published_at = 2021-09-28
+applies_from = 2021-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
+review_status = "reviewed"

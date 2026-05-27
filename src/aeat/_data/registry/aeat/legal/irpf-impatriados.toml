@@ -70,3 +70,16 @@ published_at = 2008-10-08
 applies_from = 2008-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
 review_status = "reviewed"
+
+[sources."boe-modelo-151-layout"]
+evidence_tier = "layout_authority"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-eha-2887-2008.html"
+sha256 = "6b97fd0c646467eac203fa64d18b811d1aa71acd35f61946956e378a0dd3caf3"
+bytes = 915
+retrieved_at = 2026-05-27
+published_at = 2008-10-08
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2008-16237"
+review_status = "reviewed"
