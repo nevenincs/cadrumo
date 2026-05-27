@@ -140,6 +140,43 @@ campaign — out of scope for the silent-zero elimination work.
   in this audit are the durable record.
 - Classification logic: `_PreviousModeloSelector.required_period_anchors_for_target` plus presence-of-`RelationDefinition`-targeting-the-binding-id in the revision.
 
+### Correct classification rule (for future re-implementations)
+
+The original sweep script (P02.S06, commit `5d069ce6b`) had a
+known false-positive defect in the `relation_orphaned` branch.
+The bug: it matched the binding's `selector.relation` shorthand
+against `RelationDefinition.id`. The shorthand was documentation
+drift and never matched the prefixed relation id; the runtime
+ignored it entirely. The bug surfaced one false positive
+(M100 2025 C1577) during the original sweep — investigation
+proved the binding was correctly relation-driven via
+`target_binding`.
+
+**Authoritative rule for any re-implementation of the
+bound-casilla resolution sweep:**
+
+- A previous-filing binding is `direct_resolvable` iff its
+  selector returns a non-empty
+  `required_period_anchors_for_target` for at least one period
+  declared by the revision's `period_selector`.
+- A previous-filing binding is `direct_dead` iff
+  `required_period_anchors_for_target` is empty AND no
+  `RelationDefinition` in the revision targets the binding
+  (`target_binding == binding.id`).
+- A previous-filing binding is `relation_driven` iff
+  `required_period_anchors_for_target` is empty AND at least one
+  `RelationDefinition` in the revision has
+  `target_binding == binding.id`. The `selector.relation`
+  shorthand is irrelevant — it was retired under P07.S32.
+- A previous-filing binding is `absent_by_design` iff the cap
+  (`max_year_delta`) suppresses every anchor for every declared
+  target period. It is functionally `direct_dead` but
+  intentionally so; the runtime materialises zero with the
+  `absent_by_design` provenance marker.
+- The `relation_orphaned` classification SHOULD NOT EXIST — it
+  was always a defect rooted in the now-retired `selector.relation`
+  shorthand.
+
 ## Plan amendment required
 
 Plan step `P04.S14` currently scopes the binding revision to
