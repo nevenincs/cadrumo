@@ -430,7 +430,11 @@ def _extract_profile_values(
                 "adapters.inbound.declaracion.errors.extraction_failed",
                 profile=profile.id,
                 details="; ".join(details),
-            )
+            ),
+            missing=tuple(missing),
+            malformed=tuple(malformed),
+            ambiguous=tuple(ambiguous),
+            coverage=coverage,
         )
     return tuple(values)
 
