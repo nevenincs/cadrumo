@@ -31,15 +31,26 @@ Both `pais_vasco` + `navarra` correctly refused with redirect to
 foral Hacienda (Bizkaia/Gipuzkoa/Álava/Navarra URLs). Legal
 authority cited.
 
-### CRITICAL P0 (NEW) — profile create bricked post-5d66679f9
+### CRITICAL P0 (NEW) — profile create bricked post-5d66679f9 — RESOLVED a05f120cb
 
 After the `taxpayer_type.fiscal_residency` schema-field backfill
-(#550+#197 at 5d66679f9), profile create now fails with:
+(#550+#197 at 5d66679f9), profile create failed with:
 `Integrity. bucket manifest is missing required lifecycle status`.
 
-Different failure mode than original, same outcome: NO operator can
-create a profile. Blocks every CLI persona/workflow downstream.
+Different failure mode than original, same outcome: NO operator
+could create a profile. Blocks every CLI persona/workflow downstream.
 Filed as #244 P0.
+
+RESOLVED at commit a05f120cb: ProfileRepository.list() now tolerates
+legacy manifests missing the lifecycle-status field, matching the
+silent-skip pattern that workflow/_profile_bucket_scan already uses.
+The torn-manifest case was unrelated to the fiscal_residency
+backfill — pre-existing legacy buckets in the developer storage
+root triggered it because _refuse_duplicate_tax_id drives
+self.list() before any write, and one torn bucket blew up the
+entire inventory scan. Reproduced clean on a fresh storage root
+after the fix; the torn bucket is still surfaced separately via
+list_profile_bucket_scan_issues() for repair surfaces.
 
 ### HIGH — Art. 11.2 LIRPF marinero exención (50% navegado fuera aguas)
 
