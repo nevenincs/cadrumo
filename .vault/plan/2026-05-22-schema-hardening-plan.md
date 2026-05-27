@@ -85,6 +85,6 @@ discovered pathway to its governing ADR, plan, or required follow-up decision
 before any further code or TOML edits land.
 
 - [x] `P07.S20` - Enumerate discovered registry hardening pathways and classify each as already tracked, plan-only follow-up, or ADR-required follow-up; `.vault/exec/2026-05-27-schema-hardening-placeholder-eradication.md`.
-- [ ] `P07.S21` - Refresh the committed-corpus fragmentation target list from current line-count, revision-count, and layout-mode evidence before selecting the next modelo split; `src/aeat/_data/registry/aeat/modelos`.
+- [x] `P07.S21` - Refresh the committed-corpus fragmentation target list from current line-count, revision-count, and layout-mode evidence before selecting the next modelo split; `src/aeat/_data/registry/aeat/modelos`.
 - [ ] `P07.S22` - Decide whether M100 needs only physical fragments or a compile-time template authoring layer; create a new ADR before any template support is implemented; `.vault/adr`.
 - [ ] `P07.S23` - Keep validator-module reviewability under the P05 baseline; if a package-level validator boundary is needed, record the public-export compatibility plan before moving modules; `src/aeat/domain/calculations/registry`.
