@@ -217,14 +217,14 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [x] `W04.P19.S74` - mark mandatory casillas required=true in Modelo 100 303 200 202 TOML per BOE AEAT form instructions; `same layer-1 pattern as S73; `src/aeat/_data/registry/aeat/modelos/`.
 - [x] `W04.P19.S75` - extend _required_input_casillas_for_revision and _classify_verification_outcome to honour the new CasillaDefinition.required field plus minimal VerificationPredicateDefinition DSL (all_nonzero any_nonzero); `BLOCKING_RULE finding kind; include unit test for predicate evaluator; `src/aeat/application/modelo/_actions.py`.
 - [x] `W04.P19.S76` - regression test that Modelo 130 with all casillas zero is no longer verificado_completo; `src/aeat/application/modelo/test_verification_substance.py`.
-- [ ] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
+- [x] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
 
 ### Phase `W04.P20` - verification path naming and boundary documentation
 
 Two verify paths exist work-unit gate and PDF cross-check. Document the boundary.
 
-- [ ] `W04.P20.S77` - add architectural docstring at modelo init and verification init explaining the boundary; `consider renaming verify_modelo_revision to validate_modelo_revision; `src/aeat/application/`.
+- [x] `W04.P20.S77` - add architectural docstring at modelo init and verification init explaining the boundary; `consider renaming verify_modelo_revision to validate_modelo_revision; `src/aeat/application/`.
 
 ### Phase `W04.P21` - Wave-4 review and persona re-run BREAKPOINT
 
