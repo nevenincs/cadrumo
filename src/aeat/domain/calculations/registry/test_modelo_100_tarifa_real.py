@@ -48,33 +48,42 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 # Base liquidable general: 35,400 EUR (Pere shape per S115 spec).
 #
 # Escala estatal (LIRPF Art. 63, unchanged 2024):
-#   0–12,450        @ 9.500% → 1,182.75
-#   12,450–20,200   @ 12.00% → 930.00   (cumul 2,112.75)
-#   20,200–35,200   @ 15.00% → 2,250.00 (cumul 4,362.75)
-#   35,200–35,400   @ 18.50% → 37.00    (cumul 4,399.75)
+#   0-12,450        @ 9.500% -> 1,182.75
+#   12,450-20,200   @ 12.00% -> 930.00   (cumul 2,112.75)
+#   20,200-35,200   @ 15.00% -> 2,250.00 (cumul 4,362.75)
+#   35,200-35,400   @ 18.50% -> 37.00    (cumul 4,399.75)
 #
 # Mínimo del contribuyente (LIRPF Art. 57): 5,550 EUR.
 # Tarifa on mínimo (escala estatal, same brackets):
-#   0–5,550 @ 9.500% = 527.25
+#   0-5,550 @ 9.500% = 527.25
 #
 # Cuota íntegra estatal (LIRPF Art. 62):
-#   0545 = 4,399.75 − 527.25 = 3,872.50
+#   0545 = 4,399.75 - 527.25 = 3,872.50
 #
 # Escala autonómica Cataluña 2024 (LIRPF Art. 74, Ley Cataluña 5/2020):
-#   0–12,450.00       @ 10.500% → 1,307.25
-#   12,450–17,707.20  @ 12.000% → 630.86   (cumul 1,938.11)
-#   17,707.20–21,000  @ 14.000% → 460.99   (cumul 2,399.10)
-#   21,000–33,007.20  @ 15.000% → 1,801.08 (cumul 4,200.18)
-#   33,007.20–35,400  @ 18.800% → 449.85   (cumul 4,650.03)
+#   0-12,450.00       @ 10.500% -> 1,307.25
+#   12,450-17,707.20  @ 12.000% -> 630.86   (cumul 1,938.11)
+#   17,707.20-21,000  @ 14.000% -> 460.99   (cumul 2,399.10)
+#   21,000-33,007.20  @ 15.000% -> 1,801.08 (cumul 4,200.18)
+#   33,007.20-35,400  @ 18.800% -> 449.85   (cumul 4,650.03)
 #
 # Mínimo del contribuyente (same 5,550 EUR, autonómica):
-#   0–5,550 @ 10.500% = 582.75
+#   0-5,550 @ 10.500% = 582.75
 #
 # Cuota íntegra autonómica (LIRPF Art. 75):
-#   0546 = 4,650.03 − 582.75 = 4,067.28
+#   0546 = 4,650.03 - 582.75 = 4,067.28
 # -----------------------------------------------------------------------
 
+# S353 fix: casilla 0505 is now computed via formula renta-2024-base-liquidable-
+# general-sometida-a-gravamen (max(0, 0500 - 0527)).  Tests must supply the leaf
+# manual casilla 0003 (trabajo ingresos íntegros) rather than 0505 directly.
+# With 0003=35400 and all reductions zero the chain produces:
+#   0500 = 35400  (base liquidable general)
+#   0527 = 0      (no anualidades alimentos)
+#   0505 = 35400  (max(0, 35400 - 0))
 _BASE_LIQUIDABLE_GENERAL = Decimal("35400")
+# Input leaf to feed through the computation chain; see formula chain comment above.
+_TRABAJO_INGRESOS_INTEGROS = Decimal("35400")
 _EXPECTED_CUOTA_INTEGRA_ESTATAL = Decimal("3872.50")
 _EXPECTED_CUOTA_INTEGRA_AUTONOMICA = Decimal("4067.28")
 _EXPECTED_MINIMO_CONTRIBUYENTE = Decimal("5550.00")
@@ -95,7 +104,7 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) ->
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0505": _BASE_LIQUIDABLE_GENERAL},
+        inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
@@ -123,15 +132,15 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot) ->
 def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot) -> None:
     """Cuota íntegra estatal (0545) must equal the LIRPF 2024 table result.
 
-    Expected derivation (LIRPF Art. 62–63, escala estatal 2024):
-      tarifa(35400) − tarifa(5550) = 4399.75 − 527.25 = 3,872.50 EUR.
+    Expected derivation (LIRPF Art. 62-63, escala estatal 2024):
+      tarifa(35400) - tarifa(5550) = 4399.75 - 527.25 = 3,872.50 EUR.
 
     This was previously over-stated as 3,132.75 EUR (Cluster T: mínimo personal
     = 0, so the mínimo deduction step was silently skipped).
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0505": _BASE_LIQUIDABLE_GENERAL},
+        inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
@@ -157,12 +166,12 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
 ) -> None:
     """Cuota íntegra autonómica (0546) must equal the Cataluña 2024 table result.
 
-    Expected derivation (LIRPF Art. 74–75, Ley 5/2020 Cataluña escala 2024):
-      tarifa_cat(35400) − tarifa_cat(5550) = 4650.03 − 582.75 = 4,067.28 EUR.
+    Expected derivation (LIRPF Art. 74-75, Ley 5/2020 Cataluña escala 2024):
+      tarifa_cat(35400) - tarifa_cat(5550) = 4650.03 - 582.75 = 4,067.28 EUR.
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0505": _BASE_LIQUIDABLE_GENERAL},
+        inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
@@ -191,7 +200,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
     """
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
-        inputs={"0505": _BASE_LIQUIDABLE_GENERAL},
+        inputs={"0003": _TRABAJO_INGRESOS_INTEGROS},
         date_context={"filing_period": date(2024, 12, 31)},
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
@@ -251,7 +260,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
 # Two descendants (one under 3) scenario (S249-B):
 # base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
 # Mínimo descendientes (Art. 58): first child 2,400 + second child 2,700
-#   + under-3 supplement 3,000 = 8,100 EUR total → casilla 0513 = 8,100.
+#   + under-3 supplement 3,000 = 8,100 EUR total -> casilla 0513 = 8,100.
 # Total mínimo personal y familiar = 5,550 + 8,100 = 13,650 EUR.
 # tarifa_estatal(13650):
 #   0-12,450 @ 9.500% = 1,182.75
@@ -262,7 +271,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
 # Ascendant over 75 scenario (S249-C):
 # base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
 # Mínimo ascendientes (Art. 59): 1,150 (>65) + 1,400 (>75) = 2,550 EUR
-#   → casilla 0515 = 2,550.
+#   -> casilla 0515 = 2,550.
 # Total mínimo personal y familiar = 5,550 + 2,550 = 8,100 EUR.
 # tarifa_estatal(8100):
 #   0-8,100 @ 9.500% = 769.50
@@ -298,7 +307,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs={
-            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0003": _TRABAJO_INGRESOS_INTEGROS,
             "0513": Decimal("1150"),  # Art. 57.2 age supplement, operator-supplied
         },
         date_context={"filing_period": date(2024, 12, 31)},
@@ -332,7 +341,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs={
-            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0003": _TRABAJO_INGRESOS_INTEGROS,
             "0513": Decimal("8100"),  # Art. 58: 2400 + 2700 + 3000, operator-supplied
         },
         date_context={"filing_period": date(2024, 12, 31)},
@@ -361,7 +370,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
     result = calculate_registry_snapshot(
         m100_2024_snapshot,
         inputs={
-            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0003": _TRABAJO_INGRESOS_INTEGROS,
             "0515": Decimal("2550"),  # Art. 59: 1150 + 1400, operator-supplied
         },
         date_context={"filing_period": date(2024, 12, 31)},
@@ -374,4 +383,138 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
         f"cuota íntegra estatal (0545) with Art. 59 ascendant >75 = {cuota_estatal!r}; "
         f"expected {_EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75!r}. "
         f"mínimo total = 5550 + 2550 = 8100 EUR."
+    )
+
+
+# -----------------------------------------------------------------------
+# S353 tests — LIRPF Art. 56 casilla 0505 formula derivation.
+#
+# Root cause: casilla 0505 (base liquidable general sometida a gravamen)
+# was manual — when not supplied the engine used 0 and cuota silently
+# became 0.  The fix adds formula renta-2024-base-liquidable-general-
+# sometida-a-gravamen: max(0, [0500] - [0527]).
+#
+# 0500 = base liquidable general (formula, feeds from rendimiento trabajo).
+# 0527 = anualidades alimentos hijos judicial (formula, sum of casillas
+#        1741, 1744, 1749, 1754, 1759 — Art. 75.3 LIRPF).
+#
+# Oracle: LIRPF Art. 63 escala estatal 2024 (unchanged from prior years).
+#
+# Scenario A: base_liquidable 14,896 EUR, no anualidades.
+#   tarifa(14,896):
+#     0-12,450 @ 9.500% = 1,182.75
+#     12,450-14,896 @ 12.00% = 293.52  (cumul 1,476.27)
+#   tarifa(mínimo 5,550 @ 9.500%) = 527.25
+#   Cuota íntegra estatal = 1,476.27 - 527.25 = 949.02 EUR
+#   (LIRPF 2024 Art. 62-63 / AEAT Renta 2024 Manual Part 1)
+#
+# Scenario B: base_liquidable 14,896 EUR, anualidades judicial 3,000 EUR.
+#   0505 = max(0, 14896 - 3000) = 11,896
+#   tarifa(11,896):
+#     0-11,896 @ 9.500% = 1,130.12
+#   Cuota íntegra estatal = 1,130.12 - 527.25 = 602.87 EUR
+# -----------------------------------------------------------------------
+
+_BASE_14896 = Decimal("14896")
+_ANUALIDADES_3000 = Decimal("3000")
+_EXPECTED_0505_NO_ANUALIDADES = Decimal("14896.00")
+_EXPECTED_0505_WITH_ANUALIDADES = Decimal("11896.00")
+_EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES = Decimal("949.02")
+_EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES = Decimal("602.87")
+
+
+def test_s353_0505_computed_from_0500_no_anualidades(m100_2024_snapshot) -> None:
+    """Casilla 0505 is computed as max(0, 0500) when no anualidades are present.
+
+    S353 regression guard: before the fix, 0505 was manual and silently stayed
+    0, making cuota íntegra 0.  After the fix, 0505 = 0500 = base liquidable
+    = 14,896 EUR and cuota is non-zero per LIRPF 2024 Art. 62-63 tables.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _BASE_14896},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    assert result.values["0505"] == _EXPECTED_0505_NO_ANUALIDADES, (
+        f"casilla 0505 = {result.values['0505']!r}; "
+        f"expected {_EXPECTED_0505_NO_ANUALIDADES!r}. "
+        f"If 0505 = 0 the S353 regression has re-appeared: "
+        f"check 2024/formulas/0168-renta-2024-base-liquidable-general-sometida-a-gravamen.toml."
+    )
+    cuota = result.values["0545"]
+    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) = {cuota!r}; "
+        f"expected {_EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES!r} per LIRPF 2024 Art. 62-63. "
+        f"tarifa(14896) - tarifa(5550) = 1476.27 - 527.25 = 949.02 EUR."
+    )
+
+
+def test_s353_anualidades_alimentos_reduces_0505(m100_2024_snapshot) -> None:
+    """Anualidades por alimentos hijos judicial reduce 0505 per LIRPF Art. 75.3.
+
+    With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR:
+      0527 = 3,000 (computed from casilla 1741, first child)
+      0505 = max(0, 14,896 - 3,000) = 11,896 EUR
+      cuota íntegra estatal = tarifa(11,896) - tarifa(5,550)
+                            = 1,130.12 - 527.25 = 602.87 EUR
+    Oracle: LIRPF 2024 Art. 63 escala estatal.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _BASE_14896, "1741": _ANUALIDADES_3000},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    assert result.values["0527"] == _ANUALIDADES_3000, (
+        f"casilla 0527 (anualidades total) = {result.values['0527']!r}; expected 3000.00"
+    )
+    assert result.values["0505"] == _EXPECTED_0505_WITH_ANUALIDADES, (
+        f"casilla 0505 = {result.values['0505']!r}; "
+        f"expected {_EXPECTED_0505_WITH_ANUALIDADES!r} (14896 - 3000 = 11896). "
+        f"0505 formula should subtract 0527 from 0500."
+    )
+    cuota = result.values["0545"]
+    assert abs(cuota - _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) = {cuota!r}; "
+        f"expected {_EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES!r} per LIRPF 2024 Art. 63. "
+        f"tarifa(11896) - tarifa(5550) = 1130.12 - 527.25 = 602.87 EUR."
+    )
+
+
+def test_s353_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot) -> None:
+    """Anti-tautology: anualidades judicial must change cuota relative to no-anualidades.
+
+    If the 0527 -> 0505 subtraction is not wired, both scenarios yield the same
+    cuota (the formula is broken). This test catches that failure.
+    """
+    result_no_anualidades = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _BASE_14896},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+    result_with_anualidades = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={"0003": _BASE_14896, "1741": _ANUALIDADES_3000},
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    cuota_no = result_no_anualidades.values["0545"]
+    cuota_with = result_with_anualidades.values["0545"]
+    assert cuota_with < cuota_no, (
+        f"cuota with anualidades ({cuota_with!r}) must be less than without ({cuota_no!r}). "
+        f"If equal, the 0527 -> 0505 subtraction is not wired in the formula."
+    )
+    expected_delta = _EXPECTED_CUOTA_ESTATAL_14896_NO_ANUALIDADES - _EXPECTED_CUOTA_ESTATAL_14896_WITH_ANUALIDADES
+    actual_delta = cuota_no - cuota_with
+    assert abs(actual_delta - expected_delta) <= _TOLERANCE, (
+        f"cuota delta = {actual_delta!r}; expected delta {expected_delta!r} (949.02 - 602.87 = 346.15 EUR)."
     )
