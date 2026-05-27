@@ -483,3 +483,109 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     assert casilla_a == amount
     # Scenario B: both flow
     assert casilla_b == amount * 2
+
+
+# ---------------------------------------------------------------------------
+# S385a: source_jurisdiction provenance pass-through (#258)
+#
+# LIRPF Art. 8 establishes the universal-base presumption for Spanish-
+# resident taxpayers: M100 / M130 actividad-económica income aggregates
+# ALL source jurisdictions into the same base, with foreign-source rows
+# carrying their declared jurisdiction through for audit. The IRNR /
+# Beckham per-row gating concerns (Art. 25 TRLIRNR, Art. 93.5 LIRPF)
+# belong on those engines (#256 IRNR pending; M151 stub-only); on the
+# resident-IRPF surface the source_jurisdiction is provenance only.
+# ---------------------------------------------------------------------------
+
+
+def _actividad_transaction_with_source(
+    provider_id: str,
+    *,
+    value_date: date,
+    amount: Decimal,
+    source_jurisdiction: str | None,
+) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": _raw_transaction(
+                provider_id,
+                booked_date=value_date,
+                value_date=value_date,
+                amount=amount,
+            ),
+            "direction": TransactionDirection.INCOMING,
+            "business_classification": BusinessClassification.BUSINESS,
+            "irpf_category": "actividad_economica",
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
+            "classified_by": "manual",
+            "source_jurisdiction": source_jurisdiction,
+        }
+    )
+
+
+def test_renta_income_observation_preserves_es_source_jurisdiction() -> None:
+    """A Spanish-source actividad row carries source_jurisdiction="ES" on the observation.
+
+    Provenance witness for the M100 / M130 income pipeline. The
+    aggregation does NOT filter on source_jurisdiction (Art. 8 universal-
+    base presumption); it propagates the declared value from the ledger
+    row onto the typed observation so downstream auditors and the future
+    IRNR / Beckham engines can read the jurisdiction without retrofitting
+    the read-side.
+    """
+    tx = _actividad_transaction_with_source(
+        "ae-es-001",
+        value_date=date(2024, 2, 1),
+        amount=Decimal("3000.00"),
+        source_jurisdiction="ES",
+    )
+    catalogue = TransactionCatalogue.from_transactions((tx,))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+
+    assert len(result.observations) == 1
+    assert result.observations[0].source_jurisdiction == "ES"
+
+
+def test_renta_income_aggregation_mixes_es_and_foreign_source() -> None:
+    """LIRPF Art. 8: ES and foreign-source rows BOTH enter the M130 base; jurisdictions distinct.
+
+    The universal-base presumption (LIRPF Art. 8.1) taxes Spanish residents
+    on worldwide income, so a foreign-source row from an FR client must
+    aggregate into casilla 01 alongside ES rows. This test guards against
+    a future "clean-up" refactor that filters foreign-source out of the
+    resident-IRPF surface — that would silently under-state the base for
+    every resident with cross-border income (Pedro intracom, Olivia UK
+    landlord pre-IRNR move, etc.).
+
+    Distinct-preservation: both observations must carry their declared
+    jurisdiction; collapsing both to "ES" or to None would lose the audit
+    trail and break the future IRNR / Beckham read-side.
+    """
+    es_amount = Decimal("1000.00")
+    fr_amount = Decimal("500.00")
+    es_row = _actividad_transaction_with_source(
+        "ae-es-002",
+        value_date=date(2024, 1, 15),
+        amount=es_amount,
+        source_jurisdiction="ES",
+    )
+    fr_row = _actividad_transaction_with_source(
+        "ae-fr-001",
+        value_date=date(2024, 2, 10),
+        amount=fr_amount,
+        source_jurisdiction="FR",
+    )
+    catalogue = TransactionCatalogue.from_transactions((es_row, fr_row))
+
+    result = aggregate_renta_income_ledger(catalogue, bucket_id="test", period="2024Q1")
+
+    # Art. 8 universal-base: both rows enter the casilla aggregation.
+    assert len(result.observations) == 2
+    assert result.casilla_aggregation.casilla_values["01"] == es_amount + fr_amount
+    # Distinct-preservation witness: each observation carries its own
+    # jurisdiction unchanged.
+    by_id = {obs.transaction_id: obs for obs in result.observations}
+    assert by_id[es_row.transaction_id].source_jurisdiction == "ES"
+    assert by_id[fr_row.transaction_id].source_jurisdiction == "FR"
