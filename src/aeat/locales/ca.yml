@@ -1021,9 +1021,15 @@ cli:
         sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada pel llindar del 50% del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
         sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si ja s''ha assolit el límit del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
         sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
+        autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable al Model 303.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de ser un import decimal; rebut: {value}'
         sal_reserva_casilla_not_found: '--sal-beneficio-neto no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reserva especial de Societat Laboral. Fes servir --casilla per subministrar els valors directament.'
         sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social s''han de subministrar conjuntament.'
         sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals.'
+        compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art. 82-84 LIRPF) respecte a tributació individual per a una unitat de treball Model 100 existent. Executa el motor de càlcul del registre dues vegades — una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual) — sobre les mateixes dades de perfil, i emet el diferencial de quota i la recomanació. Operació efímera: no es persisteix cap revisió.'
+        compare_taxation_work_unit_not_found: 'Unitat de treball {work_unit_id} no trobada; consulta les unitats actives amb ''aeat app modelo work list''.'
+        compare_taxation_error: 'La comparació conjunta vs. individual no és disponible: {detail}'
+        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)

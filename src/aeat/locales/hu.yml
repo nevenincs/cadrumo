@@ -755,9 +755,15 @@ cli:
         sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
         sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
         sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza a 21%-ot (LISIVA 90. cikk) az esedékes ÁFA kiszámításához. Csak a 303-as modellre alkalmazható.'
+        autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek decimális összegnek kell lennie; kapott érték: {value}'
         sal_reserva_casilla_not_found: 'A --sal-beneficio-neto nem támogatott ennél a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.'
         sal_reserva_incomplete: 'A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social opciókat együtt kell megadni.'
         sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell lenniük.'
+        compare_taxation_help: 'Összehasonlítja az IRPF kvótát közös (conjunta, Art. 82-84 LIRPF) és egyéni adóbevallás esetén egy meglévő 100-as modelo munkaegységre. A nyilvántartási motort kétszer futtatja — egyszer 2-es (conjunta) és egyszer 1-es (individual) nyilatkozattípussal — azonos profilkötéseken, és közli a kvóta-különbözetet és a javaslatot. Efemer: nem ment revíziót.'
+        compare_taxation_work_unit_not_found: 'A(z) {work_unit_id} munkaegység nem található; ellenőrizd az aktív egységeket az ''aeat app modelo work list'' paranccsal.'
+        compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető el: {detail}'
+        compare_taxation_recommendation_line: 'JAVASLAT: {recommendation} — {reason}'
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date

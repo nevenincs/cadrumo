@@ -64,6 +64,32 @@ legal_refs = ["ley-37-1992:art-84", "rd-1624-1992:art-71", "orden-eha-3786-2008:
 source_refs = ["aeat-dr-303-2025"]
 
 [[revisions.2023-y-siguientes.casillas]]
+id = "iva.autoconsumo.promotor.base"
+number = "iva.autoconsumo.promotor.base"
+label = "Base imponible del autoconsumo del promotor inmobiliario (coste de construccion, Art. 9.1.c + Art. 79.4 LISIVA)"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_base"
+required = false
+input_kind = "bound"
+binding = "modelo-303-autoconsumo-promotor-base"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2023-y-siguientes.casillas]]
+id = "iva.autoconsumo.promotor.cuota"
+number = "iva.autoconsumo.promotor.cuota"
+label = "Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre base imponible, Art. 9.1.c + Art. 90 LISIVA)"
+section = ["iva", "regimen_general", "devengado"]
+data_type = "money"
+semantic_role = "iva_autoconsumo_promotor_cuota"
+required = false
+input_kind = "computed"
+formula = "modelo-303-autoconsumo-promotor-cuota"
+legal_refs = ["ley-37-1992:art-9", "ley-37-1992:art-79", "ley-37-1992:art-90", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025"]
+
+[[revisions.2023-y-siguientes.casillas]]
 id = "iva.cuota-devengada-total"
 number = "iva.cuota-devengada-total"
 label = "Total cuota IVA devengada (repercutido a los tres tipos + autorepercutido en adquisiciones intracomunitarias)"

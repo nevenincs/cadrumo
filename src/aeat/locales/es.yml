@@ -1036,9 +1036,15 @@ cli:
         sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada por el umbral del 50% del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
         sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
         sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
+        autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica automáticamente el 21% (Art. 90 LISIVA) para calcular la cuota devengada. Sólo aplicable a Modelo 303.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base debe ser un importe decimal; recibido: {value}'
         sal_reserva_casilla_not_found: '--sal-beneficio-neto no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.'
         sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social deben suministrarse conjuntamente.'
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales.'
+        compare_taxation_help: 'Compara la cuota IRPF en tributación conjunta (Art. 82-84 LIRPF) frente a tributación individual para una unidad de trabajo Modelo 100 existente. Ejecuta el motor de cálculo del registro dos veces — una con tipo de declaración = 2 (conjunta) y otra con tipo = 1 (individual) — sobre los mismos datos de perfil, y emite el diferencial de cuota y la recomendación. Operación efímera: no persiste ninguna revisión.'
+        compare_taxation_work_unit_not_found: 'Unidad de trabajo {work_unit_id} no encontrada; consulta las unidades activas con ''aeat app modelo work list''.'
+        compare_taxation_error: 'La comparación conjunta vs. individual no está disponible: {detail}'
+        compare_taxation_recommendation_line: 'RECOMENDACIÓN: {recommendation} — {reason}'
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -2053,6 +2059,7 @@ cli:
       verify_help: Verificar la integridad del manual contra su contrato
       view_help: Mostrar la estructura de un manual y, opcionalmente, una sección
       year_help: Año fiscal del manual (p. ej. 2024)
+      verify_missing_translation: 'la sección %{section_id}: falta la clave de traducción de %{field_name}'
     metrics:
       applicability_declaration_count: Nº declaraciones de aplicabilidad
       application_link_count: Nº enlaces de aplicación
