@@ -89,16 +89,18 @@ def test_next_expiry_year_is_earliest_active_lot_plus_four(
     _runtime_profile: None,
 ) -> None:
     """Two lots: 2020 (expired) and 2023 (active). next_expiry_year from 2023 lot."""
+    expired_lot = Decimal("100.00")
+    active_lot = Decimal("200.00")
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
-    repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
+    repo.save_period(_state(filing_year=2020, period="4T", generated=expired_lot))
+    repo.save_period(_state(filing_year=2023, period="2T", generated=active_lot))
 
     report = query_iva_wallet_balance(as_of_year=2026)
 
     # 2020 lot is EXPIRED_REVIEW_REQUIRED (age=6), excluded from next_expiry_year
     # 2023 lot is ACTIVE (age=3), next_expiry_year = 2023 + 4 = 2027
     assert report.next_expiry_year == 2027
-    assert report.total_balance == Decimal("300.00")
+    assert report.total_balance == expired_lot + active_lot
     assert report.lot_count == 2
 
 
