@@ -68,6 +68,15 @@ def _apply(
     )
 
 
+def _assert_missing_wallet_decision_error(exc: ModeloIvaWalletReconciliationBlocked) -> None:
+    if exc.translated_message is None:
+        assert "requires a persisted IVA wallet" in str(exc)
+        return
+    assert exc.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
+    assert exc.suggestion is not None
+    assert "iva-wallet seed" in exc.suggestion
+
+
 def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:
     caller: dict[str, Decimal] = {}
     backend: dict[str, Decimal] = {}
@@ -112,7 +121,7 @@ def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
 
 
 def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="requires a persisted IVA wallet"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -126,6 +135,7 @@ def test_modelo_303_prior_compensation_binding_without_wallet_decision_is_refuse
             backend_binding_values={},
             decision=None,
         )
+    _assert_missing_wallet_decision_error(exc_info.value)
 
 
 def test_modelo_303_without_prior_compensation_binding_can_calculate_without_wallet_decision() -> None:
@@ -138,7 +148,7 @@ def test_modelo_303_without_prior_compensation_binding_can_calculate_without_wal
 
 
 def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="requires a persisted IVA wallet"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -152,10 +162,11 @@ def test_modelo_303_prior_compensation_casilla_without_wallet_decision_is_refuse
             backend_binding_values={},
             decision=None,
         )
+    _assert_missing_wallet_decision_error(exc_info.value)
 
 
 def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="requires a persisted IVA wallet"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -169,6 +180,7 @@ def test_modelo_303_backend_prior_compensation_casilla_without_wallet_decision_i
             backend_binding_values={},
             decision=None,
         )
+    _assert_missing_wallet_decision_error(exc_info.value)
 
 
 def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:

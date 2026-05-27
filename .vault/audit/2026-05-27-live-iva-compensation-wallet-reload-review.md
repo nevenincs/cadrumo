@@ -20,3 +20,6 @@ The initial static guard covered wallet-named test/source files but not the live
 
 RELOAD-004 | HIGH | Filed-history-only fallback must not become filing-grade IVA wallet authority
 The reconciliation path classified missing direct wallet/cartera plus AEAT filed-history recurrence as `filed_history_only` but left the decision non-blocking, allowing Modelo 303 calculation to prefill prior compensation from fallback evidence. Resolved 2026-05-27 by making `filed_history_only`, missing-wallet local recurrence, and stale-wallet local recurrence blocking decisions; the real Modelo 303 engine now requires an explicit taxpayer override before using the fallback amount.
+
+RELOAD-005 | HIGH | Readiness coverage must name filed-history-only fallback, not only wallet divergence
+Export and verification readiness already refused persisted blocked wallet decisions generically, but the focused readiness tests only covered direct wallet/local divergence. Resolved 2026-05-27 by adding real-behavior Modelo 303 verification and export tests proving a persisted `filed_history_only` fallback decision is surfaced as blocking readiness and no export file is emitted.

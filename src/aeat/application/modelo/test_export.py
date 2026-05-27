@@ -190,6 +190,33 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
     )
 
 
+def _filed_history_only_wallet_decision(
+    *,
+    taxpayer_nif: str,
+    period: str = "2T",
+) -> IvaCompensationReconciliationDecision:
+    now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    return IvaCompensationReconciliationDecision(
+        taxpayer_nif=taxpayer_nif,
+        target_year=2026,
+        target_period=period,
+        selected_authority="filed_history",
+        selected_amount=Decimal("800.00"),
+        wallet_amount=None,
+        local_recurrence_amount=Decimal("800.00"),
+        override_amount=None,
+        divergence="filed_history_only",
+        blocked=True,
+        stale_wallet=False,
+        reason=(
+            "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
+            "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
+        ),
+        wallet_captured_at=None,
+        decided_at=now,
+    )
+
+
 def _wallet_decision_repository_at(sidecar_root: Path) -> tuple[IvaWalletDecisionRepository, Settings]:
     settings = Settings(aeat_local_storage_root=sidecar_root, aeat_active_profile="operator")
     objects = inspect_bucket_storage_runtime("operator", settings).secure_object_repository()
@@ -350,6 +377,33 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     assert not (tmp_path / "out.txt").exists()
 
 
+def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_history_only(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    taxpayer_nif = "taxpayeralpha"
+    bucket_id = _seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="303",
+        filing_year=2026,
+        period="2T",
+    )
+    IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
+
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only"):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=tmp_path / "out.txt",
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+        )
+    assert not (tmp_path / "out.txt").exists()
+
+
 def test_export_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None,
     tmp_path: Path,
@@ -381,6 +435,36 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     finally:
         dispose_engine(decision_settings)
     assert not (tmp_path / "out.txt").exists()
+
+
+def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocking_readiness(
+    isolated_backend: None,
+) -> None:
+    taxpayer_nif = "taxpayeralpha"
+    bucket_id = _seed_profile(tax_id=taxpayer_nif)
+    _, calc_rev_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.BORRADOR,
+        modelo="303",
+        filing_year=2026,
+        period="2T",
+    )
+    IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
+
+    report = verify_modelo_revision(
+        calc_rev_id,
+        actor="operator",
+        workflow_profile=_profile(),
+        work_unit_repository=WorkUnitCatalogueRepository(),
+        calculation_repository=CalculationRevisionCatalogueRepository(),
+        verification_repository=VerificationReportCatalogueRepository(),
+    )
+
+    assert report.granted_verificado_completo is False
+    assert any("filed_history_only" in finding.message for finding in report.findings)
+    revision = CalculationRevisionCatalogueRepository().load().get(calc_rev_id)
+    assert revision is not None
+    assert revision.state is CalculationRevisionState.BORRADOR
 
 
 def test_verify_modelo_303_uses_injected_wallet_decision_repository(
