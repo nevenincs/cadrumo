@@ -97,3 +97,66 @@ def test_work_create_650_refusal_fires_before_profile_check(
     assert result.exit_code != 0, result.output
     assert "Traceback" not in result.output
     assert "29/1987" in result.output or "LISyD" in result.output or "Hacienda" in result.output
+
+
+def test_causante_ccaa_foral_refused_before_stub_guard(
+    _isolated_cli_backend: Path,
+) -> None:
+    """--causante-ccaa with a foral regime (País Vasco / Navarra) must be
+    refused with a ForalRegimeError message — not a stub refusal — even
+    when the modelo would also trigger the stub guard.
+
+    The foral guard runs before ``_guard_stub_modelo`` so the operator
+    receives a domain-correct error that names the Concierto / Convenio
+    regime rather than a generic "modelo not yet supported" message.
+
+    Anti-tautology: assertions target legal phrases specific to the foral
+    refusal path ("foral", "Concierto", "Ley 12/2002") that the stub guard
+    cannot produce.
+    """
+
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "work", "create",
+            "--modelo", "650",
+            "--year", "2024",
+            "--period", "0A",
+            "--revision", "actual",
+            "--causante-ccaa", "pais_vasco",
+        ]
+    )  # fmt: skip
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    output = result.output or ""
+    # Must name the foral regime or governing statute.
+    assert any(
+        phrase in output
+        for phrase in ("foral", "Concierto", "Ley 12/2002", "Hacienda Foral", "País Vasco")
+    ), f"Expected foral-regime message but got: {output!r}"
+
+
+def test_causante_ccaa_navarra_foral_refused(
+    _isolated_cli_backend: Path,
+) -> None:
+    """--causante-ccaa navarra is refused with a foral-regime error
+    (Convenio Económico / Ley 28/1990) before the stub guard fires."""
+
+    result = invoke_cached_cli(
+        [
+            "app", "modelo", "work", "create",
+            "--modelo", "650",
+            "--year", "2024",
+            "--period", "0A",
+            "--revision", "actual",
+            "--causante-ccaa", "navarra",
+        ]
+    )  # fmt: skip
+
+    assert result.exit_code != 0, result.output
+    assert "Traceback" not in result.output
+    output = result.output or ""
+    assert any(
+        phrase in output
+        for phrase in ("foral", "Convenio", "Ley 28/1990", "Navarra", "Hacienda Foral")
+    ), f"Expected foral-regime message but got: {output!r}"

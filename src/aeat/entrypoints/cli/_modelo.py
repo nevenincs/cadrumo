@@ -59,6 +59,7 @@ from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
 from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
+from ...domain.profile import ForalRegimeError, parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
 if TYPE_CHECKING:
@@ -1219,6 +1220,7 @@ def _work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
         discarded_at=unit.discarded_at.isoformat() if unit.discarded_at else None,
         discarded_by=unit.discarded_by,
         discard_reason=unit.discard_reason,
+        causante_ccaa=unit.causante_ccaa.value if unit.causante_ccaa is not None else None,
     )
 
 
@@ -1241,6 +1243,8 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
         lines.append(f"discarded_by\t{unit.discarded_by}")
     if unit.discard_reason is not None:
         lines.append(f"discard_reason\t{unit.discard_reason}")
+    if unit.causante_ccaa is not None:
+        lines.append(f"causante_ccaa\t{unit.causante_ccaa.value}")
     return lines
 
 
@@ -1618,6 +1622,20 @@ def work_create(
             ),
         ),
     ] = False,
+    causante_ccaa_raw: Annotated[
+        str | None,
+        typer.Option(
+            "--causante-ccaa",
+            help=tr(
+                "cli.app.modelo.work.causante_ccaa_help",
+                default=(
+                    "CCAA de residencia habitual del causante (ISD Modelo 650/660) o CCAA donde se ubica el bien "
+                    "transmitido (ITPyAJD Modelo 600/620). Determina la Hacienda competente (Ley 22/2009 Art. 32). "
+                    "País Vasco y Navarra son regímenes forales; consulta la Hacienda autonómica correspondiente."
+                ),
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
@@ -1628,6 +1646,12 @@ def work_create(
     # refusal fires.  Registry-registered stubs (151, 714, 721) are
     # intercepted equally early.
     _validate_filing_year(year)
+    # Foral guard: parse before the stub guard so the operator receives a
+    # domain-correct ForalRegimeError rather than a generic "modelo not yet
+    # supported" message when a foral CCAA is supplied.  The
+    # command_error_boundary decorator surfaces AeatError (including
+    # ForalRegimeError) on stderr and exits; no try/except needed here.
+    causante_ccaa = parse_tax_region(causante_ccaa_raw) if causante_ccaa_raw is not None else None
     _guard_stub_modelo(modelo)
     _validate_registry_target(modelo, revision, year)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
@@ -1669,6 +1693,7 @@ def work_create(
         revision_id=revision,
         name=name,
         actor=resolved_actor,
+        causante_ccaa=causante_ccaa,
     )
 
     # A --name supplied on a reuse is not silently dropped: it is applied
@@ -2174,6 +2199,9 @@ def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
 #: Semantic role that identifies the INSS maternidad/paternidad exempt casilla.
 _INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
 
+#: Semantic role that identifies the Art. 81 deducción maternidad casilla (0611).
+_DEDUCCION_MATERNIDAD_SEMANTIC_ROLE = "irpf_deduccion_maternidad"
+
 
 def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
     """Return the casilla id for the INSS maternidad/paternidad exempt slot.
@@ -2207,6 +2235,85 @@ def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
             ),
         )
     )
+
+
+def _resolve_deduccion_maternidad_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the Art. 81 deducción maternidad slot (0611).
+
+    Looks up by ``semantic_role`` so future M100 revisions that renumber the
+    casilla still resolve correctly.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found.
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _DEDUCCION_MATERNIDAD_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.deduccion_maternidad_casilla_not_found",
+            default=(
+                "--meses-trabajo-con-hijo-menor-3 is not supported for this modelo revision; "
+                "no Art. 81 deducción maternidad casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
+    """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``.
+
+    Returns ``(hijo_id_str, meses_int)``.  Raises :exc:`typer.BadParameter` on
+    malformed input or out-of-range meses (must be 0–12).
+    """
+
+    if "=" not in spec:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_bad_format",
+                spec=spec,
+                default="--meses-trabajo-con-hijo-menor-3 requires HIJO_ID=MESES format; got: {spec}",
+            )
+        )
+    hijo_id, _, meses_raw = spec.partition("=")
+    hijo_id = hijo_id.strip()
+    meses_raw = meses_raw.strip()
+    try:
+        meses = int(meses_raw)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_not_integer",
+                spec=spec,
+                default="--meses-trabajo-con-hijo-menor-3 MESES must be an integer 0–12; got: {spec}",
+            )
+        ) from exc
+    if not (0 <= meses <= 12):
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.meses_trabajo_hijo_out_of_range",
+                spec=spec,
+                meses=meses,
+                default="--meses-trabajo-con-hijo-menor-3 MESES must be 0–12; got {meses} in: {spec}",
+            )
+        )
+    return hijo_id, meses
+
+
+def _compute_deduccion_maternidad_0611(meses_por_hijo: list[tuple[str, int]]) -> int:
+    """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
+
+    Formula: ``sum(min(meses × 100, 1_200))`` for each ``(hijo_id, meses)`` pair.
+    Returns an integer euros amount.
+    """
+    return sum(min(meses * 100, 1200) for _, meses in meses_por_hijo)
 
 
 def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
@@ -2356,6 +2463,23 @@ def work_calculate(
             ),
         ),
     ] = None,
+    meses_trabajo_con_hijo_menor_3: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--meses-trabajo-con-hijo-menor-3",
+            help=tr(
+                "cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help",
+                default=(
+                    "Meses trabajados mientras el hijo menor de 3 años estaba en la unidad "
+                    "familiar (Art. 81 LIRPF deducción maternidad). Formato: HIJO_ID=MESES. "
+                    "Repetible por cada hijo. HIJO_ID es un identificador libre (p. ej. 0, 1, 'laia'). "
+                    "Se calcula sum(min(MESES × 100, 1200)) y se inyecta en casilla 0611. "
+                    "Ejemplo: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 "
+                    "→ 0611 = 1800."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2412,6 +2536,20 @@ def work_calculate(
             ) from exc
         inss_casilla_id = _resolve_inss_exenta_casilla_id(work_unit_id)
         casilla_inputs[inss_casilla_id] = inss_decimal
+
+    # --meses-trabajo-con-hijo-menor-3 computes the Art. 81 LIRPF deducción
+    # maternidad as sum(min(meses × 100, 1_200)) per eligible child and
+    # injects the result into the revision-specific casilla 0611, resolved
+    # by semantic_role so future revisions that renumber the casilla still
+    # work correctly.
+    if meses_trabajo_con_hijo_menor_3:
+        meses_pairs = [
+            _parse_meses_trabajo_hijo_spec(spec)
+            for spec in meses_trabajo_con_hijo_menor_3
+        ]
+        deduccion_amount = _compute_deduccion_maternidad_0611(meses_pairs)
+        maternidad_casilla_id = _resolve_deduccion_maternidad_casilla_id(work_unit_id)
+        casilla_inputs[maternidad_casilla_id] = Decimal(deduccion_amount)
 
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}

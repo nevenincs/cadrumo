@@ -37,6 +37,7 @@ class WorkUnitPayload(OutputSchema):
     discarded_at: str | None = None
     discarded_by: str | None = None
     discard_reason: str | None = None
+    causante_ccaa: str | None = None
 
 
 class ObservationPayload(OutputSchema):
