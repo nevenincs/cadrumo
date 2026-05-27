@@ -19,11 +19,13 @@ before any state access.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
+from aeat.core.config import override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -33,23 +35,22 @@ _OPTION_FLAG = "--output-language"
 
 
 @pytest.fixture(autouse=True)
-def _isolated_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'ol-parity.db').as_posix()}")
+def _isolated_state(tmp_path: Path) -> Iterator[None]:
+    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None) as settings:
+        dispose_engine(settings)
+        try:
+            yield
+        finally:
+            dispose_engine(settings)
 
 
 def _assert_output_language_registered(args: list[str]) -> None:
     """Invoke ``--help`` for *args* and assert ``--output-language`` is present."""
     help_args = [*args, "--help"]
     result = invoke_cached_cli(help_args)
-    assert result.exit_code == 0, (
-        f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
-    )
+    assert result.exit_code == 0, f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
     assert _OPTION_FLAG in result.output, (
-        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\n"
-        f"Help output:\n{result.output}"
+        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{result.output}"
     )
 
 
