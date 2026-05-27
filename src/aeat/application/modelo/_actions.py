@@ -567,6 +567,7 @@ def create_work_unit(
         The persisted :class:`aeat.domain.modelos.WorkUnit`.
     """
 
+    _reject_unknown_revision(modelo=modelo, revision_id=revision_id)
     repo = repository or WorkUnitCatalogueRepository()
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     catalogue = repo.load()
@@ -1838,6 +1839,33 @@ def _authority_via_resources() -> ValidatedRegistryAuthority:
     """Return the registry authority via the central resource registry."""
     from ...core.resources import resources
     return resources().modelos.authority
+
+
+def _reject_unknown_revision(*, modelo: str, revision_id: str) -> None:
+    """Refuse a work-unit create that names a revision the registry does not declare.
+
+    The work-unit id is content-addressed over ``(bucket, modelo, year,
+    period, revision_id)``, so a typo or stale revision id quietly
+    creates an unreachable unit (subsequent ``work calculate`` raises
+    the opaque registry-snapshot miss). Catch the typo at the boundary
+    with a clear listing of the valid revision ids for the modelo.
+    """
+
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        modelo_def = _authority_via_resources().modelo(modelo)
+    except RegistrySnapshotError as exc:
+        # Bubble unknown-modelo as a domain error consistent with the
+        # broader create_work_unit error envelope.
+        raise ModeloError(str(exc)) from exc
+    if revision_id in modelo_def.revisions:
+        return
+    available = ", ".join(sorted(modelo_def.revisions))
+    raise ModeloError(
+        f"revision_id {revision_id!r} is not declared on modelo {modelo!r}. "
+        f"Available revisions: {available}"
+    )
 
 
 def _reject_incomplete_amendment_casillas(
