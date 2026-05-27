@@ -1421,21 +1421,26 @@ def work_create(
         )
         operation = "modelo.work.create"
 
-    payload = {
-        "operation": operation,
-        "status": status,
-        "status_message": status_message,
-        "name_applied": name_applied,
-        "applicability_guard_bypassed": allow_not_applicable,
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkCreateResult
+
+    result = WorkCreateResult.model_validate(
+        {
+            "operation": operation,
+            "status": status,
+            "status_message": status_message,
+            "name_applied": name_applied,
+            "applicability_guard_bypassed": allow_not_applicable,
+            **_work_unit_payload(unit),
+        }
+    )
     lines = [
         f"operation\t{operation}",
         f"status\t{status}",
         *_work_unit_lines(unit),
         status_message,
     ]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command=operation, result=result, lines=lines)
 
 
 @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
@@ -1457,13 +1462,17 @@ def work_list(
 
     _require_active_profile()
     units = list_work_units(bucket_id=bucket_id, include_discarded=include_discarded)
-    payload = {
-        "operation": "modelo.work.list",
-        "bucket_id_filter": bucket_id,
-        "include_discarded": include_discarded,
-        "work_unit_count": len(units),
-        "work_units": [_work_unit_payload(unit) for unit in units],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkListResult
+
+    result = WorkListResult.model_validate(
+        {
+            "bucket_id_filter": bucket_id,
+            "include_discarded": include_discarded,
+            "work_unit_count": len(units),
+            "work_units": [_work_unit_payload(unit) for unit in units],
+        }
+    )
     lines = [
         "operation\tmodelo.work.list",
         f"bucket_id_filter\t{bucket_id or ''}",
@@ -1486,7 +1495,7 @@ def work_list(
         )
         for unit in units
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.list", result=result, lines=lines)
 
 
 @work_app.command("status", help=tr("cli.app.modelo.work.status_help"))
@@ -1505,12 +1514,12 @@ def work_status(
         unit = get_work_unit(work_unit_id)
     except WorkUnitNotFoundError as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.status",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkStatusResult
+
+    result = WorkStatusResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines)
 
 
 @work_app.command("rename", help=tr("cli.app.modelo.work.rename_help"))
@@ -1537,12 +1546,12 @@ def work_rename(
         unit = rename_work_unit(work_unit_id, name, actor=actor or _resolve_default_actor())
     except (WorkUnitNotFoundError, WorkUnitMutationRefusedError) as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.rename",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRenameResult
+
+    result = WorkRenameResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
 
 
 @work_app.command("discard", help=tr("cli.app.modelo.work.discard_help"))
@@ -1591,12 +1600,12 @@ def work_discard(
         unit = discard_work_unit(work_unit_id, actor=actor or _resolve_default_actor(), reason=reason)
     except (WorkUnitNotFoundError, WorkUnitAlreadyDiscardedError) as exc:
         raise _bad_parameter_from_error(exc) from exc
-    payload = {
-        "operation": "modelo.work.discard",
-        **_work_unit_payload(unit),
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkDiscardResult
+
+    result = WorkDiscardResult.model_validate(_work_unit_payload(unit))
     lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
 
 
 filing_record_app = typer.Typer(
@@ -2095,12 +2104,16 @@ def work_revisions(
         work_unit_id = _validate_work_unit_id(work_unit_id)
     _require_active_profile()
     revisions = list_calculation_revisions(work_unit_id=work_unit_id)
-    payload = {
-        "operation": "modelo.work.revisions",
-        "work_unit_id_filter": work_unit_id,
-        "revision_count": len(revisions),
-        "revisions": [_calculation_revision_payload(rev) for rev in revisions],
-    }
+    from ._common import _emit_envelope
+    from ._modelo_payloads import WorkRevisionsResult
+
+    result = WorkRevisionsResult.model_validate(
+        {
+            "work_unit_id_filter": work_unit_id,
+            "revision_count": len(revisions),
+            "revisions": [_calculation_revision_payload(rev) for rev in revisions],
+        }
+    )
     lines = [
         "operation\tmodelo.work.revisions",
         f"work_unit_id_filter\t{work_unit_id or ''}",
@@ -2111,7 +2124,7 @@ def work_revisions(
         f"{rev.calculation_revision_id}\t{rev.work_unit_id}\t{rev.state.value}\t{rev.created_at.isoformat()}"
         for rev in revisions
     )
-    _emit(ctx, payload, lines)
+    _emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 
 @work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
