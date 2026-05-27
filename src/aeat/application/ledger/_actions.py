@@ -63,6 +63,11 @@ from ...domain.transactions import (
     derive_split_group_id,
     derive_transaction_id,
 )
+from ...domain.currency import (
+    CurrencyNormalizationService,
+    CurrencyNormalizationStatus,
+    MonetaryAmount,
+)
 from ...domain.usage_ratios import (
     UsageRatioProfile,
     UsageRatioValidationError,
@@ -268,12 +273,34 @@ class _ImportRowPlan(NamedTuple):
     likely_duplicate_refs: tuple[BucketTransactionRef, ...]
 
 
+def _apply_fx_conversion(
+    raw: RawTransaction,
+    currency_normalizer: CurrencyNormalizationService | None,
+) -> tuple[Decimal | None, Decimal | None]:
+    """Return ``(fx_rate, value_in_eur)`` for a raw row, or ``(None, None)``.
+
+    EUR-native rows always yield ``(None, None)``.  Non-EUR rows with no
+    normalizer or a missing rate also yield ``(None, None)``, preserving the
+    coupling invariant on :class:`Transaction`.
+    """
+    if raw.currency == "EUR" or currency_normalizer is None:
+        return (None, None)
+    rate_date = raw.value_date or raw.booked_date
+    result = currency_normalizer.normalize(
+        MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date
+    )
+    if result.status is not CurrencyNormalizationStatus.NORMALIZED or result.rate is None:
+        return (None, None)
+    return (result.rate, result.eur_amount)
+
+
 def _evaluate_import_rows(
     *,
     bucket_id: str,
     catalogue: TransactionCatalogue,
     raw_rows: tuple[RawTransaction, ...],
     direction_resolver: Callable[[RawTransaction], object],
+    currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> _ImportRowPlan:
     """Classify every raw row as imported / skipped / likely-duplicate.
 
@@ -299,11 +326,14 @@ def _evaluate_import_rows(
                 BucketTransactionRef(bucket_id=bucket_id, transaction_id=derive_transaction_id(raw))
             )
             continue
+        fx_rate, value_in_eur = _apply_fx_conversion(raw, currency_normalizer)
         transaction = Transaction.model_validate(
             {
                 "raw": raw,
                 "direction": direction_resolver(raw),
                 "import_fingerprint": fingerprint,
+                "fx_rate": fx_rate,
+                "value_in_eur": value_in_eur,
             }
         )
         batch_fingerprints.add(fingerprint)
@@ -329,6 +359,7 @@ def import_ledger_transactions(
     actor: str = "operator",
     source_command: str = "aeat app ledger import",
     occurred_at: datetime | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> LedgerImportOperationResult:
     """Import provider transactions into one bucket catalogue and emit events."""
 
@@ -342,6 +373,7 @@ def import_ledger_transactions(
         catalogue=catalogue,
         raw_rows=raw_rows,
         direction_resolver=direction_resolver,
+        currency_normalizer=currency_normalizer,
     )
     imported_transactions = list(plan.imported)
     imported_refs = [

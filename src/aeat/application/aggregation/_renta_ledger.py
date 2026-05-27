@@ -33,6 +33,7 @@ from ...domain.transactions import (
 )
 from ...domain.transactions import TransactionDirection as LedgerTransactionDirection
 from . import _shared_issue_reasons
+from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationPeriodError, AggregationValidationError, t
 from ._models import CasillaAggregation, CasillaProvenance, Period, PeriodKind
 
@@ -268,7 +269,7 @@ def _classify_renta_transaction(
             reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION,
             detail=f"transaction direction {transaction.direction.value!r} is not a Renta expense flow",
         )
-    if transaction.raw.currency != "EUR":
+    if is_non_eur_without_conversion(transaction):
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,

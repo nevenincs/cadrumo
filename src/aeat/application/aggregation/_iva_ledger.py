@@ -39,6 +39,7 @@ from ...domain.transactions import (
     TransactionDirection as LedgerTransactionDirection,
 )
 from . import _shared_issue_reasons
+from ._currency_predicates import is_non_eur_without_conversion
 from ._errors import AggregationValidationError, t
 from ._models import Period
 
@@ -394,7 +395,7 @@ def _classify_iva_transaction(
                 detail=f"transaction date {operation_date.isoformat()} is outside {resolved_period.raw}",
             )
         )
-    if transaction.raw.currency != "EUR":
+    if is_non_eur_without_conversion(transaction):
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
