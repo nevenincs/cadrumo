@@ -126,3 +126,18 @@ outside this empty-revision slice: Modelo 130 no longer emits calculated target
 `03` in `test_committed_registry`, and M100 2024/2025 registry validation is
 failing on `ley-35-2006:art-52` / `irpf_reduccion_prevision_social_total`
 semantic-role drift.
+
+## Follow-up: Reviewability Creep Gate
+
+Post-split baseline:
+
+- Largest registry TOML: `legal/irpf.toml`, 2,948 lines.
+- Largest modelo TOML: `modelos/200/revisions/2024-y-siguientes/export/0028-modelo-200-page-019.part-002.toml`, 1,618 lines.
+- Longest registry TOML line: `legal/is.toml`, 884 characters.
+
+The committed-corpus reviewability gate now enforces a hard ceiling of 5,000
+lines per TOML file and 1,200 characters per TOML row, plus a tighter baseline
+watch that fails if the current largest file crosses 3,500 lines or the widest
+row crosses 1,000 characters. This leaves headroom for small regulatory updates
+while making a return to 100k-line registry artifacts impossible without an
+explicit test failure.
