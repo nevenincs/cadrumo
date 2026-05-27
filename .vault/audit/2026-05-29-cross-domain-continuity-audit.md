@@ -2173,6 +2173,117 @@ is documented as FU-W08-A. Three follow-ups logged for W09.
 
 ---
 
+## Task #130 — W08.P38.S146-S148 Wave-8 breakpoint consolidation
+
+**Review date:** 2026-05-27
+
+### S146 — Consolidated Wave-8 commit review
+
+#### W08.P35 — De-hardcode 17 f-string error raises (`b6991aeb1`)
+
+Commit converts all 17 hardcoded `f"..."` error raises in
+`src/aeat/application/modelo/_actions.py` to `tr()`-managed locale keys.
+
+**Locale compliance (G4):** Seven keys coined under
+`application.modelo.errors.*`. Step record confirms `python -m aeat.locales
+scaffold` was used for all four locale files. Verified in `en.yml`: all seven
+keys carry proper operator prose with `%{placeholder}` interpolation. No
+hand-editing of yml structure. G4 compliant.
+
+**Key correctness:** Pattern is consistent — `WorkUnitNotFoundError`,
+`CalculationRevisionNotFoundError`, `FilingRecordNotFoundError`,
+`VerificationReportNotFoundError`, and `WorkUnitMutationRefusedError` each
+receive a dedicated key. No key reuse across error types with different
+semantics. Placeholder names match the function parameter names exactly (`work_unit_id`,
+`calculation_revision_id`, etc.) — no stale names.
+
+**Test changes:** Three `match=` regex assertions that checked raw English
+f-string substrings (`"discard|state|DISCARDED"`, `"calculation|revision|not|found"`)
+were dropped. The exception type assertion is retained. This is correct — the
+`match=` argument was testing implementation language choice, not error semantics.
+Dropping it does not reduce meaningful contract coverage.
+
+**S140 Haiku sweep:** 120 additional f-string raises identified across 43
+application files; operator-facing subset documented in the step record. Captured
+as S255 in W09.P41 for follow-on work. The sweep result is honest: it surfaces
+the scope of remaining work rather than claiming completeness.
+
+**Pre-existing failures noted in step record:** `~40 tests` failing with
+`RegistryValidationError: bound casilla '15' requires resolved binding` — a
+pre-existing registry binding configuration issue, not introduced by this step.
+Confirmed: these failures exist at `HEAD` independently.
+
+**W08.P35 verdict: APPROVE.** Mechanical, correct, locale-scaffold-compliant.
+No follow-ups.
+
+#### W08.P36 — `--output-language` parity (S141-S144)
+
+Previously reviewed as Task #78. Verdict: **ACCEPT-WITH-FOLLOWUP** (FU-W08-A
+through FU-W08-D). Full findings in the Task #78 section above.
+FU-W08-B resolved as S264 (already closed).
+
+#### W08.P37 — Re-export removal (S145)
+
+`882d6c027` closes S145 in the plan with a note that the `__all__` cleanup
+already landed in `f864d72fd` as part of an earlier S02+S03 fix-forward commit.
+No new code was needed. This is a plan-accounting closure — the actual change
+was already reviewed as part of the S02/S03 work. **PASS.**
+
+#### Wave-8 rollup table
+
+| Commit | Step(s) | Verdict | Notes |
+|--------|---------|---------|-------|
+| `b6991aeb1` | S123-S140 | APPROVE | G4 scaffold-compliant; 7 locale keys; test match= removal correct |
+| `4c631baba` | S255 append | APPROVE | Plan expansion; S140 sweep result honest |
+| `03016c382` | S141-S143 | ACCEPT-WITH-FOLLOWUP | FU-W08-A coordination; wiring real |
+| `dcc774795` | S144 | ACCEPT-WITH-FOLLOWUP | FU-W08-C/D fixture + coverage gap |
+| `925d8fb0f` | S141-S143 | ACCEPT-WITH-FOLLOWUP | coder1 duplicate; FU-W08-A noted |
+| `02813c853` | S144 exec record | PASS | Step record only |
+| `882d6c027` | S145 plan close | PASS | Code already landed in f864d72fd |
+
+**Wave-8 consolidated verdict: APPROVE / ACCEPT-WITH-FOLLOWUP.** P35 clean.
+P36 carries four follow-ups (S261-S264 in W09.P41, S264 already closed). P37
+closed via plan accounting. All Wave-8 follow-ups are captured in the plan.
+
+### S147 — Catalan-preferring and Hungarian-preferring persona re-run
+
+**Deferred — not yet dispatched.** The round-8 persona sweep covered Roser
+(Catalan, auth surface, round-5 focus) and Núria (gestor, multi-profile). A
+dedicated Hungarian-preferring persona re-run to verify `--output-language hu`
+renders correctly for the W08.P35 new keys and W08.P36 verb registrations has
+not been dispatched.
+
+**Recommendation:** Spawn a Hungarian-preferring persona as a standalone
+background task. The verification target is narrow:
+- W08.P35 seven new `application.modelo.errors.*` keys render in Hungarian
+  (hu.yml has prose, not scaffold stubs, for all seven).
+- W08.P36 newly-registered commands (`auth clear`, `config profile show`,
+  `work calculate/verify/file`) honour `--output-language hu`.
+
+Until that persona runs, S147 remains open. The overall Wave-8 breakpoint is
+not blocked — S147 is a verification step, not a blocking gate. Logging as
+deferred pending team-lead dispatch decision.
+
+### S148 — Plan expansion from Wave-8 persona findings
+
+No new persona findings to capture beyond what is already in the plan. The
+W08.P36 follow-ups (S261-S266) were captured at review time. The W08.P35 follow-up
+(S255 — 120 remaining f-string raises) is in W09.P41. No uncaptured items.
+
+**S148: COMPLETE.** No new Steps required.
+
+### Wave-8 breakpoint close summary
+
+| Step | Status |
+|------|--------|
+| S146 — consolidated commit review | COMPLETE (rollup above) |
+| S147 — Catalan/Hungarian persona re-run | DEFERRED — Hungarian re-run not yet dispatched |
+| S148 — plan expansion | COMPLETE (no new Steps) |
+
+S146 and S148 closed. S147 deferred pending persona dispatch.
+
+---
+
 ## Storage migration S208+S252 + W10 deadline windows — architecture review (Task #81)
 
 ### Cluster A — Storage migration

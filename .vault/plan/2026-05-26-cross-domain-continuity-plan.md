@@ -221,7 +221,7 @@ Decide and implement substantive predicates on the registry side so empty drafts
 - [x] `W04.P19.S210` - wire post-calculation casilla observation provenance re-validation into verify path; `current verify in _collect_revision_verification_findings only checks input key existence not legal_refs source_refs formula_id integrity; tampering a persisted casilla value silently slips through; add typed drift detection and refuse VERIFICADO_COMPLETO on observation mismatch; `src/aeat/application/modelo/_actions.py`.
 - [x] `W04.P19.S211` - regression test that mutating a persisted casilla value on disk between calculate and verify is caught by the new provenance re-validation; `deliberate tampering scenario currently absent from test_file_flow test_verify_ suite; `src/aeat/application/modelo/test_verification_substance.py`.
 - [x] `W04.P19.S296` - fix M200 DP200014:00562 casilla TOML misclassification — change input_kind from manual to computed and required from true to false in liquidacion-00562-cuota-integra.toml; `no verifier code change required; add regression test asserting M200 revision with DP200014:00562 present only in casilla_values engine-computed reaches VERIFICADO_COMPLETO without MISSING_REQUIRED_CASILLA finding; scope confirmed to ONE casilla across M100/M200/M202/M303; `src/aeat/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/liquidacion-00562-cuota-integra.toml`.
-- [ ] `W04.P19.S305` - ROOT CAUSE CORRECTED: not the session-nesting issue claimed by Nuria persona but the fail-closed exception handler in _refuse_duplicate_tax_id at _profile_repository.py line 668; `one unreadable existing profile currently blocks creating ANY new profile even for a completely different NIF; change except Exception handler to warn-and-continue and only raise on a confirmed duplicate NIF match; gestor multi-profile workflow unblocks immediately; `src/aeat/application/user_profile/_profile_repository.py`.
+- [x] `W04.P19.S305` - ROOT CAUSE CORRECTED: not the session-nesting issue claimed by Nuria persona but the fail-closed exception handler in _refuse_duplicate_tax_id at _profile_repository.py line 668; `one unreadable existing profile currently blocks creating ANY new profile even for a completely different NIF; change except Exception handler to warn-and-continue and only raise on a confirmed duplicate NIF match; gestor multi-profile workflow unblocks immediately; `src/aeat/application/user_profile/_profile_repository.py`.
 
 ### Phase `W04.P20` - verification path naming and boundary documentation
 
@@ -411,9 +411,9 @@ Remove build_error_envelope and json_output_requested from _errors.py __all__; u
 
 Code-reviewer and Catalan and Hungarian preferring personas confirm no message renders in English or Spanish when Catalan or Hungarian selected.
 
-- [ ] `W08.P38.S146` - dispatch vaultspec-code-reviewer against every Wave-8 commit; `.vault/exec/`.
+- [x] `W08.P38.S146` - dispatch vaultspec-code-reviewer against every Wave-8 commit; `.vault/exec/`.
 - [ ] `W08.P38.S147` - re-run Catalan-preferring and Hungarian-preferring personas verify no message in wrong language; `.vault/audit/`.
-- [ ] `W08.P38.S148` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+- [x] `W08.P38.S148` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W09` - systemic drift cleanup file-by-file catalogue
 
