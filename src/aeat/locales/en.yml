@@ -648,6 +648,11 @@ cli:
         period_help: Optional period filter (e.g. Q1, annual)
         year_help: Optional filing year filter
       history_help: Show the chronological lifecycle audit for one modelo
+      iva_wallet:
+        as_of_year_help: Reference year for carry-forward age and expiry calculations.
+        balance_help: Show aggregated IVA compensation carry-forward balance computed from
+          local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
+        group_help: Local IVA compensation wallet balance commands.
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       project:

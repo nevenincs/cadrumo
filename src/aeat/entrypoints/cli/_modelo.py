@@ -63,6 +63,13 @@ from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subc
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
     from ...domain.calculations.registry._schema import ModeloRevision
+    from ._modelo_payloads import (
+        CalculationRevisionPayload,
+        ModeloRecordPayload,
+        ResultSummaryRowPayload,
+        VerificationReportPayload,
+        WorkUnitPayload,
+    )
 
 InputKind = Literal["manual", "bound", "computed", "informational"]
 
@@ -1085,22 +1092,24 @@ work_app = typer.Typer(
 app.add_typer(work_app, name="work")
 
 
-def _work_unit_payload(unit: WorkUnit) -> dict[str, object]:
-    return {
-        "work_unit_id": unit.work_unit_id,
-        "bucket_id": unit.bucket_id,
-        "modelo": str(unit.modelo),
-        "filing_year": unit.filing_year,
-        "period": unit.period,
-        "revision_id": unit.revision_id,
-        "name": unit.name,
-        "state": unit.state.value,
-        "created_at": unit.created_at.isoformat(),
-        "updated_at": unit.updated_at.isoformat(),
-        "discarded_at": unit.discarded_at.isoformat() if unit.discarded_at else None,
-        "discarded_by": unit.discarded_by,
-        "discard_reason": unit.discard_reason,
-    }
+def _work_unit_payload(unit: WorkUnit) -> WorkUnitPayload:
+    from ._modelo_payloads import WorkUnitPayload as _WorkUnitPayload
+
+    return _WorkUnitPayload(
+        work_unit_id=unit.work_unit_id,
+        bucket_id=unit.bucket_id,
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+        revision_id=unit.revision_id,
+        name=unit.name,
+        state=unit.state.value,
+        created_at=unit.created_at.isoformat(),
+        updated_at=unit.updated_at.isoformat(),
+        discarded_at=unit.discarded_at.isoformat() if unit.discarded_at else None,
+        discarded_by=unit.discarded_by,
+        discard_reason=unit.discard_reason,
+    )
 
 
 def _work_unit_lines(unit: WorkUnit) -> list[str]:
@@ -1460,7 +1469,7 @@ def work_create(
             "status_message": status_message,
             "name_applied": name_applied,
             "applicability_guard_bypassed": allow_not_applicable,
-            **_work_unit_payload(unit),
+            **_work_unit_payload(unit).model_dump(mode="python"),
         }
     )
     lines = [
@@ -1546,7 +1555,7 @@ def work_status(
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkStatusResult
 
-    result = WorkStatusResult.model_validate(_work_unit_payload(unit))
+    result = WorkStatusResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.status", *_work_unit_lines(unit)]
     _emit_envelope(ctx, command="modelo.work.status", result=result, lines=lines)
 
@@ -1578,7 +1587,7 @@ def work_rename(
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkRenameResult
 
-    result = WorkRenameResult.model_validate(_work_unit_payload(unit))
+    result = WorkRenameResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.rename", *_work_unit_lines(unit)]
     _emit_envelope(ctx, command="modelo.work.rename", result=result, lines=lines)
 
@@ -1632,7 +1641,7 @@ def work_discard(
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkDiscardResult
 
-    result = WorkDiscardResult.model_validate(_work_unit_payload(unit))
+    result = WorkDiscardResult.model_validate(_work_unit_payload(unit).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.discard", *_work_unit_lines(unit)]
     _emit_envelope(ctx, command="modelo.work.discard", result=result, lines=lines)
 
@@ -1646,43 +1655,46 @@ filing_record_app = typer.Typer(
 app.add_typer(filing_record_app, name="filing-record")
 
 
-def _calculation_revision_payload(rev: CalculationRevision) -> dict[str, object]:
-    return {
-        "calculation_revision_id": rev.calculation_revision_id,
-        "work_unit_id": rev.work_unit_id,
-        "state": rev.state.value,
-        "casilla_values": {k: str(v) for k, v in rev.casilla_values.items()},
-        # Typed CasillaObservation envelope carrying full per-casilla
-        # provenance (formula_id, operand_refs, operand_values,
-        # legal_refs, source_refs). Without this projection the CLI
-        # JSON would strip every regulatory grounding signal.
-        "observations": tuple(
-            {
-                "casilla_id": obs.casilla_id,
-                "value": str(obs.value),
-                "formula_id": obs.formula_id,
-                "operand_refs": tuple(obs.operand_refs),
-                "operand_values": tuple(str(v) for v in obs.operand_values),
-                "legal_refs": tuple(obs.legal_refs),
-                "source_refs": tuple(obs.source_refs),
-            }
-            for obs in rev.observations
-        ),
+def _calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisionPayload:
+    from ._modelo_payloads import CalculationRevisionPayload, ObservationPayload
+
+    # Typed CasillaObservation envelope carrying full per-casilla
+    # provenance (formula_id, operand_refs, operand_values,
+    # legal_refs, source_refs). Without this projection the CLI
+    # JSON would strip every regulatory grounding signal.
+    observations = tuple(
+        ObservationPayload(
+            casilla_id=obs.casilla_id,
+            value=str(obs.value),
+            formula_id=obs.formula_id,
+            operand_refs=tuple(obs.operand_refs),
+            operand_values=tuple(str(v) for v in obs.operand_values),
+            legal_refs=tuple(obs.legal_refs),
+            source_refs=tuple(obs.source_refs),
+        )
+        for obs in rev.observations
+    )
+    return CalculationRevisionPayload(
+        calculation_revision_id=rev.calculation_revision_id,
+        work_unit_id=rev.work_unit_id,
+        state=rev.state.value,
+        casilla_values={k: str(v) for k, v in rev.casilla_values.items()},
+        observations=observations,
         # Headline result summary: registry-declared result-to-pay /
         # result-to-refund total plus the modelo's key computed
         # casillas, so the JSON consumer gets the same lead figures the
         # text surface shows.
-        "result_summary": _result_summary_payload(rev),
-        "binding_overrides": {key: str(value) for key, value in rev.binding_overrides.items()},
-        "inputs_snapshot": dict(rev.inputs_snapshot),
-        "created_at": rev.created_at.isoformat(),
-        "updated_at": rev.updated_at.isoformat(),
-        "verified_at": rev.verified_at.isoformat() if rev.verified_at else None,
-        "verified_by": rev.verified_by,
-        "filed_at": rev.filed_at.isoformat() if rev.filed_at else None,
-        "filed_by": rev.filed_by,
-        "superseded_at": rev.superseded_at.isoformat() if rev.superseded_at else None,
-    }
+        result_summary=_result_summary_payload(rev),
+        binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
+        inputs_snapshot=dict(rev.inputs_snapshot),
+        created_at=rev.created_at.isoformat(),
+        updated_at=rev.updated_at.isoformat(),
+        verified_at=rev.verified_at.isoformat() if rev.verified_at else None,
+        verified_by=rev.verified_by,
+        filed_at=rev.filed_at.isoformat() if rev.filed_at else None,
+        filed_by=rev.filed_by,
+        superseded_at=rev.superseded_at.isoformat() if rev.superseded_at else None,
+    )
 
 
 def _result_summary_lines(rev: CalculationRevision) -> list[str]:
@@ -1715,21 +1727,22 @@ def _result_summary_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _result_summary_payload(rev: CalculationRevision) -> tuple[dict[str, object], ...]:
+def _result_summary_payload(rev: CalculationRevision) -> tuple[ResultSummaryRowPayload, ...]:
     """Return the headline-result summary rows for the JSON payload."""
 
     from ...application.modelo import calculation_result_summary
+    from ._modelo_payloads import ResultSummaryRowPayload
 
     summary = calculation_result_summary(rev)
     if summary is None:
         return ()
     return tuple(
-        {
-            "role": row.role,
-            "casilla_id": row.casilla_id,
-            "value": str(row.value),
-            "label": row.label,
-        }
+        ResultSummaryRowPayload(
+            role=row.role,
+            casilla_id=row.casilla_id,
+            value=str(row.value),
+            label=row.label,
+        )
         for row in summary.rows
     )
 
@@ -1760,36 +1773,36 @@ def _calculation_revision_lines(rev: CalculationRevision) -> list[str]:
     return lines
 
 
-def _filing_record_payload(record: ModeloRecord) -> dict[str, object]:
-    external_evidence: dict[str, object] | None
-    if record.external_evidence is None:
-        external_evidence = None
-    else:
-        external_evidence = {
-            "kind": record.external_evidence.kind.value,
-            "reference_id": record.external_evidence.reference_id,
-            "imported_at": record.external_evidence.imported_at.isoformat(),
-        }
-    return {
-        "filing_record_id": record.filing_record_id,
-        "work_unit_id": record.work_unit_id,
-        "calculation_revision_id": record.calculation_revision_id,
-        "bucket_id": record.bucket_id,
-        "modelo": str(record.modelo),
-        "filing_year": record.filing_year,
-        "period": record.period,
-        "filed_at": record.filed_at.isoformat(),
-        "filed_by": record.filed_by,
-        "notes": record.notes,
-        "aeat_accepted": record.aeat_accepted,
-        "status": record.status.value,
-        "superseded_at": record.superseded_at.isoformat() if record.superseded_at else None,
-        "superseded_by_filing_record_id": record.superseded_by_filing_record_id,
-        "external_evidence": external_evidence,
-        "amends_filing_record_id": record.amends_filing_record_id,
-        "kind": "internal_filing",
-        "live_submission": False,
-    }
+def _filing_record_payload(record: ModeloRecord) -> ModeloRecordPayload:
+    from ._modelo_payloads import ExternalEvidencePayload, ModeloRecordPayload
+
+    external_evidence: ExternalEvidencePayload | None = None
+    if record.external_evidence is not None:
+        external_evidence = ExternalEvidencePayload(
+            kind=record.external_evidence.kind.value,
+            reference_id=record.external_evidence.reference_id,
+            imported_at=record.external_evidence.imported_at.isoformat(),
+        )
+    return ModeloRecordPayload(
+        filing_record_id=record.filing_record_id,
+        work_unit_id=record.work_unit_id,
+        calculation_revision_id=record.calculation_revision_id,
+        bucket_id=record.bucket_id,
+        modelo=str(record.modelo),
+        filing_year=record.filing_year,
+        period=record.period,
+        filed_at=record.filed_at.isoformat(),
+        filed_by=record.filed_by,
+        notes=record.notes,
+        aeat_accepted=record.aeat_accepted,
+        status=record.status.value,
+        superseded_at=record.superseded_at.isoformat() if record.superseded_at else None,
+        superseded_by_filing_record_id=record.superseded_by_filing_record_id,
+        external_evidence=external_evidence,
+        amends_filing_record_id=record.amends_filing_record_id,
+        kind="internal_filing",
+        live_submission=False,
+    )
 
 
 def _filing_record_lines(record: ModeloRecord) -> list[str]:
@@ -2106,7 +2119,7 @@ def work_calculate(
         {
             "saved": True,
             "saved_confirmation": saved_confirmation,
-            **_calculation_revision_payload(revision),
+            **_calculation_revision_payload(revision).model_dump(mode="python"),
             **modality_payload,
         }
     )
@@ -2197,7 +2210,7 @@ def work_revision(
 
     result = WorkRevisionResult.model_validate(
         {
-            **_calculation_revision_payload(revision),
+            **_calculation_revision_payload(revision).model_dump(mode="python"),
             **modality_payload_r,
         }
     )
@@ -2280,30 +2293,32 @@ def work_history(
     _emit(ctx, payload, lines)
 
 
-def _verification_report_payload(report: VerificationReport) -> dict[str, object]:
-    return {
-        "verification_report_id": report.verification_report_id,
-        "calculation_revision_id": report.calculation_revision_id,
-        "completeness_status": report.completeness_status.value,
-        "granted_verificado_completo": report.granted_verificado_completo,
-        "resolved_casillas": list(report.resolved_casillas),
-        "missing_required_casillas": list(report.missing_required_casillas),
-        "run_at": report.run_at.isoformat(),
-        "verified_by": report.verified_by,
-        "findings": [
-            {
-                "kind": f.kind.value,
-                "severity": f.severity.value,
-                "casilla_id": f.casilla_id,
-                "expectation_id": f.expectation_id,
-                "message": f.message,
-                "next_action": f.next_action,
-                "legal_refs": list(f.legal_refs),
-                "source_refs": list(f.source_refs),
-            }
+def _verification_report_payload(report: VerificationReport) -> VerificationReportPayload:
+    from ._modelo_payloads import FindingPayload, VerificationReportPayload
+
+    return VerificationReportPayload(
+        verification_report_id=report.verification_report_id,
+        calculation_revision_id=report.calculation_revision_id,
+        completeness_status=report.completeness_status.value,
+        granted_verificado_completo=report.granted_verificado_completo,
+        resolved_casillas=list(report.resolved_casillas),
+        missing_required_casillas=list(report.missing_required_casillas),
+        run_at=report.run_at.isoformat(),
+        verified_by=report.verified_by,
+        findings=[
+            FindingPayload(
+                kind=f.kind.value,
+                severity=f.severity.value,
+                casilla_id=f.casilla_id,
+                expectation_id=f.expectation_id,
+                message=f.message,
+                next_action=f.next_action,
+                legal_refs=list(f.legal_refs),
+                source_refs=list(f.source_refs),
+            )
             for f in report.findings
         ],
-    }
+    )
 
 
 def _verification_report_lines(report: VerificationReport) -> list[str]:
@@ -2396,7 +2411,7 @@ def work_verify(
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkVerifyResult
 
-    result = WorkVerifyResult.model_validate(_verification_report_payload(report))
+    result = WorkVerifyResult.model_validate(_verification_report_payload(report).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.verify", *_verification_report_lines(report)]
     _emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines)
 
@@ -2455,7 +2470,7 @@ def work_file(
     from ._common import _emit_envelope
     from ._modelo_payloads import WorkFileResult
 
-    result = WorkFileResult.model_validate(_filing_record_payload(record))
+    result = WorkFileResult.model_validate(_filing_record_payload(record).model_dump(mode="python"))
     lines = ["operation\tmodelo.work.file", *_filing_record_lines(record)]
     lines.append("filing_disambiguation\t(internal only — does not submit to AEAT)")
     _emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines)
@@ -2753,7 +2768,7 @@ def work_amend(
         {
             "amendment_kind": amendment_kind.value,
             "amends_filing_record_id": from_filing_record_id,
-            **_filing_record_payload(record),
+            **_filing_record_payload(record).model_dump(mode="python"),
         }
     )
     lines = [
@@ -2884,7 +2899,7 @@ def verification_report_show(
 
     payload = {
         "operation": "modelo.verification_report.show",
-        **_verification_report_payload(report),
+        **_verification_report_payload(report).model_dump(mode="python"),
     }
     lines = ["operation\tmodelo.verification_report.show", *_verification_report_lines(report)]
     _emit(ctx, payload, lines)
@@ -2907,7 +2922,7 @@ def filing_record_show(
 
     payload = {
         "operation": "modelo.filing_record.show",
-        **_filing_record_payload(record),
+        **_filing_record_payload(record).model_dump(mode="python"),
     }
     lines = ["operation\tmodelo.filing_record.show", *_filing_record_lines(record)]
     _emit(ctx, payload, lines)
@@ -2993,7 +3008,7 @@ def filing_record_import(
         "operation": "modelo.filing_record.import",
         "evidence_kind": kind.value,
         "evidence_reference_id": evidence_reference_id,
-        **_filing_record_payload(record),
+        **_filing_record_payload(record).model_dump(mode="python"),
     }
     lines = [
         "operation\tmodelo.filing_record.import",
@@ -4053,6 +4068,61 @@ def modelo_compare(
             f"{row['casilla_id']}\t{row['label']}\t{row['section']}"
             f"\t{row['year_a_value']}\t{row['year_b_value']}\t{row['delta']}\t{pct}"
         )
+    _emit(ctx, payload, lines)
+
+
+iva_wallet_app = typer.Typer(
+    name="iva-wallet",
+    help=tr(
+        "cli.app.modelo.iva_wallet.group_help",
+        default="Local IVA compensation wallet balance commands.",
+    ),
+    no_args_is_help=True,
+    add_completion=False,
+)
+app.add_typer(iva_wallet_app, name="iva-wallet")
+
+
+@iva_wallet_app.command(
+    "balance",
+    help=tr(
+        "cli.app.modelo.iva_wallet.balance_help",
+        default=(
+            "Show aggregated IVA compensation carry-forward balance computed from local "
+            "Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year "
+            "(source_filing_year + 4 for the earliest ACTIVE lot with remaining balance)."
+        ),
+    ),
+)
+def iva_wallet_balance_cmd(
+    ctx: typer.Context,
+    as_of_year: Annotated[
+        int,
+        typer.Option(
+            "--as-of-year",
+            min=2000,
+            max=2099,
+            help=tr(
+                "cli.app.modelo.iva_wallet.as_of_year_help",
+                default="Reference year for carry-forward age and expiry calculations.",
+            ),
+        ),
+    ],
+) -> None:
+    """Report the aggregated IVA wallet balance without contacting AEAT."""
+
+    from ...application.calculations._iva_wallet_balance import query_iva_wallet_balance
+
+    report = query_iva_wallet_balance(as_of_year=as_of_year)
+    payload = report.model_dump(mode="json")
+    lines = [
+        "operation\tmodelo.iva-wallet.balance",
+        f"as_of_year\t{report.as_of_year}",
+        f"total_balance\t{report.total_balance}",
+        f"lot_count\t{report.lot_count}",
+        f"next_expiry_year\t{report.next_expiry_year}",
+        f"unallocated_applied_amount\t{report.unallocated_applied_amount}",
+    ]
     _emit(ctx, payload, lines)
 
 
