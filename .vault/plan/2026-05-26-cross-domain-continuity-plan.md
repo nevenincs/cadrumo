@@ -557,10 +557,10 @@ Eight modelos have zero deadline_windows across all revisions: 100 111 180 232 3
 
 Modelo 100 has six revisions but zero deadline_windows. Register windows where corpus authority exists; document the gaps where it does not.
 
-- [ ] `W10.P50.S176` - register Modelo 100 deadline windows for exercise 2020 campana filing 2021 requires corpus authority; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/deadline_windows/`.
-- [ ] `W10.P50.S177` - register Modelo 100 deadline windows for exercise 2021; `src/aeat/_data/registry/aeat/modelos/100/revisions/2021/deadline_windows/`.
-- [ ] `W10.P50.S178` - register Modelo 100 deadline windows for exercise 2022; `src/aeat/_data/registry/aeat/modelos/100/revisions/2022/deadline_windows/`.
-- [ ] `W10.P50.S179` - register Modelo 100 deadline windows for exercise 2024 currently tracked as task 42 gated on Orden HAC 242-2025 corpus landing; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/deadline_windows/`.
+- [x] `W10.P50.S176` - register Modelo 100 deadline windows for exercise 2020 campana filing 2021 requires corpus authority; `src/aeat/_data/registry/aeat/modelos/100/revisions/2020/deadline_windows/`.
+- [x] `W10.P50.S177` - register Modelo 100 deadline windows for exercise 2021; `src/aeat/_data/registry/aeat/modelos/100/revisions/2021/deadline_windows/`.
+- [x] `W10.P50.S178` - register Modelo 100 deadline windows for exercise 2022; `src/aeat/_data/registry/aeat/modelos/100/revisions/2022/deadline_windows/`.
+- [x] `W10.P50.S179` - register Modelo 100 deadline windows for exercise 2024 currently tracked as task 42 gated on Orden HAC 242-2025 corpus landing; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/deadline_windows/`.
 
 ### Phase `W10.P51` - Modelo 111 deadline windows
 
