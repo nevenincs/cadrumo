@@ -483,6 +483,9 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S267` - FU-S208-A verify all isolated_profile_storage_root callers pass with file-backend change and document aeat_dev_test_database_password CI dependency in secure_sql.py docstring; `src/aeat/tests/secure_sql.py`.
 - [ ] `W09.P41.S268` - FU-W10-A extract HAC/242/2025 art-8 text into corpus HTML and add required_text to orden-hac-242-2025:art-8 entry in irpf.toml; `src/aeat/_data/registry/aeat/legal/irpf.toml`.
 - [ ] `W09.P41.S269` - FU-W10-B oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar and correct if needed; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/deadline_windows/`.
+- [ ] `W09.P41.S270` - FU-W09-A S267 verify CI sets AEAT_DEV_TEST_DATABASE_PASSWORD environment variable; `the cb51d03e7 commit changed isolated_profile_storage_root from EphemeralMasterKeyProvider to file backend + aeat_dev_test_database_password; without the env-var 8+ existing callers (test_operator test_apex_workflow_verification test_config_reset test_diagnostics test_profile_repository) will fail at passphrase resolution; `.github/workflows/`.
+- [ ] `W09.P41.S271` - FU-W09-B S268 corpus gap: HAC/242/2025 art-8 is referenced by the M100 2024 deadline-window registration but the corpus file currently exists only as .json without required_text; `complete the corpus entry with the full BOE text; `.vault/research/`.
+- [ ] `W09.P41.S272` - FU-W09-C S269 verify M202 2025-2P and 2025-3P deadline window closing dates against AEAT oracle; reviewer could not independently confirm dates without sourcing Orden HAC text; `src/aeat/_data/registry/aeat/modelos/202/`.
 
 ### Phase `W09.P42` - twin function merge
 
