@@ -303,3 +303,34 @@ to add a new authoring compiler feature yet. The next ADR-class substrate is a
 generic casilla continuity/evolution model for non-overlapping annual revisions;
 until that exists, M100 remains explicit fragmented TOML and template expansion
 stays blocked.
+
+## Follow-up: Validator Module Reviewability Gate
+
+P07.S23 decision: do not elevate `registry/_validate.py` and helpers to a
+`validate/` package in this slice. Current line-count discovery shows the
+validator surface is already below the P05 handoff baseline:
+
+- `_validate.py`: 203 lines against a 204-line P05 baseline after extracting
+  cache storage to `_validate_cache.py`.
+- Largest current helper: `_validate_revision_sections.py` at 249 lines against
+  a 252-line P05 baseline.
+- All current `_validate*.py` helpers are below the package-elevation concern
+  threshold; the largest non-baselined helper is also below 300 lines.
+
+The first reviewability test run exposed real Python-count growth that
+PowerShell line counting had hidden: `_validate.py` and
+`_validate_revision_identity.py` were over their P05 ceilings. The slice
+rebalanced those modules by moving cache storage and calculation-completeness
+manifest validation into bounded helper modules before accepting the gate.
+
+The compatibility boundary, if package elevation becomes necessary later, is to
+preserve the public `RegistryValidator` export through
+`aeat.domain.calculations.registry.__init__` and preserve direct private-module
+imports used by existing tests only until they are migrated. No production
+caller should import helper modules directly.
+
+This slice adds a real filesystem gate in
+`test_registry_reviewability.py`: P05-named validator modules may not exceed
+their recorded P05 line-count baselines, and any new `_validate*.py` helper is
+capped at 300 lines. Future validator growth must therefore extract/rebalance
+before it can merge.
