@@ -306,7 +306,6 @@ Design and implement a bundled-export schema that carries work units calculation
 - [x] `W06.P28.S106` - implement bundled deserializer with provenance preservation; `src/aeat/application/user_profile/`.
 - [x] `W06.P28.S107` - real-CLI roundtrip test export non-trivial profile and re-import to fresh storage root every artefact survives; `src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`.
 - [x] `W06.P28.S260` - author profile-portability ADR formalising the bundle decision space; `strip encrypted material refuse-on-profile-id-collision schema-version 2 bump typed-pydantic-throughout; cite the W75 grounding section as research basis; required before S104 implementation lands; `.vault/adr/`.
-- [ ] `W06.P28.S277` - Annotate merged dict in _import_ledger_transactions as dict[str, Transaction] (or extract upsert_transaction helper); `resolves D3 inconsistency noted in FU-S104-A; `src/aeat/application/user_profile/_bundle.py`.
 
 ### Phase `W06.P29` - idempotent import
 
@@ -334,7 +333,7 @@ Trace Modelo 100 cuota path end-to-end for a pensioner-landlord profile and iden
 - [x] `W07.P31.S113` - trace Modelo 100 cuota path end-to-end for pensioner-landlord and identify where tarifa is silently zeroed; `.vault/exec/`.
 - [x] `W07.P31.S114` - confirm root cause class CCAA fact missing or wrong; `profile-fact bindings missing per Cluster T; rate lookup gated on wrong predicate; apply fix at correct boundary; `src/aeat/_data/registry/aeat/modelos/100/`.
 - [x] `W07.P31.S115` - regression test Pere profile base 35400 minimo 5550 Catalonia returns Modelo 100 cuota in expected range; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
-- [x] `W07.P31.S246` - FU-W07-B extend Modelo 100 revision 2024 minimo del contribuyente to model LIRPF Art. 57.2/57.3 age supplements (+1150 EUR at 65-74, +1400 EUR at >=75) — required for pensioner personas (Pere, hypothetical >=75) to compute correct cuota; `mirror pattern from base flat 5550 fix in 01ac9d698; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
+- [x] `W07.P31.S246` - FU-W07-B extend Modelo 100 revision 2024 minimo del contribuyente to model LIRPF Art. 57.2/57.3 age supplements (+1150 EUR at 65-74, +1400 EUR at >=75) - required for pensioner personas (Pere, hypothetical >=75) to compute correct cuota; `mirror pattern from base flat 5550 fix in 01ac9d698; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
 - [x] `W07.P31.S247` - FU-W07-B Art. 58 descendant minimo extensions in Modelo 100 revision 2024; `2400/2700/4000/4500 EUR per child supplements based on order and 3000 EUR <3 anos supplement; required for natural-person personas with descendants; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
 - [x] `W07.P31.S248` - FU-W07-B Art. 59 ascendant minimo extensions in Modelo 100 revision 2024; `ascendant over 65 supplements; required for personas claiming dependant parents; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
 - [x] `W07.P31.S249` - FU-W07-B regression test Pere age 70 viudo CCAA Comunidad Valenciana with the age supplement applied returns AEAT-published cuota for the analogous worked example; `supersedes the current 4-test suite which only exercises the base flat minimo; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
@@ -419,14 +418,6 @@ Bulk of Cluster O. Each Step is a single file drift resolution. Mechanical and r
 
 Seven identical copies of _missing_refs across _validate modules. Extract to a single helper module and import.
 
-- [ ] `W09.P39.S149` - create _validate_helpers.py with canonical _missing_refs and any other shared validate-helpers; `src/aeat/domain/calculations/registry/_validate_helpers.py`.
-- [ ] `W09.P39.S150` - delete duplicate _missing_refs from _validate_algorithms.py and import from _validate_helpers; `src/aeat/domain/calculations/registry/_validate_algorithms.py`.
-- [ ] `W09.P39.S151` - same for _validate_constructs.py; `src/aeat/domain/calculations/registry/_validate_constructs.py`.
-- [ ] `W09.P39.S152` - same for _validate_dependency_sections.py; `src/aeat/domain/calculations/registry/_validate_dependency_sections.py`.
-- [ ] `W09.P39.S153` - same for _validate_exports.py; `src/aeat/domain/calculations/registry/_validate_exports.py`.
-- [ ] `W09.P39.S154` - same for _validate_record_sections.py; `src/aeat/domain/calculations/registry/_validate_record_sections.py`.
-- [ ] `W09.P39.S155` - same for _validate_revision_sections.py; `src/aeat/domain/calculations/registry/_validate_revision_sections.py`.
-- [ ] `W09.P39.S156` - same for _validate_surfaces.py; `src/aeat/domain/calculations/registry/_validate_surfaces.py`.
 
 ### Phase `W09.P40` - ledger aggregation duplication pair resolution
 
@@ -489,16 +480,13 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S270` - FU-W09-A S267 verify CI sets AEAT_DEV_TEST_DATABASE_PASSWORD environment variable; `the cb51d03e7 commit changed isolated_profile_storage_root from EphemeralMasterKeyProvider to file backend + aeat_dev_test_database_password; without the env-var 8+ existing callers (test_operator test_apex_workflow_verification test_config_reset test_diagnostics test_profile_repository) will fail at passphrase resolution; `.github/workflows/`.
 - [ ] `W09.P41.S271` - FU-W09-B S268 corpus gap: HAC/242/2025 art-8 is referenced by the M100 2024 deadline-window registration but the corpus file currently exists only as .json without required_text; `complete the corpus entry with the full BOE text; `.vault/research/`.
 - [ ] `W09.P41.S272` - FU-W09-C S269 verify M202 2025-2P and 2025-3P deadline window closing dates against AEAT oracle; `reviewer could not independently confirm dates without sourcing Orden HAC text; `src/aeat/_data/registry/aeat/modelos/202/`.
-- [x] `W09.P41.S273` - S253 follow-up: migrate remaining 7 Category B files not covered by cf7775ebe — test_audit_remediation test_command_suggestions test_modelo_202_modality test_modelo_discovery_defects test_modelo_period_consistency test_modelo_work_applicability_guard test_modelo_work_ux; `S253 was marked closed prematurely with only 5 of 12 files migrated; M202 modality file contains S244 must-fix; `src/aeat/entrypoints/cli/`.
+- [x] `W09.P41.S273` - S253 follow-up: migrate remaining 7 Category B files not covered by cf7775ebe - test_audit_remediation test_command_suggestions test_modelo_202_modality test_modelo_discovery_defects test_modelo_period_consistency test_modelo_work_applicability_guard test_modelo_work_ux; `S253 was marked closed prematurely with only 5 of 12 files migrated; M202 modality file contains S244 must-fix; `src/aeat/entrypoints/cli/`.
 - [ ] `W09.P41.S274` - side-fix landed in cf7775ebe ledger_transaction_payload counterparty=None coerced to empty string; `resolves Pere persona R7-A defect (ledger list and ledger view CliValidationBoundaryError on CSV-imported transactions with absent currency/counterparty); verify the fix is complete OR if a more typed solution (Optional[str] on LedgerTransactionPayload) is preferable; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S275` - FU-S274-A centralise counterparty-None coercion into display_counterparty property on TransactionRaw domain model; `retire two identical call-site counterparty or empty-string coercions in ledger actions; `src/aeat/application/ledger/_actions.py`.
 - [ ] `W09.P41.S276` - FU-S253-A commit message in cf7775ebe says real EphemeralMasterKeyProvider but the helper changed to file backend in cb51d03e7 (S208); `update prior commit message note in step record for accuracy; documentation-only; `.vaultspec/`.
-- [ ] `W09.P41.S278` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 14 CLI entrypoint payload functions returning dict[str, object] with typed pydantic models; `sites _modelo.py lines 961 1059 1611 1680 1725 2233; _ledger.py lines 2127 2718; _config __init__ line 2214; _common.py line 227; _app_live.py lines 625 725 882 1153; each should return a domain-typed payload model; `src/aeat/entrypoints/cli/`.
-- [ ] `W09.P41.S279` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 10 application service payload functions returning dict[str, object] with typed pydantic models; `sites auth _diagnostics.py lines 178 185; auth _acquisition_lock.py line 217; filing _review.py line 408; aggregation _service.py line 105; operator_surface _models.py line 225; ledger _actions.py lines 1024 1055 1064 1075; complements coder1 R7-A side-fix work; `src/aeat/application/`.
-- [ ] `W09.P41.S280` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 14 cast() type-erasure operations with typed alternatives or document third-party API boundary inline per aeat-calculation-grounding; `sites workflow _adapters.py lines 107 112 141 147 203 204; registry _schema.py lines 1219 1231; registry _loader.py line 104; plus 3 pydantic Any/object field declarations at review _actions.py line 18 schedules.py line 86 workflow _models.py line 408; `src/aeat/`.
 - [ ] `W09.P41.S285` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: refactor test_cross_dependency_calculations.py M180 and M190 tests to derive expected values from AEAT workbook or grounded fixture instead of synthetic Decimal hand-computed oracles; `per no-tautological-calculation-tests rule; `src/aeat/domain/calculations/registry/test_cross_dependency_calculations.py`.
 - [ ] `W09.P41.S286` - TAUTOLOGICAL_TEST_SUSPICION sweep S98 follow-up: replace monkeypatch.setenv abuse in application/auth/test_operator.py lines 230-260 and 477-521 with Settings override fixture; `AEAT_CERTIFICATE_PATH and AEAT_CLAVE_MOVIL_DNI_NIE injection in application-layer tests should not use env-var monkeypatch; `src/aeat/application/auth/test_operator.py`.
-- [ ] `W09.P41.S288` - criterio de caja casilla 62 work split out from S94; `model the Ley 37/1992 art 163 quinquies cash-accounting regime; separate from the intracom axes work; out-of-scope for W05.P24 — surface as W09 or future-wave candidate; `src/aeat/application/aggregation/`.
+- [ ] `W09.P41.S288` - criterio de caja casilla 62 work split out from S94; `model the Ley 37/1992 art 163 quinquies cash-accounting regime; separate from the intracom axes work; out-of-scope for W05.P24 - surface as W09 or future-wave candidate; `src/aeat/application/aggregation/`.
 - [ ] `W09.P41.S289` - evaluate access_gate __init__.py env-var read pre-Settings bootstrap; `either lift into Settings (preferred) or write an ADR exception note formalising the early-bootstrap-window exception; `src/aeat/access_gate/__init__.py`.
 - [ ] `W09.P41.S290` - evaluate core i18n _render.py env-var signature for cache-key invalidation; `either route through Settings or document the cache-coherence rationale in an ADR; `src/aeat/core/i18n/_render.py`.
 - [ ] `W09.P41.S291` - evaluate core observability _replay.py env-var write for replay scope; `if test-infrastructure-only document inline + restrict via test-only import path; if production-touching lift into Settings; `src/aeat/core/observability/_replay.py`.
@@ -658,3 +646,29 @@ Campaign terminates only when full persona-fleet pass returns zero BLOCKER zero 
 
 - [ ] `W11.P60.S196` - campaign terminates only when full persona-fleet pass minimum five distinct shapes returns zero BLOCKER and zero MAJOR AND full Haiku drift sweep returns zero in-scope drift across 1400 plus Python files AND vault check all reports vault clean of new findings; `.vault/audit/`.
 - [ ] `W11.P60.S197` - until termination criteria hold every complete claim is treated as premature; `plan re-expands at next loop; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
+
+## Wave `W12` - structural debt cleanup
+
+consolidated wave hosting promoted W09.P39 + W09.P41 macro-clusters that were too large for their original phases; typed-boundary bulk and registry validate-helper dedup
+
+### Phase `W12.P61` - typed boundary bulk
+
+promote 38 untyped boundary sites surfaced by discovery2 sweep S97; 14 CLI payload functions + 10 application payload functions + 14 cast() + 3 pydantic Any/object; per architect verdict in dac6b09f7
+
+- [ ] `W12.P61.S277` - Annotate merged dict in _import_ledger_transactions as dict[str, Transaction] (or extract upsert_transaction helper); `resolves D3 inconsistency noted in FU-S104-A; `src/aeat/application/user_profile/_bundle.py`.
+- [ ] `W12.P61.S278` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 14 CLI entrypoint payload functions returning dict[str, object] with typed pydantic models; `sites _modelo.py lines 961 1059 1611 1680 1725 2233; _ledger.py lines 2127 2718; _config __init__ line 2214; _common.py line 227; _app_live.py lines 625 725 882 1153; each should return a domain-typed payload model; `src/aeat/entrypoints/cli/`.
+- [ ] `W12.P61.S279` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 10 application service payload functions returning dict[str, object] with typed pydantic models; `sites auth _diagnostics.py lines 178 185; auth _acquisition_lock.py line 217; filing _review.py line 408; aggregation _service.py line 105; operator_surface _models.py line 225; ledger _actions.py lines 1024 1055 1064 1075; complements coder1 R7-A side-fix work; `src/aeat/application/`.
+- [ ] `W12.P61.S280` - UNTYPED_BOUNDARY sweep S97 follow-up: replace 14 cast() type-erasure operations with typed alternatives or document third-party API boundary inline per aeat-calculation-grounding; `sites workflow _adapters.py lines 107 112 141 147 203 204; registry _schema.py lines 1219 1231; registry _loader.py line 104; plus 3 pydantic Any/object field declarations at review _actions.py line 18 schedules.py line 86 workflow _models.py line 408; `src/aeat/`.
+
+### Phase `W12.P62` - registry validate helper dedup
+
+promote 8 W09.P39 validate-helper duplicate steps (S149-S156) into a dedicated phase; one canonical _validate_helpers.py with seven import updates
+
+- [ ] `W12.P62.S149` - create _validate_helpers.py with canonical _missing_refs and any other shared validate-helpers; `src/aeat/domain/calculations/registry/_validate_helpers.py`.
+- [ ] `W12.P62.S150` - delete duplicate _missing_refs from _validate_algorithms.py and import from _validate_helpers; `src/aeat/domain/calculations/registry/_validate_algorithms.py`.
+- [ ] `W12.P62.S151` - same for _validate_constructs.py; `src/aeat/domain/calculations/registry/_validate_constructs.py`.
+- [ ] `W12.P62.S152` - same for _validate_dependency_sections.py; `src/aeat/domain/calculations/registry/_validate_dependency_sections.py`.
+- [ ] `W12.P62.S153` - same for _validate_exports.py; `src/aeat/domain/calculations/registry/_validate_exports.py`.
+- [ ] `W12.P62.S154` - same for _validate_record_sections.py; `src/aeat/domain/calculations/registry/_validate_record_sections.py`.
+- [ ] `W12.P62.S155` - same for _validate_revision_sections.py; `src/aeat/domain/calculations/registry/_validate_revision_sections.py`.
+- [ ] `W12.P62.S156` - same for _validate_surfaces.py; `src/aeat/domain/calculations/registry/_validate_surfaces.py`.
