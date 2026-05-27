@@ -1,7 +1,16 @@
+# RD 439/2007 art. 110.5 — same-ejercicio prior-quarter saldo-
+# negativo carry-forward. The selector declares
+# `source_period_offset_from_target = -1` (prior period) with
+# `max_year_delta = 0` (no cross-ejercicio reach): 2T pulls from
+# 1T, 3T from 2T, 4T from 3T; 1T produces no anchor (absent-by-
+# design) because AEAT's rule restricts carry-forward to prior
+# trimestres within the same ejercicio. Casilla 15 at 1T is
+# materialised as Decimal("0") through the absent-by-design path
+# with provenance marker on the resulting CasillaObservation.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-resultados-negativos-anteriores"
 source = "previous_filing"
-selector = { source_modelo = "130", source_output = "saldo-negativo-fin-periodo" }
+selector = { source_modelo = "130", source_output = "saldo-negativo-fin-periodo", source_period_offset_from_target = -1, max_year_delta = 0 }
 aggregation = { op = "copy" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-130-instructions"]

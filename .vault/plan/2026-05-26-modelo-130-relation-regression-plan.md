@@ -57,9 +57,9 @@ Eliminate the silent zero default. Bound casillas resolve exclusively through th
 
 Revise the carry-forward binding against the new selector capability and strengthen the legal grounding.
 
-- [ ] `P04.S14` - revise the `modelo-130-resultados-negativos-anteriores` binding selector to declare `source_period_offset_from_target = -1` and `max_year_delta = 0`; `the binding's TOML comment is updated to document the same-ejercicio first-period-suppression contract; `src/aeat/_data/registry/aeat/modelos/130.toml`.
-- [ ] `P04.S15` - extend `[legal."rd-439-2007:art-110"].required_text` in `src/aeat/_data/registry/aeat/legal/irpf.toml` with the art. 110.5 BOE-verbatim carry-forward sentence fragment; `if the corpus normative source at `corpus/normatives/rd-439-2007.json#art-110` does not carry the fragment, re-fetch the corpus document and update its content before extending `required_text`.
-- [ ] `P04.S16` - run the registry validation suite to confirm the legal-text-fragment check passes against the revised `required_text` and the binding selector validates against the new `_PreviousModeloSelector` shape; `src/aeat/domain/calculations/registry/test_registry_schema.py`, `src/aeat/domain/calculations/registry/test_referential_integrity.py`, and the cross-dependency contract suite`.
+- [x] `P04.S14` - revise the `modelo-130-resultados-negativos-anteriores` binding selector to declare `source_period_offset_from_target = -1` and `max_year_delta = 0`; `the binding's TOML comment is updated to document the same-ejercicio first-period-suppression contract; `src/aeat/_data/registry/aeat/modelos/130.toml`.
+- [x] `P04.S15` - extend `[legal."rd-439-2007:art-110"].required_text` in `src/aeat/_data/registry/aeat/legal/irpf.toml` with the art. 110.5 BOE-verbatim carry-forward sentence fragment; `if the corpus normative source at `corpus/normatives/rd-439-2007.json#art-110` does not carry the fragment, re-fetch the corpus document and update its content before extending `required_text`.
+- [x] `P04.S16` - run the registry validation suite to confirm the legal-text-fragment check passes against the revised `required_text` and the binding selector validates against the new `_PreviousModeloSelector` shape; `src/aeat/domain/calculations/registry/test_registry_schema.py`, `src/aeat/domain/calculations/registry/test_referential_integrity.py`, and the cross-dependency contract suite`.
 
 ### Phase `P05` - regression test suite
 
