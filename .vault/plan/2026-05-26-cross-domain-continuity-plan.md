@@ -413,7 +413,7 @@ Remove build_error_envelope and json_output_requested from _errors.py __all__; u
 Code-reviewer and Catalan and Hungarian preferring personas confirm no message renders in English or Spanish when Catalan or Hungarian selected.
 
 - [x] `W08.P38.S146` - dispatch vaultspec-code-reviewer against every Wave-8 commit; `.vault/exec/`.
-- [ ] `W08.P38.S147` - re-run Catalan-preferring and Hungarian-preferring personas verify no message in wrong language; `.vault/audit/`.
+- [x] `W08.P38.S147` - re-run Catalan-preferring and Hungarian-preferring personas verify no message in wrong language; `.vault/audit/`.
 - [x] `W08.P38.S148` - consolidate findings and expand this plan in place; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W09` - systemic drift cleanup file-by-file catalogue
@@ -517,7 +517,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S323` - R9-MANUEL-A SC profile schema lacks socio enumeration; `entity_type=attribution_entity stored as generic legal entity with no fields for nombre de socios percentages NIFs forma juridica; extend UserProfileSchema with attribution_entity-specific section (socios: tuple[SocioEntry, ...] with nif name share_pct fields); required precondition for M184 calculation to work end-to-end; `src/aeat/domain/user_profile/_schema.py`.
 - [ ] `W09.P41.S324` - R9-MANUEL-B add cross-profile linkage SC to socio M100; `today base atribuida from M184 does not flow automatically to a member socio personal M100 declaration; socio must manually re-enter the attributed share; design a binding source attribution_received that resolves the share from a known SC profile in the same workspace OR document the manual workflow with explicit CLI prompts; `src/aeat/application/modelo/_profile_binding.py`.
 - [ ] `W09.P41.S326` - FU-S306-A annotate all_calendars list as list[dict[str, object]] or carry an inline third-party-boundary comment per aeat-calculation-grounding; `minor non-blocking from #131 review of dd8934c72; `src/aeat/entrypoints/cli/_overview.py`.
-- [ ] `W09.P41.S327` - FU-S318-A simplify _collect_revision_verification_findings — casillas_by_id dict lookup is redundant when casilla is already in scope from the snapshot iteration; pure cleanup not a regression; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W09.P41.S327` - FU-S318-A simplify _collect_revision_verification_findings — casillas_by_id dict lookup is redundant when casilla is already in scope from the snapshot iteration; `pure cleanup not a regression; `src/aeat/application/modelo/_actions.py`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -570,6 +570,12 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S316` - register --output-language on work_list work_status work_history work_revisions work_revision and the bare work_runs which currently has no parameters at all; `per discovery3 #121 CLI completeness audit; S144 parity regression test must catch these but currently doesn't; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P45.S317` - add NEXT_ACTION guidance hints to work_verify work_list work_status work_history success/failure outputs per discovery3 #121; `work_calculate already has this pattern (lines 2082-2093 emit explicit next-step guidance) — mirror it across the sibling verbs; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P45.S319` - standardise explicit --json flag across CLI verbs; `today _emit_envelope and _emit handle JSON internally without a visible signature parameter; expose --json explicitly so operators know per-verb whether structured output is available; document the flag in --help text; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P45.S328` - R9-ZSOFIA-A localise weekday shift enum values in overview calendar output; `today raw Spanish sabado/domingo leaks into operator-facing shift= field; render via tr() with locale-mapped day names; `src/aeat/application/overview/`.
+- [ ] `W09.P45.S329` - R9-ZSOFIA-B identify and localise commands where --language flag is accepted but has no effect on output; `config profile show config auth status modelo work calculate (closing prose only) confirmed broken; the parity test S144 must catch these as ineffective-flag cases not just absent-flag cases; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P45.S330` - R9-ZSOFIA-C state tokens borrador and verificado_completo leak Spanish in operator-facing context; `when emitted alongside operator prose route via tr() with locale-mapped human-readable label OR document they are technical identifiers and keep raw Spanish but always paired with translated prose; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S331` - R9-ZSOFIA-D Kv format error raw technical English string surfaces during work verify error path; `locate and route via tr() with locale-prose explanation of what KV format is; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W09.P45.S332` - R9-ZSOFIA-E broad --help text globally not hu-localised; `even where parent command supports --language hu the help text remains spanish/english; the --help text emission must consult active locale for option descriptions and section headers; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P45.S333` - R9-ZSOFIA-F inconsistent help-text localisation within a single command — overview calendar --help has ONE option (--all-profiles) translated to hu but other options remain english; either localise all options or none; partial localisation is more confusing than uniform; `src/aeat/entrypoints/cli/_overview.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
