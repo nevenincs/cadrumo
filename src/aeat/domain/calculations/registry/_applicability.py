@@ -96,6 +96,7 @@ from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     TaxpayerProfile,
 )
 
@@ -172,12 +173,19 @@ class PayerFact(StrEnum):
             intracomunitarias — the Modelo 349 trigger.
         EXCEEDS_THIRD_PARTY_THRESHOLD: The taxpayer's third-party
             transactions exceeded the Modelo 347 declaration threshold.
+        BIENES_EXTRANJERO_ABOVE_THRESHOLD: The taxpayer holds bienes
+            en el extranjero (foreign assets declared in Modelo 720)
+            with aggregate value above the legal declaration threshold
+            (DADisp. Adicional 18ª Ley 58/2003). The boolean has no
+            tri-state: a ``False`` value is indistinguishable from "not
+            declared", so an undeclared fact yields ``INCOMPLETE``.
     """
 
     PAYS_WITHHELD_INCOME = "pays_withheld_income"
     PAYS_RENT_WITH_RETENCION = "pays_rent_with_retencion"
     TRADES_INTRACOMMUNITY = "trades_intracommunity"
     EXCEEDS_THIRD_PARTY_THRESHOLD = "exceeds_third_party_threshold"
+    BIENES_EXTRANJERO_ABOVE_THRESHOLD = "bienes_extranjero_above_threshold"
 
 
 def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
@@ -198,6 +206,8 @@ def _payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
             return profile.does_intracomunitario
         case PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD:
             return profile.third_party_transactions_above_347_threshold
+        case PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD:
+            return profile.bienes_extranjero_above_threshold
 
 
 class ModeloApplicability(BaseModel):
@@ -484,6 +494,41 @@ refuses to guess a ``NOT_APPLICABLE`` it cannot positively justify.
 This is structurally distinct from the *undeclared taxpayer model*
 rationale: the entity type and regime can be fully declared and this
 verdict still holds.
+"""
+
+_IMPATRIADO_M720_LEGAL_REFS: tuple[str, ...] = (
+    "ley-35-2006:art-93",   # LIRPF Art. 93 — régimen especial impatriados.
+    "ley-7-2012:da-1",      # Ley 7/2012 DA 1ª — obligación Modelo 720.
+    "orden-hap-72-2013:art-1",  # Orden HAP/72/2013 — aprobación Modelo 720.
+)
+"""Legal refs grounding the IRPF Art. 93 impatriado Modelo 720 exemption.
+
+An impatriado under LIRPF Art. 93 is taxed as a non-resident (IRNR) for
+the duration of the special regime. Modelo 720 (bienes en el extranjero)
+is an obligation reserved for IRPF residents; it does not extend to
+non-residents or to IRPF taxpayers who have opted into the IRNR-rate
+regime. The general Art. 93 key resolves in the registry table
+``legal/irpf-impatriados.toml``; the two Modelo 720 keys resolve in the
+table ``legal/modelo-720.toml``.
+"""
+
+_IMPATRIADO_M720_EXEMPT_REASON = (
+    "Modelo 720 no aplica: el contribuyente tiene activado el régimen "
+    "especial para trabajadores desplazados a territorio español (LIRPF "
+    "Art. 93). En este régimen el contribuyente tributa conforme al IRNR "
+    "y no tiene la consideración de contribuyente residente del IRPF a "
+    "efectos de la obligación de declarar bienes y derechos en el "
+    "extranjero. La obligación del Modelo 720 corresponde exclusivamente "
+    "a los residentes fiscales contribuyentes del IRPF (DA 18ª Ley "
+    "58/2003 LGT introducida por la Ley 7/2012 DA 1ª)."
+)
+"""``NOT_APPLICABLE`` rationale for the impatriado Art. 93 M720 exemption.
+
+Surfaced when ``profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO``
+and ``modelo == "720"``. The pre-check in :func:`derive_modelo_applicability`
+fires before the :data:`_MODELO_APPLICABILITY_RULES` lookup to guarantee the
+exemption is enforced even when ``bienes_extranjero_above_threshold`` is
+``True``.
 """
 
 
@@ -1040,6 +1085,50 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "rd-1065-2007:art-42-quater",
         ),
     ),
+    # Modelo 720 — declaración informativa sobre bienes y derechos situados
+    # en el extranjero. Applies to any natural person or legal entity who
+    # holds foreign assets above the declaration threshold as of 31 December
+    # (Ley 7/2012 DA 1ª introducing DA 18ª Ley 58/2003 LGT; Orden
+    # HAP/72/2013). The threshold is whether the aggregate value exceeds
+    # the applicable limit — a payer-fact the three-axis model cannot
+    # resolve alone; a profile that does not positively declare
+    # ``bienes_extranjero_above_threshold = True`` yields INCOMPLETE rather
+    # than a guessed NOT_APPLICABLE.
+    #
+    # IMPORTANT: the IRPF Art. 93 special regime (impatriados / Beckham)
+    # exempts the taxpayer from Modelo 720 for the duration of the regime.
+    # An impatriado is taxed as a non-resident (IRNR) and does not owe the
+    # obligations reserved for IRPF residents. This exemption is enforced by
+    # the pre-check in :func:`derive_modelo_applicability` before this rule
+    # is evaluated.
+    "720": ModeloApplicabilityRule(
+        modelo="720",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_payer_fact=PayerFact.BIENES_EXTRANJERO_ABOVE_THRESHOLD,
+        applicable_reason=(
+            "Modelo 720 (declaración informativa sobre bienes y derechos en "
+            "el extranjero): el contribuyente posee bienes o derechos situados "
+            "en el extranjero con valor agregado superior al umbral declarable "
+            "y está obligado a presentar esta declaración informativa anual. "
+            "La obligación se estableció por la Ley 7/2012 DA 1ª."
+        ),
+        not_applicable_reason=(
+            "Modelo 720 no aplica: la declaración informativa sobre bienes en "
+            "el extranjero solo corresponde a personas físicas o entidades "
+            "jurídicas. El tipo de contribuyente declarado no está incluido en "
+            "el ámbito subjetivo de la DA 18ª Ley 58/2003 LGT."
+        ),
+        cuota_bearing=False,
+        # Ley 7/2012 DA 1ª — obligación de declarar bienes y derechos en el
+        # extranjero (introducing DA 18ª Ley 58/2003 LGT); Orden HAP/72/2013
+        # Art. 1 — aprobación del Modelo 720 y obligados a presentarlo.
+        legal_refs=(
+            "ley-7-2012:da-1",
+            "orden-hap-72-2013:art-1",
+        ),
+    ),
 }
 """Seed modelo-applicability rules — core persona coverage.
 
@@ -1180,6 +1269,22 @@ def derive_modelo_applicability(
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
 
+    # An impatriado (LIRPF Art. 93 special regime) is taxed as a non-resident
+    # for the duration of the Beckham window and is therefore exempt from the
+    # IRPF-resident obligations. Modelo 720 (bienes en el extranjero) is one
+    # of those obligations: it applies to IRPF residents, not to non-resident
+    # taxpayers under Art. 93. Enforce the exemption before the rule table so
+    # the payer-fact gate is never reached for an impatriado.
+    if (
+        modelo == "720"
+        and profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
+    ):
+        return ModeloApplicability(
+            modelo="720",
+            verdict=ApplicabilityVerdict.NOT_APPLICABLE,
+            reason=_IMPATRIADO_M720_EXEMPT_REASON,
+            legal_refs=_IMPATRIADO_M720_LEGAL_REFS,
+        )
     rule = _MODELO_APPLICABILITY_RULES.get(modelo)
     if rule is None:
         return _incomplete_applicability(modelo, unruled=True)

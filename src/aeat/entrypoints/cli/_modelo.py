@@ -1320,12 +1320,13 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 #: period metadata; the full casilla/formula authoring has not yet been
 #: completed.  ``work create`` is refused with a legally-grounded message
 #: that names the obligation and AEAT Sede as the operative filing surface.
-_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"151", "721"})
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"151", "714", "721"})
 
 #: Maps each stub-only modelo code to its dedicated locale key so that the
 #: refusal message cites the correct legal authorities for that modelo.
 _STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
     "151": "cli.app.modelo.work.create_stub_modelo_151_refused",
+    "714": "cli.app.modelo.work.create_stub_modelo_714_refused",
     "721": "cli.app.modelo.work.create_stub_modelo_refused",
 }
 
@@ -1333,7 +1334,7 @@ _STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
 def _guard_stub_modelo(modelo: str) -> None:
     """Refuse ``work create`` for modelos that are registry stubs only.
 
-    Two stubs are currently registered:
+    Three stubs are currently registered:
 
     - Modelo 721 (declaración informativa sobre monedas virtuales situadas
       en el extranjero): full casilla inventory and calculation engine not yet
@@ -1343,6 +1344,10 @@ def _guard_stub_modelo(modelo: str) -> None:
     - Modelo 151 (régimen especial impatriados, "Ley Beckham"): full casilla
       inventory and calculation engine not yet authored.  Legal refs:
       Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
+
+    - Modelo 714 (Impuesto sobre el Patrimonio): full casilla inventory and
+      calculation engine not yet authored.  Legal refs: Ley 19/1991 Art. 28,
+      Orden HAC/1023/2021.
 
     Without this guard the CLI would silently provision a work unit that
     cannot be calculated, leaving the taxpayer with no path to a valid filing.
