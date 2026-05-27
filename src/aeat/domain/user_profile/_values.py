@@ -14,6 +14,10 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core._time import utc_now
+from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
+from ..modelos._filing_record import ModeloRecord as _ModeloRecord
+from ..modelos._work_unit import WorkUnit as _WorkUnit
+from ..transactions._models import Transaction as _Transaction
 from ._errors import UserProfileValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -274,13 +278,30 @@ class UserProfilePortableExport(BaseModel):
     an export bundle compare this integer to their supported range before
     attempting to parse ``profile``. Increment it when the serialised shape
     changes in a backward-incompatible way.
+
+    Version 1: facts-only bundle (``profile`` only). Remains importable.
+    Version 2: full bundle — adds ``work_units``, ``ledger_transactions``,
+        ``calculation_revisions``, and ``filing_records``. All four default
+        to empty tuples so v1 facts-only bundles remain importable.
+
+    Encrypted-material blobs are NOT included (ADR D2: strip encrypted
+    material; re-encrypt under recipient bucket DEK on import).
     """
 
     model_config = _STRICT_FROZEN
 
-    bundle_schema_version: int = Field(default=1, ge=1)
+    bundle_schema_version: int = Field(default=2, ge=1)
     exported_at: datetime = Field(default_factory=utc_now)
     profile: UserProfileRecord
+
+    # --- v2 financial-history fields -----------------------------------------
+    # All default to empty tuples so v1 facts-only bundles round-trip
+    # cleanly; the import path checks bundle_schema_version before reading.
+
+    work_units: tuple[_WorkUnit, ...] = ()
+    ledger_transactions: tuple[_Transaction, ...] = ()
+    calculation_revisions: tuple[_CalculationRevision, ...] = ()
+    filing_records: tuple[_ModeloRecord, ...] = ()
 
 
 def _derive_canonical_hash(
