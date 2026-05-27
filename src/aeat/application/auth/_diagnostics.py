@@ -43,6 +43,7 @@ class AuthDiagnosticSummary(BaseModel):
     html_captured: bool
     screenshot_captured: bool
     auth_mode: str = ""
+    auth_route: str = ""
     identity_kind: str = ""
     headless: bool | None = None
     prefer_non_qr: bool | None = None
@@ -220,6 +221,7 @@ def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummar
         screenshot_captured=isinstance(payload.get("screenshot_png_base64"), str)
         and bool(str(payload.get("screenshot_png_base64")).strip()),
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
+        auth_route=str(auth_attempt.get("auth_route") or ""),
         identity_kind=str(auth_attempt.get("identity_kind") or ""),
         headless=raw_headless if isinstance(raw_headless, bool) else None,
         prefer_non_qr=_optional_bool(auth_attempt.get("prefer_non_qr")),
