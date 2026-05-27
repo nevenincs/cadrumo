@@ -188,3 +188,98 @@ def test_transaction_catalogue_dropped_business_pct_surfaces_at_load(
         # path. The original ValidationError is preserved for inspection.
         assert isinstance(exc_info.value.original_exception, ValidationError)
         assert exc_info.value.bucket_id == profile.bucket_id
+
+
+def test_transaction_catalogue_preserves_source_jurisdiction_through_encrypted_storage(
+    tmp_path: Path,
+) -> None:
+    """source_jurisdiction must survive the encrypted-envelope roundtrip.
+
+    Anchors the source-jurisdiction axis at the persistence boundary: a
+    Transaction carrying ``source_jurisdiction="ES"`` saved through the
+    repository must load back equal (strict pydantic equality), with the
+    field preserved verbatim. Foundational for the IRNR scope filter and
+    the Art. 93 LIRPF Beckham base filter.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        spanish_txn = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-es", Decimal("-50.00"), "Compra material oficina"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+            }
+        )
+        original = TransactionCatalogue.from_transactions([spanish_txn])
+        repo.save(original)
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+
+    assert loaded == original
+    loaded_txn = loaded.transactions[spanish_txn.transaction_id]
+    assert loaded_txn.source_jurisdiction == "ES"
+
+
+def test_transaction_catalogue_grandfathers_missing_source_jurisdiction_key(
+    tmp_path: Path,
+) -> None:
+    """A persisted envelope lacking source_jurisdiction must load with None.
+
+    Anti-tautology proof for the grandfather contract: surgically delete
+    the source_jurisdiction key from a previously-persisted envelope and
+    reload. The load must succeed with ``loaded.source_jurisdiction is
+    None`` because the field carries a None default — operator catalogues
+    written before the axis was introduced must continue to deserialise
+    cleanly. The original-with-ES catalogue must NOT equal the deleted-key
+    version, locking the field's identity contribution.
+    """
+
+    import json as _json
+
+    from ._repository import _TX_CATALOGUE_VERSION, TX_BUCKET_NAMESPACE, transaction_catalogue_object_key
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default-bucket") as profile:
+        repo = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
+        spanish_txn = Transaction.model_validate(
+            {
+                "raw": _raw("provider-row-es", Decimal("-50.00"), "Compra material oficina"),
+                "direction": TransactionDirection.OUTGOING,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+            }
+        )
+        original = TransactionCatalogue.from_transactions([spanish_txn])
+        repo.save(original)
+
+        object_key = transaction_catalogue_object_key(profile.bucket_id)
+        record = profile.repository.load(
+            TX_BUCKET_NAMESPACE,
+            object_key,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        txn_dict = envelope["payload"]["transactions"][spanish_txn.transaction_id]
+        assert txn_dict.get("source_jurisdiction") == "ES", (
+            "fixture must serialise source_jurisdiction into the envelope "
+            "for the grandfather proof to be meaningful"
+        )
+        del txn_dict["source_jurisdiction"]
+        profile.repository.save(
+            namespace=TX_BUCKET_NAMESPACE,
+            object_key=object_key,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        loaded = TransactionCatalogueRepository(bucket_id=profile.bucket_id).load()
+        loaded_txn = loaded.transactions[spanish_txn.transaction_id]
+        assert loaded_txn.source_jurisdiction is None
+        # Strict-inequality witness: the field carries identity weight at
+        # the model boundary, so the grandfathered catalogue must NOT
+        # equal the original ES-bearing catalogue.
+        assert loaded != original
