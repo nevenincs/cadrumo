@@ -294,7 +294,7 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     # layer against raw storage corruption that bypasses pydantic. We bypass
     # model_validator here via model_construct to simulate that scenario.
     from aeat.application.modelo._actions import _assert_revision_content_integrity
-    from aeat.domain.calculations.registry._bindings import CasillaObservation
+    from aeat.domain.calculations.registry import CasillaObservation
 
     target_obs = revision.observations[0]
     tampered_obs = CasillaObservation.model_construct(

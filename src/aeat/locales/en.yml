@@ -1303,8 +1303,13 @@ cli:
       classification_help: Business classification state for the transaction
       help: Classify one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to classify
+      counterparty_eu_member_state_help: EU member state of the counterparty (ISO
+        3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
+        prohibited with export_third_country_zero_rated
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
+      iva_category_help: Explicit IVA category override for this transaction (e.g.
+        intra_community_supply, export_third_country_zero_rated, domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as

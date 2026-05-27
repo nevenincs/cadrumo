@@ -61,6 +61,7 @@ from ...domain.categories import (
     SpendingCategory,
     SpendingCategoryFamily,
 )
+from ...domain.iva._schema import EUMemberState, IvaCategory
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -498,6 +499,16 @@ def ledger_classify(
         "--irpf-category",
         help=tr("cli.ledger.classify.irpf_category_help"),
     ),
+    iva_category: IvaCategory | None = typer.Option(
+        None,
+        "--iva-category",
+        help=tr("cli.ledger.classify.iva_category_help"),
+    ),
+    counterparty_eu_member_state: EUMemberState | None = typer.Option(
+        None,
+        "--counterparty-eu-member-state",
+        help=tr("cli.ledger.classify.counterparty_eu_member_state_help"),
+    ),
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
 ) -> None:
@@ -531,6 +542,8 @@ def ledger_classify(
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             irpf_category=irpf_category,
+            iva_category=iva_category,
+            counterparty_eu_member_state=counterparty_eu_member_state,
         )
         result = update_manual_transaction_fields(
             bucket_id=transaction_repository.bucket_id,
