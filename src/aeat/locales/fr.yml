@@ -369,9 +369,23 @@ cli:
       filed_app_help: cli.app.live.filed_app_help
       from_year_help: cli.app.live.from_year_help
       iva_wallet:
+        acquisition:
+          outcome:
+            aeat_403: cli.app.live.iva_wallet.acquisition.outcome.aeat_403
+            authenticated: cli.app.live.iva_wallet.acquisition.outcome.authenticated
+            certificate_required: cli.app.live.iva_wallet.acquisition.outcome.certificate_required
+            dom_drift: cli.app.live.iva_wallet.acquisition.outcome.dom_drift
+            live_navigation_failed: cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed
+            no_clave_prompt: cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt
+            operator_timeout: cli.app.live.iva_wallet.acquisition.outcome.operator_timeout
+            pending_clave_request: cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request
+            qr_required: cli.app.live.iva_wallet.acquisition.outcome.qr_required
+            unknown: cli.app.live.iva_wallet.acquisition.outcome.unknown
+            wrong_identity: cli.app.live.iva_wallet.acquisition.outcome.wrong_identity
         app_help: cli.app.live.iva_wallet.app_help
         as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
         capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        capture_remote_state_help: cli.app.live.iva_wallet.capture_remote_state_help
         history_help: cli.app.live.iva_wallet.history_help
         pull_help: cli.app.live.iva_wallet.pull_help
         taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
@@ -861,10 +875,13 @@ cli:
       export_out_help: cli.config.profile.export_out_help
       help: cli.config.profile.help
       import_help: cli.config.profile.import_help
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: cli.config.profile.import_label_help
       import_label_taken: cli.config.profile.import_label_taken
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: cli.config.profile.import_missing_bundle
       import_path_help: cli.config.profile.import_path_help
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: cli.config.profile.logout_help
       logout_session_warning: cli.config.profile.logout_session_warning
       no_active_profile: cli.config.profile.no_active_profile
@@ -971,12 +988,12 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
+        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
         invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
         invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
-        profile_empty: cli.diagnostics.profile.errors.profile_empty
-        ambiguous_profile: cli.diagnostics.profile.errors.ambiguous_profile
-        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
         no_active_profile: cli.diagnostics.profile.errors.no_active_profile
+        profile_empty: cli.diagnostics.profile.errors.profile_empty
+        unknown_profile: cli.diagnostics.profile.errors.unknown_profile
         unknown_profile_key: cli.diagnostics.profile.errors.unknown_profile_key
       get_help: cli.diagnostics.profile.get_help
       help: cli.diagnostics.profile.help
@@ -1601,8 +1618,15 @@ cli:
       help: cli.review.show.help
       id_help: cli.review.show.id_help
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: cli.root.errors.did_you_mean_command
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: cli.root.landing.headline
       help_line: cli.root.landing.help_line
@@ -1623,6 +1647,13 @@ cli:
       tagline: cli.root.landing.tagline
       welcome_no_profile: cli.root.landing.welcome_no_profile
       welcome_profile: cli.root.landing.welcome_profile
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: cli.topic.app_help
     errors:

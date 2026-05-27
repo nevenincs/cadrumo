@@ -1262,12 +1262,15 @@ cli:
       export_out_help: Destination path for the JSON bundle
       help: Manage active profile configuration values
       import_help: Register a portable profile bundle from a JSON file
+      import_invalid_bundle: cli.config.profile.import_invalid_bundle
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it to import a second copy under a fresh label.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
         NEW_NAME` to import it under a different name.
+      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
+      import_uuid_collision: cli.config.profile.import_uuid_collision
       logout_help: Sign out of the active profile by clearing the local pointer
       logout_session_warning: Logout cleared the active-profile pointer. Subsequent
         verbs in this terminal will refuse with NoActiveBucketSessionError until you
@@ -1389,7 +1392,7 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   diagnostics:
-    app_help: 'Engineer-only diagnostics for AEAT internals.'
+    app_help: Engineer-only diagnostics for AEAT internals.
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -1407,20 +1410,21 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
+        ambiguous_profile: 'Ambiguous profile label: %{profile}'
         invalid_value_fallback: 'Invalid value for %{key}: %{value}'
         invalid_value_with_choices: '%{message} (%{choices})'
-        ambiguous_profile: 'Ambiguous profile label: %{profile}'
+        no_active_profile: No active profile and no --profile NAME supplied; run `aeat
+          config profile switch NAME` first.
+        profile_empty: --profile must not be empty when supplied.
         unknown_profile: 'Unknown profile: %{profile}'
-        no_active_profile: 'No active profile and no --profile NAME supplied; run `aeat config profile switch NAME` first.'
         unknown_profile_key: 'Unknown profile key: %{key}'
-        profile_empty: '--profile must not be empty when supplied.'
-      get_help: 'Read one profile key stored value.'
-      help: 'Engineer-only profile field inspection and surgical edits.'
-      key_help: 'Profile key.'
-      profile_help: 'Profile to use; defaults to the active profile.'
-      set_help: 'Write one profile key value, validated against the wizard descriptor.'
-      unset_help: 'Clear one profile key value.'
-      value_help: 'Value to store.'
+      get_help: Read one profile key stored value.
+      help: Engineer-only profile field inspection and surgical edits.
+      key_help: Profile key.
+      profile_help: Profile to use; defaults to the active profile.
+      set_help: Write one profile key value, validated against the wizard descriptor.
+      unset_help: Clear one profile key value.
+      value_help: Value to store.
     repair:
       audience_internal: internal application issue
       auth_label: Auth
@@ -1437,13 +1441,14 @@ cli:
       python_label: Python
       version_label: Version
     secure_objects:
-      all_help: 'Return every key, including unreadable rows.'
+      all_help: Return every key, including unreadable rows.
       errors:
-        conflicting_filters: '--all and --unreadable cannot be combined; pass one or neither.'
-      help: 'Inventory the secure-object index by namespace.'
-      list_help: 'List secure-object keys stored under one namespace.'
-      namespace_help: 'Namespace to inventory.'
-      unreadable_help: 'Restrict the listing to undecryptable rows.'
+        conflicting_filters: --all and --unreadable cannot be combined; pass one or
+          neither.
+      help: Inventory the secure-object index by namespace.
+      list_help: List secure-object keys stored under one namespace.
+      namespace_help: Namespace to inventory.
+      unreadable_help: Restrict the listing to undecryptable rows.
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -2139,8 +2144,15 @@ cli:
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
+    app_app_help: cli.root.app_app_help
+    app_help: cli.root.app_help
+    app_help_help: cli.root.app_help_help
+    debug_help: cli.root.debug_help
+    detail_help: cli.root.detail_help
     errors:
       did_you_mean_command: Did you mean '%{command}'?
+    format_help: cli.root.format_help
+    help_help: cli.root.help_help
     landing:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
@@ -2171,6 +2183,13 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
+    language_help: cli.root.language_help
+    profile_help: cli.root.profile_help
+    quiet_help: cli.root.quiet_help
+    startup_import_error: cli.root.startup_import_error
+    unavailable_app_help: cli.root.unavailable_app_help
+    verbose_help: cli.root.verbose_help
+    version_help: cli.root.version_help
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
