@@ -988,6 +988,18 @@ def calculate_modelo_revision(
         period=work_unit.period,
     )
     resolved_bindings = dict(sorted({**relation_binding_values, **resolved_bindings}.items()))
+    # When the operator supplies --casilla for a previous_filing-bound casilla (e.g.
+    # M130 casilla 15 resultados negativos, M131 casilla 11) and no upstream resolver has
+    # provided the corresponding binding value, promote the casilla override into the
+    # binding_values map.  The engine requires that inputs[casilla_id] and
+    # binding_values[binding_id] agree; this promotion makes them agree by construction.
+    resolved_bindings = dict(
+        sorted(
+            _lift_previous_filing_casilla_overrides_to_bindings(
+                snapshot.revision, casilla_inputs, resolved_bindings
+            ).items()
+        )
+    )
     declaration_period_inputs = _resolve_declaration_period_inputs(
         snapshot.revision,
         filing_year=work_unit.filing_year,
@@ -1281,12 +1293,32 @@ def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
     return value.strip()
 
 
+def _iva_regime_for_bucket(bucket_id: str) -> str | None:
+    """Return the profile's ``iva.regime`` value, or ``None`` if unset or profile absent."""
+    from ...domain.user_profile import ProfileNotFoundError
+    from ..user_profile import UserProfileLifecycleRepository
+    from ..user_profile._projections import record_to_path_values
+
+    try:
+        record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    value = record_to_path_values(record).get("iva.regime")
+    if value is None or not str(value).strip():
+        return None
+    return str(value).strip()
+
+
 _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
     {
         "ledger_iva_aggregation",
         "ledger_renta_expense_aggregation",
     }
 )
+# IVA regimes that do not use ledger aggregation for IVA repercutido; these
+# clients supply régimen-simplificado casillas (47-58) directly as manual
+# inputs rather than deriving them from the transaction ledger.
+_IVA_LEDGER_EXEMPT_REGIMES = frozenset({"SIMPLIFICADO"})
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
@@ -1297,6 +1329,11 @@ def _raise_if_ledger_preflight_blocks_calculation(
     transaction_repository: TransactionCatalogueRepository | None = None,
 ) -> None:
     if not any(binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES for binding in revision.bindings):
+        return
+    # Régimen simplificado clients supply casillas 47-58 as manual inputs;
+    # they have no transaction ledger to satisfy the IVA aggregation preflight.
+    iva_regime = _iva_regime_for_bucket(work_unit.bucket_id)
+    if iva_regime in _IVA_LEDGER_EXEMPT_REGIMES:
         return
     from ..ledger import preflight_ledger_tax_readiness
 
@@ -1609,6 +1646,46 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
         if value is not None:
             resolved[casilla.id] = value
     return resolved
+
+
+def _lift_previous_filing_casilla_overrides_to_bindings(
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[str, Decimal],
+    resolved_bindings: Mapping[str, Decimal],
+) -> dict[str, Decimal]:
+    """Promote operator ``--casilla`` overrides for ``previous_filing``-bound casillas into bindings.
+
+    When an operator supplies ``--casilla "15=2694"`` for a casilla whose registry
+    binding declares ``source = "previous_filing"``, and no upstream resolver (borrador,
+    profile, ledger, or caller ``--binding``) has already populated the binding, the
+    override becomes the authoritative value for that binding.
+
+    This satisfies the engine's twin invariants enforced by ``_initial_values``:
+    - The smuggle-rejection guard requires that any ``previous_filing``-bound casilla in
+      ``inputs`` ALSO appears in ``binding_values`` under its binding id.
+    - The consistency check requires ``inputs[casilla_id] == binding_values[binding_id]``.
+
+    The returned dict extends ``resolved_bindings`` with the promoted entries.
+    Bindings already present in ``resolved_bindings`` (from ``--binding``, borrador, or
+    the profile layer) are never overwritten — the operator used the correct channel.
+    """
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    promoted: dict[str, Decimal] = {}
+    for casilla_id, value in casilla_inputs.items():
+        casilla = casillas_by_id.get(casilla_id)
+        if casilla is None or casilla.input_kind != "bound" or not casilla.binding:
+            continue
+        binding = bindings_by_id.get(casilla.binding)
+        if binding is None or binding.source != "previous_filing":
+            continue
+        if casilla.binding in resolved_bindings:
+            # The binding was already provided via --binding or a resolver; do not
+            # override it.  The consistency check in _initial_values will surface any
+            # divergence between inputs[casilla_id] and binding_values[binding_id].
+            continue
+        promoted[casilla.binding] = value
+    return {**resolved_bindings, **promoted}
 
 
 _FILING_PERIOD_ORDINALS: Mapping[str, int] = {
