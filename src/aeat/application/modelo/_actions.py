@@ -1730,13 +1730,14 @@ def _reject_caller_overrides_of_source_bindings(
     if rejected_bindings:
         # For the IVA compensation binding the operator should use the seed verb, not
         # a manual override, to set the prior carry-forward balance.
-        seed_hint = (
-            " To set the M303 carry-forward balance use: aeat app modelo iva-wallet seed"
+        seed_suggestion = (
+            "aeat app modelo iva-wallet seed"
             if any("compensacion-pendiente-anteriores" in b for b in rejected_bindings)
-            else ""
+            else None
         )
         raise ModeloAggregationBindingError(
-            f"caller binding values cannot override bucket-derived source bindings: {rejected_bindings!r}.{seed_hint}"
+            translated_message="errors.error.error_modelo_aggregation_binding",
+            suggestion=seed_suggestion,
         )
     rejected_casillas = sorted(
         set(caller_casilla_inputs).intersection(_source_owned_bound_casilla_ids(revision, owned_sources))
