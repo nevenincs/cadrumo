@@ -10,6 +10,11 @@ from ._schema import ModeloDefinition
 
 _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")
 
+__all__ = (
+    "LabelArtifactFinding",
+    "collect_label_artifact_findings",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class LabelArtifactFinding:

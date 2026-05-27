@@ -17,6 +17,13 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "legal_refs",
 )
 
+__all__ = (
+    "CrossRevisionCasillaDivergence",
+    "CrossRevisionCasillaDriftSummary",
+    "summarize_non_overlapping_cross_revision_casilla_drift",
+    "validate_cross_revision_casilla_consistency",
+)
+
 
 @dataclass(frozen=True, slots=True)
 class CrossRevisionCasillaDivergence:
