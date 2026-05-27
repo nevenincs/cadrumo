@@ -543,17 +543,17 @@ cli:
       iva_wallet:
         acquisition:
           outcome:
-            aeat_403: 'puerta AEAT 403/autenticación'
-            authenticated: 'autenticado'
-            certificate_required: 'certificado requerido'
-            dom_drift: 'la forma de la página AEAT ha cambiado'
-            live_navigation_failed: 'navegación en directo fallida'
-            no_clave_prompt: 'sin aviso de Cl@ve'
-            operator_timeout: 'tiempo de aprobación agotado'
-            pending_clave_request: 'petición Cl@ve pendiente'
-            qr_required: 'aprobación QR requerida'
-            unknown: 'desconocido'
-            wrong_identity: 'identidad incorrecta'
+            aeat_403: puerta AEAT 403/autenticación
+            authenticated: autenticado
+            certificate_required: certificado requerido
+            dom_drift: la forma de la página AEAT ha cambiado
+            live_navigation_failed: navegación en directo fallida
+            no_clave_prompt: sin aviso de Cl@ve
+            operator_timeout: tiempo de aprobación agotado
+            pending_clave_request: petición Cl@ve pendiente
+            qr_required: aprobación QR requerida
+            unknown: desconocido
+            wrong_identity: identidad incorrecta
         app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura;
           solo permite representación en nombre propio y la consulta de lectura protegida
           de cartera).
@@ -562,7 +562,9 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
-        capture_remote_state_help: 'Captura en directo el historial de Modelo 303 presentado e intenta la lectura de la cartera de IVA AEAT como una adquisición tipada de solo lectura.'
+        capture_remote_state_help: Captura en directo el historial de Modelo 303 presentado
+          e intenta la lectura de la cartera de IVA AEAT como una adquisición tipada
+          de solo lectura.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
@@ -1423,12 +1425,6 @@ cli:
         un espacio de nombres (o en todos).
       integrity_registry_help: Ejecuta la validación completa del registro (la comprobación
         de integridad opcional entre dominios).
-      list_all_help: Return every key, including unreadable.
-      list_conflicting_flags: --all and --unreadable cannot be combined; pass one
-        or neither.
-      list_help: List secure-object keys stored under one namespace.
-      list_namespace_help: Namespace to inventory.
-      list_unreadable_help: Restrict to undecryptable rows.
       logs_help: Mostrar la ruta del archivo de logs y las líneas recientes
       logs_lines_help: Número de líneas recientes del archivo de logs a mostrar
       plan_help: Planificación de reparación en seco y preservación primero para filas
@@ -3201,6 +3197,10 @@ errors:
         Comprueba la ruta de almacenamiento configurada y vuelve a intentarlo.
       empty_database_url: La URL de base de datos configurada está vacía. Selecciona
         un perfil o configura el almacenamiento antes de volver a intentarlo.
+    namespace:
+      classification_mismatch: 'El espacio de nombres de objeto seguro %{namespace} está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.'
+      schema_mismatch: 'El espacio de nombres de objeto seguro %{namespace} está registrado con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.'
+      unregistered: 'El espacio de nombres de objeto seguro %{namespace} no está registrado para almacenamiento runtime.'
     runtime:
       cold_bootstrap_active_profile_refused: El almacenamiento de arranque en frío
         solo está disponible antes de seleccionar un bucket de perfil activo.
