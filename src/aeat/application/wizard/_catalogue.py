@@ -17,7 +17,7 @@ from ...domain.deadlines._models import (
     IVARegime,
     LegalEntityForm,
 )
-from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode
+from ...domain.profile import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
 from ...domain.profile._ccaa import CCAA
 from ._models import (
     WizardChoice,
@@ -180,6 +180,32 @@ _MARITAL_STATUS_CHOICES: tuple[WizardChoice, ...] = (
     WizardChoice(
         value=RentaMaritalStatus.SEPARADO_DIVORCIADO.value,
         label=tr("wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label"),
+    ),
+)
+
+_SITUACION_FAMILIAR_CHOICES: tuple[WizardChoice, ...] = (
+    WizardChoice(
+        value=SituacionFamiliar.CASADO.value,
+        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.casado.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.casado.description"),
+    ),
+    WizardChoice(
+        value=SituacionFamiliar.PAREJA_HECHO_REGISTRADA.value,
+        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.description"),
+    ),
+    WizardChoice(
+        value=SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA.value,
+        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.label"),
+        description=tr("wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.description"),
+    ),
+    WizardChoice(
+        value=SituacionFamiliar.SOLTERO.value,
+        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.soltero.label"),
+    ),
+    WizardChoice(
+        value=SituacionFamiliar.SEPARADO_DIVORCIADO.value,
+        label=tr("wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label"),
     ),
 )
 
@@ -399,6 +425,35 @@ _TAXPAYER_SECTION = WizardSection(
             choices=_MARITAL_STATUS_CHOICES,
             required=False,
             visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # Art. 82 LIRPF: situación familiar determines whether conjunta
+            # (joint) taxation is available and which unidad-familiar variant
+            # applies. Distinct from the Modelo 100 marital-status code
+            # (which maps to form rows); this axis drives the verifier check
+            # and future casilla routing.
+            id="situacion-familiar",
+            profile_key="renta_taxpayer.situacion_familiar",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.taxpayer.situacion-familiar.prompt"),
+            help=tr("wizard.setup.taxpayer.situacion-familiar.help"),
+            choices=_SITUACION_FAMILIAR_CHOICES,
+            required=False,
+            visible_when=_NATURAL_PERSON,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            # Art. 82.1 LIRPF: matrimonio sobrevenido — records the date the
+            # current marriage began.  Drives casillas 0245 (vigente todo el año),
+            # 0246 (primer mes), and 0247 (último mes completo).  Only asked when
+            # the taxpayer is married (marital_status = "2").
+            id="taxpayer-marriage-date",
+            profile_key="renta_taxpayer.marriage_date",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.taxpayer.taxpayer-marriage-date.prompt"),
+            required=False,
+            visible_when=WizardCondition(question_id="taxpayer-marital-status", equals=RentaMaritalStatus.CASADO.value),
             answer_type=str,
         ),
         WizardQuestion(

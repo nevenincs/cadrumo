@@ -18,6 +18,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...domain.profile._renta_codes import SituacionFamiliar
 from ._setup_answers import SetupAnswers
 
 
@@ -121,12 +122,49 @@ def _check_obligations_consistency(answers: SetupAnswers) -> WizardCheckFinding:
     )
 
 
+# Art. 82.1.2° LIRPF: conjunta requires marriage or a registered pareja de
+# hecho. An unregistered pareja de hecho, soltero without hijos, and
+# separado/divorciado without hijos a cargo are ineligible for conjunta via
+# the cónyuge path. Monoparental conjunta (soltero/separado with hijos) is
+# not blocked here — the tax engine handles the variant routing, so the
+# verifier issues a WARNING rather than an ERROR when the monoparental path
+# may apply, and only hard-ERRORs for the clearly-ineligible case.
+_JOINT_INELIGIBLE = frozenset(
+    {
+        SituacionFamiliar.PAREJA_HECHO_NO_REGISTRADA,
+    }
+)
+
+
+def _check_joint_taxation_situacion_familiar(answers: SetupAnswers) -> WizardCheckFinding:
+    # Skip when conjunta is not requested or situacion_familiar is undeclared.
+    if answers.taxation_type != "2" or not answers.situacion_familiar:
+        return WizardCheckFinding(
+            name="joint_taxation_situacion_familiar",
+            severity=WizardCheckSeverity.OK,
+            message_key="wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+        )
+    sf = answers.situacion_familiar
+    if sf in _JOINT_INELIGIBLE:
+        return WizardCheckFinding(
+            name="joint_taxation_situacion_familiar",
+            severity=WizardCheckSeverity.ERROR,
+            message_key="wizard.setup.verifier.joint_taxation_situacion_familiar_refused",
+        )
+    return WizardCheckFinding(
+        name="joint_taxation_situacion_familiar",
+        severity=WizardCheckSeverity.OK,
+        message_key="wizard.setup.verifier.joint_taxation_situacion_familiar_ok",
+    )
+
+
 _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
     _check_tax_id_present,
     _check_activity_present,
     _check_spouse_consistency,
     _check_eu_eea_country_consistency,
     _check_obligations_consistency,
+    _check_joint_taxation_situacion_familiar,
 )
 
 

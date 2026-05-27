@@ -612,14 +612,51 @@ cli:
         create_reused: cli.app.modelo.work.create_reused
         create_reused_name_match: cli.app.modelo.work.create_reused_name_match
         create_reused_renamed: cli.app.modelo.work.create_reused_renamed
-        create_stub_modelo_151_refused: cli.app.modelo.work.create_stub_modelo_151_refused
-        create_stub_modelo_210_refused: cli.app.modelo.work.create_stub_modelo_210_refused
-        create_stub_modelo_600_refused: cli.app.modelo.work.create_stub_modelo_600_refused
-        create_stub_modelo_620_refused: cli.app.modelo.work.create_stub_modelo_620_refused
-        create_stub_modelo_650_refused: cli.app.modelo.work.create_stub_modelo_650_refused
-        create_stub_modelo_660_refused: cli.app.modelo.work.create_stub_modelo_660_refused
-        create_stub_modelo_714_refused: cli.app.modelo.work.create_stub_modelo_714_refused
-        create_stub_modelo_refused: cli.app.modelo.work.create_stub_modelo_refused
+        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvány (különleges külföldi
+          lakóhelyű adózói rendszer, „Beckham-törvény") nem támogatott munkaterv-egység
+          létrehozásához ebben a CLI-ban. Jogalap: 35/2006. sz. törvény 93. cikk LIRPF,
+          439/2007. sz. királyi rendelet 113. cikk, EHA/2887/2008. rendelet. Nyújtsd
+          be a bevallást a sede.agenciatributaria.gob.es oldalon.'
+        create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR — nem rezidensek
+          jövedelemadója) nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban.
+          Jogalap: 5/2004. sz. törvényerejű rendelet (TRLIRNR), TRLIRNR 28. cikk (negyedéves
+          határidők: 1N/2N/3N/4N). Általános adókulcs: 19 % EU/EGT-rezidensek, 24 %
+          egyéb. Nyújtsd be a bevallást a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml
+          oldalon.'
+        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD — vagyonátruházási
+          illeték és okiratbélyeg) nem támogatott munkaterv-egység létrehozásához ebben
+          a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
+          sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
+          autonóm közösség adóhatóságánál kell benyújtani.'
+        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD — használt
+          járművek átruházása) nem támogatott munkaterv-egység létrehozásához ebben
+          a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
+          sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
+          autonóm közösség adóhatóságánál kell benyújtani.'
+        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvány (ISD — örökösödési
+          illeték, öröklés útján szerzett vagyontárgyak bevallása) nem támogatott munkaterv-egység
+          létrehozásához ebben a CLI-ban. Jogalap: 29/1987. sz. törvény (LISyD). Határidő:
+          6 hónap az elhunyt halálától, további 6 hónappal meghosszabbítható (RISD
+          67. cikk). A bevallást annál az autonóm közösségnél kell benyújtani, ahol
+          az elhunytnak szokásos lakóhelye volt (22/2009. sz. törvény, 32. cikk). Fordulj
+          az illetékes regionális adóhatósághoz.'
+        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvány (ISD — hagyatéki
+          leltár tájékoztató bevallása, a 650-es nyomtatvánnyal együtt nyújtandó be)
+          nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap:
+          29/1987. sz. törvény (LISyD), határidő 6 hónap (RISD 67. cikk). A bevallást
+          annál az autonóm közösségnél kell benyújtani, ahol az elhunytnak szokásos
+          lakóhelye volt (22/2009. sz. törvény, 32. cikk). Fordulj az illetékes regionális
+          adóhatósághoz.'
+        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvány (vagyonadó) nem
+          támogatott munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap: 19/1991.
+          sz. törvény 28. cikk, HAC/1023/2021. rendelet. Nyújtsd be a bevallást a
+          sede.agenciatributaria.gob.es oldalon.'
+        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
+          kriptovaluta-eszközökről szóló tájékoztató bevallás) nem támogatott munkaterv-egység
+          létrehozásához ebben a CLI-ban. Kötelezettség: december 31-i külföldi egyenleg
+          meghaladja az 50 000 €-t (11/2021. sz. törvény 13. cikk, HFP/887/2023. rendelet,
+          1065/2007. sz. KR 42/c cikk). Nyújtsd be a bevallást a sede.agenciatributaria.gob.es
+          oldalon.'
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help
