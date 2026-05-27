@@ -161,6 +161,7 @@ casillas = [
   { number = "0056" },
   { number = "0057" },
   { number = "0058" },
+  { number = "0059" },
   { number = "0060" },
   { number = "0089" },
   { number = "0102" },
