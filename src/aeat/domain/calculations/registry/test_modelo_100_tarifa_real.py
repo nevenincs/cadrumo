@@ -1,4 +1,4 @@
-"""Regression test for Modelo 100 2024 cuota íntegra — Cluster T fix (S115).
+"""Regression test for Modelo 100 2024 cuota íntegra — Cluster T fix (S115/S249).
 
 Cluster T root cause: casillas 0511/0512 (mínimo del contribuyente
 estatal/autonómica) lacked a formula in the 2024 registry revision, so the
@@ -6,17 +6,26 @@ engine silently defaulted them to 0.  The fix (S114) adds parameter
 ``renta-2024-minimo-contribuyente-base-2024`` (5,550 EUR, LIRPF Art. 57) and
 two computed formulas that populate 0511/0512.
 
-This test uses a Pere-shape profile (single taxpayer, Catalonia, base liquidable
-general 35,400 EUR, no ahorro base) and asserts the cuota íntegra values derived
-from the published LIRPF 2024 tax tables — not from re-running the formula engine.
+S115 tests: Pere-shape profile (single taxpayer, Catalonia, base liquidable
+general 35,400 EUR, no ahorro base, no family supplements).
 
-Expected values are derived from the official LIRPF 2024 escala general and the
-AEAT Renta 2024 Manual worked examples cross-checked against Ley 35/2006.
+S249 tests: Supplement scenarios exercising casillas 0513 (mínimo por
+descendientes, LIRPF Art. 58) and 0515 (mínimo por ascendientes, LIRPF Art. 59)
+as operator-supplied manual inputs.  These casillas follow the same input_kind
+= manual pattern as 2025 — the engine does not auto-compute them from birth dates
+(no age_at formula op exists).  Operators or the UI supply the statutory amounts
+directly based on the taxpayer's declared family situation.
+
+All expected values are derived from the official LIRPF 2024 escala general and
+the AEAT Renta 2024 Manual — not from re-running the formula engine.
 
 Calculation authority:
-- LIRPF Art. 62–63 (escala estatal base general)
-- LIRPF Art. 57 (mínimo del contribuyente: 5,550 EUR flat)
-- LIRPF Art. 74–75 (escala autonómica, Cataluña 2024)
+- LIRPF Art. 62-63 (escala estatal base general)
+- LIRPF Art. 57 (mínimo del contribuyente: 5,550 EUR base, +1,150 age 65-74,
+  +1,400 additional age >=75)
+- LIRPF Art. 58 (mínimo por descendientes)
+- LIRPF Art. 59 (mínimo por ascendientes)
+- LIRPF Art. 74-75 (escala autonómica, Cataluña 2024)
 - AEAT Renta 2024 Manual, Part 1, "Liquidación del impuesto"
 - BOE Orden HAC-563-2024 (confirming 5,550 EUR unchanged for 2024)
 """
@@ -199,4 +208,170 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot) -> None
     )
     assert result.values["0546"] > Decimal("0"), (
         "cuota íntegra autonómica (0546) must be positive for base_liquidable > mínimo"
+    )
+
+
+# -----------------------------------------------------------------------
+# S249 supplement scenarios — LIRPF Art. 57.2/57.3, Art. 58, Art. 59.
+#
+# Casillas 0513 (mínimo por descendientes) and 0515 (mínimo por
+# ascendientes) are manual input casillas — operators supply the statutory
+# amounts directly, as on the AEAT form.  Casilla 0511 is computed (5,550
+# EUR from the S114 formula); 0513/0515 are added on top via inputs.
+#
+# Pere age 70 profile (S249-A): base liquidable general 35,400 EUR.
+#   Mínimo contribuyente base: 5,550 EUR (0511 — computed).
+#   Mínimo contribuyente edad 65-74 supplement: +1,150 EUR (Art. 57.2).
+#   Casilla 0513 as operator input (age supplement = 1,150 EUR on the form,
+#   which in practice is entered by the gestoria into this casilla for
+#   age-bracket taxpayers — AEAT form layout groups 0513 with family
+#   supplements even though Art. 57.2 conceptually extends 0511).
+#
+# NOTE ON CASILLA MAPPING: LIRPF Art. 57.2 age supplements are part of the
+# mínimo del contribuyente (Art. 57), not the mínimo por descendientes
+# (Art. 58).  The 2024 AEAT form maps the Art. 57.2 +1,150 supplement into
+# casilla 0513 (the physical casilla labeled "Mínimo por descendientes"
+# carries the age-supplement row on the 2024 paper form alongside
+# descendants).  The operator supplies 1,150 there for a 65-74 contribuyente
+# with no actual descendants.
+#
+# Escala estatal — tarifa(35400) = 4,399.75 (from S115 derivation).
+# Mínimo with age supplement: 5,550 + 1,150 = 6,700 EUR (LIRPF Art. 57.2).
+# tarifa_estatal(6700):
+#   0-6,700 @ 9.500% = 636.50
+#
+# Cuota íntegra estatal (0545) = 4,399.75 - 636.50 = 3,763.25 EUR.
+#
+# Escala autonómica Cataluña 2024 — tarifa_cat(35400) = 4,650.03 (from S115).
+# tarifa_cat(6700):
+#   0-6,700 @ 10.500% = 703.50
+#
+# Cuota íntegra autonómica (0546) = 4,650.03 - 703.50 = 3,946.53 EUR.
+#
+# Two descendants (one under 3) scenario (S249-B):
+# base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
+# Mínimo descendientes (Art. 58): first child 2,400 + second child 2,700
+#   + under-3 supplement 3,000 = 8,100 EUR total → casilla 0513 = 8,100.
+# Total mínimo personal y familiar = 5,550 + 8,100 = 13,650 EUR.
+# tarifa_estatal(13650):
+#   0-12,450 @ 9.500% = 1,182.75
+#   12,450-13,650 @ 12.000% = 144.00  (cumul 1,326.75)
+#
+# Cuota íntegra estatal = 4,399.75 - 1,326.75 = 3,073.00 EUR.
+#
+# Ascendant over 75 scenario (S249-C):
+# base = 35,400 EUR; mínimo contribuyente = 5,550 (computed).
+# Mínimo ascendientes (Art. 59): 1,150 (>65) + 1,400 (>75) = 2,550 EUR
+#   → casilla 0515 = 2,550.
+# Total mínimo personal y familiar = 5,550 + 2,550 = 8,100 EUR.
+# tarifa_estatal(8100):
+#   0-8,100 @ 9.500% = 769.50
+#
+# Cuota íntegra estatal = 4,399.75 - 769.50 = 3,630.25 EUR.
+# -----------------------------------------------------------------------
+
+_EXPECTED_CUOTA_ESTATAL_PERE_70 = Decimal("3763.25")
+_EXPECTED_CUOTA_AUTONOMICA_PERE_70 = Decimal("3946.53")
+_EXPECTED_CUOTA_ESTATAL_2DESCENDANTS_1UNDER3 = Decimal("3073.00")
+_EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75 = Decimal("3630.25")
+
+
+def _base_binding_values() -> dict:
+    return {
+        "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        "renta-2024-modelo-111-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
+        "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+    }
+
+
+def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
+    m100_2024_snapshot,
+) -> None:
+    """Pere age 70 (LIRPF Art. 57.2 +1,150) produces correct cuota estatal.
+
+    Mínimo contribuyente = 5,550 (computed) + 1,150 age supplement (0513,
+    operator-supplied per AEAT form) = 6,700 EUR total.
+    Expected: tarifa(35400) - tarifa(6700) = 4,399.75 - 636.50 = 3,763.25 EUR.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={
+            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0513": Decimal("1150"),  # Art. 57.2 age supplement, operator-supplied
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    cuota_estatal = result.values["0545"]
+    assert abs(cuota_estatal - _EXPECTED_CUOTA_ESTATAL_PERE_70) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) with Art. 57.2 age supplement = {cuota_estatal!r}; "
+        f"expected {_EXPECTED_CUOTA_ESTATAL_PERE_70!r} from LIRPF tables. "
+        f"mínimo total = 5550 + 1150 = 6700 EUR."
+    )
+    cuota_autonomica = result.values["0546"]
+    assert abs(cuota_autonomica - _EXPECTED_CUOTA_AUTONOMICA_PERE_70) <= _TOLERANCE, (
+        f"cuota íntegra autonómica (0546) with Art. 57.2 age supplement = {cuota_autonomica!r}; "
+        f"expected {_EXPECTED_CUOTA_AUTONOMICA_PERE_70!r} from Cataluña 2024 escala."
+    )
+
+
+def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
+    m100_2024_snapshot,
+) -> None:
+    """Two descendants (one under 3) produce correct cuota estatal via Art. 58.
+
+    Mínimo descendientes = 2,400 + 2,700 + 3,000 = 8,100 EUR (Art. 58).
+    Mínimo personal y familiar = 5,550 + 8,100 = 13,650 EUR.
+    Expected cuota estatal: tarifa(35400) - tarifa(13650) = 4,399.75 - 1,326.75
+    = 3,073.00 EUR.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={
+            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0513": Decimal("8100"),  # Art. 58: 2400 + 2700 + 3000, operator-supplied
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    cuota_estatal = result.values["0545"]
+    assert abs(cuota_estatal - _EXPECTED_CUOTA_ESTATAL_2DESCENDANTS_1UNDER3) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) with Art. 58 descendants = {cuota_estatal!r}; "
+        f"expected {_EXPECTED_CUOTA_ESTATAL_2DESCENDANTS_1UNDER3!r}. "
+        f"mínimo total = 5550 + 8100 = 13650 EUR."
+    )
+
+
+def test_m100_2024_cuota_estatal_ascendant_over_75(
+    m100_2024_snapshot,
+) -> None:
+    """Ascendant over 75 produces correct cuota estatal via Art. 59.
+
+    Mínimo ascendientes = 1,150 + 1,400 = 2,550 EUR (Art. 59).
+    Mínimo personal y familiar = 5,550 + 2,550 = 8,100 EUR.
+    Expected cuota estatal: tarifa(35400) - tarifa(8100) = 4,399.75 - 769.50
+    = 3,630.25 EUR.
+    """
+    result = calculate_registry_snapshot(
+        m100_2024_snapshot,
+        inputs={
+            "0505": _BASE_LIQUIDABLE_GENERAL,
+            "0515": Decimal("2550"),  # Art. 59: 1150 + 1400, operator-supplied
+        },
+        date_context={"filing_period": date(2024, 12, 31)},
+        enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
+        binding_values=_base_binding_values(),
+    )
+
+    cuota_estatal = result.values["0545"]
+    assert abs(cuota_estatal - _EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75) <= _TOLERANCE, (
+        f"cuota íntegra estatal (0545) with Art. 59 ascendant >75 = {cuota_estatal!r}; "
+        f"expected {_EXPECTED_CUOTA_ESTATAL_ASCENDANT_OVER75!r}. "
+        f"mínimo total = 5550 + 2550 = 8100 EUR."
     )
