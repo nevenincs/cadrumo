@@ -293,22 +293,23 @@ def _emit_update_result(
     events: tuple[str, ...],
 ) -> None:
     transaction_payload = ledger_transaction_payload(result_transaction)
+    review_status = ledger_transaction_review_status(result_transaction)
     payload = {
         "bucket_id": bucket_id,
         "transaction_id": result_transaction.transaction_id,
         "bucket_event_ids": list(events),
-        "review_status": ledger_transaction_review_status(result_transaction),
-        "transaction": transaction_payload,
+        "review_status": review_status,
+        "transaction": transaction_payload.model_dump(mode="python"),
     }
     _emit(
         ctx,
         payload,
         [
             f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload['date']}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload['amount']}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload['description']}",
-            f"{tr('cli.ledger.labels.review_status')}\t{payload['review_status']}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
         ],
     )
 
@@ -405,16 +406,16 @@ def ledger_add(
         "bucket_id": result.ref.bucket_id,
         "transaction_id": result.ref.transaction_id,
         "bucket_event_ids": list(result.bucket_event_ids),
-        "transaction": transaction_payload,
+        "transaction": transaction_payload.model_dump(mode="python"),
     }
     _emit(
         ctx,
         payload,
         [
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload['date']}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload['amount']}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload['description']}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
         ],
     )
 
@@ -479,11 +480,19 @@ def ledger_update(
 @app.command("classify", help=tr("cli.ledger.classify.help"))
 def ledger_classify(
     ctx: typer.Context,
-    transaction_id: str = typer.Option(..., "--id", help=tr("cli.ledger.classify.id_help")),
-    classification: BusinessClassification = typer.Option(
-        ...,
+    transaction_id: str | None = typer.Option(None, "--id", help=tr("cli.ledger.classify.id_help")),
+    classification: BusinessClassification | None = typer.Option(
+        None,
         "--classification",
         help=tr("cli.ledger.classify.classification_help"),
+    ),
+    from_csv: str | None = typer.Option(
+        None,
+        "--from-csv",
+        help=tr(
+            "cli.ledger.classify.from_csv_help",
+            default="Path to a CSV file with transaction_id and classification columns.",
+        ),
     ),
     business_pct: str | None = typer.Option(
         None,
@@ -512,27 +521,74 @@ def ledger_classify(
     actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.classify.actor_help")),
     reaffirm: bool = typer.Option(False, "--reaffirm", help=tr("cli.ledger.classify.reaffirm_help")),
 ) -> None:
-    """Classify one ledger transaction through the bucket-scoped backend."""
+    """Classify one ledger transaction (--id) or many via --from-csv."""
+    from ...application.ledger._actions import bulk_classify_from_csv as _bulk_classify
+
     state = _state()
     transaction_repository = _tx_repo(state)
+
+    if from_csv is not None:
+        # Bulk-classify mode: --id and --classification must not be combined
+        if transaction_id is not None or classification is not None:
+            raise _bad(
+                tr(
+                    "cli.ledger.classify.from_csv_exclusive",
+                    default="--from-csv cannot be combined with --id or --classification.",
+                )
+            )
+        csv_path = Path(from_csv)
+        if not csv_path.exists():
+            raise _bad(
+                tr("cli.ledger.classify.from_csv_not_found", path=from_csv, default=f"CSV file not found: {from_csv}")
+            )
+        csv_text = csv_path.read_text(encoding="utf-8")
+        result = _bulk_classify(
+            bucket_id=transaction_repository.bucket_id,
+            csv_text=csv_text,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger classify",
+            transaction_repository=transaction_repository,
+        )
+        payload = {
+            "total": result.total,
+            "applied": result.applied,
+            "skipped": result.skipped,
+            "failures": [f.model_dump(mode="json") for f in result.failures],
+        }
+        lines = [
+            tr(
+                "cli.ledger.classify.bulk_summary",
+                total=result.total,
+                applied=result.applied,
+                skipped=result.skipped,
+                fail=len(result.failures),
+                default=(
+                    f"bulk classify: {result.total} rows, {result.applied} applied, "
+                    f"{result.skipped} skipped, {len(result.failures)} failed"
+                ),
+            )
+        ]
+        for failure in result.failures:
+            lines.append(f"  failed\t{failure.transaction_id}\t{failure.reason}")
+        _emit(ctx, payload, lines)
+        return
+
+    # Single-transaction mode: --id and --classification are required
+    if transaction_id is None:
+        raise _bad(tr("cli.ledger.classify.id_required", default="--id is required when --from-csv is not provided."))
+    if classification is None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.classification_required",
+                default="--classification is required when --from-csv is not provided.",
+            )
+        )
     validated_category_id = _validate_category_id(category_id)
     resolved_id = _resolve_id(transaction_repository, transaction_id)
     if classification is BusinessClassification.MIXED and business_pct is None:
-        # MIXED demands a proportion; surface the `--business-pct` flag
-        # directly rather than letting the patch validator's generic
-        # message route through the opaque boundary.
         raise _bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
     if classification is not BusinessClassification.MIXED and business_pct is not None:
-        # `--business-pct` only carries meaning for a MIXED row; a
-        # BUSINESS or PERSONAL classification is wholly business or
-        # wholly private. Refuse rather than silently dropping it.
         raise _bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
-    # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
-    # an illegal field combination) is otherwise wrapped by the generic
-    # CLI boundary into "command input failed validation. Run config
-    # repair" — a misleading hint, since `config repair` cannot fix a
-    # bad CLI argument. Catch it here and surface the real validator
-    # cause, matching the `ledger add` / `ledger review --id` treatment.
     try:
         patch = _patch_from_options(
             business_classification=classification,
@@ -1072,7 +1128,7 @@ def ledger_link(
         "actor": actor_label,
     }
     if evidence_result_payload:
-        payload["evidence_update"] = evidence_result_payload
+        payload["evidence_update"] = evidence_result_payload.model_dump(mode="python")
     lines = [
         "operation\tledger.link",
         f"bucket\t{bucket_id}",
@@ -1374,13 +1430,17 @@ def ledger_list(ctx: typer.Context) -> None:
     for result in results:
         transaction = result.transaction
         review_status = ledger_transaction_review_status(transaction)
-        row = ledger_transaction_review_payload(transaction)
-        row["full_id"] = transaction.transaction_id
-        row["display_id"] = transaction.transaction_id[:display_width]
+        review_payload = ledger_transaction_review_payload(transaction)
+        display_id = transaction.transaction_id[:display_width]
+        row: dict[str, object] = {
+            **review_payload.model_dump(mode="python"),
+            "full_id": transaction.transaction_id,
+            "display_id": display_id,
+        }
         rows.append(row)
         lines.append(
-            f"{row['display_id']}\t{transaction.transaction_id}\t{row['date']}\t"
-            f"{row['amount']}\t{row['description']}\t{review_status}"
+            f"{display_id}\t{transaction.transaction_id}\t{review_payload.date}\t"
+            f"{review_payload.amount}\t{review_payload.description}\t{review_status}"
         )
     _emit(
         ctx,
@@ -1405,8 +1465,8 @@ def ledger_view(
         transaction_id=resolved_id,
         transaction_repository=transaction_repository,
     )
-    payload = ledger_transaction_result_payload(result)
-    transaction_payload = ledger_transaction_payload(result.transaction)
+    result_payload = ledger_transaction_result_payload(result)
+    transaction_payload = result_payload.transaction
     review_status = ledger_transaction_review_status(result.transaction)
 
     # `ledger view` is the operator's confirmation that the data they
@@ -1414,32 +1474,32 @@ def ledger_view(
     # the IVA triple, counterparty, classification, category and notes
     # invisible - the operator could not verify those fields persisted.
     # Every stored field is now shown; `-` marks a field left unset.
-    def _field(key: str) -> str:
-        value = transaction_payload.get(key)
+    def _field(value: object) -> str:
         return "-" if value is None or value == "" else str(value)
 
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
-        f"{tr('cli.ledger.labels.date')}\t{transaction_payload['date']}",
-        f"{tr('cli.ledger.labels.value_date', default='Value date')}\t{_field('value_date')}",
-        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload['amount']}",
-        f"{tr('cli.ledger.labels.currency', default='Currency')}\t{_field('currency')}",
-        f"{tr('cli.ledger.labels.direction', default='Direction')}\t{_field('direction')}",
-        f"{tr('cli.ledger.labels.description')}\t{transaction_payload['description']}",
-        f"{tr('cli.ledger.labels.counterparty', default='Counterparty')}\t{_field('counterparty')}",
+        f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+        f"{tr('cli.ledger.labels.value_date', default='Value date')}\t{_field(transaction_payload.value_date)}",
+        f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+        f"{tr('cli.ledger.labels.currency', default='Currency')}\t{_field(transaction_payload.currency)}",
+        f"{tr('cli.ledger.labels.direction', default='Direction')}\t{_field(transaction_payload.direction)}",
+        f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+        f"{tr('cli.ledger.labels.counterparty', default='Counterparty')}\t{_field(transaction_payload.counterparty)}",
         f"{tr('cli.ledger.labels.business_classification', default='Classification')}"
-        f"\t{_field('business_classification')}",
-        f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field('business_pct')}",
-        f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field('category_id')}",
-        f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}\t{_field('taxable_base')}",
-        f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field('iva_rate')}",
-        f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field('iva_amount')}",
-        f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}\t{_field('irpf_category')}",
-        f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field('notes')}",
-        f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field('lifecycle_state')}",
+        f"\t{_field(transaction_payload.business_classification)}",
+        f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field(transaction_payload.business_pct)}",
+        f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field(transaction_payload.category_id)}",
+        f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}\t{_field(transaction_payload.taxable_base)}",
+        f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
+        f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field(transaction_payload.iva_amount)}",
+        f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}"
+        f"\t{_field(transaction_payload.irpf_category)}",
+        f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field(transaction_payload.notes)}",
+        f"{tr('cli.ledger.labels.lifecycle_state')}\t{_field(transaction_payload.lifecycle_state)}",
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
-    _emit(ctx, payload, lines)
+    _emit(ctx, result_payload.model_dump(mode="python"), lines)
 
 
 @app.command("status", help=tr("cli.ledger.status.help"))
@@ -1528,8 +1588,8 @@ def ledger_track(
     )
     payload = {
         "bucket_id": result.ref.bucket_id,
-        "transaction": ledger_transaction_payload(result.transaction),
-        "tracking": ledger_transaction_tracking_payload(result.transaction),
+        "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="python"),
+        "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="python"),
     }
     _emit(
         ctx,
@@ -2930,3 +2990,201 @@ def evidence_remove(
     lines = _evidence_text_lines(result.record)
     lines.append(f"bucket_event_ids\t{','.join(result.bucket_event_ids)}")
     _emit(ctx, payload, lines)
+
+
+# ---------------------------------------------------------------------------
+# rule sub-app
+# ---------------------------------------------------------------------------
+
+rule_app = typer.Typer(
+    name="rule",
+    help=tr(
+        "cli.app.ledger.rule.group_help",
+        default="Ledger classification rules (add / list / apply).",
+    ),
+    no_args_is_help=True,
+)
+app.add_typer(rule_app, name="rule")
+
+
+def _rule_bucket_id() -> str:
+    return _tx_repo(_state()).bucket_id
+
+
+@rule_app.command(
+    "add",
+    help=tr(
+        "cli.app.ledger.rule.add_help",
+        default="Persist a new classification rule.",
+    ),
+)
+def rule_add(
+    ctx: typer.Context,
+    description_pattern: str = typer.Option(
+        ...,
+        "--description-pattern",
+        help=tr("cli.app.ledger.rule.add.description_pattern_help", default="Regex matched against transaction description (case-insensitive)."),
+    ),
+    classification: BusinessClassification = typer.Option(
+        ...,
+        "--classification",
+        help=tr("cli.app.ledger.rule.add.classification_help", default="Classification to assign when the pattern matches."),
+    ),
+    category_id: str | None = typer.Option(
+        None,
+        "--category-id",
+        help=tr("cli.app.ledger.rule.add.category_id_help", default="Optional spending category id."),
+    ),
+    priority: int = typer.Option(
+        100,
+        "--priority",
+        help=tr("cli.app.ledger.rule.add.priority_help", default="Rule priority (lower number wins, default 100)."),
+    ),
+    actor: str | None = typer.Option(None, "--actor", hidden=True),
+) -> None:
+    """Persist a new ledger classification rule (idempotent: same pattern+classification returns existing id)."""
+    from ...application.ledger._actions import add_classification_rule
+
+    bucket_id = _rule_bucket_id()
+    resolved_actor = actor or resolve_active_bucket_id() or "operator"
+    try:
+        rule = add_classification_rule(
+            bucket_id=bucket_id,
+            description_pattern=description_pattern,
+            classification=classification,
+            category_id=category_id,
+            priority=priority,
+            actor=resolved_actor,
+        )
+    except ValueError as exc:
+        raise _bad(str(exc)) from exc
+    payload = rule.model_dump(mode="json")
+    lines = [
+        tr(
+            "cli.app.ledger.rule.add.added",
+            rule_id=rule.rule_id[:16],
+            pattern=rule.description_pattern,
+            classification=rule.classification.value,
+            default=f"rule added: {rule.rule_id[:16]}... pattern={rule.description_pattern!r} classification={rule.classification.value}",
+        )
+    ]
+    _emit(ctx, payload, lines)
+
+
+@rule_app.command(
+    "list",
+    help=tr(
+        "cli.app.ledger.rule.list_help",
+        default="List stored classification rules.",
+    ),
+)
+def rule_list(ctx: typer.Context) -> None:
+    """List all stored ledger classification rules in priority order."""
+    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
+
+    repo = LedgerClassificationRuleRepository()
+    rules = repo.list_rules()
+    payload = {
+        "rules": [r.model_dump(mode="json") for r in rules],
+    }
+    lines = [tr("cli.app.ledger.rule.list.count", count=len(rules), default=f"{len(rules)} rule(s)")]
+    for rule in rules:
+        lines.append(
+            f"  [{rule.priority}] {rule.description_pattern!r} -> {rule.classification.value}"
+        )
+    _emit(ctx, payload, lines)
+
+
+@rule_app.command(
+    "apply",
+    help=tr(
+        "cli.app.ledger.rule.apply_help",
+        default="Apply classification rules to unclassified transactions.",
+    ),
+)
+def rule_apply(
+    ctx: typer.Context,
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help=tr("cli.app.ledger.rule.apply.dry_run_help", default="Preview matches without writing."),
+    ),
+    reaffirm: bool = typer.Option(
+        False,
+        "--reaffirm",
+        help=tr("cli.app.ledger.rule.apply.reaffirm_help", default="Re-apply rules over already-classified (manual) rows."),
+    ),
+    actor: str | None = typer.Option(None, "--actor", hidden=True),
+) -> None:
+    """Apply stored classification rules to all in-scope ACTIVE transactions."""
+    from ...application.ledger._rule_repository import LedgerClassificationRuleRepository
+    from ...domain.transactions import TransactionLifecycleState
+
+    resolved_actor = actor or resolve_active_bucket_id() or "operator"
+    bucket_id = _rule_bucket_id()
+    tx_repo = _tx_repo(_state())
+
+    if dry_run:
+        rule_repo = LedgerClassificationRuleRepository()
+        rules = rule_repo.list_rules()
+        catalogue = tx_repo.load()
+        would_match: list[dict[str, str]] = []
+        for tx in catalogue.transactions.values():
+            if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+                continue
+            if tx.business_classification.value != "NOT_YET_PROCESSED":
+                if not (reaffirm and tx.classified_by == "manual"):
+                    continue
+            for rule in rules:
+                if rule.matches(tx.raw.description or ""):
+                    would_match.append(
+                        {
+                            "transaction_id": tx.transaction_id,
+                            "classification": rule.classification.value,
+                            "rule_id": rule.rule_id,
+                        }
+                    )
+                    break
+        payload: dict[str, object] = {
+            "dry_run": True,
+            "count": len(would_match),
+            "matches": would_match,
+        }
+        lines = [
+            tr(
+                "cli.app.ledger.rule.apply.dry_run_summary",
+                count=len(would_match),
+                default=f"dry-run: {len(would_match)} transaction(s) would be classified",
+            )
+        ]
+        for row in would_match:
+            lines.append(f"  match\t{row['transaction_id'][:16]}...\t{row['classification']}")
+        _emit(ctx, payload, lines)
+        return
+
+    from ...application.ledger._actions import apply_classification_rules
+
+    result = apply_classification_rules(
+        bucket_id=bucket_id,
+        reaffirm=reaffirm,
+        actor=resolved_actor,
+        source_command="aeat app ledger rule apply",
+    )
+    payload = {
+        "rules_evaluated": result.rules_evaluated,
+        "transactions_scanned": result.transactions_scanned,
+        "matched": result.matched,
+        "skipped_already_classified": result.skipped_already_classified,
+        "no_match": result.no_match,
+        "bucket_event_ids": list(result.bucket_event_ids),
+    }
+    lines = [
+        tr(
+            "cli.app.ledger.rule.apply.summary",
+            matched=result.matched,
+            scanned=result.transactions_scanned,
+            default=f"apply rules: {result.matched} matched / {result.transactions_scanned} scanned",
+        )
+    ]
+    _emit(ctx, payload, lines)
+

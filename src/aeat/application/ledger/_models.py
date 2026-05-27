@@ -18,6 +18,11 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionValidationError,
 )
+from ...domain.transactions._models import (
+    TransactionEditLineageEntry,
+    TransactionEvidenceProvenanceEntry,
+    TransactionLifecycleLineageEntry,
+)
 from ..export import ExportSerializationFormat
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -61,6 +66,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     actor: str = Field(default="operator", min_length=1)
     source_command: str = Field(default="aeat app ledger add", min_length=1)
     idempotency_key: str | None = None
+    classified_by_override: str | None = None
 
     @field_validator(
         "bucket_id",
@@ -83,6 +89,7 @@ class ManualLedgerTransactionCommand(BaseModel):
         "prorrata_reference",
         "purchase_invoice_evidence_id",
         "idempotency_key",
+        "classified_by_override",
     )
     @classmethod
     def _trim_optional_text(cls, value: str | None) -> str | None:
@@ -262,6 +269,61 @@ class LedgerTransactionPayload(BaseModel):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     lifecycle_state: str = Field(min_length=1)
+
+
+class LedgerTransactionReviewPayload(BaseModel):
+    """Canonical read projection for one ledger transaction plus review status."""
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=64, max_length=64)
+    date: str = Field(min_length=10, max_length=10)
+    booked_date: str = Field(min_length=10, max_length=10)
+    value_date: str | None = None
+    amount: str = Field(min_length=1)
+    currency: str = Field(min_length=3, max_length=3)
+    direction: str = Field(min_length=1)
+    counterparty: str = ""
+    description: str = Field(min_length=1)
+    business_classification: str = Field(min_length=1)
+    business_pct: str | None = None
+    category_id: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+    irpf_category: str | None = None
+    usage_ratio_id: str | None = None
+    prorrata_reference: str | None = None
+    purchase_invoice_evidence_id: str | None = None
+    attachment_ids: tuple[str, ...] = ()
+    notes: str = ""
+    lifecycle_state: str = Field(min_length=1)
+    review_status: str = Field(min_length=1)
+    classified_by: str | None = None
+
+
+class LedgerTransactionResultPayload(BaseModel):
+    """Canonical projection for a single ledger mutation/read result."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str = Field(min_length=1)
+    transaction_id: str = Field(min_length=64, max_length=64)
+    review_status: str = Field(min_length=1)
+    transaction: LedgerTransactionPayload
+
+
+class LedgerTransactionTrackingPayload(BaseModel):
+    """Durable event lineage fields for one ledger transaction."""
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=64, max_length=64)
+    created_event_id: str = Field(min_length=1)
+    evidence_provenance: tuple[TransactionEvidenceProvenanceEntry, ...]
+    edit_lineage: tuple[TransactionEditLineageEntry, ...]
+    lifecycle_state: str = Field(min_length=1)
+    lifecycle_lineage: tuple[TransactionLifecycleLineageEntry, ...]
 
 
 class SplitChildCommand(BaseModel):
@@ -460,7 +522,7 @@ class LedgerReviewRow(BaseModel):
     amount: str = Field(min_length=1)
     description: str = Field(min_length=1)
     status: str = Field(min_length=1)
-    transaction: dict[str, object] | None = None
+    transaction: LedgerTransactionPayload | None = None
 
 
 class LedgerReviewQueryResult(BaseModel):
@@ -559,6 +621,76 @@ class LedgerExportCommand(BaseModel):
         if not trimmed:
             raise TransactionValidationError("ledger export command text fields must not be blank")
         return trimmed
+
+
+class BulkClassifyRow(BaseModel):
+    """One row from a ``ledger classify --from-csv`` CSV input file.
+
+    Required columns: ``transaction_id``, ``classification``.
+    Optional columns: ``category_id``.
+    Unknown column names are rejected pre-persistence to protect against
+    silent field mis-mapping.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1)
+    classification: BusinessClassification
+    category_id: str | None = None
+
+
+class BulkClassifyFailure(BaseModel):
+    """One failed row from a ``ledger classify --from-csv`` operation."""
+
+    model_config = _STRICT_FROZEN
+
+    row_index: int = Field(ge=0)
+    transaction_id: str
+    reason: str = Field(min_length=1)
+
+
+class BulkClassifyResult(BaseModel):
+    """Aggregate result for a ``ledger classify --from-csv`` operation.
+
+    Uses partial-success semantics matching the ledger import pattern:
+    all parseable rows that pass validation are applied; failures are
+    collected into ``failures`` and reported without aborting the batch.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    total: int = Field(ge=0)
+    applied: int = Field(ge=0)
+    skipped: int = Field(ge=0)
+    failures: tuple[BulkClassifyFailure, ...] = ()
+    bucket_event_ids: tuple[str, ...] = ()
+
+
+BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
+
+
+class ApplyRulesAppliedRow(BaseModel):
+    """One successfully rule-applied transaction from ``ledger rule apply``."""
+
+    model_config = _STRICT_FROZEN
+
+    transaction_id: str = Field(min_length=1)
+    matched_rule_id: str = Field(min_length=1)
+    classification: BusinessClassification
+
+
+class ApplyRulesResult(BaseModel):
+    """Aggregate result for a ``ledger rule apply`` operation."""
+
+    model_config = _STRICT_FROZEN
+
+    rules_evaluated: int = Field(ge=0)
+    transactions_scanned: int = Field(ge=0)
+    matched: int = Field(ge=0)
+    skipped_already_classified: int = Field(ge=0)
+    no_match: int = Field(ge=0)
+    applied: tuple[ApplyRulesAppliedRow, ...] = ()
+    bucket_event_ids: tuple[str, ...] = ()
 
 
 class LedgerExportRow(BaseModel):
