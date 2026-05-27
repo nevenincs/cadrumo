@@ -24,24 +24,21 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage.sql import dispose_engine
-from aeat.core.config import override_settings
+from aeat.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 # The option string we assert must appear in every target command's help.
 _OPTION_FLAG = "--output-language"
+_CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
 
 
 @pytest.fixture(autouse=True)
 def _isolated_state(tmp_path: Path) -> Iterator[None]:
-    with override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
+    with isolated_sessionless_storage_root(tmp_path=tmp_path):
+        yield
 
 
 def _assert_output_language_registered(args: list[str]) -> None:
@@ -51,6 +48,10 @@ def _assert_output_language_registered(args: list[str]) -> None:
     assert result.exit_code == 0, f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
     assert _OPTION_FLAG in result.output, (
         f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{result.output}"
+    )
+    assert _CHOICE_LIST in result.output, (
+        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\n"
+        f"Help output:\n{result.output}"
     )
 
 
