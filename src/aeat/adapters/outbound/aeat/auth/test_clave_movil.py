@@ -23,10 +23,13 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from . import _session_store
 from ._clave_movil import (
+    CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
@@ -690,7 +693,7 @@ class TestPendingPetitionRefusal:
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
 
-        async def run() -> None:
+        async def run() -> str:
             with pytest.raises(ClaveMovilApprovalTimeoutError, match=r"Cl@ve|pending|prior|petition") as excinfo:
                 await provider._raise_if_pending_request_error(page)
             assert excinfo.value.failure_mode == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
@@ -698,9 +701,22 @@ class TestPendingPetitionRefusal:
             assert excinfo.value.context["failure_mode"] == ClaveMovilFailureMode.PENDING_PETITION_BLOCKED
             assert "detected_markers" in excinfo.value.context
             assert "diagnostic_id" in excinfo.value.context
+            diagnostic_id = excinfo.value.context["diagnostic_id"]
+            assert isinstance(diagnostic_id, str)
             assert excinfo.value.suggestion is not None
+            return diagnostic_id
 
-        asyncio.run(run())
+        diagnostic_id = asyncio.run(run())
+        record = secure_object_repository_for_active_bucket().load(
+            CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+            diagnostic_id,
+            expected_class=SensitivityClass.SESSION,
+            max_supported_version=1,
+        )
+        assert record is not None
+        payload = json.loads(record.payload.decode("utf-8"))
+        assert payload["diagnostic_id"] == diagnostic_id
+        assert payload["reason"] == "pending-request-refusal"
 
     def test_post_auth_wait_detects_pending_petition_refusal_during_poll(
         self,
