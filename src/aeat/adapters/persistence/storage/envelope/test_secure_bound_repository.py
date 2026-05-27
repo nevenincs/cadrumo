@@ -20,12 +20,12 @@ import pytest
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy import Engine
 
+from .....core.config import Settings, override_settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
-from ..errors import EnvelopeVersionError
+from ..errors import EnvelopeVersionError, StorageValidationError
 from ..sql import SecureObjectRepository
 from ..sql._orm import Base
 from ..sql.engine import create_engine_from_settings
-from .....core.config import Settings
 from ._envelope import Envelope
 from ._secure_repository import SecureBoundRepository
 
@@ -109,6 +109,21 @@ def test_secure_bound_repository_missing_returns_none(tmp_path: Path) -> None:
             engine.dispose()
 
 
+def test_secure_bound_repository_default_refuses_active_profile_without_session(
+    tmp_path: Path,
+) -> None:
+    """Default construction does not fall back when an active profile is selected."""
+
+    with (
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile="secure-bound-bucket",
+        ),
+        pytest.raises(StorageValidationError, match="no active bucket session"),
+    ):
+        _DummyRepository()
+
+
 def test_secure_bound_repository_rejects_future_schema_version(
     tmp_path: Path,
 ) -> None:
@@ -138,7 +153,7 @@ def test_secure_bound_repository_rejects_future_schema_version(
             # Write directly through the underlying object store so the
             # row carries schema_version=2 even though the bound repo
             # declares max=1.
-            repo._objects.save(  # noqa: SLF001 - test reaches across boundary intentionally
+            repo._objects.save(
                 namespace=_DummyRepository.namespace,
                 object_key="future",
                 classification=SensitivityClass.AUDIT,
