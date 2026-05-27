@@ -996,6 +996,50 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
             "orden-hap-2250-2015:art-4",
         ),
     ),
+    # Modelo 721 — declaracion informativa sobre monedas virtuales situadas
+    # en el extranjero. Introduced by Ley 11/2021 DA 10a; form approved by
+    # Orden HFP/887/2023. Applies to any natural person or legal entity that
+    # holds virtual currencies abroad through a third-party custodian or in
+    # self-custody wallets with aggregate value exceeding EUR 50,000 at 31
+    # December (threshold per Orden HFP/887/2023 Art. 3). The three-axis
+    # profile cannot determine whether the threshold is met; applicability is
+    # reported APPLICABLE for natural persons and legal entities — the operator
+    # decides whether the EUR 50,000 threshold is crossed.
+    # Path-B stub: registry entry records legal authority; full casilla
+    # authoring is a follow-on step (full casilla inventory not yet authored).
+    "721": ModeloApplicabilityRule(
+        modelo="721",
+        applicable_entity_types=frozenset(
+            {EntityType.NATURAL_PERSON, EntityType.LEGAL_ENTITY}
+        ),
+        required_income_categories=frozenset(),
+        applicable_reason=(
+            "Modelo 721 (declaracion informativa sobre monedas virtuales en "
+            "el extranjero): el contribuyente que posee monedas virtuales "
+            "situadas en el extranjero con valor agregado superior a 50.000 "
+            "EUR el 31 de diciembre esta obligado a presentar esta declaracion "
+            "informativa anual. La obligacion nace con la Ley 11/2021 DA 10a "
+            "y el formulario esta aprobado por Orden HFP/887/2023. Nota: la "
+            "aplicacion no ha implementado aun el calculo completo del Modelo "
+            "721; utilice la Sede Electronica de la AEAT para presentarlo."
+        ),
+        not_applicable_reason=(
+            "Modelo 721 no aplica: la declaracion informativa sobre monedas "
+            "virtuales en el extranjero solo corresponde a personas fisicas o "
+            "entidades juridicas. El tipo de contribuyente declarado no esta "
+            "incluido en el ambito subjetivo de la Ley 11/2021 DA 10a."
+        ),
+        cuota_bearing=False,
+        # Ley 11/2021 DA 10a — obligacion de declarar monedas virtuales en el
+        # extranjero; Orden HFP/887/2023 Art. 3 — umbral de 50.000 EUR;
+        # RD 1065/2007 Art. 42 quater — reglamento base de declaraciones
+        # informativas de bienes y derechos en el extranjero.
+        legal_refs=(
+            "ley-11-2021:da-10",
+            "orden-hfp-887-2023:art-3",
+            "rd-1065-2007:art-42-quater",
+        ),
+    ),
 }
 """Seed modelo-applicability rules — core persona coverage.
 

@@ -1,0 +1,123 @@
+[legal."ley-11-2021:da-10"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-11-2021-da-10.html#da10"
+document_id = "BOE-A-2021-11473"
+article = "DA-10"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-11473#da10"
+published_at = 2021-07-10
+effective_from = 2022-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Disposicion adicional decima de la Ley 11/2021 de medidas de prevencion y lucha contra el fraude fiscal: obliga a informar sobre monedas virtuales situadas en el extranjero a personas fisicas y juridicas residentes en Espana. Umbral de 50.000 EUR de valor agregado a 31 de diciembre. Habilita el desarrollo reglamentario del Modelo 721."
+required_text = [
+    "monedas virtuales situadas en el extranjero",
+    "personas físicas y jurídicas residentes en territorio español",
+    "50.000 euros",
+]
+
+[legal."orden-hfp-887-2023:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-887-2023-art-1.html#a1"
+document_id = "BOE-A-2023-18679"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679#a1"
+published_at = 2023-07-29
+effective_from = 2023-08-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Orden HFP/887/2023 art 1: aprueba el Modelo 721 'Declaracion informativa sobre monedas virtuales situadas en el extranjero' y sus disenos fisicos y logicos."
+required_text = [
+    "Modelo 721",
+    "Declaración informativa sobre monedas virtuales situadas en el extranjero",
+    "diseños físicos y lógicos",
+]
+
+[legal."orden-hfp-887-2023:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-887-2023-art-2.html#a2"
+document_id = "BOE-A-2023-18679"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679#a2"
+published_at = 2023-07-29
+effective_from = 2023-08-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Orden HFP/887/2023 art 2: obligados a presentar el Modelo 721. Personas fisicas y juridicas, y entidades del art 35.4 LGT, residentes en territorio espanol que posean monedas virtuales situadas en el extranjero a 31 de diciembre cuyo valor agregado supere 50.000 EUR."
+required_text = [
+    "Modelo 721",
+    "monedas virtuales situadas en el extranjero",
+    "valor",
+]
+
+[legal."orden-hfp-887-2023:art-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-887-2023-art-3.html#a3"
+document_id = "BOE-A-2023-18679"
+article = "3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679#a3"
+published_at = 2023-07-29
+effective_from = 2023-08-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Orden HFP/887/2023 art 3: plazo de presentacion del Modelo 721, entre el 1 de enero y el 31 de marzo del ano siguiente al ejercicio al que se refiera la informacion. Primera declaracion corresponde al ejercicio 2022."
+required_text = [
+    "1 de enero",
+    "31 de marzo",
+    "ejercicio",
+]
+
+[legal."rd-1065-2007:art-42-quater"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-42-quater.html#a42quater"
+document_id = "BOE-A-2007-15984"
+article = "42-quater"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a42quater"
+published_at = 2023-07-29
+effective_from = 2023-08-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "RGAT art 42 quater (introducido por RD 249/2023): obligacion de informar sobre monedas virtuales situadas en el extranjero. Desarrolla reglamentariamente la DA 10 de la Ley 11/2021. Habilita el Modelo 721."
+required_text = [
+    "monedas virtuales",
+    "extranjero",
+]
+
+[sources."aeat-modelo-721-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_721/files/modelo-721-procedure.html"
+sha256 = "cad952e774746e098c3bfcfa199fbec398d3801848c0825e180182f6b92858ec"
+bytes = 748
+retrieved_at = 2026-05-27
+applies_from = 2023-08-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/procedimientoini/GI56.shtml"
+review_status = "reviewed"
+
+[sources."boe-modelo-721-2023-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hfp-887-2023.html"
+sha256 = "85f769782a1cb68f98e7697d197696b18985314fdde4bd4e4dbcfabede70e050"
+bytes = 743
+retrieved_at = 2026-05-27
+published_at = 2023-07-29
+applies_from = 2023-08-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-18679"
+review_status = "reviewed"
