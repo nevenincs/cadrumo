@@ -360,3 +360,178 @@ recommendation carries the finding IDs it resolves.
 - S239: Improve wizard non-TTY hint to include non-interactive flag usage. (Anna D4)
 
 - D5: Resolve `--revision` from profile fiscal year when flag is absent. (Anna D5)
+
+---
+
+## W04.P19+P20 cluster commit review (W04.P21.S78)
+
+Seven commits reviewed against the architect's HYBRID verdict (option (c)) and the
+verified-complete ADR (`2026-05-12-cli-workflow-redesign-verified-complete-adr`),
+registry-authority-flow rule, and taxpayer-type-applicability ADR
+(`2026-05-21-taxpayer-type-applicability-adr`).
+
+### `e6387c08a` S72 — verification-predicate strategy ADR
+
+**ACCEPT.**
+
+The ADR is correctly placed under `.vault/adr/` with the `#cross-domain-continuity`
+feature tag, `accepted` status, and all three required citations in the `related:`
+frontmatter (`2026-05-12-cli-workflow-redesign-verified-complete-adr`,
+`2026-05-21-taxpayer-type-applicability-adr`, `2026-05-26-cross-domain-continuity-plan`).
+The body covers Problem Statement, Considerations, Constraints, Implementation table,
+and Consequences. The two-layer decision boundary table is present and accurate. The
+registry-authority-flow rule is cited inline in the Rationale section. One note: the
+`related:` field omits an explicit link to the registry-authority-flow rule document,
+but the rule is cited by name in the prose — acceptable.
+
+### `94940cb5d` S73+S74 — Layer 1 `required=true` on M130/M202/M200
+
+**ACCEPT.**
+
+The commit message explicitly records the legal citations for each change:
+M130 casilla 02 (Orden EHA/672/2007 art.1, RD 439/2007 art.110), M202 casilla 01
+(Ley 27/2014 art.40), M200 casillas 00501 and 00562. All six TOML changes are
+single-field flips from `required = false` to `required = true` on casillas that
+are already `input_kind = "manual"` — the correct Layer 1 target. M303 exclusion is
+justified (core IVA casillas are `input_kind=bound`). M100 exclusion is addressed
+below.
+
+**M100 not marked `required=true` — INTENTIONAL, NOT A GAP.**
+
+The commit message states: "M100: required casillas are `input_kind=bound`; Layer 1
+manual gate does not apply." This is architecturally correct. Layer 1's filter is
+`input_kind == "manual" and required`. The cuota and base casillas in M100 that feed
+the IRPF tariff are computed (`input_kind=bound` or `computed`), not operator-entered.
+Cluster T (cuota=0) is caused by the personal-data binding declarations being absent
+from revision 2024 TOML — those are `input_kind=bound` binding-resolution entries, not
+manual casilla fields. Setting `required=true` on bound casillas would only fire the
+Layer 1 gate when the formula engine fails to resolve them, not when the binding source
+is missing. Cluster T requires a W07 fix (adding the personal-data binding declarations
+to M100 revision 2024 TOML), which is the correct scope per S113-S115. This commit is
+correct to exclude M100.
+
+### `aaec080e7` S75+S76 — Layer 2 predicate evaluator + M130 all-zero regression gate
+
+**ACCEPT.**
+
+`VerificationPredicateDefinition` is a clean `RegistryModel` subclass with tight
+field constraints (`predicate_id` min_length=1 max_length=128, `expression`
+max_length=512, `finding_kind: Literal["BLOCKING_RULE"]`). `ModeloRevision.verification_predicates`
+defaults to `()` — existing revisions are unaffected. The evaluator
+(`_evaluate_predicate_expression`) is small, stateless, and defensively handles unknown
+DSL expressions by returning `True` (pass-through), preserving forward compatibility.
+`_evaluate_verification_predicates` is correctly wired into `_collect_revision_verification_findings`
+after the Layer 1 required-casilla pass.
+
+`StoredCalculationDriftError` registration in `_application.py` is present and atomic
+with this commit — the class definition and the registry entry land in the same commit.
+The `ErrorCode` carries `category=ErrorCategory.INTEGRITY`, `retryable=False`, and a
+`default_suggestion` pointing to `aeat app modelo work calculate`. This resolves the
+Anna D1 / Marc R7-D2 import-crash blocker.
+
+**Test quality (no-tautological-tests rule):** 11 tests. The seven unit tests for
+`_evaluate_predicate_expression` and `_evaluate_verification_predicates` test concrete
+input/output pairs derived from the DSL specification, not from observed output.
+The M130 Layer 1 regression test (`test_m130_all_zero_without_gastos_is_blocked`)
+reads `required` and `input_kind` from the real registry rather than hardcoding
+casilla IDs, which is the correct anti-tautology pattern. The assertions check
+`ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA` membership and
+`report.granted_verificado_completo is False`. No mocks, no stubs, no skips. Passes
+the no-tautological-calculation-tests rule.
+
+One observation: `test_unknown_expression_does_not_block` asserts that an unknown
+expression returns `True`. This is a specification test for the forward-compatibility
+guarantee, not a tautology — acceptable.
+
+### `b4ccc2357` S210+S211 — observation provenance cross-check + tampering regression
+
+**ACCEPT.**
+
+S210 extends `_assert_revision_content_integrity` with the observation provenance
+cross-check: for each `CasillaObservation` in `revision.observations`, the observation
+`.value` must equal `revision.casilla_values[casilla_id]`. Two distinct `StoredCalculationDriftError`
+paths: (a) observation present but casilla absent from `casilla_values`, (b) values
+disagree. The legacy-safe guard (`observations == ()` skips check 2) is explicit and
+correct — older revisions without observations are not rejected.
+
+The S211 tamper regression test in `test_verification_substance.py` uses
+`model_construct` to bypass pydantic validators, which is the correct technique for
+simulating storage-layer corruption without writing invalid bytes to disk. The test
+asserts `pytest.raises(StoredCalculationDriftError)` from
+`_assert_revision_content_integrity` directly — a unit assertion against a named
+exception derived from the specification, not from observed output.
+
+**Sequencing note:** `StoredCalculationDriftError` is defined in `aaec080e7` (S75
+commit) and the error-code registry entry is added in the same commit. `b4ccc2357`
+extends the function that raises it. The atomicity guarantee holds across both commits:
+no commit in between defines or uses `StoredCalculationDriftError` without its registry
+entry being present.
+
+### `2f92b74e2` S77 — `verify_modelo_revision` docstring (four-layer gate)
+
+**ACCEPT.**
+
+The docstring update accurately describes the four-layer pipeline:
+(1) state-machine gate, (2) Layer 1 required-input gate, (3) Layer 2 predicate gate,
+(4) provenance re-validation. `StoredCalculationDriftError` is added to the `Raises`
+section. No functional changes. Documentation-only commit is correctly scoped.
+
+### `d8bec8bd9` S77+S76+S211 — boundary docstring + extra regression tests
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+`__init__.py` four-layer boundary docstring is correct. `StoredCalculationDriftError`
+is exported from the `modelo` package — required for the Anna D1 fix to surface a
+named exception rather than an import error.
+
+The three real-storage regression tests in `test_verificado_completo_regression.py`
+are substantive:
+- `test_verify_refuses_when_required_casillas_absent_m130`: reads required casillas
+  from the real registry, calculates without them, asserts `granted_verificado_completo
+  is False` and `≥1 MISSING_REQUIRED_CASILLA` finding.
+- `test_verify_grants_when_required_casillas_present_m130`: positive path — supplies
+  all required casillas and asserts `granted_verificado_completo is True` and
+  `missing_required_casillas == ()`. This is the essential complement to the negative
+  test.
+- `test_tampered_revision_raises_drift_error`: uses `model_construct` bypass, mutates
+  `casilla_values["02"]`, asserts `StoredCalculationDriftError` from
+  `_assert_revision_content_integrity`. Sound technique.
+
+**FOLLOWUP FU-W04-A:** The commit co-lands plan step closures (S75/S76/S210/S211/S77
+via vault CLI) and exec step records inside the same commit as new test files and the
+`__init__.py` boundary docstring. This violates the one-Step-per-commit convention
+(documented as FU-G in the Wave-3 audit). The tests and docstring are functionally
+correct; the convention violation is a documentation note only. Recommend a plan note
+under W09 (no code change).
+
+### `a3b30aac0` S211 — step record path fix
+
+**ACCEPT.**
+
+Corrects the `test_file:` reference in the S211 exec step record from
+`test_verification_substance.py` to `test_verificado_completo_regression.py`. One-line
+metadata fix; no functional impact.
+
+---
+
+### Cross-commit summary
+
+| Commit | Step(s) | Verdict |
+|---|---|---|
+| `e6387c08a` | S72 ADR | ACCEPT |
+| `94940cb5d` | S73+S74 | ACCEPT |
+| `aaec080e7` | S75+S76 | ACCEPT |
+| `b4ccc2357` | S210+S211 | ACCEPT |
+| `2f92b74e2` | S77 docstring | ACCEPT |
+| `d8bec8bd9` | S77+S76+S211 boundary | ACCEPT-WITH-FOLLOWUP (FU-W04-A) |
+| `a3b30aac0` | S211 record fix | ACCEPT |
+
+**Follow-up Steps for W09:**
+
+- FU-W04-A: Add plan note documenting the S77+S76+S211 multi-step co-landing
+  (convention note only, no code change). Mirrors FU-G from Wave-3 audit.
+
+**M100 Cluster T status:** M100 exclusion from S74 is intentional and correct.
+Cluster T root cause (missing personal-data binding declarations in M100 revision 2024
+TOML) is outside Layer 1 scope and is addressed by W07.P31.S113-S115 (currently
+in_progress per task #60).
