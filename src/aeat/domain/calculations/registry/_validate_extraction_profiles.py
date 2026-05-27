@@ -72,6 +72,13 @@ def validate_declaracion_pdf_round_trip_gate(
     if profile.provisional_pending_specimen:
         return []
     if profile.corpus_round_trip_verified:
+        if profile.verification_source is None:
+            return [
+                f"{scope}: extraction profile {profile.id!r} sets corpus_round_trip_verified = true "
+                f"but verification_source is not set; set verification_source to one of "
+                f"'real_aeat_corpus_pdf', 'synthetic_from_aeat_published_text', "
+                f"'historical_suppression', or 'not_applicable' to document provenance explicitly"
+            ]
         return []
     fixture_dir = corpus_root / modelo_id
     if not (fixture_dir.is_dir() and any(fixture_dir.glob("*.pdf"))):
