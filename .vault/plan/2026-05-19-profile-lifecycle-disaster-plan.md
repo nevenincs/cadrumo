@@ -106,8 +106,8 @@ feature. Pass criterion: every persona scores ≤1 on every prior
 pain point.
 
 - [ ] `P06.S42` - dispatch persona newcomer for first-time-operator retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-newcomer-retest.md`.
-- [ ] `P06.S43` - dispatch persona returning for Monday-morning retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-returning-retest.md`.
-- [ ] `P06.S44` - dispatch persona dual for two-profile retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-dual-retest.md`.
-- [ ] `P06.S45` - dispatch persona fumbler for error-prone retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-fumbler-retest.md`.
-- [ ] `P06.S46` - dispatch persona curious for investigatory retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-curious-retest.md`.
-- [ ] `P06.S47` - write closing synthesis comparing pain scores before/after and close the disaster recovery; `.vault/audit/2026-05-19-profile-lifecycle-disaster-retest-synthesis.md`.
+- [x] `P06.S43` - dispatch persona returning for Monday-morning retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-returning-retest.md`.
+- [x] `P06.S44` - dispatch persona dual for two-profile retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-dual-retest.md`.
+- [x] `P06.S45` - dispatch persona fumbler for error-prone retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-fumbler-retest.md`.
+- [x] `P06.S46` - dispatch persona curious for investigatory retest and persist testimony; `.vault/audit/2026-05-19-operator-blind-curious-retest.md`.
+- [x] `P06.S47` - write closing synthesis comparing pain scores before/after and close the disaster recovery; `.vault/audit/2026-05-19-profile-lifecycle-disaster-retest-synthesis.md`.

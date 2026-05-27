@@ -339,8 +339,8 @@ Trace Modelo 100 cuota path end-to-end for a pensioner-landlord profile and iden
 
 The binding renta-2025-modelo-130-pagos-fraccionados exists; the projection is invisible from the operator surface.
 
-- [ ] `W07.P32.S116` - add aeat app modelo project --target 100 --from 130-revisions verb surfacing projected year-end Modelo 100 from quarterly 130 filings; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W07.P32.S117` - regression test series of four filed 130 quarters produces sensible Modelo 100 projection; `src/aeat/entrypoints/cli/test_modelo_projection.py`.
+- [x] `W07.P32.S116` - add aeat app modelo project --target 100 --from 130-revisions verb surfacing projected year-end Modelo 100 from quarterly 130 filings; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W07.P32.S117` - regression test series of four filed 130 quarters produces sensible Modelo 100 projection; `src/aeat/entrypoints/cli/test_modelo_projection.py`.
 
 ### Phase `W07.P33` - cross-fiscal-year compare verb
 
@@ -467,7 +467,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S251` - FU-S115-CAT investigate Cataluña 2024 autonomic tarifa discrepancy; `reviewer reconstruction gives 4522.78 EUR for base 35400 but S115/S249 oracle values use 4650.03; either the bracket table is wrong in S115 or there is a complementary tariff source from Orden HAC 2024 Cataluña not yet ingested; ground against AEAT oracle replay before adjusting; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
 - [ ] `W09.P41.S252` - S209 BATCH 1 migrate Category A no-active-profile tests to isolated_profile_storage_root: test_profile_create_taxpayer_type_paths test_profile_incn_new_entity_paths test_cold_start_no_profile test_repair_bootstrap_exempt test_fast_path_no_state; `drop AEAT_SECRET_STORE_BACKEND=unsecured and AEAT_ALLOW_UNENCRYPTED monkeypatches; replace with isolated_profile_storage_root fixture; depends on S208; `src/aeat/entrypoints/cli/`.
 - [ ] `W09.P41.S253` - S209 BATCH 2 migrate Category B active-profile tests to isolated_runtime_profile: test_apex_workflow_verification test_audit_remediation test_cli_surface test_command_suggestions test_modelo_202_modality test_modelo_discovery_defects test_modelo_period_consistency test_modelo_source_mesh_calculate test_modelo_work_applicability_guard test_modelo_work_ux test_profile_output_language test_session_lifecycle_roundtrip; `replace _isolated_backend fixture with runtime_profile fixture using isolated_runtime_profile context manager; CliRunner invocations remain unchanged; `src/aeat/entrypoints/cli/`.
-- [ ] `W09.P41.S254` - S209 BATCH 3 mixed-fixture triage for test_profile_lifecycle_verbs test_root_grammar_invariants test_root_help_shape; split create-path tests from active-session tests across test classes or parametrised fixtures; some functions may need isolated_profile_storage_root other functions need isolated_runtime_profile; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P41.S254` - S209 BATCH 3 mixed-fixture triage for test_profile_lifecycle_verbs test_root_grammar_invariants test_root_help_shape; `split create-path tests from active-session tests across test classes or parametrised fixtures; some functions may need isolated_profile_storage_root other functions need isolated_runtime_profile; `src/aeat/entrypoints/cli/`.
 
 ### Phase `W09.P42` - twin function merge
 
