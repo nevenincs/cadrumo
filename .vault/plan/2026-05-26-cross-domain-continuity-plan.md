@@ -108,7 +108,7 @@ Mandated breakpoint. Dispatch code-reviewer on Wave-1 commits, round-7 persona f
 - [x] `W01.P09.S33` - dispatch vaultspec-code-reviewer against every Wave-1 commit and consolidate verdict; `.vault/exec/`.
 - [x] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
 - [x] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
-- [ ] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
+- [x] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
 - [ ] `W01.P09.S37` - expand this plan in place: every new BLOCKER and MAJOR becomes a new Phase or Step in the appropriate Wave; `re-run vault plan check; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
 
 ## Wave `W02` - applicability and calendar consolidation
