@@ -3947,3 +3947,108 @@ raises `ValueError`. No mocks.
 | S96: Partial-success vs all-or-nothing | NO — recommend partial-success | W05.P25 |
 | S99: `balance` verb placement (`app modelo` vs `app live`) | Decision above (app modelo) | W05.P26 |
 | S99: "next pull date" semantics | Decision above (lot-expiry boundary) | W05.P26 |
+
+---
+
+## Task #122 — Architecture review: W05.P23.S86-S90 FX conversion
+
+**Commits:** `38d82ce95` (S86 decision) + `9239692e4` (S87 schema) +
+`434ed8a18` (S88+S89 implementation) + `9ff321c88` (S90 tests) +
+`cfcd6559a` (exec records + plan closure)
+**Date:** 2026-05-27
+**Reviewer:** architecture-specialist
+
+### S86 — Decision doc: AEAT/BOE authority citations
+
+CONFIRMED. The step record cites three distinct statutory authorities:
+
+- Art. 79.Dos LIVA (BOE-A-1992-28740): IVA devengo date → ECB reference rate on
+  tax point date
+- Art. 14 LIRPF (Ley 35/2006, BOE-A-2006-20764): IRPF exigibilidad date
+- Art. 16.5 LIS (Ley 27/2014, BOE-A-2014-12328): IS transaction date for revenue
+  items
+
+Conversion date proxy: `value_date ?? booked_date` matching the existing
+`operation_date` applied across all aggregation gates. Rationale for hybrid over
+on-aggregation-conversion is clearly argued: determinism, no late-binding rate
+provider in the aggregation layer, provenance preservation. Placement on
+`Transaction` (not `RawTransaction`) is explicitly justified matching the
+`iva_category` boundary precedent. S86 decision doc is thorough and legally grounded.
+
+### S87 — Transaction schema: G2 compliance + coupling invariant
+
+CONFIRMED. `fx_rate: Decimal | None = None` and `value_in_eur: Decimal | None = None`
+added to `Transaction` (lines 794-795 of `_models.py`). Both added to
+`_TRANSACTION_DECIMAL_KEYS` (lines 269-270). Two validators enforce correctness:
+
+- `_validate_fx_fields`: rejects negative values via existing
+  `_validate_non_negative_decimal` helper
+- `_enforce_fx_coupling`: both set or both absent; EUR-native transactions carry neither
+
+G2 compliant: typed `Decimal | None`, no `dict[str, Any]`. Backward compat: both
+fields default to `None`, so all existing `Transaction` records remain valid.
+
+### S88 — Import path FX wiring
+
+CONFIRMED. `_apply_fx_conversion` helper in `_actions.py`: EUR rows return
+`(None, None)` immediately; non-EUR rows with no normalizer or a missing rate also
+return `(None, None)`, preserving the coupling invariant. Rate date is
+`raw.value_date or raw.booked_date` — consistent with S86 decision.
+`CurrencyNormalizationService` is optional in `import_ledger_transactions` and
+`_evaluate_import_rows`; callers without a rate provider retain existing behaviour.
+ECB source is the `ExchangeRateProvider` abstraction injected by the caller —
+not hardcoded. G4 locale gate: no locale yml touched. PASS.
+
+### S89 — Shared predicate: G5 compliance
+
+CONFIRMED. `is_non_eur_without_conversion` canonical helper in
+`_currency_predicates.py:18`. All three independent
+`if transaction.raw.currency != "EUR"` guards in `_iva_ledger.py:398`,
+`_renta_ledger.py:272`, and `_renta_income_ledger.py:225` replaced with
+the shared predicate. Zero remaining raw `currency != "EUR"` checks in those
+files. G5 gate passes.
+
+`effective_eur_amount` is defined and exported but not yet called in any
+aggregation file — a preparatory helper for a future wiring step (IVA ledger
+currently uses operator-supplied `taxable_base`). Not a defect in S89 scope.
+
+One minor dead-code line in `test_missing_rate_leaves_fx_fields_absent`
+(line 210): an unused `CurrencyNormalizationService` construction is shadowed
+immediately by the `_NoRateProvider` inner class two lines below. Non-blocking.
+
+### S90 — Regression test: oracle + G6 anti-tautology
+
+CONFIRMED STRONG. ECB oracle is explicit and well-documented:
+
+- ECB EXR.D.USD.EUR.SP00.A 2024-01-15 = 1.0868 (published reference rate)
+- `_ECB_2024_01_15_USD_RATE = Decimal("1") / Decimal("1.0868")` — derived from
+  the published figure, not author-invented
+- `_EXPECTED_EUR` computed from the derived rate with a module-level
+  `assert _EXPECTED_EUR == Decimal("92.01")` — the test file fails to import
+  if the oracle derivation is wrong
+
+Satisfies `no-tautological-calculation-tests`: expected EUR value traces to a
+published ECB figure, not to the formula under test.
+
+Anti-tautology proof (test 5): mutant rate (50% of canonical) in a separate
+provider instance produces a distinct `value_in_eur`; `assert canonical_eur != mutant_eur`
+fails if the rate is ignored. Non-tautological.
+
+All 5 tests pass (`pytest test_fx_conversion.py` in 3.13s; `isolated_runtime_profile`
+real adapter; no mocks).
+
+### Follow-up (non-blocking)
+
+- `effective_eur_amount` wiring: the helper is exported but unused. A future
+  step should wire it into the amount projection path for non-EUR rows when
+  `taxable_base` is absent at import. Track as W05.P23 follow-up.
+- Dead code in `test_missing_rate_leaves_fx_fields_absent` line 210: shadowed
+  `CurrencyNormalizationService` construction. Remove in next cleanup pass.
+
+### Verdict
+
+**APPROVE.** S86-S90 all pass. Decision doc is well-grounded with three BOE
+citations. Schema coupling invariant is tight. G2, G5, G6 gates all satisfied.
+Oracle from published ECB EXR data satisfies no-tautological-calculation-tests.
+G4 locale gate: no yml mutation across any of the 5 commits. Two minor
+non-blocking follow-ups logged.
