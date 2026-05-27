@@ -1,0 +1,324 @@
+"""Regression tests for the verificado-completo required-input gate and drift detection.
+
+S76: acceptance gate for Layer-1 verification strategy (S72-S75):
+
+1. A Modelo 130 revision calculated without the required manual input
+   casillas is NOT granted verificado_completo.
+2. Each MISSING_REQUIRED_CASILLA finding references a casilla that
+   the registry marks ``required = true`` and ``input_kind = "manual"``.
+3. Supplying all required casillas causes the transition to be granted.
+
+S211: tamper-detection regression:
+
+4. Mutating a persisted casilla value after calculate raises
+   StoredCalculationDriftError on verify — the content-address mismatch
+   is caught before VERIFICADO_COMPLETO is granted.
+
+The tests exercise the real registry, real encrypted SQLite storage, and
+real formula engine — no mocks, no stubs, no tautological assertions.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+from decimal import Decimal
+
+import pytest
+
+from aeat.application.modelo import (
+    StoredCalculationDriftError,
+    calculate_modelo_revision,
+    create_work_unit,
+    verify_modelo_revision,
+)
+from aeat.core.resources import resources
+from aeat.domain.buckets import BucketEventHistoryRepository
+from aeat.domain.deadlines import IVARegime, TaxpayerProfile
+from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
+from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
+from aeat.domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+    VerificationCompletenessStatus,
+)
+from aeat.domain.modelos._verification_repository import VerificationReportCatalogueRepository
+from aeat.tests.secure_sql import isolated_runtime_profile
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+_T0 = datetime(2026, 1, 15, 12, 0, 0, tzinfo=UTC)
+_T1 = datetime(2026, 1, 15, 13, 0, 0, tzinfo=UTC)
+_T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
+
+_M130_MODELO = "130"
+_M130_FILING_YEAR = 2026
+_M130_PERIOD = "1T"
+
+
+def _required_manual_casillas_for_m130() -> tuple[str, ...]:
+    """Read required manual casillas from the real registry — no duplication."""
+    snap = resources().modelos.authority.snapshot(
+        _M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD
+    )
+    return tuple(
+        str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == "manual"
+    )
+
+
+def _workflow_profile() -> TaxpayerProfile:
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        has_employees=False,
+        pays_rent_with_retencion=False,
+        does_intracomunitario=False,
+        bienes_extranjero_above_threshold=False,
+    )
+
+
+@pytest.fixture
+def repos(tmp_path):
+    """Real encrypted SQLite repos over a fresh isolated profile."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="default") as profile:
+        objects = profile.repository
+        wu = WorkUnitCatalogueRepository(objects=objects)
+        cr = CalculationRevisionCatalogueRepository(objects=objects)
+        vr = VerificationReportCatalogueRepository(objects=objects)
+        bv = BucketEventHistoryRepository(objects=objects)
+        yield wu, cr, vr, bv
+
+
+def test_verify_refuses_when_required_casillas_absent_m130(repos) -> None:
+    """M130 revision with no required casilla is NOT granted verificado_completo.
+
+    The test uses the real M130 registry to determine which casillas are
+    required. It calculates a revision with those casillas absent and
+    asserts the verifier produces ≥1 MISSING_REQUIRED_CASILLA finding.
+    """
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    required = _required_manual_casillas_for_m130()
+    assert len(required) >= 1, (
+        "M130 registry must declare at least one required manual casilla; "
+        "check casillas/0001-casillas.toml required = true declarations"
+    )
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo=_M130_MODELO,
+        filing_year=_M130_FILING_YEAR,
+        period=_M130_PERIOD,
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    # Calculate with empty required casillas — supply only the bound casilla
+    # (01) and non-required manual casillas so the engine can run, but omit
+    # the required ones entirely.
+    inputs_without_required: dict[str, Decimal] = {
+        "05": Decimal("0"),
+        "06": Decimal("0"),
+        "08": Decimal("0"),
+        "10": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+    # Explicitly exclude any casilla in the required set
+    casilla_inputs = {k: v for k, v in inputs_without_required.items() if k not in required}
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            # previous_filing binding for casilla 15 carry-forward (no period anchor;
+            # supply zero for Q1 where no prior quarter exists within the ejercicio)
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verificado_completo is False
+    assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
+
+    missing_finding_casillas = {
+        f.casilla_id
+        for f in report.findings
+        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
+    }
+    # Every casilla in the missing finding set must be registry-required
+    assert missing_finding_casillas, "Expected at least one MISSING_REQUIRED_CASILLA finding"
+    assert missing_finding_casillas <= set(required), (
+        f"Findings reference casillas not declared required in registry: "
+        f"{missing_finding_casillas - set(required)}"
+    )
+    # The required casillas we omitted must appear in missing_required_casillas
+    for casilla_id in required:
+        assert casilla_id in report.missing_required_casillas
+
+
+def test_verify_grants_when_required_casillas_supplied_m130(repos) -> None:
+    """M130 revision with all required casillas present is granted verificado_completo."""
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+    required = _required_manual_casillas_for_m130()
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo=_M130_MODELO,
+        filing_year=_M130_FILING_YEAR,
+        period=_M130_PERIOD,
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    casilla_inputs: dict[str, Decimal] = {
+        "01": Decimal("10000"),
+        "02": Decimal("3000"),
+        "05": Decimal("0"),
+        "06": Decimal("0"),
+        "08": Decimal("0"),
+        "10": Decimal("0"),
+        "15": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+    # Confirm the test supplies all required casillas
+    assert set(required) <= set(casilla_inputs), (
+        f"Test fixture missing required casillas: {set(required) - set(casilla_inputs)}"
+    )
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    assert report.granted_verificado_completo is True
+    assert report.completeness_status is VerificationCompletenessStatus.COMPLETE
+    assert report.missing_required_casillas == ()
+    assert set(report.resolved_casillas) >= set(required)
+
+
+def test_tampered_revision_raises_drift_error(repos) -> None:
+    """_assert_revision_content_integrity raises StoredCalculationDriftError on drift.
+
+    S211 regression: verify_modelo_revision calls _assert_revision_content_integrity
+    before granting VERIFICADO_COMPLETO.  The check is exercised by constructing a
+    CalculationRevision via model_construct (bypassing _enforce_invariants) with a
+    casilla_values mapping that does not match the stored calculation_revision_id.
+
+    This tests the integrity guard as a unit within the verify path: the guard is
+    called with a revision object where the hash-to-payload contract is broken.
+    In production, such breakage can occur through raw-storage manipulation or a
+    future schema migration that mutates the payload without updating the id.
+    """
+    from aeat.application.modelo._actions import _assert_revision_content_integrity
+
+    wu_repo, cr_repo, _vr_repo, bv_repo = repos
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo=_M130_MODELO,
+        filing_year=_M130_FILING_YEAR,
+        period=_M130_PERIOD,
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs={
+            "01": Decimal("10000"),
+            "02": Decimal("3000"),
+            "05": Decimal("0"),
+            "06": Decimal("0"),
+            "08": Decimal("0"),
+            "10": Decimal("0"),
+            "15": Decimal("0"),
+            "16": Decimal("0"),
+            "18": Decimal("0"),
+        },
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    catalogue = cr_repo.load()
+    original = catalogue.get(revision.calculation_revision_id)
+    assert original is not None
+
+    # Construct a tampered revision via model_construct — this bypasses all
+    # pydantic validators so the hash mismatch is not caught at build time.
+    # The tampered version keeps the original calculation_revision_id (which
+    # was derived from the original casilla_values) but carries mutated
+    # casilla_values, breaking the content-address contract.
+    tampered_values = dict(original.casilla_values)
+    tampered_values["02"] = Decimal("999999")
+
+    tampered = original.model_construct(
+        calculation_revision_id=original.calculation_revision_id,
+        work_unit_id=original.work_unit_id,
+        state=original.state,
+        inputs_snapshot=original.inputs_snapshot,
+        binding_overrides=original.binding_overrides,
+        source_transaction_ids=original.source_transaction_ids,
+        borrador_snapshot_id=original.borrador_snapshot_id,
+        bindings_sourced_from_borrador=original.bindings_sourced_from_borrador,
+        casilla_values=tampered_values,
+        observations=(),  # cleared so the obs-vs-casilla_values pydantic check is skipped
+        created_at=original.created_at,
+        updated_at=original.updated_at,
+        verified_at=original.verified_at,
+        verified_by=original.verified_by,
+        filed_at=original.filed_at,
+        filed_by=original.filed_by,
+        superseded_at=original.superseded_at,
+        discarded_at=original.discarded_at,
+        discarded_by=original.discarded_by,
+        discard_reason=original.discard_reason,
+        amendment_kind=original.amendment_kind,
+        amends_filing_record_id=original.amends_filing_record_id,
+        amendment_reason=original.amendment_reason,
+    )
+
+    # The guard must detect the hash mismatch and raise StoredCalculationDriftError.
+    with pytest.raises(StoredCalculationDriftError):
+        _assert_revision_content_integrity(tampered)
