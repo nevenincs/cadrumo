@@ -5221,3 +5221,138 @@ supply). If dispatching to different coders, both can proceed in
 parallel since they touch different casilla files and different formula
 files.
 
+---
+
+## S350 — W12.P61 typed-boundary CLI payload sweep (13 helpers)
+
+**Commits:** `f45a8532c` (Batch 1 `_modelo_payloads.py`) + `2ae2b1a10`
+(Batch 2 `_ledger.py`, `_config/__init__.py`, `_common.py`,
+`_app_live.py`)
+
+**Verdict: APPROVE**
+
+### Gate results
+
+**G1 (naked env reads):** PASS. No `os.environ` / `os.getenv` in any
+modified file.
+
+**G2 (typed pydantic at boundaries):** PASS with documented exceptions.
+Batch 1 extended `FindingPayload` with `legal_refs` / `source_refs`
+and `ModeloRecordPayload` with `ExternalEvidencePayload` sub-model and
+`amends_filing_record_id`. All five `_modelo.py` helpers already typed
+from the concurrent S99 iva-wallet campaign (`e9f45806c`). Batch 2
+promoted five read-only row helpers from `dict[str, object]` to
+`Mapping[str, object]` — correct for immutable projection paths.
+Two functions deliberately retain `dict[str, object]`:
+`_business_invoice_payload` (post-call mutation: callers append
+`bucket_event_ids` directly on the dict — `Mapping` would break the
+call contract) and `_aggregate_filing_inputs` (not a CLI JSON payload
+but a casilla binding dict fed into the calculation engine). Both
+exceptions are documented with inline rationale comments.
+
+**G3 (user strings via tr()):** PASS. No new user-facing string
+literals introduced. No locale structure changes.
+
+**G4 (locale yml structure):** PASS. No locale YAML touched.
+
+**G5 (no shims/re-exports/duplication):** PASS. No new re-exports or
+duplicate symbols.
+
+**G6 (no tautological tests):** PASS. No test changes in this commit
+cluster.
+
+**Grounding gate:** PASS. This is a structural boundary-typing pass,
+not a calculation or domain-logic change. No registry grounding
+required.
+
+**Git-discipline gate:** PASS. No stash/reset/backup language in step
+record. Step record commit `2a0e1a341` references correct commits.
+Note: step record lists `f45a8532c` but git log shows it as commit
+`f45a8532c646952326b513a6a0c47b8ae6af379e` — SHA matches.
+
+### Test results
+
+`src/aeat/entrypoints/cli/_config/` suite: 24/24 passed (10.47s).
+`ruff check` on all five modified files: clean.
+
+### Observations
+
+The step record's Batch 2 boundary decision table is well-reasoned and
+matches what is in the code. The `Mapping` vs `dict` distinction is
+applied correctly based on downstream mutation semantics, not
+mechanically. No follow-up items.
+
+---
+
+## M721 — Eva round-9 SHOW-STOPPER: cryptocurrency informativa registry gap
+
+**Research note:** `.vault/research/2026-05-27-m721-informativa-criptomonedas-research.md`
+
+**Verdict: SHOW-STOPPER confirmed. Recommend registry-stub-with-explicit-refusal (SMALL).**
+
+### Confirmed absence
+
+`src/aeat/_data/registry/aeat/modelos/` has no `721/` directory.
+No TOML file in the codebase references Modelo 721 as an identifier,
+`Ley 11/2021` as a legal ref, or `Orden HFP/887/2023` as a source ref.
+The legal authority for M721 has zero registry footprint.
+
+### Legal authority
+
+M721 (Declaración informativa sobre monedas virtuales situadas en el
+extranjero) was created by Ley 11/2021, DA-10, and regulated by Orden
+HFP/887/2023 (BOE A-2023-17052, 28-VII-2023). Applicable from fiscal
+year 2022 (first filing in 2023). Annual cadence, period type `0A`.
+Threshold: holdings abroad > 50,000 EUR aggregate value at 31 December.
+
+Key registry legal_refs:
+- `ley-11-2021:da-10`
+- `orden-hfp-887-2023:art-1`, `art-2`, `art-3`
+- `rd-1065-2007:art-42-quater`
+
+### Decision: stub-first, full authoring as follow-on
+
+**Why not full authoring now:** M721 is a pure informative modelo with
+no computed casillas and no formula engine involvement. Full authoring
+would require the Orden HFP/887/2023 form PDF for casilla labels/numbers
+and is a MEDIUM (2-3 day) TOML authoring exercise. It does not block
+any current calculation or filing workflow.
+
+**Why stub closes the SHOW-STOPPER:** Eva's pain is that the CLI either
+crashes or silently mishandles M721 input. A registry stub with an
+explicit `"Modelo 721 is not yet fully supported; registry stub only"`
+refusal closes the operator-visible regression while deferring the full
+casilla inventory.
+
+**Stub scope (SMALL, ~1 day):**
+- `src/aeat/_data/registry/aeat/modelos/721/manifest.toml` — mirrors
+  M720 structure with correct id, title, tax_domain, cadence,
+  legal_refs
+- `src/aeat/_data/registry/aeat/modelos/721/revisions/2023-y-siguientes/revision.toml`
+  — minimal revision shell, period `year_from = 2022`, period type `0A`
+- CLI guard: ensure the operator receives a clear, localised refusal
+  when attempting M721 operations; must not crash or silently return
+  empty results
+
+**Full casilla inventory (MEDIUM, follow-on):** ~30-40 casillas across
+four sections (custodian-held, self-custody, acquisitions/transmissions,
+identification). No formula work required.
+
+### Structural template
+
+M720 (`2013-y-siguientes` revision, `tax_domain = "informative"`,
+`cadence = "annual"`, period_selector `year_from = 2012`) is the exact
+structural template. The manifest and revision TOML structures copy
+directly with different `id`, `title`, `year_from`, and `legal_refs`.
+
+### Size
+
+**SMALL** for stub. **MEDIUM** for full casilla inventory.
+
+### Dispatch
+
+Issue as a new Step in the registry-authoring wave. Can be dispatched
+to any coder not currently on M100/M303 TOML work (S361/S353/S352 all
+touch different modelos — no conflict). Coder needs the Orden
+HFP/887/2023 form PDF accessible for casilla labels in the full pass.
+
