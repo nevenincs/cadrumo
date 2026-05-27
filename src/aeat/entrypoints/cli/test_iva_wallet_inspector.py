@@ -22,7 +22,8 @@ from aeat.application.calculations._iva_compensation_history import (
 )
 from aeat.application.calculations._iva_wallet_balance import query_iva_wallet_balance
 from aeat.entrypoints.cli import app
-from aeat.tests.secure_sql import isolated_runtime_profile
+from aeat.tests.cli_runner import invoke_cached_cli
+from aeat.tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -347,3 +348,157 @@ def test_carry_forward_lot_rejects_unbalanced_amounts_anti_tautology() -> None:
             expiry_review_state=IvaCompensationExpiryReviewState.ACTIVE,
             source_observation_key="303:2024:1T:EXP",
         )
+
+
+# ---------------------------------------------------------------------------
+# M303 wallet-seed error guidance regression (Pedro round-18 finding)
+# ---------------------------------------------------------------------------
+#
+# Fresh-profile M303 calculate with a caller compensation-binding override
+# must surface the iva-wallet seed verb — NOT the obsolete --mode modelo flag.
+# After seeding the same calculate must succeed.
+# ---------------------------------------------------------------------------
+
+_GUIDANCE_PROFILE = "guidance-test"
+_GUIDANCE_NIF = "87654321Y"
+
+
+def _seed_full_autónomo_profile_for_guidance(bucket_id: str) -> None:
+    """Persist a minimal autónomo profile sufficient for M303 work-unit applicability."""
+    from datetime import UTC, datetime
+
+    from aeat.application.user_profile import UserProfileLifecycleRepository
+    from aeat.domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+
+    _created_at = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Guidance Test Autónomo",
+            status=UserProfileStatus.ACTIVE,
+            facts=(
+                UserProfileFact(path="identity.name", value="Guidance Test Autónomo"),
+                UserProfileFact(path="identity.tax_id", value=_GUIDANCE_NIF),
+                UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                UserProfileFact(
+                    path="taxpayer_type.irpf_income_categories",
+                    value="actividad_economica",
+                ),
+                UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="provenance.source", value="manual_cli"),
+            ),
+        )
+    )
+
+
+def test_m303_fresh_profile_binding_override_surfaces_seed_verb_not_mode_flag(
+    tmp_path: Path,
+) -> None:
+    """Pedro round-18 regression: compensation binding override on fresh profile names seed verb.
+
+    A fresh profile with no persisted IVA wallet decision attempting
+    ``aeat app modelo work calculate`` with a binding override for
+    ``modelo-303-compensacion-pendiente-anteriores`` must:
+    - exit with a non-zero exit code
+    - name the iva-wallet seed verb in the error output
+    - NOT reference the obsolete ``--mode modelo`` flag
+
+    This is derived from the spec: the error message must contain the exact
+    verb ``aeat app modelo iva-wallet seed`` so the operator can unblock.
+    """
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_GUIDANCE_PROFILE,
+    ):
+        _seed_full_autónomo_profile_for_guidance(_GUIDANCE_PROFILE)
+        work_unit_result = invoke_cached_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "work", "create",
+                "--modelo", "303",
+                "--year", "2024",
+                "--period", "1T",
+                "--revision", "2023-y-siguientes",
+            ]
+        )
+        assert work_unit_result.exit_code == 0, work_unit_result.output
+        import json as _json
+        raw = _json.loads(work_unit_result.output)
+        if "schema_version" in raw and "result" in raw:
+            work_unit_id = raw["result"]["work_unit_id"]
+        else:
+            work_unit_id = raw["work_unit_id"]
+
+        result = invoke_cached_cli(
+            [
+                "app", "modelo", "work", "calculate", work_unit_id,
+                "--binding", "modelo-303-compensacion-pendiente-anteriores=500",
+            ],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    assert result.exit_code != 0, (
+        "Expected non-zero exit when compensation binding is supplied without a seeded wallet"
+    )
+    assert "iva-wallet seed" in result.output, (
+        f"Error output must name the iva-wallet seed verb; got:\n{result.output}"
+    )
+    assert "--mode" not in result.output, (
+        f"Error output must NOT reference the obsolete --mode flag; got:\n{result.output}"
+    )
+
+
+def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wallet_error(
+    tmp_path: Path,
+) -> None:
+    """Anti-tautology: fresh-profile M303 calculate without binding override does not error on wallet.
+
+    When no compensation binding is supplied by the caller, M303 calculate
+    proceeds with zero prior compensation (a valid first-filing state).
+    The wallet-seed guidance error must NOT appear without provocation.
+    This proves the error is not spuriously emitted on every M303 calculate.
+    """
+    with isolated_cli_runtime_profile(
+        tmp_path=tmp_path,
+        bucket_id=_GUIDANCE_PROFILE,
+    ):
+        _seed_full_autónomo_profile_for_guidance(_GUIDANCE_PROFILE)
+
+        work_unit_result = invoke_cached_cli(
+            [
+                "--format", "json",
+                "app", "modelo", "work", "create",
+                "--modelo", "303",
+                "--year", "2024",
+                "--period", "1T",
+                "--revision", "2023-y-siguientes",
+            ]
+        )
+        assert work_unit_result.exit_code == 0, work_unit_result.output
+        import json as _json
+        raw = _json.loads(work_unit_result.output)
+        if "schema_version" in raw and "result" in raw:
+            work_unit_id = raw["result"]["work_unit_id"]
+        else:
+            work_unit_id = raw["work_unit_id"]
+
+        # Calculate WITHOUT a compensation binding override — fresh profile
+        # with no prior filings should succeed with zero compensation.
+        result = invoke_cached_cli(
+            ["app", "modelo", "work", "calculate", work_unit_id],
+            env={"AEAT_OUTPUT_LANGUAGE": "en"},
+        )
+
+    # The wallet-seed error must not appear when no binding override is supplied.
+    assert "iva_wallet_not_seeded" not in result.output, (
+        "Wallet-seed error must not fire when no compensation binding is supplied"
+    )
+    # An empty-ledger M303 may refuse for other reasons (e.g. missing bindings),
+    # but it must never emit the seed-verb guidance without a compensation binding conflict.
+    assert "iva-wallet seed" not in result.output or result.exit_code == 0, (
+        "Wallet-seed guidance must not appear without a compensation binding conflict; "
+        f"got exit_code={result.exit_code}:\n{result.output}"
+    )

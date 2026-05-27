@@ -289,6 +289,10 @@ application:
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
+        history. For the first M303 filing of a fresh profile, seed the opening balance
+        with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
+        --amount 0 --confirm`.'
       reconcile_declaration_unsupported: Declaration-PDF reconcile source is not yet
         implemented; use --from-justificante PATH until the declaration parser lands.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
@@ -739,9 +743,9 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
-        casilla_non_numeric_data_type: 'Casilla {key} ("{label}") has data type {data_type}
-          and does not accept decimal overrides. Use --binding for this input type or
-          run `aeat app modelo casillas` to identify the correct numeric casilla.'
+        casilla_non_numeric_data_type: Casilla {key} ("{label}") has data type {data_type}
+          and does not accept decimal overrides. Use --binding for this input type
+          or run `aeat app modelo casillas` to identify the correct numeric casilla.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
@@ -840,6 +844,9 @@ cli:
           app modelo describe MODELO` to see the available revision ids.
         revision_show_help: Show one stored calculation revision's persisted casilla
           values (without recomputing)
+        revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
+          cover filing year %{filing_year}. Revisions applicable to that year%{applicable}.
+        revision_year_mismatch_no_match: no revision covers that filing year
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
         runs_help: List persisted workflow runs with their run ids, newest first.
@@ -859,9 +866,6 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
-          cover filing year %{filing_year}. Revisions applicable to that year%{applicable}.
-        revision_year_mismatch_no_match: no revision covers that filing year
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -2830,11 +2834,11 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   errors:
-    foral_regime: 'Residents in {tax_region} file with the corresponding Hacienda Foral
+    foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
       not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
       (Gipuzkoa), araba.eus/ogasun (Álava), or hacienda.navarra.es (Navarra) depending
-      on your territory.'
+      on your territory.
     not_configured: No tax-residence profile is configured for RENTA.
   keys:
     description: Profile configuration keys and their descriptions

@@ -1166,7 +1166,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_AGGREGATION_BINDING",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_aggregation_binding",
-            default_suggestion="aeat app ledger preflight --mode modelo",
+            default_suggestion="aeat app ledger preflight",
             retryable=False,
             runbook_id=None,
         ),
@@ -1177,7 +1177,10 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_modelo_iva_wallet_reconciliation_blocked",
-            default_suggestion="aeat app live iva-wallet pull",
+            default_suggestion=(
+                "aeat app modelo iva-wallet seed --filing-year YEAR "
+                "--period PERIOD --amount 0 --confirm"
+            ),
             retryable=False,
             runbook_id=None,
         ),

@@ -215,6 +215,10 @@ application:
       external_filing_no_casilla_values: application.modelo.errors.external_filing_no_casilla_values
       filing_record_not_found: 'Nem található beadási nyilvántartás ezzel az azonosítóval:
         %{filing_record_id}.'
+      iva_wallet_not_seeded: 'A 303-as Modelo számításához inicializált IVA-kompenzációs
+        előzmény szükséges. Új profil első M303 bevallásához inicializáld a nyitó
+        egyenleget nullával: `aeat app modelo iva-wallet seed --filing-year YEAR --period
+        PERIOD --amount 0 --confirm`.'
       reconcile_declaration_unsupported: application.modelo.errors.reconcile_declaration_unsupported
       reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
@@ -665,6 +669,8 @@ cli:
         resume_target_help: cli.app.modelo.work.resume_target_help
         revision_help: cli.app.modelo.work.revision_help
         revision_show_help: cli.app.modelo.work.revision_show_help
+        revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
+        revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
         revisions_help: cli.app.modelo.work.revisions_help
         runs_help: cli.app.modelo.work.runs_help
         set_not_decimal: cli.app.modelo.work.set_not_decimal
@@ -676,8 +682,6 @@ cli:
         work_unit_id_help: cli.app.modelo.work.work_unit_id_help
         year_help: cli.app.modelo.work.year_help
         year_out_of_range: cli.app.modelo.work.year_out_of_range
-        revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
-        revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date
