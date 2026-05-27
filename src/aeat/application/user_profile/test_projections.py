@@ -93,3 +93,31 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
     assert profile.professional_income_withholding_ge_70pct is True
     assert profile.uses_objective_estimation_irpf is True
     assert profile.has_employees is True
+
+
+def test_record_to_values_emits_bare_key_for_third_party_threshold() -> None:
+    """S228 regression: obligations.third_party_transactions_above_347_threshold
+    must appear under the bare key (without 'obligations.' prefix) in the
+    record_to_values output so the calendar's _GATING_FIELDS lookup finds it.
+
+    Before the fix, the schema field had no model_selectors and the fact
+    path 'obligations.third_party_transactions_above_347_threshold' was
+    emitted verbatim, causing the calendar to treat the field as absent and
+    emit a false warning even when the operator had declared the value.
+    """
+    record = UserProfileRecord(
+        profile_id="operator",
+        display_name="Operator",
+        facts=(
+            UserProfileFact(
+                path="obligations.third_party_transactions_above_347_threshold",
+                value=True,
+            ),
+        ),
+    )
+    values = record_to_values(record)
+    # Must be keyed without the section prefix — that is what the calendar reads.
+    assert "third_party_transactions_above_347_threshold" in values
+    assert values["third_party_transactions_above_347_threshold"] == "true"
+    # The prefixed key must NOT appear (no dual-key emission).
+    assert "obligations.third_party_transactions_above_347_threshold" not in values

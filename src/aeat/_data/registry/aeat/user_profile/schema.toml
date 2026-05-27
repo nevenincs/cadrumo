@@ -532,6 +532,7 @@ required = false
 sensitivity = "financial"
 effective_dated = true
 description = "Modelo 347 eligibility: declared yearly transactions with a single counterpart exceed the legal threshold."
+model_selectors = ["third_party_transactions_above_347_threshold"]
 schedule_predicates = ["third_party_transactions_above_347_threshold"]
 
 [[sections.fields]]
