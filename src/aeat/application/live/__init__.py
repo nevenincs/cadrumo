@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
@@ -203,6 +204,62 @@ class IvaCompensationHistoryCaptureReport(BaseModel):
     calculation_observation_keys: tuple[str, ...]
     reloaded_history_count: int
     reloaded_rows: tuple[IvaCompensationHistoryRow, ...]
+
+
+class LiveIvaReadSurface(StrEnum):
+    """Read-only IVA remote-state surfaces acquired from AEAT."""
+
+    FILED_HISTORY = "filed_history"
+    WALLET_CARTERA = "wallet_cartera"
+
+
+class LiveIvaReadStatus(StrEnum):
+    """Per-surface outcome for one live IVA read attempt."""
+
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+
+class LiveIvaReadOutcome(BaseModel):
+    """Redacted per-surface acquisition outcome."""
+
+    model_config = ConfigDict(frozen=True)
+
+    surface: LiveIvaReadSurface
+    status: LiveIvaReadStatus
+    failure_mode: LiveIvaAcquisitionFailureMode | None = None
+    failure_type: str | None = None
+    captured_count: int | None = None
+    calculation_observation_count: int | None = None
+
+
+class IvaRemoteStateAcquisitionReport(BaseModel):
+    """Combined read-only IVA remote-state acquisition report."""
+
+    model_config = ConfigDict(frozen=True)
+
+    output_root: str
+    year_from: int
+    year_to: int
+    target_year: int
+    target_period: str
+    filed_history: IvaCompensationHistoryCaptureReport | None
+    wallet: IvaWalletCaptureReport | None
+    outcomes: tuple[LiveIvaReadOutcome, ...]
+
+    @property
+    def filed_history_succeeded(self) -> bool:
+        return any(
+            outcome.surface is LiveIvaReadSurface.FILED_HISTORY and outcome.status is LiveIvaReadStatus.SUCCEEDED
+            for outcome in self.outcomes
+        )
+
+    @property
+    def wallet_succeeded(self) -> bool:
+        return any(
+            outcome.surface is LiveIvaReadSurface.WALLET_CARTERA and outcome.status is LiveIvaReadStatus.SUCCEEDED
+            for outcome in self.outcomes
+        )
 
 
 class FiledDataListingRow(BaseModel):
@@ -529,6 +586,25 @@ async def capture_iva_compensation_history(
         raise LiveApplicationInputError("from-year must be less than or equal to to-year")
 
     session, settings = await _active_verified_session()
+    return await _capture_iva_compensation_history_with_session(
+        session,
+        settings=settings,
+        year_from=year_from,
+        year_to=year_to,
+        output_root=output_root,
+    )
+
+
+async def _capture_iva_compensation_history_with_session(
+    session: AeatSession,
+    *,
+    settings: Settings,
+    year_from: int,
+    year_to: int,
+    output_root: Path,
+) -> IvaCompensationHistoryCaptureReport:
+    """Capture filed Modelo 303s using an already-acquired AEAT session."""
+
     store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
@@ -931,6 +1007,27 @@ async def capture_iva_compensation_wallet(
         operation="live-iva-wallet-read",
         target_url=PRE303_PRESENTATION_SERVICE_URL,
     )
+    return await _capture_iva_compensation_wallet_with_session(
+        session,
+        settings=settings,
+        target_year=target_year,
+        target_period=target_period,
+        taxpayer_nif=taxpayer_nif,
+        output_root=output_root,
+    )
+
+
+async def _capture_iva_compensation_wallet_with_session(
+    session: AeatSession,
+    *,
+    settings: Settings,
+    target_year: int,
+    target_period: str,
+    taxpayer_nif: str | None = None,
+    output_root: Path | None = None,
+) -> IvaWalletCaptureReport:
+    """Capture and persist the wallet with an already-acquired AEAT session."""
+
     observation: IvaCompensationWalletObservation = await fetch_iva_compensation_wallet(
         session,
         target_year=target_year,
@@ -940,6 +1037,132 @@ async def capture_iva_compensation_wallet(
     )
     store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-wallet"
     return persist_and_reconcile_iva_compensation_wallet(observation, output_root=store_root)
+
+
+async def capture_iva_remote_state(
+    *,
+    year_from: int,
+    year_to: int,
+    target_year: int,
+    target_period: str,
+    taxpayer_nif: str | None = None,
+    output_root: Path | None = None,
+) -> IvaRemoteStateAcquisitionReport:
+    """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation."""
+
+    if year_from > year_to:
+        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+
+    session, settings = await _active_verified_session(
+        operation="live-iva-remote-state-read",
+        target_url=PRE303_PRESENTATION_SERVICE_URL,
+    )
+    store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
+    filed_history: IvaCompensationHistoryCaptureReport | None = None
+    wallet: IvaWalletCaptureReport | None = None
+    filed_error: BaseException | None = None
+    wallet_error: BaseException | None = None
+
+    try:
+        filed_history = await _capture_iva_compensation_history_with_session(
+            session,
+            settings=settings,
+            year_from=year_from,
+            year_to=year_to,
+            output_root=store_root / "filed-history",
+        )
+    except Exception as exc:
+        filed_error = exc
+
+    try:
+        wallet = await _capture_iva_compensation_wallet_with_session(
+            session,
+            settings=settings,
+            target_year=target_year,
+            target_period=target_period,
+            taxpayer_nif=taxpayer_nif,
+            output_root=store_root / "wallet",
+        )
+    except Exception as exc:
+        wallet_error = exc
+
+    return build_iva_remote_state_acquisition_report(
+        output_root=store_root,
+        year_from=year_from,
+        year_to=year_to,
+        target_year=target_year,
+        target_period=target_period,
+        filed_history=filed_history,
+        wallet=wallet,
+        filed_history_error=filed_error,
+        wallet_error=wallet_error,
+    )
+
+
+def build_iva_remote_state_acquisition_report(
+    *,
+    output_root: Path,
+    year_from: int,
+    year_to: int,
+    target_year: int,
+    target_period: str,
+    filed_history: IvaCompensationHistoryCaptureReport | None = None,
+    wallet: IvaWalletCaptureReport | None = None,
+    filed_history_error: BaseException | None = None,
+    wallet_error: BaseException | None = None,
+) -> IvaRemoteStateAcquisitionReport:
+    """Build the redacted combined acquisition report from surface results."""
+
+    outcomes = (
+        _surface_outcome(
+            LiveIvaReadSurface.FILED_HISTORY,
+            report=filed_history,
+            error=filed_history_error,
+        ),
+        _surface_outcome(
+            LiveIvaReadSurface.WALLET_CARTERA,
+            report=wallet,
+            error=wallet_error,
+        ),
+    )
+    return IvaRemoteStateAcquisitionReport(
+        output_root=str(output_root),
+        year_from=year_from,
+        year_to=year_to,
+        target_year=target_year,
+        target_period=target_period,
+        filed_history=filed_history,
+        wallet=wallet,
+        outcomes=outcomes,
+    )
+
+
+def _surface_outcome(
+    surface: LiveIvaReadSurface,
+    *,
+    report: IvaCompensationHistoryCaptureReport | IvaWalletCaptureReport | None,
+    error: BaseException | None,
+) -> LiveIvaReadOutcome:
+    if error is not None:
+        return LiveIvaReadOutcome(
+            surface=surface,
+            status=LiveIvaReadStatus.FAILED,
+            failure_mode=classify_live_iva_acquisition_failure(error),
+            failure_type=error.__class__.__name__,
+        )
+    if report is None:
+        return LiveIvaReadOutcome(
+            surface=surface,
+            status=LiveIvaReadStatus.FAILED,
+            failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_type="MissingSurfaceReport",
+        )
+    return LiveIvaReadOutcome(
+        surface=surface,
+        status=LiveIvaReadStatus.SUCCEEDED,
+        captured_count=getattr(report, "captured_count", None),
+        calculation_observation_count=getattr(report, "calculation_observation_count", None),
+    )
 
 
 async def _active_verified_session(
@@ -971,17 +1194,23 @@ __all__ = [
     "IvaCompensationHistoryCaptureReport",
     "IvaCompensationHistoryReport",
     "IvaCompensationHistoryRow",
+    "IvaRemoteStateAcquisitionReport",
     "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
+    "LiveIvaReadOutcome",
+    "LiveIvaReadStatus",
+    "LiveIvaReadSurface",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
     "borrador_100_snapshot_object_key",
+    "build_iva_remote_state_acquisition_report",
     "capture_filed_data",
     "capture_iva_compensation_history",
     "capture_iva_compensation_wallet",
+    "capture_iva_remote_state",
     "capture_notifications",
     "capture_source_filed_data",
     "classify_live_iva_acquisition_failure",
