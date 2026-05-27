@@ -68,8 +68,8 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                         "headless": True,
                         "prefer_non_qr": True,
                         "timeout_ms": 120000,
-                        "active_profile_id": "profile-123",
-                        "active_profile_label": "live-operator",
+                        "active_profile_ref": "sha256:profile123",
+                        "active_profile_label_present": True,
                         "active_profile_registered": True,
                         "profile_record_present": True,
                         "profile_tax_id_present": True,
@@ -106,8 +106,10 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].prefer_non_qr is True
         assert listed.rows[0].timeout_ms == 120000
         assert listed.rows[0].route_label == "clave_movil_contrast"
-        assert listed.rows[0].active_profile_id == "profile-123"
-        assert listed.rows[0].active_profile_label == "live-operator"
+        assert listed.rows[0].active_profile_id == ""
+        assert listed.rows[0].active_profile_ref == "sha256:profile123"
+        assert listed.rows[0].active_profile_label == ""
+        assert listed.rows[0].active_profile_label_present is True
         assert listed.rows[0].profile_tax_id_present is True
         assert listed.rows[0].clave_identity_configured is True
         assert listed.rows[0].identity_alignment == "mismatch"

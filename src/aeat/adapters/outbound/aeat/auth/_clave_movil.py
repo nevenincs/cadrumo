@@ -737,8 +737,10 @@ class ClaveMovilAuthProvider:
             bucket_id = resolve_active_bucket_id()
             pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
             context: dict[str, object] = {
-                "active_profile_id": bucket_id or "",
-                "active_profile_label": pointer.label if pointer is not None else "",
+                "active_profile_id": "",
+                "active_profile_ref": _diagnostic_fingerprint(bucket_id),
+                "active_profile_label": "",
+                "active_profile_label_present": bool(pointer is not None and pointer.label),
                 "active_profile_registered": pointer is not None,
                 "profile_record_present": False,
                 "profile_tax_id_present": False,
@@ -783,7 +785,9 @@ class ClaveMovilAuthProvider:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
             return {
                 "active_profile_id": "",
+                "active_profile_ref": "",
                 "active_profile_label": "",
+                "active_profile_label_present": False,
                 "active_profile_registered": False,
                 "profile_record_present": False,
                 "profile_tax_id_present": False,
