@@ -75,7 +75,9 @@ from ._models import (
     Recovery,
     Schedule,
     TaxpayerProfile,
+    evaluate_multiple_pagadores_obligation,
 )
+from ._plazo import resolve_filing_closes_on
 from ._profiles import taxpayer_profile_from_mapping
 from ._recargo import (
     build_recovery_for_overdue,
@@ -112,8 +114,10 @@ __all__ = [
     "ScheduleComputationError",
     "ScheduleProducer",
     "TaxpayerProfile",
+    "evaluate_multiple_pagadores_obligation",
     "applies_to",
     "build_recovery_for_overdue",
+    "resolve_filing_closes_on",
     "compute_obligation_schedule",
     "explain",
     "is_business_day",

@@ -2002,6 +2002,10 @@ cli:
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
         de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
+      filing_obligation_multiple_pagadores: "AVISO OBLIGACION DECLARAR (Art. 96.3\
+        \ LIRPF): el perfil declara mas de un pagador con rentas del segundo y siguientes\
+        \ pagadores superiores a 1.500 EUR. La presentacion del Modelo 100 es OBLIGATORIA\
+        \ independientemente del umbral general de ingresos."
     status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.

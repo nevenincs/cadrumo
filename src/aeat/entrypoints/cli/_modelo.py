@@ -1830,6 +1830,25 @@ def work_create(
         *_work_unit_lines(unit),
         status_message,
     ]
+    # Pre-calificación Art. 96.3 LIRPF: when the operator creates a Modelo 100
+    # work unit and the profile declares multiple pagadores with secondary income
+    # exceeding €1,500, surface the filing-obligation advisory so they know the
+    # income-threshold exemption does not apply.
+    if modelo == "100":
+        from ...application.overview import build_filing_obligation_advisories as _build_filing_obligation_advisories
+        from ...application.user_profile._projections import record_to_values
+        from ...application.workflow._models import resolve_active_bucket_id
+
+        _bucket = resolve_active_bucket_id()
+        if _bucket is not None:
+            from ...application.user_profile._orchestration import profile_storage_session
+            from ...application.user_profile._profile_repository import ProfileRepository
+
+            with profile_storage_session(_bucket):
+                _rec = ProfileRepository().load(_bucket)
+            _raw = record_to_values(_rec.record) if _rec is not None else None
+            for _advisory_key in _build_filing_obligation_advisories(_raw):
+                lines.append(tr(_advisory_key))
     _emit_envelope(ctx, command=operation, result=result, lines=lines)
 
 

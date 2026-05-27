@@ -42,6 +42,7 @@ def overview_status(
     app-overview-shape ADR's Consequences section. No compatibility
     shim is preserved; callers must use the dedicated verb.
     """
+    from ...application.user_profile._projections import record_to_values
     from ...application.workflow._models import resolve_active_bucket_id
 
     current = _state() if resolve_active_bucket_id() is not None else None
@@ -66,7 +67,9 @@ def overview_status(
             period_lines.append(f"{d.modelo}\t{d.draft_id}\t{d.status.value}")
         _emit(ctx, payload, period_lines)
         return
-    report = build_overview_status_report(state=current)
+    profile_record = current.active_profile_record() if current is not None else None
+    raw_values = record_to_values(profile_record) if profile_record is not None else None
+    report = build_overview_status_report(state=current, raw_values=raw_values)
     _emit(ctx, report, render_cli_overview_status_lines(report))
 
 

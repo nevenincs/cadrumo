@@ -1884,6 +1884,10 @@ cli:
       work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
+      filing_obligation_multiple_pagadores: "FILING OBLIGATION NOTICE (Art. 96.3\
+        \ LIRPF): the profile declares more than one pagador with income from the\
+        \ 2nd and subsequent payers exceeding EUR 1,500. Filing Modelo 100 is MANDATORY\
+        \ regardless of the general income threshold."
     status_help: Show profile, ledger, and modelo readiness
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
