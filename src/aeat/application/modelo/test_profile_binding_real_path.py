@@ -36,6 +36,7 @@ from typing import Any
 import pytest
 
 from aeat.application.modelo._profile_binding import (
+    _inject_derived_marriage_facts,  # pyright: ignore[reportPrivateUsage]
     _profile_fact_index,  # pyright: ignore[reportPrivateUsage]
     _resolve_one,  # pyright: ignore[reportPrivateUsage]
 )
@@ -98,7 +99,11 @@ def _full_m100_profile() -> UserProfileRecord:
             # 0010 renta-2025-profile-taxpayer-sex
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             # 0011 renta-2025-profile-marital-status
-            UserProfileFact(path="renta_taxpayer.marital_status", value="soltero"),
+            UserProfileFact(path="renta_taxpayer.marital_status", value="casado"),
+            # 0045 renta-2025-profile-marriage-full-year (derived from marriage_date at bind time)
+            # 0046 renta-2025-profile-marriage-month-start
+            # 0047 renta-2025-profile-marriage-month-end
+            UserProfileFact(path="renta_taxpayer.marriage_date", value=date(2023, 6, 15)),
             # 0012 renta-2025-profile-taxpayer-birth-date
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             # 0013 renta-2025-profile-spouse-tax-id
@@ -202,6 +207,10 @@ def test_every_scalar_profile_binding_resolves_to_typed_value() -> None:
     schema = load_user_profile_schema()
     record = _full_m100_profile()
     fact_index = _profile_fact_index(record, schema)
+    # Marriage-derived facts (full_year, month_start, month_end) are not stored as
+    # profile facts but are injected at binding-resolution time.  The full-population
+    # fixture supplies renta_taxpayer.marriage_date so injection populates them here.
+    _inject_derived_marriage_facts(fact_index, _YEAR)
 
     # Deliberately absent binding — tested separately.
     absent = "renta-2025-profile-taxpayer-death-date"
@@ -360,26 +369,29 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
             )
 
 
-def test_binding_count_is_exactly_30() -> None:
-    """M100 2025 has exactly 30 ``source = 'profile'`` bindings.
+def test_binding_count_is_exactly_33() -> None:
+    """M100 2025 has exactly 33 ``source = 'profile'`` bindings.
 
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
 
-    Breakdown of the 30: 19 scalar bindings (single-value profile reads
+    Breakdown of the 33: 22 scalar bindings (single-value profile reads
     keyed by entity_type, ccaa, estimation_regime, income categories,
-    address-cadastral references, etc.) plus 11 family-repeating-collection
-    bindings (per-dependent / per-spouse / per-child arrays whose
-    cardinality follows the operator's declared family composition).
-    The split matters when a new binding lands: a 20-scalar / 10-collection
-    rebalance still totals 30 but indicates a different schema shift
+    address-cadastral references, plus the three matrimonio-sobrevenido
+    derived scalars: marriage_full_year, marriage_month_start,
+    marriage_month_end added for Art. 82 LIRPF casillas 0245/0246/0247)
+    plus 11 family-repeating-collection bindings (per-dependent / per-spouse
+    / per-child arrays whose cardinality follows the operator's declared
+    family composition).
+    The split matters when a new binding lands: a 23-scalar / 10-collection
+    rebalance still totals 33 but indicates a different schema shift
     (operator-data field add vs family-collection contract change).
     Future drift in the sentinel meaning is prevented by this note
     plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 30, (
-        f"expected 30 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
+    assert len(profile_bindings) == 33, (
+        f"expected 33 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
         + ", ".join(str(b.id) for b in profile_bindings)
     )

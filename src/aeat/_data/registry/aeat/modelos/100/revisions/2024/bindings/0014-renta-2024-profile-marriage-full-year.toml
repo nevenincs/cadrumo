@@ -1,0 +1,11 @@
+[[revisions."2024".bindings]]
+id = "renta-2024-profile-marriage-full-year"
+source = "profile"
+selector = { profile_key = "renta_taxpayer.marriage_full_year" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-35-2006:art-82"]
+source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".bindings.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["matrimonio", "vigente"]

@@ -31,7 +31,13 @@ from ._marriage_facts import (
     parse_marriage_date_flag,
 )
 from ._normalise import normalise_key
-from ._renta_codes import RentaDeclaracionType, RentaDisabilityGrade, RentaMaritalStatus, RentaSexCode, SituacionFamiliar
+from ._renta_codes import (
+    RentaDeclaracionType,
+    RentaDisabilityGrade,
+    RentaMaritalStatus,
+    RentaSexCode,
+    SituacionFamiliar,
+)
 from .family import DescendantInfo, RentaAscendantProfile, RentaDescendantProfile, RentaFamilyProfile
 
 if TYPE_CHECKING:
@@ -169,8 +175,8 @@ __all__ = [
     "RentaFamilyProfile",
     "RentaMaritalStatus",
     "RentaSexCode",
-    "SituacionFamiliar",
     "ResidenceChange",
+    "SituacionFamiliar",
     "TaxResidenceProfile",
     "TaxResidenceProfileError",
     "get_profile_key",

@@ -285,6 +285,16 @@ model_selectors = ["taxpayer.new_entity_first_two_profit_periods"]
 legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)"]
 
 [[sections.fields]]
+key = "tributacion_estado_porcentaje"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Porcentaje de tributación al Estado for Modelo 200 casilla DP200026:00625. Standard (régimen común) entities are 100. Foral entities (Bizkaia, Gipuzkoa, Álava, Navarra) declare a partial percentage. An undeclared value is treated as 100 by the engine binding default so common-regime SLs file without configuring this field."
+model_selectors = ["taxpayer.tributacion_estado_porcentaje"]
+legal_refs = ["LIS Art. 29 (BOE-A-2014-12328)", "Ley Orgánica 8/1980 LOFCA Art. 3 (BOE-A-1980-22492)"]
+
+[[sections.fields]]
 key = "irpf_income_categories"
 type = "string"
 required = false
@@ -689,6 +699,47 @@ effective_dated = false
 nullable = true
 description = "Taxpayer death date when Modelo 100 requires it."
 model_selectors = ["taxpayer.death_date"]
+
+[[sections.fields]]
+key = "marriage_date"
+type = "date"
+required = false
+sensitivity = "identity"
+effective_dated = false
+nullable = true
+description = "Date the current marriage began (ISO-8601). Used when marital_status = 2 (casado/a) to derive casillas 0245 (vigente todo el año), 0246 (primer mes), and 0247 (último mes completo) via the profile binding resolver."
+model_selectors = ["renta_taxpayer.marriage_date"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_start"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. First month married in the filing year (1-12). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_start"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_month_end"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date. Last full month married in the filing year (always 12 when married). Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_month_end"]
+legal_refs = ["ley-35-2006:art-82"]
+
+[[sections.fields]]
+key = "marriage_full_year"
+type = "integer"
+required = false
+sensitivity = "identity"
+effective_dated = false
+description = "Derived at binding-resolution time from marriage_date and filing year. 1 when marriage predates the filing year, 0 otherwise. Not stored as a profile fact; populated by the binding resolver."
+model_selectors = ["renta_taxpayer.marriage_full_year"]
+legal_refs = ["ley-35-2006:art-82"]
 
 [[sections]]
 key = "renta_spouse"
