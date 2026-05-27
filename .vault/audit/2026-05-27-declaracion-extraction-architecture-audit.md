@@ -304,3 +304,34 @@ forward: prefer explicit "out of scope" classification over
 "acknowledged" rationalization when a finding is real but the operator
 chooses not to remediate immediately; this preserves the audit signal
 for future sessions.
+
+**Finding F — Full-suite scope vastly larger than scoped subset runs**
+(task #57 full-suite end-to-end): The session's scoped pass-count
+reports (1923/1923, 116, 127, 136, etc.) were SUBSETS of the codebase,
+specifically `src/aeat/adapters/inbound/declaracion/` plus
+`src/aeat/domain/calculations/registry/`. The full
+`src/aeat/` suite contains ~9749 tests; the scoped runs covered a tenth
+of that. The first end-to-end full-suite run this session returned 419
+failed + 77 errors in 1:06:42. The 19 collection-error lines visible
+through harness output truncation are all M100 settlement-chain and
+tarifa-real tests from concurrent audit-round campaigns (rounds 14-25
+covering Yara INSS maternidad, Marcos married first-home, Aitor SAL,
+Khadija Moroccan, Carla retiree, etc.). The 419 FAILED test names are
+lost to truncation but cluster heavily in M100 territory based on the
+campaign-commit history. No earlier full-suite baseline exists this
+session for comparison, so the 419 failures cannot be classified as
+regression-vs-steady-state. What is established: the declaration-
+extraction-architecture campaign's own surface verified clean (136/136
+in the scoped run, plus the new audit-remediation tests at 18+19+23+2).
+The broader codebase is in active mid-campaign state with substantial
+outstanding work attributable to concurrent campaigns. The L11 finding
+was vastly understated — "scope partial" did not capture that a tenth
+of the suite was the only thing exercised.
+
+**Procedural takeaway**: scope verification reports MUST run the full
+suite at session start AND session end to establish a delta. Reporting
+"all pass" against a tenth of the codebase while 419 fail elsewhere is
+a discipline failure even when the subset is genuinely clean. Future
+sessions should set a clear baseline-pass count and a final-pass count
+and report the delta honestly. Mid-session intermediate scoped runs are
+fine for fast feedback but cannot substitute for the full-suite delta.
