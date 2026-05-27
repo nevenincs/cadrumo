@@ -397,7 +397,7 @@ Register --output-language on every Typer command that emits user-facing text. a
 
 Remove build_error_envelope and json_output_requested from _errors.py __all__; update consumers.
 
-- [ ] `W08.P37.S145` - remove build_error_envelope and json_output_requested from _errors.py __all__ update any importer to import from source module; `src/aeat/entrypoints/cli/_errors.py`.
+- [x] `W08.P37.S145` - remove build_error_envelope and json_output_requested from _errors.py __all__ update any importer to import from source module; `src/aeat/entrypoints/cli/_errors.py`.
 
 ### Phase `W08.P38` - Wave-8 review and persona re-run BREAKPOINT
 
@@ -472,7 +472,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S256` - FU-W07-D surface legal_refs and source_refs on projected M100 casilla values in modelo project verb output payload; `calculation-grounding rule requires every casilla observation to carry its provenance; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer; `extract snapshot acquisition + engine call into a thin application.modelo service function and have the verb call only that service; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S258` - FU-W07-F document or test that resources().modelos.authority and _service()._authority yield identical RegistrySnapshots; `the modelo project verb test asserts via two distinct paths but the equivalence is currently implicit; `src/aeat/application/modelo/`.
-- [ ] `W09.P41.S259` - FU-W07-G S118 + S118-fix co-landing convention note: 604bf217d and f4108869d both touch the S118 scope without an intervening Step record; documentation-only note for W09; `.vaultspec/`.
+- [ ] `W09.P41.S259` - FU-W07-G S118 + S118-fix co-landing convention note: 604bf217d and f4108869d both touch the S118 scope without an intervening Step record; `documentation-only note for W09; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
