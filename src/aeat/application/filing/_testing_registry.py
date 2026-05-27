@@ -28,6 +28,7 @@ def build_registry_filing_draft(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_values: ModeloInputs,
+    binding_values: ModeloInputs | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
@@ -40,6 +41,12 @@ def build_registry_filing_draft(
         filing_year=snapshot_year,
         period=registry_period_token,
     )
+    duplicate_input_ids = sorted(set(casilla_values).intersection(binding_values or {}))
+    if duplicate_input_ids:
+        raise ModeloBuilderError(
+            "registry filing test helper received duplicate casilla/binding input ids: "
+            f"{duplicate_input_ids!r}"
+        )
     draft = build_draft(
         modelo=modelo,
         period=runtime_period,
@@ -47,7 +54,7 @@ def build_registry_filing_draft(
             tax_id=profile_tax_id,
             display_name="Registry filing test",
         ),
-        inputs=casilla_values,
+        inputs={**(binding_values or {}), **casilla_values},
         schema_provider=schema_provider,
     )
     if status is ModeloDraftStatus.APROBADO:
@@ -75,6 +82,7 @@ def build_registry_filing_draft_from_decimals(
     period: str,
     profile_tax_id: str = "Y0000001S",
     casilla_decimals: Mapping[str, str | Decimal],
+    binding_decimals: Mapping[str, str | Decimal] | None = None,
     status: ModeloDraftStatus = ModeloDraftStatus.APROBADO,
     filing_year: int = 2026,
 ) -> ModeloDraft:
@@ -83,11 +91,15 @@ def build_registry_filing_draft_from_decimals(
     coerced: dict[str, Decimal] = {}
     for casilla_id, raw in casilla_decimals.items():
         coerced[casilla_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
+    coerced_bindings: dict[str, Decimal] = {}
+    for binding_id, raw in (binding_decimals or {}).items():
+        coerced_bindings[binding_id] = raw if isinstance(raw, Decimal) else Decimal(raw)
     return build_registry_filing_draft(
         modelo=modelo,
         period=period,
         profile_tax_id=profile_tax_id,
         casilla_values=coerced,
+        binding_values=coerced_bindings,
         status=status,
         filing_year=filing_year,
     )

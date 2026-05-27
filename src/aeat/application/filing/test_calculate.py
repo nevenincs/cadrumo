@@ -50,10 +50,12 @@ def _make_draft(
             "06": Decimal("100"),
             "08": Decimal("2000"),
             "10": Decimal("10"),
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-            "15": Decimal("0"),
             "16": Decimal("0"),
             "18": Decimal("0"),
+        },
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         status=status,
     )
