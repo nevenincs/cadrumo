@@ -566,45 +566,45 @@ Modelo 100 has six revisions but zero deadline_windows. Register windows where c
 
 Modelo 111 has zero deadline_windows. Register 2025 and 2026 quarterly windows grounded in BOE Orden.
 
-- [ ] `W10.P51.S180` - register Modelo 111 deadline windows for 2025 quarters 1T 2T 3T 4T BOE Orden grounding required; `src/aeat/_data/registry/aeat/modelos/111/`.
-- [ ] `W10.P51.S181` - register Modelo 111 deadline windows for 2026 quarters; `src/aeat/_data/registry/aeat/modelos/111/`.
+- [x] `W10.P51.S180` - register Modelo 111 deadline windows for 2025 quarters 1T 2T 3T 4T BOE Orden grounding required; `src/aeat/_data/registry/aeat/modelos/111/`.
+- [x] `W10.P51.S181` - register Modelo 111 deadline windows for 2026 quarters; `src/aeat/_data/registry/aeat/modelos/111/`.
 
 ### Phase `W10.P52` - Modelo 180 deadline windows
 
 Modelo 180 has zero deadline_windows across both revisions. Register annual filing window January for prior year.
 
-- [ ] `W10.P52.S182` - register Modelo 180 annual deadline windows filing in January for prior year 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W10.P52.S182` - register Modelo 180 annual deadline windows filing in January for prior year 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/180/`.
 
 ### Phase `W10.P53` - Modelo 232 deadline windows
 
 Modelo 232 has zero deadline_windows across both revisions. Register annual filing window November for prior year.
 
-- [ ] `W10.P53.S183` - register Modelo 232 annual deadline windows filing in November for prior year 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/232/`.
+- [x] `W10.P53.S183` - register Modelo 232 annual deadline windows filing in November for prior year 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/232/`.
 
 ### Phase `W10.P54` - Modelo 349 deadline windows
 
 Modelo 349 has zero deadline_windows. Register quarterly and above-threshold monthly windows for 2025 and 2026.
 
-- [ ] `W10.P54.S184` - register Modelo 349 quarterly and monthly above-threshold deadline windows for 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/349/`.
+- [x] `W10.P54.S184` - register Modelo 349 quarterly and monthly above-threshold deadline windows for 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/349/`.
 
 ### Phase `W10.P55` - Modelo 390 deadline windows
 
 Modelo 390 has zero deadline_windows. Register annual IVA-summary window filing in January for 2025 and 2026.
 
-- [ ] `W10.P55.S185` - register Modelo 390 annual deadline windows filing in January for 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/390.toml`.
+- [x] `W10.P55.S185` - register Modelo 390 annual deadline windows filing in January for 2025 and 2026; `src/aeat/_data/registry/aeat/modelos/390.toml`.
 
 ### Phase `W10.P56` - Modelo 131 revision population
 
 Modelo 131 directory has zero revisions. Decide scope: scaffold a revision or document the exclusion.
 
-- [ ] `W10.P56.S186` - decide whether Modelo 131 IRPF objective estimation is in scope; `if yes scaffold a revision with casillas and deadline_windows; if no document exclusion; `src/aeat/_data/registry/aeat/modelos/131/`.
+- [x] `W10.P56.S186` - decide whether Modelo 131 IRPF objective estimation is in scope; `if yes scaffold a revision with casillas and deadline_windows; if no document exclusion; `src/aeat/_data/registry/aeat/modelos/131/`.
 
 ### Phase `W10.P57` - Modelo 200 and 202 corporate calendar completion
 
 Modelo 200 has only 2024 windows no 2025; Modelo 202 has 2025-y-siguientes coordinate with foreign-WIP parallel campaign.
 
-- [ ] `W10.P57.S187` - register Modelo 200 deadline windows for 2025 fiscal year filing in July 2026; `src/aeat/_data/registry/aeat/modelos/200/`.
-- [ ] `W10.P57.S188` - verify foreign-WIP Modelo 202 corporate-calendar work lands cleanly; `coordinate with parallel campaign; `src/aeat/_data/registry/aeat/modelos/202/`.
+- [x] `W10.P57.S187` - register Modelo 200 deadline windows for 2025 fiscal year filing in July 2026; `src/aeat/_data/registry/aeat/modelos/200/`.
+- [x] `W10.P57.S188` - verify foreign-WIP Modelo 202 corporate-calendar work lands cleanly; `coordinate with parallel campaign; `src/aeat/_data/registry/aeat/modelos/202/`.
 
 ### Phase `W10.P58` - Wave-10 review and persona re-run BREAKPOINT
 
