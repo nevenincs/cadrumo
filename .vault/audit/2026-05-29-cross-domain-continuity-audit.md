@@ -639,3 +639,145 @@ co-landing convention violation as FU-G and FU-W04-A. FU-W05-A: add plan note fo
 
 **Follow-up for W09:** FU-W05-A — convention note for multi-step co-landing in
 `03be9b6f4` (no code change). Mirrors FU-G and FU-W04-A.
+
+---
+
+## W02.P10+P11+P12 cluster commit review (W02.P13.S51)
+
+Five commits reviewed against the applicability ADR
+(`2026-05-21-taxpayer-type-applicability-adr`), registry-authority-flow rule, and
+hexagonal-boundary rule. S49 CLI modality wiring is noted as co-landed in W03.P15
+commit `c73d60493` (documented in Wave-3 audit as FU-G).
+
+### `30065a92e` W02.P10.S38-S42 — collapse applicability to single domain source
+
+**ACCEPT.**
+
+This commit executes the byte-identical duplicate removal that the applicability ADR
+mandated. `application/overview/_applicability.py` is reduced from ~1100 lines to a
+55-line thin re-export of the domain module. All relative-import consumers continue
+to resolve without change. The `_modelo.py` CLI entrypoint (S40) is retargeted to
+import `ApplicabilityVerdict` + `derive_modelo_applicability` directly from the domain
+facade, eliminating the application-layer indirection for the CLI boundary. S41
+removes five private-symbol entries (`_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS`,
+`_INCOMPLETE_LEGAL_REFS`, `_INCOMPLETE_UNDECLARED_REASON`, `_INCOMPLETE_UNDETERMINED_REASON`,
+`_INCOMPLETE_UNRULED_REASON`) from `__all__` in the domain facade — private names must
+not appear in `__all__`, consistent with the aeat-source-hygiene rule.
+
+The S42 canonical test is correct: it uses AST scanning to assert exactly one
+assignment of `_MODELO_APPLICABILITY_RULES` in the codebase (not a re-export), then
+uses `importlib` + `is` identity checks to confirm the application re-export and
+domain facade both resolve to the same object. This is the anti-duplication proof
+the applicability ADR requires — not tautological, since the identity check would
+fail if the re-export ever re-constructed the object rather than forwarding it.
+
+**Multi-step co-landing note:** S38-S42 are five distinct Steps co-landed in one
+commit. This violates the one-Step-per-commit convention. FU-W02-A for W09 (no code
+change).
+
+### `acea52801` W02.P11.S43+S44+S46 — authority doc + derived _gating_fields + consistency test
+
+**ACCEPT.**
+
+S43 adds the authority documentation to `_applicability.py` clarifying the
+two-applicability-concern separation (modelo-level `_MODELO_APPLICABILITY_RULES` vs
+window-level `applicability_conditions`). This is the correct documentation of the
+architecture-specialist's verdict from Task #33 — the two concerns are orthogonal,
+and the docstring now states this explicitly.
+
+S44 replaces the hardcoded 5-entry `_GATING_FIELDS` dict with `_gating_fields()`, a
+function that derives the profile-key → (affected_modelos, locale_key, fix_command)
+mapping from `_MODELO_APPLICABILITY_RULES` at import time. This is the correct
+implementation direction: the gating table is now registry-derived rather than
+hardcoded, so new applicability rules automatically surface their warnings. The fix
+also closes two previously incomplete entries: `pays_professionals_with_retencion` now
+includes both 111 and 190; `pays_rent_with_retencion` includes both 115 and 180; and
+adds the missing Modelo 347 `third_party_transactions_above_347_threshold` entry. These
+three silent gaps in the prior hardcoded table would have caused operators with those
+profiles to not receive the expected gating warnings.
+
+`SuppressedCalendarEntry` is a clean `strict=True, frozen=True` pydantic model. Its
+`suppressed_entries` field on `OverviewCalendar` defaults to empty tuple, preserving
+backward compatibility for callers that do not pass `show_suppressed=True`. The
+`(modelo, period)` sort order on suppressed entries is deterministic.
+
+S46 consistency test covers four personas (autónomo, sociedad limitada, landlord,
+attribution entity) and asserts that `build_overview_calendar` and
+`build_overview_explain` return identical `ApplicabilityVerdict` per modelo. This is a
+cross-surface alignment test, not a tautology — the two functions have independent
+code paths and could independently drift.
+
+**Multi-step co-landing note:** S43+S44+S46 co-landed in one commit. FU-W02-B for W09.
+
+### `e01a9147c` W02.P11.S45 — `--show-suppressed` flag on overview calendar
+
+**ACCEPT.**
+
+18-line change threads `show_suppressed: bool` through `build_overview_calendar` and
+renders suppressed entries as tab-separated lines. The implementation is minimal and
+correct: the flag defaults to `False` so existing callers are unaffected; the CLI
+entrypoint wires it to a `--show-suppressed` Typer option. No functional side-effects.
+
+### `919735168` W02.P12.S47+S48 — INCN profile binding + modality annotation for Modelo 202
+
+**ACCEPT.**
+
+Binding TOML `0002-modelo-202-2025-y-siguientes-incn-prior-12-months.toml` follows the
+established pattern of the M200 INCN binding (profile source, `taxpayer.incn_prior_12_months`
+selector, copy aggregation). Legal refs are present. Source citations are present.
+
+Casilla 03 and casilla 32 comment annotations correctly document the Art. 40.2 /
+Art. 40.3 modality split and reference the binding ID and LIS Art. 40.3 threshold.
+The commit message note that `CasillaDefinition` carries no `applicability_conditions`
+field — enforcement is at calculation time via `derive_modelo_202_modality` — is
+accurate and consistent with the applicability ADR's implementation section.
+
+### `181211178` W02.P12.S50 — Modelo 202 modality gate tests
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+The 9 domain-function unit tests are sound. The three-state INCN split
+(ART_40_3_MANDATORY / ART_40_2_OPTIONAL / INCOMPLETE), the boundary condition at
+exactly €6 000 000, and the natural-person / attribution-entity NOT_APPLICABLE outer
+gate are all tested against real `TaxpayerProfile` objects without mocks. The
+`_INCN_ABOVE_THRESHOLD`, `_INCN_AT_THRESHOLD`, `_INCN_BELOW_THRESHOLD` constants are
+derived from the LIS Art. 40.3 threshold specification, not from observed output.
+
+**FOLLOWUP FU-W02-C:** The CLI integration test `test_legal_entity_can_create_modelo_202_work_unit`
+uses `monkeypatch` to inject `AEAT_SECRET_STORE_BACKEND=unsecured` and
+`AEAT_ALLOW_UNENCRYPTED=1`. This violates the real-adapters quality gate: integration
+tests must exercise real services and real storage. The commit message acknowledges
+the test is "blocked by a pre-existing storage-layer regression" but the test is
+committed as an active (non-skipped) test that uses an unsecured backend to work
+around it. Per aeat-quality-gates: integration tests must not use fakes, mocks, stubs,
+or unencrypted backends as shortcuts. The correct resolution is: (a) fix the
+underlying storage-layer regression that caused the original block, then (b) rewrite
+this test using `isolated_runtime_profile` (the real encrypted backend pattern used by
+Wave-4 and Wave-5 tests). Until then the test gives false confidence — it exercises
+the CLI path but not the real storage boundary. This is a MUST-FIX before Wave-2
+is considered complete. Tracked as FU-W02-C, recommended as a blocking item for W09.
+
+**S49 co-landing note:** S49 (modality CLI wiring) was co-landed in W03.P15 commit
+`c73d60493`. This is documented in the Wave-3 audit (FU-G). No new action required
+here; noting for completeness.
+
+---
+
+### Cross-commit summary — Wave 2
+
+| Commit | Step(s) | Verdict |
+|---|---|---|
+| `30065a92e` | S38-S42 | ACCEPT-WITH-FOLLOWUP (FU-W02-A) |
+| `acea52801` | S43+S44+S46 | ACCEPT-WITH-FOLLOWUP (FU-W02-B) |
+| `e01a9147c` | S45 | ACCEPT |
+| `919735168` | S47+S48 | ACCEPT |
+| `181211178` | S50 | ACCEPT-WITH-FOLLOWUP (FU-W02-C — MUST-FIX) |
+
+**Follow-up Steps for W09:**
+
+- FU-W02-A: Convention note — S38-S42 multi-step co-landing in `30065a92e` (no code change).
+- FU-W02-B: Convention note — S43+S44+S46 multi-step co-landing in `acea52801` (no code change).
+- FU-W02-C (MUST-FIX): Replace `test_legal_entity_can_create_modelo_202_work_unit`
+  unsecured-backend workaround with a real `isolated_runtime_profile` integration
+  test, after the underlying storage-layer regression is resolved. The current test
+  violates the real-adapters quality gate.
