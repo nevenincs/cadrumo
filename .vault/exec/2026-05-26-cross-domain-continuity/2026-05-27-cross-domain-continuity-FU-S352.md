@@ -18,7 +18,7 @@ Closed three follow-up findings from the S352 code review (LOCALE-001 MEDIUM, LO
 
 ## Commit
 
-Pending — staged, commit follows.
+`de6641b0d` — FU-S352: route engine-layer ModeloAggregationBindingError through tr()
 
 ## Changes
 
