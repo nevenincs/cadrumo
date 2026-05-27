@@ -23,6 +23,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from .....application.user_profile._orchestration import profile_create_storage_span
+from .....application.user_profile._testing import register_minimal_profile
+from .....application.workflow._persistence import workflow_state_repository
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .....tests.secure_sql import isolated_runtime_profile
@@ -336,6 +339,44 @@ class TestIdentityClassification:
     def test_rejects_empty(self) -> None:
         with pytest.raises(ClaveMovilConfigurationError, match=r"NIF|NIE|identity|empty"):
             _classify_identity("")
+
+
+class TestAttemptDiagnostics:
+    def test_attempt_context_uses_real_profile_storage_and_redacts_identity_values(self) -> None:
+        with profile_create_storage_span("diagnostic-profile"):
+            workflow_state_repository().update(
+                lambda state: register_minimal_profile(
+                    state,
+                    profile_id="diagnostic-profile",
+                    overrides={"identity.tax_id": "X1234567L"},
+                    secure_objects=secure_object_repository_for_active_bucket(),
+                    enforce_unique_tax_id=False,
+                )
+            )
+            settings = Settings().model_copy(
+                update={
+                    "aeat_clave_movil_dni_nie": "X1234567L",
+                    "aeat_clave_movil_nie_soporte": "support-marker",
+                    "aeat_clave_prefer_non_qr": True,
+                    "aeat_clave_movil_timeout_ms": 120_000,
+                }
+            )
+
+            context = ClaveMovilAuthProvider(settings)._attempt_context()
+        context_json = json.dumps(context, sort_keys=True)
+
+        assert context["auth_mode"] == "non_qr"
+        assert context["auth_route"] == "clave_movil_non_qr_request"
+        assert context["identity_kind"] == "NIE"
+        assert context["active_profile_id"] == "diagnostic-profile"
+        assert context["active_profile_registered"] is True
+        assert context["profile_record_present"] is True
+        assert context["profile_tax_id_present"] is True
+        assert context["identity_alignment"] == "matches"
+        assert context["nie_soporte_configured"] is True
+        assert context["timeout_ms"] == 120_000
+        assert "X1234567L" not in context_json
+        assert "support-marker" not in context_json
 
 
 # ── describe() ──────────────────────────────────────────────────────────────
