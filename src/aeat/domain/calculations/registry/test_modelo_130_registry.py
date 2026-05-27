@@ -424,9 +424,10 @@ def test_modelo_130_art110_3b_casilla_17_computes_normally_when_retention_ratio_
 ) -> None:
     """Anti-tautology: casilla 17 equals the standard subtraction when retenciones/rendimientos < 70%.
 
-    Oracle values: ingresos (c01) = 50000, gastos (c02) = 10000, retenciones (c06) = 1000.
+    Oracle values: ingresos (c01) = 50000, gastos (c02) = 10000,
+    rendimiento neto (c03) = 40000, retenciones (c06) = 1000.
     Ratio = 1000 / 50000 = 0.02 (2%) — well below the 70% threshold.
-    Formula chain: c03=40000, c04=8000, c07=7000, c12=7000, c13=0, c14=7000,
+    Formula chain: c04=8000, c05=0, c07=7000, c12=7000, c13=0, c14=7000,
     c15=0, c16=0 → c17 = 7000 (standard subtraction, NOT the exemption zero).
 
     The ratio is deliberately far from 70% so this test is sensitive to any
