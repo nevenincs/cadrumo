@@ -49,7 +49,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from ..calculations.registry._bindings import CasillaObservation
 from ._errors import ModeloValidationError
-from ._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
+from ._row_models import ModeloDetailRow
 
 
 class CalculationRevisionState(StrEnum):
