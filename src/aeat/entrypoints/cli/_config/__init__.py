@@ -40,7 +40,7 @@ from ....application.wizard._commands import build_wizard_command as _build_wiza
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
-from ....core.i18n import tr as _tr
+from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit
@@ -55,37 +55,37 @@ _wizard_edit_command = _build_wizard_command(_SETUP_FLOW, mode="edit")
 
 app = typer.Typer(
     name="config",
-    help=_tr("cli.config.app_help"),
+    help=tr("cli.config.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
     add_help_option=False,
 )
 profile_app = typer.Typer(
     name="profile",
-    help=_tr("cli.config.profile.help"),
+    help=tr("cli.config.profile.help"),
     no_args_is_help=True,
     cls=_AeatTyperGroup,
 )
-auth_app = typer.Typer(name="auth", help=_tr("cli.config.auth.help"), no_args_is_help=True)
+auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
 auth_diagnostics_app = typer.Typer(
     name="diagnostics",
-    help=_tr("cli.config.auth.diagnostics.help", default="Inspect encrypted auth diagnostics."),
+    help=tr("cli.config.auth.diagnostics.help", default="Inspect encrypted auth diagnostics."),
     no_args_is_help=True,
 )
 apoderado_app = typer.Typer(
     name="apoderado",
-    help=_tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
+    help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
     no_args_is_help=True,
 )
 repair_app = typer.Typer(
     name="repair",
-    help=_tr("cli.config.repair.help"),
+    help=tr("cli.config.repair.help"),
     no_args_is_help=False,
     invoke_without_command=True,
 )
 bucket_app = typer.Typer(
     name="bucket",
-    help=_tr("cli.config.bucket.help"),
+    help=tr("cli.config.bucket.help"),
     no_args_is_help=True,
 )
 
@@ -103,7 +103,7 @@ _REPAIR_LOG_OBJECT_KEY_RE = re.compile(r"\b(?:wallet|transaction-catalogue):[^\s
 @app.callback()
 def config_root(
     ctx: typer.Context,
-    help_: bool = typer.Option(False, "--help", "-h", help=_tr("cli.config.workflow_help"), is_eager=True),
+    help_: bool = typer.Option(False, "--help", "-h", help=tr("cli.config.workflow_help"), is_eager=True),
 ) -> None:
     """Render config-level workflow help when requested."""
 
@@ -123,10 +123,10 @@ def repair(ctx: typer.Context) -> None:
     _emit(ctx, report.model_dump(mode="json"), _render_config_repair_text(report).splitlines())
 
 
-@repair_app.command("logs", help=_tr("cli.config.repair.logs_help"))
+@repair_app.command("logs", help=tr("cli.config.repair.logs_help"))
 def repair_logs(
     ctx: typer.Context,
-    lines: int = typer.Option(20, "--lines", min=0, help=_tr("cli.config.repair.logs_lines_help")),
+    lines: int = typer.Option(20, "--lines", min=0, help=tr("cli.config.repair.logs_lines_help")),
 ) -> None:
     """Show the configured log file path and recent lines."""
 
@@ -139,14 +139,14 @@ def repair_logs(
     )
 
 
-@repair_app.command("quarantine", help=_tr("cli.config.repair.quarantine_help"))
+@repair_app.command("quarantine", help=tr("cli.config.repair.quarantine_help"))
 def repair_quarantine(
     ctx: typer.Context,
-    yes: bool = typer.Option(False, "--yes", help=_tr("cli.config.repair.quarantine_yes_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.quarantine_yes_help")),
     dry_run: bool = typer.Option(
         False,
         "--dry-run/--no-dry-run",
-        help=_tr("cli.config.repair.quarantine_dry_run_help"),
+        help=tr("cli.config.repair.quarantine_dry_run_help"),
     ),
 ) -> None:
     """Move secure-object rows that fail tag verification into quarantine.
@@ -156,7 +156,7 @@ def repair_quarantine(
     """
 
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(_tr("cli.config.repair.quarantine_requires_yes"))
+        raise _CliRefusedBoundaryError(tr("cli.config.repair.quarantine_requires_yes"))
     # Cold-root guard: quarantine is bootstrap-exempt; on a root with no
     # active profile there is no per-bucket database to scan. Report
     # cleanly rather than crashing on the absent database URL
@@ -250,14 +250,14 @@ def _redact_repair_log_line(line: str) -> str:
     return _REPAIR_LOG_TAX_ID_RE.sub("<tax-id>", redacted)
 
 
-@repair_app.command("reset-state", help=_tr("cli.config.repair.reset_state_help"))
+@repair_app.command("reset-state", help=tr("cli.config.repair.reset_state_help"))
 def repair_reset_state(
     ctx: typer.Context,
-    yes: bool = typer.Option(False, "--yes", help=_tr("cli.config.repair.reset_state_yes_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.reset_state_yes_help")),
     dry_run: bool = typer.Option(
         False,
         "--dry-run/--no-dry-run",
-        help=_tr("cli.config.repair.reset_state_dry_run_help"),
+        help=tr("cli.config.repair.reset_state_dry_run_help"),
     ),
 ) -> None:
     """Drop the unreadable workflow-state envelope and emit a reset event."""
@@ -265,7 +265,7 @@ def repair_reset_state(
     from ....application.workflow._persistence import fingerprint_workflow_state, reset_workflow_state
 
     if not dry_run and not yes:
-        raise _CliRefusedBoundaryError(_tr("cli.config.repair.reset_state_requires_yes"))
+        raise _CliRefusedBoundaryError(tr("cli.config.repair.reset_state_requires_yes"))
     # Cold-root guard: reset-state is bootstrap-exempt; on a root with
     # no active profile there is no workflow-state envelope to reset.
     # Report cleanly rather than crashing on the absent per-bucket
@@ -308,29 +308,29 @@ def repair_reset_state(
 
 @repair_app.command(
     "profile",
-    help=_tr("cli.config.repair.profile_help"),
+    help=tr("cli.config.repair.profile_help"),
 )
 def repair_profile(
     ctx: typer.Context,
     profile: str | None = typer.Option(
         None,
         "--profile",
-        help=_tr("cli.config.repair.profile_name_help"),
+        help=tr("cli.config.repair.profile_name_help"),
     ),
     clear_active: bool = typer.Option(
         False,
         "--clear-active",
-        help=_tr("cli.config.repair.profile_clear_active_help"),
+        help=tr("cli.config.repair.profile_clear_active_help"),
     ),
     repair_manifest_status: bool = typer.Option(
         False,
         "--repair-manifest-status",
-        help=_tr(
+        help=tr(
             "cli.config.repair.profile_repair_manifest_status_help",
             default="Backfill a legacy active bucket manifest status from the encrypted profile record.",
         ),
     ),
-    yes: bool = typer.Option(False, "--yes", help=_tr("cli.config.repair.yes_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.repair.yes_help")),
 ) -> None:
     """Inspect profile health or safely repair a degraded active-profile pointer/manifest."""
 
@@ -342,7 +342,7 @@ def repair_profile(
 
     if clear_active and repair_manifest_status:
         raise _CliRefusedBoundaryError(
-            _tr(
+            tr(
                 "cli.config.repair.profile_one_action",
                 default="Choose either --clear-active or --repair-manifest-status, not both.",
             )
@@ -353,9 +353,9 @@ def repair_profile(
     if profile is not None:
         resolved = _resolve_profile_by_label(profile)
         if resolved.bucket_id != _resolve_active_bucket_id():
-            raise _CliRefusedBoundaryError(_tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
+            raise _CliRefusedBoundaryError(tr("cli.config.repair.profile_clear_active_mismatch", profile=profile))
     if (clear_active or repair_manifest_status) and not yes:
-        raise _CliRefusedBoundaryError(_tr("cli.config.repair.profile_requires_yes"))
+        raise _CliRefusedBoundaryError(tr("cli.config.repair.profile_requires_yes"))
     if repair_manifest_status:
         result = repair_active_profile_manifest_status(confirmed=yes)
         health = result.after or result.before
@@ -488,7 +488,7 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
 
 integrity_app = typer.Typer(
     name="integrity",
-    help=_tr(
+    help=tr(
         "cli.config.repair.integrity_help",
         default="Probe secure-object and registry integrity.",
     ),
@@ -498,7 +498,7 @@ integrity_app = typer.Typer(
 
 @integrity_app.command(
     "objects",
-    help=_tr(
+    help=tr(
         "cli.config.repair.integrity_objects_help",
         default="Probe AES-256-GCM tag verification across one namespace (or all).",
     ),
@@ -508,7 +508,7 @@ def repair_integrity_objects(
     namespace: str | None = typer.Option(
         None,
         "--namespace",
-        help=_tr(
+        help=tr(
             "cli.config.repair.integrity_namespace_help",
             default="Restrict the integrity probe to one namespace.",
         ),
@@ -549,7 +549,7 @@ def repair_integrity_objects(
 
 @integrity_app.command(
     "registry",
-    help=_tr(
+    help=tr(
         "cli.config.repair.integrity_registry_help",
         default="Run full registry validation (the opt-in cross-domain integrity probe).",
     ),
@@ -582,84 +582,7 @@ def repair_integrity_registry(ctx: typer.Context) -> None:
 repair_app.add_typer(integrity_app, name="integrity")
 
 
-@repair_app.command(
-    "list",
-    help=_tr(
-        "cli.config.repair.list_help",
-        default="List secure-object keys in one namespace without mutating storage.",
-    ),
-)
-def repair_list(
-    ctx: typer.Context,
-    namespace: str = typer.Argument(
-        ...,
-        help=_tr("cli.config.repair.list_namespace_help", default="Namespace to inventory."),
-    ),
-    include_all: bool = typer.Option(
-        False,
-        "--all",
-        help=_tr("cli.config.repair.list_all_help", default="Return every key, including readable rows."),
-    ),
-    only_unreadable: bool = typer.Option(
-        False,
-        "--unreadable",
-        help=_tr("cli.config.repair.list_unreadable_help", default="Restrict output to undecryptable rows."),
-    ),
-) -> None:
-    """Render a read-only secure-object key inventory for one namespace."""
-
-    from ....application.repair_integrity import build_repair_list_report
-
-    if include_all and only_unreadable:
-        raise _CliRefusedBoundaryError(
-            _tr(
-                "cli.config.repair.list_conflicting_flags",
-                default="--all and --unreadable cannot be combined; pass one or neither.",
-            )
-        )
-    if _resolve_active_bucket_id() is None:
-        _emit(
-            ctx,
-            {"namespace": namespace, "rows_total": 0, "reason": "no-active-profile"},
-            (
-                f"namespace\t{namespace}",
-                "rows_total\t0",
-                "reason\tno active profile; nothing to inventory",
-            ),
-        )
-        return
-    report = build_repair_list_report(
-        namespace=namespace,
-        include_all=include_all,
-        only_unreadable=only_unreadable,
-    )
-    lines = [
-        f"namespace\t{report.namespace}",
-        f"filter\t{report.filter_mode}",
-        f"readable\t{report.integrity.readable}",
-        f"unreadable\t{report.integrity.unreadable}",
-        f"rows_total\t{report.rows_total}",
-    ]
-    for row in report.rows:
-        parts = [
-            f"key\t{row.object_key_digest}",
-            f"readable\t{'' if row.readable is None else row.readable}",
-        ]
-        if row.row_id is not None:
-            parts.append(f"row_id\t{row.row_id}")
-        if row.classification:
-            parts.append(f"class\t{row.classification}")
-        if row.schema_version is not None:
-            parts.append(f"schema\t{row.schema_version}")
-        if row.written_at is not None:
-            parts.append(f"written_at\t{row.written_at.isoformat()}")
-        if row.reason:
-            parts.append(f"reason\t{row.reason}")
-        lines.append("\t".join(parts))
-    _emit(ctx, report.model_dump(mode="json"), lines)
-
-
-@repair_app.command("connectivity", help=_tr("cli.config.repair.connectivity_help"))
+@repair_app.command("connectivity", help=tr("cli.config.repair.connectivity_help"))
 def repair_connectivity(
     ctx: typer.Context,
     target: typing.Annotated[
@@ -667,7 +590,7 @@ def repair_connectivity(
         typer.Option(
             "--target",
             click_type=click.Choice(("browser",)),
-            help=_tr("cli.config.repair.connectivity_target_help"),
+            help=tr("cli.config.repair.connectivity_target_help"),
         ),
     ] = "browser",
 ) -> None:
@@ -703,9 +626,9 @@ def _resolve_profile_by_label(name: str):
     try:
         pointer = _read_profile_bucket(name)
     except ValueError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
     return pointer
 
 
@@ -782,7 +705,7 @@ def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None
     return profile_id
 
 
-@profile_app.command("list", help=_tr("cli.config.list.help"))
+@profile_app.command("list", help=tr("cli.config.list.help"))
 def config_list(ctx: typer.Context) -> None:
     """List every registered profile via the manifest-scan helper.
 
@@ -821,10 +744,10 @@ def config_list(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("switch", help=_tr("cli.config.profile.switch_help"))
+@profile_app.command("switch", help=tr("cli.config.profile.switch_help"))
 def config_profile_switch(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=_tr("cli.config.profile.switch_name_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.switch_name_help")),
 ) -> None:
     """Select an existing profile as the active profile."""
 
@@ -833,7 +756,7 @@ def config_profile_switch(
 
     pointer = _read_profile_bucket(name)
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
     _assert_profile_record_present(
         ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
     )
@@ -945,16 +868,16 @@ def _read_profile_record(*, profile_id: str, bucket_id: str):
         return service.read(profile_id)
 
 
-@profile_app.command("show", help=_tr("cli.config.profile.show_help"))
+@profile_app.command("show", help=tr("cli.config.profile.show_help"))
 def config_profile_show(
     ctx: typer.Context,
-    name: str | None = typer.Argument(None, help=_tr("cli.config.profile.show_name_help")),
+    name: str | None = typer.Argument(None, help=tr("cli.config.profile.show_name_help")),
     output_language: str | None = typer.Option(
         None,
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """View one profile's facts (defaults to the active profile).
@@ -978,13 +901,13 @@ def config_profile_show(
         try:
             pointer = _read_profile_bucket(name, include_tombstoned=True)
         except ValueError as exc:
-            raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name)) from exc
+            raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
         if pointer is None:
-            raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name))
+            raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name))
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+            raise _CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     try:
         record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
@@ -1033,11 +956,11 @@ def config_profile_show(
         raise typer.Exit(code=2)
 
 
-@profile_app.command("delete", help=_tr("cli.config.profile.delete_help"))
+@profile_app.command("delete", help=tr("cli.config.profile.delete_help"))
 def config_profile_delete(
     ctx: typer.Context,
-    name: str = typer.Argument(..., help=_tr("cli.config.profile.delete_name_help")),
-    confirmed: bool = typer.Option(False, "--yes", help=_tr("cli.config.profile.delete_yes_help")),
+    name: str = typer.Argument(..., help=tr("cli.config.profile.delete_name_help")),
+    confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.profile.delete_yes_help")),
 ) -> None:
     """Tombstone a profile. Immutable filing snapshots are retained."""
 
@@ -1045,7 +968,7 @@ def config_profile_delete(
     from ....domain.user_profile import ProfileNotFoundError
 
     if not confirmed:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.delete_requires_yes", name=name))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.delete_requires_yes", name=name))
     # Resolve the operator-supplied label to a bucket pointer FIRST. This
     # is a plaintext manifest scan that needs no bucket session, so an
     # unknown name surfaces a clear "unknown profile" refusal distinct
@@ -1057,7 +980,7 @@ def config_profile_delete(
     try:
         record = delete_profile_with_lifecycle_span(pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=name)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=name)) from exc
     payload = {
         "profile_id": record.profile_id,
         "display_name": record.display_name,
@@ -1075,17 +998,17 @@ def config_profile_delete(
         # Make that consequence explicit so the operator is not left in a
         # silent no-active-profile state.
         lines.append("active_profile\t<none>")
-        lines.append(f"notice\t{_tr('cli.config.profile.delete_active_cleared')}")
+        lines.append(f"notice\t{tr('cli.config.profile.delete_active_cleared')}")
     _emit(ctx, payload, lines)
 
 
-@profile_app.command("duplicate", help=_tr("cli.config.profile.duplicate_help"))
+@profile_app.command("duplicate", help=tr("cli.config.profile.duplicate_help"))
 def config_profile_duplicate(
     ctx: typer.Context,
-    source: str = typer.Argument(..., help=_tr("cli.config.profile.duplicate_source_help")),
-    target: str = typer.Argument(..., help=_tr("cli.config.profile.duplicate_target_help")),
+    source: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_source_help")),
+    target: str = typer.Argument(..., help=tr("cli.config.profile.duplicate_target_help")),
     display_name: str | None = typer.Option(
-        None, "--display-name", help=_tr("cli.config.profile.duplicate_display_name_help")
+        None, "--display-name", help=tr("cli.config.profile.duplicate_display_name_help")
     ),
 ) -> None:
     """Copy SOURCE into TARGET as a new active profile.
@@ -1105,7 +1028,7 @@ def config_profile_duplicate(
 
     source_pointer = _resolve_profile_by_label(source)
     if _read_profile_bucket(target) is not None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.already_exists", name=target))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target))
 
     try:
         source_record = _read_profile_record(
@@ -1113,7 +1036,7 @@ def config_profile_duplicate(
             bucket_id=source_pointer.bucket_id,
         )
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=source)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
     try:
         target_id = _atomic_create_profile(
@@ -1121,7 +1044,7 @@ def config_profile_duplicate(
             facts=source_record.facts,
         )
     except ProfileAlreadyRegisteredError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.already_exists", name=target)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
 
     _emit(
         ctx,
@@ -1145,7 +1068,7 @@ def config_profile_duplicate(
 # for the create-vs-edit branch.
 _config_profile_create_callback = profile_app.command(
     "create",
-    help=_tr(
+    help=tr(
         "cli.config.profile.create_help",
         default="Initialize a new active profile and config bucket.",
     ),
@@ -1154,7 +1077,7 @@ _config_profile_create_callback = profile_app.command(
 
 _config_profile_edit_callback = profile_app.command(
     "edit",
-    help=_tr(
+    help=tr(
         "cli.config.profile.edit_help",
         default="Re-run the wizard against an existing profile; updates values in place.",
     ),
@@ -1163,7 +1086,7 @@ _config_profile_edit_callback = profile_app.command(
 
 @profile_app.command(
     "rename",
-    help=_tr(
+    help=tr(
         "cli.config.profile.rename_help",
         default="Rename a profile by updating its display label.",
     ),
@@ -1171,10 +1094,10 @@ _config_profile_edit_callback = profile_app.command(
 def config_profile_rename(
     ctx: typer.Context,
     source: str = typer.Argument(
-        ..., help=_tr("cli.config.profile.rename_source_help", default="Existing profile name.")
+        ..., help=tr("cli.config.profile.rename_source_help", default="Existing profile name.")
     ),
     target: str = typer.Argument(
-        ..., help=_tr("cli.config.profile.rename_target_help", default="New profile name.")
+        ..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")
     ),
 ) -> None:
     """Rename a profile by changing its operator-visible label.
@@ -1196,9 +1119,9 @@ def config_profile_rename(
     try:
         record = rename_profile(profile_id=pointer.bucket_id, new_label=target)
     except ProfileAlreadyRegisteredError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.already_exists", name=target)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.already_exists", name=target)) from exc
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=source)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=source)) from exc
 
     _emit(
         ctx,
@@ -1216,73 +1139,8 @@ def config_profile_rename(
 
 
 @profile_app.command(
-    "set",
-    help=_tr(
-        "cli.config.profile.set_help",
-        default="Set one or more profile key-value pairs on the active profile.",
-    ),
-)
-def config_profile_set(
-    ctx: typer.Context,
-    assignments: list[str] = typer.Argument(
-        ...,
-        help=_tr(
-            "cli.config.profile.set_assignments_help",
-            default="KEY=VALUE pairs to write (e.g. taxpayer_type.days_in_spain_2024=165).",
-        ),
-    ),
-) -> None:
-    """Write one or more profile fact key-value pairs on the active profile.
-
-    Each assignment must be a ``KEY=VALUE`` string where ``KEY`` is a
-    dotted profile path (e.g. ``taxpayer_type.days_in_spain_2024``) and
-    ``VALUE`` is the string representation of the value to store.
-
-    Useful for per-year and other dynamic-key axes that cannot be
-    expressed as wizard questions:
-
-        aeat config profile set taxpayer_type.days_in_spain_2024=165
-        aeat config profile set taxpayer_type.days_in_spain_2023=340
-    """
-
-    from ....application.user_profile._orchestration import set_active_fields
-    from ....domain.user_profile import UserProfileFact
-
-    if _resolve_active_bucket_id() is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
-
-    facts: list[UserProfileFact] = []
-    for raw in assignments:
-        if "=" not in raw:
-            raise _CliRefusedBoundaryError(
-                _tr(
-                    "cli.config.profile.set_invalid_assignment",
-                    assignment=raw,
-                    default=f"Assignment must be KEY=VALUE; got: {raw!r}",
-                )
-            )
-        key, _, value = raw.partition("=")
-        key = key.strip()
-        if not key:
-            raise _CliRefusedBoundaryError(
-                _tr(
-                    "cli.config.profile.set_empty_key",
-                    default=f"Assignment key must not be empty; got: {raw!r}",
-                )
-            )
-        facts.append(UserProfileFact(path=key, value=value))
-
-    repository = _profile_state()
-    repository.update(lambda state: set_active_fields(state, facts))
-
-    emitted = [{"key": fact.path, "value": fact.value} for fact in facts]
-    lines = [f"{fact.path}\t{fact.value}" for fact in facts]
-    _emit(ctx, {"assignments": emitted}, lines)
-
-
-@profile_app.command(
     "export",
-    help=_tr(
+    help=tr(
         "cli.config.profile.export_help",
         default="Write a portable profile bundle to PATH.",
     ),
@@ -1291,12 +1149,12 @@ def config_profile_export(
     ctx: typer.Context,
     name: str | None = typer.Argument(
         None,
-        help=_tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+        help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
     ),
     out: Path = typer.Option(
         ...,
         "--to",
-        help=_tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+        help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
     ),
 ) -> None:
     """Serialize a profile bundle to a JSON file.
@@ -1317,7 +1175,7 @@ def config_profile_export(
     else:
         pointer = _resolve_active_profile_pointer()
         if pointer is None:
-            raise _CliRefusedBoundaryError(_tr("cli.config.errors.no_active_profile"))
+            raise _CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     try:
         from ....adapters.persistence.storage import has_active_bucket_session
         from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
@@ -1328,7 +1186,7 @@ def config_profile_export(
             with profile_storage_session(pointer.bucket_id):
                 bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
     _emit(
@@ -1350,7 +1208,7 @@ def config_profile_export(
 
 @profile_app.command(
     "import",
-    help=_tr(
+    help=tr(
         "cli.config.profile.import_help",
         default="Register a portable profile bundle from PATH into the active bucket.",
     ),
@@ -1358,12 +1216,12 @@ def config_profile_export(
 def config_profile_import(
     ctx: typer.Context,
     path: Path = typer.Argument(
-        ..., help=_tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
+        ..., help=tr("cli.config.profile.import_path_help", default="Path to the JSON bundle.")
     ),
     label: str | None = typer.Option(
         None,
         "--label",
-        help=_tr("cli.config.profile.import_label_help"),
+        help=tr("cli.config.profile.import_label_help"),
     ),
 ) -> None:
     """Read a portable profile bundle from a JSON file and register it.
@@ -1400,7 +1258,7 @@ def config_profile_import(
 
     if not path.is_file():
         raise _CliRefusedBoundaryError(
-            _tr(
+            tr(
                 "cli.config.profile.import_missing_bundle",
                 default=f"bundle path not found: {path}",
                 path=str(path),
@@ -1410,7 +1268,7 @@ def config_profile_import(
         bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
     except Exception as exc:
         raise _CliRefusedBoundaryError(
-            _tr("cli.config.profile.import_invalid_bundle", default=f"bundle parse error: {exc}", error=str(exc))
+            tr("cli.config.profile.import_invalid_bundle", default=f"bundle parse error: {exc}", error=str(exc))
         ) from exc
     try:
         _validate_bundle_schema_version(bundle)
@@ -1429,7 +1287,7 @@ def config_profile_import(
     # Tier 1 (identity-preserving path): refuse if the bundle UUID already exists.
     if not fresh_uuid_mode and read_profile_bucket_by_id(bundle_profile_id) is not None:
         raise _CliRefusedBoundaryError(
-            _tr(
+            tr(
                 "cli.config.profile.import_uuid_collision",
                 default=(
                     f"profile already registered (id={bundle_profile_id}); "
@@ -1444,7 +1302,7 @@ def config_profile_import(
     existing = _read_profile_bucket(target_label)
     if existing is not None:
         raise _CliRefusedBoundaryError(
-            _tr(
+            tr(
                 "cli.config.profile.import_label_taken_different_id",
                 default=(
                     f"label {target_label!r} is already taken by a different profile; "
@@ -1464,7 +1322,7 @@ def config_profile_import(
         )
     except ProfileAlreadyRegisteredError as exc:
         raise _CliRefusedBoundaryError(
-            _tr("cli.config.profile.already_exists", name=target_label)
+            tr("cli.config.profile.already_exists", name=target_label)
         ) from exc
     # Import v2 financial-history objects into the newly-provisioned bucket.
     with profile_storage_session(target_id):
@@ -1486,7 +1344,7 @@ def config_profile_import(
 
 @profile_app.command(
     "logout",
-    help=_tr(
+    help=tr(
         "cli.config.profile.logout_help",
         default="Sign out of the active profile by clearing the pointer file.",
     ),
@@ -1502,16 +1360,16 @@ def config_profile_logout(ctx: typer.Context) -> None:
         {
             "logged_out_profile": before or "",
             "active_profile": None,
-            "session_warning": _tr("cli.config.profile.logout_session_warning"),
+            "session_warning": tr("cli.config.profile.logout_session_warning"),
         },
         (
             f"logged_out_profile\t{before or '<none>'}",
-            _tr("cli.config.profile.logout_session_warning"),
+            tr("cli.config.profile.logout_session_warning"),
         ),
     )
 
 
-@profile_app.command("status", help=_tr("cli.config.status.help"))
+@profile_app.command("status", help=tr("cli.config.status.help"))
 def config_status(ctx: typer.Context) -> None:
     """Show the readiness of the current configuration profile."""
 
@@ -1540,7 +1398,7 @@ def config_status(ctx: typer.Context) -> None:
             ctx,
             payload,
             (
-                _tr("cli.config.status.empty_profile"),
+                tr("cli.config.status.empty_profile"),
                 f"next_action\t{profile_health.next_action}",
             ),
         )
@@ -1596,7 +1454,7 @@ def config_status(ctx: typer.Context) -> None:
             "configured": False,
         }
         if active_profile is None:
-            lines = (_tr("cli.config.status.empty_profile"),)
+            lines = (tr("cli.config.status.empty_profile"),)
         else:
             lines = (
                 f"profile\t{active_profile}",
@@ -1617,7 +1475,7 @@ def config_status(ctx: typer.Context) -> None:
             "activity_present": bool(values.get("activities.description")),
             "configured": False,
         }
-        _emit(ctx, payload, (_tr("cli.config.status.empty_profile"),))
+        _emit(ctx, payload, (tr("cli.config.status.empty_profile"),))
         return
     # Operators address a profile by its display name; the immutable
     # bucket UUID is carried as a secondary `profile_id` field so the
@@ -1641,29 +1499,29 @@ def config_status(ctx: typer.Context) -> None:
             f"activities.description\t{values.get('activities.description', '<unset>')}",
             f"iva.regime\t{values.get('iva.regime', '<unset>')}",
             f"tax_residence.ccaa\t{values.get('tax_residence.ccaa', '<unset>')}",
-            _tr("cli.config.status.next_step"),
+            tr("cli.config.status.next_step"),
         ),
     )
     del projection
 
 
-@app.command("reset", help=_tr("cli.config.reset.help"))
+@app.command("reset", help=tr("cli.config.reset.help"))
 def config_reset(
     ctx: typer.Context,
     scope: str = typer.Option(
         "all",
         "--scope",
         click_type=click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
-        help=_tr("cli.config.reset.scope_help"),
+        help=tr("cli.config.reset.scope_help"),
     ),
-    yes: bool = typer.Option(False, "--yes", help=_tr("cli.config.reset.yes_help")),
+    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
 ) -> None:
     """Reset operator-entered configuration scopes."""
 
     from ....application.config_reset import reset_config
 
     if not yes:
-        raise _CliRefusedBoundaryError(_tr("cli.config.reset.requires_yes"))
+        raise _CliRefusedBoundaryError(tr("cli.config.reset.requires_yes"))
     scope_enum = _parse_config_reset_scope(scope)
     report = reset_config(scope_enum, confirmed=True)
     _emit(
@@ -1677,7 +1535,7 @@ def config_reset(
     )
 
 
-@auth_app.command("providers", help=_tr("cli.config.auth.providers_help"))
+@auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
 def auth_providers(
     ctx: typer.Context,
     output_language: str | None = typer.Option(
@@ -1685,7 +1543,7 @@ def auth_providers(
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """List supported authentication providers from the backend catalogue."""
@@ -1698,35 +1556,35 @@ def auth_providers(
     rows: list[str] = []
     for provider in report.providers:
         if provider.implemented:
-            status_token = _tr("cli.config.auth.providers.status_implemented")
+            status_token = tr("cli.config.auth.providers.status_implemented")
         else:
             # Render "no disponible aún" alongside ``reserved`` so a
             # layperson does not read "reserved" as "reserved for me"
             # (round-5 minor).
             status_token = (
-                f"{_tr('cli.config.auth.providers.status_reserved')}"
-                f" ({_tr('cli.config.auth.providers.status_unavailable_gloss')})"
+                f"{tr('cli.config.auth.providers.status_reserved')}"
+                f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
             )
-        rows.append(f"{provider.id}\t{status_token}\t{_tr(str(provider.label))}")
+        rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
     _emit(ctx, payload, tuple(rows))
 
 
-@auth_app.command("configure", help=_tr("cli.config.auth.configure_help"))
+@auth_app.command("configure", help=tr("cli.config.auth.configure_help"))
 def auth_configure(
     ctx: typer.Context,
     provider: str = typer.Option(
         ...,
         "--provider",
         click_type=click.Choice(_known_auth_provider_ids()),
-        help=_tr("cli.config.auth.provider_help"),
+        help=tr("cli.config.auth.provider_help"),
     ),
-    file: Path | None = typer.Option(None, "--file", help=_tr("cli.config.auth.file_help")),
+    file: Path | None = typer.Option(None, "--file", help=tr("cli.config.auth.file_help")),
     output_language: str | None = typer.Option(
         None,
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """Configure the active authentication provider."""
@@ -1741,11 +1599,11 @@ def auth_configure(
     try:
         result = configure_operator_auth(provider, certificate_path=file)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.unknown_provider", provider=provider)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider)) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.reserved_provider", provider=provider)) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider)) from exc
     except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.no_active_bucket")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.no_active_bucket")) from exc
     except AuthConfigureDanglingActiveProfileError as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     lines = [
@@ -1770,7 +1628,7 @@ def auth_configure(
     _emit(ctx, result.model_dump(mode="json"), lines)
 
 
-@auth_app.command("status", help=_tr("cli.config.auth.status_help"))
+@auth_app.command("status", help=tr("cli.config.auth.status_help"))
 def auth_status(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
@@ -1779,7 +1637,7 @@ def auth_status(
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """Show the configured local authentication state."""
@@ -1790,12 +1648,12 @@ def auth_status(
     try:
         result = inspect_operator_auth(provider)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
 
-@auth_app.command("test", help=_tr("cli.config.auth.test_help"))
+@auth_app.command("test", help=tr("cli.config.auth.test_help"))
 def auth_test(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
@@ -1804,7 +1662,7 @@ def auth_test(
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """Render auth readiness through the application-owned auth state."""
@@ -1815,25 +1673,25 @@ def auth_test(
     try:
         result = test_operator_auth(provider)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
 
-@auth_app.command("login", help=_tr("cli.config.auth.login_help"))
+@auth_app.command("login", help=tr("cli.config.auth.login_help"))
 def auth_login(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    fresh: bool = typer.Option(False, "--fresh", help=_tr("cli.config.auth.login_fresh_help")),
-    reset_lock: bool = typer.Option(False, "--reset-lock", help=_tr("cli.config.auth.login_reset_lock_help")),
+    fresh: bool = typer.Option(False, "--fresh", help=tr("cli.config.auth.login_fresh_help")),
+    reset_lock: bool = typer.Option(False, "--reset-lock", help=tr("cli.config.auth.login_reset_lock_help")),
     output_language: str | None = typer.Option(
         None,
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """Acquire or verify a live AEAT session through the configured provider."""
@@ -1848,28 +1706,28 @@ def auth_login(
     try:
         result = asyncio.run(login_operator_auth(provider, fresh=fresh, reset_lock=reset_lock))
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
     except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
         raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
     _emit(ctx, payload, tuple(f"{key}\t{value}" for key, value in payload.items()))
 
 
-@auth_app.command("clear", help=_tr("cli.config.auth.clear_help"))
+@auth_app.command("clear", help=tr("cli.config.auth.clear_help"))
 def auth_clear(
     ctx: typer.Context,
     provider: str | None = typer.Option(None, "--provider", click_type=click.Choice(_known_auth_provider_ids())),
-    all_providers: bool = typer.Option(False, "--all", help=_tr("cli.config.auth.clear_all_help")),
-    sessions: bool = typer.Option(False, "--sessions", help=_tr("cli.config.auth.clear_sessions_help")),
-    locks: bool = typer.Option(False, "--locks", help=_tr("cli.config.auth.clear_locks_help")),
+    all_providers: bool = typer.Option(False, "--all", help=tr("cli.config.auth.clear_all_help")),
+    sessions: bool = typer.Option(False, "--sessions", help=tr("cli.config.auth.clear_sessions_help")),
+    locks: bool = typer.Option(False, "--locks", help=tr("cli.config.auth.clear_locks_help")),
     output_language: str | None = typer.Option(
         None,
         "--output-language",
         "--language",
         click_type=_OUTPUT_LANGUAGE_CLI,
-        help=_tr("cli.config.auth.output_language_help"),
+        help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
     """Clear local auth metadata, persisted sessions, and auth locks."""
@@ -1880,9 +1738,9 @@ def auth_clear(
     try:
         result = clear_operator_auth(provider=provider, all_providers=all_providers, sessions=sessions, locks=locks)
     except KeyError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.unknown_provider", provider=provider or "")) from exc
     except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(_tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
+        raise _CliRefusedBoundaryError(tr("cli.config.auth.reserved_provider", provider=provider or "")) from exc
     _emit(
         ctx,
         result.model_dump(mode="json"),
@@ -1896,7 +1754,7 @@ def auth_clear(
 
 @auth_diagnostics_app.command(
     "list",
-    help=_tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
+    help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
 )
 def auth_diagnostics_list(ctx: typer.Context) -> None:
     """List encrypted auth diagnostics without revealing captured HTML/screenshots."""
@@ -1928,11 +1786,11 @@ def auth_diagnostics_list(ctx: typer.Context) -> None:
 
 @auth_diagnostics_app.command(
     "show",
-    help=_tr("cli.config.auth.diagnostics.show_help", default="Show one redacted encrypted auth diagnostic."),
+    help=tr("cli.config.auth.diagnostics.show_help", default="Show one redacted encrypted auth diagnostic."),
 )
 def auth_diagnostics_show(
     ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=_tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
 ) -> None:
     """Show one encrypted auth diagnostic by id with sensitive bodies redacted."""
 
@@ -1941,7 +1799,7 @@ def auth_diagnostics_show(
     detail = load_auth_diagnostic(diagnostic_id)
     if detail is None:
         raise _CliRefusedBoundaryError(
-            _tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
+            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id)
         )
     reported_at = detail.phone_state_reported_at.isoformat() if detail.phone_state_reported_at is not None else ""
     bool_value = _optional_bool_text
@@ -1990,18 +1848,18 @@ def _optional_bool_text(value: bool | None) -> str:
 
 @auth_diagnostics_app.command(
     "report",
-    help=_tr(
+    help=tr(
         "cli.config.auth.diagnostics.report_help",
         default="Record the operator-observed Cl@ve app state for one auth diagnostic.",
     ),
 )
 def auth_diagnostics_report(
     ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=_tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
     phone_state: str = typer.Option(
         ...,
         "--phone-state",
-        help=_tr(
+        help=tr(
             "cli.config.auth.diagnostics.phone_state_help",
             default=(
                 "One of: app_prompted_and_accepted, app_prompted_not_accepted, "
@@ -2018,7 +1876,7 @@ def auth_diagnostics_report(
         result = record_auth_diagnostic_phone_state(diagnostic_id, phone_state)
     except ValueError as exc:
         raise _CliRefusedBoundaryError(
-            _tr(
+            tr(
                 "cli.config.auth.diagnostics.invalid_phone_state",
                 phone_state=phone_state,
                 choices=", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
@@ -2026,7 +1884,7 @@ def auth_diagnostics_report(
         ) from exc
     if result is None:
         raise _CliRefusedBoundaryError(
-            _tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id),
+            tr("cli.config.auth.diagnostics.not_found", diagnostic_id=diagnostic_id),
         )
     _emit(
         ctx,
@@ -2041,14 +1899,14 @@ def auth_diagnostics_report(
 
 scopes_app = typer.Typer(
     name="scopes",
-    help=_tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"),
+    help=tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"),
     no_args_is_help=True,
 )
 apoderado_app.add_typer(scopes_app, name="scopes")
 
 
 @scopes_app.command(
-    "list", help=_tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
+    "list", help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes")
 )
 def apoderado_scopes_list(ctx: typer.Context) -> None:
     """List all available representative scopes in the vocabulary."""
@@ -2056,19 +1914,19 @@ def apoderado_scopes_list(ctx: typer.Context) -> None:
 
     svc = ApoderadoService()
     payload = svc.catalogue.model_dump(mode="json")
-    lines = [f"{s.code}\t{_tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
+    lines = [f"{s.code}\t{tr(f'cli.config.auth.apoderado.scope.{s.code.lower()}')}" for s in svc.catalogue.scopes]
     _emit(ctx, payload, lines)
 
 
 @apoderado_app.command(
-    "status", help=_tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration")
+    "status", help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration")
 )
 def apoderado_status(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
 
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
     svc = ApoderadoService()
     result = svc.status(bucket_id=pointer.bucket_id)
@@ -2086,19 +1944,19 @@ def apoderado_status(ctx: typer.Context) -> None:
 
 
 @apoderado_app.command(
-    "configure", help=_tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration")
+    "configure", help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration")
 )
 def apoderado_configure(
     ctx: typer.Context,
     represented_nif: str = typer.Option(
         ...,
         "--represented-nif",
-        help=_tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party"),
+        help=tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party"),
     ),
     scope: list[str] = typer.Option(
         ...,
         "--scope",
-        help=_tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
+        help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
     ),
 ) -> None:
     from ....application.auth._apoderado import ApoderadoService
@@ -2107,7 +1965,7 @@ def apoderado_configure(
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
     svc = ApoderadoService()
     result = svc.configure(
@@ -2126,7 +1984,7 @@ def apoderado_configure(
 
 
 @apoderado_app.command(
-    "clear", help=_tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration")
+    "clear", help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration")
 )
 def apoderado_clear(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoService
@@ -2135,7 +1993,7 @@ def apoderado_clear(ctx: typer.Context) -> None:
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
     svc = ApoderadoService()
     cleared = svc.clear(bucket_id=pointer.bucket_id)
@@ -2148,7 +2006,7 @@ def apoderado_clear(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@apoderado_app.command("check", help=_tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
+@apoderado_app.command("check", help=tr("cli.config.auth.apoderado.check_help", default="Read-only live verification"))
 def apoderado_check(ctx: typer.Context) -> None:
     from ....application.auth._apoderado import ApoderadoLiveCheckUnavailableError, ApoderadoService
     from ....application.workflow._persistence import workflow_state_repository
@@ -2157,7 +2015,7 @@ def apoderado_check(ctx: typer.Context) -> None:
     workflow_state_repository().load()
     pointer = _resolve_active_profile_pointer()
     if pointer is None:
-        raise _CliRefusedBoundaryError(_tr("cli.config.profile.no_active_profile"))
+        raise _CliRefusedBoundaryError(tr("cli.config.profile.no_active_profile"))
 
     svc = ApoderadoService()
 
@@ -2181,46 +2039,46 @@ def apoderado_check(ctx: typer.Context) -> None:
     _emit(ctx, payload, lines)
 
 
-@bucket_app.command("history", help=_tr("cli.config.bucket.history_help"))
+@bucket_app.command("history", help=tr("cli.config.bucket.history_help"))
 def bucket_history(
     ctx: typer.Context,
     bucket_id: typing.Annotated[
         str,
-        typer.Argument(help=_tr("cli.config.bucket.bucket_id_help")),
+        typer.Argument(help=tr("cli.config.bucket.bucket_id_help")),
     ],
     event_type: typing.Annotated[
         list[str] | None,
         typer.Option(
             "--event-type",
-            help=_tr("cli.config.bucket.event_type_help"),
+            help=tr("cli.config.bucket.event_type_help"),
         ),
     ] = None,
     since: typing.Annotated[
         str | None,
         typer.Option(
             "--since",
-            help=_tr("cli.config.bucket.since_help"),
+            help=tr("cli.config.bucket.since_help"),
         ),
     ] = None,
     until: typing.Annotated[
         str | None,
         typer.Option(
             "--until",
-            help=_tr("cli.config.bucket.until_help"),
+            help=tr("cli.config.bucket.until_help"),
         ),
     ] = None,
     object_id: typing.Annotated[
         str | None,
         typer.Option(
             "--object-id",
-            help=_tr("cli.config.bucket.object_id_help"),
+            help=tr("cli.config.bucket.object_id_help"),
         ),
     ] = None,
     actor: typing.Annotated[
         str | None,
         typer.Option(
             "--actor",
-            help=_tr("cli.config.bucket.actor_help"),
+            help=tr("cli.config.bucket.actor_help"),
         ),
     ] = None,
 ) -> None:
@@ -2232,7 +2090,7 @@ def bucket_history(
     since_dt = _parse_bucket_history_instant(since, flag="--since")
     until_dt = _parse_bucket_history_instant(until, flag="--until")
     if since_dt is not None and until_dt is not None and since_dt > until_dt:
-        raise typer.BadParameter(_tr("cli.config.bucket.history.since_after_until"))
+        raise typer.BadParameter(tr("cli.config.bucket.history.since_after_until"))
     object_id_token = object_id.strip() if object_id else None
     actor_token = actor.strip() if actor else None
 
@@ -2286,7 +2144,7 @@ def _parse_bucket_event_types(event_type: list[str] | None) -> tuple[BucketEvent
             # BucketEventType" — untranslated and dev-flavoured. Surface a
             # localized refusal naming the bad token and the valid set.
             raise typer.BadParameter(
-                _tr(
+                tr(
                     "cli.config.bucket.history.invalid_event_type",
                     value=token,
                     valid=", ".join(member.value for member in BucketEventType),
@@ -2304,7 +2162,7 @@ def _parse_bucket_history_instant(raw: str | None, *, flag: str) -> datetime | N
         return datetime.fromisoformat(raw.strip())
     except ValueError as exc:
         raise typer.BadParameter(
-            _tr("cli.config.bucket.history.invalid_timestamp", flag=flag, raw=raw),
+            tr("cli.config.bucket.history.invalid_timestamp", flag=flag, raw=raw),
         ) from exc
 
 

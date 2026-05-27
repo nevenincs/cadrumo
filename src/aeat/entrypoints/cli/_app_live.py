@@ -12,6 +12,7 @@ import typer
 from ...application.live import (
     FiledDataListingRow,
     IvaCompensationHistoryReport,
+    IvaRemoteStateAcquisitionReport,
     IvaWalletCaptureReport,
     capture_filed_data,
     capture_source_filed_data,
@@ -70,6 +71,44 @@ app.add_typer(iva_wallet_app, name="iva-wallet")
 
 def _metric_line(key: str, value: object) -> str:
     return f"{key}={value}"
+
+
+def _live_iva_outcome_label(value: object) -> str:
+    token = getattr(value, "value", value)
+    normalized = str(token or "unknown")
+    if normalized == "aeat_403":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.aeat_403", default="AEAT 403/auth gate")
+    if normalized == "authenticated":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.authenticated", default="authenticated")
+    if normalized == "certificate_required":
+        return tr(
+            "cli.app.live.iva_wallet.acquisition.outcome.certificate_required",
+            default="certificate required",
+        )
+    if normalized == "dom_drift":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.dom_drift", default="AEAT page shape changed")
+    if normalized == "live_navigation_failed":
+        return tr(
+            "cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed",
+            default="live navigation failed",
+        )
+    if normalized == "no_clave_prompt":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt", default="no Cl@ve prompt")
+    if normalized == "operator_timeout":
+        return tr(
+            "cli.app.live.iva_wallet.acquisition.outcome.operator_timeout",
+            default="operator approval timed out",
+        )
+    if normalized == "pending_clave_request":
+        return tr(
+            "cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request",
+            default="pending Cl@ve request",
+        )
+    if normalized == "qr_required":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.qr_required", default="QR approval required")
+    if normalized == "wrong_identity":
+        return tr("cli.app.live.iva_wallet.acquisition.outcome.wrong_identity", default="wrong identity")
+    return tr("cli.app.live.iva_wallet.acquisition.outcome.unknown", default=normalized.replace("_", " "))
 
 
 def _emit_live_auth_preflight(provider: str | None = None) -> None:
@@ -339,6 +378,114 @@ def iva_wallet_capture_history_cmd(
         _metric_line("output_root", report.output_root),
     )
     _emit(ctx, report, lines)
+
+
+@iva_wallet_app.command(
+    "capture-remote-state",
+    help=tr(
+        "cli.app.live.iva_wallet.capture_remote_state_help",
+        default=(
+            "Live-capture filed Modelo 303 history and attempt the AEAT IVA wallet/cartera read as one "
+            "typed read-only acquisition."
+        ),
+    ),
+)
+def iva_wallet_capture_remote_state_cmd(
+    ctx: typer.Context,
+    year_from: Annotated[
+        int,
+        typer.Option("--from-year", min=2000, max=2099, help=tr("cli.app.live.from_year_help")),
+    ],
+    year_to: Annotated[
+        int,
+        typer.Option("--to-year", min=2000, max=2099, help=tr("cli.app.live.to_year_help")),
+    ],
+    target_year: Annotated[
+        int,
+        typer.Option("--target-year", min=2000, max=2099, help=tr("cli.app.live.year_help")),
+    ],
+    target_period: Annotated[str, typer.Option("--target-period", help=tr("cli.app.live.period_help"))],
+    taxpayer_nif: Annotated[
+        str | None,
+        typer.Option(
+            "--taxpayer-nif",
+            help=tr(
+                "cli.app.live.iva_wallet.taxpayer_nif_help",
+                default="Taxpayer NIF; defaults to authenticated identity.",
+            ),
+        ),
+    ] = None,
+    output_root: Annotated[
+        Path,
+        typer.Option(
+            "--output-root",
+            file_okay=False,
+            dir_okay=True,
+            writable=True,
+            help=tr("cli.app.live.output_root_help"),
+        ),
+    ] = Path("var/aeat/live/iva-remote-state"),
+) -> None:
+    """Capture filed-history and wallet/cartera evidence as one read-only operation."""
+
+    from ...application.live import capture_iva_remote_state
+
+    _emit_live_auth_preflight()
+    report = asyncio.run(
+        capture_iva_remote_state(
+            year_from=year_from,
+            year_to=year_to,
+            target_year=target_year,
+            target_period=target_period,
+            taxpayer_nif=taxpayer_nif,
+            output_root=output_root,
+        )
+    )
+    _emit(ctx, report, _iva_remote_state_capture_lines(report))
+
+
+def _iva_remote_state_capture_lines(report: IvaRemoteStateAcquisitionReport) -> tuple[str, ...]:
+    lines = [
+        *_IVA_WALLET_LIVE_SAFETY_LINES,
+        _metric_line("year_from", report.year_from),
+        _metric_line("year_to", report.year_to),
+        _metric_line("target_year", report.target_year),
+        _metric_line("target_period", report.target_period),
+        _metric_line("acquisition_manifest_id", report.acquisition_manifest_id or ""),
+        _metric_line("auth_status", report.auth.status.value),
+        _metric_line("auth_outcome", report.auth.outcome_mode.value),
+        _metric_line("auth_outcome_label", _live_iva_outcome_label(report.auth.outcome_mode)),
+        _metric_line("auth_failure_mode", report.auth.failure_mode.value if report.auth.failure_mode else ""),
+        _metric_line("auth_failure_type", report.auth.failure_type or ""),
+        _metric_line("auth_provider_kind", report.auth.provider_kind or ""),
+        _metric_line("auth_reused_persisted_session", report.auth.reused_persisted_session),
+        _metric_line("auth_fresh", report.auth.fresh),
+        _metric_line("filed_history_succeeded", report.filed_history_succeeded),
+        _metric_line("wallet_succeeded", report.wallet_succeeded),
+        _metric_line("output_root", report.output_root),
+    ]
+    for outcome in report.outcomes:
+        calculation_count = (
+            outcome.calculation_observation_count if outcome.calculation_observation_count is not None else ""
+        )
+        lines.append(
+            _metric_line(
+                "surface_outcome",
+                "\t".join(
+                    (
+                        outcome.surface.value,
+                        f"status={outcome.status.value}",
+                        f"outcome={outcome.outcome_mode.value}",
+                        f"outcome_label={_live_iva_outcome_label(outcome.outcome_mode)}",
+                        f"failure_mode={outcome.failure_mode.value if outcome.failure_mode else ''}",
+                        f"failure_type={outcome.failure_type or ''}",
+                        f"captured_count={outcome.captured_count if outcome.captured_count is not None else ''}",
+                        f"calculation_observation_count={calculation_count}",
+                    )
+                ),
+            )
+        )
+    return tuple(lines)
 
 
 @filed_app.command("list", help=tr("cli.app.live.filed.list_help"))
@@ -1352,6 +1499,7 @@ __all__ = [
     "filed_list_cmd",
     "iva_wallet_app",
     "iva_wallet_capture_history_cmd",
+    "iva_wallet_capture_remote_state_cmd",
     "iva_wallet_history_cmd",
     "iva_wallet_pull_cmd",
     "portals_app",
