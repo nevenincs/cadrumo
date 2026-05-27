@@ -4052,3 +4052,108 @@ citations. Schema coupling invariant is tight. G2, G5, G6 gates all satisfied.
 Oracle from published ECB EXR data satisfies no-tautological-calculation-tests.
 G4 locale gate: no yml mutation across any of the 5 commits. Two minor
 non-blocking follow-ups logged.
+
+---
+
+## Task #124 — W12.P61.S277 typed-boundary warmup (1515ec548 + 621f8b83b + 487642ce3)
+
+### Commits reviewed
+
+- `1515ec548` — replace `_parse_json_object_options` with `_parse_typed_cli_observations`
+- `621f8b83b` — regression tests for `_parse_typed_cli_observations`
+- `487642ce3` — exec record + plan closure
+
+### G2 compliance
+
+The UNTYPED_BOUNDARY site is eliminated. `_parse_json_object_options()` returning
+`tuple[dict[str, object], ...]` is fully removed — no remaining callers anywhere in
+`src/aeat/`. The replacement `_parse_typed_cli_observations[ObservationT: BaseModel]`
+accepts `model=` and validates each JSON string via `model.model_validate_json(raw)`.
+
+`PerModeloAggregationCommand` is now constructed directly with typed observation
+tuples (`RetencionObservation`, `CounterpartObservation`, `ForeignAssetIngestObservation`)
+rather than going through a `model_validate_json(json.dumps({...}))` indirection.
+All three types are correctly imported from `aeat.application.aggregation`.
+
+The `dict[str, object]` occurrences remaining in `_modelo.py` are all serialisation
+payload helpers (`_work_unit_payload`, `_verification_report_payload`, etc.) —
+these are S278 scope (output direction), not this step.
+
+### PEP 695 type parameter syntax
+
+`[ObservationT: BaseModel]` uses PEP 695 syntax, valid from Python 3.12+.
+The project targets Python 3.13 (confirmed by the test runner: Python 3.13.11).
+Correct choice — avoids the `TypeVar` boilerplate and satisfies ruff UP047/UP049.
+
+### G4 — locale scaffold compliance
+
+`cli.app.modelo.aggregate.json_validation_error` was added via
+`python -m aeat.locales scaffold` as documented in the step record. Verified:
+en.yml carries prose (`{flag} value is not a valid observation object: {details}.`);
+es/ca/hu carry scaffold stubs (full key path as placeholder). Structural addition
+via scaffold, not hand-edit. G4 satisfied.
+
+### Regression tests (621f8b83b)
+
+Four tests, all exercising `_parse_typed_cli_observations` directly (unit-level,
+no CLI runner overhead):
+
+- `test_parse_typed_cli_observations_round_trips_valid_json` — constructs a full
+  `RetencionObservation` payload; asserts typed fields including `RetencionScheme`
+  StrEnum coercion from JSON string. Genuine round-trip.
+- `test_parse_typed_cli_observations_rejects_invalid_json_syntax` — `{not: json}`
+  must raise `typer.BadParameter`.
+- `test_parse_typed_cli_observations_rejects_non_object_json` — JSON array must
+  raise `typer.BadParameter` (distinct code path from syntax error).
+- `test_parse_typed_cli_observations_rejects_schema_violation` — object missing
+  required `scheme` field must raise `typer.BadParameter` (pydantic `ValidationError`
+  path).
+
+All 4 pass in 1.55s. G6 gate: the three error-path tests collectively serve as the
+anti-tautology proof — if the function stopped raising `BadParameter` on bad input
+any of the three would fail. No tautological assertions.
+
+### Minor observations (non-blocking)
+
+- The `_ = _typer` line in `test_parse_typed_cli_observations_round_trips_valid_json`
+  is an unused-import suppressor for a `typer` import that is only used in the other
+  three tests. The import itself is at function scope in each test, so the suppressor
+  is redundant and could be deleted; this is cosmetic, not a correctness issue.
+- The step record notes two pre-existing test failures
+  (`test_work_calculate_binding_help_points_at_bindings_list`,
+  `test_period_token_error_enumerates_modelo_specific_tokens`) unrelated to S277.
+  These are pre-existing and not introduced by this step.
+
+### Scalability assessment for S278-S280
+
+S277 established the **input-direction** pattern: parse raw CLI strings into typed
+pydantic models at the CLI boundary. This generic is **not reusable** for S278/S279
+which are **output-direction** (functions returning `dict[str, object]` to the CLI
+emitter). Coder2 must understand:
+
+- **S278 pattern** (14 CLI payload functions): define an `OutputSchema` subclass in
+  `src/aeat/entrypoints/cli/_modelo_payloads.py` (the established home for these —
+  `WorkUnitPayload`, `VerificationReportPayload`, etc. are there). Replace the
+  `-> dict[str, object]` function with `-> TheTypedPayload`. The emitter already
+  handles `OutputSchema` instances. One `OutputSchema` subclass per payload shape.
+- **S279 pattern** (10 application payload functions): same principle but in
+  `src/aeat/application/` — typed return models, not `dict[str, object]`. These
+  may need new pydantic models in the relevant `_models.py` file per subpackage.
+- **S280 pattern** (14 `cast()` sites): each site must be individually assessed.
+  `cast()` in `workflow/_adapters.py` lines 107/112/141/147/203/204` is likely
+  third-party adapter coercion — inline documentation is the correct resolution
+  per `aeat-calculation-grounding`. `registry/_schema.py` casts may be
+  replaceable with typed constructors.
+
+The S277 generic is not the S278/S279 template. Coder2 should follow the
+`_modelo_payloads.py` `OutputSchema` pattern for S278, not adapt the input-direction
+generic.
+
+### Verdict
+
+**APPROVE.** G2 satisfied — old untyped function fully deleted, no remaining callers.
+G4 satisfied — locale key added via scaffold. G6 satisfied — four regression tests,
+three covering error paths as anti-tautology proof. PEP 695 syntax correct for
+Python 3.13. Pattern is sound and scalable to S278 with the caveat that S278/S279
+are output-direction and require `OutputSchema` subclasses, not the input-direction
+generic from S277. Two non-blocking cosmetic observations noted.
