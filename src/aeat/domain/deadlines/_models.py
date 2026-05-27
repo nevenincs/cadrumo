@@ -149,6 +149,32 @@ class IrpfEstimationRegime(StrEnum):
     OBJETIVA = "objetiva"
 
 
+class IrpfSpecialRegime(StrEnum):
+    """IRPF special-regime category for natural persons.
+
+    Most taxpayers file under the general IRPF regime. The ``IMPATRIADO``
+    value represents the régimen especial aplicable a los trabajadores
+    desplazados a territorio español (LIRPF Art. 93, "Ley Beckham"),
+    introduced by Ley 62/2003 and extended by Ley 26/2014. Under this
+    regime the taxpayer files Modelo 151 (not Modelo 100) and is taxed
+    at the flat IRNR rate on Spanish-source income.
+
+    Grounded in LIRPF Ley 35/2006 Art. 93 (BOE-A-2006-20764) and
+    RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820).
+
+    Attributes:
+        GENERAL: Standard IRPF — files Modelo 100, subject to the
+            progressive tarifa general / del ahorro.
+        IMPATRIADO: Régimen especial impatriados (Art. 93 LIRPF) —
+            files Modelo 151, taxed at the flat IRNR rate. The regime
+            has a six-year window triggered by the opt-in election date
+            (``special_regime_start_date`` on the profile).
+    """
+
+    GENERAL = "general"
+    IMPATRIADO = "impatriado"
+
+
 class ObligationStatus(StrEnum):
     """Status of a single :class:`ModeloDeadline` against a reference date.
 
@@ -263,6 +289,16 @@ class TaxpayerProfile(BaseModel):
         enrollment: AEAT enrollment facts that can change filing cadence.
         notes: Free-form notes for the user. Never consumed by the
             engine.
+        irpf_special_regime: The IRPF special regime in effect for
+            this taxpayer. ``None`` when undeclared (treated as
+            ``GENERAL`` by engine consumers). ``IMPATRIADO`` activates
+            the Ley Beckham path (LIRPF Art. 93): the CLI refuses
+            Modelo 100 in favour of Modelo 151 and the obligation
+            engine suppresses Modelo 100 deadlines.
+        special_regime_start_date: The date of the opt-in election for
+            the special regime. Required to compute the six-year window
+            for ``IMPATRIADO`` (RIRPF Art. 116). ``None`` when
+            undeclared or when ``irpf_special_regime`` is ``GENERAL``.
     """
 
     model_config = _STRICT_FROZEN
@@ -296,6 +332,8 @@ class TaxpayerProfile(BaseModel):
     vivienda_office_office_m2: Decimal | None = None
     iae_epigraph: str = ""
     notes: str = ""
+    irpf_special_regime: IrpfSpecialRegime | None = None
+    special_regime_start_date: date | None = None
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod

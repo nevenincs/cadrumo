@@ -17,6 +17,7 @@ from decimal import Decimal, InvalidOperation
 from ._errors import ProfileError
 from ._models import (
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -142,6 +143,14 @@ def taxpayer_profile_from_mapping(
         vivienda_office_office_m2=_parse_decimal(canonical.get("vivienda_office.office_m2")),
         iae_epigraph=canonical.get("activities.iae_epigraph", ""),
         notes=typed.notes,
+        irpf_special_regime=_resolve_special_regime(
+            # Prefer the typed wizard answer; fall back to the canonical
+            # path-keyed value from record_to_path_values so the field is
+            # reachable from persisted facts even before a wizard question is
+            # added to the SETUP_FLOW.
+            typed.irpf_special_regime or canonical.get("irpf.special_regime", "")
+        ),
+        special_regime_start_date=_parse_date(canonical.get("irpf.special_regime_start_date")),
     )
 
 
@@ -214,3 +223,18 @@ def _resolve_iva_regime(raw: str | None, default: IVARegime) -> IVARegime:
         return default
     canonical = raw.strip().upper().replace("-", "_")
     return IVARegime(canonical)
+
+
+def _resolve_special_regime(raw: IrpfSpecialRegime | str) -> IrpfSpecialRegime | None:
+    """Project the SetupAnswers special-regime field to a typed enum or None.
+
+    A blank string means the operator has not declared a special regime
+    (equivalent to the general case); the typed ``None`` signals that
+    to downstream consumers.
+    """
+
+    if raw == "" or raw is None:
+        return None
+    if isinstance(raw, IrpfSpecialRegime):
+        return raw
+    return IrpfSpecialRegime(raw)
