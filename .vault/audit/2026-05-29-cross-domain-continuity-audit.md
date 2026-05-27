@@ -4518,3 +4518,112 @@ S305 and S306 both land cleanly against the Task #114 architecture grounding.
 | ID | Description |
 |----|-------------|
 | FU-S306-A | Annotate `all_calendars: list[dict[str, object]]` → typed payload or inline `# dict[str,Any] from pydantic model_dump` comment per `aeat-calculation-grounding` |
+
+---
+
+## Task #135 — S318 verification provenance threading (eddd19047 + 6dcc19d64 + 2d36575a9)
+
+**Review date:** 2026-05-27
+
+### Commits reviewed
+
+- `eddd19047` — S318: thread casilla legal_refs/source_refs into verification findings
+- `6dcc19d64` — S318 tests: provenance-threading integration + anti-tautology unit proofs
+- `2d36575a9` — exec record + plan step close
+
+### Option A compliance
+
+The implementation follows the mandated Option A (inline fields on the domain
+model) exactly:
+
+**Domain model (`_verification_report.py`):** `legal_refs: tuple[str, ...] = ()`
+and `source_refs: tuple[str, ...] = ()` added with empty-tuple defaults. The
+`frozen=True` + `strict=True` model config is preserved. Persisted reports
+round-trip without migration — empty-tuple defaults cover all existing blobs.
+
+**Threading path (`_actions.py`):** `_collect_revision_verification_findings`
+is refactored to load the registry snapshot directly (`authority.snapshot(...)`)
+rather than delegating to the two separate helpers
+`_required_input_casillas_for_revision` and `_verification_predicates_for_revision`.
+This gives it access to full `CasillaDefinition` objects. The refactor is
+correct — it avoids a second registry round-trip and eliminates the now-redundant
+helper call duplication. The two helper functions remain available for other
+callers; they are not deleted.
+
+`_missing_required_casilla_finding` gains a keyword-only `casilla_def:
+CasillaDefinition | None = None` parameter. When `casilla_def` is present,
+`legal_refs` and `source_refs` are populated; when absent (e.g. the registry
+lookup produced no snapshot — already blocked above), they default to empty
+tuples. The `casillas_by_id` dict is built once per verify call and passed via
+`.get(casilla_id)` — correct defensive fallback.
+
+**BLOCKING_RULE / predicate findings:** `_evaluate_verification_predicates`
+now propagates `legal_refs=tuple(str(r) for r in predicate.legal_refs)` on
+BLOCKING_RULE findings. `source_refs` is NOT threaded for predicate findings —
+`VerificationPredicateDefinition` carries `legal_refs` but no `source_refs`
+(cross-casilla predicates are policy, not casilla-source authority). This is
+the correct decision: `source_refs` on a predicate would be misleading.
+
+**Hexagonal direction:** The registry authority is accessed via
+`_authority_via_resources()` inside the application layer — this is the
+established pattern throughout `_actions.py`. No entrypoint-layer registry
+access introduced. **Clean.**
+
+**CLI emit path (`_modelo.py`):** `_verification_report_payload` emits
+`legal_refs` and `source_refs` as lists (correct — JSON arrays). 
+`_verification_report_lines` conditionally appends `finding_legal_refs` and
+`finding_source_refs` tab-separated lines when non-empty — the conditional
+guard avoids polluting output for findings with no provenance (e.g. registry
+unavailable). Both paths correct.
+
+### G6 — Tests
+
+**Integration test (`test_missing_required_casilla_finding_carries_registry_provenance`):**
+- Creates M130 work unit, calculates with casilla 02 deliberately absent,
+  runs verify, locates the `MISSING_REQUIRED_CASILLA` finding for casilla 02.
+- Asserts `finding.legal_refs` non-empty + matches `_M130_CASILLA_02_LEGAL_REFS`
+  oracle drawn from the actual TOML.
+- Asserts `finding.source_refs` non-empty + matches `_M130_CASILLA_02_SOURCE_REFS`
+  oracle.
+- Oracle values verified against
+  `src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-casillas.toml`
+  lines 12-13/25-26: exact match confirmed. This is the external authority —
+  not hand-computed from the threading code itself.
+- Real registry + real application-layer verify path. No mocks. **PASS.**
+
+**Anti-tautology unit test (`test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent`):**
+- Calls `_missing_required_casilla_finding("99", "wu-test-id", casilla_def=None)`
+  directly and asserts both `legal_refs == ()` and `source_refs == ()`.
+- This proves the threading is structural: if the integration test passes but
+  the `casilla_def` parameter were ignored (fields always empty), this unit
+  test would also pass but the integration test would fail. The two tests form
+  a complementary pair — neither alone is sufficient.
+- The naming "anti-tautology" is accurate: without this test a naive
+  implementation that always returns empty tuples would pass the unit test
+  but fail the integration test, and vice versa.
+
+Both tests pass in 29.10s. No mocks, no skip/xfail.
+
+### Minor observations (non-blocking)
+
+- The `casillas_by_id = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}`
+  dict is built once and looked up via `.get(casilla_id)`. The `.get` fallback
+  to `None` is appropriate — the same `casilla_id` was just extracted from
+  iterating `snapshot.revision.casillas`, so the fallback should never fire in
+  practice. The defensive `.get` is still correct insurance.
+- The large number of formatting-only changes in the `_actions.py` diff (line
+  wrapping, quote style) is ruff formatter output co-landing with the
+  substantive changes. Not a concern.
+
+### Verdict table
+
+| Commit | Step | Verdict | Notes |
+|--------|------|---------|-------|
+| `eddd19047` | S318 implementation | APPROVE | Option A correct; hexagonal direction clean; BLOCKING_RULE predicate legal_refs correct; source_refs omission on predicates deliberate |
+| `6dcc19d64` | S318 tests | APPROVE | Oracle from TOML; anti-tautology pair sound; real registry; no mocks |
+| `2d36575a9` | exec record + plan close | PASS | Honest step record; plan checkbox correct |
+
+**Overall: APPROVE.** S318 closes the verification provenance gap identified in
+discovery3 #121 and the Marc/Inés round-8 testimonials. Operator-facing verify
+output now carries `legal_refs` and `source_refs` per finding. Option A
+implementation matches the architecture grounding exactly.
