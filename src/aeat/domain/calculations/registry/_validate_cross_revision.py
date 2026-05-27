@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from ._errors import RegistryValidationError
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
@@ -15,6 +16,32 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "semantic_role",
     "legal_refs",
 )
+
+
+@dataclass(frozen=True, slots=True)
+class CrossRevisionCasillaDivergence:
+    """One field-level difference for a repeated casilla id."""
+
+    modelo_id: str
+    casilla_id: str
+    left_revision_id: str
+    right_revision_id: str
+    field: str
+    left_value: object
+    right_value: object
+    revisions_overlap: bool
+
+
+@dataclass(frozen=True, slots=True)
+class CrossRevisionCasillaDriftSummary:
+    """Grouped advisory drift inventory for non-overlapping revisions."""
+
+    modelo_id: str
+    left_revision_id: str
+    right_revision_id: str
+    field: str
+    drift_count: int
+    example_casilla_ids: tuple[str, ...]
 
 
 def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
@@ -66,14 +93,102 @@ def _validate_cross_revision_casilla_consistency(
 
     Per the AEAT registry design contract, a casilla id is a stable
     handle for a single legal concept within a modelo. Two
-    declarations of casilla `0700` in M100 revisions 2024 and 2025
+    declarations of casilla `0700` in two overlapping revisions
     must declare the same label, section, data_type, role, and
     legal references. Divergence is an authoring or repurposing event
     that needs explicit handling (either deprecate-and-rename or
     reconcile-to-canonical-form), never silent acceptance.
     """
 
-    failures: list[str] = []
+    failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    for divergence in _iter_cross_revision_casilla_divergences(modelos):
+        if not divergence.revisions_overlap:
+            continue
+        key = (
+            divergence.modelo_id,
+            divergence.casilla_id,
+            divergence.left_revision_id,
+            divergence.right_revision_id,
+        )
+        failures[key].append(divergence)
+    return tuple(
+        _format_cross_revision_failure(modelo_id, casilla_id, left_revision_id, divergences)
+        for (
+            modelo_id,
+            casilla_id,
+            left_revision_id,
+            _right_revision_id,
+        ), divergences in failures.items()
+    )
+
+
+def _format_cross_revision_failure(
+    modelo_id: str,
+    casilla_id: str,
+    left_revision_id: str,
+    divergences: Iterable[CrossRevisionCasillaDivergence],
+) -> str:
+    divergence_tuples = tuple(
+        (item.right_revision_id, item.field, (item.left_value, item.right_value))
+        for item in divergences
+    )
+    return (
+        f"cross-revision drift: modelo {modelo_id} casilla "
+        f"{casilla_id!r} canonical revision {left_revision_id!r} "
+        f"divergences {divergence_tuples!r}"
+    )
+
+
+def summarize_non_overlapping_cross_revision_casilla_drift(
+    modelos: Iterable[ModeloDefinition],
+    *,
+    example_limit: int = 5,
+) -> tuple[CrossRevisionCasillaDriftSummary, ...]:
+    """Return advisory drift summaries for repeated ids in non-overlapping revisions.
+
+    The snapshot-build validator raises on overlapping revision windows
+    because those revisions can apply to the same filing period. Annual
+    non-overlapping forms, such as M100, can legally evolve or repurpose
+    repeated numeric ids; this inventory keeps that drift visible without
+    turning it into a load-time error before the schema has an explicit
+    continuity/evolution contract.
+    """
+
+    if example_limit < 1:
+        raise ValueError("example_limit must be at least 1")
+
+    grouped: dict[tuple[str, str, str, str], list[str]] = defaultdict(list)
+    for divergence in _iter_cross_revision_casilla_divergences(modelos):
+        if divergence.revisions_overlap:
+            continue
+        key = (
+            divergence.modelo_id,
+            divergence.left_revision_id,
+            divergence.right_revision_id,
+            divergence.field,
+        )
+        grouped[key].append(divergence.casilla_id)
+
+    summaries: list[CrossRevisionCasillaDriftSummary] = []
+    for (modelo_id, left_revision_id, right_revision_id, field), casilla_ids in sorted(grouped.items()):
+        examples = tuple(dict.fromkeys(casilla_ids[:example_limit]))
+        summaries.append(
+            CrossRevisionCasillaDriftSummary(
+                modelo_id=modelo_id,
+                left_revision_id=left_revision_id,
+                right_revision_id=right_revision_id,
+                field=field,
+                drift_count=len(casilla_ids),
+                example_casilla_ids=examples,
+            )
+        )
+    return tuple(summaries)
+
+
+def _iter_cross_revision_casilla_divergences(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[CrossRevisionCasillaDivergence, ...]:
+    divergences: list[CrossRevisionCasillaDivergence] = []
     for modelo in modelos:
         by_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
         for revision in modelo.revisions.values():
@@ -85,25 +200,28 @@ def _validate_cross_revision_casilla_consistency(
             for index, (left_revision, left_casilla) in enumerate(occurrences[:-1]):
                 left_sig = _cross_revision_signature(left_casilla)
                 for right_revision, right_casilla in occurrences[index + 1 :]:
-                    if not _revisions_overlap(left_revision, right_revision):
-                        continue
+                    revisions_overlap = _revisions_overlap(left_revision, right_revision)
                     right_sig = _cross_revision_signature(right_casilla)
                     if right_sig == left_sig:
                         continue
-                    divergences = tuple(
-                        (right_revision.id, field, (left_value, right_value))
-                        for field, left_value, right_value in zip(
-                            _CROSS_REVISION_CASILLA_FIELDS,
-                            left_sig,
-                            right_sig,
-                            strict=True,
+                    for field, left_value, right_value in zip(
+                        _CROSS_REVISION_CASILLA_FIELDS,
+                        left_sig,
+                        right_sig,
+                        strict=True,
+                    ):
+                        if left_value == right_value:
+                            continue
+                        divergences.append(
+                            CrossRevisionCasillaDivergence(
+                                modelo_id=modelo.id,
+                                casilla_id=casilla_id,
+                                left_revision_id=left_revision.id,
+                                right_revision_id=right_revision.id,
+                                field=field,
+                                left_value=left_value,
+                                right_value=right_value,
+                                revisions_overlap=revisions_overlap,
+                            )
                         )
-                        if left_value != right_value
-                    )
-                    failures.append(
-                        f"cross-revision drift: modelo {modelo.id} casilla "
-                        f"{casilla_id!r} canonical revision {left_revision.id!r} "
-                        f"divergences {divergences!r}"
-                    )
-                    continue
-    return tuple(failures)
+    return tuple(divergences)
