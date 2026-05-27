@@ -781,3 +781,141 @@ here; noting for completeness.
   unsecured-backend workaround with a real `isolated_runtime_profile` integration
   test, after the underlying storage-layer regression is resolved. The current test
   violates the real-adapters quality gate.
+
+---
+
+## W07.P31 Cluster T fix commit review (mid-wave, not closing S120)
+
+Three commits reviewed. The fix targets the mínimo del contribuyente silent-zero
+root cause in M100 revision 2024.
+
+### `01ac9d698` S113+S114 — trace + fix
+
+**ACCEPT.**
+
+**Root cause analysis soundness:** The S113 exec record traces the zero back to
+`_formula_runtime.py:352` where the engine's `_initial_values` initialises every
+`input_kind=manual` casilla to `Decimal("0")` when absent from the operator's inputs.
+Casillas 0511 and 0512 were `input_kind=manual` with no formula and no binding in the
+2024 revision. No operator supplies them because they are statutory constants, not
+operator-entered fields. The chain `0511 → 0519 → 0521 → 0530` collapses to zero,
+making the mínimo-personal deduction from cuota zero. The cuota is not reported as
+zero but is over-stated because the statutory deduction is skipped. The distinction
+matters: the fix is a registry authoring gap, not an engine defect.
+
+Anna's hypothesis ("missing personal-data bindings in 2024") is refined correctly:
+the 2025 personal-data bindings (birth_date, marital_status, disability_grade,
+family_unit) do not feed `0511` in 2025 either — they support the
+disability-adjusted and family-minimum extensions that 2024 does not yet model.
+The 2024 gap is specifically the flat statutory parameter.
+
+**Legal grounding:** Parameter `renta-2024-minimo-contribuyente-base-2024` carries:
+- `value = "5550"` — correct per LIRPF Art. 57 (unchanged 5,550 EUR for 2024,
+  confirmed by BOE Orden HAC-563-2024 cited in `source_refs`).
+- `valid_from = 2024-01-01`, `valid_to = 2024-12-31` — correct temporal scope.
+- `legal_refs = ["ley-35-2006:art-57"]` — correct citation.
+- `source_refs = ["aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]`
+  with `required_text = ["Mínimo del contribuyente"]`.
+
+Both formula files (0166 estatal, 0167 autonómica) target 0511/0512 respectively
+via `lookup_parameter`, follow the `lookup_parameter` pattern from the 2025
+revision precedent, and cite `ley-35-2006:art-56` + `art-57` for estatal,
+adding `art-74` for the autonómica — correct (Art. 74 is the autonomic equivalent).
+Casilla definitions for 0511/0512 updated from `input_kind=manual` to
+`input_kind=computed` with formula backref — correct; these are now engine-derived
+fields.
+
+**Commit message verification arithmetic** (Comunidad Valenciana, 27,000 EUR base):
+- Escala estatal on 27,000: 1,182.75 + 930.00 + 1,020.00 = 3,132.75 ✓
+- Mínimo 5,550 @ 9.5% = 527.25 ✓
+- Cuota after: 3,132.75 − 527.25 = 2,605.50 ✓ — cross-check is sound.
+
+**S113+S114 multi-step co-landing note:** Two Steps in one commit. FU-W07-A for W09
+(convention note only).
+
+### `65a0bc0dd` S115 — regression tests
+
+**ACCEPT.**
+
+Four tests. The expected values are derived from published LIRPF 2024 tables
+and independently verified by the reviewer:
+
+- `_EXPECTED_CUOTA_INTEGRA_ESTATAL = Decimal("3872.50")`: LIRPF Art. 62-63 escala
+  estatal on 35,400 EUR (4,399.75) minus mínimo tarifa (5,550 × 9.5% = 527.25).
+  4,399.75 − 527.25 = 3,872.50 ✓ — independently verified against the
+  published escala estatal brackets.
+- `_EXPECTED_CUOTA_INTEGRA_AUTONOMICA = Decimal("4067.28")`: LIRPF Art. 74-75,
+  Cataluña 2024 escala (Ley 5/2020): 4,650.03 − 582.75 = 4,067.28 ✓ —
+  independently verified against the Cataluña 2024 autonomic brackets.
+- `_EXPECTED_MINIMO_CONTRIBUYENTE = Decimal("5550.00")`: Art. 57 flat value ✓.
+
+The test file header cites all four legal authorities: LIRPF Art. 62-63, Art. 57,
+Art. 74-75, and AEAT Renta 2024 Manual worked examples plus BOE Orden HAC-563-2024.
+No hand-computed Decimal expectations: the derivation is documented inline in the
+module-level comment block so any reviewer can reproduce the arithmetic without
+running the engine. Passes the no-tautological-calculation-tests rule.
+
+`test_m100_2024_cuota_integra_estatal_is_positive` is the weakest test (guard only:
+assert > 0). It is not tautological — it would have failed before S114 (cuota was
+non-zero but the mínimo deduction was missing, not zero). Its primary value is as a
+sentinel that re-fires if the mínimo silently drops again. Acceptable as a complement
+to the precise-value tests.
+
+### `a9ff35af9` — S113/S114/S115 step records
+
+**ACCEPT.**
+
+Three exec step records written at `.vault/exec/2026-05-26-cross-domain-continuity/`.
+No functional changes. Records use the correct `W07-P31-S113/S114/S115` filename
+pattern. The S113 record includes the full formula chain trace, the before/after
+table, and the binding-gap assessment — a well-formed S113 (trace-only) record.
+
+---
+
+### Cross-commit summary — W07.P31 Cluster T
+
+| Commit | Step(s) | Verdict |
+|---|---|---|
+| `01ac9d698` | S113+S114 | ACCEPT-WITH-FOLLOWUP (FU-W07-A) |
+| `65a0bc0dd` | S115 | ACCEPT |
+| `a9ff35af9` | S113-S115 records | ACCEPT |
+
+### Cluster T scope assessment — partial closure
+
+This Step cluster closes the **base mínimo del contribuyente** (LIRPF Art. 57 flat
+5,550 EUR) gap in M100 revision 2024. The cuota íntegra is now correctly reduced by
+the mínimo-personal deduction for a single taxpayer with no family minimum extensions.
+
+**Remaining Cluster T territory NOT closed by S113-S115:**
+
+Three LIRPF Art. 57-61 mínimo extensions are not modelled in revision 2024:
+
+- **Age supplement (Art. 57.2 / Art. 57.3):** taxpayer aged 65-74 adds +1,150 EUR
+  to the mínimo del contribuyente (total 6,700 EUR); aged ≥75 adds +1,400 EUR
+  more (total 8,100 EUR). Pere Rosselló is a pensioner — age supplement likely
+  applies but is not computed.
+- **Family minimum — descendants (Art. 58):** mínimo for dependent children under
+  25 in the family unit. Not relevant for the three Cluster T personas as described
+  but absent from the registry model.
+- **Family minimum — ascendants (Art. 59):** mínimo for dependent ascendants over
+  65. Potentially relevant to Pere.
+
+None of these extensions were modelled in the S115 test profile (single taxpayer,
+no family). The exec record (S113) does not address whether they are out-of-scope
+by design or deferred to a subsequent Step.
+
+**Recommendation (FU-W07-B):** Add a plan Step under W07 explicitly scoping the
+age-supplement extensions (Art. 57.2-57.3) for the M100 2024 revision, OR document
+in the existing plan that the age and family-minimum extensions are deferred to W08/W09
+with a noted limitation: personas aged ≥65 (including Pere) will still receive an
+under-stated cuota until those parameters are added. The absence of explicit scope
+documentation creates ambiguity about whether Cluster T is "resolved" for the
+affected personas.
+
+**Follow-up Steps for W09:**
+
+- FU-W07-A: Convention note — S113+S114 co-landed in `01ac9d698` (no code change).
+- FU-W07-B: Add plan Step (or explicit deferred-scope note) for Art. 57.2-57.3
+  age supplement + Art. 58-59 family minimum extensions in M100 2024 revision.
+  Current fix closes the base mínimo gap only; ≥65 persona profiles remain
+  under-stated.
