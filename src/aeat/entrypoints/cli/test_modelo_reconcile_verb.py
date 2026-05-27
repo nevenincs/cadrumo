@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.domain.modelos._codes import ModeloCode
@@ -18,6 +18,7 @@ from aeat.domain.modelos._repository import WorkUnitCatalogueRepository, upsert_
 from aeat.domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from aeat.entrypoints.cli import app
 from aeat.tests import FIXTURES_DIR
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -30,10 +31,12 @@ def cli_runner() -> CliRunner:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'reconcile-cli.db').as_posix()}")
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("operator"),
+    ):
         try:
             workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
             yield
