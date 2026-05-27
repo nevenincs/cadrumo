@@ -19,11 +19,13 @@ from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql import dispose_engine
 from aeat.application.evidence import EvidenceBundleService
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import Settings
+from aeat.core.config import Settings, override_settings
 from aeat.core.i18n import tr
 from aeat.entrypoints.cli import app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -34,14 +36,14 @@ def cli_runner() -> CliRunner:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-
+def _isolated_backend(tmp_path: Path) -> Iterator[Path]:
     audit_dir = tmp_path / "audit"
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'audit-verbs.db').as_posix()}")
-    monkeypatch.setenv("AEAT_AUDIT_DIR", str(audit_dir))
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        override_settings(aeat_audit_dir=audit_dir),
+        profile_create_storage_span("operator"),
+    ):
         try:
             workflow_state_repository().update(lambda state: register_minimal_profile(state, profile_id="operator"))
             yield audit_dir
@@ -102,8 +104,13 @@ def test_audit_export_writes_zip_archive(cli_runner: CliRunner, tmp_path: Path) 
     result = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "audit", "export", bundle_id,
-            "--output", str(output),
+            "app",
+            "modelo",
+            "audit",
+            "export",
+            bundle_id,
+            "--output",
+            str(output),
             "--force-incomplete",
         ],
     )
@@ -122,9 +129,7 @@ def test_audit_export_refuses_incomplete_without_force(cli_runner: CliRunner, tm
 
     bundle_id = _seed_bundle()
     output = tmp_path / "bundle.zip"
-    result = cli_runner.invoke(
-        app, ["app", "modelo", "audit", "export", bundle_id, "--output", str(output)]
-    )
+    result = cli_runner.invoke(app, ["app", "modelo", "audit", "export", bundle_id, "--output", str(output)])
     assert result.exit_code != 0, result.output
     assert not output.exists()
 
@@ -147,18 +152,12 @@ def test_audit_replay_reports_verification_state_without_mutation(cli_runner: Cl
     second = cli_runner.invoke(app, ["app", "modelo", "audit", "replay", bundle_id])
     assert second.exit_code == 0, second.output
 
-    first_state = next(
-        line for line in first.output.splitlines() if line.startswith("verification_state\t")
-    )
-    second_state = next(
-        line for line in second.output.splitlines() if line.startswith("verification_state\t")
-    )
+    first_state = next(line for line in first.output.splitlines() if line.startswith("verification_state\t"))
+    second_state = next(line for line in second.output.splitlines() if line.startswith("verification_state\t"))
     assert first_state == second_state
 
 
-def test_audit_workflow_end_to_end_show_check_export_replay(
-    cli_runner: CliRunner, tmp_path: Path
-) -> None:
+def test_audit_workflow_end_to_end_show_check_export_replay(cli_runner: CliRunner, tmp_path: Path) -> None:
     """Drive the full ratified audit workflow over a single bundle:
     show → check → export → replay. The four verbs share a state-free
     contract — each reads from the persisted bundle catalogue, so the
@@ -177,8 +176,13 @@ def test_audit_workflow_end_to_end_show_check_export_replay(
     export = cli_runner.invoke(
         app,
         [
-            "app", "modelo", "audit", "export", bundle_id,
-            "--output", str(output),
+            "app",
+            "modelo",
+            "audit",
+            "export",
+            bundle_id,
+            "--output",
+            str(output),
             "--force-incomplete",
         ],
     )
@@ -190,12 +194,8 @@ def test_audit_workflow_end_to_end_show_check_export_replay(
     replay = cli_runner.invoke(app, ["app", "modelo", "audit", "replay", bundle_id])
     assert replay.exit_code == 0, replay.output
 
-    check_state = next(
-        line for line in check.output.splitlines() if line.startswith("verification_state\t")
-    )
-    replay_state = next(
-        line for line in replay.output.splitlines() if line.startswith("verification_state\t")
-    )
+    check_state = next(line for line in check.output.splitlines() if line.startswith("verification_state\t"))
+    replay_state = next(line for line in replay.output.splitlines() if line.startswith("verification_state\t"))
     assert check_state == replay_state
 
 
