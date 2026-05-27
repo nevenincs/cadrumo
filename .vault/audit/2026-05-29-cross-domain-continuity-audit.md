@@ -17,6 +17,20 @@ related:
 
 # `cross-domain-continuity` audit: `persona-fleet round 7`
 
+<!-- STANDING REVIEW GATES — enforced on every commit review from 2026-05-27 onward.
+     Apply retroactively: prior violations become W09 follow-up Steps. -->
+
+## Standing review gates (active from 2026-05-27)
+
+| Gate | Description | Verdict on violation |
+|------|-------------|----------------------|
+| G1 | No `os.environ`/`os.getenv` in production code; use pydantic-settings `Settings` | BLOCK or W09 follow-up |
+| G2 | No `dict[str, Any]`/`dict[str, object]` at persistence, wire, CLI, config, or fixture boundaries; typed pydantic throughout | BLOCK or W09 follow-up |
+| G3 | All user-facing messages via `tr()`; no hardcoded f-string raise sites reachable by operator; no mixed-language string fragments | Flag; W09 follow-up |
+| G4 | Locale yml structural edits (add/remove keys) only via `scaffold` + `audit` CLI; prose fills allowed by hand | BLOCK |
+| G5 | No duplication, shims, re-exports, deprecation aliases, or compatibility-only code | BLOCK or W09 follow-up |
+| G6 | No tautological tests; every calculation test requires external-authority expected value or anti-tautology proof; `monkeypatch` against application logic blocked | BLOCK |
+
 ## Scope
 
 Fifth sequential persona-fleet audit round for the cross-domain-continuity campaign.
