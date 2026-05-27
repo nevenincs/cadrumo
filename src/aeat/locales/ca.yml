@@ -710,6 +710,16 @@ cli:
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
           a partir de l'historial local del Model 303.
         group_help: Ordres de saldo local de la cartera de compensació IVA.
+        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
+        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
+        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
+        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
+        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
+        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
+        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
+        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       project:
@@ -2232,6 +2242,7 @@ errors:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor
       assignat.
+    bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
