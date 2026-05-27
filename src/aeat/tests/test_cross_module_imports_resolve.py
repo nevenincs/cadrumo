@@ -249,7 +249,6 @@ def test_at_least_one_aeat_cross_module_import_was_collected() -> None:
 # the discipline). Trim caps as packages clean up; the W09.P20 close
 # state is an empty mapping.
 _INIT_MISSING_FROM_ALL_BASELINE: dict[str, int] = {
-    "aeat/application/filing/__init__.py": 12,
     "aeat/application/live/__init__.py": 34,
     "aeat/application/overview/__init__.py": 17,
     "aeat/application/registry/__init__.py": 27,

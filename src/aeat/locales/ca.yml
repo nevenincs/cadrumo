@@ -2202,7 +2202,7 @@ errors:
       seguretat.
   calc:
     binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
-    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_binding_value_missing: La vinculació {binding_id} no té cap valor assignat.
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que

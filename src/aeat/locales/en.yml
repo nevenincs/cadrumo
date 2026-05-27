@@ -2119,7 +2119,7 @@ errors:
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
     binding_value_missing: Binding {binding_id} has no supplied value.
-    bound_casilla_binding_value_missing: errors.calc.bound_casilla_binding_value_missing
+    bound_casilla_binding_value_missing: Binding {binding_id} has no supplied value.
     bracket_negative_base: Bracket parameter {parameter_id} cannot accept negative
       base {base}.
     bracket_no_coverage: Bracket parameter {parameter_id} has no entry covering base
