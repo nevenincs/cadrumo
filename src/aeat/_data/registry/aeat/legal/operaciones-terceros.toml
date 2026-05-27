@@ -1,3 +1,23 @@
+[legal."rd-1065-2007:art-31"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1065-2007-art-31.html#a31"
+document_id = "BOE-A-2007-15984"
+article = "31"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984#a31"
+published_at = 2007-09-05
+effective_from = 2008-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "RGAT art 31: obligacion de informar sobre las operaciones con terceras personas. Base reglamentaria del Modelo 347 (declaracion anual de operaciones con terceras personas, umbral de 3.005,06 EUR / contraparte / ejercicio)."
+required_text = [
+    "deberán presentar una declaración anual relativa a sus operaciones",
+    "con terceras personas",
+    "3.005,06 euros",
+]
+
 [legal."orden-eha-3012-2008:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"
