@@ -5,7 +5,8 @@ tags:
 date: '2026-05-27'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
-  - '[[2026-05-27-live-iva-compensation-wallet-w07-p01-s01-acquisition-manifest]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w07-p17-s60-acquisition-manifest]]'
+  - '[[2026-05-27-live-iva-compensation-wallet-w07-p17-s61-acquisition-manifest-reload]]'
 ---
 
 # `live-iva-compensation-wallet` Code Review

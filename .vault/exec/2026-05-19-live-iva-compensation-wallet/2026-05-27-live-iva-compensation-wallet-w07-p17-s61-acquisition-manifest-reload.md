@@ -3,12 +3,12 @@ tags:
   - '#exec'
   - '#live-iva-compensation-wallet'
 date: '2026-05-27'
-step_id: 'W07.P01.S02'
+step_id: 'W07.P17.S61'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
 ---
 
-# `live-iva-compensation-wallet` `W07.P01.S02`
+# `live-iva-compensation-wallet` `W07.P17.S61`
 
 Extended stored remote IVA evidence reload to include acquisition manifests.
 
