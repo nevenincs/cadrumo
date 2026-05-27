@@ -746,6 +746,18 @@ cli:
         plazo_vencido_warning: cli.app.modelo.work.plazo_vencido_warning
         year_help: cli.app.modelo.work.year_help
         year_out_of_range: cli.app.modelo.work.year_out_of_range
+        rescate_plan_pensiones_capital_help: 'A nyugdíj-megtakarítás tőke formájú visszaváltásának bruttó összege (LIRPF 12. átmeneti rendelkezés). Használd együtt a --rescate-plan-pensiones-aportaciones-pre-2007 és --rescate-plan-pensiones-aportaciones-totales opciókkal, hogy az asszisztens kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'A nyugdíjtervbe 2006. dec. 31-ig befizetett hozzájárulások (a LIRPF 12. átmeneti rendelkezés szerinti arányosítás alapja). Szükséges a --rescate-plan-pensiones-capital és --rescate-plan-pensiones-aportaciones-totales opciókkal együtt.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'A nyugdíjterv összes hozzájárulása (a LIRPF 12. átmeneti rendelkezés szerinti arányosítás nevezője). Szükséges a --rescate-plan-pensiones-capital és --rescate-plan-pensiones-aportaciones-pre-2007 opciókkal együtt.'
+        rescate_plan_pensiones_casilla_not_found: 'A --rescate-plan-pensiones-capital nem támogatott ennél a modelo-revíziónál; nincs deklarált LIRPF 12. átmeneti rendelkezés szerinti munkajövedelem-csökkentési casilla. Add meg az értékeket közvetlenül a --casilla opcióval.'
+        rescate_plan_pensiones_incomplete: 'A --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 és --rescate-plan-pensiones-aportaciones-totales opciókat együtt kell megadni.'
+        rescate_plan_pensiones_not_decimal: 'A --rescate-plan-pensiones-* értékeknek decimális összegeknek kell lenniük.'
+        sal_beneficio_neto_help: 'A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015. törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével korlátozva. Használd a --sal-reserva-dotada és --sal-capital-social opciókkal együtt.'
+        sal_reserva_dotada_help: 'Korábbi években felhalmozott külön tartalék (44/2015. törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.'
+        sal_capital_social_help: 'A munkavállalói tulajdonú társaság jegyzett tőkéje (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla, amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_reserva_casilla_not_found: 'A --sal-beneficio-neto nem támogatott ennél a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.'
+        sal_reserva_incomplete: 'A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social opciókat együtt kell megadni.'
+        sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell lenniük.'
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date
@@ -1272,6 +1284,8 @@ cli:
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Frissítendő locale kód.'
+    remove_key_help: 'Eltávolítandó pontozott locale-kulcs.'
   log_levels:
     errors:
       flags_mutually_exclusive: cli.log_levels.errors.flags_mutually_exclusive
@@ -1453,7 +1467,6 @@ cli:
       work_units_empty: cli.overview.status.work_units_empty
       work_units_present: cli.overview.status.work_units_present
       work_units_present_with_discarded: cli.overview.status.work_units_present_with_discarded
-      filing_obligation_multiple_pagadores: cli.overview.status.filing_obligation_multiple_pagadores
     status_help: cli.overview.status_help
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
