@@ -480,6 +480,9 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S264` - FU-W08-B remove redundant _activate_subcommand_output_language wrapper in src/aeat/entrypoints/cli/_config/__init__.py; `it is now a one-line shim around the shared helper after the W08.P36 promotion landed; collapse to direct calls; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W09.P41.S265` - FU-W08-C drop unsecured-backend AEAT_SECRET_STORE_BACKEND=unsecured and AEAT_ALLOW_UNENCRYPTED=1 monkeypatches from _isolated_state autouse fixture in test_output_language_parity.py; `--help never reaches storage so these env-vars serve no purpose; `src/aeat/entrypoints/cli/test_output_language_parity.py`.
 - [ ] `W09.P41.S266` - FU-W08-D broader --output-language surface sweep beyond the 10 commands covered by S144 regression test; `identify every Typer command across the CLI and confirm flag presence; expand the test to enforce parity over the full set; `src/aeat/entrypoints/cli/`.
+- [ ] `W09.P41.S267` - FU-S208-A verify all isolated_profile_storage_root callers pass with file-backend change and document aeat_dev_test_database_password CI dependency in secure_sql.py docstring; `src/aeat/tests/secure_sql.py`.
+- [ ] `W09.P41.S268` - FU-W10-A extract HAC/242/2025 art-8 text into corpus HTML and add required_text to orden-hac-242-2025:art-8 entry in irpf.toml; `src/aeat/_data/registry/aeat/legal/irpf.toml`.
+- [ ] `W09.P41.S269` - FU-W10-B oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar and correct if needed; `src/aeat/_data/registry/aeat/modelos/202/revisions/2025-y-siguientes/deadline_windows/`.
 
 ### Phase `W09.P42` - twin function merge
 

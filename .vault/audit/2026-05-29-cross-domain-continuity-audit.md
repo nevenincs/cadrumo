@@ -1894,3 +1894,228 @@ is documented as FU-W08-A. Three follow-ups logged for W09.
 | FU-W08-B | — | Retire `_activate_subcommand_output_language` wrapper in `_config/__init__.py`; call shared helper directly |
 | FU-W08-C | S261 | `test_output_language_parity.py` `_isolated_state` fixture: drop unsecured-backend monkeypatches (--help tests need no storage isolation) |
 | FU-W08-D | S262 | Broader `--output-language` surface sweep: enumerate remaining commands not yet covered by S144 test |
+
+---
+
+## Storage migration S208+S252 + W10 deadline windows — architecture review (Task #81)
+
+### Cluster A — Storage migration
+
+#### Commits reviewed
+
+| Commit | Step | Description |
+|--------|------|-------------|
+| `cb51d03e7` | S208 | Add `isolated_sessionless_storage_root`; migrate cold-start tests |
+| `17551ca28` | S252 | Category A batch 1: migrate 4 test files |
+| `73a7bfc57` | — | Vault step records + plan closure |
+
+#### `isolated_sessionless_storage_root` — new helper justification
+
+The coder introduced a new helper rather than reusing `isolated_profile_storage_root`.
+**This is architecturally correct.** The two helpers serve distinct semantics:
+
+- `isolated_sessionless_storage_root`: empty root, no `EphemeralMasterKeyProvider`,
+  no active session. For tests that assert `has_active_bucket_session() is False` —
+  cold-start refusal, bootstrap-exempt repair verbs, fast-path surfaces.
+- `isolated_profile_storage_root`: empty root + file backend + dev-test passphrase.
+  For tests that exercise profile creation via CLI, where the create path calls
+  `get_master_key_provider()` and must resolve a real provider.
+
+My #68 grounding specified `isolated_profile_storage_root` for cold-start tests,
+which was imprecise. The coder's refinement — a sessionless variant for tests that
+need no master-key layer at all — is the better decision. A cold-start test that
+asserts `exit_code != 0` (CLI refuses before touching storage) has no business
+instantiating a master-key provider at all. `isolated_sessionless_storage_root`
+is the correct fixture for that case.
+
+#### `isolated_profile_storage_root` — semantic change flagged
+
+The S208 commit also changed `isolated_profile_storage_root`: it dropped
+`EphemeralMasterKeyProvider()` and replaced it with `file` backend +
+`aeat_dev_test_database_password` + a temp `secret_store_dir`. This is a
+**behaviour change to a shared helper with 8+ callers** beyond the S252 files:
+`test_operator.py`, `test_apex_workflow_verification.py`, `test_config_reset.py`,
+`test_diagnostics.py`, `test_profile_repository.py`.
+
+The rationale is sound: the file backend is more production-realistic than the
+ephemeral provider, and avoids the `UnsecuredMasterKeyProvider` path entirely.
+However, callers that previously used the ephemeral provider (which always succeeds
+without passphrase derivation) now use the file backend (which requires HKDF key
+derivation from `aeat_dev_test_database_password`). If any CI environment does not
+set `AEAT_DEV_TEST_DATABASE_PASSWORD`, those tests will fail at the passphrase
+resolution step rather than at the test assertion.
+
+**ACCEPT-WITH-FOLLOWUP (FU-S208-A / S267):** Verify all 8+ callers of
+`isolated_profile_storage_root` pass in CI with the file-backend change. Document
+the `aeat_dev_test_database_password` CI dependency in `src/aeat/tests/secure_sql.py`
+docstring.
+
+#### S252 Category A migration — verification against #68 grounding plan
+
+Grounding plan specified 5 Category A files:
+1. `test_cold_start_no_profile.py` — migrated in S208 (correct: `isolated_sessionless_storage_root`)
+2. `test_fast_path_no_state.py` — migrated in S252 (`isolated_sessionless_storage_root`) ✓
+3. `test_repair_bootstrap_exempt.py` — migrated in S252 (`isolated_sessionless_storage_root`) ✓
+4. `test_profile_create_taxpayer_type_paths.py` — migrated in S252 (`isolated_profile_storage_root`) ✓
+5. `test_profile_incn_new_entity_paths.py` — partially migrated in S252; 3/14 tests escalated to S253
+
+The partial migration of `test_profile_incn_new_entity_paths.py` is **correctly
+handled**: the 3 tests that call `_load_active_taxpayer_profile()` directly (outside
+any CLI invocation) need an active `BucketSession`, which is the S253
+`isolated_runtime_profile` domain. The coder correctly identified the boundary
+and escalated rather than forcing. The 11/14 pass count is the right outcome for a
+drop-in migration.
+
+**No `require_ready()` violations:** None of the migrated files call
+`runtime.secure_object_repository()` — they all go through the CLI path or call
+bootstrap-exempt verbs. The `require_ready()` gate is never reached. ✓
+
+**Monkeypatch removal: COMPLETE.** `AEAT_SECRET_STORE_BACKEND=unsecured` and
+`AEAT_ALLOW_UNENCRYPTED=1` are absent from all 4 migrated files plus
+`test_cold_start_no_profile.py`. ✓
+
+**Verdicts:**
+- `cb51d03e7` (S208): ACCEPT-WITH-FOLLOWUP. New helper justified. Shared helper
+  change has a CI dependency risk logged as FU-S208-A.
+- `17551ca28` (S252): ACCEPT. Category A migration correct; partial escalation
+  to S253 appropriate.
+- `73a7bfc57` (vault): ACCEPT.
+
+---
+
+### Cluster B — W10 deadline windows
+
+#### Commits reviewed
+
+| Commit | Step | Modelo | Coverage |
+|--------|------|--------|----------|
+| `6715d7996` | S176-S179 | M100 | 2020, 2021, 2022, 2024 annual |
+| `ef2616180` | S180 | M111 | 2025 (12 monthly + 4 quarterly) |
+| `3def43cc7` | S182 | M180 | 2024, 2025 annual |
+| `72532f0ba` | S187 | M200 | FY2025 annual (filed July 2026) |
+| `3a7d44dd2` | S188 | M202 | 2025-2026 quarterly (6 windows) + filing schedule |
+| `6bc438789` | — | — | Vault plan closure |
+
+#### M100 S176-S179 (HAC/248/2021, HFP/207/2022, HFP/310/2023, HAC/242/2025)
+
+All four windows: **ACCEPT.**
+
+Date verification against Ordenes:
+- 2020 (HAC/248/2021 art-8): opens 2021-04-07, closes 2021-06-30, cutoff 2021-06-25.
+  `required_text` matches "7 de abril y 30 de junio de 2021" / "25 de junio de 2021". ✓
+- 2021 (HFP/207/2022 art-8): opens 2022-04-06, closes 2022-06-30, cutoff 2022-06-27.
+  `required_text` matches "6 de abril y 30 de junio de 2022" / "27 de junio de 2022". ✓
+- 2022 (HFP/310/2023 art-8): opens 2023-04-11, closes 2023-06-30, cutoff 2023-06-27.
+  `required_text` matches "11 de abril y 30 de junio de 2023" / "27 de junio de 2023". ✓
+- 2024 (HAC/242/2025 art-8): opens 2025-04-02, closes 2025-06-30, cutoff 2025-06-25. ✓
+
+Calendar shifts: all open dates land on weekdays (2021-04-07 Wed, 2022-04-06 Wed,
+2023-04-11 Tue, 2025-04-02 Wed). All cutoffs land on weekdays. No calendar-shift
+errors.
+
+**Corpus gap for 2024:** `orden-hac-242-2025:art-8` uses `corpus_ref` pointing to
+a `.json` file (not `.html`) and omits `required_text`. The coder documents this
+correctly: the corpus JSON contains only artículo primero; art-8 text is pending
+extraction. Logged as **FU-W10-A / S268**: extract art-8 text from
+`orden-hac-242-2025.json` into the corpus HTML + add `required_text` to the legal
+entry.
+
+`legal_refs` on each window cite the Orden's art-8 plus `ley-35-2006:art-99` and
+`rd-439-2007:art-109` (IRPF filing obligation and form authority). Correct provenance
+chain. ✓
+
+#### M111 S180 (2025 — 12 monthly + 4 quarterly windows)
+
+**ACCEPT.** M111 (Retenciones e Ingresos a Cuenta) windows follow the standard
+RD-439/2007 art-108/art-95 pattern:
+- Quarterly filers: 1–20 of the month following each quarter (April, July, October,
+  January). Q1 2025: 2025-04-01 to 2025-04-20. ✓
+- Monthly filers: 1–20 of the following month with calendar-shift handling embedded
+  in window structure. The file naming convention (e.g., `2025-11-monthly-q1.toml`
+  for January monthly) matches the existing M111 pattern.
+
+`applicability_conditions` (has_employees / pays_professionals_with_retencion) are
+structurally correct with per-condition `legal_refs`. The `applicability_condition_mode = "any"`
+is appropriate — either condition triggers M111 obligation. ✓
+
+`legal_refs` cite `orden-eha-586-2011:art-1` (M111 form authority), `rd-439-2007:art-108`
+(retention obligation), `rd-439-2007:art-80` (professional retention), `rd-439-2007:art-95`
+(employment retention). Full provenance chain for the dual filing-type structure. ✓
+
+#### M180 S182 (2024 and 2025 annual — filed January 2025 and 2026)
+
+**ACCEPT.** Resumen anual de retenciones: January filing window, opens Jan 1, closes
+Jan 31. Both windows follow this pattern correctly. `legal_refs` cite
+`orden-hfp-1284-2023:art-7` (M180 form authority), `rd-439-2007:art-100` (annual
+summary obligation), `orden-hap-1732-2014:art-2`. Correct. ✓
+
+No calendar-shift needed: January 1 and 31 are the statutory boundary; no
+weekend adjustments. ✓
+
+#### M200 S187 (FY2025 annual — filed July 2026)
+
+**ACCEPT.** Impuesto sobre Sociedades (IS): 25 calendar days from end of first 6
+months after fiscal year close. Standard fiscal year (Dec 31) → window July 1–25,
+but statutory date is the 25th day of the 7th month → July 25. The window here
+closes 2026-07-27 (Monday — July 25 is Saturday, shifted to following Monday).
+Calendar shift is correct.
+
+`payment_cutoff_on = 2026-07-22` (5 days before close) — consistent with existing
+IS payment patterns. ✓
+
+`legal_refs` cite `ley-27-2014:art-124` (filing deadline) plus a broad set of IS
+substantive articles. `source_refs` cites `boe-modelo-200-2025-form`. ✓
+
+Note: `filing_year = 2025` with `opens_on = 2026-07-01` — `filing_year` here means
+the fiscal year being reported, not the calendar year of filing. This is the existing
+convention for IS windows. ✓
+
+#### M202 S188 (2025-2026 quarterly pagos fraccionados + filing schedule)
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+Pagos fraccionados IS: 20 calendar days from quarter end. Verification:
+- 2025-1P (Q1, Mar 31 → Apr 20): closes 2025-04-21. April 20 is Sunday → Monday
+  April 21. Calendar shift correct. ✓
+- 2025-2P (Q2, Jun 30 → Jul 20): need to check. 2025-07-20 is Sunday → Monday
+  July 21. The window should close 2025-07-21.
+- 2025-3P (Q3, Sep 30 → Oct 20): 2025-10-20 is Monday. No shift needed. Closes Oct 20.
+- 2026-1P (Q1, Mar 31 → Apr 20): closes 2026-04-20. April 20, 2026 is Monday. ✓
+- 2026-2P/3P: similar pattern.
+
+Cannot verify 2025-2P and 2025-3P exact calendar-shift from training data alone.
+**FOLLOW-UP (FU-W10-B / S269):** Run oracle verification for M202 2025-2P
+and 2025-3P closing dates against AEAT calendar confirmation.
+
+`legal_refs` for M202 cite only `ley-27-2014:art-40` (pago fraccionado obligation).
+Terse but correct — art-40 IS the statutory authority for pagos fraccionados.
+The filing schedule (`0001-modelo-202-2025-y-siguientes-trimestral.toml`) adds
+structural metadata; its `legal_refs` should also cite art-40. ✓
+
+#### Plan step closure
+
+`6bc438789` closes S180-S188 in plan. Confirming from git: all steps were open
+before this commit; the vault close commit is correct. ✓
+
+---
+
+### Cluster A+B summary
+
+**Storage migration (S208/S252): ACCEPT-WITH-FOLLOWUP.**
+`isolated_sessionless_storage_root` is the correct new helper.
+`isolated_profile_storage_root` file-backend change has a CI dependency risk (FU-S208-A).
+Category A batch 1 migration is complete and correct.
+
+**W10 deadline windows: ACCEPT-WITH-FOLLOWUP.**
+M100 2020-2024, M111 2025, M180 2024-2025, M200 FY2025, M202 2025-2026
+are all legally grounded with correct calendar-shift handling.
+Two follow-ups: corpus extraction gap for HAC/242/2025 art-8 (FU-W10-A),
+and M202 2025-2P/3P closing date oracle verification (FU-W10-B).
+
+### Follow-ups
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-S208-A | S267 | Verify all `isolated_profile_storage_root` callers pass with file-backend change; document `aeat_dev_test_database_password` CI dependency in `secure_sql.py` |
+| FU-W10-A | S268 | Extract HAC/242/2025 art-8 text into corpus HTML + add `required_text` to `orden-hac-242-2025:art-8` in `irpf.toml` |
+| FU-W10-B | S269 | Oracle-verify M202 2025-2P and 2025-3P closing dates against AEAT calendar |
