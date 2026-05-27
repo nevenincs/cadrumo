@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 # breaks the cycle.
 from ...adapters.outbound.aeat.auth._clave_movil import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
 
@@ -109,7 +110,7 @@ def list_auth_diagnostics() -> AuthDiagnosticListReport:
 def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
     """Load one encrypted Cl@ve auth diagnostic by id, redacting sensitive bodies."""
 
-    record = SecureObjectRepository().load(
+    record = _secure_objects().load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -138,7 +139,8 @@ def record_auth_diagnostic_phone_state(
 
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
         raise ValueError(phone_state)
-    record = SecureObjectRepository().load(
+    objects = _secure_objects()
+    record = objects.load(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         diagnostic_id,
         expected_class=SensitivityClass.SESSION,
@@ -152,7 +154,7 @@ def record_auth_diagnostic_phone_state(
         "phone_state": phone_state,
         "reported_at": reported_at.isoformat(),
     }
-    SecureObjectRepository().save(
+    objects.save(
         namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         object_key=diagnostic_id,
         classification=SensitivityClass.SESSION,
@@ -168,11 +170,15 @@ def record_auth_diagnostic_phone_state(
 
 
 def _diagnostic_records():
-    return SecureObjectRepository().list_records(
+    return _secure_objects().list_records(
         CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
         expected_class=SensitivityClass.SESSION,
         max_supported_version=1,
     )
+
+
+def _secure_objects() -> SecureObjectRepository:
+    return secure_object_repository_for_active_bucket()
 
 
 def _payload(raw: bytes) -> dict[str, object]:
