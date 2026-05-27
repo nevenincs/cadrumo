@@ -2768,6 +2768,127 @@ three S109 tests, and documents the fixture choice rationale. No inflated claims
 
 ---
 
+## Task #128 — W06.P30.S110-S112 Wave-6 breakpoint consolidation
+
+**Review date:** 2026-05-27
+
+### S110 — Consolidated Wave-6 commit review
+
+This section rolls up the per-commit verdicts from Tasks #85 and #89 and
+reviews the S260 profile-portability ADR commit (`57d017aec`).
+
+#### S260 — Profile-portability ADR (57d017aec)
+
+Commit authored `2026-05-27-profile-portability-adr.md` with six decisions
+D1-D5 (D1: full-bundle content; D2: encrypted-material stripping; D3: typed
+pydantic throughout, anti-tautology proof; D4: schema version bump to 2,
+SUPPORTED_BUNDLE_SCHEMA_VERSIONS frozenset; D5: refuse-on-profile-id-collision,
+two-tier guard). The commit also lands a wrongly-named scaffold stub
+`2026-05-27-cross-domain-continuity-adr.md` which was the placeholder generated
+before the ADR title was known — this is a known vault naming artefact, not a
+code defect.
+
+ADR content reviewed against the Task #75 grounding (already in this doc): all six
+architecture decisions match the grounding recommendations exactly. D3 mandates
+`model_dump(mode="json")` / `model_validate` typed equality — verified implemented
+in `af81954a6`. D4 SUPPORTED_BUNDLE_SCHEMA_VERSIONS frozenset — verified at import
+boundary in `config_profile_import`. D5 two-tier UUID + label guards — verified
+in Task #89 review.
+
+**S260 verdict: APPROVE.** ADR status correctly flips to `accepted`.
+
+#### S104-S107 — Bundled export (af81954a6 + 92df99bad)
+
+Previously reviewed as Task #85. Verdict: **APPROVE** with FU-S104-A
+(annotate `merged` dict in `_import_ledger_transactions` — resolved in S277).
+Full findings in the Task #85 section above.
+
+#### S108-S109 — Import idempotency (e5a7979a5 + 07f14dfcc)
+
+Previously reviewed as Task #89. Verdict: **APPROVE.** No follow-ups.
+Full findings in the Task #89 section above.
+
+#### Follow-up items from Wave-6 review
+
+- **FU-S104-A** — annotate `merged: dict[str, Transaction]` in
+  `_import_ledger_transactions`. Resolved by S277 (W12.P61). **CLOSED.**
+- **FU-W06** — No additional Wave-6-specific follow-up items beyond what is
+  already tracked. The co-landing convention note pattern (FU-W04-A, FU-W05-A,
+  FU-W07-A) does not apply here; each Wave-6 step landed in its own commit.
+
+#### Wave-6 rollup table
+
+| Commit | Step(s) | Verdict | Notes |
+|--------|---------|---------|-------|
+| `57d017aec` | S260 ADR | APPROVE | D1-D5 match grounding; scaffold stub artefact benign |
+| `af81954a6` | S104-S107 | APPROVE | FU-S104-A resolved in S277 |
+| `92df99bad` | S104-S107 exec records | APPROVE | Honest step records |
+| `e5a7979a5` | S109 regression test | APPROVE | Anti-tautology UUID-mutation proof PASS |
+| `07f14dfcc` | S108-S109 exec records | APPROVE | Honest S108 no-code closure |
+
+**Wave-6 consolidated verdict: APPROVE.** All P28 and P29 steps close cleanly.
+Single resolved follow-up (FU-S104-A via S277). Zero blocking items.
+
+### S111 — Núria gestor round-8 persona re-run
+
+**Satisfied by round-8 testimonial.** The round-8 persona sweep (R8-NURIA)
+exercised the gestor multi-profile workflow post-Wave-6. Key findings from the
+testimonial, as captured in the plan:
+
+- **BLOCKER (S305 in flight, Task #116):** Multi-profile gestor view broken —
+  `aeat app overview calendar` and `aeat app overview` surface active-profile
+  only; the `fail-closed` exception handler in `_profile_repository.py` swallows
+  cross-profile iteration errors. Fix being executed by coder2.
+- **BLOCKER (S306):** `--all-profiles` flag missing from `aeat app overview
+  calendar`; gestor cannot see all managed profiles in one pass.
+- **HIGH (S307):** M184 atribucion de rentas calculation path missing; sociedad
+  civil / comunidad de bienes clients cannot file from the CLI.
+- **MODERATE (S308):** Bundle export contains cleartext NIF, names, surnames —
+  LOPD risk for gestors transmitting bundles via email; passphrase encryption
+  needed.
+- **MODERATE (S309):** M131 modulos manual entry path missing; binding source is
+  ledger-only today; clients without integrated bookkeeping cannot file M131.
+- **LOW (S310):** Orphan bucket cleanup on failed profile create.
+
+W06 bundle-content goal (Cluster E: full bundle with work units, ledger,
+revisions, filings) is confirmed **working** for the single-profile path by
+the round-8 testimonial — Núria was able to export and re-import a full bundle.
+The multi-profile blocker (S305/S306) is a separate surface (overview command,
+not the bundle itself).
+
+**S111 verdict: SATISFIED.** The round-8 testimonial provides the required
+persona evidence. No additional re-run needed.
+
+### S112 — Plan expansion from persona findings
+
+All R8-NURIA persona-driven Steps are already captured in the plan:
+
+| Finding | Severity | Plan Step | Status |
+|---------|----------|-----------|--------|
+| Multi-profile gestor view broken | BLOCKER | S305 | In flight (#116) |
+| `--all-profiles` flag missing | BLOCKER | S306 | In flight (#116) |
+| M184 atribucion path missing | HIGH | S307 | Pending |
+| Cleartext NIF bundle LOPD | MODERATE | S308 | Pending |
+| M131 modulos manual entry | MODERATE | S309 | Pending |
+| Orphan bucket cleanup | LOW | S310 | Pending |
+
+No uncaptured persona findings from the round-8 testimonial. Plan expansion is
+complete — all findings are already Steps in W09.P41.
+
+**S112 verdict: COMPLETE.** No new Steps required.
+
+### Wave-6 breakpoint close summary
+
+| Step | Verdict |
+|------|---------|
+| S110 — consolidated commit review | COMPLETE (rollup above) |
+| S111 — Núria re-run | SATISFIED by round-8 testimonial |
+| S112 — plan expansion | COMPLETE (all findings already in plan) |
+
+W06.P30 closes. W06 campaign is fully landed.
+
+---
+
 ## Task #94 — W05.P24 IVA intracom + export axes: architecture grounding
 
 **Date:** 2026-05-27
