@@ -954,7 +954,7 @@ cli:
       key_help: cli.config.unset.key_help
     workflow_help: cli.config.workflow_help
   diagnostics:
-    app_help: cli.diagnostics.app_help
+    app_help: 'cli.diagnostics.app_help'
     browser:
       http_status_label: cli.diagnostics.browser.http_status_label
       markers_label: cli.diagnostics.browser.markers_label
@@ -971,15 +971,20 @@ cli:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
     profile:
       errors:
-        invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
-        invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
-      get_help: cli.diagnostics.profile.get_help
-      help: cli.diagnostics.profile.help
-      key_help: cli.diagnostics.profile.key_help
-      profile_help: cli.diagnostics.profile.profile_help
-      set_help: cli.diagnostics.profile.set_help
-      unset_help: cli.diagnostics.profile.unset_help
-      value_help: cli.diagnostics.profile.value_help
+        invalid_value_fallback: 'cli.diagnostics.profile.errors.invalid_value_fallback'
+        invalid_value_with_choices: 'cli.diagnostics.profile.errors.invalid_value_with_choices'
+        profile_empty: 'cli.diagnostics.profile.errors.profile_empty'
+        ambiguous_profile: 'cli.diagnostics.profile.errors.ambiguous_profile'
+        unknown_profile: 'cli.diagnostics.profile.errors.unknown_profile'
+        no_active_profile: 'cli.diagnostics.profile.errors.no_active_profile'
+        unknown_profile_key: 'cli.diagnostics.profile.errors.unknown_profile_key'
+      get_help: 'cli.diagnostics.profile.get_help'
+      help: 'cli.diagnostics.profile.help'
+      key_help: 'cli.diagnostics.profile.key_help'
+      profile_help: 'cli.diagnostics.profile.profile_help'
+      set_help: 'cli.diagnostics.profile.set_help'
+      unset_help: 'cli.diagnostics.profile.unset_help'
+      value_help: 'cli.diagnostics.profile.value_help'
     repair:
       audience_internal: cli.diagnostics.repair.audience_internal
       auth_label: cli.diagnostics.repair.auth_label
@@ -996,13 +1001,13 @@ cli:
       python_label: cli.diagnostics.repair.python_label
       version_label: cli.diagnostics.repair.version_label
     secure_objects:
-      all_help: cli.diagnostics.secure_objects.all_help
+      all_help: 'cli.diagnostics.secure_objects.all_help'
       errors:
-        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
-      help: cli.diagnostics.secure_objects.help
-      list_help: cli.diagnostics.secure_objects.list_help
-      namespace_help: cli.diagnostics.secure_objects.namespace_help
-      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
+        conflicting_filters: 'cli.diagnostics.secure_objects.errors.conflicting_filters'
+      help: 'cli.diagnostics.secure_objects.help'
+      list_help: 'cli.diagnostics.secure_objects.list_help'
+      namespace_help: 'cli.diagnostics.secure_objects.namespace_help'
+      unreadable_help: 'cli.diagnostics.secure_objects.unreadable_help'
     summary:
       auth_no_session: cli.diagnostics.summary.auth_no_session
       auth_none: cli.diagnostics.summary.auth_none
@@ -2159,7 +2164,8 @@ errors:
     refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
     refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
     refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
-    refused_profile_foral_regime: errors.refused.refused_profile_foral_regime
+    refused_profile_foral_regime: Hautatutako foru araubidea ez da profil honetan
+      modelatzen. Hautatu onartutako araubide bat.
     refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
     refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
     refused_profile_not_configured: errors.refused.refused_profile_not_configured
@@ -2226,7 +2232,11 @@ profile:
     deduccion_maternidad_applied: profile.descendiente.deduccion_maternidad_applied
     incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
   errors:
-    foral_regime: profile.errors.foral_regime
+    foral_regime: '{tax_region} eremuko bizilagunek dagokien Foru Ogasunean aurkeztu
+      behar dituzte zerga-aitorpenak Ekonomi Itunaren arabera (12/2002 Legea), ez
+      AEAT-en. CLI honek foru aitorpenak ez ditu modelatzen. Ikusi: sede.bizkaia.eus
+      (Bizkaia), gipuzkoa.eus/ogasuna (Gipuzkoa), araba.eus/ogasun (Araba) edo hacienda.navarra.es
+      (Nafarroa) zure lurraldearen arabera.'
     not_configured: profile.errors.not_configured
   keys:
     description: profile.keys.description
