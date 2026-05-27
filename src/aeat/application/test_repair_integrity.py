@@ -17,7 +17,11 @@ from pathlib import Path
 
 import pytest
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider, has_active_bucket_session
+from aeat.adapters.persistence.storage import (
+    WORKFLOW_STATE_NAMESPACE,
+    EphemeralMasterKeyProvider,
+    has_active_bucket_session,
+)
 from aeat.adapters.persistence.storage.master_key._active_session import _active_session
 from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
@@ -179,10 +183,10 @@ class TestBuildListReport:
     def test_list_opens_active_bucket_session_for_bootstrap_exempt_repair(self, tmp_path: Path) -> None:
         with isolated_runtime_profile(tmp_path=tmp_path):
             secure_object_repository_for_active_bucket().save(
-                namespace="aeat.workflow",
+                namespace=WORKFLOW_STATE_NAMESPACE.namespace,
                 object_key="workflow:repair-list",
-                classification=SensitivityClass.OPERATIONAL,
-                schema_version=1,
+                classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
                 written_at=datetime.now(UTC),
                 payload=b"repair-list-sessionless",
             )
