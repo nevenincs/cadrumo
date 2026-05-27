@@ -198,7 +198,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto"
-corpus_ref = "corpus/normatives/rd-439-2007.json#art-110-3-b"
+corpus_ref = "corpus/normatives/rd-439-2007.json#110-3-b"
 document_id = "BOE-A-2007-6820"
 article = "110.3.b"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
