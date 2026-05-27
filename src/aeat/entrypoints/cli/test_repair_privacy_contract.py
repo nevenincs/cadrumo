@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage import get_master_key_provider
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
@@ -19,6 +20,7 @@ from aeat.application.workflow._models import resolve_active_bucket_id
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import override_settings
 from aeat.core.logging import default_log_file_path
+from aeat.diagnostics.__main__ import app as diagnostics_app
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import isolated_profile_storage_root
 
@@ -94,8 +96,8 @@ def test_config_repair_cli_redacts_active_profile_identifier() -> None:
     assert not _UUID_PATTERN.search(summaries)
 
 
-def test_config_repair_list_cli_redacts_active_profile_identifier_in_row_context() -> None:
-    """Repair inventory exposes only the stored lookup digest."""
+def test_diagnostics_secure_objects_list_redacts_active_profile_identifier_in_row_context() -> None:
+    """Engineer inventory exposes only the stored lookup digest."""
 
     _create_operator_profile()
     active_bucket_id = resolve_active_bucket_id()
@@ -111,23 +113,28 @@ def test_config_repair_list_cli_redacts_active_profile_identifier_in_row_context
             payload=b"transaction-catalogue-payload",
         )
 
-    text = invoke_cached_cli(["config", "repair", "list", "aeat.domain.transactions.bucket", "--all"])
-    payload_result = invoke_cached_cli(
-        ["--format", "json", "config", "repair", "list", "aeat.domain.transactions.bucket", "--all"]
+    text = CliRunner().invoke(
+        diagnostics_app,
+        ["secure-objects", "list", "aeat.domain.transactions.bucket", "--all"],
     )
 
     assert text.exit_code == 0, text.output
-    assert payload_result.exit_code == 0, payload_result.output
     assert not _UUID_PATTERN.search(text.output)
-    assert "key\t" in text.output
+    assert "aeat.domain.transactions.bucket\t" in text.output
     assert object_key not in text.output
+    digest = text.output.strip().splitlines()[-1].split("\t")[-1]
+    assert re.fullmatch(r"[0-9a-f]{64}", digest)
 
-    payload = json.loads(payload_result.output)
-    row = payload["rows"][0]
-    assert re.fullmatch(r"[0-9a-f]{64}", row["object_key_digest"])
-    serialized = json.dumps(payload)
-    assert active_bucket_id not in serialized
-    assert object_key not in serialized
+
+def test_config_repair_list_operator_surface_is_retired() -> None:
+    """Secure-object inventory must not be mounted on the operator repair CLI."""
+
+    _create_operator_profile()
+
+    result = invoke_cached_cli(["config", "repair", "list", "aeat.domain.transactions.bucket", "--all"])
+
+    assert result.exit_code != 0
+    assert "rows_total" not in result.output
 
 
 def test_config_repair_integrity_objects_cli_is_metadata_only_for_unreadable_rows() -> None:
@@ -305,7 +312,6 @@ def test_config_repair_bootstrap_surfaces_do_not_require_active_profile() -> Non
     """Bootstrap-exempt repair verbs return cleanly before profile enrollment."""
 
     commands = (
-        ["config", "repair", "list", "aeat.domain.transactions.bucket", "--all"],
         ["config", "repair", "quarantine", "--dry-run"],
         ["config", "repair", "integrity", "objects"],
         ["config", "repair", "logs", "--lines", "0"],

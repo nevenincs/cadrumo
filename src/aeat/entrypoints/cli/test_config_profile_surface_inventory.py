@@ -6,10 +6,10 @@ Pins the ten plain-English operator-target verbs the
 accidentally rename or unmount a verb surface here, not in a
 shipped operator session.
 
-The legacy `view` / `use` / `remove` names MUST NOT resolve;
-they were renamed under earlier P05 commits and any reintroduction
-is a discoverability regression per the operator transcript that
-triggered this redesign.
+The legacy `view` / `use` / `remove` names and field-at-a-time
+`get` / `set` / `unset` diagnostics verbs MUST NOT resolve on the
+operator surface. Those diagnostics live under
+`python -m aeat.diagnostics profile`.
 """
 
 from __future__ import annotations
@@ -44,6 +44,9 @@ _RETIRED_VERBS = (
     "view",
     "use",
     "remove",
+    "get",
+    "set",
+    "unset",
 )
 
 
