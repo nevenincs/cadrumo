@@ -624,3 +624,79 @@ fixes (S47, S48), the consistency check (S50), the strict-
 rejection (S36 from P07), and the encrypted-storage roundtrip
 (S61) all pass in their own focused suites. The unbounded full-
 suite gate awaits a peer-campaign cleanup.
+
+---
+
+## P08.S53 finding: specimen authenticity classification
+
+Opened each of the 3 PDFs flagged with
+`provisional_pending_specimen = true` and inspected with
+pdfminer.high_level.extract_text. Classification per modelo:
+
+### M111 `2024-1T.pdf` (159709 bytes, 4808 chars)
+
+**Verdict: SANITISED-REAL AEAT SPECIMEN.**
+
+Header text: "INFORMACIÓN DE LA PRESENTACIÓN DE LA DECLARACIÓN
+Modelo 111 Registro Presentación realizada el: 01-01-1900 a las
+16:24:03". This is the canonical AEAT justificante format:
+expediente, código seguro de verificación (CSV), número de
+justificante, vía de entrada. The PII fields are sanitised
+(`SANITIZED1112024`, fictional CSV, Y0000001S NIF). The document
+structure and field layout match AEAT's published M111
+justificante format.
+
+**Recommendation**: the `provisional_pending_specimen = true`
+flag could be removed if the layout has been corpus-round-trip
+verified. Author judgement call — not actioned here because the
+field-extraction grounding requires re-running the round-trip
+gate.
+
+### M130 `2021-2T.pdf` (203406 bytes, 5612 chars)
+
+**Verdict: SANITISED-REAL AEAT SPECIMEN.**
+
+Header text: "130 01-01-1900 a las 22:47:01 202113013520455V
+SANITIZED1302021 Y0000001S APELLIDO APELLIDO NOMBRE Titular
+Presentación por Internet 1302161137085 NEGATIVA/SIN ACTIVIDAD/
+RESULTADO CERO". The phrase "NEGATIVA/SIN ACTIVIDAD/RESULTADO
+CERO" is AEAT's verbatim result-state text. Document structure
+matches the M130 published justificante format. Sanitised
+content.
+
+**Recommendation**: same as M111 — the flag could be removed
+pending corpus round-trip verification.
+
+### M131 `2024-1T.pdf` (2323 bytes, 1189 chars)
+
+**Verdict: SYNTHETIC TEST PLACEHOLDER, NOT AN AEAT SPECIMEN.**
+
+Header text: "Agencia Tributaria Pago fraccionado estimacion
+objetiva IRPF Modelo 131 NIF: Y0000001S Apellidos y nombre: DEMO
+AUTONOMO EO Ejercicio: 2026 Periodo: 1T Suma de rendimientos
+netos ........................ 01 5.000,00 Pago fraccionado
+previo por datos-base .............. 02 100,00 Volumen ...".
+
+The "DEMO AUTONOMO EO" name + explicit synthetic numeric values
+(5.000,00 / 100,00) + simplified layout (no expediente, no CSV,
+no AEAT justificante header) signal this is a synthetic test
+PDF, NOT a real AEAT-issued declaration. The 2323-byte size vs
+M111/M130's 150-200KB confirms the placeholder nature.
+
+**Recommendation**: `provisional_pending_specimen = true` is
+correctly set on the M131 2026 extraction profile. The flag
+should remain until a real AEAT M131 declaration specimen is
+committed.
+
+### Summary
+
+| Modelo | Specimen authenticity | Flag disposition |
+| ------ | --------------------- | ---------------- |
+| M111   | sanitised-real        | flag could be retired after round-trip verification |
+| M130   | sanitised-real        | flag could be retired after round-trip verification |
+| M131   | synthetic placeholder | flag is correctly set; awaits real specimen |
+
+The flag-as-truth assumption made in P07.S41 is partially
+validated (M131) and partially relaxable (M111, M130 pending
+round-trip review). No regulatory blocker; both sanitised-real
+specimens are usable for label-pattern extraction work.
