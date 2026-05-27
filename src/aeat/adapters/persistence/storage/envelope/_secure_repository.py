@@ -31,7 +31,10 @@ from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
 from .._path_safety import safe_repository_id
 from ..errors import ClassificationError, EnvelopeVersionError
-from ..runtime_repository import secure_object_repository_for_active_bucket_or_default_route
+from ..runtime_repository import (
+    secure_object_repository_for_active_bucket_or_default_route,
+    secure_object_repository_for_bucket,
+)
 from ..sql import SecureObjectRepository
 from ._envelope import Envelope
 
@@ -84,9 +87,16 @@ class SecureBoundRepository[T: BaseModel]:
     # assign the concrete class. Marked ClassVar here for clarity.
     payload_type: ClassVar[type[BaseModel]]
 
-    def __init__(self, *, objects: SecureObjectRepository | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        bucket_id: str | None = None,
+        objects: SecureObjectRepository | None = None,
+    ) -> None:
         if objects is not None:
             self._objects = objects
+        elif bucket_id is not None:
+            self._objects = secure_object_repository_for_bucket(safe_repository_id(bucket_id, context="bucket_id"))
         else:
             self._objects = _active_bucket_objects_or_default()
         cls = type(self)

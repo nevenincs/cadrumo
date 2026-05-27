@@ -31,6 +31,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...adapters.persistence.storage import BUCKETS_DIRNAME
 from ...adapters.persistence.storage.bucket._layout import BucketPaths, bucket_paths
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus, BucketManifest
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
@@ -38,7 +39,6 @@ from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core.logging import get_logger
 from ._models import ProfileBucketPointer
 
-_BUCKETS_DIRNAME = "buckets"
 _log = get_logger(__name__)
 
 
@@ -158,7 +158,7 @@ def list_profile_buckets(
     """
 
     resolved_root = _resolve_root(root)
-    buckets_root = resolved_root / _BUCKETS_DIRNAME
+    buckets_root = resolved_root / BUCKETS_DIRNAME
     if not buckets_root.is_dir():
         return {}
     result: dict[str, ProfileBucketPointer] = {}
@@ -193,7 +193,7 @@ def list_profile_bucket_scan_issues(*, root: Path | None = None) -> tuple[Profil
     """Return non-sensitive manifest-scan issues found under the profile root."""
 
     resolved_root = _resolve_root(root)
-    buckets_root = resolved_root / _BUCKETS_DIRNAME
+    buckets_root = resolved_root / BUCKETS_DIRNAME
     if not buckets_root.is_dir():
         return ()
     issues: list[ProfileBucketScanIssue] = []

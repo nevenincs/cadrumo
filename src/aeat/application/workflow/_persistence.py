@@ -8,6 +8,12 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...adapters.persistence.storage import (
+    WORKFLOW_RUN_NAMESPACE as WORKFLOW_RUN_STORAGE_NAMESPACE,
+)
+from ...adapters.persistence.storage import (
+    WORKFLOW_STATE_NAMESPACE as WORKFLOW_STATE_STORAGE_NAMESPACE,
+)
 from ...adapters.persistence.storage.envelope._envelope import Envelope
 from ...adapters.persistence.storage.errors import (
     ClassificationError,
@@ -20,7 +26,6 @@ from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_cold_bootstrap_state,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
-from ...core.classification import SensitivityClass
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.i18n import tr
 from ...core.logging import get_logger
@@ -33,11 +38,13 @@ from ._models import WorkflowResult, WorkflowState, utc_now
 
 _logger = get_logger(__name__)
 
-_STATE_VERSION = 1
-_STATE_NAMESPACE = "aeat.workflow"
-_STATE_OBJECT_KEY = "state"
-_RUN_VERSION = 1
-_RUN_NAMESPACE = "aeat.application.workflow.runs"
+_STATE_VERSION = WORKFLOW_STATE_STORAGE_NAMESPACE.schema_version
+_STATE_NAMESPACE = WORKFLOW_STATE_STORAGE_NAMESPACE.namespace
+_STATE_OBJECT_KEY = WORKFLOW_STATE_STORAGE_NAMESPACE.require_default_object_key()
+_STATE_SENSITIVITY = WORKFLOW_STATE_STORAGE_NAMESPACE.sensitivity
+_RUN_VERSION = WORKFLOW_RUN_STORAGE_NAMESPACE.schema_version
+_RUN_NAMESPACE = WORKFLOW_RUN_STORAGE_NAMESPACE.namespace
+_RUN_SENSITIVITY = WORKFLOW_RUN_STORAGE_NAMESPACE.sensitivity
 
 
 def _clear_output_language_cache() -> None:
@@ -71,7 +78,7 @@ class WorkflowStateRepository:
         record = self._objects.load(
             _STATE_NAMESPACE,
             _STATE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_STATE_SENSITIVITY,
             max_supported_version=_STATE_VERSION,
         )
         if record is None:
@@ -83,10 +90,10 @@ class WorkflowStateRepository:
             raise WorkflowError(
                 tr("application.workflow.errors.state_unreadable"),
             ) from exc
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _STATE_SENSITIVITY:
             raise ClassificationError(
                 f"workflow state has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}",
+                f"consumer expected {_STATE_SENSITIVITY}",
             )
         if envelope.schema_version > _STATE_VERSION:
             raise EnvelopeVersionError(
@@ -120,13 +127,13 @@ class WorkflowStateRepository:
         envelope = Envelope[WorkflowState](
             schema_version=_STATE_VERSION,
             written_at=utc_now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_STATE_SENSITIVITY,
             payload=payload,
         )
         return SecureObjectWrite(
             namespace=_STATE_NAMESPACE,
             object_key=_STATE_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_STATE_SENSITIVITY,
             schema_version=_STATE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
@@ -262,13 +269,13 @@ class WorkflowRunRepository:
         envelope = Envelope[WorkflowResult](
             schema_version=_RUN_VERSION,
             written_at=utc_now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_RUN_SENSITIVITY,
             payload=result,
         )
         self._objects.save(
             namespace=_RUN_NAMESPACE,
             object_key=run_id,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_RUN_SENSITIVITY,
             schema_version=_RUN_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
@@ -282,16 +289,16 @@ class WorkflowRunRepository:
         record = self._objects.load(
             _RUN_NAMESPACE,
             safe_run_id,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_RUN_SENSITIVITY,
             max_supported_version=_RUN_VERSION,
         )
         if record is None:
             raise WorkflowError(f"workflow run not found: {safe_run_id}")
         envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _RUN_SENSITIVITY:
             raise ClassificationError(
                 f"workflow run has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}",
+                f"consumer expected {_RUN_SENSITIVITY}",
             )
         if envelope.schema_version > _RUN_VERSION:
             raise EnvelopeVersionError(
@@ -304,7 +311,7 @@ class WorkflowRunRepository:
 
         records = self._objects.list_records(
             _RUN_NAMESPACE,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_RUN_SENSITIVITY,
             max_supported_version=_RUN_VERSION,
         )
         runs: list[WorkflowResult] = []

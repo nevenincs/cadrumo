@@ -979,9 +979,9 @@ Turn the residual deprecated-token scan into durable guard coverage so intention
 
 Make storage hierarchy and namespace shape auditable before deeper refactors by inventorying constants, object-key grammar, manifest versions, repair classifications, and duplicated local values.
 
-- [ ] `W15.P33.S412` - Inventory bucket paths, object-key grammar, namespace strings, manifest schema versions, and repair classifications; `.vault/audit`.
-- [ ] `W15.P33.S413` - Promote storage hierarchy constants and namespace identities into typed registry models; `src/aeat/adapters/persistence/storage`.
-- [ ] `W15.P33.S414` - Replace duplicated local storage namespace and key constants with the typed registry entries; `src/aeat/application`.
+- [x] `W15.P33.S412` - Inventory bucket paths, object-key grammar, namespace strings, manifest schema versions, and repair classifications; `.vault/audit`.
+- [x] `W15.P33.S413` - Promote storage hierarchy constants and namespace identities into typed registry models; `src/aeat/adapters/persistence/storage`.
+- [x] `W15.P33.S414` - Replace duplicated local storage namespace and key constants with the typed registry entries; `src/aeat/application`.
 
 ### Phase `W15.P34` - vaultspec traceability closeout
 

@@ -38,6 +38,7 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..adapters.persistence.storage import REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
     SecureObjectNamespaceIntegrity,
@@ -48,7 +49,7 @@ from .diagnostics import DiagnosticCheck
 
 _log = get_logger(__name__)
 
-_REPAIR_DECISION_NAMESPACE = "aeat.application.repair_integrity.decisions"
+_REPAIR_DECISION_NAMESPACE = REPAIR_DECISION_STORAGE_NAMESPACE.namespace
 """Profile-local secure-object namespace for repair-remediation decisions.
 
 The encrypted secure-object rows live in the active profile's bucket;
@@ -379,8 +380,6 @@ class RepairRemediationDecisionRepository:
 
     def save_decision(self, decision: RepairRemediationDecision) -> None:
         """Persist one decision as an encrypted AUDIT-class secure-object row."""
-        from ..core.classification import SensitivityClass
-
         expected_decision_id = _expected_repair_decision_id(decision)
         if decision.decision_id != expected_decision_id:
             raise ValueError(
@@ -391,21 +390,19 @@ class RepairRemediationDecisionRepository:
         self._repo().save(
             namespace=_REPAIR_DECISION_NAMESPACE,
             object_key=decision.decision_id,
-            classification=SensitivityClass.AUDIT,
-            schema_version=1,
+            classification=REPAIR_DECISION_STORAGE_NAMESPACE.sensitivity,
+            schema_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
             written_at=decision.decided_at,
             payload=payload,
         )
 
     def load_decision(self, decision_id: str) -> RepairRemediationDecision:
         """Load one decision by its content-addressed id; re-derives + checks the id."""
-        from ..core.classification import SensitivityClass
-
         record = self._repo().load(
             namespace=_REPAIR_DECISION_NAMESPACE,
             object_key=decision_id,
-            expected_class=SensitivityClass.AUDIT,
-            max_supported_version=1,
+            expected_class=REPAIR_DECISION_STORAGE_NAMESPACE.sensitivity,
+            max_supported_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
         )
         if record is None:
             raise ValueError(f"repair-remediation decision {decision_id!r} does not exist")
@@ -422,17 +419,23 @@ class RepairRemediationDecisionRepository:
     def list_decisions(self) -> tuple[RepairRemediationDecision, ...]:
         """Return every persisted decision in decision-time descending order."""
         repo = self._repo()
-        try:
-            keys = repo.list_keys(_REPAIR_DECISION_NAMESPACE)
-        except Exception:
-            return ()
+        records = tuple(
+            repo.list_records(
+                _REPAIR_DECISION_NAMESPACE,
+                expected_class=REPAIR_DECISION_STORAGE_NAMESPACE.sensitivity,
+                max_supported_version=REPAIR_DECISION_STORAGE_NAMESPACE.schema_version,
+            )
+        )
         decisions: list[RepairRemediationDecision] = []
-        for key in keys:
-            try:
-                decisions.append(self.load_decision(key))
-            except Exception as exc:
-                _log.debug("skipping unreadable repair decision %s: %s", key, type(exc).__name__)
-                continue
+        for record in records:
+            decision = RepairRemediationDecision.model_validate_json(record.payload)
+            expected_decision_id = _expected_repair_decision_id(decision)
+            if decision.decision_id != expected_decision_id:
+                raise ValueError(
+                    f"repair-remediation decision declares decision_id {decision.decision_id!r} "
+                    f"but re-derived {expected_decision_id!r}; refusing the list entry"
+                )
+            decisions.append(decision)
         return tuple(sorted(decisions, key=lambda d: d.decided_at, reverse=True))
 
 

@@ -19,12 +19,14 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
-_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
+from .._namespace_registry import (
+    BUCKET_AUDIT_DIRNAME,
+    BUCKET_BLOBS_DIRNAME,
+    BUCKET_DB_DIRNAME,
+    BUCKETS_DIRNAME,
+)
 
-_BUCKETS_DIRNAME = "buckets"
-_DB_DIRNAME = "db"
-_BLOBS_DIRNAME = "blobs"
-_AUDIT_DIRNAME = "audit"
+_STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
 
 class BucketPaths(BaseModel):
@@ -59,14 +61,14 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     if "/" in bucket_id or "\\" in bucket_id:
         raise ValueError("bucket_id must not contain a path separator")
 
-    bucket_dir = root / _BUCKETS_DIRNAME / bucket_id
+    bucket_dir = root / BUCKETS_DIRNAME / bucket_id
     return BucketPaths(
         bucket_id=bucket_id,
         root=root,
         bucket_dir=bucket_dir,
-        db_dir=bucket_dir / _DB_DIRNAME,
-        blobs_dir=bucket_dir / _BLOBS_DIRNAME,
-        audit_dir=bucket_dir / _AUDIT_DIRNAME,
+        db_dir=bucket_dir / BUCKET_DB_DIRNAME,
+        blobs_dir=bucket_dir / BUCKET_BLOBS_DIRNAME,
+        audit_dir=bucket_dir / BUCKET_AUDIT_DIRNAME,
     )
 
 

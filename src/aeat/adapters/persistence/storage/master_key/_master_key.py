@@ -1009,16 +1009,14 @@ class EphemeralMasterKeyProvider:
             session.close()
 
 
-_BUCKET_DEK_FILENAME: Final[str] = "bucket.dek.json"
-
-
 def _bucket_dek_path(*, storage_root: Path, bucket_id: str) -> Path:
     """Return the separated keystore path for one bucket's wrapped DEK."""
 
+    from .._namespace_registry import BUCKET_DEK_FILENAME
     from ..bucket._keystore_paths import keystore_path, validate_keystore_separation
 
     validate_keystore_separation(storage_root, bucket_id)
-    return keystore_path(storage_root, bucket_id) / _BUCKET_DEK_FILENAME
+    return keystore_path(storage_root, bucket_id) / BUCKET_DEK_FILENAME
 
 
 def _bucket_key_schedule(*, storage_root: Path, bucket_id: str):
@@ -1141,18 +1139,25 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
     """Refuse unsecured activation when the active bucket carries a real profile."""
 
     from .....core.config import load_settings
+    from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME, USER_PROFILE_VALUE_NAMESPACE
     from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 
     if session.bucket_id == "unsecured":
         return
-    db_path = load_settings().aeat_local_storage_root / "buckets" / session.bucket_id / "db" / "aeat.db"
+    db_path = (
+        load_settings().aeat_local_storage_root
+        / BUCKETS_DIRNAME
+        / session.bucket_id
+        / BUCKET_DB_DIRNAME
+        / "aeat.db"
+    )
     if not db_path.is_file():
         return
     try:
         with sqlite3.connect(db_path) as connection:
             rows = connection.execute(
                 "SELECT payload FROM secure_objects WHERE namespace = ?",
-                ("aeat.application.user_profile.value",),
+                (USER_PROFILE_VALUE_NAMESPACE.namespace,),
             ).fetchall()
     except sqlite3.Error:
         return

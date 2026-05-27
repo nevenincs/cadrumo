@@ -38,6 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .....core.classification import SensitivityClass, default_policy_for
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
+from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto._crypto import KEY_SIZE, derive_key
 from ..envelope._envelope import Envelope
@@ -58,7 +59,6 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _INDEX_FILE_NAME = "index.json"
 _LOCK_FILE_NAME = "secrets.lock"
 _HKDF_CONTEXT_SECRET_LOOKUP = b"aeat.secret_store.lookup.v1"
-_SECRET_RECORD_VERSION = 1
 
 
 class SecretRecord(BaseModel):
@@ -247,7 +247,7 @@ class SecretStore:
     def _build_envelope(self, record: SecretRecord) -> Envelope[SecretRecord]:
         """Wrap ``record`` in a versioned, classified envelope."""
         return Envelope[SecretRecord](
-            schema_version=_SECRET_RECORD_VERSION,
+            schema_version=SECRET_RECORD_SCHEMA_VERSION,
             written_at=datetime.now(UTC),
             classification=record.classification,
             payload=record,

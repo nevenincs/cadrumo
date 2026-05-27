@@ -194,11 +194,14 @@ class BucketSession:
         """Dispose the SQLAlchemy engine bound to this bucket's database."""
 
         from .....core.config import Settings, load_settings
+        from .._namespace_registry import BUCKET_DB_DIRNAME, BUCKETS_DIRNAME
         from ..sql.engine import dispose_engine
 
         try:
             settings = load_settings()
-            bucket_db_path = settings.aeat_local_storage_root / "buckets" / self._bucket_id / "db" / "aeat.db"
+            bucket_db_path = (
+                settings.aeat_local_storage_root / BUCKETS_DIRNAME / self._bucket_id / BUCKET_DB_DIRNAME / "aeat.db"
+            )
             target_url = f"sqlite:///{bucket_db_path.as_posix()}"
             dispose_engine(Settings(aeat_database_url=target_url))
         except Exception as exc:
