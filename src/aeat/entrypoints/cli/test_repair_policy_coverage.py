@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from aeat.application.repair_integrity import build_repair_policy_command_surface_catalog
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -31,6 +32,7 @@ def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_buck
 def test_policy_command_surfaces_are_adr_linked_and_namespace_policies_are_registered() -> None:
     surfaces = build_repair_policy_command_surface_catalog()
     assert len({surface.command_path for surface in surfaces}) == len(surfaces)
+    registered = {definition.namespace: definition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     for surface in surfaces:
         assert surface.adr_links
@@ -44,6 +46,35 @@ def test_policy_command_surfaces_are_adr_linked_and_namespace_policies_are_regis
             assert policy.repair_policy
             assert policy.recovery_policy
             assert policy.mutation_authority
+            if policy.registered_namespace is not None:
+                definition = registered[policy.registered_namespace]
+                assert policy.registered_namespace_key == definition.key
+                assert policy.registered_owner == definition.owner
+                assert policy.owner_domain == definition.owner
+                assert policy.registered_sensitivity == definition.sensitivity.value
+                assert policy.registered_schema_version == definition.schema_version
+                assert policy.registered_scope == definition.scope.value
+                assert policy.namespace_classification.role == definition.scope.value
+
+
+def test_repair_secure_object_surfaces_use_registry_metadata_instead_of_role_markers() -> None:
+    surfaces = {surface.command_path: surface for surface in build_repair_policy_command_surface_catalog()}
+
+    quarantine_policies = surfaces["config repair quarantine"].namespace_policies
+    assert WORKFLOW_STATE_NAMESPACE.namespace in tuple(policy.registered_namespace for policy in quarantine_policies)
+    assert "profile_local_secure_object" not in tuple(
+        policy.namespace_classification.role for policy in quarantine_policies
+    )
+
+    reset_policies = surfaces["config repair reset-state"].namespace_policies
+    assert tuple(policy.registered_namespace for policy in reset_policies) == (WORKFLOW_STATE_NAMESPACE.namespace,)
+    assert reset_policies[0].owner_domain == WORKFLOW_STATE_NAMESPACE.owner
+
+    integrity_policies = surfaces["config repair integrity objects"].namespace_policies
+    assert WORKFLOW_STATE_NAMESPACE.namespace in tuple(policy.registered_namespace for policy in integrity_policies)
+    assert "profile_local_secure_object" not in tuple(
+        policy.namespace_classification.role for policy in integrity_policies
+    )
 
 
 def _policy_relevant_command_paths_from_sources() -> set[str]:

@@ -38,7 +38,14 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..adapters.persistence.storage import REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE
+from ..adapters.persistence.storage import (
+    REPAIR_INTEGRITY_DECISION_NAMESPACE as REPAIR_DECISION_STORAGE_NAMESPACE,
+)
+from ..adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    WORKFLOW_STATE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+)
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
     SecureObjectNamespaceIntegrity,
@@ -471,6 +478,12 @@ class RepairPolicyNamespacePolicy(BaseModel):
     repair_policy: str = Field(min_length=1)
     recovery_policy: str = Field(min_length=1)
     mutation_authority: str = Field(min_length=1)
+    registered_namespace_key: str | None = Field(default=None, min_length=1)
+    registered_namespace: str | None = Field(default=None, min_length=1)
+    registered_owner: str | None = Field(default=None, min_length=1)
+    registered_sensitivity: str | None = Field(default=None, min_length=1)
+    registered_schema_version: int | None = Field(default=None, ge=1)
+    registered_scope: str | None = Field(default=None, min_length=1)
 
 
 class RepairPolicyCommandSurface(BaseModel):
@@ -487,13 +500,6 @@ class RepairPolicyCommandSurface(BaseModel):
     namespace_policies: tuple[RepairPolicyNamespacePolicy, ...] = ()
 
 
-_SECURE_OBJECT_POLICY = RepairPolicyNamespacePolicy(
-    namespace_classification=RepairPolicyNamespaceClassification(role="profile_local_secure_object"),
-    owner_domain="secure_storage",
-    repair_policy="metadata_only_digest_inventory_preserve_ciphertext",
-    recovery_policy="restore_matching_master_key_or_rebuild_from_authoritative_source",
-    mutation_authority="explicit_operator_confirmation_required_for_mutation",
-)
 _PROFILE_BUNDLE_POLICY = RepairPolicyNamespacePolicy(
     namespace_classification=RepairPolicyNamespaceClassification(role="profile_bundle"),
     owner_domain="profile_lifecycle",
@@ -519,6 +525,32 @@ _REPAIR_ADR_LINKS = (
     "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]",
     "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]",
 )
+
+
+def _secure_object_policy(
+    definition: SecureObjectNamespaceDefinition,
+    *,
+    repair_policy: str = "metadata_only_digest_inventory_preserve_ciphertext",
+    recovery_policy: str = "restore_matching_master_key_or_rebuild_from_authoritative_source",
+    mutation_authority: str = "explicit_operator_confirmation_required_for_mutation",
+) -> RepairPolicyNamespacePolicy:
+    return RepairPolicyNamespacePolicy(
+        namespace_classification=RepairPolicyNamespaceClassification(role=definition.scope.value),
+        owner_domain=definition.owner,
+        repair_policy=repair_policy,
+        recovery_policy=recovery_policy,
+        mutation_authority=mutation_authority,
+        registered_namespace_key=definition.key,
+        registered_namespace=definition.namespace,
+        registered_owner=definition.owner,
+        registered_sensitivity=definition.sensitivity.value,
+        registered_schema_version=definition.schema_version,
+        registered_scope=definition.scope.value,
+    )
+
+
+def _all_secure_object_namespace_policies() -> tuple[RepairPolicyNamespacePolicy, ...]:
+    return tuple(_secure_object_policy(definition) for definition in STORAGE_NAMESPACE_REGISTRY.namespaces)
 
 
 def _surface(
@@ -551,13 +583,19 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             "config repair quarantine",
             command_family="repair",
             owner_domains=("secure_storage",),
-            namespace_policies=(_SECURE_OBJECT_POLICY,),
+            namespace_policies=_all_secure_object_namespace_policies(),
         ),
         _surface(
             "config repair reset-state",
             command_family="repair",
             owner_domains=("workflow_state",),
-            namespace_policies=(_SECURE_OBJECT_POLICY,),
+            namespace_policies=(
+                _secure_object_policy(
+                    WORKFLOW_STATE_NAMESPACE,
+                    repair_policy="metadata_only_workflow_state_reset_plan",
+                    recovery_policy="restore_matching_master_key_or_rebuild_workflow_state_projection",
+                ),
+            ),
         ),
         _surface(
             "config repair profile",
@@ -569,7 +607,7 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             "config repair integrity objects",
             command_family="repair",
             owner_domains=("secure_storage",),
-            namespace_policies=(_SECURE_OBJECT_POLICY,),
+            namespace_policies=_all_secure_object_namespace_policies(),
         ),
         _surface("config repair integrity registry", command_family="repair", owner_domains=("registry",)),
         _surface("config repair connectivity", command_family="repair", owner_domains=("remote_connectivity",)),
