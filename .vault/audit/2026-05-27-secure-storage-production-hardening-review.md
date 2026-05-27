@@ -40,3 +40,13 @@ W15-P31-003 | LOW | Resolved repair-decision content hash drift
 The review found that `RepairRemediationDecisionRepository.load_decision()` documented a re-derived content-address guard but only compared the persisted payload id to the lookup key.
 
 Resolution: repair remediation decisions now re-derive the deterministic decision id on both save and load, and load uses the explicit AUDIT classification and version contract. A real encrypted-row regression test persists a tampered decision payload and verifies the load refusal.
+
+W15-P32-001 | HIGH | Resolved bootstrap-exempt repair session gap
+
+The review found that `config repair list` and `config repair quarantine` could resolve active-bucket repositories without opening a bucket session on the production bootstrap-exempt repair path. In-process CLI tests had masked the issue by opening a session through the normal root callback path.
+
+Resolution: repair list, quarantine preview, and quarantine mutation now enter the active-bucket repair session helper before resolving active-bucket repositories. Direct sessionless regression tests clear the active session context and assert the repair surfaces still inspect the namespace instead of returning a false zero or crashing.
+
+W15-P32-002 | PASS | Runtime-owned repository guard repair
+
+The storage hardening guards now pass with runtime-owned repository construction, central active-bucket settings derivation, and secure-bound envelope fallback through `secure_object_repository_for_active_bucket_or_default_route()`. No remaining direct production bare repository construction was found by the guard slice.

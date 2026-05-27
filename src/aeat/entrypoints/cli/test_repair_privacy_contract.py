@@ -13,8 +13,8 @@ import pytest
 from aeat.adapters.persistence.storage import get_master_key_provider
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
+from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
-from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.application.workflow._models import resolve_active_bucket_id
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import override_settings
@@ -66,7 +66,7 @@ def _write_row_with_wrong_bucket_key(
         opened_at=datetime.now(UTC),
     )
     with activate_session(session):
-        SecureObjectRepository().save(
+        secure_object_repository_for_active_bucket().save(
             namespace=namespace,
             object_key=object_key,
             classification=SensitivityClass.FINANCIAL,
@@ -102,7 +102,7 @@ def test_config_repair_list_cli_redacts_active_profile_identifier_in_row_context
     assert active_bucket_id is not None
     object_key = f"transaction-catalogue:{active_bucket_id}"
     with get_master_key_provider():
-        SecureObjectRepository().save(
+        secure_object_repository_for_active_bucket().save(
             namespace="aeat.domain.transactions.bucket",
             object_key=object_key,
             classification=SensitivityClass.FINANCIAL,
@@ -226,19 +226,21 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
         payload=b"wallet-balance=999999; taxpayer=12345678Z",
     )
     with get_master_key_provider():
-        rows_before = tuple(SecureObjectRepository().iter_all_records_raw())
+        rows_before = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
 
     text = invoke_cached_cli(["config", "repair", "quarantine", "--dry-run"])
     payload_result = invoke_cached_cli(["--format", "json", "config", "repair", "quarantine", "--dry-run"])
     with get_master_key_provider():
-        rows_after = tuple(SecureObjectRepository().iter_all_records_raw())
+        rows_after = tuple(secure_object_repository_for_active_bucket().iter_all_records_raw())
 
     assert text.exit_code == 0, text.output
     assert payload_result.exit_code == 0, payload_result.output
     assert rows_after == rows_before
     assert "dry_run\ttrue" in text.output
     assert "would_quarantine\t1" in text.output
-    assert "would_retain\t0" in text.output
+    retained_match = re.search(r"would_retain\t(?P<count>\d+)", text.output)
+    assert retained_match is not None
+    assert int(retained_match.group("count")) >= 1
     assert f"{namespace}\t1" in text.output
     assert not _UUID_PATTERN.search(text.output)
     assert sensitive_tax_id not in text.output
@@ -249,9 +251,9 @@ def test_config_repair_quarantine_dry_run_is_metadata_only_and_non_mutating() ->
     serialized = json.dumps(payload)
     assert payload["dry_run"] is True
     assert payload["unreadable_total"] == 1
-    assert payload["readable_total"] == 0
-    assert payload["namespaces"][0]["namespace"] == namespace
-    assert payload["namespaces"][0]["unreadable"] == 1
+    assert payload["readable_total"] >= 1
+    impacted = next(item for item in payload["namespaces"] if item["namespace"] == namespace)
+    assert impacted["unreadable"] == 1
     assert not _UUID_PATTERN.search(serialized)
     assert sensitive_tax_id not in serialized
     assert sensitive_period not in serialized

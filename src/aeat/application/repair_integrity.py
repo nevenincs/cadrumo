@@ -150,8 +150,8 @@ def build_repair_integrity_report(
     """Probe namespace integrity. When ``namespace`` is set, restrict scope."""
     if repository is not None:
         return _build_repair_integrity_report(namespace=namespace, repository=repository)
-    with _best_effort_active_bucket_session():
-        return _build_repair_integrity_report(namespace=namespace, repository=SecureObjectRepository())
+    with active_bucket_repair_session():
+        return _build_repair_integrity_report(namespace=namespace, repository=_active_bucket_repair_repository())
 
 
 def _build_repair_integrity_report(
@@ -179,7 +179,7 @@ def _build_repair_integrity_report(
 
 
 @contextmanager
-def _best_effort_active_bucket_session() -> Iterator[None]:
+def active_bucket_repair_session() -> Iterator[None]:
     """Open the active bucket session so integrity probes test decryptability, not bootstrap state."""
 
     provider: object | None = None
@@ -191,7 +191,8 @@ def _best_effort_active_bucket_session() -> Iterator[None]:
             return
         provider = get_master_key_provider()
         provider.__enter__()  # type: ignore[attr-defined]
-    except Exception:
+    except Exception as exc:
+        _log.debug("repair integrity could not open active bucket session: %s", type(exc).__name__)
         yield
         return
     try:
@@ -219,7 +220,30 @@ def build_repair_list_report(
     if include_all and only_unreadable:
         msg = "build_repair_list_report cannot combine --all and --unreadable; pass one or neither"
         raise ValueError(msg)
-    repo = repository or SecureObjectRepository()
+    if repository is None:
+        with active_bucket_repair_session():
+            return _build_repair_list_report(
+                namespace=namespace,
+                include_all=include_all,
+                only_unreadable=only_unreadable,
+                repository=_active_bucket_repair_repository(),
+            )
+    return _build_repair_list_report(
+        namespace=namespace,
+        include_all=include_all,
+        only_unreadable=only_unreadable,
+        repository=repository,
+    )
+
+
+def _build_repair_list_report(
+    *,
+    namespace: str,
+    include_all: bool,
+    only_unreadable: bool,
+    repository: _SecureObjectRepositoryProtocol,
+) -> RepairListReport:
+    repo = repository
     integrity = repo.probe_namespace_integrity(namespace)
     row_metadata = tuple(repo.iter_namespace_decryptability(namespace))
     rows = tuple(_repair_list_row(row) for row in row_metadata)
@@ -237,6 +261,12 @@ def build_repair_list_report(
         rows_total=len(rows),
         filter_mode=filter_mode,
     )
+
+
+def _active_bucket_repair_repository() -> SecureObjectRepository:
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+
+    return secure_object_repository_for_active_bucket()
 
 
 def _repair_list_row(row: SecureObjectDecryptabilityRow) -> RepairListRow:
