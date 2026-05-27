@@ -29,6 +29,9 @@ _REAL_MODELO_303_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "303" / "20
 _REAL_MODELO_190_DECLARATION_COPY = FIXTURES_DIR / "justificantes" / "190" / "2024-0A.pdf"
 _MODELO_840_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "840" / "2024-0A.pdf"
 _MODELO_036_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "036" / "2025-0A.pdf"
+_MODELO_180_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
+_MODELO_369_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "369" / "2024-1T.pdf"
+_MODELO_720_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "720" / "2024-0A.pdf"
 _MODELO_130_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 20))
 _MODELO_111_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 31))
 _MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 15))
@@ -1064,6 +1067,202 @@ def test_parser_extracts_modelo_036_synthetic_fixture_targets() -> None:
     # The fixture places "Alta" so the enum token is the mixed-case form.
     assert values["decl.event-kind"] == "Alta", (
         f"decl.event-kind: expected 'Alta' from AEAT-grounded fixture, got {values['decl.event-kind']!r}"
+    )
+
+
+def test_parser_extracts_modelo_180_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M180 synthetic fixture and verify all three casillas.
+
+    Ground truth is the AEAT-published printed-form template at:
+      src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/
+        02-180-orden-de-20-de-noviembre-de-2000-12-kb-pdf.pdf
+    Page 1, REGISTRO DE TIPO 1 (REGISTRO DE DECLARANTE) printed layout.
+
+    AEAT label text (verbatim from the printed form bitmap):
+      "NUMERO TOTAL DE PERCEPTORES"             (positions 136-144)
+      "BASE DE RETENCIONES E INGRESOS A CUENTA" (positions 145-160)
+      "RETENCIONES E INGRESOS A CUENTA"         (positions 161-175)
+
+    Confirmed in the Orden HAP/1732/2014 EDI spec
+    (01-180-orden-hap-1732-2014-actualizado-por-orden-hfp-1284-2023…pdf):
+      p.4 "NÚMERO TOTAL DE PERCEPTORES"
+      p.5 "BASE RETENCIONES E INGRESOS A CUENTA"
+      p.6 "RETENCIONES E INGRESOS A CUENTA"
+
+    The synthetic fixture prints those labels so the named_label parser captures
+    the trailing value token on each line.  Non-tautological: a pattern that
+    drifts from the AEAT-published label format will produce a zero-match
+    parse failure.
+    """
+    filing = parse_declaracion(
+        _MODELO_180_SYNTHETIC_FIXTURE,
+        modelo_override="180",
+        año_override=2024,
+        period_override="0A",
+    )
+
+    assert filing.modelo == "180"
+    assert filing.period == "0A"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "180"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.period == "0A"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # All three casillas defined by the M180 declaracion_pdf profile must be present.
+    assert set(values.keys()) == {
+        "decl.total-perceptores",
+        "decl.base-total",
+        "decl.retenciones-total",
+    }, f"expected exactly the three M180 profile casillas, got {set(values.keys())!r}"
+
+    # decl.total-perceptores: fixture prints "Numero total de perceptores 3";
+    # parse_spanish_decimal("3") = Decimal("3").
+    # Ground truth: AEAT printed form "NUMERO TOTAL DE PERCEPTORES" (positions 136-144).
+    assert values["decl.total-perceptores"] == Decimal("3"), (
+        f"decl.total-perceptores: expected Decimal('3'), got {values['decl.total-perceptores']!r}"
+    )
+
+    # decl.base-total: fixture prints
+    # "Base retenciones e ingresos a cuenta total 12.000,00";
+    # parse_spanish_decimal("12.000,00") = Decimal("12000.00").
+    # Ground truth: AEAT printed form "BASE DE RETENCIONES E INGRESOS A CUENTA"
+    # (positions 145-160, Orden HAP/1732/2014 p.5).
+    assert values["decl.base-total"] == Decimal("12000.00"), (
+        f"decl.base-total: expected Decimal('12000.00'), got {values['decl.base-total']!r}"
+    )
+
+    # decl.retenciones-total: fixture prints
+    # "Retenciones e ingresos a cuenta total 2.280,00";
+    # parse_spanish_decimal("2.280,00") = Decimal("2280.00").
+    # Ground truth: AEAT printed form "RETENCIONES E INGRESOS A CUENTA"
+    # (positions 161-175, Orden HAP/1732/2014 p.6).
+    assert values["decl.retenciones-total"] == Decimal("2280.00"), (
+        f"decl.retenciones-total: expected Decimal('2280.00'), got {values['decl.retenciones-total']!r}"
+    )
+
+
+def test_parser_extracts_modelo_369_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M369 OSS Union synthetic fixture and verify both casillas.
+
+    Ground truth is AEAT-published material fetched 2026-05-27:
+
+    Source 1 — DR369e21.xlsx (Diseño de Registro Modelo 369, Versión 1.1), sheet T36904 Un:
+      Row 14: "2. Ejercicio y período. Ejercicio"
+      Row 16: "2. Ejercicio y período. Periodo"
+    Saved at:
+      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+        Descripcion_PresentacionFichero369_v1.pdf
+
+    Source 2 — AEAT online manual "Presentación régimen de la Unión", section 2:
+      Section heading: "2. Ejercicio y periodo"
+    Saved at:
+      src/aeat/_data/corpus/aeat_official/instructions/modelo_369/files/
+        2-ejercicio-periodo.html
+
+    The synthetic fixture prints:
+      "Ejercicio: 2024"
+      "Periodo: 1T"
+    so the named_label parser matches the AEAT-grounded labels and captures the
+    trailing token on each line.
+
+    Non-tautology proof: the label_patterns 'Ejercicio:' and 'Per[ii]odo:' are
+    grounded against the AEAT DR field names and manual section heading — NOT the
+    registry casilla label fields.  A profile pattern that drifts from this
+    AEAT-published vocabulary will produce a zero-match parse failure.
+    """
+    filing = parse_declaracion(
+        _MODELO_369_SYNTHETIC_FIXTURE,
+        modelo_override="369",
+        año_override=2024,
+        period_override="1T",
+    )
+
+    assert filing.modelo == "369"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "369"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+    assert filing.registry_snapshot_ref.period == "1T"
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # Both casillas defined by the M369 declaracion_pdf profile must be present.
+    assert set(values.keys()) == {
+        "decl.ejercicio",
+        "decl.periodo",
+    }, f"expected exactly {{decl.ejercicio, decl.periodo}}, got {set(values.keys())!r}"
+
+    # decl.ejercicio: fixture prints "Ejercicio: 2024";
+    # parse_spanish_decimal("2024") = Decimal("2024").
+    # Ground truth: DR369e21.xlsx row 14 "2. Ejercicio y período. Ejercicio" and
+    # AEAT manual section 2 heading "2. Ejercicio y periodo".
+    assert values["decl.ejercicio"] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, "
+        f"got {values['decl.ejercicio']!r}"
+    )
+
+    # decl.periodo: fixture prints "Periodo: 1T";
+    # '1T' is not a valid Decimal so parse_spanish_decimal raises ValueError and
+    # the parser stores the raw token as a string for value_kind='text' casillas.
+    # Ground truth: DR369e21.xlsx row 16 "2. Ejercicio y período. Periodo".
+    assert values["decl.periodo"] == "1T", (
+        f"decl.periodo: expected '1T' from AEAT-grounded fixture, "
+        f"got {values['decl.periodo']!r}"
+    )
+
+
+def test_parser_extracts_modelo_720_synthetic_fixture_targets() -> None:
+    """Round-trip: parse the sanitized M720 synthetic fixture and verify decl.ejercicio.
+
+    Ground truth for the ejercicio label pattern is:
+    (1) AEAT-published diseño de registro (modelo_720.pdf), downloaded 2026-05-27 from
+        https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/
+          DR_Resto_Mod/archivos/modelo_720.pdf
+        Record-type-1 positions 5-8: EJERCICIO.
+    (2) Orden HAP/72/2013 Art. 7: "al que se refiera la información a suministrar" —
+        M720 is a declaración informativa; it uses "información", not "declaración".
+    (3) aeat-dr-720 casilla label: "Ejercicio al que se refiere la informacion".
+
+    The complementaria/sustitutiva field (record-type-1 positions 121-122) is two
+    separate single-character flags, NOT a printed label+value pair; it is absent
+    from target_casillas and this test confirms only decl.ejercicio is extracted.
+
+    Non-tautological: the label_pattern
+    'Ejercicio\\s+al\\s+que\\s+se\\s+refiere\\s+la\\s+informaci[oó]n'
+    is derived from AEAT-published sources, not the registry casilla label.
+    A profile pattern that omits the qualifying phrase will fail to match.
+    """
+    filing = parse_declaracion(
+        _MODELO_720_SYNTHETIC_FIXTURE,
+        modelo_override="720",
+        año_override=2024,
+        period_override="0A",
+    )
+
+    assert filing.modelo == "720"
+    assert filing.period == "0A"
+    assert filing.tax_id == "Y0000001S"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "720"
+    assert filing.registry_snapshot_ref.modelo_year == 2024
+
+    values = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # Only decl.ejercicio is in the extraction profile — decl.tipo-declaracion removed.
+    assert set(values.keys()) == {"decl.ejercicio"}, (
+        f"expected exactly {{decl.ejercicio}}, got {set(values.keys())!r}"
+    )
+
+    # decl.ejercicio: fixture prints "Ejercicio al que se refiere la informacion 2024";
+    # parse_spanish_decimal("2024") = Decimal("2024").
+    # Ground truth: aeat-dr-720 positions 5-8 "EJERCICIO" and Orden HAP/72/2013 Art. 7.
+    assert values["decl.ejercicio"] == Decimal("2024"), (
+        f"decl.ejercicio: expected Decimal('2024') from AEAT-grounded fixture, "
+        f"got {values['decl.ejercicio']!r}"
     )
 
 

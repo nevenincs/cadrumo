@@ -661,7 +661,10 @@ class ProfileRepository:
             if summary.status is UserProfileStatus.TOMBSTONED:
                 continue
             try:
-                aggregate = self.load(summary.profile_id)
+                from ._orchestration import profile_storage_session
+
+                with profile_storage_session(summary.profile_id):
+                    aggregate = self.load(summary.profile_id)
             except Exception as exc:
                 # A torn / unreadable bucket may carry the same tax id.
                 # Fail closed rather than silently allowing a duplicate
