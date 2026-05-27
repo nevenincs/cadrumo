@@ -58,3 +58,13 @@ through the normal registry validator.
 - [x] `P04.S10` - Identify every committed modelo revision with zero casillas and no calculation payload; `151`, `714`, `721`.
 - [x] `P04.S11` - Remove the empty registered modelo definitions while preserving legal/source catalogue authority and CLI refusal behavior; `src/aeat/_data/registry/aeat/modelos`.
 - [x] `P04.S12` - Add a generic revision validator and regression tests proving zero-casilla revisions fail validation; `src/aeat/domain/calculations/registry`.
+
+### Phase `P05` - Reviewability creep gates
+
+Convert the original 132k-line TOML failure into a committed-corpus
+regression gate so future registry authoring must fragment large data
+before it becomes unreviewable.
+
+- [x] `P05.S13` - Measure current registry TOML line-count and row-width baselines after M200 and empty-definition cleanup; `src/aeat/_data/registry/aeat`.
+- [x] `P05.S14` - Add reviewability tests for TOML file length and longest-line growth; `src/aeat/domain/calculations/registry`.
+- [x] `P05.S15` - Record the enforced thresholds and passing gate in the schema-hardening exec log; `.vault/exec`.
