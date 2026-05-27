@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 import typing
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
@@ -2258,7 +2259,7 @@ def _bucket_history_event_matches(
     return not (actor_token is not None and event.actor != actor_token)
 
 
-def _bucket_history_event_payload(event: BucketEvent) -> dict[str, object]:
+def _bucket_history_event_payload(event: BucketEvent) -> Mapping[str, object]:
     """Project one bucket event onto its JSON payload row."""
     return {
         "event_id": event.event_id,

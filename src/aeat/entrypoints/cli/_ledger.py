@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Protocol
@@ -2207,6 +2208,9 @@ def ratios_validate(ctx: typer.Context) -> None:
 
 
 def _business_invoice_payload(record) -> dict[str, object]:
+    # Legitimate mutable boundary: callers append bucket_event_ids after
+    # this call (e.g. payload["bucket_event_ids"] = list(result.bucket_event_ids)).
+    # dict[str, object] is required; Mapping would block the post-call mutation.
     return record.model_dump(mode="json")
 
 
@@ -2797,7 +2801,7 @@ def _evidence_service() -> PurchaseInvoiceEvidenceService:
     return PurchaseInvoiceEvidenceService()
 
 
-def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
+def _evidence_payload(record: PurchaseInvoiceEvidence) -> Mapping[str, object]:
     return record.model_dump(mode="json")
 
 
