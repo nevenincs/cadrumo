@@ -200,18 +200,28 @@ application:
         snapshot_not_active: application.modelo.borrador_binding.errors.snapshot_not_active
         source_trace_mismatch: application.modelo.borrador_binding.errors.source_trace_mismatch
     errors:
-      calculation_revision_not_found: "Nem található számítási revízió ezzel az azonosítóval: %{calculation_revision_id}."
-      computed_casilla_binding_conflict: "A bucket-ből származó bemenetek számított cellákat céloznak meg, amelyek nem írhatók felül külső bindolással. Érintett cellák: %{computed}."
+      calculation_revision_not_found: 'Nem található számítási revízió ezzel az azonosítóval:
+        %{calculation_revision_id}.'
+      computed_casilla_binding_conflict: 'A bucket-ből származó bemenetek számított
+        cellákat céloznak meg, amelyek nem írhatók felül külső bindolással. Érintett
+        cellák: %{computed}.'
       export_no_active_bucket: application.modelo.errors.export_no_active_bucket
       external_filing_evidence_reference_blank: application.modelo.errors.external_filing_evidence_reference_blank
       external_filing_no_casilla_values: application.modelo.errors.external_filing_no_casilla_values
-      filing_record_not_found: "Nem található beadási nyilvántartás ezzel az azonosítóval: %{filing_record_id}."
+      filing_record_not_found: 'Nem található beadási nyilvántartás ezzel az azonosítóval:
+        %{filing_record_id}.'
       reconcile_declaration_unsupported: application.modelo.errors.reconcile_declaration_unsupported
       reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
-      verification_report_not_found: "Nem található ellenőrzési jelentés ezzel az azonosítóval: %{verification_report_id}."
-      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és időszak alapján a folytatáshoz.
-      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modelo, év és időszak alapján a folytatáshoz.
-      work_unit_not_found: "Nem található modelo munkaegység ezzel az azonosítóval: %{work_unit_id}."
+      verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
+        azonosítóval: %{verification_report_id}.'
+      work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
+        dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és
+        időszak alapján a folytatáshoz.
+      work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
+        dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modelo, év
+        és időszak alapján a folytatáshoz.
+      work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
+        %{work_unit_id}.'
   overview:
     explain:
       errors:
@@ -445,6 +455,22 @@ cli:
         modelo_help: cli.app.modelo.casillas.modelo_help
         period_help: cli.app.modelo.casillas.period_help
         required_help: cli.app.modelo.casillas.required_help
+      compare:
+        modelo_help: Az összehasonlítandó modell száma (pl. 100, 130).
+        need_two_years: Pontosan két --year értéket kell megadni (pl. --year 2024
+          --year 2025).
+        no_revisions: A(z) %{modelo} modell %{filing_year}. évi munkaegységeihez nem
+          tartoznak számítási revíziók. Előbb futtasd az `aeat app modelo work calculate`
+          parancsot.
+        no_usable_revisions: A(z) %{modelo} modellnek a(z) %{filing_year}. évre nincs
+          elérhető VERIFICADO_COMPLETO vagy BORRADOR revíziója az összehasonlításhoz.
+        no_work_units: Nem található %{modelo} modell munkaegység a(z) %{filing_year}.
+          évre. Előbb hozz létre és számíts ki egy munkaegységet.
+        year_help: Az összehasonlításba bevonandó pénzügyi év. Pontosan kétszer add
+          meg (--year 2024 --year 2025).
+      compare_help: Összehasonlítja ugyanazon modell két pénzügyi évének számítási
+        revízióit. Casillánként emittál különbség-sorokat (év_b - év_a) szekciónként
+        csoportosítva.
       describe:
         as_of_help: cli.app.modelo.describe.as_of_help
         modelo_help: cli.app.modelo.describe.modelo_help

@@ -309,7 +309,9 @@ application:
           els identificadors de binding resolts.
     errors:
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
-      computed_casilla_binding_conflict: "Les entrades procedents del bucket apunten a caselles calculades i no es poden sobreescriure amb binding extern. Caselles afectades: %{computed}."
+      computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
+        a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
+        afectades: %{computed}.'
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de modelo.
       external_filing_evidence_reference_blank: La importació de declaració externa
@@ -322,9 +324,14 @@ application:
         parser de declaració estigui implementat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
-      verification_report_not_found: No s'ha trobat cap informe de verificació amb id=%{verification_report_id}.
-      work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està descartada i no es pot calcular. Crea una nova unitat de treball sobre el mateix modelo, any i periode per continuar.
-      work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està descartada i no es pot importar. Crea una nova unitat de treball sobre el mateix modelo, any i periode per continuar.
+      verification_report_not_found: No s'ha trobat cap informe de verificació amb
+        id=%{verification_report_id}.
+      work_unit_discarded_cannot_calculate: La unitat de treball %{work_unit_id} està
+        descartada i no es pot calcular. Crea una nova unitat de treball sobre el
+        mateix modelo, any i periode per continuar.
+      work_unit_discarded_cannot_import: La unitat de treball %{work_unit_id} està
+        descartada i no es pot importar. Crea una nova unitat de treball sobre el
+        mateix modelo, any i periode per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
   overview:
     explain:
@@ -605,6 +612,21 @@ cli:
         period_help: Token de periode; per a Modelo 036 usa alta, modificacion o baja;
           exemples periodics inclouen 2026Q1 i 2026-01
         required_help: Mostrar només les caselles marcades com a obligatòries
+      compare:
+        modelo_help: Número de model a comparar (p. ex. 100, 130).
+        need_two_years: Cal especificar exactament dos valors --year (p. ex. --year
+          2024 --year 2025).
+        no_revisions: Les unitats de treball del Model %{modelo} per a l'exercici
+          %{filing_year} no tenen revisions de càlcul. Executa `aeat app modelo work
+          calculate` primer.
+        no_usable_revisions: El Model %{modelo} per a l'exercici %{filing_year} no
+          té revisions VERIFICADO_COMPLETO ni BORRADOR disponibles per a comparar.
+        no_work_units: No s'han trobat unitats de treball del Model %{modelo} per
+          a l'exercici %{filing_year}. Crea i calcula una unitat de treball primer.
+        year_help: Exercici fiscal a incloure a la comparació. Especifica exactament
+          dues vegades (--year 2024 --year 2025).
+      compare_help: Compara les revisions de càlcul de dos exercicis per al mateix
+        model. Emet diferències per casella (any_b - any_a) agrupades per secció.
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
