@@ -105,7 +105,7 @@ Create the typed registry and migrate constants to it without changing encrypted
 Apply registered namespace policy to repository creation, reads, writes, repair diagnostics, and source resolver degradation.
 
 - [x] `W03.P06.S24` - require namespace registry entries when constructing runtime repositories; `src/aeat/adapters/persistence/storage`.
-- [ ] `W03.P06.S25` - enforce registered sensitivity and schema policy on secure-object reads and writes; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `W03.P06.S25` - enforce registered sensitivity and schema policy on secure-object reads and writes; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [ ] `W03.P06.S26` - replace repair namespace marker heuristics with registry ownership metadata; `src/aeat/application/repair_integrity.py`.
 - [ ] `W03.P06.S27` - add registry completeness tests for every discovered secure-object namespace; `src/aeat/adapters/persistence/storage`.
 

@@ -12,7 +12,8 @@ import pytest
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
-from ..errors import EnvelopeVersionError
+from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from ..errors import ClassificationError, EnvelopeVersionError, StorageValidationError
 from ._orm import Base
 from .engine import create_engine_from_settings
 from .secure_objects import (
@@ -589,5 +590,142 @@ def test_two_repositories_writing_one_key_converge_to_a_single_row(tmp_path: Pat
                     (namespace,),
                 ).fetchone()
             assert row_count == 1
+        finally:
+            engine.dispose()
+
+
+def test_registry_bound_repository_rejects_unregistered_namespace_on_write(tmp_path: Path) -> None:
+    """Runtime-bound secure-object writes must use a registered namespace."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "policy-unregistered.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
+
+            with pytest.raises(StorageValidationError) as raised:
+                repo.save(
+                    namespace="aeat.test.unregistered.runtime",
+                    object_key="policy-key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=b"policy-payload",
+                )
+
+            assert raised.value.translated_message == "errors.storage.namespace.unregistered"
+            with sqlite3.connect(db_path) as con:
+                (row_count,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert row_count == 0
+        finally:
+            engine.dispose()
+
+
+def test_registry_bound_repository_rejects_wrong_write_classification_and_schema(tmp_path: Path) -> None:
+    """The namespace registry, not the caller, is authoritative for write policy."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "policy-write-contract.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = WORKFLOW_STATE_NAMESPACE.namespace
+        try:
+            repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
+
+            with pytest.raises(ClassificationError) as classification_error:
+                repo.save(
+                    namespace=namespace,
+                    object_key=WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+                    classification=SensitivityClass.SESSION,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                    written_at=datetime.now(UTC),
+                    payload=b"wrong-class",
+                )
+
+            assert (
+                classification_error.value.translated_message
+                == "errors.storage.namespace.classification_mismatch"
+            )
+
+            with pytest.raises(EnvelopeVersionError) as schema_error:
+                repo.save(
+                    namespace=namespace,
+                    object_key=WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+                    classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    schema_version=WORKFLOW_STATE_NAMESPACE.schema_version + 1,
+                    written_at=datetime.now(UTC),
+                    payload=b"wrong-schema",
+                )
+
+            assert schema_error.value.translated_message == "errors.storage.namespace.schema_mismatch"
+            with sqlite3.connect(db_path) as con:
+                (row_count,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert row_count == 0
+        finally:
+            engine.dispose()
+
+
+def test_registry_bound_repository_rejects_reader_class_not_declared_by_registry(tmp_path: Path) -> None:
+    """A caller cannot widen a registered namespace to a different sensitivity on read."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "policy-read-class.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = WORKFLOW_STATE_NAMESPACE.namespace
+        object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
+        try:
+            repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
+            repo.save(
+                namespace=namespace,
+                object_key=object_key,
+                classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                schema_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                written_at=datetime.now(UTC),
+                payload=b"registered-payload",
+            )
+
+            with pytest.raises(ClassificationError) as raised:
+                repo.load(
+                    namespace,
+                    object_key,
+                    expected_class=SensitivityClass.SESSION,
+                    max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version,
+                )
+            assert raised.value.translated_message == "errors.storage.namespace.classification_mismatch"
+        finally:
+            engine.dispose()
+
+
+def test_registry_bound_repository_rejects_on_disk_schema_newer_than_registry(tmp_path: Path) -> None:
+    """Registry policy catches stored schema drift even if the reader claims support."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "policy-read-schema.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = WORKFLOW_STATE_NAMESPACE.namespace
+        object_key = WORKFLOW_STATE_NAMESPACE.require_default_object_key()
+        try:
+            unbound_repo = SecureObjectRepository(engine=engine)
+            unbound_repo.save(
+                namespace=namespace,
+                object_key=object_key,
+                classification=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                schema_version=WORKFLOW_STATE_NAMESPACE.schema_version + 1,
+                written_at=datetime.now(UTC),
+                payload=b"future-schema-payload",
+            )
+
+            registry_bound_repo = SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
+            with pytest.raises(EnvelopeVersionError) as raised:
+                registry_bound_repo.load(
+                    namespace,
+                    object_key,
+                    expected_class=WORKFLOW_STATE_NAMESPACE.sensitivity,
+                    max_supported_version=WORKFLOW_STATE_NAMESPACE.schema_version + 1,
+                )
+            assert raised.value.translated_message == "errors.storage.namespace.schema_mismatch"
         finally:
             engine.dispose()
