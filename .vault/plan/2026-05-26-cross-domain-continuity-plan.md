@@ -490,6 +490,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S289` - evaluate access_gate __init__.py env-var read pre-Settings bootstrap; `either lift into Settings (preferred) or write an ADR exception note formalising the early-bootstrap-window exception; `src/aeat/access_gate/__init__.py`.
 - [ ] `W09.P41.S290` - evaluate core i18n _render.py env-var signature for cache-key invalidation; `either route through Settings or document the cache-coherence rationale in an ADR; `src/aeat/core/i18n/_render.py`.
 - [ ] `W09.P41.S291` - evaluate core observability _replay.py env-var write for replay scope; `if test-infrastructure-only document inline + restrict via test-only import path; if production-touching lift into Settings; `src/aeat/core/observability/_replay.py`.
+- [ ] `W09.P41.S292` - R8-MARC-A surface legal_refs and source_refs in verify and revision CLI outputs; `Marc round-8 round-8 confirmed observations carry provenance in the persisted CalculationRevision but no CLI surface emits them (verification-report view revision casillas formulas describe all lack the columns); add --json flag or sibling subcommand that projects typed observations including legal_refs source_refs formula_id to operator output; `src/aeat/entrypoints/cli/_modelo.py`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -534,6 +535,8 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S282` - HARDCODED_USER_STRING sweep S98 follow-up: route 2 auth _authenticator.py raises via tr() and remove env-var/class-name leakage; `lines 1210 1213 currently expose AEAT_CERTIFICATE_PATH and AEAT_CERTIFICATE_PASSWORD_SECRET env-var names plus CertificateBundle class name; cite AEAT_LIVE_TESTS_ENABLED safety gate per round-5 audit B-ROSER findings; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
 - [ ] `W09.P45.S283` - HARDCODED_USER_STRING sweep S98 follow-up: route 9 BadParameter raises in diagnostics/profile.py via tr() (lines 62 66 68 72 77 98 104 117 127-128 153); `bulk locale-CLI migration; coin keys under diagnostics.profile.errors namespace; `src/aeat/diagnostics/profile.py`.
 - [ ] `W09.P45.S284` - HARDCODED_USER_STRING sweep S98 follow-up: route diagnostics/secure_objects.py:42-43 BadParameter via tr(); `plus locales/cli.py lines 38 40 42 44 62 (missing/extra/ok labels + scaffold-updated message) via tr(); plus entrypoints/cli/__init__.py:130 version echo via tr(); plus application/wizard/_commands.py:800-804 profile/status/next tab labels via tr(); `src/aeat/`.
+- [ ] `W09.P45.S293` - R8-MARC-B verification finding text drifts to Castellano while CLI interface is Catalan; `missing_required_casilla finding inner text not routed via tr() with profile output_language context; locate verification finding rendering and route the message body via tr(); `src/aeat/application/modelo/_actions.py`.
+- [ ] `W09.P45.S294` - R8-MARC-C ledger import --period rejects 2026T1 silently with no suggestion of valid format 2026-Q1; rejection message should suggest the canonical period token form when bare-shape input fails parsing; previously logged as S239 R7-MARC-D4 — re-confirmed open in round-8; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
