@@ -541,6 +541,19 @@ cli:
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
+        acquisition:
+          outcome:
+            aeat_403: puerta AEAT 403/autenticación
+            authenticated: autenticado
+            certificate_required: certificado requerido
+            dom_drift: la forma de la página AEAT ha cambiado
+            live_navigation_failed: navegación en directo fallida
+            no_clave_prompt: sin aviso de Cl@ve
+            operator_timeout: tiempo de aprobación agotado
+            pending_clave_request: petición Cl@ve pendiente
+            qr_required: aprobación QR requerida
+            unknown: desconocido
+            wrong_identity: identidad incorrecta
         app_help: Captura de la cartera de compensación de IVA de la AEAT (solo lectura;
           solo permite representación en nombre propio y la consulta de lectura protegida
           de cartera).
@@ -549,6 +562,9 @@ cli:
         capture_history_help: Captura en directo el historial de Modelo 303 presentados
           y persiste el estado seguro de compensación de IVA. No se envian opciones
           de presentación AEAT ni formularios de cartera.
+        capture_remote_state_help: Captura en directo el historial de Modelo 303
+          presentado e intenta la lectura de la cartera de IVA AEAT como una adquisición
+          tipada de solo lectura.
         history_help: Lista el historial local seguro de compensación de IVA, saldos
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
