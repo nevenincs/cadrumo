@@ -15,11 +15,14 @@ from typing import Protocol
 
 import pytest
 
+from ..config import override_settings
 from . import (
     GenericPayload,
     RunEventKind,
     RunEventPayload,
     RunOutcome,
+    RunTracePersistenceError,
+    current_run_context,
     load_events,
     load_trace,
     record_event,
@@ -119,6 +122,37 @@ class TestRunContextOutcome:
         trace = load_trace(captured["run_id"])
         # BaseException path: Ctrl-C must still leave a FAILED trace.
         assert trace.outcome is RunOutcome.FAILED
+
+    def test_trace_persistence_failure_surfaces_on_clean_exit(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        run_id = "1111111111111111"
+        with (
+            override_settings(aeat_runs_dir=tmp_path),
+            pytest.raises(RunTracePersistenceError) as excinfo,
+            run_context(entrypoint="aeat test persist fail", arguments=(), run_id=run_id),
+        ):
+            (tmp_path / run_id / "trace.json").mkdir()
+
+        assert excinfo.value.operation == "save_trace"
+        assert excinfo.value.path == tmp_path / run_id / "trace.json"
+        assert current_run_context() is None
+
+    def test_trace_persistence_failure_does_not_mask_body_error(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        run_id = "2222222222222222"
+        with (
+            override_settings(aeat_runs_dir=tmp_path),
+            pytest.raises(RuntimeError, match="primary failure"),
+            run_context(entrypoint="aeat test body fail", arguments=(), run_id=run_id),
+        ):
+            (tmp_path / run_id / "trace.json").mkdir()
+            raise RuntimeError("primary failure")
+
+        assert current_run_context() is None
 
 
 class TestRunContextRunIdValidation:

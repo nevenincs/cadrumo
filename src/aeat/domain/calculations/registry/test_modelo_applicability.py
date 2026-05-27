@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from aeat.core.resources import bundled_path
@@ -121,10 +123,12 @@ def test_impatriado_art93_exempts_modelo_720_even_with_bienes_declared() -> None
         irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
         iva_regime=IVARegime.GENERAL,
         irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+        special_regime_start_date=date(2023, 1, 1),
         # bienes declared above threshold — exemption must still fire
         bienes_extranjero_above_threshold=True,
     )
-    result = derive_modelo_applicability(beckham_profile, "720")
+    # Pass today within the 6-year window (2023-2028) so the exemption fires.
+    result = derive_modelo_applicability(beckham_profile, "720", today=date(2026, 5, 27))
     assert result.verdict is ApplicabilityVerdict.NOT_APPLICABLE
     # Reason must cite the Art. 93 special regime
     assert "Art. 93" in result.reason or "impatriado" in result.reason.lower()
@@ -164,10 +168,11 @@ def test_impatriado_exemption_does_not_affect_other_modelos() -> None:
         irpf_income_categories=frozenset({IrpfIncomeCategory.TRABAJO}),
         iva_regime=IVARegime.GENERAL,
         irpf_special_regime=IrpfSpecialRegime.IMPATRIADO,
+        special_regime_start_date=date(2023, 1, 1),
     )
     # Modelo 100 applies regardless of the special regime: the impatriado
     # files Modelo 151, but Modelo 100 applicability is not gated here.
     assert (
-        derive_modelo_applicability(beckham_profile, "100").verdict
+        derive_modelo_applicability(beckham_profile, "100", today=date(2026, 5, 27)).verdict
         is ApplicabilityVerdict.APPLICABLE
     )

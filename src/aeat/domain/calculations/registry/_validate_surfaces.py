@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ._schema import LegalReference, ModeloRevision, SourceReference
+from ._schema import (
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS,
+    LegalReference,
+    ModeloRevision,
+    SourceReference,
+)
 from ._validate_evidence import EvidenceValidator
 from ._validate_helpers import _missing_refs
 
@@ -73,20 +78,13 @@ def validate_workbook_parity_section(
             )
 
 
-# P09.S63: the known VerificationPredicateDefinition.expression
-# operator set the runtime DSL evaluator (_evaluate_predicate_expression
-# in src/aeat/application/modelo/_actions.py) recognises. Any
-# predicate whose expression begins with a token outside this set
-# silently passes the runtime gate ("unknown predicates do not
-# block"); a typo like 'cap_lt_when_positive' is therefore the
-# silent-zero hazard at the predicate layer. The registry-load
-# validator rejects unknown expression-prefixes so authoring-time
-# catches the typo, not gate-run-time silent-pass.
-_KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
-    {"all_nonzero", "any_nonzero", "cap_le_when_positive"}
-)
-
-
+# P10.S68: the known predicate operator set was previously a
+# module-level constant here that mirrored the runtime evaluator's
+# regex set. Drift between the two was a silent-pass hazard. The
+# canonical set now lives at
+# aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS
+# and both the validator (here) and a gate test against the
+# runtime evaluator reference it.
 def _predicate_operator_name(expression: str) -> str | None:
     """Return the leading operator name of a predicate expression, or None."""
 
@@ -133,10 +131,10 @@ def validate_verification_expectation_section(
                 f"{prefix}: {owner} expression {predicate.expression!r} is not a recognised "
                 "DSL call (missing operator name or opening paren)"
             )
-        elif op_name not in _KNOWN_VERIFICATION_PREDICATE_OPERATORS:
+        elif op_name not in KNOWN_VERIFICATION_PREDICATE_OPERATORS:
             failures.append(
                 f"{prefix}: {owner} expression uses unknown operator {op_name!r}; known operators: "
-                f"{sorted(_KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}"
+                f"{sorted(KNOWN_VERIFICATION_PREDICATE_OPERATORS)!r}"
             )
 
 

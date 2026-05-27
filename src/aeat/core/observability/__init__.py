@@ -30,6 +30,7 @@ from ._errors import (
     AeatCorpusDriftError,
     AeatObservabilityError,
     RunContextMissingError,
+    RunTracePersistenceError,
     RunTraceValidationError,
 )
 from ._fingerprint import (
@@ -87,6 +88,7 @@ __all__ = [
     "RunEventPayload",
     "RunOutcome",
     "RunTrace",
+    "RunTracePersistenceError",
     "RunTraceValidationError",
     "StepBoundaryPayload",
     "WorkflowLinkPayload",

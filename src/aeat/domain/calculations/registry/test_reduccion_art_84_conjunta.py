@@ -3,9 +3,8 @@
 Ground truth: Art. 84 Ley 35/2006 (LIRPF) — reducción en base imponible por
 tributación conjunta:
 
-    Unidad familiar tipo 1 (matrimonio, Art. 82.1): €3,400 reducción.
-    Unidad familiar tipo 2 (monoparental, Art. 82.2): €0 via this casilla
-        (tipo-2 reducción €2,150 applies through Art. 81 into a separate casilla).
+    Unidad familiar tipo 1 (matrimonio, Art. 82.1.1°): €3,400 reducción.
+    Unidad familiar tipo 2 (monoparental, Art. 82.1.2°): €2,150 reducción.
     Individual (declaration_type != 2): €0.
 
 The formula ``renta-{year}-reduccion-art-84-conjunta`` derives the reducción from
@@ -65,11 +64,19 @@ _BASE_BINDINGS_2024 = {
     "renta-2024-modelo-115-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-123-retenciones-periodicas": Decimal("0"),
     "renta-2024-modelo-193-retenciones-anuales": Decimal("0"),
+    # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
+    "renta-2024-profile-marriage-full-year": Decimal("0"),
+    "renta-2024-profile-marriage-month-start": Decimal("0"),
+    "renta-2024-profile-marriage-month-end": Decimal("0"),
 }
 
 _BASE_BINDINGS_2025 = {
     "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
     "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+    # matrimonio-sobrevenido bindings — 0 means marriage pre-dates filing year (full year)
+    "renta-2025-profile-marriage-full-year": Decimal("0"),
+    "renta-2025-profile-marriage-month-start": Decimal("0"),
+    "renta-2025-profile-marriage-month-end": Decimal("0"),
 }
 
 
@@ -175,17 +182,19 @@ def test_0461_individual_yields_0_2024() -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_0461_conjunta_tipo_2_monoparental_yields_0_2024() -> None:
-    """declaration_type=2 (conjunta) + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €0.
+def test_0461_conjunta_tipo_2_monoparental_yields_2150_2024() -> None:
+    """declaration_type=2 (conjunta) + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €2,150.
 
-    Oracle: Art. 82.2 LIRPF tipo-2 (monoparental) — the €2,150 reducción (Art. 81)
-    flows through a separate casilla, not 0461. Casilla 0461 must remain €0 for tipo-2.
+    Oracle: Art. 84.2.2° LIRPF — unidad familiar tipo 2 (monoparental, soltero/separado
+    con hijos a cargo) electing tributación conjunta receives reducción €2,150 in the
+    base imponible general via casilla 0461.
+    Source: AEAT Renta 2024 Manual, section Tributación conjunta, cuadro reducción.
     """
     scenario = _scenario_2024(
-        "m100-2024-0461-conjunta-tipo-2-monoparental-zero",
+        "m100-2024-0461-conjunta-tipo-2-monoparental-2150",
         declaration_type=Decimal("2"),
         minor_children_in_unit=Decimal("1"),
-        expected_0461=Decimal("0.00"),
+        expected_0461=Decimal("2150.00"),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
     assert_registry_scenario_matches(report)
@@ -262,13 +271,16 @@ def test_0461_individual_yields_0_2025() -> None:
     assert_registry_scenario_matches(report)
 
 
-def test_0461_conjunta_tipo_2_monoparental_yields_0_2025() -> None:
-    """declaration_type=2 + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €0 in 2025."""
+def test_0461_conjunta_tipo_2_monoparental_yields_2150_2025() -> None:
+    """declaration_type=2 + minor_children_in_unit=1 (tipo-2 monoparental) → 0461 = €2,150 in 2025.
+
+    Oracle: Art. 84.2.2° LIRPF — same €2,150 reducción applies to the 2025 revision.
+    """
     scenario = _scenario_2025(
-        "m100-2025-0461-conjunta-tipo-2-monoparental-zero",
+        "m100-2025-0461-conjunta-tipo-2-monoparental-2150",
         declaration_type=Decimal("2"),
         minor_children_in_unit=Decimal("1"),
-        expected_0461=Decimal("0.00"),
+        expected_0461=Decimal("2150.00"),
     )
     report = run_registry_calculation_scenario(scenario, registry_root=_REGISTRY_ROOT, source_root=_SOURCE_ROOT)
     assert_registry_scenario_matches(report)

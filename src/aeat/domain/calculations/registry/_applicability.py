@@ -87,6 +87,7 @@ remaining registered modelos is intentionally deferred, marked at
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 
@@ -1247,6 +1248,8 @@ def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
 def derive_modelo_applicability(
     profile: TaxpayerProfile,
     modelo: str,
+    *,
+    today: date | None = None,
 ) -> ModeloApplicability:
     """Derive a modelo's applicability from the taxpayer model.
 
@@ -1264,21 +1267,25 @@ def derive_modelo_applicability(
     Args:
         profile: The operator's three-axis taxpayer model.
         modelo: The AEAT modelo identifier to decide.
+        today: Reference date for the Beckham window check. Defaults to
+            ``date.today()`` when ``None``. Pass an explicit date in tests
+            so results are deterministic.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
 
+    _today = today if today is not None else date.today()
+
     # An impatriado (LIRPF Art. 93 special regime) is taxed as a non-resident
-    # for the duration of the Beckham window and is therefore exempt from the
-    # IRPF-resident obligations. Modelo 720 (bienes en el extranjero) is one
-    # of those obligations: it applies to IRPF residents, not to non-resident
-    # taxpayers under Art. 93. Enforce the exemption before the rule table so
-    # the payer-fact gate is never reached for an impatriado.
-    if (
-        modelo == "720"
-        and profile.irpf_special_regime is IrpfSpecialRegime.IMPATRIADO
-    ):
+    # for the duration of the six-year Beckham window (RIRPF Art. 116.1) and
+    # is therefore exempt from IRPF-resident obligations. Modelo 720 (bienes
+    # en el extranjero) is one of those obligations: it applies to IRPF
+    # residents, not to non-resident taxpayers under Art. 93. Enforce the
+    # exemption before the rule table so the payer-fact gate is never reached.
+    # Year-7+ filers whose window has expired revert to the general IRPF
+    # regime and owe M720 again — #191 EXEMPT-001 wires the window check here.
+    if modelo == "720" and profile.beckham_window_active(_today):
         return ModeloApplicability(
             modelo="720",
             verdict=ApplicabilityVerdict.NOT_APPLICABLE,

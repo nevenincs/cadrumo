@@ -2313,6 +2313,12 @@ _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
     r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$"
 )
+# advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
+# fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
+# and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
+_PREDICATE_ADVISORY_WHEN_RATIO_GE = _re.compile(
+    r'^advisory_when_ratio_ge\(\["(?P<num>[^"]+)",\s*"(?P<den>[^"]+)",\s*"(?P<thr>[^"]+)"\]\)$'
+)
 
 
 def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
@@ -2372,29 +2378,72 @@ def _evaluate_predicate_expression(
     return True
 
 
+def _evaluate_advisory_predicate_fires(
+    expression: str,
+    casilla_values: Mapping[str, Decimal],
+) -> bool:
+    """Return True when an advisory predicate's condition is met (i.e. advisory should fire).
+
+    Supports:
+
+    - ``advisory_when_ratio_ge(["num_id", "den_id", "threshold"])`` — fires when
+      num/den >= threshold and den > 0. Art. 110.3.b RIRPF: exempt from M130
+      when retenciones_acumuladas / rendimientos_brutos >= 0.70.
+    """
+    expr = expression.strip()
+    m = _PREDICATE_ADVISORY_WHEN_RATIO_GE.match(expr)
+    if m:
+        num_id = m.group("num")
+        den_id = m.group("den")
+        thr_str = m.group("thr")
+        den = casilla_values.get(den_id, Decimal(0))
+        if den <= Decimal(0):
+            return False
+        num = casilla_values.get(num_id, Decimal(0))
+        try:
+            threshold = Decimal(thr_str)
+        except Exception:
+            return False
+        return (num / den) >= threshold
+    return False
+
+
 def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
     casilla_values: Mapping[str, Decimal],
 ) -> list[ModeloVerificationFinding]:
-    """Evaluate Layer 2 cross-casilla predicates; return BLOCKING_RULE findings for violations."""
+    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories."""
     if not predicates:
         return []
 
     findings: list[ModeloVerificationFinding] = []
     for predicate in predicates:
-        if not _evaluate_predicate_expression(predicate.expression, casilla_values):
-            findings.append(
-                ModeloVerificationFinding(
-                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                    severity=ModeloVerificationFindingSeverity.BLOCKING,
-                    message=(f"cross-casilla invariant {predicate.predicate_id!r} violated: {predicate.expression}"),
-                    next_action=(
-                        f"Ensure all casillas required by predicate "
-                        f"{predicate.predicate_id!r} are non-zero before verifying."
-                    ),
-                    legal_refs=tuple(str(r) for r in predicate.legal_refs),
+        if predicate.finding_kind == "ADVISORY":
+            # ADVISORY predicates fire a WARNING finding when their condition IS met
+            # (affirmative logic — opposite of BLOCKING_RULE predicates).
+            if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values):
+                findings.append(
+                    ModeloVerificationFinding(
+                        kind=ModeloVerificationFindingKind.ADVISORY,
+                        severity=ModeloVerificationFindingSeverity.WARNING,
+                        message=predicate.predicate_id,
+                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
+                    )
                 )
-            )
+        else:
+            if not _evaluate_predicate_expression(predicate.expression, casilla_values):
+                findings.append(
+                    ModeloVerificationFinding(
+                        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                        severity=ModeloVerificationFindingSeverity.BLOCKING,
+                        message=(f"cross-casilla invariant {predicate.predicate_id!r} violated: {predicate.expression}"),
+                        next_action=(
+                            f"Ensure all casillas required by predicate "
+                            f"{predicate.predicate_id!r} are non-zero before verifying."
+                        ),
+                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
+                    )
+                )
     return findings
 
 

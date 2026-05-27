@@ -31,6 +31,21 @@ def expression_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
     return tuple(refs)
 
 
+def expression_date_binding_refs(expression: FormulaExpression) -> tuple[str, ...]:
+    """Return all date_binding ids referenced by a formula expression.
+
+    ``date_binding`` leaves carry date-valued profile facts (e.g.
+    birth_date) consumed by the ``age_at_year_end`` op.  They are
+    distinct from ``binding`` leaves (Decimal channel) and need their
+    own collector so callers can populate the ``date_binding_values``
+    channel selectively.
+    """
+
+    refs: list[str] = []
+    _collect_date_binding_refs(expression, refs)
+    return tuple(refs)
+
+
 def expression_parameter_refs(expression: FormulaExpression) -> tuple[str, ...]:
     """Return all parameter ids referenced by a formula expression.
 
@@ -64,6 +79,13 @@ def _collect_binding_refs(expression: FormulaExpression, refs: list[str]) -> Non
         refs.append(expression.binding)
     for arg in expression.args:
         _collect_binding_refs(arg, refs)
+
+
+def _collect_date_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
+    if expression.date_binding is not None:
+        refs.append(str(expression.date_binding))
+    for arg in expression.args:
+        _collect_date_binding_refs(arg, refs)
 
 
 #: Formula operators that consume a binding leaf as a string-valued enum
