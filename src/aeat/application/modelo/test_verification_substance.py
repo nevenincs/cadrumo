@@ -301,6 +301,86 @@ def test_m130_all_zero_without_gastos_is_blocked(repos) -> None:
     assert ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA in missing_kinds
 
 
+def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c14(repos) -> None:
+    """P09.S64: end-to-end integration test for the M130 C15 ≤ C14 cap predicate.
+
+    Drives the full registry-load → snapshot → calculate_modelo_revision →
+    verify_modelo_revision pipeline with a scenario where the prior-quarter
+    saldo seed (supplied via binding_values for casilla 15) exceeds C14
+    (computed from operator-supplied inputs). The verification report MUST
+    surface a BLOCKING_RULE finding citing the
+    modelo-130-c15-cap-by-c14 predicate.
+
+    The earlier S60 test exercised the predicate evaluator with literal
+    casilla values; this test exercises the FULL production pipeline —
+    a registry-load typo / binding-aggregation regression / predicate-
+    declaration drift would all surface here.
+    """
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="130",
+        filing_year=2026,
+        period="2T",
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    # Modest operator inputs so C14 stays small + positive.
+    casilla_inputs: dict[str, Decimal] = {
+        "02": Decimal("0"),
+        "05": Decimal("0"),
+        "06": Decimal("0"),
+        "08": Decimal("0"),
+        "10": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+    # Carry-forward seed deliberately large — exceeds the computed C14.
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("99999"),
+            # M130 C03 is a ledger-aggregated cumulative binding; supply
+            # a small value so C14 stays small + positive (the cap rule
+            # only fires when C14 > 0).
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("1000"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    # The cap predicate fires when C14 > 0 AND C15 > C14. The carry-
+    # forward seed (99999) exceeds any plausible C14 computed from
+    # the small inputs above; the predicate MUST emit a BLOCKING_RULE.
+    blocking_findings = [
+        f for f in report.findings if f.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    ]
+    cap_findings = [f for f in blocking_findings if "modelo-130-c15-cap-by-c14" in f.message]
+    assert cap_findings, (
+        "M130 C15-cap-by-C14 predicate must fire when carry-forward exceeds positive C14; "
+        f"got blocking findings: {[f.message for f in blocking_findings]}"
+    )
+    assert report.granted_verificado_completo is False
+
+
 # ---------------------------------------------------------------------------
 # S211: tampering regression — mutating a persisted observation is detected
 # ---------------------------------------------------------------------------
