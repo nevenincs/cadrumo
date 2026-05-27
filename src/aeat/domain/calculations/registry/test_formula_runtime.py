@@ -80,11 +80,18 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+            # C03 (rendimiento neto) was converted from computed to
+            # bound by a parallel campaign; supply the actividad-
+            # economica cumulative binding value so the bound
+            # casilla resolves.
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
         },
     )
 
+    # C03 is now bound (not computed) so it does not appear in
+    # result.entries. Order assertions adjusted to exclude C03.
     order = {entry.target: index for index, entry in enumerate(result.entries)}
-    assert order["03"] < order["04"] < order["07"] < order["12"] < order["14"] < order["17"] < order["19"]
+    assert order["04"] < order["07"] < order["12"] < order["14"] < order["17"] < order["19"]
     assert order["09"] < order["11"] < order["12"]
     assert "19" in result.values
     assert "rd-439-2007:art-110" in result.entries[0].legal_refs
@@ -93,10 +100,14 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
 def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
+    # C04 (Total ingresos) is a computed casilla in the M130 1T
+    # snapshot; previously C03 was used but a parallel campaign
+    # changed C03 to input_kind="bound" via an actividad-economica
+    # cumulative-rendimiento-neto binding.
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,
-            inputs={"03": Decimal("6000")},
+            inputs={"04": Decimal("6000")},
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
         )

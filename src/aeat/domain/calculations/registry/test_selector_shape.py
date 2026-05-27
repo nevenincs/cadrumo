@@ -92,13 +92,15 @@ def test_previous_filing_selector_accepts_well_shaped_selector() -> None:
 
 
 def test_previous_filing_selector_accepts_singular_source_output_shape() -> None:
-    """The direct-value-copy shape (singular source_output + relation) passes.
+    """The direct-value-copy shape (singular source_output) passes.
 
     Real registry bindings (e.g. M100 retenciones relations against
     M111/M115/M123) declare a ``source_output`` casilla rather than
     a ``source_casillas`` tuple. The typed selector must accept this
     second shape, validated as the exclusive alternative to the
-    plural form.
+    plural form. (The selector.relation shorthand was retired under
+    P07.S32; relation->binding linkage is via
+    RelationDefinition.target_binding.)
     """
 
     binding = _binding(
@@ -106,7 +108,6 @@ def test_previous_filing_selector_accepts_singular_source_output_shape() -> None
         selector={
             "source_modelo": "111",
             "source_output": "28",
-            "relation": "retenciones-trabajo-actividades-premios",
         },
     )
     assert validate_binding_selector_shape(binding) == []
