@@ -75,3 +75,26 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["tipo de gravamen"]
+
+# Calculation-only Decimal binding: the porcentaje de tributación al
+# Estado (casilla DP200026:00625) scales the cuota ejercicio a ingresar
+# by the entity's Estado share. Common-regime (régimen común) entities
+# always have 100; foral entities (Bizkaia, Gipuzkoa, Álava, Navarra)
+# supply the partial percentage negotiated under the Concierto /
+# Convenio Económico. Without this binding the formula
+# `modelo-200-cuota-ejercicio-a-ingresar-devolver` multiplies by
+# (00625 / 100) = 0 and produces a silent zero result (Task #183 root
+# cause). Common-regime SLs store 100 in the profile; non-common-
+# regime profiles store their partial percentage or leave it absent to
+# surface an INCOMPLETE result.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-tributacion-estado-porcentaje"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "tributacion_estado_porcentaje" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["Casilla [00625] Administración del Estado"]
