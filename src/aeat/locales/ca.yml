@@ -471,6 +471,30 @@ cli:
         unset_category_help: Id de categoria la proporció de la qual vols netejar
         unset_help: Elimina la proporció específica d'una categoria
         validate_help: Valida les proporcions contra categories admeses i límits
+      rule:
+        actor_help: Identificador de l'operador registrat en la procedència de la
+          regla.
+        add_help: Afegeix una regla de classificació que classifica automàticament
+          les transaccions coincidents.
+        apply_dry_run_help: Mostra què es classificaria sense persistir canvis.
+        apply_dry_run_summary: 'simulacre: %{count} transacció(ns) es classificarien'
+        apply_help: Aplica les regles de classificació emmagatzemades a les transaccions
+          ACTIVE sense classificar.
+        apply_reaffirm_help: També reclassifica transaccions que ja es van classificar
+          manualment.
+        apply_summary: 'regles: %{rules}, escanejades: %{scanned}, coincidències:
+          %{matched}, omeses: %{skipped}, sense_coincidència: %{no_match}'
+        category_id_help: Categoria de despesa opcional a aplicar.
+        classification_help: Classificació objectiu per a les transaccions coincidents.
+        description_pattern_help: Patró regex comparat (sense distinció de majúscules)
+          amb la descripció de la transacció.
+        group_help: Gestiona i aplica regles de classificació del llibre.
+        list_empty: (no hi ha regles emmagatzemades)
+        list_header: "prioritat\tclassificació\tpatró\trule_id"
+        list_help: Llista les regles de classificació emmagatzemades ordenades per
+          prioritat.
+        priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
+          100).
     live:
       app_help: Ordres d'observació AEAT en viu de només lectura
       borrador:
@@ -1372,6 +1396,8 @@ cli:
         període que els moviments toquin. Local; mai contacta amb AEAT.
     classify:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
+      bulk_summary: 'classificació massiva: %{total} files, %{applied} aplicades,
+        %{skipped} omeses, %{fail} fallides'
       business_pct_help: Percentatge d'ús professional de 0 a 1; obligatori amb --classification
         MIXED i rebutjat per a qualsevol altra classificació
       business_pct_requires_mixed: Rebutjat. --business-pct només s'aplica a una classificació
@@ -1380,11 +1406,17 @@ cli:
       category_help: Id de categoria de despesa deduïble (només moviments de despesa;
         els ingressos no necessiten categoria)
       classification_help: Estat de classificació professional del moviment
+      classification_required: --classification és obligatori quan no s'usa --from-csv.
       counterparty_eu_member_state_help: Estat membre de la UE de la contrapart (ISO
         3166-1 alfa-2 minúscules, p. ex. de); obligatori amb --iva-category intra_community_supply,
         prohibit amb export_third_country_zero_rated
+      from_csv_exclusive: --from-csv no pot combinar-se amb --id ni --classification.
+      from_csv_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
+        category_id].
+      from_csv_not_found: 'Fitxer CSV no trobat: %{path}'
       help: Classificar un moviment del llibre al bucket del perfil actiu
       id_help: Id del moviment del llibre a classificar
+      id_required: --id és obligatori quan no s'usa --from-csv.
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
@@ -1749,7 +1781,9 @@ cli:
         contacta amb AEAT.
       to_help: Data de fi inclusiva (ISO YYYY-MM-DD); per defecte, avui.
     calendar:
-      all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del perfil.
+      all_profiles_help: Mostra el calendari de tots els perfils registrats en lloc
+        de l'actiu. Cada bloc va precedit d'una línia de capçalera amb el nom del
+        perfil.
       allow_incomplete_help: Generar el calendari encara que les dades del perfil
         siguin incompletes.
       from_help: Data d'inici inclusiva del calendari (ISO YYYY-MM-DD).
@@ -2864,6 +2898,10 @@ errors:
       empty_database_url: L'URL de base de dades configurada és buida. Selecciona
         un perfil o configura l'emmagatzematge abans de tornar-ho a provar.
     runtime:
+      cold_bootstrap_active_profile_refused: L'emmagatzematge d'arrencada en fred
+        només està disponible abans de seleccionar un bucket de perfil actiu.
+      cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
+        no pot ometre una ruta de base de dades explícita.
       no_active_session: No hi ha cap sessió de bucket activa. Executa `aeat config
         profile switch NAME` per desbloquejar un perfil.
       no_detail: No s'ha informat cap detall de preparació.

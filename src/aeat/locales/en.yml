@@ -432,6 +432,24 @@ cli:
         unset_category_help: Category id whose ratio you want to clear
         unset_help: Remove the specific ratio for a category
         validate_help: Validate ratios against eligible categories and bounds
+      rule:
+        actor_help: Operator identifier recorded in the rule provenance.
+        add_help: Add a classification rule that auto-classifies matching transactions.
+        apply_dry_run_help: Show what would be classified without persisting changes.
+        apply_dry_run_summary: 'dry-run: %{count} transaction(s) would be classified'
+        apply_help: Apply stored classification rules to unclassified ACTIVE transactions.
+        apply_reaffirm_help: Also re-classify transactions that were manually classified.
+        apply_summary: 'rules: %{rules}, scanned: %{scanned}, matched: %{matched},
+          skipped: %{skipped}, no_match: %{no_match}'
+        category_id_help: Optional spending category to apply.
+        classification_help: Target classification for matching transactions.
+        description_pattern_help: Regex pattern matched (case-insensitive) against
+          transaction description.
+        group_help: Manage and apply ledger classification rules.
+        list_empty: (no rules stored)
+        list_header: "priority\tclassification\tpattern\trule_id"
+        list_help: List stored classification rules ordered by priority.
+        priority_help: Numeric priority; lower value is evaluated first (default 100).
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -1291,6 +1309,8 @@ cli:
         touches. Local-only; never contacts AEAT.
     classify:
       actor_help: Operator name recorded on the bucket event
+      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
+        skipped, %{fail} failed'
       business_pct_help: Business-use share from 0 to 1; required with --classification
         MIXED and rejected for any other classification
       business_pct_requires_mixed: Refused. --business-pct only applies to a MIXED
@@ -1299,11 +1319,18 @@ cli:
       category_help: Deductible-expense category id (expense transactions only; income
         needs no category)
       classification_help: Business classification state for the transaction
+      classification_required: --classification is required when --from-csv is not
+        provided.
       counterparty_eu_member_state_help: EU member state of the counterparty (ISO
         3166-1 alpha-2 lowercase, e.g. de); required with --iva-category intra_community_supply,
         prohibited with export_third_country_zero_rated
+      from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
+      from_csv_help: Path to a CSV file with columns transaction_id, classification[,
+        category_id].
+      from_csv_not_found: 'CSV file not found: %{path}'
       help: Classify one ledger transaction in the active profile bucket
       id_help: Ledger transaction id to classify
+      id_required: --id is required when --from-csv is not provided.
       irpf_category_help: IRPF category for modelo calculations
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
@@ -1673,7 +1700,8 @@ cli:
         first so the most-overdue items triage first. Local-only; never contacts AEAT.
       to_help: Inclusive end date (ISO YYYY-MM-DD); defaults to today.
     calendar:
-      all_profiles_help: Render the calendar for every registered profile instead of the active one. Each block is prefixed with a profile header line.
+      all_profiles_help: Render the calendar for every registered profile instead
+        of the active one. Each block is prefixed with a profile header line.
       allow_incomplete_help: Render the calendar even when profile data is incomplete.
       from_help: Inclusive start date for the calendar window (ISO YYYY-MM-DD).
       help: Render the deadline calendar for the active profile across the supplied
@@ -2719,6 +2747,10 @@ errors:
       empty_database_url: The configured database URL is empty. Select a profile or
         configure storage before trying again.
     runtime:
+      cold_bootstrap_active_profile_refused: Cold-bootstrap storage is only available
+        before an active profile bucket is selected.
+      cold_bootstrap_explicit_database_refused: Cold-bootstrap storage cannot bypass
+        an explicit database route.
       no_active_session: No active bucket session is open. Run `aeat config profile
         switch NAME` to unlock a profile.
       no_detail: No detailed readiness issue was reported.
