@@ -19,7 +19,7 @@ from ...domain.filing import ModeloDraft, ModeloDraftRepository
 from ...domain.submission import ModeloDraftStatus
 from ...tests.secure_sql import isolated_profile_storage_root
 from . import AuthProviderKind
-from ._operator import configure_operator_auth, inspect_operator_auth
+from ._operator import build_live_auth_preflight_report, configure_operator_auth, inspect_operator_auth
 from ._operator import test_operator_auth as run_operator_auth_test
 from ._sessions import (
     AuthProfileIdentityMismatchError,
@@ -441,6 +441,41 @@ def test_auth_test_probes_explicitly_requested_provider() -> None:
     probe = run_operator_auth_test("clave_movil")
 
     assert probe.provider == "clave_movil"
+
+
+def test_live_auth_preflight_reports_redacted_clave_profile_alignment() -> None:
+    """Live-auth preflight exposes identity readiness without raw taxpayer values."""
+
+    workflow_state_repository().update(
+        lambda state: register_minimal_profile(
+            state,
+            profile_id="operator",
+            overrides={"identity.tax_id": "12345678Z"},
+        )
+    )
+    settings = Settings().model_copy(
+        update={
+            "aeat_clave_movil_dni_nie": "12345678Z",
+            "aeat_clave_movil_nie_soporte": "support-present",
+            "aeat_clave_prefer_non_qr": True,
+            "aeat_clave_movil_timeout_ms": 120_000,
+        }
+    )
+
+    report = build_live_auth_preflight_report("clave_movil", settings=settings)
+
+    assert report.provider == "clave_movil"
+    assert report.active_profile == "operator"
+    assert report.profile_tax_id_present is True
+    assert report.provider_identity_present is True
+    assert report.identity_alignment == "matches"
+    assert report.identity_kind == "DNI"
+    assert report.auth_mode == "non_qr"
+    assert report.prefer_non_qr is True
+    assert report.timeout_ms == 120_000
+    assert report.nie_soporte_configured is True
+    assert "12345678Z" not in report.model_dump_json()
+    assert "support-present" not in report.model_dump_json()
 
 
 def test_auth_test_carries_a_local_session_probe_status_does_not() -> None:
