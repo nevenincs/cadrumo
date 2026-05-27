@@ -518,6 +518,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S324` - R9-MANUEL-B add cross-profile linkage SC to socio M100; `today base atribuida from M184 does not flow automatically to a member socio personal M100 declaration; socio must manually re-enter the attributed share; design a binding source attribution_received that resolves the share from a known SC profile in the same workspace OR document the manual workflow with explicit CLI prompts; `src/aeat/application/modelo/_profile_binding.py`.
 - [ ] `W09.P41.S326` - FU-S306-A annotate all_calendars list as list[dict[str, object]] or carry an inline third-party-boundary comment per aeat-calculation-grounding; `minor non-blocking from #131 review of dd8934c72; `src/aeat/entrypoints/cli/_overview.py`.
 - [ ] `W09.P41.S327` - FU-S318-A simplify _collect_revision_verification_findings — casillas_by_id dict lookup is redundant when casilla is already in scope from the snapshot iteration; `pure cleanup not a regression; `src/aeat/application/modelo/_actions.py`.
+- [ ] `W09.P41.S334` - FU-S278-B tighten LedgerTransactionReviewPayload.classified_by type from str|None to str; Transaction.classified_by is non-nullable so the None is unreachable at runtime; type imprecision flagged by architect #136; `src/aeat/application/ledger/_models.py`.
 
 ### Phase `W09.P42` - twin function merge
 
