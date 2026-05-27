@@ -22,8 +22,12 @@ from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.application.repair_integrity import (
+    _REPAIR_DECISION_NAMESPACE,
+    RepairRemediationDecision,
+    RepairRemediationDecisionRepository,
     build_repair_integrity_report,
     build_repair_list_report,
+    repair_remediation_decision_id,
 )
 from aeat.core.classification import SensitivityClass
 from aeat.core.config import override_settings
@@ -146,6 +150,26 @@ class TestBuildListReport:
             )
             assert unreadable_mode.filter_mode == "unreadable"
 
+    def test_list_unreadable_filters_to_only_failed_decryption_rows(self, tmp_path: Path) -> None:
+        with _explicit_storage(tmp_path):
+            with EphemeralMasterKeyProvider(key=_KEY_A):
+                _save_rows("aeat.workflow", 2, tag="stale")
+            with EphemeralMasterKeyProvider(key=_KEY_B):
+                _save_rows("aeat.workflow", 3, tag="current")
+                default = build_repair_list_report(namespace="aeat.workflow")
+                unreadable = build_repair_list_report(namespace="aeat.workflow", only_unreadable=True)
+
+        assert default.rows_total == 5
+        assert default.integrity.readable == 3
+        assert default.integrity.unreadable == 2
+        assert unreadable.filter_mode == "unreadable"
+        assert unreadable.rows_total == 2
+        assert {row.readable for row in unreadable.rows} == {False}
+        assert all(row.reason for row in unreadable.rows)
+        assert set(row.object_key_digest for row in unreadable.rows).issubset(
+            {row.object_key_digest for row in default.rows}
+        )
+
     def test_list_refuses_when_both_flags_passed(self, tmp_path: Path) -> None:
         with (
             _explicit_storage(tmp_path),
@@ -174,3 +198,43 @@ class TestReportInvariants:
             report = build_repair_integrity_report()
         with pytest.raises(ValidationError):
             report.readable_total = 99  # type: ignore[misc]
+
+
+class TestRepairRemediationDecisionRepository:
+    def test_load_refuses_decision_payload_when_content_hash_does_not_match(self, tmp_path: Path) -> None:
+        decided_at = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
+        original_id = repair_remediation_decision_id(
+            target_namespace="aeat.workflow",
+            target_object_key_digest="abc123",
+            outcome="rebuild",
+            decided_at=decided_at,
+            decided_by="operator",
+            reason="original evidence",
+            likely_origin="rotated-key",
+            replacement_evidence_requirements=("export",),
+            verified_replacement_evidence_refs=(),
+        )
+        tampered = RepairRemediationDecision(
+            decision_id=original_id,
+            target_namespace="aeat.workflow",
+            target_object_key_digest="abc123",
+            outcome="rebuild",
+            decided_at=decided_at,
+            decided_by="operator",
+            reason="tampered evidence",
+            likely_origin="rotated-key",
+            replacement_evidence_requirements=("export",),
+            verified_replacement_evidence_refs=(),
+        )
+        with _explicit_storage(tmp_path), EphemeralMasterKeyProvider(key=_KEY_A):
+            secure_repository = SecureObjectRepository()
+            secure_repository.save(
+                namespace=_REPAIR_DECISION_NAMESPACE,
+                object_key=original_id,
+                classification=SensitivityClass.AUDIT,
+                schema_version=1,
+                written_at=decided_at,
+                payload=tampered.model_dump_json().encode("utf-8"),
+            )
+            with pytest.raises(ValueError, match="re-derived"):
+                RepairRemediationDecisionRepository(repository=secure_repository).load_decision(original_id)

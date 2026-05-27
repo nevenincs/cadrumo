@@ -309,7 +309,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
             )
             profile_health = assess_active_profile_health(state)
             checks.append(_active_profile_storage_check(profile_health))
-            setup_report = build_wizard_status(state)
+            setup_report = _repair_safe_wizard_status(build_wizard_status(state))
             checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
             checks.append(_auth_check(setup_report))
         except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
@@ -481,6 +481,14 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
         if check.dead_end:
             lines.append(f"{tr('cli.diagnostics.repair.note_label', default='Note')}\t{check.dead_end}")
     return "\n".join(lines) + "\n"
+
+
+def _repair_safe_wizard_status(report: WizardStatusReport) -> WizardStatusReport:
+    """Return a repair-surface copy that does not expose the bucket UUID."""
+
+    if report.active_profile is None:
+        return report
+    return report.model_copy(update={"active_profile": "active_profile"})
 
 
 def _finding_tag(finding: DiagnosticFinding) -> str:
@@ -677,9 +685,10 @@ def build_registry_integrity_report(registry_root: Path | None = None) -> Regist
 def _active_profile_storage_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     """Render pointer/manifest/profile-record health before semantic readiness."""
 
+    active_profile = "active_profile" if health.active_profile is not None else "-"
     summary = tr(
         "cli.diagnostics.summary.profile_storage",
-        active_profile=health.active_profile or "-",
+        active_profile=active_profile,
         source=health.source,
         status=health.status,
     )
