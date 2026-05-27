@@ -624,6 +624,13 @@ cli:
           sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml (Orden EHA/2887/2008,
           BOE-A-2008-16237). Jogi hivatkozások: Ley 35/2006 93. cikk, RD 439/2007
           113-120. cikk, Orden EHA/2887/2008.'
+        create_stub_modelo_714_refused: 'A(z) %{modelo} modell regisztrált a kötelezettség-nyilvántartásban,
+          de a teljes számítási motor (casillák, adók, BOE fájl) még nincs implementálva
+          ebben a verzióban. A vagyonadót (Ley 19/1991) közvetlenül az AEAT elektronikus
+          székhelyén kell bevallani: sede.agenciatributaria.gob.es/Sede/patrimonio.html
+          (Orden HAC/1023/2021, BOE-A-2021-7593). A kötelezettségi küszöb általánosan
+          nettó vagyon > €700.000 (€600.000 a Valenciai Közösségben). Jogi hivatkozások:
+          Ley 19/1991 28. cikk, Orden HAC/1023/2021.'
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help

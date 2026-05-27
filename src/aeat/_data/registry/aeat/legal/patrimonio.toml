@@ -1,0 +1,52 @@
+# Legal authority catalogue — Impuesto sobre el Patrimonio (Modelo 714)
+#
+# Ley 19/1991 establishes the annual Impuesto sobre el Patrimonio (IP), a
+# tax on the net wealth of resident individuals and Spanish-sited wealth of
+# non-residents. The declaration is Modelo 714 (Orden HAC/1023/2021).
+# The obligation threshold is €700.000 net wealth nationally (Art. 28 Ley 19/1991),
+# with autonomic-community variation: Comunitat Valenciana €600.000, some CCAAs
+# €700.000 or €1.000.000. Full casilla authoring is pending.
+
+[legal."ley-19-1991:art-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-19-1991-art-28.html#art-28"
+document_id = "BOE-A-1991-14461"
+article = "28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1991-14461#a28"
+published_at = 1991-06-06
+effective_from = 1991-01-01
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 19/1991 Art. 28 — base liquidable y mínimo exento del Impuesto sobre el Patrimonio. El mínimo exento general es de 700.000 euros, con competencia autonómica para modificarlo (CV: 600.000 €). Declaración: Modelo 714 (Orden HAC/1023/2021)."
+required_text = [
+    "base liquidable",
+    "Impuesto sobre el Patrimonio",
+]
+
+[sources."aeat-modelo-714-procedure"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_714/files/modelo-714-procedure.html"
+sha256 = "cad66e09fbebbc885caa2294c1226623746918e18b6585df940b8ca85b3bf132"
+bytes = 943
+retrieved_at = 2026-05-27
+applies_from = 2021-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/patrimonio.html"
+review_status = "reviewed"
+
+[sources."boe-modelo-714-form"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "form_spec"
+corpus_path = "corpus/normatives/html/orden-hac-1023-2021-modelo-714.html"
+sha256 = "d82448c53ad5aad75fc3c59616864356378b980443853942ebcf62971aa73a8d"
+bytes = 859
+retrieved_at = 2026-05-27
+published_at = 2021-09-28
+applies_from = 2021-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-7593"
+review_status = "reviewed"

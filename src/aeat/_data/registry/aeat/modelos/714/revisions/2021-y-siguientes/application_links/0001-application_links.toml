@@ -1,0 +1,7 @@
+[[revisions."2021-y-siguientes".application_links]]
+id = "modelo-714-deadline"
+surface = "deadline"
+consumer = "aeat.domain.deadlines"
+requires_snapshot = true
+legal_refs = ["ley-19-1991:art-28"]
+source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-form"]
