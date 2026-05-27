@@ -371,3 +371,59 @@ plan:
    absent-by-design before the runtime flip.
 7. `required_text` on `[legal."rd-439-2007:art-110"]` includes the
    art. 110.5 carry-forward fragment, BOE-verbatim.
+
+## Amendment 2026-05-27 — Decision Z2 scope narrowed to previous-filing
+
+During the P03 implementation the strict-rejection scope of
+Decision Z2 ("inputs targeting any casilla with `input_kind =
+"bound"` raises") proved too broad. Two factors warranted the
+narrowing:
+
+1. **Established production projection pattern**: the runtime
+   helper `resolve_bound_casilla_inputs(revision, binding_values)`
+   projects resolved binding values into a casilla-id-keyed
+   mapping that production callers (aggregation, modelo actions)
+   pass as `inputs` to `calculate_registry_snapshot`. This is not
+   a masking pattern — the binding values are the source of
+   truth and the projection is a runtime ergonomics convenience.
+   Rejecting bound-casilla inputs unconditionally broke the
+   established hexagonal contract.
+
+2. **Non-numeric bound casilla shape**: ~30 bound casillas across
+   the registry carry non-numeric `data_type` values (NIF, text,
+   name, iban, etc.). The Decimal-only `values` map historically
+   holds a `Decimal("0")` placeholder for them; the actual
+   string value flows through a parallel provenance channel.
+   The strict rejection broke ~30 unrelated tests that pass
+   these bound casillas through inputs as the only available
+   route.
+
+**Amended Decision Z2 scope**: the rejection (Acceptance
+criterion 2) applies ONLY to bound casillas whose binding's
+`source` is `previous_filing`. The silent-zero hazard was
+specific to previous_filing bindings (the M130 carry-forward
+case) — the campaign's structural objective is foreclosed by
+the narrower scope. Bound casillas with other binding sources
+(profile, ledger, invoice, withholding, etc.) continue to
+support the inputs fallback because they were never the silent-
+zero hazard and the production code legitimately uses the
+projection pattern above.
+
+**Amended acceptance criterion 2**: `_initial_values` rejects
+inputs targeting bound casillas whose binding `source ==
+"previous_filing"` with `RegistryValidationError`. Subsequent
+work tracked at `P06.S21` may either (a) extend the rejection
+to all bound sources by first refactoring the production
+projection helper to feed `binding_values` directly, or (b)
+accept this amendment as the final architectural shape.
+
+**Amended acceptance criterion 5 reflection**: the third M130
+test (`test_modelo_130_bound_casilla_rejects_input_override`)
+was re-scoped as
+`test_modelo_130_previous_filing_bound_casilla_input_is_silently_ignored`
+to match the amended contract: passing
+`inputs={"15": Decimal("100")}` at 1T yields C15 = 0 with
+`absent_by_design = True` (input silently discarded, not
+rejected). The structural invariant the test pins — that
+previous-filing bound casillas cannot be smuggled in through
+inputs — is preserved.
