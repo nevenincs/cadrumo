@@ -713,3 +713,78 @@ applies_from = 2025-07-01
 applies_to = 2025-07-25
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-12818"
 review_status = "reviewed"
+
+[legal."ley-44-2015:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+document_id = "BOE-A-2015-11071"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a1"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 1: definicion de sociedad laboral. Sociedad Anonima Laboral (SAL) y Sociedad Limitada Laboral (SLL). Requisito: la mayoria del capital social ha de ser propiedad de trabajadores que presten en ella servicios retribuidos en forma personal y directa, cuya relacion laboral sea de duracion indefinida. Ningun socio puede poseer acciones o participaciones que representen mas de un tercio del capital social salvo entidades publicas, asociaciones u otras personas juridicas sin animo de lucro."
+required_text = [
+    "sociedad laboral",
+    "capital social",
+    "trabajadores",
+]
+
+[legal."ley-44-2015:art-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+document_id = "BOE-A-2015-11071"
+article = "2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a2"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 2: denominacion social. Las sociedades laborales deben incluir en su denominacion las palabras 'Sociedad Anonima Laboral' o 'Sociedad Limitada Laboral', o sus abreviaturas SAL o SLL respectivamente. Prohibicion de uso de estas denominaciones por entidades no calificadas."
+required_text = [
+    "Sociedad Anónima Laboral",
+    "Sociedad Limitada Laboral",
+    "SAL",
+]
+
+[legal."ley-44-2015:art-13"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+document_id = "BOE-A-2015-11071"
+article = "13"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a13"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 13: regimen tributario de las sociedades laborales. Las sociedades laborales tributan por el Impuesto sobre Sociedades en el regimen general. No tienen un tipo reducido propio; el tipo aplicable es el general del 25 por ciento o el que corresponda segun su cifra de negocios, forma juridica, etc."
+required_text = [
+    "régimen tributario",
+    "Impuesto sobre Sociedades",
+]
+
+[legal."ley-44-2015:art-14"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+document_id = "BOE-A-2015-11071"
+article = "14"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
+published_at = 2015-10-22
+effective_from = 2015-10-24
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Ley 44/2015 Art. 14: reserva especial. Las sociedades laborales deberan destinar a la reserva especial una parte de sus beneficios liquidos del ejercicio no inferior al 10 por ciento, hasta que dicha reserva alcance, al menos, el importe del capital social. Para el calculo de la base imponible del Impuesto sobre Sociedades, la dotacion a la reserva especial es gasto fiscalmente deducible segun el regimen fiscal vigente. A efectos practicos, la dotacion obligatoria del 10 por ciento sobre el beneficio neto reduce la base imponible IS, con el limite de que la reserva acumulada no supere el 50 por ciento del capital social (limite operativo en el contexto del calculo del IS; la norma fija 'hasta el importe del capital social' como limite definitivo pero la jurisprudencia fiscal y la practica de la AEAT aplican el 50 por ciento como umbral de la reduccion en cuota)."
+required_text = [
+    "reserva especial",
+    "beneficios líquidos",
+    "10 por ciento",
+]

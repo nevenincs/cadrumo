@@ -38,6 +38,8 @@ expression = { op = "lookup_parameter_by_entity_type", args = [
     { dispatch_table_entries = [
         { key = "sl", parameter = "is.modelo-200.tipo-gravamen-general" },
         { key = "sa", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "sal", parameter = "is.modelo-200.tipo-gravamen-general" },
+        { key = "sll", parameter = "is.modelo-200.tipo-gravamen-general" },
         { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-general" },
         { key = "other", parameter = "is.modelo-200.tipo-gravamen-general" },
         { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-cooperative-protected" },
@@ -96,6 +98,8 @@ expression = { op = "if_then_else", args = [
         { dispatch_table_entries = [
             { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
             { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
+            { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
             { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
             { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
             { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-new-entity" },
@@ -113,6 +117,8 @@ expression = { op = "if_then_else", args = [
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "sa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sal", parameter = "is.modelo-200.tipo-gravamen-pyme" },
+                { key = "sll", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "other", parameter = "is.modelo-200.tipo-gravamen-pyme" },
                 { key = "cooperativa", parameter = "is.modelo-200.tipo-gravamen-pyme" },
@@ -125,6 +131,8 @@ expression = { op = "if_then_else", args = [
             { dispatch_table_entries = [
                 { key = "sl", parameter = "is.modelo-200.cuota-integra-bracket-general" },
                 { key = "sa", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "sal", parameter = "is.modelo-200.cuota-integra-bracket-general" },
+                { key = "sll", parameter = "is.modelo-200.cuota-integra-bracket-general" },
                 { key = "sociedad_civil_mercantil", parameter = "is.modelo-200.cuota-integra-bracket-general" },
                 { key = "other", parameter = "is.modelo-200.cuota-integra-bracket-general" },
                 { key = "cooperativa", parameter = "is.modelo-200.cuota-integra-bracket-cooperative-protected" },

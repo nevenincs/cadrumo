@@ -79,6 +79,12 @@ class LegalEntityForm(StrEnum):
     Attributes:
         SL: Sociedad de responsabilidad limitada (S.L. / S.R.L.).
         SA: Sociedad anónima (S.A.).
+        SAL: Sociedad Anónima Laboral (Ley 44/2015 Art. 1). Majority of
+            share capital held by worker-shareholders. Eligible for
+            reserva especial dotación under Ley 44/2015 Art. 14.
+        SLL: Sociedad Limitada Laboral (Ley 44/2015 Art. 1). Same
+            régimen as SAL but limited-liability form. Eligible for
+            the same reserva especial under Ley 44/2015 Art. 14.
         COOPERATIVA: Sociedad cooperativa — IS with a reduced rate.
         SOCIEDAD_CIVIL_MERCANTIL: Sociedad civil con personalidad
             jurídica y objeto mercantil — an IS contribuyente since 2016.
@@ -89,6 +95,8 @@ class LegalEntityForm(StrEnum):
 
     SL = "sl"
     SA = "sa"
+    SAL = "sal"
+    SLL = "sll"
     COOPERATIVA = "cooperativa"
     SOCIEDAD_CIVIL_MERCANTIL = "sociedad_civil_mercantil"
     SIN_FINES_LUCRATIVOS = "sin_fines_lucrativos"
@@ -348,6 +356,9 @@ class TaxpayerProfile(BaseModel):
     special_regime_start_date: date | None = None
     fiscal_residency: FiscalResidency | None = None
     country_of_fiscal_residence: str | None = None
+    sal_socios_trabajadores_count: int | None = None
+    sal_reserva_especial_dotada: Decimal | None = None
+    sal_capital_social: Decimal | None = None
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod

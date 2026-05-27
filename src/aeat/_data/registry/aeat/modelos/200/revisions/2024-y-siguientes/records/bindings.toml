@@ -98,3 +98,37 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
 required_text = ["Casilla [00625] Administración del Estado"]
+
+# Calculation-only Decimal binding: carries the accumulated reserva
+# especial balance already dotada in prior periods for a Sociedad
+# Laboral (SAL/SLL). The formula `modelo-200-sal-reserva-especial-
+# dotacion` tests this value against the 50% cap before computing the
+# current-period dotacion. An absent value means the SAL has not yet
+# accumulated any prior reserva; the formula treats it as zero.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-sal-reserva-especial-dotada"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "sal_reserva_especial_dotada" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["reserva especial"]
+
+# Calculation-only Decimal binding: carries the capital social of the
+# Sociedad Laboral. Denominator of the 50% cap test under Ley 44/2015
+# Art. 14: dotacion is capped once accumulated reserva >= 50% capital
+# social.
+[[revisions."2024-y-siguientes".bindings]]
+id = "modelo-200-2024-profile-sal-capital-social"
+source = "profile"
+selector = { profile_model = "taxpayer", field = "sal_capital_social" }
+aggregation = { op = "copy" }
+legal_refs = ["ley-44-2015:art-14", "ley-44-2015:art-13"]
+source_refs = ["aeat-modelo-200-manual-2024"]
+
+[[revisions."2024-y-siguientes".bindings.source_citations]]
+source_ref = "aeat-modelo-200-manual-2024"
+required_text = ["reserva especial"]

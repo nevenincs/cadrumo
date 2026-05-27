@@ -40,6 +40,8 @@ def test_legal_entity_form_enum_covers_recognised_forms(
     assert set(field.enum_values) == {
         "sl",
         "sa",
+        "sal",
+        "sll",
         "cooperativa",
         "sociedad_civil_mercantil",
         "sin_fines_lucrativos",
