@@ -203,7 +203,11 @@ def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_a
     assert decision.selected_amount == Decimal("800")
     assert decision.divergence == "filed_history_only"
     assert decision.blocked is False
-    assert decision.authority_sources == (filed_history_source,)
+    assert {source.source_kind for source in decision.authority_sources} == {
+        "local_recurrence",
+        "filed_history_observation",
+    }
+    assert filed_history_source in decision.authority_sources
 
 
 def test_stale_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> None:
