@@ -804,6 +804,24 @@ description = "EU/EEA descendant deduction flag for Modelo 100."
 model_selectors = ["family.descendants_eu_eea_deduction"]
 
 [[sections.fields]]
+key = "descendientes_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of descendants represented in Renta family facts."
+model_selectors = ["RentaFamilyProfile.descendientes_count"]
+
+[[sections.fields]]
+key = "descendientes_minimos_aggregate_2024"
+type = "decimal"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Renta 2024 aggregate minimum for descendants."
+model_selectors = ["family.descendientes_minimos_aggregate_2024"]
+
+[[sections.fields]]
 key = "descendants"
 type = "array"
 required = false
