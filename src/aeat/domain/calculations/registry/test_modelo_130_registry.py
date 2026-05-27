@@ -130,6 +130,49 @@ def test_modelo_130_first_period_carry_forward_is_absent_by_design(modelo_130_re
     assert casilla_15.absent_by_design is True
 
 
+def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected(modelo_130_registry) -> None:
+    """ADR Decision Z2 strict-rejection recovered via P07.S36 hardening.
+
+    The original ADR mandated `RegistryValidationError` when any
+    bound-casilla input was supplied. The P03 narrowing accepted
+    the production `resolve_bound_casilla_inputs` projection
+    pattern (inputs mirrors binding_values for runtime ergonomics).
+    The narrowing left a hole: a test fixture could lie by passing
+    a previous_filing bound casilla via inputs ONLY, with no
+    binding_values entry. The silent-zero hazard re-emerges in
+    disguise.
+
+    The P07.S36 hardening closes the hole: previous_filing bound
+    casillas in inputs MUST be accompanied by the matching
+    binding_values[binding_id] entry. This test pins the strict-
+    rejection contract for the smuggle-via-inputs-only pattern.
+    """
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="previous-filing bound registry casillas cannot be supplied via inputs",
+    ):
+        calculate_registry_snapshot(
+            _snapshot_130(modelo_130_registry),
+            inputs={
+                "01": Decimal("10000"),
+                "02": Decimal("4000"),
+                "05": Decimal("250"),
+                "06": Decimal("100"),
+                "08": Decimal("2000"),
+                "10": Decimal("10"),
+                "15": Decimal("999"),  # smuggled — no matching binding_value
+                "16": Decimal("0"),
+                "18": Decimal("0"),
+            },
+            date_context={"filing_period": date(2026, 4, 20)},
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+                # modelo-130-resultados-negativos-anteriores deliberately omitted
+            },
+        )
+
+
 def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(modelo_130_registry) -> None:
     """2T pulls the prior quarter's saldo-negativo-fin-periodo seed into C15.
 
@@ -214,48 +257,9 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(mode
     assert casilla_17.value == casilla_14.value - saldo_seed - casilla_16.value
 
 
-def test_modelo_130_previous_filing_bound_casilla_input_is_silently_ignored(modelo_130_registry) -> None:
-    """Inputs targeting a previous-filing bound casilla are ignored.
-
-    The narrowed P03 runtime contract: bound casillas whose binding
-    source is `previous_filing` resolve EXCLUSIVELY through
-    `binding_values` or the absent-by-design path. The inputs
-    mapping path that historically allowed silent zero-fill is
-    closed for this binding source. Passing
-    `inputs={"15": Decimal("100")}` for the 1T snapshot (where the
-    M130 carry-forward selector returns no anchor) yields
-    C15 = Decimal("0") with `absent_by_design = True` — the input
-    value is silently discarded, not honoured.
-
-    The original ADR Decision Z2 mandated a hard rejection
-    (`RegistryValidationError` on any bound-casilla input). The
-    narrower contract was adopted during P03 implementation
-    because the production `resolve_bound_casilla_inputs` helper
-    legitimately projects binding values into the inputs mapping
-    as a runtime convenience, and non-numeric bound casillas (NIF,
-    text) historically use the inputs fallback. The strict-
-    rejection follow-up is tracked at plan step P06.S21.
-    """
-
-    result = calculate_registry_snapshot(
-        _snapshot_130(modelo_130_registry),
-        inputs={
-            "01": Decimal("10000"),
-            "02": Decimal("4000"),
-            "05": Decimal("250"),
-            "06": Decimal("100"),
-            "08": Decimal("2000"),
-            "10": Decimal("10"),
-            "15": Decimal("100"),
-            "16": Decimal("0"),
-            "18": Decimal("0"),
-        },
-        date_context={"filing_period": date(2026, 4, 20)},
-        binding_values={
-            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
-        },
-    )
-
-    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
-    assert casilla_15.value == Decimal("0")
-    assert casilla_15.absent_by_design is True
+# Note: the "silently_ignored" test that previously lived here
+# (pinned the amendment's narrowed contract) was superseded by
+# P07.S36 — the strict-rejection contract is now restored for the
+# smuggle-via-inputs-only pattern. The new
+# test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is_rejected
+# above is the harder gate.
