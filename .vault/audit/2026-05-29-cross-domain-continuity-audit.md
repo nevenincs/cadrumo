@@ -4389,3 +4389,132 @@ three covering error paths as anti-tautology proof. PEP 695 syntax correct for
 Python 3.13. Pattern is sound and scalable to S278 with the caveat that S278/S279
 are output-direction and require `OutputSchema` subclasses, not the input-direction
 generic from S277. Two non-blocking cosmetic observations noted.
+
+---
+
+## Task #131 — S305+S306 gestor unblock (51acf7a6d + dd8934c72 + 9fdb3bd92)
+
+**Review date:** 2026-05-27
+
+### Commits reviewed
+
+- `51acf7a6d` — S305: `_refuse_duplicate_tax_id` warn-and-continue + regression fix
+- `dd8934c72` — S306: `--all-profiles` flag on `aeat app overview calendar`
+- `9fdb3bd92` — exec records + plan closure
+
+### S305 — warn-and-continue for unreadable profiles
+
+**Scope compliance:** The change is precisely scoped. `_refuse_duplicate_tax_id`
+previously raised `UserProfileValidationError` on any `Exception` during the
+uniqueness scan. The new path logs a `warning` + `continue` so one torn bucket
+does not block a different taxpayer from registering. Duplicate detection still
+fires against all readable profiles — the `ProfileAlreadyRegisteredError` raise
+on `existing_tax_id == new_tax_id` is unchanged.
+
+**Architect grounding match (#114):** The Task #114 grounding specified
+warn-and-continue as the correct approach. Implementation matches exactly.
+`log.warning` (not `log.debug`) is used, providing operator-visible signal.
+The removed `raise UserProfileValidationError(...)` + deleted locale key
+`duplicate_tax_id_scan_unreadable_profile` is clean — no remaining callers
+confirmed via grep.
+
+**Pre-existing regression fix:** Commit also fixes a regression from `39383541b`
+that broke all 17 profile-repository tests. The fix adds session-aware
+`_create/_load/_delete/_select/_rename` helpers in the test file that wrap
+`ProfileRepository` calls in the correct `profile_storage_session` context,
+mirroring CLI call patterns. This is correct — the test file was calling
+`repository.create()` directly without a session, which broke after the session
+requirement was hardened. The fix is in the test file only; no production code
+change.
+
+**Anti-tautology proof pair (G6):**
+
+- `test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile`:
+  Creates a profile, corrupts its manifest to simulate a torn bucket, then
+  creates a second profile with a **different** NIF. Asserts success +
+  round-trip load. If the warn-and-continue path were broken (still fail-closed),
+  this test would raise `UserProfileValidationError` and fail. **PASS.**
+
+- `test_create_still_refuses_duplicate_nif_against_readable_profiles`:
+  Creates two profiles (readable + torn bystander), then attempts to create
+  a third with the same NIF as the readable one. Asserts `ProfileAlreadyRegisteredError`
+  fires with the readable profile's NIF in the match. The torn bystander is
+  irrelevant — the duplicate fires against the readable one. If warn-and-continue
+  accidentally suppressed all duplicate detection, this test would fail to raise.
+  **PASS.** This is the correct anti-tautology structure: the two tests are
+  complements — one proves the gate opens for different-NIF, the other proves
+  it still closes for genuine duplicates.
+
+All 3 targeted tests pass in 5.56s. No mocks.
+
+### S306 — `--all-profiles` flag
+
+**Hexagonal compliance:** `build_overview_calendar` is unchanged. The new
+`_overview_calendar_all_profiles` helper lives in the CLI entrypoint layer
+(`_overview.py`) and calls into the application layer via the established
+`profile_storage_session` + `ProfileRepository.load` + `build_overview_calendar`
+path. No new application-layer abstractions introduced. **Clean.**
+
+**`list_profile_buckets` usage:** Called correctly — filters to
+`BucketLifecycleStatus.ACTIVE` buckets only; sorted by label for deterministic
+output order. Unreadable buckets emit `profile_skipped\t{id}\t{label}` and
+`log.warning` — matches the S305 posture exactly.
+
+**Isolation:** The `--all-profiles` branch is a hard early-return
+(`_overview_calendar_all_profiles(...)` then `return`) so the existing
+single-profile path is not touched. No regression risk on the active-profile
+case.
+
+**`tax_id_default="00000000T"` argument:** `projection_for_taxpayer` is called
+with a fallback tax ID for profiles that have no declared `identity.tax_id`.
+This is a calendar-generation concern, not a tax-ID assertion — the calendar
+needs some identifier for display; using a placeholder is the correct defensive
+approach for an undeclared model.
+
+**G4 — locale scaffold compliance:** `cli.overview.calendar.all_profiles_help`
+confirmed present in all four locale files with full prose (not scaffold stubs):
+- en.yml: "Render the calendar for every registered profile instead of the active one."
+- es.yml: Spanish prose
+- ca.yml: Catalan prose
+- hu.yml: Hungarian prose (genuine Hungarian, not a scaffold stub)
+
+The en.yml diff also shows deletion of
+`duplicate_tax_id_scan_unreadable_profile` (from S305 — key no longer needed)
+and alphabetical key reordering from scaffold re-run. No structural hand-edits.
+**G4 satisfied.**
+
+**Regression test (G6):**
+`test_all_profiles_flag_iterates_every_registered_profile` registers two profiles
+via the real `profile_create_storage_span` + `workflow_state_repository` path,
+invokes the CLI with `--all-profiles --allow-incomplete`, and asserts both profile
+labels appear in output plus exactly two `profile\t` header lines. Real adapter,
+real CLI path, no mocks. Passes in 70.79s (integration test with real encrypted
+SQLite). **PASS.**
+
+**Minor observation (non-blocking):** The `all_calendars: list[dict] = []` type
+annotation accepts `dict` (untyped). The `cal.model_dump(mode="json")` call
+returns `dict[str, Any]` from pydantic — this is a third-party API boundary;
+inline documentation noting this would satisfy `aeat-calculation-grounding`.
+Not blocking for this step; log as FU-S306-A.
+
+### Exec records (9fdb3bd92)
+
+Step records for S305 and S306 are honest and complete. Plan checkboxes closed
+for `W02.P11.S306` and `W04.P19.S305`. **PASS.**
+
+### Verdict table
+
+| Commit | Step | Verdict | Notes |
+|--------|------|---------|-------|
+| `51acf7a6d` | S305 | APPROVE | warn-and-continue correct; anti-tautology pair sound; regression fix clean |
+| `dd8934c72` | S306 | APPROVE with FU-S306-A | --all-profiles clean; G4/G6 satisfied; `list[dict]` annotation minor |
+| `9fdb3bd92` | exec records | PASS | honest records; plan checkboxes correct |
+
+**Overall: APPROVE.** R8-NURIA-1 (multi-profile gestor show-stopper) is closed.
+S305 and S306 both land cleanly against the Task #114 architecture grounding.
+
+### Follow-ups
+
+| ID | Description |
+|----|-------------|
+| FU-S306-A | Annotate `all_calendars: list[dict[str, object]]` → typed payload or inline `# dict[str,Any] from pydantic model_dump` comment per `aeat-calculation-grounding` |
