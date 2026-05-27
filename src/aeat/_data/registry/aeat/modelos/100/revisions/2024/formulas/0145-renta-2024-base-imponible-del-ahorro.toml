@@ -2,6 +2,7 @@
 id = "renta-2024-base-imponible-del-ahorro"
 target = "0460"
 expression = { op = "sum", args = [
+    { casilla = "0041" },
     { casilla = "0424" },
     { casilla = "0429" },
     { op = "negate", args = [{ casilla = "0436" }] },
