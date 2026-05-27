@@ -160,6 +160,12 @@ def taxpayer_profile_from_mapping(
         country_of_fiscal_residence=_coerce_country_code(
             typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", "")
         ),
+        representante_fiscal_nif=canonical.get("taxpayer_type.representante_fiscal_nif") or None,
+        representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
+        irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
+        irpf_pagadores_secondary_income=_parse_decimal(
+            canonical.get("irpf.pagadores_secondary_income")
+        ),
     )
 
 
@@ -205,6 +211,15 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
         return Decimal(raw.strip())
     except InvalidOperation as exc:
         raise ProfileError(f"invalid census decimal {raw!r}") from exc
+
+
+def _parse_optional_int(raw: str | None) -> int | None:
+    if not raw:
+        return None
+    try:
+        return int(raw.strip())
+    except ValueError:
+        return None
 
 
 def _stringify(raw: object) -> str:

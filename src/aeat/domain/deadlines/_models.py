@@ -356,9 +356,34 @@ class TaxpayerProfile(BaseModel):
     special_regime_start_date: date | None = None
     fiscal_residency: FiscalResidency | None = None
     country_of_fiscal_residence: str | None = None
+    representante_fiscal_nif: str | None = None
+    """NIF/NIE of the fiscal representative in Spain.
+
+    Required when ``fiscal_residency`` is ``NON_RESIDENT_IRNR`` and the
+    country is outside the EU/EEA (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
+    """
+    representante_fiscal_nombre: str | None = None
+    """Full name of the fiscal representative in Spain.
+
+    Required together with ``representante_fiscal_nif`` for the same cases.
+    """
     sal_socios_trabajadores_count: int | None = None
     sal_reserva_especial_dotada: Decimal | None = None
     sal_capital_social: Decimal | None = None
+    irpf_pagadores_count: int | None = None
+    """Number of pagadores (income payers) the taxpayer received income from.
+
+    When ``>= 2`` and ``irpf_pagadores_secondary_income > 1500``, filing
+    Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total
+    income threshold. ``None`` when not declared (treated as "not known").
+    """
+    irpf_pagadores_secondary_income: Decimal | None = None
+    """Sum of income received from the 2nd and subsequent pagadores.
+
+    Art. 96.3 LIRPF: declaración obligatoria when this value exceeds
+    €1,500. Only meaningful when ``irpf_pagadores_count >= 2``; ``None``
+    when not declared.
+    """
 
     @field_validator("irpf_income_categories", mode="before")
     @classmethod
@@ -449,6 +474,35 @@ class TaxpayerProfile(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _check_representante_fiscal_required(self) -> Self:
+        """Require a fiscal representative for non-EU/EEA non-residents.
+
+        Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004: taxpayers fiscally
+        resident outside the EU/EEA (and outside Spain) must appoint a
+        representative in Spain. Both NIF and name are required together;
+        partial declaration is rejected.
+        """
+
+        if (
+            self.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and not self.ue_eee_status
+            and self.country_of_fiscal_residence is not None
+        ):
+            nif_missing = self.representante_fiscal_nif is None
+            nombre_missing = self.representante_fiscal_nombre is None
+            if nif_missing or nombre_missing:
+                missing = []
+                if nif_missing:
+                    missing.append("representante_fiscal_nif")
+                if nombre_missing:
+                    missing.append("representante_fiscal_nombre")
+                raise DeadlineValidationError(
+                    f"{' and '.join(missing)} required for non-EU/EEA non-resident "
+                    "(Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004)"
+                )
+        return self
+
     @model_validator(mode="before")
     @classmethod
     def _derive_objective_estimation_flag(cls, data: object) -> object:
@@ -508,6 +562,72 @@ class TaxpayerProfile(BaseModel):
         if self.country_of_fiscal_residence is None:
             return False
         return self.country_of_fiscal_residence.upper() in UE_EEA_COUNTRY_CODES
+
+    @property
+    def convenio_aplicable(self) -> str | None:
+        """BOE reference for the applicable double-taxation treaty, or ``None``.
+
+        Derived from ``country_of_fiscal_residence`` via a static lookup
+        of treaties signed by Spain. Returns ``None`` when no treaty is
+        registered for the country or when the country is not set.
+
+        The lookup covers treaties that are most frequently encountered
+        in IRNR practice; it is not exhaustive. The BOE identifiers
+        follow the ``BOE-A-YYYY-NNNNN`` scheme used in the official Boletín
+        Oficial del Estado. References:
+        - España-UK: BOE-A-2014-5171
+        - España-Alemania: BOE-A-2012-3669
+        - España-Francia: BOE-A-1997-21331
+        - España-EE.UU.: BOE-A-1990-28246
+        - España-Países Bajos: BOE-A-1972-674
+        """
+
+        if self.country_of_fiscal_residence is None:
+            return None
+        return _CONVENIO_BY_COUNTRY.get(self.country_of_fiscal_residence.upper())
+
+
+_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD: Decimal = Decimal("1500")
+
+
+def evaluate_multiple_pagadores_obligation(
+    pagadores_count: int | None,
+    secondary_income: Decimal | None,
+) -> bool:
+    """Return True when Art. 96.3 LIRPF mandates Modelo 100 filing.
+
+    Art. 96.3 LIRPF (Ley 35/2006) establishes that a natural person whose
+    rendimientos del trabajo come from more than one pagador is obliged to
+    file if the aggregate income received from the 2nd and subsequent
+    pagadores exceeds €1,500. The rule applies independently of the general
+    income thresholds in Art. 96.2.
+
+    Args:
+        pagadores_count: Number of pagadores the taxpayer received work
+            income from during the year. ``None`` means undeclared.
+        secondary_income: Sum of income from the 2nd and subsequent
+            pagadores. ``None`` means undeclared.
+
+    Returns:
+        ``True`` when both conditions are confirmed (count >= 2 AND
+        secondary_income > 1,500); ``False`` in every other case,
+        including when either value is undeclared.
+    """
+
+    if pagadores_count is None or secondary_income is None:
+        return False
+    return pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD
+
+
+# Static lookup: ISO 3166-1 alpha-2 → BOE reference for double-taxation treaties
+# signed by Spain. Source: AEAT Convenios de doble imposición.
+_CONVENIO_BY_COUNTRY: dict[str, str] = {
+    "GB": "BOE-A-2014-5171 España-UK",
+    "DE": "BOE-A-2012-3669 España-Alemania",
+    "FR": "BOE-A-1997-21331 España-Francia",
+    "US": "BOE-A-1990-28246 España-EE.UU.",
+    "NL": "BOE-A-1972-674 España-Países Bajos",
+}
 
 
 class RecargoBand(BaseModel):

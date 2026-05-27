@@ -1452,6 +1452,7 @@ cli:
       work_units_empty: cli.overview.status.work_units_empty
       work_units_present: cli.overview.status.work_units_present
       work_units_present_with_discarded: cli.overview.status.work_units_present_with_discarded
+      filing_obligation_multiple_pagadores: cli.overview.status.filing_obligation_multiple_pagadores
     status_help: cli.overview.status_help
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.

@@ -15,6 +15,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
+from decimal import Decimal
+
 from . import (
     EntityType,
     FiscalResidency,
@@ -25,6 +27,7 @@ from . import (
     LegalEntityForm,
     ModeloIVAProfile,
     TaxpayerProfile,
+    evaluate_multiple_pagadores_obligation,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -377,11 +380,14 @@ class TestNonResidentAxis:
             )
 
     def test_non_resident_with_country_is_accepted(self) -> None:
+        # GB is post-Brexit non-EU/EEA; representante fiscal required.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
             country_of_fiscal_residence="GB",
+            representante_fiscal_nif="12345678Z",
+            representante_fiscal_nombre="Test Representative",
         )
         assert profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
         assert profile.country_of_fiscal_residence == "GB"
@@ -396,12 +402,14 @@ class TestNonResidentAxis:
         assert profile.ue_eee_status is True
 
     def test_ue_eee_status_false_for_gb_post_brexit(self) -> None:
-        # GB left the EU/EEA on 2020-12-31; the authoritative set excludes it.
+        # GB left the EU/EEA on 2020-12-31; representante is required.
         profile = TaxpayerProfile(
             tax_id="X1234567L",
             iva_regime=IVARegime.GENERAL,
             fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
             country_of_fiscal_residence="GB",
+            representante_fiscal_nif="12345678Z",
+            representante_fiscal_nombre="Test Representative",
         )
         assert profile.ue_eee_status is False
 
@@ -432,3 +440,205 @@ class TestNonResidentAxis:
         del payload["country_of_fiscal_residence"]
         with pytest.raises(ValidationError, match=r"country_of_fiscal_residence is required"):
             TaxpayerProfile.model_validate_json(json.dumps(payload))
+
+
+class TestRepresentanteFiscalAxis:
+    """IRNR-002: representante_fiscal_nif / representante_fiscal_nombre axis.
+
+    Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004: non-EU/EEA non-residents
+    must appoint a fiscal representative in Spain. This class asserts the
+    validator, the roundtrip contract, and the anti-tautology proof.
+    """
+
+    def test_non_eu_non_resident_without_representante_is_rejected(self) -> None:
+        # GB is outside EU/EEA post-Brexit; representative required.
+        with pytest.raises(
+            ValidationError, match=r"representante_fiscal_nif and representante_fiscal_nombre required"
+        ):
+            TaxpayerProfile(
+                tax_id="X1234567L",
+                iva_regime=IVARegime.GENERAL,
+                fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+                country_of_fiscal_residence="GB",
+                representante_fiscal_nif=None,
+                representante_fiscal_nombre=None,
+            )
+
+    def test_non_eu_non_resident_with_partial_representante_is_rejected(self) -> None:
+        with pytest.raises(
+            ValidationError, match=r"representante_fiscal_nombre required"
+        ):
+            TaxpayerProfile(
+                tax_id="X1234567L",
+                iva_regime=IVARegime.GENERAL,
+                fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+                country_of_fiscal_residence="GB",
+                representante_fiscal_nif="12345678Z",
+                representante_fiscal_nombre=None,
+            )
+
+    def test_non_eu_non_resident_with_full_representante_is_accepted(self) -> None:
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="GB",
+            representante_fiscal_nif="12345678Z",
+            representante_fiscal_nombre="John Smith",
+        )
+        assert profile.representante_fiscal_nif == "12345678Z"
+        assert profile.representante_fiscal_nombre == "John Smith"
+
+    def test_eu_non_resident_does_not_require_representante(self) -> None:
+        # FR is EU — representative not required.
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="FR",
+        )
+        assert profile.representante_fiscal_nif is None
+        assert profile.representante_fiscal_nombre is None
+
+    def test_resident_irpf_does_not_require_representante(self) -> None:
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+        assert profile.representante_fiscal_nif is None
+        assert profile.representante_fiscal_nombre is None
+
+    def test_representante_roundtrip_preserves_fields(self) -> None:
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="US",
+            representante_fiscal_nif="87654321A",
+            representante_fiscal_nombre="Jane Doe",
+        )
+        restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
+        assert restored == original
+
+    def test_anti_tautology_dropping_representante_nif_breaks_non_eu_non_resident(self) -> None:
+        original = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="US",
+            representante_fiscal_nif="87654321A",
+            representante_fiscal_nombre="Jane Doe",
+        )
+        payload = json.loads(original.model_dump_json())
+        del payload["representante_fiscal_nif"]
+        with pytest.raises(ValidationError, match=r"representante_fiscal_nif"):
+            TaxpayerProfile.model_validate_json(json.dumps(payload))
+
+
+class TestConvenioAplicable:
+    """IRNR-003: convenio_aplicable derived property.
+
+    The property performs a static lookup against the known double-taxation
+    treaty table. Values are authoritative BOE identifiers; this class
+    asserts known treaties and the None-fallback for unsupported countries.
+    """
+
+    def _profile(self, country: str) -> TaxpayerProfile:
+        return TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence=country,
+            # EU countries (FR, DE) don't need representante; non-EU (GB, US) do.
+            representante_fiscal_nif=("12345678Z" if country in {"GB", "US", "NL"} else None),
+            representante_fiscal_nombre=("Test Rep" if country in {"GB", "US", "NL"} else None),
+        )
+
+    def test_gb_maps_to_espana_uk_convenio(self) -> None:
+        assert self._profile("GB").convenio_aplicable == "BOE-A-2014-5171 España-UK"
+
+    def test_de_maps_to_espana_alemania_convenio(self) -> None:
+        assert self._profile("DE").convenio_aplicable == "BOE-A-2012-3669 España-Alemania"
+
+    def test_fr_maps_to_espana_francia_convenio(self) -> None:
+        assert self._profile("FR").convenio_aplicable == "BOE-A-1997-21331 España-Francia"
+
+    def test_us_maps_to_espana_eeuu_convenio(self) -> None:
+        assert self._profile("US").convenio_aplicable == "BOE-A-1990-28246 España-EE.UU."
+
+    def test_nl_maps_to_espana_paises_bajos_convenio(self) -> None:
+        assert self._profile("NL").convenio_aplicable == "BOE-A-1972-674 España-Países Bajos"
+
+    def test_unknown_country_returns_none(self) -> None:
+        # MA (Marruecos) is not yet in the table; should return None not raise.
+        profile = TaxpayerProfile(
+            tax_id="X1234567L",
+            iva_regime=IVARegime.GENERAL,
+            fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+            country_of_fiscal_residence="MA",
+            representante_fiscal_nif="12345678Z",
+            representante_fiscal_nombre="Rep Marroquí",
+        )
+        assert profile.convenio_aplicable is None
+
+    def test_resident_irpf_returns_none(self) -> None:
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+        assert profile.convenio_aplicable is None
+
+
+class TestMultiplePagadoresObligation:
+    """Art. 96.3 LIRPF filing obligation: >= 2 pagadores AND secondary income > 1500.
+
+    Expected values derive from Art. 96.3 Ley 35/2006 (LIRPF) which establishes
+    the 1,500 EUR threshold for secondary pagador income that triggers mandatory
+    Modelo 100 filing.  No threshold values are hand-invented here.
+    """
+
+    def test_single_pagador_no_obligation(self) -> None:
+        # One pagador, total income €18,000 — single-pagador exemption; no obligation.
+        assert evaluate_multiple_pagadores_obligation(1, Decimal("18000")) is False
+
+    def test_two_pagadores_secondary_above_threshold_obliged(self) -> None:
+        # Two pagadores, secondary income €1,600 > €1,500 threshold → obliged.
+        assert evaluate_multiple_pagadores_obligation(2, Decimal("1600")) is True
+
+    def test_three_pagadores_secondary_above_threshold_obliged(self) -> None:
+        # Three pagadores, secondary income €1,600 > €1,500 threshold → obliged.
+        assert evaluate_multiple_pagadores_obligation(3, Decimal("1600")) is True
+
+    def test_two_pagadores_secondary_exactly_threshold_not_obliged(self) -> None:
+        # Art. 96.3 threshold is strictly > 1500; exactly 1500 does NOT trigger.
+        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500")) is False
+
+    def test_two_pagadores_secondary_one_cent_above_threshold_obliged(self) -> None:
+        # €1,500.01 crosses the strict > boundary.
+        assert evaluate_multiple_pagadores_obligation(2, Decimal("1500.01")) is True
+
+    def test_two_pagadores_secondary_below_threshold_not_obliged(self) -> None:
+        # Secondary income €1,499 — below threshold, no obligation.
+        assert evaluate_multiple_pagadores_obligation(2, Decimal("1499")) is False
+
+    def test_none_count_returns_false(self) -> None:
+        # Undeclared pagadores count → cannot assert obligation.
+        assert evaluate_multiple_pagadores_obligation(None, Decimal("2000")) is False
+
+    def test_none_secondary_income_returns_false(self) -> None:
+        # Undeclared secondary income → cannot assert obligation.
+        assert evaluate_multiple_pagadores_obligation(2, None) is False
+
+    def test_both_none_returns_false(self) -> None:
+        assert evaluate_multiple_pagadores_obligation(None, None) is False
+
+    def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
+        # TaxpayerProfile must carry the two new fields through construction unchanged.
+        profile = TaxpayerProfile(
+            tax_id="12345678Z",
+            iva_regime=IVARegime.GENERAL,
+            irpf_pagadores_count=3,
+            irpf_pagadores_secondary_income=Decimal("2000"),
+        )
+        assert profile.irpf_pagadores_count == 3
+        assert profile.irpf_pagadores_secondary_income == Decimal("2000")
+
+    def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
+        # Existing profiles without pagadores fields must load cleanly.
+        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
+        assert profile.irpf_pagadores_count is None
+        assert profile.irpf_pagadores_secondary_income is None
