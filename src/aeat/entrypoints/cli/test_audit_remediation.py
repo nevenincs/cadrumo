@@ -11,8 +11,8 @@ import click
 import pytest
 from click.testing import Result
 
-from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
+from aeat.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -32,18 +32,9 @@ _LEAK_FRAGMENTS = (
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    yield
-    dispose_engine()
+def _isolated_cli_state(tmp_path: Path) -> Iterator[None]:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        yield
 
 
 def _invoke(args: list[str]) -> Result:
@@ -89,62 +80,78 @@ def test_modelo_bindings_help_uses_accepted_period_examples() -> None:
         assert "2026Q1" not in flat, surface
 
 
-def test_overview_calendar_for_general_iva_includes_modelo_303() -> None:
-    init = _invoke(
-        [
-            "config",
-            "profile",
-            "create",
-            "operator",
-            "--quiet",
-            "--tax-id",
-            "12345678Z",
-            "--activity",
-            "software development",
-            "--iva-regime",
-            "GENERAL",
-        ]
-    )
-    assert init.exit_code == 0
+class TestOverviewCalendarRequiresProfileCreate:
+    """Overview calendar tests that exercise the profile create path.
 
-    # Modelo applicability is derived from the taxpayer model — declare
-    # an autónomo (natural person with actividad económica) so Modelo
-    # 303 is positively applicable rather than reported as incomplete.
-    declared = _invoke(
-        [
-            "config",
-            "profile",
-            "edit",
-            "operator",
-            "--quiet",
-            "--entity-type",
-            "natural_person",
-            "--irpf-income-categories",
-            "actividad_economica",
-        ]
-    )
-    assert declared.exit_code == 0, declared.output
+    Separated from the module-level ``isolated_runtime_profile`` autouse
+    fixture because these tests call ``profile create`` and need an empty
+    storage root — not one pre-populated with a runtime bucket.
+    """
 
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "overview",
-            "calendar",
-            "--from",
-            "2026-01-01",
-            "--to",
-            "2026-12-31",
-            "--allow-incomplete",
-        ]
-    )
+    @pytest.fixture(autouse=True)
+    def _isolated_cli_state(self, tmp_path: Path) -> Iterator[None]:
+        # Overrides the module-level _isolated_cli_state autouse fixture.
+        # Profile create tests need an empty root; isolated_runtime_profile
+        # pre-provisions a bucket that breaks NIF uniqueness checks.
+        with isolated_profile_storage_root(tmp_path=tmp_path):
+            yield
 
-    assert result.exit_code == 0
-    _assert_no_internal_leak(_combined_output(result))
-    payload = json.loads(result.output)
-    modelos = {entry["modelo"] for entry in payload["entries"]}
-    assert "303" in modelos
+    def test_overview_calendar_for_general_iva_includes_modelo_303(self) -> None:
+        init = _invoke(
+            [
+                "config",
+                "profile",
+                "create",
+                "operator",
+                "--quiet",
+                "--tax-id",
+                "12345678Z",
+                "--activity",
+                "software development",
+                "--iva-regime",
+                "GENERAL",
+            ]
+        )
+        assert init.exit_code == 0, init.output
+
+        # Modelo applicability is derived from the taxpayer model — declare
+        # an autónomo (natural person with actividad económica) so Modelo
+        # 303 is positively applicable rather than reported as incomplete.
+        declared = _invoke(
+            [
+                "config",
+                "profile",
+                "edit",
+                "operator",
+                "--quiet",
+                "--entity-type",
+                "natural_person",
+                "--irpf-income-categories",
+                "actividad_economica",
+            ]
+        )
+        assert declared.exit_code == 0, declared.output
+
+        result = _invoke(
+            [
+                "--format",
+                "json",
+                "app",
+                "overview",
+                "calendar",
+                "--from",
+                "2026-01-01",
+                "--to",
+                "2026-12-31",
+                "--allow-incomplete",
+            ]
+        )
+
+        assert result.exit_code == 0
+        _assert_no_internal_leak(_combined_output(result))
+        payload = json.loads(result.output)
+        modelos = {entry["modelo"] for entry in payload["entries"]}
+        assert "303" in modelos
 
 
 def test_every_visible_help_surface_is_clean() -> None:

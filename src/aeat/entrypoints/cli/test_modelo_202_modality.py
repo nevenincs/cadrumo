@@ -31,6 +31,7 @@ No mocks — these tests use the real domain functions directly.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -43,6 +44,7 @@ from aeat.domain.calculations.registry._applicability import (
 )
 from aeat.domain.deadlines._models import IVARegime, TaxpayerProfile
 from aeat.domain.deadlines.taxpayer_model import EntityType
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -225,29 +227,13 @@ def test_attribution_entity_is_not_applicable_for_modelo_202() -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture()
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
-    from aeat.adapters.persistence.storage.sql import dispose_engine
-
-    dispose_engine()
-    monkeypatch.setenv("AEAT_SECRET_STORE_BACKEND", "unsecured")
-    monkeypatch.setenv("AEAT_ALLOW_UNENCRYPTED", "1")
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path / "tokens"))
-    monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path / "runs"))
-    monkeypatch.setenv("AEAT_FINANCIAL_TXS_DIR", str(tmp_path / "txs"))
-    monkeypatch.setenv("AEAT_INVOICES_DIR", str(tmp_path / "invoices"))
-    monkeypatch.setenv("AEAT_DRAFTS_DIR", str(tmp_path / "drafts"))
-    with EphemeralMasterKeyProvider():
-        try:
-            yield tmp_path
-        finally:
-            dispose_engine()
+@pytest.fixture(autouse=True)
+def _isolated_storage(tmp_path: Path) -> Iterator[None]:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        yield
 
 
-def test_legal_entity_can_create_modelo_202_work_unit(_isolated_cli_backend: Path) -> None:
+def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:
     """A legal-entity profile with declared INCN can provision a Modelo 202
     work unit. The outer applicability guard must not block a legal entity.
     """
@@ -293,7 +279,7 @@ def test_legal_entity_can_create_modelo_202_work_unit(_isolated_cli_backend: Pat
             "--year",
             "2026",
             "--period",
-            "2026-1P",
+            "1P",
             "--revision",
             "2025-y-siguientes",
         ]
