@@ -2698,6 +2698,10 @@ filing:
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: 'Se ha aplicado prorrata 50 %% (Art. 59 LIRPF) por
+      custodia compartida en %{count} descendiente(s). Cada progenitor declara la mitad del
+      mínimo correspondiente (casillas 0513/0514 y, si procede, 0515/0516).'
   errors:
     foral_regime: Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente bajo
       el Concierto Económico (Ley 12/2002), no ante la AEAT. Este CLI no modela declaraciones forales.
@@ -2912,7 +2916,7 @@ wizard:
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
       descendiente:
-        help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible). Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+        help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible). Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realiza operaciones intracomunitarias
       enrollment-large-company:
@@ -3022,6 +3026,9 @@ wizard:
       taxpayer-marital-status:
         help: 'Estado civil del primer declarante: 1 = soltero/a, 2 = casado/a, 3 = viudo/a, 4 = separado/a
           o divorciado/a.'
+      taxpayer-marriage-date:
+        help: 'Fecha de inicio del matrimonio actual (AAAA-MM-DD). Solo cuando estado civil = 2 (casado/a).
+          Calcula casillas 0245/0246/0247 (matrimonio sobrevenido, art. 82 LIRPF).'
       taxpayer-sex:
         help: 'Sexo del primer declarante: H = hombre, M = mujer.'
       third-party-transactions-above-347-threshold:
@@ -3214,6 +3221,8 @@ wizard:
           viudo:
             label: 3 - viudo
         prompt: Estado civil del primer declarante
+      taxpayer-marriage-date:
+        prompt: Fecha de inicio del matrimonio (AAAA-MM-DD)
       taxpayer-sex:
         prompt: Sexo del primer declarante
       title: Primer declarante

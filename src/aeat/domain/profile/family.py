@@ -45,6 +45,13 @@ class DescendantInfo(BaseModel):
         A disabled descendant remains mínimo-eligible regardless of age.
     convive_con_contribuyente
         Whether the descendant cohabits with the taxpayer (Art. 58.1 condition).
+    custodia_compartida
+        Art. 59 LIRPF: when ``True``, both progenitors share custody under a
+        judicial or administrative arrangement. The mínimo-por-descendientes
+        and the bajo-3-años supplement for this child are split 50 % between
+        them (Art. 59 prorrata). Default ``False`` (sole custody / not
+        applicable). Setting this flag on a non-cohabiting descendant has no
+        additional effect because eligibility already fails.
     nif
         Optional NIF/NIE; validated for shape when present.
     """
@@ -55,6 +62,7 @@ class DescendantInfo(BaseModel):
     adoption_date: date | None = None
     discapacidad_grado: Literal[0, 33, 65] | None = None
     convive_con_contribuyente: bool = True
+    custodia_compartida: bool = False
     nif: str | None = None
 
     @field_validator("birth_date", "adoption_date", mode="before")
@@ -263,6 +271,49 @@ class RentaFamilyProfile(BaseModel):
             for d in self.descendientes
             if d.is_eligible_ordinary(filing_year) and d.joined_before_or_on_1_july(filing_year)
         )
+
+    def custodia_compartida_count(self, filing_year: int) -> int:
+        """Count of eligible descendientes with custodia_compartida=True.
+
+        Only eligible (Art. 58.1) and cohabiting descendants are counted;
+        non-eligible ones carry no mínimo, so the prorrata has no effect.
+        """
+        return sum(
+            1
+            for d in self.descendientes
+            if d.custodia_compartida and d.is_eligible_ordinary(filing_year)
+        )
+
+    def custodia_compartida_prorrata_factor(self, descendant: "DescendantInfo", filing_year: int) -> "Decimal":
+        """Return the Art. 59 LIRPF prorrata factor for one descendant.
+
+        Returns ``Decimal("0.5")`` when ``descendant.custodia_compartida`` is
+        ``True`` and the descendant is eligible for the mínimo, otherwise
+        ``Decimal("1")``.
+        """
+        from decimal import Decimal
+
+        if descendant.custodia_compartida and descendant.is_eligible_ordinary(filing_year):
+            return Decimal("0.5")
+        return Decimal("1")
+
+    def custodia_compartida_advisory(self, filing_year: int) -> str | None:
+        """Return the translated Art. 59 prorrata advisory string, or ``None``.
+
+        When at least one eligible descendant has ``custodia_compartida=True``
+        the returned string reads "Se ha aplicado prorrata 50 % (Art. 59 LIRPF)
+        por custodia compartida en X descendientes."  Returns ``None`` when no
+        prorrata is in effect.
+        """
+        from ...core.i18n import tr
+
+        count = self.custodia_compartida_count(filing_year)
+        if count > 0:
+            return tr(
+                "profile.descendiente.custodia_compartida_prorrata_applied",
+                count=count,
+            )
+        return None
 
 
 __all__ = [

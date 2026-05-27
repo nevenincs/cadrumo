@@ -2143,6 +2143,8 @@ filing:
     required_missing: filing.validation.required_missing
     schema_mismatch: filing.validation.schema_mismatch
 profile:
+  descendiente:
+    custodia_compartida_prorrata_applied: profile.descendiente.custodia_compartida_prorrata_applied
   errors:
     foral_regime: profile.errors.foral_regime
     not_configured: profile.errors.not_configured
@@ -2226,6 +2228,10 @@ wizard:
         help: wizard.setup.flags.notes.help
       surnames:
         help: wizard.setup.flags.surnames.help
+      taxpayer-marriage-date:
+        help: 'A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
+          = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
+          82. cikk LIRPF).'
     iva:
       title: wizard.setup.iva.title
     notes:
@@ -2266,6 +2272,8 @@ wizard:
             label: wizard.setup.taxpayer.situacion-familiar.choices.soltero.label
           separado-divorciado:
             label: wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label
+      taxpayer-marriage-date:
+        prompt: Házasságkötés dátuma (ÉÉÉÉ-HH-NN)
       title: wizard.setup.taxpayer.title
     taxpayer-type:
       incn-prior-12-months:

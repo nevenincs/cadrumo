@@ -6,11 +6,12 @@ facts are derived and stored alongside individual facts so that the registry
 binding resolver can look them up by a simple ``profile_key`` selector.
 
 Stored fact paths per descendant (n = 0-based index):
-  renta_family.descendiente.{n}.birth_date       ISO-8601 date string
-  renta_family.descendiente.{n}.adoption_date    ISO-8601 date string or absent
-  renta_family.descendiente.{n}.discapacidad     "0" / "33" / "65" or absent
-  renta_family.descendiente.{n}.convivencia      "true" / "false"
-  renta_family.descendiente.{n}.nif              NIF string or absent
+  renta_family.descendiente.{n}.birth_date         ISO-8601 date string
+  renta_family.descendiente.{n}.adoption_date      ISO-8601 date string or absent
+  renta_family.descendiente.{n}.discapacidad       "0" / "33" / "65" or absent
+  renta_family.descendiente.{n}.convivencia        "true" / "false"
+  renta_family.descendiente.{n}.custodia_compartida "true" / "false" (absent means False)
+  renta_family.descendiente.{n}.nif                NIF string or absent
 
 Aggregate facts stored:
   renta_family.descendientes_count               int count
@@ -46,13 +47,15 @@ def descendant_facts_from_list(
         if d.discapacidad_grado is not None:
             facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
         facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
+        if d.custodia_compartida:
+            facts.append((f"{prefix}.custodia_compartida", "true"))
         if d.nif is not None:
             facts.append((f"{prefix}.nif", d.nif))
     facts.append((_COUNT_PATH, str(len(descendientes))))
     return facts
 
 
-_N_RE = re.compile(r"^renta_family\.descendiente\.(\d+)\.(birth_date|adoption_date|discapacidad|convivencia|nif)$")
+_N_RE = re.compile(r"^renta_family\.descendiente\.(\d+)\.(birth_date|adoption_date|discapacidad|convivencia|custodia_compartida|nif)$")
 
 
 def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, ...]:
@@ -92,6 +95,8 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
             disc_val = None
         convivencia_raw = row.get("convivencia", "true")
         convive = convivencia_raw.lower() not in ("false", "0")
+        custodia_raw = row.get("custodia_compartida", "false")
+        custodia = custodia_raw.lower() not in ("false", "0")
         nif = row.get("nif")
         result.append(
             DescendantInfo(
@@ -99,6 +104,7 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
                 adoption_date=adoption_date,
                 discapacidad_grado=disc_val,
                 convive_con_contribuyente=convive,
+                custodia_compartida=custodia,
                 nif=nif,
             )
         )
@@ -113,6 +119,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
       ADOPCION=YYYY-MM-DD    (optional) adoption finalisation date
       DISCAPACIDAD=0|33|65   (optional) discapacidad grade
       CONVIVENCIA=true|false (optional, default true) cohabitation flag
+      CUSTODIA=true|false    (optional, default false) custodia compartida (Art. 59 LIRPF)
       NIF=XXXXXXXXX          (optional) NIF/NIE
 
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
@@ -144,6 +151,11 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     if conv_raw is not None:
         convive = conv_raw.lower() not in ("false", "0", "no")
 
+    custodia = False
+    custodia_raw = parts.get("CUSTODIA")
+    if custodia_raw is not None:
+        custodia = custodia_raw.lower() in ("true", "1", "si", "sí", "yes")
+
     nif: str | None = None
     nif_raw = parts.get("NIF")
     if nif_raw:
@@ -154,6 +166,7 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
         adoption_date=adoption_date,
         discapacidad_grado=discapacidad_grado,  # type: ignore[arg-type]
         convive_con_contribuyente=convive,
+        custodia_compartida=custodia,
         nif=nif,
     )
 
