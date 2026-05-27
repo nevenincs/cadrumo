@@ -4,139 +4,131 @@ tags:
   - '#cli-testimonial'
 date: '2026-05-27'
 related:
-  - "[[2026-05-26-cli-testimonial-audit]]"
+  - "[[2026-05-27-eva-cli-testimonial-audit]]"
 ---
 
-# `cli-testimonial` audit: `round-10 Eva Carrillo Soto cryptocurrency operator`
+# `cli-testimonial` audit: `round-10 David O'Connor Beckham impatriado`
 
 ## Scope
 
-Tenth testimonial round, focused on cryptocurrency operator persona. Eva
-Carrillo Soto, asalariada with €52k gross salary plus crypto/DeFi/NFT
-operations on foreign exchanges (Binance, Kraken, Aave) above the
-€50k informativa threshold. Exercises M100 ganancias patrimoniales
-cripto path (casillas 1804-1814), M720 foreign-asset declaration,
-M721 cryptocurrency informativa, M714 patrimonio. Re-runs R7
-cluster-T and R8/R9 spot-checks.
+Tenth testimonial round, David O'Connor — Irish national tech
+executive, Beckham régimen opt-in effective January 2024 under
+Art. 93 LIRPF. Salary €280k as Spanish empleado, US stock-options
+vesting + US bank savings (foreign-source), Spanish freelance income
+€8k. CCAA Madrid, preferred output language English. Exercises the
+impatriado declaración path (M151 expected), the foreign-asset
+exemption (Art. 93.5 LIRPF override of M720), and the flat-tarifa
+chain (24% on first €600k, 47% above).
 
 ## Findings
 
-### CRITICAL — R7 cluster-T cuota tarifa general STILL OPEN
+### CRITICAL — Beckham régimen entirely unmodelled
 
-Casillas 0532/0533 (cuota base liquidable general estatal / autonómica)
-return `0.00` even though `0500 = 52000` (base liquidable general
-correctly populated from €52k salary). The progressive tarifa is NOT
-applied to the general base. Casillas 0545/0546 (cuota íntegra) carry
-only the ahorro portion ~€305 each. Effective tax rate on €52k salary
-computes as 0% on the general portion, confirming the R7 cluster-T
-finding is still entirely open. Affects every M100 filer with salary
-income; likely the upstream root cause of the S361 chain emptiness.
+The user_profile schema has no axis for Art. 93 LIRPF opt-in. No
+`irpf_special_regime`, no `impatriados`, no `beckham`, no `art_93`
+field anywhere. The profile wizard never asks whether the taxpayer
+has opted into the special régimen for posted workers. This is the
+single most consequential classification decision for an impatriado —
+it determines which form (M151 not M100), which tarifa (flat 24%/47%
+not progressive), and which source scope (Spanish-only not worldwide).
+The system is structurally blind to this axis.
 
-### CRITICAL — Modelo 721 (criptomonedas extranjero) entirely absent
+### CRITICAL — Modelo 151 entirely absent
 
-`aeat app modelo work create --modelo 721` fails with `Invalid value:
-Modelo desconocido 721`. M721 is the cryptocurrency informativa
-introduced by Orden HFP/887/2023, obligatory from FY2023 for foreign-
-exchange balances above €50k. Régimen sancionador severo (multa
-mínima €5.000 per undeclared data set). A taxpayer with Binance or
-Kraken holdings above threshold confiding in this CLI incurs grave
-infraction with zero CLI warning. Confirms Eva round-9 finding;
-remediation tracked as Path-B refusal stub.
+`aeat app modelo work create --modelo 151` fails with `Unknown
+modelo 151`. M151 is the statutory filing form for impatriados —
+not a variant of M100 but a separate declaración with its own
+casilla structure, flat-tarifa boxes, and different reduction rules.
+Without M151 there is no correct filing path for an Art. 93 opt-in
+taxpayer in this application.
 
-### CRITICAL — Modelo 714 (Patrimonio) entirely absent
+### CRITICAL — M100 tarifa chain zeroes out at €280k (DOUBLE-CONFIRMS R7 cluster-T)
 
-`aeat app modelo work create --modelo 714` fails identically. M714 is
-the Patrimony autoliquidation under Ley 19/1991, obligatory for
-patrimonio neto above €600k in Comunitat Valenciana (autonomic
-threshold; €700k–€1M in other CCAAs). A wealthy crypto operator with
-combined holdings above the threshold has an autoliquidación
-obligation that this CLI cannot assist at all.
+Created an M100/2024 work-unit with €280k trabajo income (casilla
+0003). Engine correctly computes base imponible general = €280k,
+base liquidable general = €280k, mínimo personal = €5.550. Then
+the cuota chain breaks: 0527, 0528, 0529, 0532, 0533, 0545, 0546
+all output 0.00 despite €280k base liquidable. No error, no warning.
+Cuota diferencial = 0 on €280k salary. Independently confirms the
+Eva round-10 €52k finding — R7 cluster-T is structural, not edge-
+case. Expected output for resident progressive: ~€107k (estatal +
+Madrid autonómica). Expected output for Beckham flat: €67.200 (24%
+flat). Engine produces neither.
 
-### HIGH — Foreign-source distinction and double-taxation credit absent
+### HIGH — M720 exemption for impatriados not modelled
 
-The €180 DeFi yield on Aave (US-domiciled protocol) is foreign-source
-rendimiento del capital mobiliario. Art. 80 LIRPF and OECD convention
-require integration with possible deducción por doble imposición
-internacional. The CLI does not distinguish Spanish-source from
-foreign-source rendimientos in any binding or casilla mapping. No
-binding of the type `renta-2024-deduccion-doble-imposicion-
-internacional`. The €180 either disappear or pile into 0033 without
-source distinction; the foreign tax credit cannot be applied.
+Art. 93.5 LIRPF exempts impatriados from M720 even with foreign
+assets above €50k. Setting `--bienes-extranjero-above-threshold` on
+the profile yields no NOT_APPLICABLE verdict for M720; the work-unit
+is created without protest. `overview status` provides no obligations
+assessment — only in-progress counts. There is no surface saying
+"M720 does not apply because you are impatriado." Silent wrong
+obligation; régimen sancionador exposure.
 
-### MEDIUM — Casilla 1812 manual auto-propagation gap
+### HIGH — Source-scope axis missing (Spanish vs worldwide income)
 
-Casilla 1811 (ganancia no exenta) computes correctly to €8.500.
-Casilla 1812 (ganancia imputable a 2024) is `input_kind = "manual"`:
-the operator must duplicate the value. Without explicit `--casilla
-"1812=8500"`, aggregates 1813/1814 stay zero and the entire crypto
-gain disappears from base imponible del ahorro silently. AEAT form
-behavior is that 1812 defaults to 1811 unless multi-year deferral
-under Art. 14.2.d LIRPF; either flip 1812 to computed identity, or
-surface a verification finding when 1811 > 0 and 1812 = 0.
+US stock-options vesting (€120k) and US Bank of America interest are
+NOT taxable in Spain under Beckham — only Spanish-source rendimientos
+fall in scope. The CLI has no `source_jurisdiction` or
+`spanish_source_only` flag in bindings, ledger classification, or
+casilla wiring. If foreign-source income is fed into any casilla,
+the engine taxes it without warning. Ledger import + classification
+workflow is unsafe for impatriados in current state.
 
-### MEDIUM — Capital mobiliario does not flow to base del ahorro
+### MEDIUM — 6-year Beckham window expiry untracked
 
-Casilla 0033 (rendimientos capital mobiliario, imposición de
-capitales) accepts the staking €600 and flows correctly to 0041 (suma
-capital mobiliario base del ahorro). However casilla 0460 (base
-imponible del ahorro) carries only the €8.500 from ganancias
-patrimoniales; the €600 capital mobiliario component does NOT appear
-summed. Aggregation channel from 0041 to 0460 inactive or
-misconfigured for this revision.
+Profile schema has no `irpf_special_regime_start_date`. Beckham
+runs year-of-displacement plus 5 subsequent years. For a 2024 opt-in,
+year 7 (2030) is when progressive régimen returns on worldwide income.
+No field to record opt-in date, no derived expiry year, no
+advisory surface for approaching year 6. User must track externally.
 
-### MEDIUM — NFT classification guidance absent
+### MEDIUM — Output-language flag coverage gaps
 
-NFT transmissions tribute as transmisiones de elementos patrimoniales
-in the 1804-1814 monedas-virtuales block per AEAT 2024 manual.
-The CLI gives zero indication of this classification; an operator
-without external guidance could route NFTs into 0386 (otros elementos
-patrimoniales) producing a technically incorrect declaration.
+`--output-language en` correctly persists to `preferences.output_language`
+and is honoured by `overview status`, `modelo work calculate`,
+`modelo work verify`. NOT accepted by `modelo work create`,
+`modelo work status`, `modelo work list`, `review queue`. Flag
+contract inconsistent across subcommands.
 
-### LOW — M720 is bindings container without semantic abstraction
+### MEDIUM — Profile wizard hardcoded Spanish
 
-M720 catalog entry exists; work_create succeeds. However the 49 bindings
-are all `manual_input` with identifiers like `modelo-720-2013.type_2.
-77-101.tipo-de-titularidad-sobre-el-bien-o-derecho` — direct BOE
-record-design nomenclature without any semantic abstraction. No
-threshold validation (€50.000), no category separation (cuentas /
-valores / inmuebles), no asistente. Functional as a binding store;
-does not replace the AEAT form workflow.
+`config profile create --help` text, option descriptions, and
+section headers remain entirely in Spanish regardless of any
+language flag. A first-time English-speaking impatriado cannot
+understand the onboarding surface.
 
-### LOW — Extemporaneidad warning absent (R9 re-confirm)
+### POLISH — Modelo list and bindings list table headers untranslated
 
-Plazo ordinario para Renta 2024 was 30 June 2025. The simulation
-date is May 2026. The CLI emits no extemporaneidad advertencia and
-applies no recargo automation (Art. 27 LGT) at `work create` or
-`calculate` time. Confirmed open.
-
-### POLISH — `work create` requires explicit `--revision` without discovery
-
-Signature requires explicit `--revision 2024` (M100) or
-`--revision 2013-y-siguientes` (M720). Without prior exploration of
-`aeat app modelo bindings list`, an operator has no way to know
-which revision identifier to pass. Surface a `default-latest` flag
-or print the available revisions in the error message.
+`modelo list` and `bindings list` tabular outputs always render
+English column labels (correct convention) — flagged as polish to
+confirm intentional. Tabular labels should NOT be localised; only
+prose surfaces should.
 
 ## Recommendations
 
-The most operationally important finding is R7 cluster-T — every
-M100 salary filer computes 0% effective on the general base. This
-dwarfs the S361 settlement-chain tail in scope: S361 fixes 0587-0670
-chain, but if 0532/0533 are zero, the entire calculation is wrong
-upstream of S361. Architecture grounding required before any
-remediation: confirm the 2024 state-scale `lookup_bracket` formulas
-exist and are wired to the 0500 → 0532 path. Compare against the
-2023 (`d64dfb7ff`) and 2025 (`6eda54425`) wiring commits.
+The critical finding from this round is the DOUBLE-CONFIRMATION of
+R7 cluster-T from Eva round-10. Two independent personas at vastly
+different income levels (€52k salary and €280k salary) both produce
+0.00 cuota tarifa on the general base. This is not edge-case; it is
+the M100 tarifa wiring for 2024 entirely unwired or misrouted.
+Architecture grounding dispatched as task #158.
 
-Path-B refusal-stubs for M721 (already tracked) and M714 (new task)
-are cheap defects-of-record that eliminate the silent-misrouting
-hazard without requiring AEAT corpus PDFs.
+Priority remediation order for Beckham-régimen coverage:
 
-The 1812 auto-propagation gap is a small targeted fix that removes
-a real footgun for any crypto declarant.
+1. **Task #158** — R7 cluster-T grounding + fix (precedes everything;
+   without this, no M100 result is trustworthy for any persona).
+2. **Task #162** — Profile schema axis `irpf_special_regime` +
+   `irpf_special_regime_start_date` (foundation for #161, #163, source-
+   scope, lifecycle).
+3. **Task #161** — M151 Path-B refusal stub (cheap defect-of-record
+   blocking silent misrouting into M100).
+4. **Task #163** — M720 NOT_APPLICABLE wiring (depends on #162).
+5. Source-scope axis (separate task to be filed).
+6. Beckham 6-year window advisory.
+7. Output-language flag coverage + profile-wizard localisation.
 
-The foreign-source / double-taxation-credit gap is the largest
-authoring task uncovered — requires either a new `source_country`
-attribute on rendimientos bindings or a dedicated
-`renta-deduccion-doble-imposicion-internacional` construct mapped
-to casillas 0588-0594.
+The application is not safe for Art. 93 filers in its current state —
+a Beckham taxpayer who confides their declaración to this CLI will
+get a zeroed cuota and silent worldwide-income scope, both of which
+are material compliance failures.
