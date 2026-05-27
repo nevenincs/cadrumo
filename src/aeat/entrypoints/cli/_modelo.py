@@ -2655,9 +2655,12 @@ def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     if not _BARE_NUMERIC_RE.fullmatch(key):
         return key
 
-    # Strip leading zeros for numeric equality; "69", "069", "00069" all match.
-    key_numeric = key.lstrip("0") or "0"
-    matches = [c for c in revision.casillas if ((c.number or "").lstrip("0") or "0") == key_numeric]
+    # Numeric equality across zero-padding; "69", "069", "00069" all match.
+    # `_BARE_NUMERIC_RE.fullmatch` upstream guarantees `key` is all digits, so
+    # `int(...)` is total; casilla.number falls back to "0" on a missing token
+    # so the same canonicalisation runs against every catalogued casilla.
+    key_numeric = int(key)
+    matches = [c for c in revision.casillas if int(c.number or "0") == key_numeric]
     if len(matches) == 1:
         return str(matches[0].id)
 
