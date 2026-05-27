@@ -262,6 +262,22 @@ class StoredIvaWalletObservationRow(BaseModel):
     raw_sha256: str | None
 
 
+class StoredIvaRemoteStateAcquisitionRow(BaseModel):
+    """One redacted stored live IVA acquisition manifest summary."""
+
+    model_config = ConfigDict(frozen=True)
+
+    acquisition_ref: str
+    captured_at: datetime
+    year_from: int
+    year_to: int
+    target_year: int
+    target_period: str
+    filed_history_succeeded: bool
+    wallet_succeeded: bool
+    surfaces: tuple[str, ...]
+
+
 class IvaRemoteStateStoredEvidenceReport(BaseModel):
     """Stored remote IVA evidence available without a live AEAT read."""
 
@@ -270,6 +286,8 @@ class IvaRemoteStateStoredEvidenceReport(BaseModel):
     history: IvaCompensationHistoryReport
     wallet_observation_count: int
     wallet_observations: tuple[StoredIvaWalletObservationRow, ...]
+    acquisition_manifest_count: int = 0
+    acquisition_manifests: tuple[StoredIvaRemoteStateAcquisitionRow, ...] = ()
 
 
 class IvaCompensationHistoryCaptureReport(BaseModel):
@@ -729,10 +747,15 @@ def load_iva_remote_state(
     wallet_rows = tuple(
         _stored_wallet_observation_row(observation) for observation in store.list_iva_wallet_observations()
     )
+    acquisition_rows = tuple(
+        _stored_acquisition_manifest_row(manifest) for manifest in list_iva_remote_state_acquisition_manifests()
+    )
     return IvaRemoteStateStoredEvidenceReport(
         history=history,
         wallet_observation_count=len(wallet_rows),
         wallet_observations=wallet_rows,
+        acquisition_manifest_count=len(acquisition_rows),
+        acquisition_manifests=acquisition_rows,
     )
 
 
@@ -879,6 +902,47 @@ def _stored_wallet_observation_row(observation: _IvaCompensationWalletObservatio
         captured_at=observation.captured_at,
         raw_sha256=observation.raw_sha256,
     )
+
+
+def _stored_acquisition_manifest_row(
+    manifest: IvaRemoteStateAcquisitionManifest,
+) -> StoredIvaRemoteStateAcquisitionRow:
+    return StoredIvaRemoteStateAcquisitionRow(
+        acquisition_ref=_evidence_ref(manifest.acquisition_id),
+        captured_at=manifest.captured_at,
+        year_from=manifest.year_from,
+        year_to=manifest.year_to,
+        target_year=manifest.target_year,
+        target_period=manifest.target_period,
+        filed_history_succeeded=manifest.filed_history_succeeded,
+        wallet_succeeded=manifest.wallet_succeeded,
+        surfaces=tuple(_stored_acquisition_surface_text(surface) for surface in manifest.surfaces),
+    )
+
+
+def _stored_acquisition_surface_text(surface: IvaRemoteStateAcquisitionSurfaceManifest) -> str:
+    parts = [surface.surface.value, f"status={surface.status.value}"]
+    if surface.failure_mode is not None:
+        parts.append(f"failure_mode={surface.failure_mode.value}")
+    if surface.failure_type is not None:
+        parts.append(f"failure_type={surface.failure_type}")
+    if surface.captured_count is not None:
+        parts.append(f"captured={surface.captured_count}")
+    if surface.calculation_observation_count is not None:
+        parts.append(f"calculation_observations={surface.calculation_observation_count}")
+    if surface.reloaded_history_count is not None:
+        parts.append(f"reloaded_history={surface.reloaded_history_count}")
+    if surface.wallet_row_count is not None:
+        parts.append(f"wallet_rows={surface.wallet_row_count}")
+    if surface.decision_ref is not None:
+        parts.append(f"decision_ref={surface.decision_ref}")
+    if surface.selected_authority is not None:
+        parts.append(f"authority={surface.selected_authority}")
+    if surface.divergence is not None:
+        parts.append(f"divergence={surface.divergence}")
+    if surface.blocked is not None:
+        parts.append(f"blocked={surface.blocked}")
+    return " ".join(parts)
 
 
 def _authority_source_text(source: _IvaCompensationAuthoritySource) -> str:
@@ -1491,6 +1555,7 @@ __all__ = [
     "LiveIvaReadSurface",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
+    "StoredIvaRemoteStateAcquisitionRow",
     "StoredIvaWalletObservationRow",
     "borrador_100_snapshot_object_key",
     "build_iva_remote_state_acquisition_report",

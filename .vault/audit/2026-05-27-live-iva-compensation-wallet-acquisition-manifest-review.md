@@ -42,3 +42,11 @@ names that seed explicitly.
 
 - `uv run pytest -q src/aeat/application/live/test_iva_remote_state_acquisition.py src/aeat/adapters/persistence/storage/test_namespace_registry.py src/aeat/adapters/persistence/storage/test_runtime.py` passed.
 - `uv run ruff check src/aeat/application/live/__init__.py src/aeat/application/live/test_iva_remote_state_acquisition.py src/aeat/adapters/persistence/storage/_namespace_registry.py src/aeat/adapters/persistence/storage/__init__.py` passed.
+
+LIVEIVA-MANIFEST-004 | INFO | REVIEWED | Stored evidence report reloads acquisition summaries without raw ids
+
+Follow-up review found no issues in the `load_iva_remote_state` acquisition
+summary extension. The stored evidence report now reads stored manifests only,
+hashes the acquisition object key before surfacing it, and exposes no local path
+or taxpayer identifier fields. Focused pytest and ruff gates passed for the
+reload extension.
