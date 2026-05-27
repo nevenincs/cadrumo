@@ -118,7 +118,8 @@ def test_directory_mode_round_trip_matches_every_single_file_modelo(tmp_path: Pa
         actual = load_modelo_directory(target)
         assert actual == expected, source.modelo_id
 
-    assert checked, "at least one committed modelo must exercise single-file loading"
+    if not checked:
+        assert list(modelos_dir.glob("*.toml")) == []
 
 
 def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path: Path) -> None:
@@ -146,7 +147,8 @@ def test_fragment_directory_round_trip_matches_every_single_file_modelo(tmp_path
         actual = load_modelo_directory(target)
         assert actual == expected, source.modelo_id
 
-    assert checked, "at least one committed modelo must exercise single-file loading"
+    if not checked:
+        assert list(modelos_dir.glob("*.toml")) == []
 
 
 def test_directory_mode_rejects_manifest_with_revisions_table(tmp_path: Path) -> None:
@@ -756,8 +758,8 @@ def test_directory_mode_rejects_no_revisions(tmp_path: Path) -> None:
         load_modelo_directory(target)
 
 
-def test_committed_registry_tree_loads_single_file_and_directory_modelos() -> None:
-    """Registry discovery must include both supported modelo layouts."""
+def test_committed_registry_tree_loads_directory_modelos() -> None:
+    """Registry discovery must load every committed directory-form modelo."""
 
     registry_root = bundled_path("registry", "aeat")
     modelos_dir = registry_root / "modelos"
@@ -768,7 +770,7 @@ def test_committed_registry_tree_loads_single_file_and_directory_modelos() -> No
     assert loaded_ids == {source.modelo_id for source in sources}
     assert {load_modelo_source(source).id for source in sources} == loaded_ids
     assert any(source.layout == "directory" for source in sources)
-    assert any(source.layout == "single_file" for source in sources)
+    assert all(source.layout == "directory" for source in sources)
 
 
 def test_discovery_rejects_single_file_and_directory_layout_collision(tmp_path: Path) -> None:

@@ -28,6 +28,6 @@ into the generic directory/fragments substrate without changing schema
 semantics, loader behavior, or per-modelo definitions.
 
 - [x] `P01.S01` - Inventory M308 single-file section boundaries and record the mechanical directory split strategy before editing registry data; `.vault/audit`.
-- [ ] `P01.S02` - Mechanically split M308 into `manifest.toml` and `revisions/2009-y-siguientes` fragments using the existing generic loader layout; `src/aeat/_data/registry/aeat/modelos/308`.
+- [x] `P01.S02` - Mechanically split M308 into `manifest.toml` and `revisions/2009-y-siguientes` fragments using the existing generic loader layout; `src/aeat/_data/registry/aeat/modelos/308`.
 - [ ] `P01.S03` - Verify M308 directory loading, registry validity, snapshot behavior, and TOML reviewability gates; `src/aeat/domain/calculations/registry tests`.
 - [ ] `P01.S04` - Record review outcome and confirm the root-level single-file modelo cleanup baseline; `.vault/exec`.
