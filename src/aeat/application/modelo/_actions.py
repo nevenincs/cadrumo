@@ -2468,7 +2468,6 @@ def _collect_revision_verification_findings(
         )
         return findings, resolved_casillas, missing_required
 
-    casillas_by_id = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
     revision_keys = set(target.inputs_snapshot)
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
@@ -2481,7 +2480,7 @@ def _collect_revision_verification_findings(
                     _missing_required_casilla_finding(
                         casilla_id,
                         target.work_unit_id,
-                        casilla_def=casillas_by_id.get(casilla_id),
+                        casilla_def=casilla,
                     )
                 )
 
