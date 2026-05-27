@@ -336,7 +336,7 @@ class LiveIvaReadOutcome(BaseModel):
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
-    outcome_mode: LiveIvaAcquisitionFailureMode
+    outcome_mode: LiveIvaAcquisitionFailureMode = LiveIvaAcquisitionFailureMode.UNKNOWN
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
     captured_count: int | None = None
@@ -368,7 +368,12 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
     year_to: int
     target_year: int
     target_period: str
-    auth: LiveIvaAuthOutcome
+    auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
+        status=LiveIvaReadStatus.FAILED,
+        outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_type="MissingAuthResult",
+    )
     filed_history: IvaCompensationHistoryCaptureReport | None
     wallet: IvaWalletCaptureReport | None
     outcomes: tuple[LiveIvaReadOutcome, ...]
@@ -395,7 +400,7 @@ class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
-    outcome_mode: LiveIvaAcquisitionFailureMode
+    outcome_mode: LiveIvaAcquisitionFailureMode = LiveIvaAcquisitionFailureMode.UNKNOWN
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
     captured_count: int | None = None
@@ -419,7 +424,12 @@ class IvaRemoteStateAcquisitionManifest(BaseModel):
     year_to: int
     target_year: int
     target_period: str
-    auth: LiveIvaAuthOutcome
+    auth: LiveIvaAuthOutcome = LiveIvaAuthOutcome(
+        status=LiveIvaReadStatus.FAILED,
+        outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+        failure_type="LegacyManifestAuthOutcome",
+    )
     filed_history_succeeded: bool
     wallet_succeeded: bool
     surfaces: tuple[IvaRemoteStateAcquisitionSurfaceManifest, ...]
