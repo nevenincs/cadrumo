@@ -115,7 +115,7 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
-required_text = ["reserva especial"]
+required_text = ["base imponible"]
 
 # Calculation-only Decimal binding: carries the capital social of the
 # Sociedad Laboral. Denominator of the 50% cap test under Ley 44/2015
@@ -131,4 +131,4 @@ source_refs = ["aeat-modelo-200-manual-2024"]
 
 [[revisions."2024-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-200-manual-2024"
-required_text = ["reserva especial"]
+required_text = ["base imponible"]

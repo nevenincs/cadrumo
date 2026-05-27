@@ -303,3 +303,185 @@ def test_dispatch_binding_is_a_profile_sourced_enum_binding() -> None:
     assert binding.typed_enum == "LegalEntityForm"
     assert binding.selector.get("field") == "legal_entity_form"
     assert "ley-27-2014:art-29" in binding.legal_refs
+
+
+def test_erd_parameter_encodes_the_ley_31_2022_rate() -> None:
+    """The ERD parameter encodes the Ley 31/2022 Art. 39 flat 23 % rate.
+
+    Ley 31/2022 Art. 39 modified LIS Art. 29 to introduce a 23 %
+    rate for entities whose INCN in the immediately prior period was
+    below 1.000.000 EUR (entidades de reducida dimensión), effective
+    for periods initiated from 2023. The registry parameter must
+    encode exactly 23, be a scalar ratio/percent, and cite both the
+    original LIS Art. 29 and the Ley 31/2022 modification.
+    """
+    parameters = _parameters()
+    assert "is.modelo-200.tipo-gravamen-erd" in parameters, (
+        "ERD parameter must be registered (Ley 31/2022 Art. 39)"
+    )
+    erd = parameters["is.modelo-200.tipo-gravamen-erd"]
+    assert erd.data_type == "ratio"
+    assert erd.unit == "percent"
+    assert len(erd.values) == 1
+    assert erd.values[0].value == Decimal("23"), (
+        "ERD rate must be 23 % per Ley 31/2022 Art. 39"
+    )
+    assert "ley-27-2014:art-29" in erd.legal_refs
+    assert "ley-31-2022:art-39" in erd.legal_refs, (
+        "ERD parameter must cite Ley 31/2022 Art. 39 as modification source"
+    )
+
+
+def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
+    """INCN < 1.000.000 EUR routes general-form entities to the ERD 23 % rate.
+
+    Ley 31/2022 Art. 39 (LIS Art. 29): an SL with prior-period INCN
+    of 850.000 EUR pays 23 % IS rather than the general 25 %. The
+    tipo formula must detect the INCN threshold and select the ERD
+    parameter. Aitor Etxegarai oracle: SAL INCN 850.000 → 23 %.
+    """
+    base_inputs = {
+        "DP200014:00552": Decimal("1000000"),
+        "DP200014:01033": Decimal("0"),
+        "DP200014:01034": Decimal("0"),
+        "DP200014B:00592": Decimal("0"),
+        "DP200014B:01766": Decimal("0"),
+        "DP200014B:01784": Decimal("0"),
+    }
+    common_bindings = {
+        "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+        "modelo-200-2024-profile-incn-prior-12-months": Decimal("850000"),
+        "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+    }
+
+    result_sal = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=base_inputs,
+        enum_binding_values={_DISPATCH_BINDING: "sal"},
+        binding_values=common_bindings,
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    result_sl = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=base_inputs,
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values=common_bindings,
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+
+    assert result_sal.values["DP200014:00558"] == Decimal("23"), (
+        "SAL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
+    )
+    assert result_sl.values["DP200014:00558"] == Decimal("23"), (
+        "SL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
+    )
+    # Cuota integra: 1.000.000 base × 23 % = 230.000.
+    assert result_sal.values["DP200014:00562"] == Decimal("230000.00"), (
+        "SAL cuota integra at ERD 23 % on 1M base = 230.000"
+    )
+
+
+def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> None:
+    """INCN >= 1.000.000 EUR keeps general-form entities at the 25 % rate.
+
+    The ERD threshold is strictly below 1M. An entity with INCN exactly
+    1.000.000 EUR does NOT qualify and must stay at 25 %. This is the
+    anti-tautology companion to the ERD test: crossing the 1M boundary
+    changes the dispatched rate.
+    """
+    base_inputs = {
+        "DP200014:00552": Decimal("1000000"),
+        "DP200014:01033": Decimal("0"),
+        "DP200014:01034": Decimal("0"),
+        "DP200014B:00592": Decimal("0"),
+        "DP200014B:01766": Decimal("0"),
+        "DP200014B:01784": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=base_inputs,
+        enum_binding_values={_DISPATCH_BINDING: "sa"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("1500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+        },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert result.values["DP200014:00558"] == Decimal("25"), (
+        "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
+    )
+    assert result.values["DP200014:00562"] == Decimal("250000.00")
+
+
+def test_new_entity_flag_overrides_erd_threshold() -> None:
+    """New-entity flag (LIS Art. 29 par. 4) takes priority over the ERD lane.
+
+    Even when INCN < 1M, an entity in its first two profit-making periods
+    applies the 15 % new-entity rate, not the 23 % ERD rate. The
+    new-entity lane is the outermost predicate in the tipo formula.
+    """
+    base_inputs = {
+        "DP200014:00552": Decimal("500000"),
+        "DP200014:01033": Decimal("0"),
+        "DP200014:01034": Decimal("0"),
+        "DP200014B:00592": Decimal("0"),
+        "DP200014B:01766": Decimal("0"),
+        "DP200014B:01784": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=base_inputs,
+        enum_binding_values={_DISPATCH_BINDING: "sl"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("1"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("200000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+        },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert result.values["DP200014:00558"] == Decimal("15"), (
+        "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
+    )
+    assert result.values["DP200014:00562"] == Decimal("75000.00"), (
+        "cuota integra at 15 % on 500k base = 75.000"
+    )
+
+
+def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
+    """Cooperativa keeps 20 % even when INCN < 1.000.000 EUR.
+
+    The ERD 23 % rate does not override the cooperative-protected special
+    regime. A cooperativa fiscalmente protegida with INCN 500k must still
+    pay 20 %, not 23 %.
+    """
+    base_inputs = {
+        "DP200014:00552": Decimal("1000000"),
+        "DP200014:01033": Decimal("0"),
+        "DP200014:01034": Decimal("0"),
+        "DP200014B:00592": Decimal("0"),
+        "DP200014B:01766": Decimal("0"),
+        "DP200014B:01784": Decimal("0"),
+    }
+
+    result = calculate_registry_snapshot(
+        _snapshot(),
+        inputs=base_inputs,
+        enum_binding_values={_DISPATCH_BINDING: "cooperativa"},
+        binding_values={
+            "modelo-200-2024-profile-new-entity-flag": Decimal("0"),
+            "modelo-200-2024-profile-incn-prior-12-months": Decimal("500000"),
+            "modelo-200-2024-profile-tributacion-estado-porcentaje": Decimal("100"),
+        },
+        relation_values={"modelo-200-2024-rel-202-pagos-fraccionados": Decimal("0")},
+        date_context={"filing_period": date(2024, 12, 31)},
+    )
+    assert result.values["DP200014:00558"] == Decimal("20"), (
+        "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"
+    )
