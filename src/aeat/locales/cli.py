@@ -86,6 +86,26 @@ def set_value(
     typer.echo(f"updated {path.name}:{key}")
 
 
+@app.command("remove")
+def remove_value(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.remove_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.remove_key_help", default="Dotted locale key to remove.")),
+    ],
+) -> None:
+    """Remove one locale string leaf."""
+
+    try:
+        path = _default_manager().remove_locale_value(locale, key)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"removed {path.name}:{key}")
+
+
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
 

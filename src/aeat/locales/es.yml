@@ -1027,6 +1027,18 @@ cli:
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
+        rescate_plan_pensiones_capital_help: 'Importe bruto del rescate del plan de pensiones en forma de capital (DT 12ª LIRPF). Úsalo junto con --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales para que el asistente calcule automáticamente la reducción del 40% y la inyecte en casilla 0011.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportaciones realizadas al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'Total de aportaciones al plan de pensiones (denominador del prorrateo DT 12ª LIRPF). Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-pre-2007.'
+        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reducción del rendimiento del trabajo por DT 12ª LIRPF. Usa --casilla para suministrar los valores directamente.'
+        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 y --rescate-plan-pensiones-aportaciones-totales deben suministrarse conjuntamente.'
+        rescate_plan_pensiones_not_decimal: 'Los valores --rescate-plan-pensiones-* deben ser importes decimales.'
+        sal_beneficio_neto_help: 'Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL, Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación obligatoria a la reserva especial, limitada por el umbral del 50% del capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social.'
+        sal_reserva_dotada_help: 'Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: '--sal-beneficio-neto no está soportado para esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.'
+        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada y --sal-capital-social deben suministrarse conjuntamente.'
+        sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales.'
   common:
     errors:
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
@@ -1784,6 +1796,8 @@ cli:
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Código de locale a actualizar.'
+    remove_key_help: 'Clave de locale con puntos que se eliminará.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose y --debug son mutuamente excluyentes.
@@ -2006,10 +2020,6 @@ cli:
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
         de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: "AVISO OBLIGACION DECLARAR (Art. 96.3\
-        \ LIRPF): el perfil declara mas de un pagador con rentas del segundo y siguientes\
-        \ pagadores superiores a 1.500 EUR. La presentacion del Modelo 100 es OBLIGATORIA\
-        \ independientemente del umbral general de ingresos."
     status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.
@@ -2147,7 +2157,10 @@ cli:
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
-        --help`.'
+        --help`. Los modificadores globales (`--format json`, `--language es`,
+        `--profile NOMBRE`, `--quiet`, `--verbose`, `--debug`) deben ir ANTES del
+        subcomando, p. ej. `aeat --format json app ledger list` (no `aeat app
+        ledger list --format json`).'
       quick_start_heading: Inicio rápido
       quick_start_import: '  3. `aeat app ledger import <extracto-bancario.csv> --provider
         csv` - añadir tus movimientos bancarios.'

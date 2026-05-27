@@ -1012,6 +1012,18 @@ cli:
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
+        rescate_plan_pensiones_capital_help: 'Import brut del rescat del pla de pensions en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales perquè l''assistent calculi la reducció del 40% i l''injecti a la casella 0011.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportacions fetes al pla de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-totales.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'Total d''aportacions al pla de pensions (denominador del prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-pre-2007.'
+        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reducció del rendiment del treball per DT 12a LIRPF. Fes servir --casilla per subministrar els valors directament.'
+        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales s''han de subministrar conjuntament.'
+        rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-* han de ser imports decimals.'
+        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada pel llindar del 50% del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
+        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si ja s''ha assolit el límit del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: '--sal-beneficio-neto no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reserva especial de Societat Laboral. Fes servir --casilla per subministrar els valors directament.'
+        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social s''han de subministrar conjuntament.'
+        sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals.'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -1759,6 +1771,8 @@ cli:
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Codi de locale que s''ha d''actualitzar.'
+    remove_key_help: 'Clau de locale amb punts que s''eliminarà.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -1978,10 +1992,6 @@ cli:
       work_units_present_with_discarded: '%{count} unitat(s) de treball de models
         actives (%{discarded} descartada(es)) en aquest emmagatzematge local; la teva
         feina de models activa esta desada, repren-la amb `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: "AVIS OBLIGACIO DECLARAR (Art. 96.3\
-        \ LIRPF): el perfil declara mes d''un pagador amb rendes del segon i posteriors\
-        \ pagadors superiors a 1.500 EUR. La presentacio del Model 100 es OBLIGATORIA\
-        \ independentment del llindar general d''ingressos."
     status_help: Mostrar l'estat del perfil, llibre, factures i declaracions
     taxpayer_model_undeclared: El perfil actiu no declara aquest model fiscal; actualitza
       el perfil o torna a executar amb l'anul·lació de perfil incomplet.
@@ -2115,7 +2125,10 @@ cli:
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
-        app --help`.'
+        app --help`. Els modificadors globals (`--format json`, `--language ca`,
+        `--profile NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS
+        del subcomandament, p. ex. `aeat --format json app ledger list` (no `aeat
+        app ledger list --format json`).'
       quick_start_heading: Inici rapid
       quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
         csv` - afegir els moviments bancaris.'

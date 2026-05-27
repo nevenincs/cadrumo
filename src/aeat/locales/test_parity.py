@@ -79,6 +79,51 @@ def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     assert aggregate["json_parse_error"] == "{flag} debe ser un objeto JSON."
 
 
+def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
+    """The locale setter can repair a missing leaf without rebuilding the file."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  locales:\n"
+        "    app_help: Auditar y generar catálogos de traducción\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.set_locale_value("es", "cli.locales.set_locale_help", "Código de locale.")
+
+    assert "    set_locale_help: 'Código de locale.'\n" in locale_path.read_text(encoding="utf-8")
+    data = temp_manager.load_locale(locale_path)
+    assert data["cli"]["locales"]["set_locale_help"] == "Código de locale."
+
+
+def test_remove_locale_value_deletes_existing_leaf(tmp_path: Path):
+    """The locale remover deletes a stale leaf and leaves siblings intact."""
+
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    locale_path = locales_dir / "es.yml"
+    locale_path.write_text(
+        "cli:\n"
+        "  locales:\n"
+        "    stale: Obsoleto\n"
+        "    app_help: Auditar y generar catálogos de traducción\n",
+        encoding="utf-8",
+    )
+
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    temp_manager.remove_locale_value("es", "cli.locales.stale")
+
+    text = locale_path.read_text(encoding="utf-8")
+    assert "stale" not in text
+    assert "    app_help: Auditar y generar catálogos de traducción\n" in text
+
+
 def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
     """The locale setter only writes locale files under its configured root."""
 

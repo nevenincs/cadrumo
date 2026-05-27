@@ -933,6 +933,18 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        rescate_plan_pensiones_capital_help: 'Gross lump-sum pension-plan redemption amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007 and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates the 40% reduction and injects it into casilla 0011.'
+        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Contributions made to the pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.'
+        rescate_plan_pensiones_aportaciones_totales_help: 'Total pension-plan contributions (denominator for the LIRPF transitional provision 12 proration). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-pre-2007.'
+        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital is not supported for this modelo revision; no LIRPF transitional provision 12 work-income reduction casilla is declared. Use --casilla to supply inputs directly.'
+        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007, and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.'
+        rescate_plan_pensiones_not_decimal: '--rescate-plan-pensiones-* values must be decimal amounts.'
+        sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped by the 50% share-capital threshold. Use it with --sal-reserva-dotada and --sal-capital-social.'
+        sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has already reached 50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
+        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Denominator for the 50% test: the allocation is zero once accumulated reserve reaches 50% of share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: '--sal-beneficio-neto is not supported for this modelo revision; no worker-owned company special reserve casilla is declared. Use --casilla to supply inputs directly.'
+        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.'
+        sal_reserva_not_decimal: '--sal-* values must be decimal amounts.'
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -1670,6 +1682,8 @@ cli:
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
+    remove_locale_help: 'Locale code to update.'
+    remove_key_help: 'Dotted locale key to remove.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -1887,10 +1901,6 @@ cli:
       work_units_present_with_discarded: '%{count} active modelo work unit(s) (%{discarded}
         discarded) in this local storage - your active modelo work is saved; resume
         it with `aeat app modelo work list`.'
-      filing_obligation_multiple_pagadores: "FILING OBLIGATION NOTICE (Art. 96.3\
-        \ LIRPF): the profile declares more than one pagador with income from the\
-        \ 2nd and subsequent payers exceeding EUR 1,500. Filing Modelo 100 is MANDATORY\
-        \ regardless of the general income threshold."
     status_help: Show profile, ledger, and modelo readiness
     taxpayer_model_undeclared: The active profile does not declare this taxpayer model;
       update the profile or rerun with the incomplete-profile override.
@@ -2024,7 +2034,10 @@ cli:
     landing:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
-        --help`.'
+        --help`. Global flags (`--format json`, `--language en`, `--profile NAME`,
+        `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand,
+        e.g. `aeat --format json app ledger list` (not `aeat app ledger list --format
+        json`).'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
         csv` - add your bank transactions.'
