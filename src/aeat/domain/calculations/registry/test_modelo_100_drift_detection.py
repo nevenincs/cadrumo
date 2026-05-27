@@ -204,6 +204,12 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #:   converting 1577 to ``input_kind = "computed"`` with an
 #:   ``op = "percent"`` formula, which is a schema-level change tracked
 #:   by task #47.
+#: * 2024 mínimos personales y familiares (LIRPF arts. 57-61) —
+#:   legally sourced state/autonomic minimo parameters were staged for
+#:   the 2024 renta revision, but the formulas currently consume the
+#:   base contributor minimo only. These entries must be removed as the
+#:   remaining age, descendant, and ascendant minimo formulas land in
+#:   the 2024 cuota chain.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
         "renta-2024-minimo-ascendientes-mayor-65-2024",
