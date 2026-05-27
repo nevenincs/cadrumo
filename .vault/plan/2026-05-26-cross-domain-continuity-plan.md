@@ -330,6 +330,10 @@ Trace Modelo 100 cuota path end-to-end for a pensioner-landlord profile and iden
 - [x] `W07.P31.S113` - trace Modelo 100 cuota path end-to-end for pensioner-landlord and identify where tarifa is silently zeroed; `.vault/exec/`.
 - [x] `W07.P31.S114` - confirm root cause class CCAA fact missing or wrong; `profile-fact bindings missing per Cluster T; rate lookup gated on wrong predicate; apply fix at correct boundary; `src/aeat/_data/registry/aeat/modelos/100/`.
 - [x] `W07.P31.S115` - regression test Pere profile base 35400 minimo 5550 Catalonia returns Modelo 100 cuota in expected range; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
+- [ ] `W07.P31.S246` - FU-W07-B extend Modelo 100 revision 2024 minimo del contribuyente to model LIRPF Art. 57.2/57.3 age supplements (+1150 EUR at 65-74, +1400 EUR at >=75) — required for pensioner personas (Pere, hypothetical >=75) to compute correct cuota; `mirror pattern from base flat 5550 fix in 01ac9d698; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
+- [ ] `W07.P31.S247` - FU-W07-B Art. 58 descendant minimo extensions in Modelo 100 revision 2024; `2400/2700/4000/4500 EUR per child supplements based on order and 3000 EUR <3 anos supplement; required for natural-person personas with descendants; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
+- [ ] `W07.P31.S248` - FU-W07-B Art. 59 ascendant minimo extensions in Modelo 100 revision 2024; `ascendant over 65 supplements; required for personas claiming dependant parents; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`.
+- [ ] `W07.P31.S249` - FU-W07-B regression test Pere age 70 viudo CCAA Comunidad Valenciana with the age supplement applied returns AEAT-published cuota for the analogous worked example; supersedes the current 4-test suite which only exercises the base flat minimo; `src/aeat/domain/calculations/registry/test_modelo_100_tarifa_real.py`.
 
 ### Phase `W07.P32` - 130 to 100 projection verb
 
@@ -457,7 +461,8 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S241` - FU-W05-A multi-step co-landing convention note from Wave-5 audit; `commit 03be9b6f4 bundled exec records and step closures; same pattern as FU-W04-A; documentation-only no code change; `.vaultspec/`.
 - [ ] `W09.P41.S242` - FU-W02-A multi-step co-landing convention note from Wave-2 audit; `commit 30065a92e S38-S42; documentation-only no code change; `.vaultspec/`.
 - [ ] `W09.P41.S243` - FU-W02-B multi-step co-landing convention note from Wave-2 audit; `commit acea52801 S43+S44+S46; documentation-only no code change; `.vaultspec/`.
-- [ ] `W09.P41.S244` - FU-W02-C MUST-FIX rewrite test_legal_entity_can_create_modelo_202_work_unit with isolated_runtime_profile fixture; currently uses monkeypatch AEAT_SECRET_STORE_BACKEND=unsecured to work around the storage regression S209; once S209 lands the unsecured workaround in this test must be removed; blocks Wave-2 quality-gate sign-off; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
+- [ ] `W09.P41.S244` - FU-W02-C MUST-FIX rewrite test_legal_entity_can_create_modelo_202_work_unit with isolated_runtime_profile fixture; `currently uses monkeypatch AEAT_SECRET_STORE_BACKEND=unsecured to work around the storage regression S209; once S209 lands the unsecured workaround in this test must be removed; blocks Wave-2 quality-gate sign-off; `src/aeat/entrypoints/cli/test_modelo_202_modality.py`.
+- [ ] `W09.P41.S245` - FU-W07-A multi-step co-landing convention note from Wave-7 review of 01ac9d698 S113+S114; `documentation-only; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
