@@ -1967,6 +1967,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.StoredTransactionDriftError",
+        ErrorCode(
+            code="INTEGRITY_STORED_TRANSACTION_DRIFT",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.storage.stored_data_validation_boundary",
+            default_suggestion="aeat config repair",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.user_profile._errors.ProfileExportError",
         ErrorCode(
             code="FAIL_PROFILE_EXPORT",
