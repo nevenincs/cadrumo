@@ -1088,6 +1088,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         attachment_ids=transaction.attachment_ids,
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
+        classified_by=transaction.classified_by,
     )
 
 
@@ -1119,6 +1120,7 @@ def ledger_transaction_review_payload(transaction: Transaction) -> LedgerTransac
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         review_status=ledger_transaction_review_status(transaction),
+        classified_by=transaction.classified_by,
     )
 
 
@@ -3240,6 +3242,124 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
     )
 
 
+def _build_bucket_event(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+    occurred_at: datetime,
+    actor: str,
+    object_id: str,
+    payload: Mapping[str, str],
+    object_type: BucketEventObjectType = BucketEventObjectType.LEDGER_TRANSACTION,
+) -> BucketEvent:
+    event = BucketEvent(
+        event_id=derive_bucket_event_id(
+            bucket_id=bucket_id,
+            event_type=event_type,
+            occurred_at=occurred_at,
+            actor=actor,
+            object_type=object_type,
+            object_id=object_id,
+            payload=payload,
+        ),
+        bucket_id=bucket_id,
+        event_type=event_type,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=object_type,
+        object_id=object_id,
+        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
+        payload=dict(payload),
+    )
+    return event
+
+
+def _append_bucket_event(*, repository: BucketEventHistoryRepository, event: BucketEvent) -> None:
+    repository.save(append_bucket_event(repository.load(), event))
+
+
+def _append_bucket_events(*, repository: BucketEventHistoryRepository, events: tuple[BucketEvent, ...]) -> None:
+    catalogue = repository.load()
+    for event in events:
+        catalogue = append_bucket_event(catalogue, event)
+    repository.save(catalogue)
+
+
+def _save_transaction_catalogue_and_events(
+    *,
+    transaction_repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    catalogue: TransactionCatalogue,
+    events: tuple[BucketEvent, ...],
+) -> None:
+    event_catalogue = event_repository.load()
+    for event in events:
+        event_catalogue = append_bucket_event(event_catalogue, event)
+    transaction_repository.save_with_secure_object_writes(
+        catalogue,
+        (event_repository.to_secure_object_write(event_catalogue),),
+    )
+
+
+def _save_transaction_catalogue_invoices_and_events(
+    *,
+    transaction_repository: TransactionCatalogueRepository,
+    invoice_repository: InvoiceCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    transaction_catalogue: TransactionCatalogue,
+    invoice_catalogue: InvoiceCatalogue,
+    events: tuple[BucketEvent, ...],
+) -> None:
+    event_catalogue = event_repository.load()
+    for event in events:
+        event_catalogue = append_bucket_event(event_catalogue, event)
+    transaction_repository.save_with_secure_object_writes(
+        transaction_catalogue,
+        (
+            invoice_repository.to_secure_object_write(invoice_catalogue),
+            event_repository.to_secure_object_write(event_catalogue),
+        ),
+    )
+
+
+def _primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
+    for event in events:
+        if event.object_type is BucketEventObjectType.LEDGER_TRANSACTION:
+            return event.event_id
+    return events[0].event_id
+
+
+def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
+    mapping: dict[tuple[str, str], str] = {}
+    for event in events:
+        if event.event_type in {
+            BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
+            BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
+        }:
+            mapping[("purchase_invoice_evidence", event.object_id)] = event.event_id
+        if event.event_type is BucketEventType.ATTACHMENT_LINKED:
+            mapping[("attachment", event.object_id)] = event.event_id
+    return mapping
+
+
+def _import_batch_id(
+    *,
+    bucket_id: str,
+    source_command: str,
+    imported_transaction_ids: tuple[str, ...],
+) -> str:
+    encoded = json.dumps(
+        {
+            "bucket_id": bucket_id,
+            "source_command": source_command,
+            "imported_transaction_ids": imported_transaction_ids,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def bulk_classify_from_csv(
     *,
     bucket_id: str,
@@ -3457,28 +3577,25 @@ def apply_classification_rules(
             business_classification=rule_matched.classification,
             category_id=rule_matched.category_id,
         )
-        try:
-            result = update_manual_transaction_fields(
-                bucket_id=bucket_id,
+        result = update_manual_transaction_fields(
+            bucket_id=bucket_id,
+            transaction_id=tx.transaction_id,
+            patch=patch,
+            actor=actor,
+            classified_by_override=f"rule:{rule_matched.rule_id}",
+            source_command=source_command,
+            reaffirm=reaffirm,
+            transaction_repository=tx_repo,
+            bucket_event_repository=event_repo,
+        )
+        all_event_ids.extend(result.bucket_event_ids)
+        applied_rows.append(
+            ApplyRulesAppliedRow(
                 transaction_id=tx.transaction_id,
-                patch=patch,
-                actor=actor,
-                classified_by_override=f"rule:{rule_matched.rule_id}",
-                source_command=source_command,
-                reaffirm=reaffirm,
-                transaction_repository=tx_repo,
-                bucket_event_repository=event_repo,
+                matched_rule_id=rule_matched.rule_id,
+                classification=rule_matched.classification,
             )
-            all_event_ids.extend(result.bucket_event_ids)
-            applied_rows.append(
-                ApplyRulesAppliedRow(
-                    transaction_id=tx.transaction_id,
-                    matched_rule_id=rule_matched.rule_id,
-                    classification=rule_matched.classification,
-                )
-            )
-        except Exception:
-            no_match += 1
+        )
 
     return ApplyRulesResult(
         rules_evaluated=len(rules),
@@ -3501,119 +3618,3 @@ def _result(
         transaction=transaction,
         bucket_event_ids=bucket_event_ids,
     )
-def _build_bucket_event(
-    *,
-    bucket_id: str,
-    event_type: BucketEventType,
-    occurred_at: datetime,
-    actor: str,
-    object_id: str,
-    payload: Mapping[str, str],
-    object_type: BucketEventObjectType = BucketEventObjectType.LEDGER_TRANSACTION,
-) -> BucketEvent:
-    event = BucketEvent(
-        event_id=derive_bucket_event_id(
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=occurred_at,
-            actor=actor,
-            object_type=object_type,
-            object_id=object_id,
-            payload=payload,
-        ),
-        bucket_id=bucket_id,
-        event_type=event_type,
-        occurred_at=occurred_at,
-        actor=actor,
-        object_type=object_type,
-        object_id=object_id,
-        payload_version=_BUCKET_EVENT_PAYLOAD_VERSION,
-        payload=dict(payload),
-    )
-    return event
-
-
-def _append_bucket_event(*, repository: BucketEventHistoryRepository, event: BucketEvent) -> None:
-    repository.save(append_bucket_event(repository.load(), event))
-
-
-def _append_bucket_events(*, repository: BucketEventHistoryRepository, events: tuple[BucketEvent, ...]) -> None:
-    catalogue = repository.load()
-    for event in events:
-        catalogue = append_bucket_event(catalogue, event)
-    repository.save(catalogue)
-
-
-def _save_transaction_catalogue_and_events(
-    *,
-    transaction_repository: TransactionCatalogueRepository,
-    event_repository: BucketEventHistoryRepository,
-    catalogue: TransactionCatalogue,
-    events: tuple[BucketEvent, ...],
-) -> None:
-    event_catalogue = event_repository.load()
-    for event in events:
-        event_catalogue = append_bucket_event(event_catalogue, event)
-    transaction_repository.save_with_secure_object_writes(
-        catalogue,
-        (event_repository.to_secure_object_write(event_catalogue),),
-    )
-
-
-def _save_transaction_catalogue_invoices_and_events(
-    *,
-    transaction_repository: TransactionCatalogueRepository,
-    invoice_repository: InvoiceCatalogueRepository,
-    event_repository: BucketEventHistoryRepository,
-    transaction_catalogue: TransactionCatalogue,
-    invoice_catalogue: InvoiceCatalogue,
-    events: tuple[BucketEvent, ...],
-) -> None:
-    event_catalogue = event_repository.load()
-    for event in events:
-        event_catalogue = append_bucket_event(event_catalogue, event)
-    transaction_repository.save_with_secure_object_writes(
-        transaction_catalogue,
-        (
-            invoice_repository.to_secure_object_write(invoice_catalogue),
-            event_repository.to_secure_object_write(event_catalogue),
-        ),
-    )
-
-
-def _primary_lineage_event_id(events: tuple[BucketEvent, ...]) -> str:
-    for event in events:
-        if event.object_type is BucketEventObjectType.LEDGER_TRANSACTION:
-            return event.event_id
-    return events[0].event_id
-
-
-def _evidence_event_ids(events: tuple[BucketEvent, ...]) -> dict[tuple[str, str], str]:
-    mapping: dict[tuple[str, str], str] = {}
-    for event in events:
-        if event.event_type in {
-            BucketEventType.PURCHASE_INVOICE_EVIDENCE_ATTACHED,
-            BucketEventType.PURCHASE_INVOICE_EVIDENCE_REPLACED,
-        }:
-            mapping[("purchase_invoice_evidence", event.object_id)] = event.event_id
-        if event.event_type is BucketEventType.ATTACHMENT_LINKED:
-            mapping[("attachment", event.object_id)] = event.event_id
-    return mapping
-
-
-def _import_batch_id(
-    *,
-    bucket_id: str,
-    source_command: str,
-    imported_transaction_ids: tuple[str, ...],
-) -> str:
-    encoded = json.dumps(
-        {
-            "bucket_id": bucket_id,
-            "source_command": source_command,
-            "imported_transaction_ids": imported_transaction_ids,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    return hashlib.sha256(encoded).hexdigest()

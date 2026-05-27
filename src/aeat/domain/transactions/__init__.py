@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._classification_rule import LedgerClassificationRule
 from ._enums import (
     CLASSIFIED_STATES,
     BusinessClassification,
@@ -118,6 +119,7 @@ __all__ = [
     "LLMClassificationResponse",
     "LLMClassifier",
     "LLMClassifierError",
+    "LedgerClassificationRule",
     "LedgerNoActiveBucketError",
     "LedgerStorageError",
     "ModelCapability",
