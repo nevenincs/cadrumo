@@ -313,13 +313,14 @@ def test_cli_seed_verb_refuses_duplicate(tmp_path: Path) -> None:
     """Seed verb refuses a second seed for the same period."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="seed-test"):
         _store_profile_with_nif(_NIF)
-        _RUNNER.invoke(
+        first_result = _RUNNER.invoke(
             app,
             ["app", "modelo", "iva-wallet", "seed",
              "--filing-year", "2024", "--period", "4T",
              "--amount", "1200.00", "--confirm"],
             env={"AEAT_OUTPUT_LANGUAGE": "en"},
         )
+        assert first_result.exit_code == 0, first_result.output
         result = _RUNNER.invoke(
             app,
             ["app", "modelo", "iva-wallet", "seed",

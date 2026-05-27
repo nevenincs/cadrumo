@@ -24,7 +24,7 @@ Implemented `aeat app modelo iva-wallet seed` CLI verb and `seed_iva_compensatio
 - `src/aeat/application/calculations/_iva_compensation_history.py`: Added `IvaCompensationSeedConflictError`, `seed_iva_compensation_period`. Seeds an `IvaCompensationPeriodState(status='seeded')` that flows through `_observation_from_iva_compensation_history` → binding prefill for `modelo-303-compensacion-pendiente-anteriores`.
 - `src/aeat/entrypoints/cli/_modelo.py`: New `iva-wallet seed` command with `--filing-year`, `--period`, `--amount`, `--confirm`. Requires `--confirm`, refuses without active profile NIF, refuses duplicate periods via `IvaCompensationSeedConflictError`.
 - `src/aeat/application/modelo/_actions.py`: Improved `ModeloAggregationBindingError` message for compensation binding override path — hints at the seed verb.
-- `src/aeat/locales/{en,es,ca,hu}.yml`: 7 new CLI locale keys scaffolded.
+- `src/aeat/locales/{en,es,ca,hu}.yml`: 10 new CLI locale keys scaffolded (`seed_help`, `seed_filing_year_help`, `seed_period_help`, `seed_amount_help`, `seed_confirm_help`, `seed_confirm_required`, `seed_invalid_amount`, `seed_negative_amount`, `seed_no_nif`, `seed_conflict`).
 - `src/aeat/entrypoints/cli/test_iva_wallet_inspector.py`: 6 regression tests — persist + round-trip, anti-tautology amount proof, duplicate refusal, CLI happy path, CLI no-confirm refusal, CLI duplicate refusal.
 
 ## Investigation: --binding override rejection source
