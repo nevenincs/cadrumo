@@ -660,6 +660,8 @@ cli:
         work_unit_id_help: cli.app.modelo.work.work_unit_id_help
         year_help: cli.app.modelo.work.year_help
         year_out_of_range: cli.app.modelo.work.year_out_of_range
+        revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
+        revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
   common:
     errors:
       invalid_iso_date: cli.common.errors.invalid_iso_date

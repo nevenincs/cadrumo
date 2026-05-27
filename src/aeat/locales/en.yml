@@ -840,6 +840,9 @@ cli:
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
+        revision_year_mismatch: Revision %{revision} of modelo %{modelo} does not
+          cover filing year %{filing_year}. Revisions applicable to that year%{applicable}.
+        revision_year_mismatch_no_match: no revision covers that filing year
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required

@@ -1165,7 +1165,33 @@ def _validate_filing_year(year: int) -> None:
         )
 
 
-def _validate_registry_target(modelo: str, revision_id: str) -> None:
+def _revision_covers_year(revision_id: str, year: int, definition: object) -> bool:
+    """Return True when the revision's period_selector applies to *year*.
+
+    Revisions declare their year scope through ``PeriodSelector``:
+    - ``years = [2024]`` — explicit year list
+    - ``year_from = 2019, year_to = 2023`` — closed range
+    - ``year_from = 2024`` (no ``year_to``) — open-ended from that year
+
+    A revision with no year constraints (``year_from`` is None and
+    ``years`` is empty) is treated as applicable to every year.
+    """
+
+    rev = definition.revisions.get(revision_id)  # type: ignore[union-attr]
+    if rev is None:
+        return False
+    selector = rev.period_selector
+    if selector.years:
+        return year in selector.years
+    if selector.year_from is None:
+        # No year constraint — applies to all years.
+        return True
+    if selector.year_to is None:
+        return year >= selector.year_from
+    return selector.year_from <= year <= selector.year_to
+
+
+def _validate_registry_target(modelo: str, revision_id: str, year: int) -> None:
     """Refuse a work-unit create that names an unknown modelo or revision.
 
     Without this gate ``modelo work create --modelo 999 --revision
@@ -1174,6 +1200,11 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
     against the validated registry authority — the single source of
     truth for modelo / revision identity — and refused cleanly with a
     translated error naming the unknown value.
+
+    Additionally, the revision's ``period_selector`` is checked against
+    the supplied filing year.  A 2026 revision (e.g. DANA rules) applied
+    to a 2024 filing silently uses wrong parameters; this guard refuses
+    the cross-year combination with an explicit message.
     """
 
     from ...core.resources import resources
@@ -1200,6 +1231,25 @@ def _validate_registry_target(modelo: str, revision_id: str) -> None:
                 revision=revision,
                 modelo=modelo_code,
                 declared=declared,
+            )
+        )
+    if not _revision_covers_year(revision, year, definition):
+        # Build a human-readable description of which years each revision covers.
+        applicable = ", ".join(
+            rev_id
+            for rev_id in sorted(definition.revisions)
+            if _revision_covers_year(rev_id, year, definition)
+        ) or tr(
+            "cli.app.modelo.work.revision_year_mismatch_no_match",
+            default="ninguna revisión cubre ese ejercicio",
+        )
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.revision_year_mismatch",
+                revision=revision,
+                modelo=modelo_code,
+                filing_year=year,
+                applicable=applicable,
             )
         )
 
@@ -1426,7 +1476,7 @@ def work_create(
     # arguments are sound, immediately before the bucket database is
     # opened by create_work_unit.
     _validate_filing_year(year)
-    _validate_registry_target(modelo, revision)
+    _validate_registry_target(modelo, revision, year)
     _guard_stub_modelo(modelo)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
