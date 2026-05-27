@@ -1,9 +1,11 @@
+import logging
 from pathlib import Path
 
 import pytest
 import yaml
 from typer.testing import CliRunner
 
+from aeat.locales._ast_scanner import scan_namespace_markers, scan_source_tree
 from aeat.locales.cli import app
 from aeat.locales.manager import LocaleError, LocaleManager
 
@@ -101,6 +103,29 @@ def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
 
     assert result.exit_code != 0
     assert "Invalid locale code" in result.output
+
+
+def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, caplog) -> None:
+    """A broken module is debug-logged and does not hide valid locale keys nearby."""
+
+    (tmp_path / "valid_surface.py").write_text(
+        "from aeat.core.i18n import tr\n"
+        "\n"
+        "def render(reason):\n"
+        "    return tr('cli.locales.app_help') + tr(f'wizard.errors.{reason}')\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "broken_surface.py").write_text("def broken(:\n", encoding="utf-8")
+
+    caplog.set_level(logging.DEBUG, logger="aeat.locales._ast_scanner")
+
+    assert "cli.locales.app_help" in scan_source_tree(tmp_path)
+    assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
+    assert any(
+        "locale ast scan: parse failure" in record.getMessage()
+        and "broken_surface.py" in record.getMessage()
+        for record in caplog.records
+    )
 
 
 def _namespace_covers(key: str, prefix: str) -> bool:
