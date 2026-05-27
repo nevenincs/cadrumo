@@ -371,6 +371,7 @@ def filed_list_cmd(
     modelos = tuple(str(m.id) for m in resources().modelos.all()) if modelo is None else (modelo,)
     all_rows: list[FiledDataListingRow] = []
     total_count = 0
+    _emit_live_auth_preflight()
     for code in modelos:
         report = asyncio.run(
             list_filed_data(
@@ -432,6 +433,7 @@ def filed_capture_cmd(
 ) -> None:
     """Capture filed-declaration data from the authenticated AEAT register."""
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_filed_data(
             modelo=modelo,
@@ -495,6 +497,7 @@ def filed_capture_sources_cmd(
 ) -> None:
     """Capture filed observations required by a target filing's dependencies."""
 
+    _emit_live_auth_preflight()
     report = asyncio.run(
         capture_source_filed_data(
             modelo=modelo,
@@ -562,6 +565,7 @@ def notifications_capture(ctx: typer.Context) -> None:
     from ...application.live import capture_notifications
 
     bucket_id = _active_bucket_id()
+    _emit_live_auth_preflight()
     persisted = asyncio.run(capture_notifications(bucket_id=bucket_id))
     payload = {
         "bucket_id": bucket_id,
@@ -792,6 +796,7 @@ def expedientes_capture(
     from ...application.live import capture_expedientes
 
     bucket_id = _active_bucket_id()
+    _emit_live_auth_preflight()
     persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=modelo, year=year))
     payload = {
         "bucket_id": bucket_id,
