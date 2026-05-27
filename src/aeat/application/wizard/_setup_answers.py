@@ -14,6 +14,7 @@ from ...domain.deadlines._models import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
+    IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
 )
@@ -122,6 +123,11 @@ class SetupAnswers(BaseModel):
     pays_capital_income_with_retencion: bool = False
     uses_objective_estimation_irpf: bool = False
     irpf_estimation_regime: IrpfEstimationRegime | str = ""
+    irpf_special_regime: IrpfSpecialRegime | str = ""
+    """IRPF special-regime axis. Blank for the general regime; ``impatriado``
+    activates the Ley Beckham path (LIRPF Art. 93)."""
+    special_regime_start_date: str = ""
+    """ISO-8601 opt-in election date for the special regime. Blank when undeclared."""
     does_intracomunitario: bool = False
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
@@ -173,6 +179,17 @@ class SetupAnswers(BaseModel):
         if isinstance(value, str):
             return IrpfEstimationRegime(value)
         raise TypeError("irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank")
+
+    @field_validator("irpf_special_regime", mode="before")
+    @classmethod
+    def _parse_irpf_special_regime(cls, value: object) -> IrpfSpecialRegime | str:
+        if value == "":
+            return ""
+        if isinstance(value, IrpfSpecialRegime):
+            return value
+        if isinstance(value, str):
+            return IrpfSpecialRegime(value)
+        raise TypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
 
     @field_validator("irpf_income_categories")
     @classmethod

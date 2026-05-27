@@ -393,6 +393,28 @@ model_selectors = ["irpf.estimation_regime"]
 schedule_predicates = ["irpf.estimation_regime"]
 legal_refs = ["LIRPF Arts. 16, 28-31 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 30-31 (BOE-A-2007-6820)"]
 
+[[sections.fields]]
+key = "special_regime"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "IRPF special regime. general is the standard tarifa progressive IRPF (Modelo 100). impatriado is the regimen especial aplicable a los trabajadores desplazados a territorio espanol (Ley Beckham, LIRPF Art. 93): the taxpayer files Modelo 151 at the flat IRNR rate and the obligation engine suppresses Modelo 100 deadlines. The regime window is six fiscal years from the opt-in election (RIRPF Art. 116); record the election date in special_regime_start_date."
+enum_values = ["general", "impatriado"]
+model_selectors = ["irpf.special_regime"]
+schedule_predicates = ["irpf.special_regime"]
+legal_refs = ["LIRPF Art. 93 Ley 35/2006 (BOE-A-2006-20764)", "RIRPF RD 439/2007 Arts. 113-120 (BOE-A-2007-6820)"]
+
+[[sections.fields]]
+key = "special_regime_start_date"
+type = "date"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Opt-in election date for the IRPF special regime (RIRPF Art. 116). Required to compute the six-year impatriado window. Blank when no special regime is in effect."
+model_selectors = ["irpf.special_regime_start_date"]
+legal_refs = ["RIRPF RD 439/2007 Art. 116 (BOE-A-2007-6820)"]
+
 [[sections]]
 key = "withholding"
 title = "Withholding payer obligations"
