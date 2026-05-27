@@ -22,7 +22,7 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
-<!-- RETIRED: P02, S01 -->
+<!-- RETIRED: P02, P64, S01 -->
 
 # `cross-domain-continuity` `cross-domain continuity remediation epic - open-ended persona-driven correctness campaign` plan
 
@@ -552,7 +552,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [x] `W09.P41.S371` - M100 casilla 1812 auto-propagation from 1811 (crypto ganancia imputable); `flip 1812 input_kind manual to computed with identity-copy formula for both 2024 and 2025 revisions; add regression tests; `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
 - [x] `W09.P41.S372` - add typed --row flag mechanism to work calculate for miembro M184 vinculada M232 operador M349 row types; `share ModelRowCollection base; wire rows to observation resolvers; locale keys es/en/ca/hu; oracle-grounded tests per modelo; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W09.P41.S373` - route M303 wallet-seed guidance through tr() to iva-wallet seed verb; `fix obsolete --mode hint in error registry; add iva_wallet_not_seeded locale key; regression + anti-tautology CLI tests; `src/aeat/application/modelo/_actions.py src/aeat/core/errors/registry/_domain.py src/aeat/locales/`.
-- [x] `W09.P41.S374` - fix M100 base imponible del ahorro chain — add casilla 0041 as summand in renta-2024/2025-base-imponible-del-ahorro formula; `oracle-grounded regression tests for four confirmed persona shapes (Sergio/Carla/Aitor/Mateo) plus anti-tautology; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/formulas/0145-renta-2024-base-imponible-del-ahorro.toml src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0168-renta-2025-base-imponible-del-ahorro.toml src/aeat/domain/calculations/registry/test_modelo_100_ahorro_base_chain.py`.
+- [x] `W09.P41.S374` - fix M100 base imponible del ahorro chain - add casilla 0041 as summand in renta-2024/2025-base-imponible-del-ahorro formula; `oracle-grounded regression tests for four confirmed persona shapes (Sergio/Carla/Aitor/Mateo) plus anti-tautology; `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/formulas/0145-renta-2024-base-imponible-del-ahorro.toml src/aeat/_data/registry/aeat/modelos/100/revisions/2025/formulas/0168-renta-2025-base-imponible-del-ahorro.toml src/aeat/domain/calculations/registry/test_modelo_100_ahorro_base_chain.py`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -761,3 +761,7 @@ promote 8 W09.P39 validate-helper duplicate steps (S149-S156) into a dedicated p
 Exhaustive WebFetch search of AEAT Sede and BOE for retired M037 Declaracion censal simplificada historical material; capture any retrieved evidence to corpus; document definitive absence of Diseno de Registro.
 
 - [x] `W12.P63.S375` - WebFetch AEAT Sede DR037 xlsx variants and census pages plus BOE-A-2025-410; `capture suppression order text to corpus; write SEARCH_LOG; DR037 Diseno de Registro confirmed absent; domain invariant intact; `src/aeat/_data/corpus/aeat_official/historical_retired_modelos/modelo_037/`.
+
+### Phase `W12.P65` - source_jurisdiction ledger axis - Spanish-source vs foreign-source classification
+
+Introduce a source_jurisdiction axis on the ledger so IRNR M210 routing, Beckham scope filter under Art. 93 LIRPF, and convenio doble imposicion credit can derive from authoritative ledger evidence. Surfaced by Pedro intracom, Olivia UK landlord, Felipe Argentina pensioner, and Khadija Morocco worker testimonials. Affects approximately 600k IRNR plus Beckham filers. Six ordered Steps cover model add, persistence widen, CLI flag, profile-conditional validation, reclassify verb, ADR plus tests.
