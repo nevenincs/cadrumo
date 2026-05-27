@@ -249,3 +249,36 @@ a plan or ADR update.
   compatibility decision if it changes public exports or import boundaries. The
   current plan allows further extraction only while preserving the existing
   registry validation API.
+
+## Follow-up: Fragmentation Target Refresh
+
+The current branch is materially diverged from `origin/main`
+(`origin/main...HEAD` reports 53 commits on `origin/main` not in this branch and
+3,256 commits on this branch not in `origin/main`). No merge, rebase, reset,
+checkout, or stash operation was attempted in this shared worktree. The target
+refresh below is therefore scoped to the active branch's tracked registry files.
+
+Registry TOML tracking evidence:
+
+- 26 tracked modelos are in directory layout.
+- 42 tracked revision sources use fragment-directory layout.
+- 0 tracked revision sources use `revisions/<id>.toml` revision-file layout.
+- 0 tracked multi-revision modelos remain in single-file layout.
+- Largest tracked registry TOML under `modelos`: 1,618 lines
+  (`200/.../0028-modelo-200-page-019.part-002.toml`).
+- Largest tracked total modelo footprint: M100 at 134,503 lines across 12,824
+  TOML fragments and 6 fragmented revisions.
+
+Top tracked modelos by total TOML lines:
+
+- M100: 134,503 total lines, largest fragment 1,598 lines, 6 fragmented revisions.
+- M200: 134,244 total lines, largest fragment 1,618 lines, 1 fragmented revision.
+- M303: 9,960 total lines, largest fragment 1,532 lines, 2 fragmented revisions.
+- M202: 7,936 total lines, largest fragment 790 lines, 3 fragmented revisions.
+- M131: 6,019 total lines, largest fragment 624 lines, 4 fragmented revisions.
+- M232: 5,234 total lines, largest fragment 688 lines, 2 fragmented revisions.
+
+Conclusion: there is no current line-count-driven "next split" comparable to
+M200. The remaining structural decision is M100 authoring duplication: physical
+fragments are already in place, but template expansion would be a new compiler
+feature and remains blocked on a future ADR.
