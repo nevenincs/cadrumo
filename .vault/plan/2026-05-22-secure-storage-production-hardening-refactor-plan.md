@@ -955,9 +955,9 @@ This Wave converts the post-migration findings into executable work before more 
 
 Restore the current shared HEAD to a trustworthy baseline before further secure-storage work by isolating and repairing the Modelo work-create validation refusal that blocks focused CLI verification.
 
-- [ ] `W15.P30.S403` - Reproduce the current Modelo work-create validation refusal and isolate the rejecting boundary; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W15.P30.S404` - Repair the Modelo validation boundary so valid work-create inputs are not masked by generic CLI validation refusal; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W15.P30.S405` - Run the affected Modelo CLI suites through the centralized runtime helper and record any non-storage registry blockers; `src/aeat/entrypoints/cli`.
+- [x] `W15.P30.S403` - Reproduce the current Modelo work-create validation refusal and isolate the rejecting boundary; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W15.P30.S404` - Repair the Modelo validation boundary so valid work-create inputs are not masked by generic CLI validation refusal; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W15.P30.S405` - Run the affected Modelo CLI suites through the centralized runtime helper and record any non-storage registry blockers; `src/aeat/entrypoints/cli`.
 
 ### Phase `W15.P31` - repair privacy contract reconciliation
 
