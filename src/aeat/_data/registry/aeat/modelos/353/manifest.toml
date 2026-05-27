@@ -1,0 +1,19 @@
+[modelo]
+id = "353"
+title = "IVA. Grupo de entidades. Modelo agregado. Autoliquidación mensual"
+official_name = "Modelo 353. Impuesto sobre el Valor Añadido. Grupo de entidades. Modelo agregado. Autoliquidación mensual."
+tax_domain = "iva"
+cadence = "monthly"
+jurisdiction = "ES-AEAT"
+output_sensitivity = "financial"
+legal_refs = [
+    "orden-eha-3434-2007:art-2",
+    "orden-eha-3434-2007:art-8",
+    "rd-1624-1992:art-71",
+]
+source_refs = [
+    "aeat-dr-353-2026",
+    "aeat-modelo-353-procedure",
+    "boe-modelo-353-2007-form",
+]
+
