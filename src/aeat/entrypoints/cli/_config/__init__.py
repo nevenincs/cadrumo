@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import typing
 from datetime import datetime
 from pathlib import Path
@@ -88,6 +89,14 @@ bucket_app = typer.Typer(
 )
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(_SUPPORTED_OUTPUT_LANGUAGES)
+_REPAIR_LOG_UUID_RE = re.compile(
+    r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
+)
+_REPAIR_LOG_TAX_ID_RE = re.compile(r"\b(?:[XYZKLMABCDEFGHJNPQRSUVW]\d{7}[A-Z]|\d{8}[A-Z])\b", re.IGNORECASE)
+_REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE = re.compile(
+    r"(?i)\b(?P<label>object[_-]?key|lookup[_-]?key)\s*(?P<sep>[:=])\s*(?P<value>[^,\s;]+)"
+)
+_REPAIR_LOG_OBJECT_KEY_RE = re.compile(r"\b(?:wallet|transaction-catalogue):[^\s,;]+")
 
 
 @app.callback()
@@ -228,7 +237,16 @@ def _tail_lines(path: Path, count: int) -> tuple[str, ...]:
     except OSError:
         return ()
     text = tail_bytes.decode("utf-8", errors="replace")
-    return tuple(text.splitlines()[-count:])
+    return tuple(_redact_repair_log_line(line) for line in text.splitlines()[-count:])
+
+
+def _redact_repair_log_line(line: str) -> str:
+    """Redact identifiers before diagnostic log lines are echoed to the operator."""
+
+    redacted = _REPAIR_LOG_OBJECT_KEY_ASSIGNMENT_RE.sub(r"\g<label>\g<sep><object-key>", line)
+    redacted = _REPAIR_LOG_OBJECT_KEY_RE.sub("<object-key>", redacted)
+    redacted = _REPAIR_LOG_UUID_RE.sub("<profile-id>", redacted)
+    return _REPAIR_LOG_TAX_ID_RE.sub("<tax-id>", redacted)
 
 
 @repair_app.command("reset-state", help=_tr("cli.config.repair.reset_state_help"))

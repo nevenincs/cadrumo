@@ -963,9 +963,9 @@ Restore the current shared HEAD to a trustworthy baseline before further secure-
 
 Reconcile the repair CLI command surface with the privacy contract so diagnostics remain useful while row context, logs, and operator output do not leak active profile identifiers or secure-storage internals.
 
-- [ ] `W15.P31.S406` - Reconcile current repair CLI verbs with the privacy-contract tests and remove obsolete command assumptions; `src/aeat/entrypoints/cli/test_repair_privacy_contract.py`.
-- [ ] `W15.P31.S407` - Harden repair diagnostics so row context and diagnostic logs redact profile identifiers and object-key hints; `src/aeat/application/repair_integrity.py`.
-- [ ] `W15.P31.S408` - Add real-custody CLI privacy roundtrips for repair list, quarantine, bootstrap, and log surfaces; `src/aeat/entrypoints/cli`.
+- [x] `W15.P31.S406` - Reconcile current repair CLI verbs with the privacy-contract tests and remove obsolete command assumptions; `src/aeat/entrypoints/cli/test_repair_privacy_contract.py`.
+- [x] `W15.P31.S407` - Harden repair diagnostics so row context and diagnostic logs redact profile identifiers and object-key hints; `src/aeat/application/repair_integrity.py`.
+- [x] `W15.P31.S408` - Add real-custody CLI privacy roundtrips for repair list, quarantine, bootstrap, and log surfaces; `src/aeat/entrypoints/cli`.
 
 ### Phase `W15.P32` - residual storage-surface guard hardening
 
