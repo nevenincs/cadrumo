@@ -16,7 +16,7 @@ related:
      - NEVER reference file paths in the body. If you must name a source file,
        class, or function, use inline backtick code: `src/module.py`. -->
 
-# `cross-domain-continuity` adr: `profile-portability` | (**status:** `in_progress`)
+# `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
 
 Status becomes `accepted` when S104-S109 land and the roundtrip test (S107)
 passes. Supersedes the deferred bundle-content decision in the 2026-05-18
