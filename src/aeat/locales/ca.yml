@@ -875,6 +875,18 @@ cli:
           reconegut. --year i --period es componen per separat: passa --year %{year}
           per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
           trimestre o MM per a un mes) a --period.'
+        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta no és
+          compatible amb aquesta revisió del model; no s''ha declarat cap casella
+          d''exempció INSS (Art. 7.h). Usa --casilla per subministrar els valors
+          directament.'
+        prestacion_inss_exenta_help: Import íntegre de les prestacions de la Seguretat
+          Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es
+          registra a la casella d''exempció corresponent a la revisió i es resta del
+          total d''ingressos computables. Introdueix l''import brut rebut de la
+          Seguretat Social per baixa de maternitat o paternitat. NO l''incloguis a
+          --casilla 0003 (Retribucions dineràries).
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
+          import decimal; s''ha rebut: {value}.'
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         relation_help: Valor de relació de període anterior amb sintaxi KEY=VALUE.
           KEY és un id de relació del registry; VALUE és un decimal. Repetible.
@@ -900,15 +912,15 @@ cli:
         revision_year_mismatch_no_match: cap revisió cobreix aquest exercici
         revisions_help: Llistar les revisions de càlcul, opcionalment filtrades per
           unitat de treball
-        row_empty_key: 'Clau de camp buida a --row {token}; cada camp ha de tenir
-          el format CLAU=VALOR.'
+        row_empty_key: Clau de camp buida a --row {token}; cada camp ha de tenir el
+          format CLAU=VALOR.
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més files.
-          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més
+          files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
           Exemple M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
-        row_kv_format_error: 'El camp --row {token} ha de tenir el format CLAU=VALOR.'
+        row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
           han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
         row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
@@ -3214,6 +3226,9 @@ wizard:
         help: Empresa de gran volum
       enrollment-public-administration-budget-gt-6000000:
         help: Pressupost administració pública superior a 6.000.000
+      descendiente:
+        help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible). Format:
+          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       entity-type:
         help: Persona física, persona jurídica o entitat en atribució de rendes
       family-descendants-eu-eea-deduction:

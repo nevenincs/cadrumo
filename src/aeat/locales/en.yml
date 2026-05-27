@@ -803,6 +803,16 @@ cli:
           token. --year and --period are composed separately: pass --year %{year}
           for the filing year and a period token (0A for annual, Qn for a quarter,
           or MM for a month) for --period.'
+        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta is not
+          supported for this modelo revision; no Art. 7.h exempt-INSS casilla is
+          declared. Use --casilla to supply inputs directly.'
+        prestacion_inss_exenta_help: Gross amount of INSS maternity/paternity benefit
+          exempt from IRPF (Art. 7.h LIRPF). Recorded in the revision-specific exempt
+          casilla and subtracted from total computable income. Enter the gross amount
+          received from Social Security for maternity or paternity leave. Do NOT
+          include this in --casilla 0003 (Retribuciones dinerarias).
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta must be a decimal
+          amount; received: {value}.'
         reason_help: Optional free-text reason for the discard (up to 500 chars)
         relation_help: Prior-period relation value as KEY=VALUE. The KEY is a registry
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
@@ -826,15 +836,15 @@ cli:
         revision_year_mismatch_no_match: no revision covers that filing year
         revisions_help: List calculation revisions, optionally filtered to one work
           unit
-        row_empty_key: 'Empty field key in --row {token}; each field must be in KEY=VALUE
-          format.'
+        row_empty_key: Empty field key in --row {token}; each field must be in KEY=VALUE
+          format.
         row_empty_spec: --row spec cannot be empty; expected TYPE FIELD=value [...]
         row_help: 'Typed detail row for multi-record informational modelos. Format:
           TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
           member) or ''vinculada'' (M232 related-party operation). Repeat to add multiple
           rows. M184 example: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
           M232 example: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
-        row_kv_format_error: '--row field {token} must be in KEY=VALUE format.'
+        row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m184_shares_not_100: 'M184 miembro rows: share percentages must sum to
           exactly 100%; got {total} across {count} rows.'
         row_unknown_type: '--row type {row_type!r} is not recognised; supported types:
@@ -3055,6 +3065,9 @@ wizard:
         help: Large-company enrollment
       enrollment-public-administration-budget-gt-6000000:
         help: Public administration budget over 6,000,000
+      descendiente:
+        help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
+          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       entity-type:
         help: Natural person, legal entity, or attribution entity
       family-descendants-eu-eea-deduction:

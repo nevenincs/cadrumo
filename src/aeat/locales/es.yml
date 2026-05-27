@@ -885,6 +885,17 @@ cli:
           reconocido. --year y --period se componen por separado: pasa --year %{year}
           para el ejercicio fiscal y un token de periodo (0A para anual, Qn para un
           trimestre o MM para un mes) en --period.'
+        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta no está
+          soportado para esta revisión del modelo; no se ha declarado ninguna casilla
+          exenta de prestaciones INSS (Art. 7.h). Usa --casilla para suministrar
+          los valores directamente.'
+        prestacion_inss_exenta_help: Importe íntegro de prestaciones INSS maternidad/paternidad
+          exentas (Art. 7.h LIRPF). Se registra en la casilla de exención correspondiente
+          a la revisión y se descuenta del total de ingresos computables. Introduce el
+          importe bruto recibido de la Seguridad Social por baja de maternidad o
+          paternidad. NO lo incluyas en --casilla 0003 (Retribuciones dinerarias).
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta debe ser un
+          importe decimal; se recibió: {value}.'
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         relation_help: Valor de relación de periodo anterior con sintaxis KEY=VALUE.
           KEY es un id de relación del registry; VALUE es un decimal. Repetible.
@@ -911,15 +922,16 @@ cli:
         revision_year_mismatch_no_match: ninguna revisión cubre ese ejercicio
         revisions_help: Listar las revisiones de cálculo, opcionalmente filtradas
           por unidad de trabajo
-        row_empty_key: 'Clave de campo --row vacía en {token}; cada campo debe tener
-          el formato CLAVE=VALOR.'
+        row_empty_key: Clave de campo --row vacía en {token}; cada campo debe tener
+          el formato CLAVE=VALOR.
         row_empty_spec: --row no puede estar vacío; se esperaba TIPO CAMPO=valor [...]
-        row_help: 'Fila de detalle tipada para modelos informativos con registros repetibles.
-          Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro'' (socio/partícipe
-          M184) o ''vinculada'' (operación vinculada M232). Repetir para añadir más
-          filas. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Ejemplo M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
-        row_kv_format_error: 'El campo --row {token} debe tener el formato CLAVE=VALOR.'
+        row_help: 'Fila de detalle tipada para modelos informativos con registros
+          repetibles. Formato: TIPO CAMPO=valor [CAMPO=valor ...]. TIPO es ''miembro''
+          (socio/partícipe M184) o ''vinculada'' (operación vinculada M232). Repetir
+          para añadir más filas. Ejemplo M184: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. Ejemplo M232: --row ''vinculada nif=A12345678 tipo_operacion=01
+          importe=50000''.'
+        row_kv_format_error: El campo --row {token} debe tener el formato CLAVE=VALOR.
         row_m184_shares_not_100: 'M184 filas miembro: los porcentajes de participación
           deben sumar exactamente 100%; se obtuvo {total} con {count} filas.'
         row_unknown_type: 'Tipo de fila --row {row_type!r} no reconocido; tipos soportados:
@@ -3229,6 +3241,9 @@ wizard:
         help: Empresa de gran volumen
       enrollment-public-administration-budget-gt-6000000:
         help: Presupuesto administración pública superior a 6.000.000
+      descendiente:
+        help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible). Formato:
+          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       entity-type:
         help: Persona física, persona jurídica o entidad en atribución de rentas
       family-descendants-eu-eea-deduction:

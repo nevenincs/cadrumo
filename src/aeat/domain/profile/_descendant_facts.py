@@ -1,0 +1,165 @@
+"""Helpers for persisting and reloading DescendantInfo as profile facts.
+
+DescendantInfo records are stored as individual profile facts under the
+``renta_family.descendiente.{n}.{field}`` key hierarchy. Aggregate summary
+facts are derived and stored alongside individual facts so that the registry
+binding resolver can look them up by a simple ``profile_key`` selector.
+
+Stored fact paths per descendant (n = 0-based index):
+  renta_family.descendiente.{n}.birth_date       ISO-8601 date string
+  renta_family.descendiente.{n}.adoption_date    ISO-8601 date string or absent
+  renta_family.descendiente.{n}.discapacidad     "0" / "33" / "65" or absent
+  renta_family.descendiente.{n}.convivencia      "true" / "false"
+  renta_family.descendiente.{n}.nif              NIF string or absent
+
+Aggregate facts stored:
+  renta_family.descendientes_count               int count
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Sequence
+from datetime import date
+
+from .family import DescendantInfo
+
+_DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
+_COUNT_PATH = "renta_family.descendientes_count"
+
+
+def descendant_facts_from_list(
+    descendientes: Sequence[DescendantInfo],
+) -> list[tuple[str, str]]:
+    """Return a list of (path, canonical-value-string) tuples for all DescendantInfo entries.
+
+    The caller converts these to :class:`~aeat.domain.user_profile.UserProfileFact`
+    records; this function only computes the canonical key-value pairs.
+    """
+
+    facts: list[tuple[str, str]] = []
+    for idx, d in enumerate(descendientes):
+        prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
+        facts.append((f"{prefix}.birth_date", d.birth_date.isoformat()))
+        if d.adoption_date is not None:
+            facts.append((f"{prefix}.adoption_date", d.adoption_date.isoformat()))
+        if d.discapacidad_grado is not None:
+            facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
+        facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
+        if d.nif is not None:
+            facts.append((f"{prefix}.nif", d.nif))
+    facts.append((_COUNT_PATH, str(len(descendientes))))
+    return facts
+
+
+_N_RE = re.compile(r"^renta_family\.descendiente\.(\d+)\.(birth_date|adoption_date|discapacidad|convivencia|nif)$")
+
+
+def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, ...]:
+    """Reconstruct a tuple of DescendantInfo from a flat profile-fact dict.
+
+    ``facts`` is a ``{path: canonical-value-string}`` mapping. Only
+    ``renta_family.descendiente.*`` paths are consumed; all others are ignored.
+
+    Entries are sorted by index so the reconstructed tuple preserves the
+    original insertion order.
+    """
+
+    rows: dict[int, dict[str, str]] = {}
+    for path, value in facts.items():
+        m = _N_RE.match(path)
+        if m is None:
+            continue
+        idx = int(m.group(1))
+        field = m.group(2)
+        rows.setdefault(idx, {})[field] = value
+
+    result: list[DescendantInfo] = []
+    for idx in sorted(rows):
+        row = rows[idx]
+        birth_raw = row.get("birth_date")
+        if not birth_raw:
+            continue
+        birth_date = date.fromisoformat(birth_raw)
+        adoption_raw = row.get("adoption_date")
+        adoption_date = date.fromisoformat(adoption_raw) if adoption_raw else None
+        discapacidad_raw = row.get("discapacidad")
+        if discapacidad_raw is not None:
+            disc_val = int(discapacidad_raw)
+            if disc_val not in (0, 33, 65):
+                disc_val = 0
+        else:
+            disc_val = None
+        convivencia_raw = row.get("convivencia", "true")
+        convive = convivencia_raw.lower() not in ("false", "0")
+        nif = row.get("nif")
+        result.append(
+            DescendantInfo(
+                birth_date=birth_date,
+                adoption_date=adoption_date,
+                discapacidad_grado=disc_val,
+                convive_con_contribuyente=convive,
+                nif=nif,
+            )
+        )
+    return tuple(result)
+
+
+def parse_descendiente_flag(raw: str) -> DescendantInfo:
+    """Parse a ``--descendiente NACIMIENTO=YYYY-MM-DD,...`` flag value.
+
+    Accepted keys (case-insensitive):
+      NACIMIENTO=YYYY-MM-DD  (required) birth date
+      ADOPCION=YYYY-MM-DD    (optional) adoption finalisation date
+      DISCAPACIDAD=0|33|65   (optional) discapacidad grade
+      CONVIVENCIA=true|false (optional, default true) cohabitation flag
+      NIF=XXXXXXXXX          (optional) NIF/NIE
+
+    Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
+    on missing required keys or invalid values.
+    """
+
+    parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
+
+    nacimiento_raw = parts.get("NACIMIENTO")
+    if not nacimiento_raw:
+        raise ValueError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
+    birth_date = date.fromisoformat(nacimiento_raw)
+
+    adoption_date: date | None = None
+    adopcion_raw = parts.get("ADOPCION")
+    if adopcion_raw:
+        adoption_date = date.fromisoformat(adopcion_raw)
+
+    discapacidad_grado = None
+    disc_raw = parts.get("DISCAPACIDAD")
+    if disc_raw is not None:
+        val = int(disc_raw)
+        if val not in (0, 33, 65):
+            raise ValueError(f"DISCAPACIDAD must be 0, 33, or 65; got {val!r}")
+        discapacidad_grado = val
+
+    convive = True
+    conv_raw = parts.get("CONVIVENCIA")
+    if conv_raw is not None:
+        convive = conv_raw.lower() not in ("false", "0", "no")
+
+    nif: str | None = None
+    nif_raw = parts.get("NIF")
+    if nif_raw:
+        nif = nif_raw.strip().upper()
+
+    return DescendantInfo(
+        birth_date=birth_date,
+        adoption_date=adoption_date,
+        discapacidad_grado=discapacidad_grado,  # type: ignore[arg-type]
+        convive_con_contribuyente=convive,
+        nif=nif,
+    )
+
+
+__all__ = [
+    "descendant_facts_from_list",
+    "descendant_list_from_facts",
+    "parse_descendiente_flag",
+]
