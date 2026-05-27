@@ -1425,43 +1425,77 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     )
 
 
-#: Modelos that are registry-registered but NOT yet fully supported for
-#: work-unit creation.  The registry entry records legal authority and
-#: period metadata; the full casilla/formula authoring has not yet been
-#: completed.  ``work create`` is refused with a legally-grounded message
-#: that names the obligation and AEAT Sede as the operative filing surface.
-_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"151", "714", "721"})
+#: Modelos that are not yet fully supported for work-unit creation.
+#: Includes both registry-registered stubs (casilla/formula authoring
+#: incomplete) and autonomic/non-resident modelos that are filed outside
+#: the national AEAT CLI surface.  ``work create`` is refused with a
+#: legally-grounded message that names the obligation and the operative
+#: filing surface.
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset(
+    {"151", "210", "600", "620", "650", "660", "714", "721"}
+)
 
 #: Maps each stub-only modelo code to its dedicated locale key so that the
 #: refusal message cites the correct legal authorities for that modelo.
 _STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
     "151": "cli.app.modelo.work.create_stub_modelo_151_refused",
+    "210": "cli.app.modelo.work.create_stub_modelo_210_refused",
+    "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
+    "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
+    "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
+    "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
     "714": "cli.app.modelo.work.create_stub_modelo_714_refused",
     "721": "cli.app.modelo.work.create_stub_modelo_refused",
 }
 
+# Parity guard: every frozenset entry must have a locale key mapping.
+# This fires at import time during tests rather than silently at runtime.
+assert set(_STUB_MODELO_LOCALE_KEYS) == _STUB_ONLY_MODELOS, (
+    f"_STUB_MODELO_LOCALE_KEYS keys {set(_STUB_MODELO_LOCALE_KEYS)} "
+    f"do not match _STUB_ONLY_MODELOS {_STUB_ONLY_MODELOS}"
+)
+
 
 def _guard_stub_modelo(modelo: str) -> None:
-    """Refuse ``work create`` for modelos that are registry stubs only.
+    """Refuse ``work create`` for stub and autonomic modelos.
 
-    Three stubs are currently registered:
+    Stubs registered in the AEAT registry (casilla/formula authoring
+    incomplete):
 
     - Modelo 721 (declaración informativa sobre monedas virtuales situadas
-      en el extranjero): full casilla inventory and calculation engine not yet
-      authored.  Legal refs: Ley 11/2021 Art. 13 / DA 10ª, Orden HFP/887/2023,
-      RD 1065/2007 Art. 42 quáter.
+      en el extranjero): Legal refs: Ley 11/2021 Art. 13 / DA 10ª,
+      Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.
 
-    - Modelo 151 (régimen especial impatriados, "Ley Beckham"): full casilla
-      inventory and calculation engine not yet authored.  Legal refs:
+    - Modelo 151 (régimen especial impatriados, "Ley Beckham"): Legal refs:
       Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
 
-    - Modelo 714 (Impuesto sobre el Patrimonio): full casilla inventory and
-      calculation engine not yet authored.  Legal refs: Ley 19/1991 Art. 28,
-      Orden HAC/1023/2021.
+    - Modelo 714 (Impuesto sobre el Patrimonio): Legal refs: Ley 19/1991
+      Art. 28, Orden HAC/1023/2021.
 
-    Without this guard the CLI would silently provision a work unit that
-    cannot be calculated, leaving the taxpayer with no path to a valid filing.
-    Legal refs carried in the error match the registry manifest.
+    Autonomic / non-resident modelos (filed outside national AEAT CLI):
+
+    - Modelo 210 (IRNR no residentes): RD Legislativo 5/2004 (TRLIRNR),
+      Art. 28.  Filed via AEAT Sede Electrónica G320.
+
+    - Modelo 600 (ITP-AJD transmisiones patrimoniales): Ley 28/1990
+      ITPyAJD.  Filed at the Hacienda of the CCAA where the asset is
+      located (impuesto cedido).
+
+    - Modelo 620 (ITP-AJD transmisiones medios de transporte usados):
+      Ley 28/1990 ITPyAJD.  Filed at the Hacienda of the CCAA where the
+      asset is located (impuesto cedido).
+
+    - Modelo 650 (ISD Sucesiones): Ley 29/1987 LISyD, Art. 67 RISD
+      (plazo 6 meses, prorrogable 6 meses).  Filed at the autonomic
+      Hacienda of the CCAA where the causante had habitual residence
+      (Ley 22/2009 Art. 32).
+
+    - Modelo 660 (ISD informativa caudal relicto): Ley 29/1987 LISyD.
+      Accompanies Modelo 650 for sociedades o conjunto declarations.
+
+    Without this guard the CLI would attempt registry lookups for modelos
+    it does not model, leaving the taxpayer with no path to a valid filing.
+    Legal refs carried in the error match the governing statute.
     """
 
     from ._errors import CliRefusedBoundaryError
@@ -1469,13 +1503,20 @@ def _guard_stub_modelo(modelo: str) -> None:
     modelo_code = modelo.strip()
     if modelo_code not in _STUB_ONLY_MODELOS:
         return
-    locale_key = _STUB_MODELO_LOCALE_KEYS[modelo_code]
-    raise CliRefusedBoundaryError(
-        tr(
-            locale_key,
-            modelo=modelo_code,
-        )
-    )
+
+    # Literal tr() call per stub so the locale scaffold can discover each
+    # key and populate all four locale files.
+    _refusals: dict[str, str] = {
+        "151": tr("cli.app.modelo.work.create_stub_modelo_151_refused", modelo=modelo_code),
+        "210": tr("cli.app.modelo.work.create_stub_modelo_210_refused", modelo=modelo_code),
+        "600": tr("cli.app.modelo.work.create_stub_modelo_600_refused", modelo=modelo_code),
+        "620": tr("cli.app.modelo.work.create_stub_modelo_620_refused", modelo=modelo_code),
+        "650": tr("cli.app.modelo.work.create_stub_modelo_650_refused", modelo=modelo_code),
+        "660": tr("cli.app.modelo.work.create_stub_modelo_660_refused", modelo=modelo_code),
+        "714": tr("cli.app.modelo.work.create_stub_modelo_714_refused", modelo=modelo_code),
+        "721": tr("cli.app.modelo.work.create_stub_modelo_refused", modelo=modelo_code),
+    }
+    raise CliRefusedBoundaryError(_refusals[modelo_code])
 
 
 #: Registry-validation translated-message keys that signal an
@@ -1580,14 +1621,15 @@ def work_create(
 ) -> None:
     """Create or load a modelo work unit. Idempotent on the four-axis key."""
 
-    # User-input validation (filing year, registry target, period
-    # token) runs first so an operator gets that feedback even before a
-    # profile exists. The no-active-profile guard fires only once the
-    # arguments are sound, immediately before the bucket database is
-    # opened by create_work_unit.
+    # User-input validation order: stub guard runs before registry lookup
+    # because several stub modelos (210, 600, 620, 650, 660) are not
+    # registry-registered; _validate_registry_target would refuse them
+    # with a generic "Modelo desconocido" before the legally-grounded
+    # refusal fires.  Registry-registered stubs (151, 714, 721) are
+    # intercepted equally early.
     _validate_filing_year(year)
-    _validate_registry_target(modelo, revision, year)
     _guard_stub_modelo(modelo)
+    _validate_registry_target(modelo, revision, year)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
     # Round-4 M4: refuse a work unit for a modelo the active profile's
@@ -2129,6 +2171,44 @@ def _casilla_revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
     return snapshot.revision
 
 
+#: Semantic role that identifies the INSS maternidad/paternidad exempt casilla.
+_INSS_EXENTA_SEMANTIC_ROLE = "irpf_rendimiento_trabajo_prestacion_inss_maternidad_paternidad_exenta"
+
+
+def _resolve_inss_exenta_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the INSS maternidad/paternidad exempt slot.
+
+    Looks up the casilla by its registry ``semantic_role`` so the
+    correct id is resolved for every M100 revision regardless of the
+    physical casilla number (0058 for 2024, 0059 for 2025).
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found
+    (e.g. when ``--prestacion-inss-exenta`` is used against a modelo
+    that does not declare the exempt-INSS casilla).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _INSS_EXENTA_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.prestacion_inss_exenta_casilla_not_found",
+            modelo=revision.id if hasattr(revision, "id") else "unknown",
+            default=(
+                "--prestacion-inss-exenta is not supported for this modelo revision; "
+                "no Art. 7.h exempt-INSS casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
 def _normalise_casilla_key(key: str, revision: ModeloRevision) -> str:
     """Resolve a bare-numeric ``--casilla`` key to its qualified CasillaId.
 
@@ -2260,6 +2340,22 @@ def work_calculate(
             ),
         ),
     ] = None,
+    prestacion_inss_exenta: Annotated[
+        str | None,
+        typer.Option(
+            "--prestacion-inss-exenta",
+            help=tr(
+                "cli.app.modelo.work.prestacion_inss_exenta_help",
+                default=(
+                    "Importe íntegro de prestaciones INSS maternidad/paternidad "
+                    "exentas (Art. 7.h LIRPF). Se registra en casilla 0058 (rev. 2024) "
+                    "o 0059 (rev. 2025) y se descuenta del total de ingresos computables. "
+                    "Introduce el importe bruto recibido de la Seguridad Social por "
+                    "baja de maternidad o paternidad. NO lo incluyas en --casilla 0003."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2298,6 +2394,25 @@ def work_calculate(
             casilla_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
             raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
+
+    # --prestacion-inss-exenta injects the Art. 7.h exempt INSS amount into the
+    # revision-specific casilla (0058 for 2024, 0059 for 2025).  The casilla is
+    # looked up by semantic_role so it resolves correctly for any future revision
+    # that carries the same role.
+    if prestacion_inss_exenta is not None:
+        try:
+            inss_decimal = Decimal(prestacion_inss_exenta)
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.prestacion_inss_exenta_not_decimal",
+                    value=prestacion_inss_exenta,
+                    default="--prestacion-inss-exenta must be a decimal amount; received: {value}",
+                )
+            ) from exc
+        inss_casilla_id = _resolve_inss_exenta_casilla_id(work_unit_id)
+        casilla_inputs[inss_casilla_id] = inss_decimal
+
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}

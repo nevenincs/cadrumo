@@ -826,6 +826,46 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
+        create_stub_modelo_151_refused: 'El model %{modelo} (règim especial d''impatriats
+          "Llei Beckham") no és compatible amb la creació d''unitats de treball en
+          aquest CLI. Base legal: Llei 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113,
+          Ordre EHA/2887/2008. Presenta la declaració a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR — Impost sobre la
+          Renda de No Residents) no és compatible amb la creació d''unitats de treball
+          en aquest CLI. Base legal: RD Legislatiu 5/2004 TRLIRNR, Art. 28 TRLIRNR
+          (termini trimestral: 1T/2T/3T/4T). Tipus general: 19 % UE/EEE, 24 % resta.
+          Presenta la declaració a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
+        create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD — Impost sobre
+          Transmissions Patrimonials i Actes Jurídics Documentats) no és compatible
+          amb la creació d''unitats de treball en aquest CLI. És un impost cedit a les
+          comunitats autònomes (Llei 28/1990 ITPyAJD). Presenta l''autoliquidació a
+          la Hisenda de la CA on es troba el bé transmès.'
+        create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD — transmissions
+          específiques de vehicles de motor usats) no és compatible amb la creació
+          d''unitats de treball en aquest CLI. És un impost cedit a les comunitats autònomes
+          (Llei 28/1990 ITPyAJD). Presenta l''autoliquidació a la Hisenda de la CA
+          on es troba el bé transmès.'
+        create_stub_modelo_650_refused: 'El model %{modelo} (ISD Successions — declaració
+          de béns adquirits per herència) no és compatible amb la creació d''unitats
+          de treball en aquest CLI. Base legal: Llei 29/1987 LISyD. Termini: 6 mesos
+          des de la defunció, prorrogable 6 mesos més (Art. 67 RISD). Presenta la declaració
+          a la Hisenda de la CA on el causant tenia la residència habitual (Llei 22/2009
+          Art. 32). Consulta la Hisenda autonòmica corresponent.'
+        create_stub_modelo_660_refused: 'El model %{modelo} (ISD — declaració informativa
+          del cabal relicte, acompanya el model 650) no és compatible amb la creació
+          d''unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD, termini
+          6 mesos (Art. 67 RISD). Presenta la declaració a la Hisenda de la CA on el
+          causant tenia la residència habitual (Llei 22/2009 Art. 32). Consulta la
+          Hisenda autonòmica corresponent.'
+        create_stub_modelo_714_refused: 'El model %{modelo} (Impost sobre el Patrimoni)
+          no és compatible amb la creació d''unitats de treball en aquest CLI. Base
+          legal: Llei 19/1991 Art. 28, Ordre HAC/1023/2021. Presenta la declaració
+          a sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
+          monedes virtuals situades a l''estranger) no és compatible amb la creació
+          d''unitats de treball en aquest CLI. Obligació: saldos superiors a 50.000
+          € a 31 de desembre (Llei 11/2021 Art. 13, Ordre HFP/887/2023, RD 1065/2007
+          Art. 42 quáter). Presenta la declaració a sede.agenciatributaria.gob.es.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -875,16 +915,15 @@ cli:
           reconegut. --year i --period es componen per separat: passa --year %{year}
           per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
           trimestre o MM per a un mes) a --period.'
-        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta no és
-          compatible amb aquesta revisió del model; no s''ha declarat cap casella
-          d''exempció INSS (Art. 7.h). Usa --casilla per subministrar els valors
-          directament.'
+        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no és compatible
+          amb aquesta revisió del model; no s'ha declarat cap casella d'exempció INSS
+          (Art. 7.h). Usa --casilla per subministrar els valors directament.
         prestacion_inss_exenta_help: Import íntegre de les prestacions de la Seguretat
-          Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es
-          registra a la casella d''exempció corresponent a la revisió i es resta del
-          total d''ingressos computables. Introdueix l''import brut rebut de la
-          Seguretat Social per baixa de maternitat o paternitat. NO l''incloguis a
-          --casilla 0003 (Retribucions dineràries).
+          Social per maternitat/paternitat exemptes d''IRPF (Art. 7.h LIRPF). Es registra
+          a la casella d''exempció corresponent a la revisió i es resta del total
+          d''ingressos computables. Introdueix l''import brut rebut de la Seguretat
+          Social per baixa de maternitat o paternitat. NO l''incloguis a --casilla
+          0003 (Retribucions dineràries).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta ha de ser un
           import decimal; s''ha rebut: {value}.'
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
@@ -1684,6 +1723,9 @@ cli:
   locales:
     app_help: Auditar i generar catàlegs de traducció
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -3220,15 +3262,15 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      descendiente:
+        help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible).
+          Format: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Realitza operacions intracomunitàries
       enrollment-large-company:
         help: Empresa de gran volum
       enrollment-public-administration-budget-gt-6000000:
         help: Pressupost administració pública superior a 6.000.000
-      descendiente:
-        help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible). Format:
-          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       entity-type:
         help: Persona física, persona jurídica o entitat en atribució de rendes
       family-descendants-eu-eea-deduction:
@@ -3493,6 +3535,26 @@ wizard:
         prompt: NIF/NIE del cònjuge
       title: Cònjuge
     taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimoni vigent — tributació conjunta disponible (Art. 82.1.1°)
+            label: Casat/ada
+          pareja-hecho-no-registrada:
+            description: Convivència sense inscripció registral — tributació conjunta
+              NO disponible
+            label: Parella de fet no registrada
+          pareja-hecho-registrada:
+            description: Inscrita al registre autonòmic — tributació conjunta disponible
+              (Art. 82.1.2°)
+            label: Parella de fet registrada
+          separado-divorciado:
+            label: Separat/ada o divorciat/ada
+          soltero:
+            label: Solter/a
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar s''aplica.'
+        prompt: Situació familiar (Art. 82 LIRPF)
       taxpayer-birth-date:
         prompt: Data de naixement del primer declarant
       taxpayer-death-date:
@@ -3576,6 +3638,11 @@ wizard:
         UE o l''EEE però falta el país. Afegeix el país de residència.'
       eu_eea_country_ok: 'Residència del cònjuge: el país de residència a la UE o
         l''EEE és coherent.'
+      joint_taxation_situacion_familiar_ok: 'Situació familiar: la declaració conjunta
+        és compatible amb la situació familiar declarada.'
+      joint_taxation_situacion_familiar_refused: 'Situació familiar: la declaració
+        conjunta no està permesa per a parella de fet no registrada (Art. 82.1.2°
+        LIRPF). Canvia la situació familiar o tria tributació individual.'
       obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
         són coherents.'
       obligations_inconsistent: 'Obligacions de retenció: has declarat retencions

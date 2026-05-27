@@ -612,6 +612,14 @@ cli:
         create_reused: cli.app.modelo.work.create_reused
         create_reused_name_match: cli.app.modelo.work.create_reused_name_match
         create_reused_renamed: cli.app.modelo.work.create_reused_renamed
+        create_stub_modelo_151_refused: cli.app.modelo.work.create_stub_modelo_151_refused
+        create_stub_modelo_210_refused: cli.app.modelo.work.create_stub_modelo_210_refused
+        create_stub_modelo_600_refused: cli.app.modelo.work.create_stub_modelo_600_refused
+        create_stub_modelo_620_refused: cli.app.modelo.work.create_stub_modelo_620_refused
+        create_stub_modelo_650_refused: cli.app.modelo.work.create_stub_modelo_650_refused
+        create_stub_modelo_660_refused: cli.app.modelo.work.create_stub_modelo_660_refused
+        create_stub_modelo_714_refused: cli.app.modelo.work.create_stub_modelo_714_refused
+        create_stub_modelo_refused: cli.app.modelo.work.create_stub_modelo_refused
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help
@@ -636,18 +644,17 @@ cli:
         period_help: cli.app.modelo.work.period_help
         period_token_invalid: cli.app.modelo.work.period_token_invalid
         period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
-        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta nem
-          támogatott ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes
-          mezőszám deklarálva. Használja a --casilla opciót az értékek közvetlen
-          megadásához.'
+        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta nem támogatott
+          ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes mezőszám deklarálva.
+          Használja a --casilla opciót az értékek közvetlen megadásához.
         prestacion_inss_exenta_help: Az SZJA alól mentes anyasági/apasági INSS-járadék
           teljes összege (Art. 7.h LIRPF). A revízióhoz tartozó mentességi mezőbe
           kerül rögzítésre, és levonásra kerül a számítható jövedelmek összesítéséből.
-          Adja meg a Társadalombiztosítástól (Seguridad Social) kapott bruttó
-          anyasági vagy apasági táppénz összegét. NE adja meg a --casilla 0003
-          (Retribuciones dinerarias) opcióban.
-        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének
-          decimálisnak kell lennie; a kapott érték: {value}.'
+          Adja meg a Társadalombiztosítástól (Seguridad Social) kapott bruttó anyasági
+          vagy apasági táppénz összegét. NE adja meg a --casilla 0003 (Retribuciones
+          dinerarias) opcióban.
+        prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének decimálisnak
+          kell lennie; a kapott érték: {value}.'
         reason_help: cli.app.modelo.work.reason_help
         relation_help: cli.app.modelo.work.relation_help
         relation_not_decimal: cli.app.modelo.work.relation_not_decimal
@@ -1208,6 +1215,9 @@ cli:
   locales:
     app_help: cli.locales.app_help
     scaffold_check_help: cli.locales.scaffold_check_help
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
   log_levels:
     errors:
       flags_mutually_exclusive: cli.log_levels.errors.flags_mutually_exclusive
@@ -2202,6 +2212,23 @@ wizard:
     spouse:
       title: wizard.setup.spouse.title
     taxpayer:
+      situacion-familiar:
+        help: wizard.setup.taxpayer.situacion-familiar.help
+        prompt: wizard.setup.taxpayer.situacion-familiar.prompt
+        choices:
+          casado:
+            label: wizard.setup.taxpayer.situacion-familiar.choices.casado.label
+            description: wizard.setup.taxpayer.situacion-familiar.choices.casado.description
+          pareja-hecho-registrada:
+            label: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.label
+            description: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.description
+          pareja-hecho-no-registrada:
+            label: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.label
+            description: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.description
+          soltero:
+            label: wizard.setup.taxpayer.situacion-familiar.choices.soltero.label
+          separado-divorciado:
+            label: wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label
       title: wizard.setup.taxpayer.title
     taxpayer-type:
       incn-prior-12-months:
@@ -2220,6 +2247,8 @@ wizard:
       activity_present: wizard.setup.verifier.activity_present
       eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
       eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
+      joint_taxation_situacion_familiar_ok: wizard.setup.verifier.joint_taxation_situacion_familiar_ok
+      joint_taxation_situacion_familiar_refused: wizard.setup.verifier.joint_taxation_situacion_familiar_refused
       obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
       obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
       spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing

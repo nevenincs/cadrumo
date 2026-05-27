@@ -759,6 +759,44 @@ cli:
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name was applied as a rename to
           %{name}.
+        create_stub_modelo_151_refused: 'Modelo %{modelo} (special expatriate regime
+          "Beckham Law") is not supported for work-unit creation in this CLI. Legal
+          basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
+          File the return at sede.agenciatributaria.gob.es.'
+        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR — Non-Resident Income
+          Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
+          Legislativo 5/2004 TRLIRNR, Art. 28 TRLIRNR (quarterly deadlines: Q1/Q2/Q3/Q4).
+          General rate: 19 % EU/EEA residents, 24 % others. File the return at sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
+        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD — Transfer Tax and
+          Stamp Duty on property transfers) is not supported for work-unit creation
+          in this CLI. This tax is devolved to the Autonomous Communities (Ley 28/1990
+          ITPyAJD). File the self-assessment at the Hacienda of the CCAA where the
+          transferred asset is located.'
+        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD — specific transfers
+          of used motor vehicles) is not supported for work-unit creation in this CLI.
+          This tax is devolved to the Autonomous Communities (Ley 28/1990 ITPyAJD).
+          File the self-assessment at the Hacienda of the CCAA where the transferred
+          asset is located.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD Inheritances — declaration
+          of assets acquired by inheritance) is not supported for work-unit creation
+          in this CLI. Legal basis: Ley 29/1987 LISyD. Deadline: 6 months from the
+          date of death, extendable by a further 6 months (Art. 67 RISD). File at
+          the Hacienda of the CCAA where the deceased had their habitual residence
+          (Ley 22/2009 Art. 32). Consult the relevant regional tax authority.'
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD — informative declaration
+          of the estate inventory, filed alongside Modelo 650) is not supported for
+          work-unit creation in this CLI. Legal basis: Ley 29/1987 LISyD, deadline
+          6 months (Art. 67 RISD). File at the Hacienda of the CCAA where the deceased
+          had their habitual residence (Ley 22/2009 Art. 32). Consult the relevant
+          regional tax authority.'
+        create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
+          for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28, Orden
+          HAC/1023/2021. File the return at sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual
+          currencies held abroad) is not supported for work-unit creation in this CLI.
+          Obligation: aggregate holdings exceeding €50,000 at 31 December (Ley 11/2021
+          Art. 13, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter). File the return
+          at sede.agenciatributaria.gob.es.'
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -803,14 +841,14 @@ cli:
           token. --year and --period are composed separately: pass --year %{year}
           for the filing year and a period token (0A for annual, Qn for a quarter,
           or MM for a month) for --period.'
-        prestacion_inss_exenta_casilla_not_found: '--prestacion-inss-exenta is not
-          supported for this modelo revision; no Art. 7.h exempt-INSS casilla is
-          declared. Use --casilla to supply inputs directly.'
+        prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta is not
+          supported for this modelo revision; no Art. 7.h exempt-INSS casilla is declared.
+          Use --casilla to supply inputs directly.
         prestacion_inss_exenta_help: Gross amount of INSS maternity/paternity benefit
           exempt from IRPF (Art. 7.h LIRPF). Recorded in the revision-specific exempt
           casilla and subtracted from total computable income. Enter the gross amount
-          received from Social Security for maternity or paternity leave. Do NOT
-          include this in --casilla 0003 (Retribuciones dinerarias).
+          received from Social Security for maternity or paternity leave. Do NOT include
+          this in --casilla 0003 (Retribuciones dinerarias).
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta must be a decimal
           amount; received: {value}.'
         reason_help: Optional free-text reason for the discard (up to 500 chars)
@@ -1598,6 +1636,9 @@ cli:
   locales:
     app_help: Audit and scaffold locale catalogues
     scaffold_check_help: Report drift without writing locale files
+    set_key_help: cli.locales.set_key_help
+    set_locale_help: cli.locales.set_locale_help
+    set_value_help: cli.locales.set_value_help
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -3059,15 +3100,15 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      descendiente:
+        help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
+          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
         help: Conducts intracomunitario operations
       enrollment-large-company:
         help: Large-company enrollment
       enrollment-public-administration-budget-gt-6000000:
         help: Public administration budget over 6,000,000
-      descendiente:
-        help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
-          NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       entity-type:
         help: Natural person, legal entity, or attribution entity
       family-descendants-eu-eea-deduction:
@@ -3329,6 +3370,26 @@ wizard:
         prompt: Spouse NIF/NIE
       title: Spouse
     taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Valid marriage — joint taxation available (Art. 82.1.1°)
+            label: Married
+          pareja-hecho-no-registrada:
+            description: De-facto couple without registration — joint taxation NOT
+              available
+            label: Unregistered civil partnership
+          pareja-hecho-registrada:
+            description: Registered in the corresponding autonomic registry — joint
+              taxation available (Art. 82.1.2°)
+            label: Registered civil partnership
+          separado-divorciado:
+            label: Separated or divorced
+          soltero:
+            label: Single
+        help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
+          is available and which family unit variant applies.'
+        prompt: Family situation (Art. 82 LIRPF)
       taxpayer-birth-date:
         prompt: First taxpayer birth date
       taxpayer-death-date:
@@ -3410,6 +3471,11 @@ wizard:
         but the country is missing. Add the country of residence.'
       eu_eea_country_ok: 'Spouse residence: the EU or EEA country of residence is
         consistent.'
+      joint_taxation_situacion_familiar_ok: 'Family situation: joint taxation is compatible
+        with the declared family situation.'
+      joint_taxation_situacion_familiar_refused: 'Family situation: joint taxation
+        is not permitted for an unregistered civil partnership (Art. 82.1.2° LIRPF).
+        Change the family situation or choose individual taxation.'
       obligations_consistency_ok: 'Withholding obligations: the withholding answers
         are consistent.'
       obligations_inconsistent: 'Withholding obligations: you declared professional
