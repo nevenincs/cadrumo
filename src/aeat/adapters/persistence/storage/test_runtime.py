@@ -17,7 +17,10 @@ from aeat.adapters.persistence.storage.runtime import (
     inspect_bucket_storage_runtime,
     inspect_storage_runtime,
 )
-from aeat.adapters.persistence.storage.runtime_repository import secure_object_repository_for_cold_bootstrap_state
+from aeat.adapters.persistence.storage.runtime_repository import (
+    secure_object_repository_for_active_bucket_or_default_route,
+    secure_object_repository_for_cold_bootstrap_state,
+)
 from aeat.adapters.persistence.storage.sql import SecureObjectRepository
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectWrite
 from aeat.core.classification import SensitivityClass
@@ -242,17 +245,46 @@ def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_pat
 
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
     with (
-        override_settings(aeat_local_storage_root=tmp_path, aeat_active_profile="bucket-a"),
+        override_settings(
+            aeat_local_storage_root=tmp_path,
+            aeat_active_profile="bucket-a",
+            aeat_output_language="en",
+        ),
         pytest.raises(StorageValidationError, match="Cold-bootstrap storage"),
     ):
         secure_object_repository_for_cold_bootstrap_state()
 
 
+def test_cold_bootstrap_repository_refuses_settings_scoped_active_profile(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(
+        aeat_local_storage_root=tmp_path,
+        aeat_active_profile="bucket-a",
+        aeat_output_language="en",
+    )
+
+    with pytest.raises(StorageValidationError, match="Cold-bootstrap storage"):
+        secure_object_repository_for_cold_bootstrap_state(settings)
+
+
 def test_cold_bootstrap_repository_refuses_explicit_database_route(tmp_path: Path) -> None:
-    settings = Settings(aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}")
+    settings = Settings(
+        aeat_database_url=f"sqlite:///{(tmp_path / 'aeat.db').as_posix()}",
+        aeat_output_language="en",
+    )
 
     with pytest.raises(StorageValidationError, match="explicit database route"):
         secure_object_repository_for_cold_bootstrap_state(settings)
+
+
+def test_default_route_repository_refuses_settings_scoped_active_profile_without_session(
+    tmp_path: Path,
+) -> None:
+    settings = _settings_for_bucket(tmp_path, "bucket-a")
+
+    with pytest.raises(StorageValidationError, match="no active bucket session"):
+        secure_object_repository_for_active_bucket_or_default_route(settings)
 
 
 def test_runtime_repository_factory_rechecks_live_session(tmp_path: Path) -> None:

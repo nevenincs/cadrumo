@@ -46,7 +46,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -55,14 +55,11 @@ from sqlalchemy import Engine, select
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
 from ..errors import ClassificationError
-from ..sql import SecureObjectRepository
 from ..sql._orm import Base, SecureObjectRow
 from ..sql.engine import create_engine_from_settings, dispose_engine
 from ..sql.session import session_scope
 from ._envelope import Envelope
 from ._secure_repository import SecureBoundRepository
-
-T = TypeVar("T", bound=BaseModel)
 
 _FOREIGN_CLASS_MAP: dict[SensitivityClass, SensitivityClass] = {
     SensitivityClass.AUDIT: SensitivityClass.OPERATIONAL,
@@ -88,7 +85,7 @@ _UNSAFE_IDS: tuple[str, ...] = (
 
 
 @dataclass(frozen=True)
-class SecureRepositoryContractCase(Generic[T]):
+class SecureRepositoryContractCase[T: BaseModel]:
     """Inputs required to run the contract against a concrete repository.
 
     The contract is parameterised by:
@@ -138,13 +135,16 @@ def _activate_engine(db_path: Path, monkeypatch: pytest.MonkeyPatch) -> Engine:
 
     dispose_engine()
     url = f"sqlite:///{db_path.as_posix()}"
+    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", (db_path.parent / "storage-root").as_posix())
     monkeypatch.setenv("AEAT_DATABASE_URL", url)
     engine = create_engine_from_settings(Settings(aeat_database_url=url))
     Base.metadata.create_all(engine)
     return engine
 
 
-def _round_trip_preserves_payload(case: SecureRepositoryContractCase[T]) -> None:
+def _round_trip_preserves_payload[T: BaseModel](
+    case: SecureRepositoryContractCase[T],
+) -> None:
     repo_a = case.repository_factory()
     repo_a.save(case.first_payload)
     repo_b = case.repository_factory()
@@ -155,7 +155,7 @@ def _round_trip_preserves_payload(case: SecureRepositoryContractCase[T]) -> None
     )
 
 
-def _save_is_idempotent(case: SecureRepositoryContractCase[T]) -> None:
+def _save_is_idempotent[T: BaseModel](case: SecureRepositoryContractCase[T]) -> None:
     repo = case.repository_factory()
     repo.save(case.first_payload)
     repo.save(case.first_payload)
@@ -167,12 +167,14 @@ def _save_is_idempotent(case: SecureRepositoryContractCase[T]) -> None:
     )
 
 
-def _load_returns_none_when_absent(case: SecureRepositoryContractCase[T]) -> None:
+def _load_returns_none_when_absent[T: BaseModel](
+    case: SecureRepositoryContractCase[T],
+) -> None:
     repo = case.repository_factory()
     assert repo.load("never-existed-x") is None
 
 
-def _delete_removes(case: SecureRepositoryContractCase[T]) -> None:
+def _delete_removes[T: BaseModel](case: SecureRepositoryContractCase[T]) -> None:
     repo = case.repository_factory()
     repo.save(case.first_payload)
     identifier = repo.extract_identifier(case.first_payload)
@@ -180,12 +182,14 @@ def _delete_removes(case: SecureRepositoryContractCase[T]) -> None:
     assert repo.load(identifier) is None
 
 
-def _delete_missing_returns_false(case: SecureRepositoryContractCase[T]) -> None:
+def _delete_missing_returns_false[T: BaseModel](
+    case: SecureRepositoryContractCase[T],
+) -> None:
     repo = case.repository_factory()
     assert repo.delete("never-existed-x") is False
 
 
-def _object_marker_identifies_secure_backend(
+def _object_marker_identifies_secure_backend[T: BaseModel](
     case: SecureRepositoryContractCase[T],
 ) -> None:
     repo = case.repository_factory()
@@ -196,14 +200,14 @@ def _object_marker_identifies_secure_backend(
     )
 
 
-def _unsafe_id_rejected(case: SecureRepositoryContractCase[T]) -> None:
+def _unsafe_id_rejected[T: BaseModel](case: SecureRepositoryContractCase[T]) -> None:
     repo = case.repository_factory()
     for bad in _UNSAFE_IDS:
         with pytest.raises(ValueError):
             repo.envelope_path_for(bad)
 
 
-def _database_payload_is_encrypted_audit_data(
+def _database_payload_is_encrypted_audit_data[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     db_path: Path,
 ) -> None:
@@ -223,7 +227,7 @@ def _database_payload_is_encrypted_audit_data(
     assert repo.load(identifier) == case.first_payload
 
 
-def _foreign_class_object_refused(
+def _foreign_class_object_refused[T: BaseModel](
     case: SecureRepositoryContractCase[T],
 ) -> None:
     repo = case.repository_factory()
@@ -241,7 +245,7 @@ def _foreign_class_object_refused(
         classification=foreign,
         payload=case.first_payload,
     )
-    SecureObjectRepository().save(
+    repo._objects.save(
         namespace=repo.namespace,
         object_key=identifier,
         classification=foreign,
@@ -253,7 +257,7 @@ def _foreign_class_object_refused(
         repo.load(identifier)
 
 
-def _boundary_catches_simulated_field_drop_via_corrupted_payload(
+def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     engine: Engine,
 ) -> None:
@@ -319,7 +323,7 @@ test files, and the contract honours both for migration parity.
 """
 
 
-def assert_secure_repository_contract(
+def assert_secure_repository_contract[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     *,
     tmp_path: Path,

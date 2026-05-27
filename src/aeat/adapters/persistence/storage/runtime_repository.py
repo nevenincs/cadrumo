@@ -8,6 +8,26 @@ from .runtime import inspect_bucket_storage_runtime
 from .sql import SecureObjectRepository
 
 
+def _active_bucket_id_for_source(
+    source: Settings,
+    *,
+    include_process_pointer: bool,
+) -> str | None:
+    """Resolve the active bucket for ``source`` without ignoring scoped settings."""
+
+    override = (source.aeat_active_profile or "").strip()
+    if override:
+        return override
+    route = classify_storage_route(source)
+    if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE:
+        return route.bucket_id
+    if include_process_pointer:
+        from ....core._bucket_pointer_io import resolve_active_bucket_id
+
+        return resolve_active_bucket_id()
+    return None
+
+
 def secure_object_repository_for_bucket(
     bucket_id: str,
     settings: Settings | None = None,
@@ -23,13 +43,42 @@ def secure_object_repository_for_active_bucket() -> SecureObjectRepository:
     from ....core._bucket_pointer_io import resolve_active_bucket_id
     from ....core.i18n import tr
 
+    source = load_settings()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
         raise StorageValidationError(
-            tr("application.workflow.errors.no_active_profile_bucket"),
+            tr(
+                "application.workflow.errors.no_active_profile_bucket",
+                locale=source.aeat_output_language,
+            ),
             translated_message="errors.storage.runtime.not_ready",
         )
     return secure_object_repository_for_bucket(bucket_id)
+
+
+def secure_object_repository_for_active_bucket_or_default_route(
+    settings: Settings | None = None,
+) -> SecureObjectRepository:
+    """Return active-bucket storage when selected, otherwise the process default.
+
+    This lower-level storage helper is for repository base classes that
+    still support explicit injected/default SQL engines in tests and
+    bootstrap-adjacent code. It does not catch active-bucket runtime
+    errors: once a bucket is selected, route/session failures surface
+    from ``secure_object_repository_for_bucket`` instead of falling
+    back to a bare repository.
+    """
+
+    source = settings or load_settings()
+    bucket_id = _active_bucket_id_for_source(
+        source,
+        include_process_pointer=settings is None,
+    )
+    if bucket_id is None:
+        from .sql.engine import get_engine
+
+        return SecureObjectRepository(engine=get_engine(source))
+    return secure_object_repository_for_bucket(bucket_id, source)
 
 
 def secure_object_repository_for_cold_bootstrap_state(
@@ -48,27 +97,35 @@ def secure_object_repository_for_cold_bootstrap_state(
     from ....core.i18n import tr
 
     source = settings or load_settings()
-    if classify_storage_route(source).kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
+    route = classify_storage_route(source)
+    if route.kind is StorageRouteKind.EXPLICIT_DATABASE_URL:
         raise StorageValidationError(
             tr(
                 "errors.storage.runtime.cold_bootstrap_explicit_database_refused",
                 default="Cold-bootstrap storage cannot bypass an explicit database route.",
+                locale=source.aeat_output_language,
             ),
             translated_message="errors.storage.runtime.not_ready",
         )
-    if resolve_active_bucket_id() is not None:
+    if route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE or (
+        settings is None and resolve_active_bucket_id() is not None
+    ):
         raise StorageValidationError(
             tr(
                 "errors.storage.runtime.cold_bootstrap_active_profile_refused",
                 default="Cold-bootstrap storage is only available before an active profile bucket is selected.",
+                locale=source.aeat_output_language,
             ),
             translated_message="errors.storage.runtime.not_ready",
         )
-    return SecureObjectRepository()
+    from .sql.engine import get_engine
+
+    return SecureObjectRepository(engine=get_engine(source))
 
 
 __all__ = [
     "secure_object_repository_for_active_bucket",
+    "secure_object_repository_for_active_bucket_or_default_route",
     "secure_object_repository_for_bucket",
     "secure_object_repository_for_cold_bootstrap_state",
 ]
