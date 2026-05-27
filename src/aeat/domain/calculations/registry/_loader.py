@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel, ValidationError
 
@@ -96,12 +96,11 @@ def _as_toml_table(value: object) -> dict[str, object] | None:
     ``tomllib`` and :func:`freeze_toml` always emit ``str`` keys, so a
     parsed-TOML ``dict`` is genuinely ``dict[str, object]``. The runtime
     ``isinstance`` check loses the key type because TOML payloads flow
-    through ``object``; the ``cast`` re-attaches the key type at this
-    single deserialization boundary so callers index tables without
-    type-erasure escapes downstream.
+    through ``object``; the annotation below re-attaches the known ``str``
+    key type at this single TOML deserialization boundary.
     """
     if isinstance(value, dict):
-        return cast("dict[str, object]", value)
+        return value  # type: ignore[return-value]  # TOML always emits str keys; key type is erased by the object parameter
     return None
 
 
