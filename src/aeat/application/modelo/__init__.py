@@ -102,6 +102,13 @@ from ._result_summary import (
     ResultSummaryRow,
     calculation_result_summary,
 )
+from ._taxation_comparison import (
+    TaxationComparisonError,
+    TaxationComparisonResult,
+    TaxationRecommendation,
+    compare_taxation_for_work_unit,
+    compare_taxation_modes,
+)
 
 __all__ = [
     "AmendmentEvidenceMissingError",
@@ -124,6 +131,9 @@ __all__ = [
     "ModeloWorkflowGateError",
     "ResultSummaryRow",
     "StoredCalculationDriftError",
+    "TaxationComparisonError",
+    "TaxationComparisonResult",
+    "TaxationRecommendation",
     "VerificationReportNotFoundError",
     "WorkUnitAlreadyDiscardedError",
     "WorkUnitHistory",
@@ -135,6 +145,8 @@ __all__ = [
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
     "calculation_result_summary",
+    "compare_taxation_for_work_unit",
+    "compare_taxation_modes",
     "create_work_unit",
     "discard_work_unit",
     "file_modelo_revision",
