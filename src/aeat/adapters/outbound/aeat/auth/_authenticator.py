@@ -1211,7 +1211,11 @@ class AeatAuthenticator:
         if path is None:
             raise CertificateLoadError(tr(
                 "application.auth.certificate.load.path_unset",
-                default="No certificate file is configured. Run 'aeat config auth configure --provider certificate --file PATH' to set one.",
+                default=(
+                    "No certificate file is configured. Run"
+                    " 'aeat config auth configure --provider certificate"
+                    " --file PATH' to set one."
+                ),
             ))
         password = self._settings.aeat_certificate_password_secret
         if password is None:
