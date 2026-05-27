@@ -535,3 +535,107 @@ metadata fix; no functional impact.
 Cluster T root cause (missing personal-data binding declarations in M100 revision 2024
 TOML) is outside Layer 1 scope and is addressed by W07.P31.S113-S115 (currently
 in_progress per task #60).
+
+---
+
+## W05.P22 cluster commit review (W05.P27.S101)
+
+Four commits reviewed against the W05.P22 Step intent (S81-S85: M130 actividad
+económica income aggregation) and the registry-authority-flow rule.
+
+### `3445eb6cf` S81+S82 — aggregation resolver + ledger module
+
+**ACCEPT.**
+
+`_renta_income_ledger.py` is a self-contained application-layer module following
+the existing aggregation module pattern. The cumulative window rule (RD 439/2007
+art. 110.2) is correctly implemented: for period Qn in year Y the window is
+`[Jan 1, Y, last_day_of_Qn, Y]`. The four eligibility gates (lifecycle ACTIVE,
+currency EUR, direction INCOMING, business_classification BUSINESS or MIXED) are
+applied in the correct order. MIXED uses `business_pct` fractional attribution;
+`None` business_pct on a MIXED record returns `None` from `_income_business_amount`
+and routes to `UNCLASSIFIED_BUSINESS_STATE` — correct defensive handling.
+
+The `_RentaLedgerIncomeSelector` in `_bindings.py` follows the pattern of the
+existing `_RentaLedgerExpenseSelector`: pydantic model with strict/frozen config,
+`target_casilla` constrained to known values, `fact` constrained to
+`gross_income_sum`. `validate_ledger_renta_income_aggregation_binding_definition`
+is registered and `resolve_ledger_renta_income_aggregation_binding_values` is wired
+into the source mesh in `_modelo_bindings.py`. The new source type
+`"ledger_renta_income_aggregation"` is added to the `BindingSource` discriminator
+union in `_schema.py`. Locale key `aggregation.renta_ledger.errors.quarterly_period_required`
+is scaffolded and translated for ca/en/es with a Hungarian stub — consistent with
+locale parity discipline.
+
+Casilla 01 is still `input_kind = "manual"` at this commit point. `required = false`
+is correct here: an operator filling M130 manually before the aggregation path is
+wired must still be able to omit casilla 01 without a blocking finding. The `bound`
+transition lands in the next commit.
+
+### `3fe34b561` S83+S84 — binding registration + casilla 01 wired to ledger aggregation
+
+**ACCEPT.**
+
+Binding TOML `0003-m130-income-cumulative.toml` registers
+`modelo-130-actividad-economica-ingresos-cumulative` with `source = "ledger_renta_income_aggregation"`,
+`selector = { modelo = "130", target_casilla = "01", fact = "gross_income_sum" }`,
+`aggregation = { op = "sum" }`, and full `legal_refs` plus `source_citations` with
+`required_text`. This satisfies the registry-authority-flow rule: the binding carries
+its legal grounding (`rd-439-2007:art-110`, `orden-eha-672-2007:art-1`,
+`ley-35-2006:art-99`, `rd-439-2007:art-95`) in the TOML record.
+
+Casilla 01 is correctly changed from `input_kind = "manual"` to `input_kind = "bound"`
+with `binding = "modelo-130-actividad-economica-ingresos-cumulative"`. The field
+`required = false` is preserved — correct: casilla 01 is now bound to the aggregation
+resolver so the Layer 1 manual gate (`input_kind == "manual" and required`) does not
+apply. An operator with no ledger transactions receives `Decimal("0")` from the
+resolver, not a `MISSING_REQUIRED_CASILLA` blocking finding.
+
+**Interaction with S73+S74:** S73+S74 set `required = true` on casilla 02 (Gastos,
+`input_kind = "manual"`). S83+S84 change casilla 01 (Ingresos) from manual to bound,
+leaving `required = false`. These are orthogonal changes on two different casillas.
+No conflict.
+
+### `dfde39115` S85 — regression tests
+
+**ACCEPT.**
+
+10 tests. The pure-aggregator tests exercise concrete input/output pairs derived from
+the RD 439/2007 art. 110.2 cumulative window specification:
+
+- Q1 captures Jan-Mar, excludes Apr (`OUTSIDE_PERIOD` issue) — window boundary.
+- Q2 YTD captures Jan-Jun including the Q1 transactions — cumulative semantics.
+- Q2 expected value 7000 = 2500 + 1500 + 3000 derived from fixture amounts, not
+  from copying observed output. Passes the no-tautological-tests rule.
+- MIXED classification with `business_pct = 0.6` applies the fraction.
+- PERSONAL, non-EUR, OUTGOING exclusions each produce the correct typed reason.
+- ARCHIVED lifecycle bypasses without an issue record.
+- Non-quarterly period raises `AggregationPeriodError`.
+
+Repository-backed integration test uses real `isolated_runtime_profile` storage — no
+mocks, no stubs. The structural pin test asserts `target_casilla == "01"` and
+`modelo == "130"` — not tautological since the binding contract could target a
+different casilla. All tests pass the no-tautological-calculation-tests rule.
+
+### `03be9b6f4` — S81-S85 exec records + plan step checks
+
+**ACCEPT-WITH-FOLLOWUP.**
+
+Five exec step records written; plan steps S81-S85 closed via vault CLI. No functional
+changes. The commit co-lands all five step closures and records — same multi-step
+co-landing convention violation as FU-G and FU-W04-A. FU-W05-A: add plan note for W09
+(no code change).
+
+---
+
+### Cross-commit summary — Wave 5
+
+| Commit | Step(s) | Verdict |
+|---|---|---|
+| `3445eb6cf` | S81+S82 | ACCEPT |
+| `3fe34b561` | S83+S84 | ACCEPT |
+| `dfde39115` | S85 | ACCEPT |
+| `03be9b6f4` | S81-S85 records | ACCEPT-WITH-FOLLOWUP (FU-W05-A) |
+
+**Follow-up for W09:** FU-W05-A — convention note for multi-step co-landing in
+`03be9b6f4` (no code change). Mirrors FU-G and FU-W04-A.
