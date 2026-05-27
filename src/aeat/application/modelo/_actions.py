@@ -60,6 +60,11 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from ...domain.modelos._row_models import (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    ModeloDetailRow,
+)
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
@@ -859,6 +864,7 @@ def calculate_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine and persist a draft revision.
@@ -977,6 +983,7 @@ def calculate_modelo_revision(
             }.items()
         )
     )
+    resolved_date_bindings = dict(sorted(profile_result.date_binding_values.items()))
     _reject_binding_channel_mismatch(snapshot.revision, resolved_bindings, resolved_enum_bindings)
     resolved_relations = dict(relation_values or {})
     relation_binding_values = materialize_relation_binding_values(
@@ -1011,6 +1018,7 @@ def calculate_modelo_revision(
         binding_values=resolved_bindings,
         enum_binding_values=resolved_enum_bindings,
         relation_values=resolved_relations,
+        date_binding_values=resolved_date_bindings or None,
     )
 
     inputs_snapshot: dict[str, str] = dict(
@@ -1033,6 +1041,7 @@ def calculate_modelo_revision(
         source_transaction_ids=source_transaction_ids,
         borrador_snapshot_id=borrador_result.borrador_snapshot_id,
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
+        detail_rows=detail_rows,
     )
     revisions = cr_repo.load()
     existing = revisions.get(revision_id)
@@ -1050,6 +1059,7 @@ def calculate_modelo_revision(
         bindings_sourced_from_borrador=borrador_result.bindings_sourced_from_borrador,
         casilla_values=casilla_values,
         observations=typed_observations,
+        detail_rows=detail_rows,
         created_at=now,
         updated_at=now,
     )
@@ -1133,7 +1143,8 @@ def _apply_iva_compensation_decision_binding(
             or backend_casilla_value is not None
         ):
             raise ModeloIvaWalletReconciliationBlocked(
-                "Modelo 303 prior compensation requires a persisted IVA wallet reconciliation decision"
+                translated_message="application.modelo.errors.iva_wallet_not_seeded",
+                suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
             )
         return
 
@@ -1200,7 +1211,8 @@ def _require_persisted_iva_compensation_decision_for_work_unit(
     persisted = _load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if persisted is None:
         raise ModeloIvaWalletReconciliationBlocked(
-            "Modelo 303 IVA wallet reconciliation decisions must be persisted before calculation"
+            translated_message="application.modelo.errors.iva_wallet_not_seeded",
+            suggestion="aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD --amount 0 --confirm",
         )
     if persisted != supplied_decision:
         raise ModeloIvaWalletReconciliationBlocked(
@@ -1338,6 +1350,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     transaction_repository: TransactionCatalogueRepository | None = None,
     invoice_repository: InvoiceCatalogueRepository | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
+    detail_rows: tuple[ModeloDetailRow, ...] = (),
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision using bucket-local ledger aggregation."""
@@ -1490,8 +1503,13 @@ def _resolve_profile_bindings_for_calculation(
     return ProfileSourcedBindingResult(
         binding_values=resolution.binding_values,
         enum_binding_values=resolution.enum_binding_values,
+        date_binding_values=resolution.date_binding_values,
         bindings_sourced_from_profile=tuple(
-            sorted(set(resolution.binding_values) | set(resolution.enum_binding_values))
+            sorted(
+                set(resolution.binding_values)
+                | set(resolution.enum_binding_values)
+                | set(resolution.date_binding_values)
+            )
         ),
     )
 
@@ -2215,6 +2233,9 @@ def _assert_revision_content_integrity(revision: CalculationRevision) -> None:
 
 _PREDICATE_ALL_NONZERO = _re.compile(r"^all_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
 _PREDICATE_ANY_NONZERO = _re.compile(r"^any_nonzero\(\[(?P<ids>[^\]]*)\]\)$")
+_PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
+    r"^cap_le_when_positive\(\[(?P<ids>[^\]]*)\]\)$"
+)
 
 
 def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
@@ -2252,6 +2273,24 @@ def _evaluate_predicate_expression(
     if m:
         ids = _parse_predicate_casilla_ids(m.group("ids"))
         return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+    m = _PREDICATE_CAP_LE_WHEN_POSITIVE.match(expr)
+    if m:
+        # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
+        # ceiling casilla is strictly positive, the limited casilla value
+        # MUST NOT exceed the ceiling. P08.S47/S48: enforces AEAT cap rules
+        # like Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
+        # caso podrá figurar... un importe superior a la cantidad positiva
+        # consignada".
+        ids = _parse_predicate_casilla_ids(m.group("ids"))
+        if len(ids) != 2:
+            return True
+        limited_id, ceiling_id = ids[0], ids[1]
+        ceiling = casilla_values.get(ceiling_id, Decimal(0))
+        if ceiling <= Decimal(0):
+            return True
+        limited = casilla_values.get(limited_id, Decimal(0))
+        return limited <= ceiling
 
     return True
 
