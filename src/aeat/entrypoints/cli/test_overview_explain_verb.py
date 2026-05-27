@@ -103,7 +103,7 @@ def test_explain_help_advertises_local_only(cli_runner: CliRunner) -> None:
 
 
 def test_explain_721_returns_structured_payload_not_crash(cli_runner: CliRunner) -> None:
-    """M721 registry stub: ``explain 721`` must return exit 0 with the three
+    """M721 applicability rule: ``explain 721`` must return exit 0 with the three
     legal refs from Ley 11/2021 DA 10 and Orden HFP/887/2023 — never a raw
     OverviewExplainError traceback.
 

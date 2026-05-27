@@ -232,6 +232,43 @@ def test_committed_snapshot_declares_no_support_removal_decisions(_modelo_130_sn
     assert _modelo_130_snapshot.support_removal_decisions == {}
 
 
+def test_committed_registry_contains_no_zero_casilla_revisions() -> None:
+    modelos, _catalogues = load_registry_tree(_REGISTRY_ROOT)
+
+    zero_casilla_revisions = [
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if not revision.casillas
+    ]
+
+    assert zero_casilla_revisions == []
+
+
+def test_revision_without_casillas_is_registry_validation_failure() -> None:
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    empty_revision = revision.model_copy(
+        update={
+            "casillas": (),
+            "formulas": (),
+            "bindings": (),
+            "relations": (),
+            "export_layouts": (),
+            "extraction_profiles": (),
+            "verification_expectations": (),
+        }
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="revision must declare at least one casilla",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(
+            _with_revision(modelo, empty_revision)
+        )
+
+
 _EXPECTED_DEADLINE_WINDOWS = (
     "modelo-130-2026-1t",
     "modelo-130-2026-2t",
