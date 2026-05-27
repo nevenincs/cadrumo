@@ -399,3 +399,39 @@ Apply the M036/M180/M349/M369/M720 successful WebFetch-grounding pattern to the 
 WebFetch-ground M131 declaracion_pdf extraction_profiles against AEAT-published DR xlsx 2026 and instructions HTML; determine printed-form layout verdict (line-start vs line-end box numbers); author fixture and gap-test or round-trip test accordingly.
 
 - [x] `W07.P33.S174` - Ground Modelo 131 numeric_casilla declaracion_pdf profile against AEAT-published DR xlsx (01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx shared-strings [65]-[78] confirm bracket [NN] casilla notation) and instructions HTML (modelo-131-instrucciones.html); `verdict: GAP-DOCUMENTED -- M131 printed form uses the same line-end box-number tabular layout as M130 (both AEAT IRPF quarterly pago-fraccionado forms, same AEAT form-generation system); author synthetic fixture 131/2024-1T.pdf via _generate.py; add structural gap test asserting zero casilla extraction from the real profile on the synthetic fixture; retain provisional_pending_specimen=true on all M131 extraction_profiles revisions; `src/aeat/_data/registry/aeat/modelos/131/revisions/2026/extraction_profiles/0001-extraction_profiles.toml, src/aeat/tests/fixtures/justificantes/131/2024-1T.pdf, src/aeat/tests/fixtures/justificantes/_generate.py, src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
+
+## Wave `W08` - Post-rush remediation: address 15 findings from honest self-audit 2026-05-27
+
+Track and remediate the 15 findings from .vault/audit/2026-05-27-declaracion-extraction-architecture-audit.md across HIGH (synthetic-fixture circularity, gate test path gap, target_casillas shrinkage), MEDIUM (cross-campaign sweeps, plan attribution, scratch commit, M193 reversal, _temporal.py case fix, M190 rename, gap-test brittleness), and LOW (suite scope, step granularity, PDF determinism, gate-surface scope, cross-attribution risk) severity levels. Dispatch high-leverage remediations and track deferred items as plan steps.
+
+### Phase `W08.P34` - HIGH-severity remediation
+
+verification-source schema field + coverage-drift audit + production-path gate tests
+
+- [ ] `W08.P34.S181` - Promote verification_source to typed schema field on ExtractionProfileDefinition with Literal options real_aeat_corpus_pdf synthetic_from_aeat_published_text historical_suppression; `src/aeat/domain/calculations/registry/_schema.py`.
+- [ ] `W08.P34.S182` - Tag all 16 GROUNDED profiles with the appropriate verification_source enum value reflecting actual provenance; `src/aeat/_data/registry/aeat/modelos/`.
+- [ ] `W08.P34.S183` - Audit calculation-completeness manifests for the 5 modelos with target_casillas REMOVED (M036/M720/M184/M232/M347) to verify removed casillas are marked input_kind informational or otherwise non-extractable; `src/aeat/domain/calculations/registry/`.
+- [x] `W08.P34.S184` - Add production-path tests for both gate validators (validate_declaracion_pdf_specimen_gate and validate_declaracion_pdf_round_trip_gate) exercising RegistryValidator with source_root=bundled_path() not direct corpus_root injection; `src/aeat/domain/calculations/registry/test_provisional_specimen_gate.py src/aeat/domain/calculations/registry/test_corpus_round_trip_gate.py`.
+
+### Phase `W08.P35` - MEDIUM-severity drifts
+
+cross-campaign sweeps audit + M193 reversal verify + M190 rename ADR amendment + _temporal.py case-fix caller audit + .vault-scratch cleanup
+
+- [ ] `W08.P35.S185` - Remove .vault-scratch bound_casilla_sweep.json from git tracking and add path to gitignore; `.vault-scratch/`.
+- [ ] `W08.P35.S186` - Re-audit M193 _total suffix conclusion against M180 real-corpus extraction behaviour or document remaining uncertainty inline; `src/aeat/_data/registry/aeat/modelos/193.toml`.
+- [ ] `W08.P35.S187` - Audit select_revision callers for case-sensitive period expectations regressed by _temporal.py case-insensitive comparison fix; `src/aeat/domain/calculations/registry/_temporal.py`.
+- [ ] `W08.P35.S188` - Author ADR amendment recording M190 revision rename rationale 2025-y-siguientes to 2024-y-siguientes year_from=2024; `.vault/adr/2026-05-21-declaracion-extraction-architecture-adr.md`.
+- [ ] `W08.P35.S189` - Document cross-campaign plan-doc attribution scatter and consolidate where reasonable; `.vault/plan/`.
+
+### Phase `W08.P36` - LOW-severity housekeeping
+
+_generate.py PDF determinism + suite scope discipline + gate surface generalisation
+
+- [ ] `W08.P36.S190` - Investigate and fix _generate.py PDF metadata determinism eliminate rolling fixture-regen sweep churn; `src/aeat/tests/fixtures/justificantes/_generate.py`.
+- [ ] `W08.P36.S191` - Survey borrador_pdf justificante_pdf export_record official_workbook surfaces for analogous silent-failure class extend gate where warranted; `src/aeat/domain/calculations/registry/_validate_extraction_profiles.py`.
+
+### Phase `W08.P37` - Gap-test brittleness fix
+
+assert on typed exception attributes instead of message text
+
+- [ ] `W08.P37.S192` - Restructure M111 M130 M131 gap tests to assert on typed exception attributes failure_mode missing tuple instead of message text; `src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
