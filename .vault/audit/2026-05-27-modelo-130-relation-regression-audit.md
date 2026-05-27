@@ -302,3 +302,46 @@ The four sweeps absorbed my campaign edits cleanly with no
 detected semantic drift. Trust-but-verify discharged. The
 shared-worktree absorption pattern is operating as documented;
 no rollback required.
+
+---
+
+## P07.S44 finding: tautology gate elevation strategy
+
+The hand-summed-aggregation gate at
+`src/aeat/domain/calculations/registry/test_tautology_gate.py::test_no_hand_summed_aggregation_tests_across_codebase`
+runs in ~2 seconds in isolation. The gate kept re-firing during
+P06 and P07 because new tests with the pattern landed from
+parallel campaigns; the gate caught them at full-suite-gate
+time, not at authoring time.
+
+**Pre-commit hook elevation is rejected** per the user's
+documented stance (memory note `prek_disarmed`: pre-commit
+hooks are permanently off because prek's stash/pop pattern
+destroys files in the shared worktree).
+
+**Ruff plugin** would require authoring a custom ruff rule
+(rust+config). High-cost for one gate; out of scope for a
+hardening Step.
+
+**Adopted strategy**: the gate is already fast enough (~2s) to
+include in any pre-flight subset a dev runs locally. Documented
+the explicit invocation in this audit as the recommended
+authoring-time check:
+
+```
+uv run --no-sync pytest \
+  src/aeat/domain/calculations/registry/test_tautology_gate.py::test_no_hand_summed_aggregation_tests_across_codebase \
+  -q
+```
+
+Devs should run this command after authoring any aggregation
+test. Operational discipline replaces process gate; the cost
+of the failure mode (CI re-fire on long full-suite) is bounded
+because the gate fires within 2 seconds of running the named
+test.
+
+The gate's defect-detection logic is unchanged; only the
+authoring-time-feedback path is documented. A future
+infrastructure investment (ruff plugin) is recommended once the
+project has enough custom gates to justify the rust+config
+overhead.
