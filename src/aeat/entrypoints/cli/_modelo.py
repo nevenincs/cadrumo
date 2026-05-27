@@ -832,6 +832,33 @@ def _validate_m184_share_sum(rows: tuple[ModeloDetailRow, ...]) -> None:
         )
 
 
+def _validate_m347_threshold(rows: tuple[ModeloDetailRow, ...]) -> None:
+    """Raise BadParameter when any M347 contraparte row is below the €3,005.06 threshold.
+
+    RD 1065/2007 art. 31.1: only counterparties with annual operations exceeding
+    €3,005.06 must be declared.  The check applies per-row, not as a sum across
+    rows, because each row is one declared counterparty.
+    """
+
+    contraparte_rows = [r for r in rows if isinstance(r, Modelo347ContraparteRow)]
+    for row in contraparte_rows:
+        total = row.importe_total
+        if total <= M347_THRESHOLD_EUR:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.row_m347_below_threshold",
+                    default=(
+                        f"M347 contraparte row (nif={row.nif!r}): importe total {total} "
+                        f"does not exceed the €{M347_THRESHOLD_EUR} threshold "
+                        f"required by RD 1065/2007 art. 31.1"
+                    ),
+                    nif=row.nif,
+                    total=str(total),
+                    threshold=str(M347_THRESHOLD_EUR),
+                )
+            )
+
+
 @bindings_app.command("list", help=tr("cli.app.modelo.bindings.list_help"))
 def bindings_list(
     ctx: typer.Context,
@@ -3038,6 +3065,7 @@ def work_calculate(
     detail_rows: tuple[ModeloDetailRow, ...] = tuple(_parse_row_spec(spec) for spec in (row or ()))
     if detail_rows:
         _validate_m184_share_sum(detail_rows)
+        _validate_m347_threshold(detail_rows)
 
     try:
         revision = calculate_modelo_revision_from_bucket_aggregation(

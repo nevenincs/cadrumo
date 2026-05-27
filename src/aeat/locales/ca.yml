@@ -982,12 +982,20 @@ cli:
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184) o ''vinculada'' (operació vinculada M232). Repetir per afegir més
-          files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
-          Exemple M232: --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador
+          intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir
+          més files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. Exemple M349: --row ''operador codigo_pais=DE
+          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
           han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
+        row_m347_below_threshold: 'M347 fila contraparte (nif={nif}): importe total
+          {total} no supera el llindar de €{threshold} exigit per RD 1065/2007 art.
+          31.1'
+        row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincideix
+          amb el format NIF-IVA esperat per al país {pais} (Directiva 2006/112/CE
+          Annex XI)'
         row_unknown_type: 'Tipus de fila --row {row_type!r} no reconegut; tipus suportats:
           {supported}.'
         row_validation_error: 'Validació fallida per a la fila --row tipus {row_type!r}:
@@ -2719,6 +2727,7 @@ errors:
       amb el resum anual.
     stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
       acceptable.
+    fail_observability_run_trace_persistence: 'El magatzem de traces d''execució no ha pogut completar una operació del sistema de fitxers.'
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   identity:
