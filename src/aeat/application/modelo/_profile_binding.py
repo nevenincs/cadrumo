@@ -152,6 +152,50 @@ def _inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 
+def _inject_derived_family_facts(
+    fact_index: dict[str, ProfileFactValue],
+    filing_year: int,
+) -> None:
+    """Inject computed Art. 81 bis guardería integers into *fact_index* in-place.
+
+    When ``renta_family.descendiente.{n}.birth_date`` facts are present the
+    count of children whose age at year-end is < 3 (Art. 58.3 LIRPF) is
+    computed and stored as ``renta_family.descendientes_menores_3_{year}``.
+
+    This function is idempotent: keys already present are not overwritten.
+    Only the 2024 filing year is handled; other years are ignored until a
+    dedicated binding is declared.
+    """
+
+    if filing_year != 2024:
+        return
+
+    menores_key = "renta_family.descendientes_menores_3_2024"
+    if menores_key in fact_index:
+        return
+
+    # Reconstruct per-descendant birth_dates from stored facts.
+    count_menores = 0
+    idx = 0
+    while True:
+        birth_raw = fact_index.get(f"renta_family.descendiente.{idx}.birth_date")
+        if birth_raw is None:
+            break
+        convivencia_raw = fact_index.get(f"renta_family.descendiente.{idx}.convivencia", "true")
+        convive = str(convivencia_raw).lower() not in ("false", "0")
+        if convive:
+            try:
+                birth = date.fromisoformat(str(birth_raw))
+                age_at_year_end = filing_year - birth.year
+                if age_at_year_end < 3:
+                    count_menores += 1
+            except (ValueError, TypeError):
+                pass
+        idx += 1
+
+    fact_index[menores_key] = Decimal(count_menores)
+
+
 def _decimal_value(binding_id: str, value: object) -> Decimal:
     # Boolean-typed profile facts arrive as Python ``bool`` now that
     # ``_profile_fact_index`` preserves the typed value. ``bool`` is a
@@ -245,6 +289,7 @@ def resolve_profile_sourced_bindings(
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     fact_index = _profile_fact_index(record, resolved_schema)
     _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
+    _inject_derived_family_facts(fact_index, snapshot.filing_year)
     enum_bindings = enum_consumed_binding_ids(snapshot.revision)
 
     decimal_values: dict[str, Decimal] = {}

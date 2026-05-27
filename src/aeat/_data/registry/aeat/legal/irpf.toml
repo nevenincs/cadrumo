@@ -194,6 +194,26 @@ required_text = [
     "trimestres anteriores del mismo año",
 ]
 
+[legal."rd-439-2007:art-110-3-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/rd-439-2007.json#art-110-3-b"
+document_id = "BOE-A-2007-6820"
+article = "110.3.b"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a110"
+published_at = 2007-03-31
+effective_from = 2007-03-31
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Exención de presentar M130 cuando las retenciones e ingresos a cuenta del trimestre (y anteriores del año) superen el 70% de los rendimientos íntegros del mismo período. Autónomo exento de pago fraccionado."
+required_text = [
+    "70 por ciento",
+    "retenciones e ingresos a cuenta",
+    "rendimientos íntegros",
+]
+
 [legal."orden-eha-586-2011:art-1"]
 evidence_tier = "legal_authority"
 authority = "boe"

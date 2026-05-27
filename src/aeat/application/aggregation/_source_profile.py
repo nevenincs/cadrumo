@@ -56,6 +56,7 @@ class ProfileSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=result.binding_values,
             enum_binding_values=result.enum_binding_values,
+            date_binding_values=result.date_binding_values,
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind="profile",

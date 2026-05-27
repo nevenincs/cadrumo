@@ -2271,7 +2271,59 @@ def payable_invoice_add(
     iva_amount: str = typer.Option("0", "--iva-amount"),
     total_amount: str = typer.Option("0", "--total-amount"),
     notes: str = typer.Option("", "--notes"),
+    country_code: str | None = typer.Option(
+        None,
+        "--country-code",
+        help=tr(
+            "cli.app.ledger.payable_invoice.country_code_help",
+            default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
+        ),
+    ),
+    eu_vat_id: str | None = typer.Option(
+        None,
+        "--eu-vat-id",
+        help=tr(
+            "cli.app.ledger.payable_invoice.eu_vat_id_help",
+            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+        ),
+    ),
+    operation_type: str | None = typer.Option(
+        None,
+        "--operation-type",
+        help=tr(
+            "cli.app.ledger.payable_invoice.operation_type_help",
+            default=(
+                "M349 operation type: E entrega, S servicios, T triangular,"
+                " R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea."
+            ),
+        ),
+    ),
 ) -> None:
+    from ...application.ledger._business_operation_invoice import (
+        BusinessOperationInvoiceInputError,
+        IntracomOperationType,
+        validate_eu_vat_id,
+    )
+
+    validated_vat_id: str | None = None
+    if eu_vat_id is not None:
+        try:
+            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+        except BusinessOperationInvoiceInputError as exc:
+            raise _bad(str(exc)) from exc
+    parsed_operation_type: IntracomOperationType | None = None
+    if operation_type is not None:
+        try:
+            parsed_operation_type = IntracomOperationType(operation_type.upper())
+        except ValueError:
+            valid = ", ".join(t.value for t in IntracomOperationType)
+            raise _bad(
+                tr(
+                    "cli.app.ledger.payable_invoice.operation_type_invalid",
+                    default=f"--operation-type must be one of: {valid}",
+                    valid=valid,
+                )
+            ) from None
     bucket_id = _ratios_bucket_id()
     result = _payable_invoice_service().add(
         bucket_id=bucket_id,
@@ -2285,6 +2337,9 @@ def payable_invoice_add(
         iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
+        country_code=country_code,
+        eu_vat_id=validated_vat_id,
+        operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
@@ -2428,7 +2483,59 @@ def collectible_invoice_add(
     iva_amount: str = typer.Option("0", "--iva-amount"),
     total_amount: str = typer.Option("0", "--total-amount"),
     notes: str = typer.Option("", "--notes"),
+    country_code: str | None = typer.Option(
+        None,
+        "--country-code",
+        help=tr(
+            "cli.app.ledger.collectible_invoice.country_code_help",
+            default="Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations).",
+        ),
+    ),
+    eu_vat_id: str | None = typer.Option(
+        None,
+        "--eu-vat-id",
+        help=tr(
+            "cli.app.ledger.collectible_invoice.eu_vat_id_help",
+            default="Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations.",
+        ),
+    ),
+    operation_type: str | None = typer.Option(
+        None,
+        "--operation-type",
+        help=tr(
+            "cli.app.ledger.collectible_invoice.operation_type_help",
+            default=(
+                "M349 operation type: E entrega, S servicios, T triangular,"
+                " R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea."
+            ),
+        ),
+    ),
 ) -> None:
+    from ...application.ledger._business_operation_invoice import (
+        BusinessOperationInvoiceInputError,
+        IntracomOperationType,
+        validate_eu_vat_id,
+    )
+
+    validated_vat_id: str | None = None
+    if eu_vat_id is not None:
+        try:
+            validated_vat_id = validate_eu_vat_id(eu_vat_id)
+        except BusinessOperationInvoiceInputError as exc:
+            raise _bad(str(exc)) from exc
+    parsed_operation_type: IntracomOperationType | None = None
+    if operation_type is not None:
+        try:
+            parsed_operation_type = IntracomOperationType(operation_type.upper())
+        except ValueError:
+            valid = ", ".join(t.value for t in IntracomOperationType)
+            raise _bad(
+                tr(
+                    "cli.app.ledger.collectible_invoice.operation_type_invalid",
+                    default=f"--operation-type must be one of: {valid}",
+                    valid=valid,
+                )
+            ) from None
     bucket_id = _ratios_bucket_id()
     result = _collectible_invoice_service().add(
         bucket_id=bucket_id,
@@ -2442,6 +2549,9 @@ def collectible_invoice_add(
         iva_amount=_parse_required_decimal(iva_amount, label="iva-amount"),
         total_amount=_parse_required_decimal(total_amount, label="total-amount"),
         notes=notes,
+        country_code=country_code,
+        eu_vat_id=validated_vat_id,
+        operation_type=parsed_operation_type,
     )
     payload = _business_invoice_payload(result.record)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)

@@ -23,13 +23,14 @@ MutatingNounGroupContract.
 
 from __future__ import annotations
 
+import re
 import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from ...core.config import Settings
 from ...core.errors import AeatError
@@ -48,12 +49,94 @@ class BusinessOperationInvoiceSourceKind(StrEnum):
     COLLECTIBLE_INVOICE = "collectible_invoice"
 
 
+class IntracomOperationType(StrEnum):
+    """M349 intracomunitaria operation type codes per BOE M349 schema.
+
+    E = entrega de bienes, S = prestación de servicios, T = triangular,
+    R = rectificación, A = adquisición de bienes, ADQUISICION_SERVICIOS =
+    adquisición de servicios (code "I"), M = miscelánea.
+    """
+
+    E = "E"
+    S = "S"
+    T = "T"
+    R = "R"
+    A = "A"
+    ADQUISICION_SERVICIOS = "I"
+    M = "M"
+
+
 class BusinessOperationInvoiceInputError(AeatError):
     """Raised when a CLI-supplied input violates the typed contract."""
 
 
 class BusinessOperationInvoiceNotFoundError(AeatError):
     """Raised when a CLI lookup targets a missing record."""
+
+
+# EU VAT-ID format patterns keyed by ISO 3166-1 alpha-2 country code (uppercase).
+# Sources: EU Commission VIES documentation + member-state tax authority publications.
+_EU_VAT_PATTERNS: dict[str, re.Pattern[str]] = {
+    "AT": re.compile(r"^ATU\d{8}$"),
+    "BE": re.compile(r"^BE0\d{9}$"),
+    "BG": re.compile(r"^BG\d{9,10}$"),
+    "CY": re.compile(r"^CY\d{8}[A-Z]$"),
+    "CZ": re.compile(r"^CZ\d{8,10}$"),
+    "DE": re.compile(r"^DE\d{9}$"),
+    "DK": re.compile(r"^DK\d{8}$"),
+    "EE": re.compile(r"^EE\d{9}$"),
+    "ES": re.compile(r"^ES[A-Z0-9]\d{7}[A-Z0-9]$"),
+    "FI": re.compile(r"^FI\d{8}$"),
+    "FR": re.compile(r"^FR[A-Z0-9]{2}\d{9}$"),
+    "GR": re.compile(r"^EL\d{9}$"),
+    "HR": re.compile(r"^HR\d{11}$"),
+    "HU": re.compile(r"^HU\d{8}$"),
+    "IE": re.compile(r"^IE\d{7}[A-Z]{1,2}$"),
+    "IT": re.compile(r"^IT\d{11}$"),
+    "LT": re.compile(r"^LT(\d{9}|\d{12})$"),
+    "LU": re.compile(r"^LU\d{8}$"),
+    "LV": re.compile(r"^LV\d{11}$"),
+    "MT": re.compile(r"^MT\d{8}$"),
+    "NL": re.compile(r"^NL\d{9}B\d{2}$"),
+    "PL": re.compile(r"^PL\d{10}$"),
+    "PT": re.compile(r"^PT\d{9}$"),
+    "RO": re.compile(r"^RO\d{2,10}$"),
+    "SE": re.compile(r"^SE\d{12}$"),
+    "SI": re.compile(r"^SI\d{8}$"),
+    "SK": re.compile(r"^SK\d{10}$"),
+}
+
+
+def validate_eu_vat_id(raw: str) -> str:
+    """Normalise and validate an EU VAT-ID.
+
+    Strips whitespace and hyphens, uppercases, then checks the two-letter
+    country prefix against the per-member-state pattern table.
+
+    Returns the normalised value on success. Raises
+    :class:`BusinessOperationInvoiceInputError` on format mismatch.
+    """
+    normalised = raw.strip().upper().replace(" ", "").replace("-", "")
+    if len(normalised) < 4 or not normalised[:2].isalpha():
+        raise BusinessOperationInvoiceInputError(
+            f"EU VAT-ID {raw!r} must start with a 2-letter EU country code",
+            suggestion="example: DE345678901, FR12345678901",
+        )
+    prefix = normalised[:2]
+    # Greece uses EL prefix in VAT-IDs but GR in ISO 3166-1; map to its pattern.
+    pattern_key = "GR" if prefix == "EL" else prefix
+    pattern = _EU_VAT_PATTERNS.get(pattern_key)
+    if pattern is None:
+        raise BusinessOperationInvoiceInputError(
+            f"EU VAT-ID prefix {prefix!r} does not correspond to an EU member state",
+            suggestion="use one of: " + ", ".join(sorted(_EU_VAT_PATTERNS)),
+        )
+    if not pattern.match(normalised):
+        raise BusinessOperationInvoiceInputError(
+            f"EU VAT-ID {raw!r} does not match the expected format for {prefix}",
+            suggestion=f"pattern: {pattern.pattern}",
+        )
+    return normalised
 
 
 class BusinessOperationInvoice(BaseModel):
@@ -63,6 +146,11 @@ class BusinessOperationInvoice(BaseModel):
     locked source-kind taxonomy values. ``invoice_id`` is the noun-group's
     full_id; mutating verbs accept either ``invoice_id`` or any
     unambiguous prefix per the 2026-05-14 transaction-identity amendment.
+
+    Intracom fields (``country_code``, ``eu_vat_id``, ``operation_type``)
+    are ``None`` for domestic invoices and are set for EU intracomunitaria
+    operations that feed M349 aggregation. Existing records without these
+    fields grandfather in as ``None`` (schema migration per spec §5).
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -80,8 +168,17 @@ class BusinessOperationInvoice(BaseModel):
     iva_amount: Decimal = Field(default=Decimal("0"))
     total_amount: Decimal = Field(default=Decimal("0"))
     notes: str = Field(default="", max_length=2000)
+    # Intracom EU fields — None for domestic invoices.
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    eu_vat_id: str | None = Field(default=None, max_length=20)
+    operation_type: IntracomOperationType | None = Field(default=None)
     created_at: datetime
     updated_at: datetime
+
+    @field_validator("country_code")
+    @classmethod
+    def _normalise_country_code(cls, v: str | None) -> str | None:
+        return v.upper() if v is not None else None
 
     @field_serializer("taxable_base", "iva_amount", "total_amount", "iva_rate", when_used="json")
     def _serialize_decimal(self, value: Decimal | None) -> str | None:
@@ -110,6 +207,9 @@ class BusinessOperationInvoicePatch(BaseModel):
     iva_amount: Decimal | None = Field(default=None)
     total_amount: Decimal | None = Field(default=None)
     notes: str | None = Field(default=None, max_length=2000)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    eu_vat_id: str | None = Field(default=None, max_length=20)
+    operation_type: IntracomOperationType | None = Field(default=None)
 
 
 class BusinessOperationInvoiceResult(BaseModel):
@@ -266,6 +366,9 @@ class _BusinessOperationInvoiceService:
         iva_amount: Decimal = Decimal("0"),
         total_amount: Decimal = Decimal("0"),
         notes: str = "",
+        country_code: str | None = None,
+        eu_vat_id: str | None = None,
+        operation_type: IntracomOperationType | None = None,
         actor: str = "cli",
     ) -> BusinessOperationInvoiceResult:
         now = _now()
@@ -283,6 +386,9 @@ class _BusinessOperationInvoiceService:
             iva_amount=iva_amount,
             total_amount=total_amount,
             notes=notes,
+            country_code=country_code,
+            eu_vat_id=eu_vat_id,
+            operation_type=operation_type,
             created_at=now,
             updated_at=now,
         )
@@ -379,5 +485,7 @@ __all__ = [
     "BusinessOperationInvoiceResult",
     "BusinessOperationInvoiceSourceKind",
     "CollectibleInvoiceService",
+    "IntracomOperationType",
     "PayableInvoiceService",
+    "validate_eu_vat_id",
 ]

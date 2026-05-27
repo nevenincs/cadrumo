@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from pydantic import ValidationError
 
 from ..access_gate import LiveSubmitForbiddenError
 from ..i18n import tr
 from ..i18n._render import UnmatchedPlaceholderError
-from ..observability._errors import RunContextMissingError
+from ..observability._errors import RunContextMissingError, RunTracePersistenceError
 from . import (
     ERROR_REGISTRY,
     ErrorCategory,
@@ -146,6 +148,7 @@ def test_core_error_prefixes_are_grep_stable() -> None:
     for error_factory, expected_category, expected_text_prefix in (
         (LiveSubmitForbiddenError, "LOCKED", "Locked."),
         (RunContextMissingError, "INTERNAL", "Internal."),
+        (lambda: RunTracePersistenceError(operation="test", path=Path("runs")), "FAIL", "Failed."),
     ):
         error = error_factory()
         assert error.code.category.value == expected_category

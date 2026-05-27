@@ -135,6 +135,14 @@ _JOINT_INELIGIBLE = frozenset(
     }
 )
 
+# Situations where conjunta is only valid as monoparental (requires hijos a cargo).
+_MONOPARENTAL_REQUIRED = frozenset(
+    {
+        SituacionFamiliar.SOLTERO,
+        SituacionFamiliar.SEPARADO_DIVORCIADO,
+    }
+)
+
 
 def _check_joint_taxation_situacion_familiar(answers: SetupAnswers) -> WizardCheckFinding:
     # Skip when conjunta is not requested or situacion_familiar is undeclared.
@@ -158,6 +166,31 @@ def _check_joint_taxation_situacion_familiar(answers: SetupAnswers) -> WizardChe
     )
 
 
+def _check_monoparental_requires_hijos(answers: SetupAnswers) -> WizardCheckFinding:
+    # Art. 82.1.2° LIRPF: monoparental unidad familiar requires hijos a cargo.
+    # A soltero/separado/divorciado requesting conjunta without minor children in
+    # the unit cannot form the monoparental unidad familiar — issue a WARNING so
+    # the operator can correct the declaration before filing.
+    if answers.taxation_type != "2" or not answers.situacion_familiar:
+        return WizardCheckFinding(
+            name="monoparental_requires_hijos",
+            severity=WizardCheckSeverity.OK,
+            message_key="wizard.setup.verifier.monoparental_requires_hijos_ok",
+        )
+    sf = answers.situacion_familiar
+    if sf in _MONOPARENTAL_REQUIRED and not answers.family_minor_children_in_unit:
+        return WizardCheckFinding(
+            name="monoparental_requires_hijos",
+            severity=WizardCheckSeverity.WARNING,
+            message_key="wizard.setup.verifier.monoparental_requires_hijos_warning",
+        )
+    return WizardCheckFinding(
+        name="monoparental_requires_hijos",
+        severity=WizardCheckSeverity.OK,
+        message_key="wizard.setup.verifier.monoparental_requires_hijos_ok",
+    )
+
+
 _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
     _check_tax_id_present,
     _check_activity_present,
@@ -165,6 +198,7 @@ _SETUP_CHECKS: tuple[Callable[[SetupAnswers], WizardCheckFinding], ...] = (
     _check_eu_eea_country_consistency,
     _check_obligations_consistency,
     _check_joint_taxation_situacion_familiar,
+    _check_monoparental_requires_hijos,
 )
 
 

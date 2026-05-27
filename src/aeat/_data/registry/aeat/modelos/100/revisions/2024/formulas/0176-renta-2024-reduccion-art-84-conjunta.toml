@@ -2,9 +2,8 @@
 id = "renta-2024-reduccion-art-84-conjunta"
 target = "0461"
 # Art. 84 LIRPF: reducción por tributación conjunta.
-# Tipo 1 (matrimonio, Art. 82.1): declaration_type = 2 AND minor_children_in_unit = 0 → €3.400
-# Tipo 2 (monoparental, Art. 82.2): declaration_type = 2 AND minor_children_in_unit = 1 → €0
-#   (tipo-2 reducción €2.150 flows through Art. 81 into a separate casilla)
+# Tipo 1 (matrimonio, Art. 82.1.1°): declaration_type = 2 AND minor_children_in_unit = 0 → €3.400
+# Tipo 2 (monoparental, Art. 82.1.2°): declaration_type = 2 AND minor_children_in_unit = 1 → €2.150
 # Individual (declaration_type = 1): → €0
 expression = { op = "if_then_else", args = [
     { op = "equal", args = [
@@ -17,7 +16,7 @@ expression = { op = "if_then_else", args = [
             { literal = "0" },
         ] },
         { literal = "3400" },
-        { literal = "0" },
+        { literal = "2150" },
     ] },
     { literal = "0" },
 ] }

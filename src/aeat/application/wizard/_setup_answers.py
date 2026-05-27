@@ -166,6 +166,11 @@ class SetupAnswers(BaseModel):
     country_of_fiscal_residence: str = ""
     """ISO 3166-1 alpha-2 code of the country of fiscal residence.
     Required when ``fiscal_residency`` is ``non_resident_irnr``."""
+    representante_fiscal_nif: str = ""
+    """NIF/NIE of the fiscal representative in Spain.
+    Required for non-EU/EEA non-residents (Art. 47 LGT + Art. 10 TRLIRNR)."""
+    representante_fiscal_nombre: str = ""
+    """Full name of the fiscal representative in Spain."""
 
     # ── notes ────────────────────────────────────────────────────────────
     notes: str = ""
