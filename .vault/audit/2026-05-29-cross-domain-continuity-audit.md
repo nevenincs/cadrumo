@@ -2659,3 +2659,191 @@ for casilla 60.
 |----|------|-------------|
 | FU-W05-A | S278 | Criterio de caja ledger axis (casilla 62): separate step after S94 |
 | FU-W05-B | pre-S91 | Author W05.P24 IVA-classification ADR (D1-D4) before coder starts S91; block S91 on ADR acceptance |
+
+---
+
+## Task #95 — W04.P21.S79-S80 persona re-run grounding
+
+**Date:** 2026-05-27
+
+### Investigation 1 — Marc round-7 `work verify` experience
+
+Marc Carrasco Vidal's round-7 audit (section above, lines ~159-201) did NOT reach
+`work verify` at all. The session was blocked earlier by two defects:
+
+- **R7-D2:** `StoredCalculationDriftError` surfaced as an unhandled traceback on
+  `aeat app modelo work` import. This blocked all `work *` subcommands.
+- **R7-D4:** `ledger import --period 2024T1` failed (ledger import path not feeding
+  the unified period parser).
+
+The round-7 Marc session was stopped at the `modelo work` import crash (R7-D2). It
+never exercised `work calculate`, `work verify`, or `verificado_completo`. S79 must
+therefore re-run from scratch reaching the full `work → calculate → verify` path.
+
+**R7-D2 is now closed** — `StoredCalculationDriftError` was registered in
+`ErrorCode` in `aaec080e7` (S75+S76 commit). Marc's import-crash blocker is gone.
+
+**R7-D4 status:** `ledger import --period` token format inconsistency was noted as
+INCOMPLETE in the round-7 cross-persona summary. It must be confirmed as either
+closed or still present at S79 time; if still present it is a pre-verify blocker
+for the M130 path and must be logged.
+
+### Investigation 2 — Tax-shape recommendation for S79 fresh persona
+
+The S79 brief says "Marc autónomo IT AND fresh persona reaching `work verify`." Two
+distinct personas are called for:
+
+**Marc (repeat):** autónomo IT, Catalan output (`--output-language ca`). Tax shape:
+`actividad_economica = design`, non-zero IRPF income, M130 quarterly obligation
+(since he had W05.P22 M130 income-side resolver landed in S81-S85). Marc exercises
+the full `work → calculate → verify` path on M130. He is the natural fit because:
+
+1. The M130 income-side aggregation resolver (S81-S85) was not yet live when Marc's
+   round-7 session ran — it landed later. S79 confirms it works end-to-end.
+2. The verificado_completo four-layer gate (S72-S77) applies to M130 casilla 02
+   (`required = true` per S73+S74). Marc exercises Layer 1 (missing casilla 02 →
+   refused) and Layer 2 (predicate gate if any M130 predicate is defined).
+3. Marc's round-6 S349 intracom finding: does a Modelo 349 obligation exist alongside
+   M303 and M130? S79 should probe whether `app modelo work list` surfaces M349.
+
+**Fresh persona:** A fresh persona that exercises the provenance re-validation path
+(S210-S211) specifically. The best fit is a _trabajador autónomo with a prior-period
+revision that has been tampered_ — this exercises the drift-detection path directly.
+However, since we cannot literally corrupt storage in a persona testimonial, the
+fresh persona should instead exercise the provenance path via the `--json` output and
+inspect `observations` fields for `legal_refs` and `source_refs` presence.
+
+Recommended fresh persona: **Inés Ortega Castell** (S.A. director, round-7 repeat).
+She has a corporate M200 obligation (not M130/M303), which exercises a different
+casilla cluster. Her S79 run should confirm:
+
+- M200 `work verify` refuses on an empty draft (Layer 1: `required = true` casillas
+  `00501`/`00562` from S73+S74).
+- M200 `work calculate` populates `observations` with typed `CasillaObservation`
+  entries carrying `legal_refs` and `source_refs`.
+- `granted_verificado_completo = false` without the required inputs.
+- `granted_verificado_completo = true` once required inputs are populated.
+- Exit code is 1 on refusal and 0 on success.
+
+### Investigation 3 — Specific verification scenarios to probe
+
+For each persona the S79 testimonial must exercise these four scenarios in sequence:
+
+**Scenario A — empty draft refused:**
+1. `aeat app modelo work create --modelo 130 --period 1T`
+2. `aeat app modelo work calculate <work_unit_id>` (no ledger transactions → all
+   casillas zero or absent)
+3. `aeat app modelo work verify <revision_id>` → must exit 1, output must contain
+   `granted_verificado_completo\tfalse`, must contain at least one
+   `MISSING_REQUIRED_CASILLA` finding citing casilla 02 (M130) or 00501/00562 (M200).
+   Must NOT contain `Traceback`.
+
+**Scenario B — populated draft accepted:**
+1. Import at least one income-side ledger transaction via `app ledger import`.
+2. `aeat app modelo work calculate <work_unit_id>`.
+3. `aeat app modelo work verify <revision_id>` → must exit 0,
+   `granted_verificado_completo\ttrue`.
+
+**Scenario C — `--json` output provenance check:**
+After Scenario B, re-run `work verify <revision_id> --output json` (or check that
+the standard output contains `legal_refs` and `source_refs` fields in the
+`observations` array). The provenance fields must not be empty tuples for the
+computed casilla. This is the S210-S211 surface check — it confirms observations
+survived the export boundary with their provenance intact.
+
+**Scenario D — VERIFICADO_COMPLETO state persistence:**
+After Scenario B succeeds, `aeat app modelo work list --modelo 130` must show the
+revision with `state\tVERIFICADO_COMPLETO`. `aeat app modelo work verify <same_id>`
+re-run must NOT re-verify (state-machine guard: already VERIFICADO_COMPLETO).
+The CLI should surface a `CalculationRevisionStateError`-derived refusal, not a
+traceback.
+
+### S79 Persona Operating Brief
+
+The following is the operating brief for the S79 fresh background-agent dispatch.
+
+---
+
+**W04.P21.S79 Persona Operating Brief**
+
+**Objective:** Re-run the `work → calculate → verify` path on Modelo 130 (Marc,
+autónomo IT) and Modelo 200 (Inés, S.A.) confirming `verificado_completo` is
+refused on empty drafts and granted on populated ones. Surface any residual R7-D4
+or Cluster T regressions.
+
+**Method:** CLI-only. No source code access. Isolated `AEAT_LOCAL_STORAGE_ROOT`
+(use `tmp_path`-style isolation). No live rights. Two personas.
+
+**Persona 1 — Marc Carrasco Vidal (autónomo IT, repeat)**
+- Language: `--output-language ca` on all commands.
+- Tax shape: autónomo IT, actividad_economica = design, fiscal_year = 2026.
+- Setup: `aeat config profile create marc --tax-id 12345678Z --activity design
+  --output-language ca`
+- Probe R7-D4 first: `aeat app ledger import --period 2026T1 <csv>` (note: must use
+  `1T` format, not `2026T1`; if `2026T1` fails, log as R7-D4 still open).
+- Exercise Scenarios A, B, C, D on M130 in sequence.
+- Additionally probe: `aeat app modelo work list --output-language ca` — all labels
+  must be in Catalan, no English leakage.
+- Additionally probe: `aeat app modelo work list --modelo 349` — does a M349
+  obligation surface? Log as informational.
+
+**Persona 2 — Inés Ortega Castell (S.A. director, repeat)**
+- Language: `--output-language es`.
+- Tax shape: sociedad anónima, M200 obligation.
+- Setup: `aeat config profile create ines-sa --tax-id B12345678 --activity consulting
+  --output-language es`
+- Exercise Scenarios A, B, C, D on M200 in sequence.
+- Required casillas to supply in Scenario B: `00501` (base imponible general) and
+  `00562` (cuota íntegra). Supply via `work calculate` with explicit `--casilla`
+  flags or via the full ledger path if available.
+
+**Output format:** A single `.vault/audit/yyyy-mm-dd-cross-domain-continuity-audit.md`
+append (do not create a new file) with:
+- One subsection per persona.
+- Findings as third-level headings labelled BLOCKER / MAJOR / MINOR / CLOSED per
+  the established convention.
+- A cross-persona table at the end mapping finding to step.
+
+**Known open items to confirm closed:**
+- R7-D2 (`StoredCalculationDriftError` traceback on `modelo work`): MUST be closed.
+- Anna D1 (same as R7-D2): MUST be closed.
+- `verificado_completo` Layer 1 refusal on empty M130 draft: MUST work.
+- `verificado_completo` Layer 1 refusal on empty M200 draft: MUST work.
+
+**Known open items to probe (may still be open):**
+- R7-D4 (`ledger import --period 2026T1` format): probe and report.
+- Cluster T (M100 cuota=0): not relevant for M130/M200 — skip for this session.
+- `ledger classify/list/view` silent empty results (R7-D1): probe once per persona.
+
+---
+
+### Investigation 4 — S80 consolidation guidance
+
+**Question: new audit doc or append?**
+
+Append to `2026-05-29-cross-domain-continuity-audit.md`. The established convention
+(round-4 through round-7 all in the same growing document) is to append; a new
+document is only warranted when the audit target is a wholly distinct campaign or
+Wave terminus. S79 is an incremental wave-4 breakpoint re-run within the ongoing
+`cross-domain-continuity` campaign.
+
+**Question: threshold for "expand plan in place" (S80)?**
+
+The plan expansion threshold is:
+
+- 1 or more BLOCKER findings → expand plan in place, add new Steps under the
+  affected Phase or a new Phase, assign to the appropriate Wave.
+- 2 or more MAJOR findings that cluster on the same surface → expand plan in place
+  with a mini-Phase (2-4 Steps).
+- MINOR findings only → record in audit, no plan expansion; sweep into the next
+  applicable Wave's follow-up list.
+- 0 findings (all CLOSED) → write "W04.P21 persona breakpoint: all CLOSED" in audit
+  and proceed to W05 steps.
+
+The plan expansion must follow the vault CLI (`vault plan step add`, `vault plan
+phase add`) — no hand-editing. Step identifiers must be canonical and gap-free.
+
+**S80 output:** A single `vault plan step check` call closing S79, plus a
+`vault plan step check` call closing S80 after the consolidation note is written
+in the audit doc. If plan expansion is triggered, the new Steps are added before
+S80 is closed.
