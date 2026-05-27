@@ -1318,29 +1318,35 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
 #: Modelos that are registry-registered but NOT yet fully supported for
 #: work-unit creation.  The registry entry records legal authority and
 #: period metadata; the full casilla/formula authoring has not yet been
-#: completed.  ``work create`` is refused with a legallygrounded message
-#: that names the obligation, the threshold, and AEAT Sede as the
-#: operative filing surface.
-_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"721"})
+#: completed.  ``work create`` is refused with a legally-grounded message
+#: that names the obligation and AEAT Sede as the operative filing surface.
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"151", "721"})
+
+#: Maps each stub-only modelo code to its dedicated locale key so that the
+#: refusal message cites the correct legal authorities for that modelo.
+_STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
+    "151": "cli.app.modelo.work.create_stub_modelo_151_refused",
+    "721": "cli.app.modelo.work.create_stub_modelo_refused",
+}
 
 
 def _guard_stub_modelo(modelo: str) -> None:
     """Refuse ``work create`` for modelos that are registry stubs only.
 
-    Modelo 721 (declaración informativa sobre monedas virtuales situadas
-    en el extranjero) is registered in the registry with legal authority
-    and period metadata, but the full casilla inventory and calculation
-    engine have not yet been authored.  Without this guard the CLI would
-    silently provision a work unit that cannot be calculated, leaving the
-    taxpayer with no path to a valid filing.
+    Two stubs are currently registered:
 
-    The refusal cites the three governing legal authorities:
-    - Ley 11/2021 Art. 13 / DA 10ª — obligation basis
-    - Orden HFP/887/2023 — form approval and €50.000 threshold
-    - RD 1065/2007 Art. 42 quáter — reglamento operativo
+    - Modelo 721 (declaración informativa sobre monedas virtuales situadas
+      en el extranjero): full casilla inventory and calculation engine not yet
+      authored.  Legal refs: Ley 11/2021 Art. 13 / DA 10ª, Orden HFP/887/2023,
+      RD 1065/2007 Art. 42 quáter.
 
-    Legal refs carried in the error match the registry manifest so the
-    audit trail is grounded in the same authority as the registry itself.
+    - Modelo 151 (régimen especial impatriados, "Ley Beckham"): full casilla
+      inventory and calculation engine not yet authored.  Legal refs:
+      Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
+
+    Without this guard the CLI would silently provision a work unit that
+    cannot be calculated, leaving the taxpayer with no path to a valid filing.
+    Legal refs carried in the error match the registry manifest.
     """
 
     from ._errors import CliRefusedBoundaryError
@@ -1348,21 +1354,10 @@ def _guard_stub_modelo(modelo: str) -> None:
     modelo_code = modelo.strip()
     if modelo_code not in _STUB_ONLY_MODELOS:
         return
+    locale_key = _STUB_MODELO_LOCALE_KEYS[modelo_code]
     raise CliRefusedBoundaryError(
         tr(
-            "cli.app.modelo.work.create_stub_modelo_refused",
-            default=(
-                "Modelo {modelo} está registrado pero no tiene soporte completo "
-                "en esta versión de la aplicación. La declaración informativa "
-                "sobre monedas virtuales situadas en el extranjero (Modelo 721) "
-                "requiere su presentación directamente en la Sede Electrónica de "
-                "la AEAT (sede.agenciatributaria.gob.es). La obligación nace "
-                "cuando el valor agregado de monedas virtuales en el extranjero "
-                "supera €50.000 a 31 de diciembre (Orden HFP/887/2023). "
-                "Autoridades legales: Ley 11/2021 Art. 13 / DA 10ª, "
-                "Orden HFP/887/2023 (BOE-A-2023-17455), "
-                "RD 1065/2007 Art. 42 quáter."
-            ),
+            locale_key,
             modelo=modelo_code,
         )
     )

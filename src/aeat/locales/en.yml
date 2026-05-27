@@ -762,6 +762,14 @@ cli:
           value of virtual currencies abroad exceeds €50,000 at 31 December (Orden
           HFP/887/2023, BOE-A-2023-17455). Legal authorities: Ley 11/2021 Art. 13 /
           DA 10ª, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
+        create_stub_modelo_151_refused: 'Modelo %{modelo} is registered in the obligation
+          inventory but the full calculation engine (casillas, formulas, BOE file) has
+          not yet been implemented in this version. The special impatriates regime
+          (Ley Beckham) — Art. 93 LIRPF (Ley 35/2006) and Arts. 113-120 RIRPF
+          (RD 439/2007) — requires filing Modelo 151 directly at the AEAT Sede
+          Electrónica: sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml
+          (Orden EHA/2887/2008, BOE-A-2008-16237). Legal authorities: Ley 35/2006
+          Art. 93, RD 439/2007 Arts. 113-120, Orden EHA/2887/2008.'
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.

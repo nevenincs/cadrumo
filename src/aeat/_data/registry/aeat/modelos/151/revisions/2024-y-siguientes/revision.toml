@@ -1,0 +1,12 @@
+[revisions."2024-y-siguientes"]
+label = "Modelo 151 ejercicios 2024 y siguientes (Orden EHA/2887/2008 y actualizaciones)"
+valid_from = 2008-01-01
+period_selector = { year_from = 2008, periods = ["0A"] }
+legal_refs = [
+    "ley-35-2006:art-93",
+    "rd-439-2007:art-113",
+]
+source_refs = [
+    "aeat-modelo-151-procedure",
+    "boe-modelo-151-form",
+]

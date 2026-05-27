@@ -829,6 +829,14 @@ cli:
           neix quan el valor agregat supera €50.000 el 31 de desembre (Orden HFP/887/2023,
           BOE-A-2023-17455). Autoritats legals: Llei 11/2021 Art. 13 / DA 10ª,
           Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
+        create_stub_modelo_151_refused: 'El model %{modelo} està registrat a l''inventari
+          d''obligacions però el motor de càlcul complet (caselles, fórmules, fitxer BOE)
+          encara no ha estat implementat en aquesta versió. El règim especial d''impatriats
+          (Llei Beckham) — Art. 93 LIRPF (Llei 35/2006) i Arts. 113-120 RIRPF
+          (RD 439/2007) — exigeix la presentació del Model 151 directament a la Seu
+          Electrònica de l''AEAT: sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml
+          (Orden EHA/2887/2008, BOE-A-2008-16237). Autoritats: Llei 35/2006 Art. 93,
+          RD 439/2007 Arts. 113-120, Orden EHA/2887/2008.'
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
