@@ -88,4 +88,4 @@ before any further code or TOML edits land.
 - [x] `P07.S21` - Refresh the committed-corpus fragmentation target list from current line-count, revision-count, and layout-mode evidence before selecting the next modelo split; `src/aeat/_data/registry/aeat/modelos`.
 - [x] `P07.S22` - Decide whether M100 needs only physical fragments or a compile-time template authoring layer; create a new ADR before any template support is implemented; `.vault/adr`.
 - [x] `P07.S23` - Keep validator-module reviewability under the P05 baseline; if a package-level validator boundary is needed, record the public-export compatibility plan before moving modules; `src/aeat/domain/calculations/registry`.
-- [ ] `P07.S24` - Research a generic casilla continuity/evolution contract for non-overlapping annual revisions before any M100 template-expansion ADR; `.vault/research`.
+- [x] `P07.S24` - Research a generic casilla continuity/evolution contract for non-overlapping annual revisions before any M100 template-expansion ADR; `.vault/research`.
