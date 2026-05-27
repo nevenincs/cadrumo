@@ -23,6 +23,7 @@ from ....core.config import (
     load_settings,
     settings_for_active_profile_bucket,
 )
+from ._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .errors import StorageValidationError
 from .master_key._active_session import _active_session
 
@@ -123,7 +124,7 @@ class StorageRuntime(BaseModel):
             aeat_active_profile=self.bucket_id,
         )
         engine = get_engine(settings)
-        return SecureObjectRepository(engine=engine)
+        return SecureObjectRepository(engine=engine, namespace_registry=STORAGE_NAMESPACE_REGISTRY)
 
     def _require_current_active_session(self) -> None:
         """Refuse repository construction when the live session drifted."""

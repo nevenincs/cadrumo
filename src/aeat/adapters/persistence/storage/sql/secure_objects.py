@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from .....core.classification import SensitivityClass
 from .....core.logging import get_logger
+from .._namespace_registry import StorageHierarchyRegistry
 from ..crypto._encrypted_columns import decrypt_encrypted_bytes_column
 from ..errors import (
     ClassificationError,
@@ -161,8 +162,14 @@ class SecureObjectDecryptabilityRow(BaseModel):
 class SecureObjectRepository:
     """Repository over encrypted byte objects stored in the primary database."""
 
-    def __init__(self, *, engine: Engine | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        engine: Engine | None = None,
+        namespace_registry: StorageHierarchyRegistry | None = None,
+    ) -> None:
         self._engine = engine or get_engine()
+        self._namespace_registry = namespace_registry
         # `inspect(mapped_class).local_table` is a `Table` at runtime, but the
         # SQLAlchemy stubs widen its declared type to `FromClause` (which lacks
         # `.create`). Cast through `Table` so pyrefly resolves the method.
@@ -171,6 +178,12 @@ class SecureObjectRepository:
         local_table = inspect(_orm.SecureObjectRow).local_table
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
+
+    @property
+    def namespace_registry(self) -> StorageHierarchyRegistry | None:
+        """Return the namespace registry bound to this repository, if any."""
+
+        return self._namespace_registry
 
     def _check_session_freshness(self) -> None:
         """Refuse the operation when the active session has crossed its idle deadline.
