@@ -1,0 +1,27 @@
+---
+tags:
+  - "#audit"
+  - "#finding-coverage"
+date: "2026-05-27"
+related:
+  - "[[2026-05-27-eva-cli-testimonial-audit]]"
+  - "[[2026-05-27-david-cli-testimonial-audit]]"
+  - "[[2026-05-27-khalid-cli-testimonial-audit]]"
+  - "[[2026-05-27-lourdes-cli-testimonial-audit]]"
+  - "[[2026-05-27-sergio-cli-testimonial-audit]]"
+  - "[[2026-05-27-yara-cli-testimonial-audit]]"
+  - "[[2026-05-27-mateo-cli-testimonial-audit]]"
+  - "[[2026-05-27-olivia-cli-testimonial-audit]]"
+  - "[[2026-05-27-nuria-cli-testimonial-audit]]"
+  - "[[2026-05-27-pedro-cli-testimonial-audit]]"
+  - "[[2026-05-27-carla-cli-testimonial-audit]]"
+  - "[[2026-05-27-aitor-cli-testimonial-audit]]"
+  - "[[2026-05-27-marcos-cli-testimonial-audit]]"
+  - "[[2026-05-27-diego-cli-testimonial-audit]]"
+  - "[[2026-05-27-ines-cli-testimonial-audit]]"
+  - "[[2026-05-27-ramon-cli-testimonial-audit]]"
+  - "[[2026-05-27-khadija-cli-testimonial-audit]]"
+  - "[[2026-05-27-felipe-cli-testimonial-audit]]"
+  - "[[2026-05-27-maria-cli-testimonial-audit]]"
+  - "[[2026-05-27-mikel-cli-testimonial-audit]]"
+---
