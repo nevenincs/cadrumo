@@ -2248,3 +2248,152 @@ The duplication follow-up is a quality note, not a blocking issue.
 | FU-S253-A | — | Commit message inaccuracy: "EphemeralMasterKeyProvider" in `cf7775ebe` is stale since S208 file-backend change |
 | FU-S244 | S273 | Migrate remaining 7 Category B files (includes S244 M202 modality must-fix) |
 | FU-S274-A | S275 | Centralise `counterparty or ""` coercion into a `display_counterparty` property on the domain `TransactionRaw` model; retire two identical call-site coercions |
+
+---
+
+## Task #85 — W06.P28.S104-S107 bundled-export (af81954a6 + 92df99bad)
+
+**Review date:** 2026-05-27
+
+### Scope
+
+Two commits: `af81954a6` (S104-S107: schema v2 extension + serialiser + deserialiser
++ roundtrip test) and `92df99bad` (exec records + plan closure). Reviewed against
+`2026-05-27-profile-portability-adr.md` D1–D5.
+
+### D1 — bundle content (four typed tuple fields, `bundle_schema_version=2`)
+
+`UserProfilePortableExport` in `src/aeat/domain/user_profile/_values.py` gains four
+fields — `work_units`, `ledger_transactions`, `calculation_revisions`,
+`filing_records` — all typed as `tuple[DomainModel, ...]` defaulting to `()`.
+`bundle_schema_version` default changed from 1 to 2. The v1 import path remains
+reachable because all four fields default to empty tuples (v1 documents omit them;
+pydantic fills the defaults on parse). **PASS.**
+
+### D2 — no encrypted material in bundle
+
+`serialize_profile_bundle` reads from live bucket repositories, which return
+decrypted domain-model instances. The function assembles only pydantic domain models
+into `UserProfilePortableExport`; no DEK/KEK blobs, no `SecureObjectRecord` wrappers,
+no raw cipher bytes are present in the bundle. `deserialize_profile_bundle` writes
+via the standard repository save paths, which re-encrypt under the target bucket DEK.
+**PASS.**
+
+### D3 — typed provenance throughout; no `dict[str, Any]`; no `exclude_none=True`
+
+`serialize_profile_bundle` passes domain-model tuples directly into the pydantic
+constructor; no `dict[str, Any]` intermediates. `config_profile_export` writes the
+bundle via `bundle.model_dump_json(indent=2)` — the standard pydantic JSON emitter
+with no `exclude_none` or `exclude_unset` flags, which is correct: `None` slots must
+survive the boundary to distinguish "explicitly null" from "field absent". The import
+path restores the bundle via `UserProfilePortableExport.model_validate_json(...)`,
+preserving all pydantic types. **PASS.**
+
+Individual repository saves in `_bundle.py` use pydantic domain models directly
+(`upsert_work_unit`, `upsert_calculation_revision`, etc.) — no raw dict intermediates.
+**PASS.**
+
+### D4 — version-constant at import boundary; v1 importable
+
+`SUPPORTED_BUNDLE_SCHEMA_VERSIONS = frozenset({1, 2})` lives at module level in
+`src/aeat/application/user_profile/_bundle.py`. `deserialize_profile_bundle` checks
+`bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS` before any
+writes and raises `UnsupportedBundleSchemaVersionError` on a miss. The CLI helper
+`_validate_bundle_schema_version` imports and re-uses the same frozenset, so the
+guard fires before pydantic model construction when the version constant is extended
+later. v1 bundles short-circuit in `deserialize_profile_bundle` and return without
+writing financial-history objects (the caller handles profile-record provisioning
+independently). **PASS.**
+
+### D5 — two-tier collision guard; bundle `profile_id` preserved
+
+`config_profile_import` implements:
+
+- Tier 1: `read_profile_bucket_by_id(bundle_profile_id) is not None` → refuse with
+  `CliRefusedBoundaryError` citing "already registered".
+- Tier 2: `read_profile_bucket(target_label)` not None and its `bucket_id` differs
+  from the bundle UUID → refuse citing "label taken" + `--label` recovery hint.
+- Provisional UUID preserved via `_atomic_create_profile(..., profile_id=bundle_profile_id)`.
+
+**PASS.** One observation: Tier 1 is checked before the `_atomic_create_profile`
+call, but `ProfileAlreadyRegisteredError` is also caught downstream — making the Tier
+1 explicit guard technically redundant. The guard is valuable as an early-exit with
+a user-facing message, so it should stay; the downstream catch is correct insurance
+if the guard is ever removed. No action required.
+
+### Roundtrip test — ADR D3 anti-tautology mandate
+
+`test_v2_bundle_export_import_roundtrip` in
+`src/aeat/entrypoints/cli/test_profile_export_roundtrip.py`:
+
+- Uses `isolated_profile_storage_root` — no unsecured-backend monkeypatches. Real
+  file-backend master-key provider session. **PASS.**
+- Seeds all four financial-history categories: work unit via `create_work_unit`,
+  ledger transaction via real CLI `app ledger import`, calculation revision and filing
+  record via real repository paths. **PASS.**
+- Asserts strict pydantic equality for all four tuples (`==`), not string-shape
+  checks. **PASS.**
+- Checks typed provenance separately: `computed.legal_refs == ("Ley 37/1992 art. 90",)`
+  and `source_refs == ("aeat-modelo-303-instrucciones-2026",)`. **PASS.**
+- D5: asserts `imported_bucket_id == source_bucket_id`. **PASS.**
+- Import uses a second `isolated_profile_storage_root` nested context so source and
+  target are independent storage roots. **PASS.**
+
+`test_v2_bundle_anti_tautology_legal_refs_mutation`:
+
+- Exports a bundle, mutates `observations[0].legal_refs[0]` in the raw JSON to
+  `"MUTATED-legal-ref"`, then calls `UserProfilePortableExport.model_validate_json`
+  on the mutated payload.
+- If pydantic accepts the mutated payload, asserts that the mutated revision's
+  `observations != original_bundle_revision.observations`. If pydantic rejects it,
+  `ValidationError` is caught — both outcomes satisfy the anti-tautology mandate.
+- The `assert mutated` gate confirms the fixture always produces at least one
+  observation with `legal_refs`, preventing the mutation path from silently skipping
+  due to an empty fixture. **PASS.**
+
+D5 collision tests (`test_import_refuses_uuid_collision`,
+`test_import_label_collision_different_uuid_is_refused`) exercise the two-tier guard
+through the real CLI path. **PASS.**
+
+### Issues
+
+**MINOR — `_import_ledger_transactions` uses `dict[str, object]` intermediate.**
+Lines 155-157 in `_bundle.py`:
+
+```python
+merged: dict[str, object] = dict(existing.transactions)
+for txn in bundle.ledger_transactions:
+    merged[txn.transaction_id] = txn
+repo.save(TransactionCatalogue(transactions=merged))
+```
+
+The `merged` dict is typed `dict[str, object]`, not `dict[str, Transaction]`. This
+bypasses D3's "no `dict[str, Any]` intermediate" in spirit. The type resolves at
+runtime because `TransactionCatalogue.transactions` accepts a typed mapping, but the
+declared annotation is weaker than the actual content. The other three categories use
+typed `upsert_*` helpers that avoid this. ADR D3 is not strictly violated (no
+`dict[str, Any]`, and the `TransactionCatalogue` constructor validates at boundary),
+but the inconsistency should be resolved: annotate `merged` as `dict[str, Transaction]`
+or extract an `upsert_transaction` helper matching the pattern used by the other three
+categories. Logged as FU-S104-A.
+
+### Verdict
+
+| Decision | Status |
+|----------|--------|
+| D1 — four typed fields, v2 default | PASS |
+| D2 — no encrypted material | PASS |
+| D3 — typed pydantic throughout, no `exclude_none` | PASS (minor: `_import_ledger_transactions` `dict[str, object]`) |
+| D4 — version constant at import boundary, v1 importable | PASS |
+| D5 — two-tier collision guard, UUID preserved | PASS |
+| Roundtrip test — real adapter, strict equality | PASS |
+| Anti-tautology proof — mutation surfaces inequality | PASS |
+
+**Overall: APPROVE.** ADR `2026-05-27-profile-portability-adr.md` status flips to
+`accepted`. One follow-up (FU-S104-A) logged; does not block the step.
+
+### Follow-ups
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-S104-A | S277 | Annotate `merged` in `_import_ledger_transactions` as `dict[str, Transaction]` or extract `upsert_transaction` helper; resolves D3 inconsistency |
