@@ -1245,7 +1245,78 @@ def _work_unit_lines(unit: WorkUnit) -> list[str]:
         lines.append(f"discard_reason\t{unit.discard_reason}")
     if unit.causante_ccaa is not None:
         lines.append(f"causante_ccaa\t{unit.causante_ccaa.value}")
+    lines.extend(_work_unit_plazo_lines(unit))
     return lines
+
+
+def _work_unit_plazo_lines(unit: WorkUnit) -> list[str]:
+    """Return plazo voluntario and extemporaneidad lines for the work unit.
+
+    Appends zero lines when the registry has no deadline window for the
+    unit's (modelo, filing_year, period) combination — a benign data gap
+    that must not surface as an error.  When the plazo is known and
+    already closed, appends recargo Art. 27 LGT information so the
+    operator can see the applicable surcharge before filing.
+    """
+    from ...domain.deadlines._plazo import resolve_filing_closes_on
+    from ...domain.deadlines._recargo import build_recovery_for_overdue
+
+    closes_on = resolve_filing_closes_on(str(unit.modelo), unit.filing_year, unit.period)
+    if closes_on is None:
+        return []
+
+    today = date.today()
+    out: list[str] = [f"plazo_closes_on\t{closes_on.isoformat()}"]
+
+    if today <= closes_on:
+        days_remaining = (closes_on - today).days
+        out.append(
+            tr(
+                "cli.app.modelo.work.plazo_days_remaining",
+                default="days_remaining\t{days_remaining}",
+                days_remaining=days_remaining,
+            )
+        )
+        return out
+
+    days_late = (today - closes_on).days
+    if days_late < 1:
+        return out
+
+    out.append(f"days_overdue\t{days_late}")
+    try:
+        recovery = build_recovery_for_overdue(
+            days_late=days_late,
+            modelo=str(unit.modelo),
+            period=unit.period,
+        )
+    except (ValueError, Exception):  # noqa: BLE001
+        out.append(
+            tr(
+                "cli.app.modelo.work.plazo_vencido_warning",
+                default=(
+                    "AVISO: plazo voluntario vencido. Presenta con recargo "
+                    "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+                ),
+            )
+        )
+        return out
+
+    band = recovery.recargo_band
+    out.extend([
+        f"recargo_band\t{band.id}",
+        f"recargo_pct\t{band.surcharge_pct}",
+        f"recargo_interest_applies\t{band.interest_applies}",
+        f"recargo_legal_ref\t{band.legal_ref}",
+        tr(
+            "cli.app.modelo.work.plazo_vencido_warning",
+            default=(
+                "AVISO: plazo voluntario vencido. Presenta con recargo "
+                "Art. 27 LGT antes de recibir requerimiento de la AEAT."
+            ),
+        ),
+    ])
+    return out
 
 
 _FILING_YEAR_MIN = 2000
@@ -2331,6 +2402,80 @@ def _compute_dt12_reduccion_plan_pensiones(
     return reduccion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+_SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
+
+
+def _resolve_sal_reserva_especial_casilla_id(work_unit_id: str) -> str:
+    """Return the casilla id for the SAL reserva especial dotacion slot.
+
+    Looks up by ``semantic_role`` so it resolves across M200 revision changes.
+
+    Raises :exc:`typer.BadParameter` when no matching casilla is found (e.g.
+    when used against a modelo other than M200).
+    """
+
+    try:
+        revision = _casilla_revision_for_work_unit(work_unit_id)
+    except WorkUnitNotFoundError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    for casilla in revision.casillas:
+        if getattr(casilla, "semantic_role", None) == _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE:
+            return casilla.id
+
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.sal_reserva_casilla_not_found",
+            default=(
+                "--sal-beneficio-neto is not supported for this modelo revision; "
+                "no SAL reserva especial casilla is declared. "
+                "Use --casilla to supply inputs directly."
+            ),
+        )
+    )
+
+
+def _compute_sal_reserva_especial_dotacion(
+    *,
+    beneficio_neto: Decimal,
+    reserva_dotada: Decimal,
+    capital_social: Decimal,
+) -> Decimal:
+    """Compute the Ley 44/2015 Art. 14 SAL/SLL reserva especial dotacion.
+
+    Formula: dotacion = min(beneficio_neto * 10%, cap_headroom), where
+    cap_headroom = max(0, capital_social * 50% - reserva_dotada).
+
+    Once the accumulated reserva equals or exceeds 50% of capital social
+    the dotacion is zero (cap reached). The result is rounded to 2
+    decimal places (money-2 per registry convention).
+
+    Raises :exc:`ValueError` when capital_social is zero or negative,
+    or when any input is negative.
+    """
+
+    if capital_social <= Decimal(0):
+        raise ValueError(
+            f"capital_social must be positive; got {capital_social}"
+        )
+    if beneficio_neto < Decimal(0):
+        raise ValueError(
+            f"beneficio_neto must be non-negative; got {beneficio_neto}"
+        )
+    if reserva_dotada < Decimal(0):
+        raise ValueError(
+            f"reserva_dotada must be non-negative; got {reserva_dotada}"
+        )
+
+    cap = (capital_social * Decimal("0.50")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    headroom = max(Decimal("0.00"), cap - reserva_dotada)
+    dotacion_obligatoria = (beneficio_neto * Decimal("0.10")).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+    dotacion = min(dotacion_obligatoria, headroom)
+    return dotacion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:
     """Parse one ``HIJO_ID=MESES`` token from ``--meses-trabajo-con-hijo-menor-3``.
 
@@ -2590,6 +2735,50 @@ def work_calculate(
             ),
         ),
     ] = None,
+    sal_beneficio_neto: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-beneficio-neto",
+            help=tr(
+                "cli.app.modelo.work.sal_beneficio_neto_help",
+                default=(
+                    "Beneficio neto del ejercicio de la Sociedad Laboral (SAL/SLL) "
+                    "(Ley 44/2015 Art. 14). Se aplica el 10% para calcular la dotación "
+                    "obligatoria a la reserva especial, limitada por el umbral del 50% del "
+                    "capital social. Úsalo junto con --sal-reserva-dotada y --sal-capital-social."
+                ),
+            ),
+        ),
+    ] = None,
+    sal_reserva_dotada: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-reserva-dotada",
+            help=tr(
+                "cli.app.modelo.work.sal_reserva_dotada_help",
+                default=(
+                    "Reserva especial acumulada en ejercicios anteriores (Ley 44/2015 Art. 14). "
+                    "Se usa para comprobar si ya se ha alcanzado el límite del 50% del capital social. "
+                    "Necesario junto con --sal-beneficio-neto y --sal-capital-social."
+                ),
+            ),
+        ),
+    ] = None,
+    sal_capital_social: Annotated[
+        str | None,
+        typer.Option(
+            "--sal-capital-social",
+            help=tr(
+                "cli.app.modelo.work.sal_capital_social_help",
+                default=(
+                    "Capital social de la Sociedad Laboral (Ley 44/2015 Art. 14). "
+                    "Denominador del test del 50%: la dotación se anula cuando la reserva "
+                    "acumulada alcanza el 50% del capital social. "
+                    "Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada."
+                ),
+            ),
+        ),
+    ] = None,
     output_language: str | None = typer.Option(
         None,
         "--output-language",
@@ -2704,6 +2893,44 @@ def work_calculate(
         reduccion_casilla_id = _resolve_reduccion_trabajo_casilla_id(work_unit_id)
         casilla_inputs[reduccion_casilla_id] = dt12_reduccion
 
+    # --sal-beneficio-neto / --sal-reserva-dotada / --sal-capital-social compute
+    # the Ley 44/2015 Art. 14 SAL/SLL reserva especial obligatory dotacion and
+    # inject it into the revision-specific SAL casilla, resolved by semantic_role.
+    # All three flags must be supplied together; partial supply raises BadParameter.
+    sal_supplied = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
+    if any(sal_supplied):
+        if not all(sal_supplied):
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.sal_reserva_incomplete",
+                    default=(
+                        "--sal-beneficio-neto, --sal-reserva-dotada, and "
+                        "--sal-capital-social must all be supplied together."
+                    ),
+                )
+            )
+        try:
+            sal_bn = Decimal(sal_beneficio_neto)  # type: ignore[arg-type]
+            sal_rd = Decimal(sal_reserva_dotada)  # type: ignore[arg-type]
+            sal_cs = Decimal(sal_capital_social)  # type: ignore[arg-type]
+        except (InvalidOperation, ValueError) as exc:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.work.sal_reserva_not_decimal",
+                    default="--sal-* values must be decimals.",
+                )
+            ) from exc
+        try:
+            sal_dotacion = _compute_sal_reserva_especial_dotacion(
+                beneficio_neto=sal_bn,
+                reserva_dotada=sal_rd,
+                capital_social=sal_cs,
+            )
+        except ValueError as exc:
+            raise typer.BadParameter(str(exc)) from exc
+        sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
+        casilla_inputs[sal_casilla_id] = sal_dotacion
+
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
     binding_values: dict[str, Decimal] = {}
     enum_binding_values: dict[str, str] = {}
@@ -2800,10 +3027,12 @@ def work_calculate(
             **modality_payload,
         }
     )
+    plazo_lines = _work_unit_plazo_lines(unit_for_modality)
     lines = [
         "operation\tmodelo.work.calculate",
         *_calculation_revision_lines(revision),
         *modality_lines,
+        *plazo_lines,
         saved_confirmation,
     ]
     _emit_envelope(ctx, command="modelo.work.calculate", result=result, lines=lines)
