@@ -305,6 +305,10 @@ application:
         cannot be imported. Create a fresh work unit on the same modelo, year, and
         period to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
+    findings:
+      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
+        filing M130 this quarter because accumulated withholdings and payments on
+        account for the year represent 70% or more of gross income.'
   overview:
     explain:
       errors:
@@ -366,14 +370,16 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Register a new collectible invoice
-        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
+          EU operations)
         eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices a customer owes you
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered collectible invoices
-        operation_type_help: 'M349 operation type: E supply of goods, S services, T triangular, R rectification,
-          A acquisition of goods, I acquisition of services, M miscellaneous'
+        operation_type_help: 'M349 operation type: E supply of goods, S services,
+          T triangular, R rectification, A acquisition of goods, I acquisition of
+          services, M miscellaneous'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a registered collectible invoice
         update_help: Update collectible invoice details
@@ -420,14 +426,16 @@ cli:
         year_help: Tax year
       payable_invoice:
         add_help: Register a new payable invoice
-        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom
+          EU operations)
         eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices you owe a supplier
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered payable invoices
-        operation_type_help: 'M349 operation type: E supply of goods, S services, T triangular, R rectification,
-          A acquisition of goods, I acquisition of services, M miscellaneous'
+        operation_type_help: 'M349 operation type: E supply of goods, S services,
+          T triangular, R rectification, A acquisition of goods, I acquisition of
+          services, M miscellaneous'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a registered payable invoice
         update_help: Update payable invoice details
@@ -733,6 +741,12 @@ cli:
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
         app_help: Manage the lifecycle of modelo work units
+        autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
+          (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
+          converted to the rental estate. The assistant automatically applies 21%
+          (Art. 90 LISIVA) to compute the VAT charge. Applicable to Modelo 303 only.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be
+          a decimal amount; received: {value}'
         borrador_help: Modelo 100 borrador snapshot id (full or unambiguous prefix).
           Snapshot binding values are used only for registry bindings marked aeat_prefilled;
           caller --binding overrides always take precedence.
@@ -758,6 +772,18 @@ cli:
           or run `aeat app modelo casillas` to identify the correct numeric casilla.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
+        compare_taxation_error: 'Conjunta vs. individual comparison not available:
+          {detail}'
+        compare_taxation_help: 'Compare IRPF cuota under joint (conjunta, Art. 82-84
+          LIRPF) vs. individual filing for an existing Modelo 100 work unit. Runs
+          the registry engine twice — once with declaration_type=2 (conjunta) and
+          once with declaration_type=1 (individual) — over identical profile bindings,
+          and outputs the cuota differential and a recommendation. Ephemeral: no revision
+          is persisted.'
+        compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} —
+          {reason}'
+        compare_taxation_work_unit_not_found: Work unit {work_unit_id} not found;
+          check active units with 'aeat app modelo work list'.
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
@@ -853,6 +879,7 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         name_help: Optional display name for the work unit
         notes_help: Optional notes attached to the filing record
+        output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
           needs.
@@ -866,6 +893,9 @@ cli:
           token. --year and --period are composed separately: pass --year %{year}
           for the filing year and a period token (0A for annual, Qn for a quarter,
           or MM for a month) for --period.'
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: 'WARNING: voluntary filing period expired (Art. 27
+          LGT). File with surcharge before receiving an AEAT notice.'
         prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta is not
           supported for this modelo revision; no Art. 7.h exempt-INSS casilla is declared.
           Use --casilla to supply inputs directly.
@@ -881,6 +911,24 @@ cli:
           relation id; the VALUE is a decimal. Repeat to supply multiple relations.
         relation_not_decimal: 'The --relation value for {key} is not a decimal: {value}.'
         rename_help: Update the display name of a work unit
+        rescate_plan_pensiones_aportaciones_pre_2007_help: Contributions made to the
+          pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration
+          base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.
+        rescate_plan_pensiones_aportaciones_totales_help: Total pension-plan contributions
+          (denominator for the LIRPF transitional provision 12 proration). Required
+          with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-pre-2007.
+        rescate_plan_pensiones_capital_help: Gross lump-sum pension-plan redemption
+          amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007
+          and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates
+          the 40% reduction and injects it into casilla 0011.
+        rescate_plan_pensiones_casilla_not_found: --rescate-plan-pensiones-capital
+          is not supported for this modelo revision; no LIRPF transitional provision
+          12 work-income reduction casilla is declared. Use --casilla to supply inputs
+          directly.
+        rescate_plan_pensiones_incomplete: --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007,
+          and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.
+        rescate_plan_pensiones_not_decimal: --rescate-plan-pensiones-* values must
+          be decimal amounts.
         result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Accepts a workflow run id or a work-unit id.
@@ -906,9 +954,9 @@ cli:
           TYPE FIELD=value [FIELD=value ...]. TYPE is ''miembro'' (M184 attribution
           member), ''vinculada'' (M232 related-party operation), ''operador'' (M349
           intracom operator), or ''contraparte'' (M347 declared counterparty). Repeat
-          to add multiple rows. M184 example: --row ''miembro nif=12345678A
-          porcentaje=40 importe=10000''. M349 example: --row ''operador codigo_pais=DE
-          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
+          to add multiple rows. M184 example: --row ''miembro nif=12345678A porcentaje=40
+          importe=10000''. M349 example: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          clave_operacion=E importe=50000''.'
         row_kv_format_error: --row field {token} must be in KEY=VALUE format.
         row_m184_shares_not_100: 'M184 miembro rows: share percentages must sum to
           exactly 100%; got {total} across {count} rows.'
@@ -916,14 +964,31 @@ cli:
           {total} does not exceed the €{threshold} threshold required by RD 1065/2007
           art. 31.1'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} does not match
-          the expected NIF-IVA format for country {pais} (Council Directive
-          2006/112/EC Annex XI)'
+          the expected NIF-IVA format for country {pais} (Council Directive 2006/112/EC
+          Annex XI)'
         row_unknown_type: '--row type {row_type!r} is not recognised; supported types:
           {supported}.'
         row_validation_error: '--row {row_type!r} failed validation: {error}'
         runs_help: List persisted workflow runs with their run ids, newest first.
           Use a run id with `aeat app modelo work resume`. Local-only; never contacts
           AEAT.
+        sal_beneficio_neto_help: Net profit for the fiscal year of the worker-owned
+          company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate
+          the mandatory special reserve allocation, capped by the 50% share-capital
+          threshold. Use it with --sal-reserva-dotada and --sal-capital-social.
+        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015
+          Art. 14). Denominator for the 50% test: the allocation is zero once accumulated
+          reserve reaches 50% of share capital. Required with --sal-beneficio-neto
+          and --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: --sal-beneficio-neto is not supported for this
+          modelo revision; no worker-owned company special reserve casilla is declared.
+          Use --casilla to supply inputs directly.
+        sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
+          (Law 44/2015 Art. 14). Used to check whether the reserve has already reached
+          50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.
+        sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social
+          must all be supplied together.
+        sal_reserva_not_decimal: --sal-* values must be decimal amounts.
         set_not_decimal: The --set value must be a decimal; got {value}.
         set_override_help: Corrected casilla value with CASILLA=DECIMAL syntax (repeatable;
           at least one required)
@@ -935,31 +1000,9 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
-        plazo_days_remaining: "days_remaining\t{days_remaining}"
-        plazo_vencido_warning: "WARNING: voluntary filing period expired (Art. 27 LGT).\
-          \ File with surcharge before receiving an AEAT notice."
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
-        rescate_plan_pensiones_capital_help: 'Gross lump-sum pension-plan redemption amount (LIRPF transitional provision 12). Use it with --rescate-plan-pensiones-aportaciones-pre-2007 and --rescate-plan-pensiones-aportaciones-totales so the assistant calculates the 40% reduction and injects it into casilla 0011.'
-        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Contributions made to the pension plan up to 31 Dec 2006 (LIRPF transitional provision 12 proration base). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-totales.'
-        rescate_plan_pensiones_aportaciones_totales_help: 'Total pension-plan contributions (denominator for the LIRPF transitional provision 12 proration). Required with --rescate-plan-pensiones-capital and --rescate-plan-pensiones-aportaciones-pre-2007.'
-        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital is not supported for this modelo revision; no LIRPF transitional provision 12 work-income reduction casilla is declared. Use --casilla to supply inputs directly.'
-        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007, and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.'
-        rescate_plan_pensiones_not_decimal: '--rescate-plan-pensiones-* values must be decimal amounts.'
-        sal_beneficio_neto_help: 'Net profit for the fiscal year of the worker-owned company (SAL/SLL, Law 44/2015 Art. 14). The assistant applies 10% to calculate the mandatory special reserve allocation, capped by the 50% share-capital threshold. Use it with --sal-reserva-dotada and --sal-capital-social.'
-        sal_reserva_dotada_help: 'Special reserve accumulated in previous fiscal years (Law 44/2015 Art. 14). Used to check whether the reserve has already reached 50% of share capital. Required with --sal-beneficio-neto and --sal-capital-social.'
-        sal_capital_social_help: 'Share capital of the worker-owned company (Law 44/2015 Art. 14). Denominator for the 50% test: the allocation is zero once accumulated reserve reaches 50% of share capital. Required with --sal-beneficio-neto and --sal-reserva-dotada.'
-        autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties converted to the rental estate. The assistant automatically applies 21% (Art. 90 LISIVA) to compute the VAT charge. Applicable to Modelo 303 only.'
-        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base must be a decimal amount; received: {value}'
-        sal_reserva_casilla_not_found: '--sal-beneficio-neto is not supported for this modelo revision; no worker-owned company special reserve casilla is declared. Use --casilla to supply inputs directly.'
-        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.'
-        sal_reserva_not_decimal: '--sal-* values must be decimal amounts.'
-        compare_taxation_help: 'Compare IRPF cuota under joint (conjunta, Art. 82-84 LIRPF) vs. individual filing for an existing Modelo 100 work unit. Runs the registry engine twice — once with declaration_type=2 (conjunta) and once with declaration_type=1 (individual) — over identical profile bindings, and outputs the cuota differential and a recommendation. Ephemeral: no revision is persisted.'
-        compare_taxation_work_unit_not_found: 'Work unit {work_unit_id} not found; check active units with ''aeat app modelo work list''.'
-        compare_taxation_error: 'Conjunta vs. individual comparison not available: {detail}'
-        compare_taxation_recommendation_line: 'RECOMMENDATION: {recommendation} — {reason}'
-        output_language_help: 'Output language for rendered messages.'
   common:
     errors:
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
@@ -1297,7 +1340,10 @@ cli:
       help: Reset operator-entered configuration scopes
       invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
       requires_yes: Reset is destructive. Re-run with --yes to confirm.
-      scope_help: 'Scope to reset. profile: delete every profile bucket (manifests, DEKs, declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE auth session. data: quarantine unreadable secure-object rows across all namespaces. all: apply profile, auth, and data together.'
+      scope_help: 'Scope to reset. profile: delete every profile bucket (manifests,
+        DEKs, declarations, ledger and invoice reviews). auth: clear the persisted
+        AEAT/SEDE auth session. data: quarantine unreadable secure-object rows across
+        all namespaces. all: apply profile, auth, and data together.'
       yes_help: Explicitly confirm the reset operation
     set:
       help: Assign a value to one configuration key
@@ -1693,12 +1739,12 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    remove_key_help: Dotted locale key to remove.
+    remove_locale_help: Locale code to update.
     scaffold_check_help: Report drift without writing locale files
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
-    remove_locale_help: 'Locale code to update.'
-    remove_key_help: 'Dotted locale key to remove.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose, and --debug are mutually exclusive.
@@ -1944,14 +1990,18 @@ cli:
       part_help: Manual volume (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: List the rules codified in a manual
       section_help: Optional section identifier to show
+      verify_dangling_rule_section_ref: rule %{rule_id} references unknown section
+        %{target}
+      verify_dangling_section_ref: section %{section_id} references unknown section
+        %{target}
+      verify_failed: 'verification failed for %{manual_id}/%{year}/%{part}: %{messages}'
       verify_help: Verify the manual integrity against its contract
+      verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch''
+        to materialise it'
+      verify_missing_translation: 'section %{section_id}: %{field_name} missing translation
+        key'
       view_help: Show a manual structure and, optionally, one section
       year_help: Tax year of the manual (e.g. 2024)
-      verify_missing_translation: 'section %{section_id}: %{field_name} missing translation key'
-      verify_dangling_section_ref: 'section %{section_id} references unknown section %{target}'
-      verify_dangling_rule_section_ref: 'rule %{rule_id} references unknown section %{target}'
-      verify_missing_manifest: '%{manifest_path} is absent; run ''aeat manual fetch'' to materialise it'
-      verify_failed: 'verification failed for %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: Applicability declaration count
       application_link_count: Application link count
@@ -2055,9 +2105,8 @@ cli:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
         --help`. Global flags (`--format json`, `--language en`, `--profile NAME`,
-        `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand,
-        e.g. `aeat --format json app ledger list` (not `aeat app ledger list --format
-        json`).'
+        `--quiet`, `--verbose`, `--debug`) must be placed BEFORE the subcommand, e.g.
+        `aeat --format json app ledger list` (not `aeat app ledger list --format json`).'
       quick_start_heading: Quick start
       quick_start_import: '  3. `aeat app ledger import <bank-statement.csv> --provider
         csv` - add your bank transactions.'
@@ -2547,6 +2596,8 @@ errors:
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
       or loaded.
     fail_normatives_normative_parse: A normative record failed schema validation.
+    fail_observability_run_trace_persistence: The run trace store could not complete
+      a filesystem operation.
     fail_outbound_storage: A storage-provider error occurred.
     fail_outbound_storage_network: The storage service could not be reached. Check
       your internet connection and try again.
@@ -2594,7 +2645,6 @@ errors:
       the annual summary.
     stale_exchange_rate: The only available exchange rate is outside the acceptable
       freshness window.
-    fail_observability_run_trace_persistence: 'The run trace store could not complete a filesystem operation.'
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
   identity:
@@ -3209,9 +3259,9 @@ wizard:
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
       irpf-special-regime:
-        help: IRPF special regime. "general" for most taxpayers. "impatriado" for workers
-          who relocated to Spain and elected the Beckham Law regime (Art. 93 LIRPF),
-          available for the first 6 years after relocation.
+        help: IRPF special regime. "general" for most taxpayers. "impatriado" for
+          workers who relocated to Spain and elected the Beckham Law regime (Art.
+          93 LIRPF), available for the first 6 years after relocation.
       irpf-special-regime-start-date:
         help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
           irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
@@ -3463,7 +3513,8 @@ wizard:
           murcia:
             label: Murcia
       country-of-fiscal-residence:
-        prompt: Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE, FR)
+        prompt: Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE,
+          FR)
       fiscal-residency:
         choices:
           non_resident_irnr:
