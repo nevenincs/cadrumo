@@ -472,3 +472,31 @@ def test_invoice_selector_rejects_retired_source_kind() -> None:
     assert "bad-invoice" in failures[0]
     assert "source 'invoice' is retired" in failures[0]
     assert "collectible_invoice" in failures[0]
+
+
+def test_previous_filing_selector_rejects_removed_relation_field() -> None:
+    """The previous-filing selector no longer accepts a ``relation`` field.
+
+    Historically the field was a runtime-ignored shorthand for documenting
+    the cross-reference relation by id; the runtime resolves relation->
+    binding linkage via ``RelationDefinition.target_binding`` and never
+    consulted the selector value. P07.S32 retired the field as dead schema
+    surface — accepting arbitrary unverified strings was a silent-
+    corruption hazard. The pydantic model now rejects unknown keys under
+    ``extra='forbid'``; passing ``relation`` must surface as a typed
+    diagnostic.
+    """
+
+    binding = _binding(
+        source="previous_filing",
+        selector={
+            "source_modelo": "130",
+            "source_output": "saldo-negativo-fin-periodo",
+            "relation": "atribucion-actividades-economicas",
+        },
+        binding_id="dead-relation-binding",
+    )
+    failures = validate_binding_selector_shape(binding)
+    assert failures, "selector.relation must be rejected by the gate"
+    assert "dead-relation-binding" in failures[0]
+    assert "relation" in failures[0].lower() or "extra" in failures[0].lower()

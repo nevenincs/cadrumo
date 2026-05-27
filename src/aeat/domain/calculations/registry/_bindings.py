@@ -323,13 +323,11 @@ class _PreviousModeloSelector(BaseModel):
     # Two-shape source spec: ``source_casillas`` (plural) carries a
     # tuple of casillas on the source filing for aggregation; the
     # singular ``source_output`` covers the direct-value-copy shape
-    # (one casilla on the source filing, often paired with the
-    # optional ``relation`` cross-reference id). The
+    # (one casilla on the source filing). The
     # ``_validate_source_spec`` model-validator below requires exactly
     # one of the two to be populated.
     source_casillas: tuple[str, ...] = ()
     source_output: str | None = Field(default=None, min_length=1)
-    relation: str | None = Field(default=None, min_length=1)
     # Cap on the absolute year-delta of resolved source anchors. When
     # set, anchors whose implied ``period_year_delta`` is strictly
     # greater than ``max_year_delta`` are dropped from the resolver's
@@ -410,22 +408,18 @@ class _PreviousModeloSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_source_spec(self) -> _PreviousModeloSelector:
-        # Three legal shapes:
+        # Two legal shapes:
         # (a) ``source_casillas`` only — direct aggregation over
         #     declared casillas on the source filing.
-        # (b) ``source_output`` (+ optional ``relation``) — single
-        #     casilla on the source filing, copy or relation-routed.
-        # (c) neither — a relation-only binding where the linked
-        #     ``RelationDefinition`` carries the source-output
-        #     contract (period_alignment, source_periods, etc.).
-        # Shape (c) bindings have ``source_modelo`` set but defer to
-        # the relation declaration for the rest.
+        # (b) ``source_output`` only — single casilla on the source
+        #     filing, copied through the binding pipeline.
+        # The relation->binding linkage is established by
+        # ``RelationDefinition.target_binding``; the selector itself
+        # does not carry a relation-id reference.
         if self.source_casillas and self.source_output is not None:
             raise RegistryValidationError(
                 "previous-filing selector cannot declare both source_casillas and source_output"
             )
-        if self.relation is not None and self.source_output is None:
-            raise RegistryValidationError("previous-filing selector relation requires source_output")
         return self
 
 
