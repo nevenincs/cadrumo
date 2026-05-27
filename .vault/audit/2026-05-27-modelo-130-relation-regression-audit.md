@@ -233,3 +233,72 @@ are recommended:
 The transient FileNotFoundError observed during the campaign
 was correctly identified as race-condition-from-fragmentation,
 not a regression caused by P03 or P07 work.
+
+---
+
+## P07.S43 finding: cross-campaign sweep commits audit
+
+Audited the four sweep commits that absorbed campaign edits:
+
+### `0ba779481` — sweep: cross-campaign auth/sede/formula-runtime WIP + corpus fixture regen
+
+Touched 9 files including:
+- `src/aeat/domain/calculations/registry/_formula_runtime.py`
+  (60 lines): MY P03.S09-S11 work (bound-casilla input rejection
+  with `resolve_bound_casilla_inputs` projection allowance).
+  Diff verified against the campaign intent — no semantic delta.
+- `src/aeat/domain/calculations/registry/test_renta_chain_behaviour.py`
+  (5 lines): MY P06.S25 fixture extension. Verbatim match.
+- Plus corpus fixture regens for M100/M130/M303/M840 (binary PDFs)
+  authored by other agents. Not my files; out of campaign scope.
+
+**Verdict**: NO drift from campaign intent. The sweep absorbed
+my edits cleanly.
+
+### `1f2eb4b7e` — sweep: cross-campaign m130-relation plan + M100 cuota chain construct + 100-drift + M720 + tautology gate + fixture regens + scratch
+
+Touched 12 files. Includes the M130 plan tracker (`vault plan
+step check` re-canonicalisations of my P06 closures) and
+multiple modelo fixture regens.
+
+**Verdict**: NO drift. The plan tracker re-canonicalisations
+preserved my Step-close intent; the modelo fixture regens are
+out of scope.
+
+### `451845d09` — sweep: application overview applicability (cross-campaign final)
+
+1-line edit to `application/overview/_applicability.py`
+swapping a private-import to the public registry surface — the
+exact same edit I made for S24. The sweep landed it before
+mine; no semantic delta.
+
+**Verdict**: NO drift. (The shim was subsequently deleted by
+my P07.S34 — same intent extended.)
+
+### `dc6e6c63d` — exec: step record W05.P24.S91-S95 IVA classification enrichment
+
+Pure documentation: a single `.vault/exec/` step record for an
+unrelated cross-domain-continuity campaign. Did not touch any
+file in my campaign's scope.
+
+**Verdict**: NOT my campaign. Out of scope; included in the
+list only because git history showed it interleaved with my
+commits.
+
+### `42e9cd4dc` — Registry hardening: fragment Modelo 131 revisions
+
+Cross-campaign schema-hardening fragmentation: deleted 4 flat-
+file `M131/revisions/<rev>.toml` files, created the per-domain
+fragment directories. ABSORBED my P02.S08 cap-revision edits
+into the new fragmented files — verified at the time as commit
+`5d069ce6b` cite.
+
+**Verdict**: NO drift. The fragmentation script preserved my
+selector cap additions cleanly into the new file layout.
+
+### Overall
+
+The four sweeps absorbed my campaign edits cleanly with no
+detected semantic drift. Trust-but-verify discharged. The
+shared-worktree absorption pattern is operating as documented;
+no rollback required.
