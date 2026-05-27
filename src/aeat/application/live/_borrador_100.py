@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ...adapters.persistence.storage import Envelope, SensitivityClass
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
 from ._errors import LiveApplicationInputError
@@ -147,7 +148,7 @@ class Borrador100SnapshotRepository:
         self._bucket_id = bucket_id.strip()
         if not self._bucket_id:
             raise LiveApplicationInputError("bucket_id must not be blank")
-        self._objects = objects or SecureObjectRepository()
+        self._objects = objects if objects is not None else secure_object_repository_for_bucket(self._bucket_id)
 
     @property
     def bucket_id(self) -> str:
