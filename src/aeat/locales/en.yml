@@ -752,6 +752,13 @@ cli:
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name was applied as a rename to
           %{name}.
+        create_stub_modelo_refused: 'Modelo %{modelo} is registered but not yet fully
+          supported in this version. The informative declaration on virtual currencies
+          held abroad (Modelo 721) must be filed directly at the AEAT Sede Electrónica
+          (sede.agenciatributaria.gob.es). The obligation arises when the aggregate
+          value of virtual currencies abroad exceeds €50,000 at 31 December (Orden
+          HFP/887/2023, BOE-A-2023-17455). Legal authorities: Ley 11/2021 Art. 13 /
+          DA 10ª, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter.'
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.

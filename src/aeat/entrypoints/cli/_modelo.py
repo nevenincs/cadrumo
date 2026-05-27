@@ -1265,6 +1265,59 @@ def _guard_modelo_applicability(modelo: str, *, allow_not_applicable: bool) -> N
     )
 
 
+#: Modelos that are registry-registered but NOT yet fully supported for
+#: work-unit creation.  The registry entry records legal authority and
+#: period metadata; the full casilla/formula authoring has not yet been
+#: completed.  ``work create`` is refused with a legallygrounded message
+#: that names the obligation, the threshold, and AEAT Sede as the
+#: operative filing surface.
+_STUB_ONLY_MODELOS: frozenset[str] = frozenset({"721"})
+
+
+def _guard_stub_modelo(modelo: str) -> None:
+    """Refuse ``work create`` for modelos that are registry stubs only.
+
+    Modelo 721 (declaración informativa sobre monedas virtuales situadas
+    en el extranjero) is registered in the registry with legal authority
+    and period metadata, but the full casilla inventory and calculation
+    engine have not yet been authored.  Without this guard the CLI would
+    silently provision a work unit that cannot be calculated, leaving the
+    taxpayer with no path to a valid filing.
+
+    The refusal cites the three governing legal authorities:
+    - Ley 11/2021 Art. 13 / DA 10ª — obligation basis
+    - Orden HFP/887/2023 — form approval and €50.000 threshold
+    - RD 1065/2007 Art. 42 quáter — reglamento operativo
+
+    Legal refs carried in the error match the registry manifest so the
+    audit trail is grounded in the same authority as the registry itself.
+    """
+
+    from ._errors import CliRefusedBoundaryError
+
+    modelo_code = modelo.strip()
+    if modelo_code not in _STUB_ONLY_MODELOS:
+        return
+    raise CliRefusedBoundaryError(
+        tr(
+            "cli.app.modelo.work.create_stub_modelo_refused",
+            default=(
+                "Modelo {modelo} está registrado pero no tiene soporte completo "
+                "en esta versión de la aplicación. La declaración informativa "
+                "sobre monedas virtuales situadas en el extranjero (Modelo 721) "
+                "requiere su presentación directamente en la Sede Electrónica de "
+                "la AEAT (sede.agenciatributaria.gob.es). La obligación nace "
+                "cuando el valor agregado de monedas virtuales en el extranjero "
+                "supera €50.000 a 31 de diciembre (Orden HFP/887/2023). "
+                "Autoridades legales: Ley 11/2021 Art. 13 / DA 10ª, "
+                "Orden HFP/887/2023 (BOE-A-2023-17455), "
+                "RD 1065/2007 Art. 42 quáter."
+            ),
+            modelo=modelo_code,
+        )
+    )
+
+
 #: Registry-validation translated-message keys that signal an
 #: unsatisfied calculation input the operator can supply with
 #: ``--binding`` / ``--relation``. The first ``work calculate`` of a
@@ -1374,6 +1427,7 @@ def work_create(
     # opened by create_work_unit.
     _validate_filing_year(year)
     _validate_registry_target(modelo, revision)
+    _guard_stub_modelo(modelo)
     resolved_year, resolved_period = _resolve_year_period(year, period, modelo=modelo)
     _require_active_profile()
     # Round-4 M4: refuse a work unit for a modelo the active profile's
