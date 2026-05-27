@@ -516,6 +516,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S322` - FU-W05-F remove dead shadowed CurrencyNormalizationService construction at test_fx_conversion.py:210; `minor cleanup from W05.P23 review #122; `src/aeat/application/aggregation/test_fx_conversion.py`.
 - [ ] `W09.P41.S323` - R9-MANUEL-A SC profile schema lacks socio enumeration; `entity_type=attribution_entity stored as generic legal entity with no fields for nombre de socios percentages NIFs forma juridica; extend UserProfileSchema with attribution_entity-specific section (socios: tuple[SocioEntry, ...] with nif name share_pct fields); required precondition for M184 calculation to work end-to-end; `src/aeat/domain/user_profile/_schema.py`.
 - [ ] `W09.P41.S324` - R9-MANUEL-B add cross-profile linkage SC to socio M100; `today base atribuida from M184 does not flow automatically to a member socio personal M100 declaration; socio must manually re-enter the attributed share; design a binding source attribution_received that resolves the share from a known SC profile in the same workspace OR document the manual workflow with explicit CLI prompts; `src/aeat/application/modelo/_profile_binding.py`.
+- [ ] `W09.P41.S326` - FU-S306-A annotate all_calendars list as list[dict[str, object]] or carry an inline third-party-boundary comment per aeat-calculation-grounding; minor non-blocking from #131 review of dd8934c72; `src/aeat/entrypoints/cli/_overview.py`.
 
 ### Phase `W09.P42` - twin function merge
 
