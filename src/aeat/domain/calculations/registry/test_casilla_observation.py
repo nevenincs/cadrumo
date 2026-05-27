@@ -71,3 +71,57 @@ def test_casilla_observation_rejects_extra_fields() -> None:
                 "unknown_field": "x",
             }
         )
+
+
+def test_casilla_observation_absent_by_design_defaults_to_false() -> None:
+    """P08.S51: the absent_by_design provenance marker is opt-in.
+
+    The flag was added in P03.S11 to distinguish structural zeros
+    (binding had no anchor for the target period) from value-bearing
+    observations. Default False so pre-P03-persisted observations
+    deserialise as "value-bearing" — the historical contract — until
+    the campaign-level migration is run.
+    """
+    obs = CasillaObservation(casilla_id="15", value=Decimal("0"))
+    assert obs.absent_by_design is False
+
+
+def test_casilla_observation_absent_by_design_roundtrips_through_json() -> None:
+    """P08.S51: absent_by_design survives JSON serialise-then-parse.
+
+    A real-behaviour roundtrip: construct an observation with the
+    flag set, dump to JSON via model_dump_json, parse back via
+    model_validate_json, assert the flag preserved verbatim. Pins
+    the persistence contract so a future schema refactor cannot
+    silently drop the field without breaking this test.
+    """
+    original = CasillaObservation(
+        casilla_id="15",
+        value=Decimal("0"),
+        absent_by_design=True,
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-modelo-130-instructions",),
+    )
+
+    payload = original.model_dump_json()
+    restored = CasillaObservation.model_validate_json(payload)
+
+    assert restored == original
+    assert restored.absent_by_design is True
+    assert restored.legal_refs == ("rd-439-2007:art-110",)
+
+
+def test_casilla_observation_absent_by_design_default_roundtrips_through_json() -> None:
+    """P08.S51: the False default also survives the JSON roundtrip.
+
+    Migration concern: pre-P03 persisted observations deserialise
+    with the default False. This test pins that the default ALSO
+    roundtrips cleanly — so an observation persisted today with
+    the field implicit will load back identically.
+    """
+    original = CasillaObservation(casilla_id="01", value=Decimal("1000"))
+    payload = original.model_dump_json()
+    restored = CasillaObservation.model_validate_json(payload)
+
+    assert restored == original
+    assert restored.absent_by_design is False

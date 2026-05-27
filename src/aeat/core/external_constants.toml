@@ -111,11 +111,14 @@ wallet_execute_submit_selector = "input#ejecutar[name=\"ejecutar\"][type=\"submi
 csv_verification = "/Sede/ayuda/consultas-practicas-manuales/verificacion-integridad-documentos.html"
 renta_web_open_landing = "/Sede/ayuda/consultas-informaticas/renta-ayuda-tecnica/renta-web-open.html"
 nif_iva_landing = "/Sede/iva/iva-operaciones-comercio-exterior/identificacion-realizar-operaciones-otros-empresarios-ue/vies.html"
+manual_practicos_root = "/static_files/Sede/Biblioteca/Manual/Practicos"
 
 [aeat.oracles]
 nif_iva_verification = "https://www1.agenciatributaria.gob.es/wlpl/IXVI-JDIT/ConsultaIntracomunitarios"
 groi_check = "https://www2.agenciatributaria.gob.es/wlpl/GROI-JDIT/ConsultaOperadorSedeGroiServlet"
 renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-RW25/OPEN/index.zul?EJER={year}&TACCESO=COLAB"
+groi_auth_unlock_descriptor = "www2 GROI ConsultaOperadorSedeGroiServlet"
+nif_iva_auth_locked_descriptor = "www1 IXVI ConsultaIntracomunitarios"
 
 [aeat.live_safety]
 auth_browser_action_patterns = [

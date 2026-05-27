@@ -23,3 +23,6 @@ The reconciliation path classified missing direct wallet/cartera plus AEAT filed
 
 RELOAD-005 | HIGH | Readiness coverage must name filed-history-only fallback, not only wallet divergence
 Export and verification readiness already refused persisted blocked wallet decisions generically, but the focused readiness tests only covered direct wallet/local divergence. Resolved 2026-05-27 by adding real-behavior Modelo 303 verification and export tests proving a persisted `filed_history_only` fallback decision is surfaced as blocking readiness and no export file is emitted.
+
+RELOAD-006 | MEDIUM | Residual executable AEAT route descriptors must be centralized
+The W09 constants scan found NIF-IVA auth diagnostic endpoint descriptors and the manuals Biblioteca root path embedded in executable source rather than the external constants registry. Resolved 2026-05-27 by enrolling those values in `external_constants.toml`, routing the NIF-IVA and manual-fetch code through the typed registry, and expanding the executable literal guard to cover the touched NIF-IVA, GROI, and manual-fetch modules.
