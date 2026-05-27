@@ -12,6 +12,8 @@ provenance fields (``observations``, ``legal_refs``, ``source_refs``,
 
 from __future__ import annotations
 
+from pydantic import Field
+
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -91,6 +93,8 @@ class FindingPayload(OutputSchema):
     expectation_id: str | None = None
     message: str
     next_action: str | None = None
+    legal_refs: list[str] = Field(default_factory=list)
+    source_refs: list[str] = Field(default_factory=list)
 
 
 class VerificationReportPayload(OutputSchema):
@@ -105,6 +109,14 @@ class VerificationReportPayload(OutputSchema):
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
+
+
+class ExternalEvidencePayload(OutputSchema):
+    """External-evidence reference embedded in a filing record."""
+
+    kind: str
+    reference_id: str
+    imported_at: str
 
 
 class ModeloRecordPayload(OutputSchema):
@@ -124,6 +136,8 @@ class ModeloRecordPayload(OutputSchema):
     status: str
     superseded_at: str | None = None
     superseded_by_filing_record_id: str | None = None
+    external_evidence: ExternalEvidencePayload | None = None
+    amends_filing_record_id: str | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
