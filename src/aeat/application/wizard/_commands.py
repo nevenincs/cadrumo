@@ -50,17 +50,20 @@ from ._runner import run_flow
 
 
 def _ccaa_choice_values() -> list[str]:
-    """Return the CCAA choice tokens from the canonical ``CCAA`` enum.
+    """Return the CCAA choice tokens accepted by ``--tax-residence-ccaa``.
 
-    Derived from the domain enum rather than a hand-kept literal list
-    so the ``--tax-residence-ccaa`` choices never drift from the
-    autonomous-community catalogue the rest of the domain validates
-    against.
+    The list includes all 15 common-regime values from the ``CCAA`` enum
+    plus the two foral-regime tokens (``pais_vasco``, ``navarra``).  The
+    foral tokens are accepted by Click so the operator receives a
+    localised redirect rather than a generic "not one of" error, but they
+    are refused by the wizard persistence layer via ``ForalRegimeError``.
     """
 
     from ...domain.profile._ccaa import CCAA
 
-    return [member.value for member in CCAA]
+    common = [member.value for member in CCAA]
+    foral = ["pais_vasco", "navarra"]
+    return common + foral
 
 
 _CCAA_CHOICE_VALUES: list[str] = _ccaa_choice_values()
@@ -760,6 +763,22 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         explicit_flags: dict[str, str] = dict(canonical)
         non_interactive = quiet or accept_defaults
         patch_edit = mode == "edit" and non_interactive
+
+        # Refuse foral CCAA tokens before any persistence or prompt.
+        # `pais_vasco` and `navarra` are accepted by Click (so the
+        # operator receives a redirect rather than a generic choice
+        # error) but are not valid AEAT-jurisdiction residence CCAAs.
+        _ccaa_token = canonical.get("tax-residence-ccaa") or explicit_flags.get("tax-residence-ccaa")
+        if _ccaa_token is not None:
+            from ...domain.profile import ForalRegimeError, parse_tax_region
+
+            try:
+                parse_tax_region(_ccaa_token)
+            except ForalRegimeError as _foral_exc:
+                raise typer.BadParameter(
+                    tr("profile.errors.foral_regime", tax_region=_foral_exc.value),
+                    param_hint="'--tax-residence-ccaa'",
+                ) from _foral_exc
 
         if patch_edit:
             _run_patch_edit(flow, explicit_flags, profile_id=profile_id)
