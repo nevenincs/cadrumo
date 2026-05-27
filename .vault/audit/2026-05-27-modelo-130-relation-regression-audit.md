@@ -345,3 +345,73 @@ authoring-time-feedback path is documented. A future
 infrastructure investment (ruff plugin) is recommended once the
 project has enough custom gates to justify the rust+config
 overhead.
+
+---
+
+## P08.S49 finding: M130 C03 ledger-aggregation conversion audit
+
+The P07.S46 cascade fixes worked around C03's silent conversion
+from `input_kind = "computed"` to `input_kind = "bound"` (via the
+`modelo-130-actividad-economica-rendimiento-neto-cumulative`
+binding). S49 audits the conversion against AEAT M130
+instructions.
+
+**Binding shape**:
+
+```
+[[revisions."2019-y-siguientes".bindings]]
+id = "modelo-130-actividad-economica-rendimiento-neto-cumulative"
+source = "ledger_renta_income_aggregation"
+selector = { modelo = "130", target_casilla = "01", fact = "taxable_base_sum" }
+aggregation = { op = "sum" }
+legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1",
+              "ley-35-2006:art-99", "rd-439-2007:art-95"]
+```
+
+The author's comment block documents the intent: "Feeds casilla
+03 directly from the ledger when transactions carry an explicit
+taxable_base; observations without taxable_base contribute 0."
+
+**Grounding against AEAT**:
+
+RD 439/2007 art. 110.1.a (corpus, P06.S22-extended text):
+"20 por ciento del rendimiento neto correspondiente al período de
+tiempo transcurrido desde el primer día del año hasta el último
+día del trimestre a que se refiere el pago fraccionado."
+
+The cumulative year-to-date rendimiento neto IS the input C03 must
+carry. The binding's aggregation `op = "sum"` over per-transaction
+`taxable_base` values reconstructs the cumulative net amount —
+matching AEAT's definition. Architecturally sound.
+
+**Discovered minor concern**: the selector declares
+`target_casilla = "01"` while the binding feeds C03. C01 is
+"Ingresos" (gross) and C03 is "Rendimiento neto" (net = ingresos -
+gastos). The selector's `target_casilla` field appears to be a
+ledger-aggregation routing hint (which ledger column to sum), not
+the destination casilla. The binding itself is correctly attached
+to C03 via the casilla declaration. Minor naming friction; not a
+defect.
+
+**C02 (Gastos) absence from closure**: the new binding bypasses
+the per-quarter C02 input by relying on `taxable_base` being
+pre-computed at transaction ingest time (net of allowable
+expenses). The operator no longer enters C02 manually; the
+ledger's classification has already separated gross from
+deductible. This is a legitimate architectural improvement — the
+calculation closure no longer requires a manual C02 entry because
+the ledger pre-classifies. The P07.S46 manifest update (removing
+C02) reflects this correctly.
+
+**Verdict**: C03's computed→bound conversion is correctly grounded
+in AEAT M130 instructions and represents an architectural lift
+from manual operator input to ledger-driven aggregation. The
+follow-up tracked at P07.S40 (M036 manifest validation) and
+P08.S40 (closure-rule semantics) collectively confirm the
+manifest update was structural-not-cosmetic.
+
+Recommendation: the selector's `target_casilla = "01"` field
+naming is potentially misleading. A future cleanup could rename it
+to `ledger_column` or `ledger_target_casilla` to clarify that it
+identifies the ledger source casilla (Ingresos column), not the
+binding's destination casilla. Out of scope for this campaign.
