@@ -987,5 +987,5 @@ Make storage hierarchy and namespace shape auditable before deeper refactors by 
 
 Close the process gap left by fast shared-worktree execution by recording the pushed storage-migration commits, validation caveats, residual blockers, and review requirements in durable vault artifacts.
 
-- [ ] `W15.P34.S415` - Persist step records for the pushed storage test-enrollment commits and their validation results; `.vault/exec`.
-- [ ] `W15.P34.S416` - Persist closeout audit for residual storage blockers, intentional guard hits, and required code-review follow-up; `.vault/audit`.
+- [x] `W15.P34.S415` - Persist step records for the pushed storage test-enrollment commits and their validation results; `.vault/exec`.
+- [x] `W15.P34.S416` - Persist closeout audit for residual storage blockers, intentional guard hits, and required code-review follow-up; `.vault/audit`.
