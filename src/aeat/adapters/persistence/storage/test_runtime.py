@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from aeat.adapters.persistence.storage.errors import StorageValidationError
 from aeat.adapters.persistence.storage.master_key._active_session import activate_session
 from aeat.adapters.persistence.storage.master_key._bucket_session import BucketSession
@@ -197,6 +198,7 @@ def test_runtime_creates_bucket_attached_secure_object_repository(tmp_path: Path
     ):
         runtime = inspect_storage_runtime(settings, now=_NOW)
         repo = runtime.secure_object_repository()
+        assert repo.namespace_registry is STORAGE_NAMESPACE_REGISTRY
         repo.save_many(
             (
                 SecureObjectWrite(
@@ -241,6 +243,16 @@ def test_cold_bootstrap_repository_is_available_before_profile_selection(tmp_pat
         repository = secure_object_repository_for_cold_bootstrap_state()
 
     assert isinstance(repository, SecureObjectRepository)
+    assert repository.namespace_registry is STORAGE_NAMESPACE_REGISTRY
+
+
+def test_default_route_repository_carries_namespace_registry_before_profile_selection(tmp_path: Path) -> None:
+    settings = Settings(aeat_local_storage_root=tmp_path, aeat_active_profile=None)
+
+    repository = secure_object_repository_for_active_bucket_or_default_route(settings)
+
+    assert isinstance(repository, SecureObjectRepository)
+    assert repository.namespace_registry is STORAGE_NAMESPACE_REGISTRY
 
 
 def test_cold_bootstrap_repository_refuses_active_profile(tmp_path: Path) -> None:
