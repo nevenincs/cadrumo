@@ -35,7 +35,6 @@ from ...domain.user_profile import (
     UserProfileFact,
     UserProfileStatus,
 )
-from ...domain.user_profile._errors import UserProfileValidationError
 from ...tests.secure_sql import isolated_profile_storage_root
 from ..workflow._profile_bucket_scan import (
     list_profile_buckets,
@@ -140,12 +139,21 @@ def test_create_refuses_a_duplicate_tax_id(_backend: Path) -> None:
     assert repository.load(first.profile_id).label == "Original"
 
 
-def test_create_fails_closed_when_tax_id_scan_hits_unreadable_profile(_backend: Path) -> None:
-    """An unreadable live profile blocks create before any new store write."""
+def test_create_succeeds_with_different_nif_when_scan_hits_unreadable_profile(
+    _backend: Path,
+) -> None:
+    """An unreadable live profile must NOT block creating a profile with a distinct NIF.
+
+    One torn bucket is an operator storage problem; it must not prevent
+    an entirely different taxpayer from being registered. The scan skips
+    the unreadable profile with a warning and continues against the
+    readable ones. The new profile is written and loads correctly.
+    """
 
     repository = ProfileRepository()
-    created = repository.create(label="Drifted Tax Id Holder", facts=_VALID_FACTS)
+    created = repository.create(label="Torn Tax Id Holder", facts=_VALID_FACTS)
 
+    # Corrupt the manifest so load() raises ProfileIntegrityError for this profile.
     target = manifest_path(bucket_paths(_backend, created.profile_id))
     corrupted = target.read_text(encoding="utf-8").replace(
         f'bucket_id = "{created.profile_id}"',
@@ -154,10 +162,51 @@ def test_create_fails_closed_when_tax_id_scan_hits_unreadable_profile(_backend: 
     assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
     target.write_text(corrupted, encoding="utf-8")
 
-    with pytest.raises(UserProfileValidationError):
-        repository.create(label="Blocked", facts=_SECOND_FACTS)
+    # A distinct NIF must succeed despite the torn profile — the warn-and-continue
+    # path does not let a torn bucket block a new taxpayer registration.
+    new_profile = repository.create(label="Different NIF", facts=_SECOND_FACTS)
 
-    assert read_profile_bucket("Blocked", root=_backend) is None
+    assert new_profile.label == "Different NIF"
+    loaded = repository.load(new_profile.profile_id)
+    assert loaded.label == "Different NIF"
+
+
+def test_create_still_refuses_duplicate_nif_against_readable_profiles(_backend: Path) -> None:
+    """Duplicate NIF detection fires against readable profiles even when another is torn.
+
+    When the scan skips an unreadable profile it must still detect a
+    duplicate NIF in the readable portion of the registry. The
+    anti-tautology proof: corrupting a THIRD profile does not disable
+    detection of a duplicate against a perfectly readable profile.
+    """
+
+    repository = ProfileRepository()
+    readable = repository.create(label="Readable Holder", facts=_VALID_FACTS)
+    torn = repository.create(label="Torn Bystander", facts=_SECOND_FACTS)
+
+    # Corrupt the torn profile's manifest.
+    target = manifest_path(bucket_paths(_backend, torn.profile_id))
+    corrupted = target.read_text(encoding="utf-8").replace(
+        f'bucket_id = "{torn.profile_id}"',
+        'bucket_id = "00000000-0000-4000-8000-000000000000"',
+    )
+    assert "00000000-0000-4000-8000-000000000000" in corrupted, "manifest mutation did not apply"
+    target.write_text(corrupted, encoding="utf-8")
+
+    # Attempt to create a profile that duplicates the READABLE profile's NIF.
+    duplicate_facts = tuple(
+        UserProfileFact(path="identity.tax_id", value="00000000T")
+        if fact.path == "identity.tax_id"
+        else fact
+        for fact in _SECOND_FACTS
+    )
+    with pytest.raises(ProfileAlreadyRegisteredError, match=r"00000000T|Readable Holder"):
+        repository.create(label="Duplicate", facts=duplicate_facts)
+
+    # No half-live profile for the refused duplicate.
+    assert read_profile_bucket("Duplicate", root=_backend) is None
+    # The original readable profile is untouched.
+    assert repository.load(readable.profile_id).label == "Readable Holder"
 
 
 def test_create_allows_distinct_tax_ids(_backend: Path) -> None:
