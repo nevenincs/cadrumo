@@ -1079,3 +1079,175 @@ profile `date_of_birth` is wired to casilla pre-fill logic.
   Needs an AEAT oracle run or the actual `Orden HAC/2024` Cataluña complementary
   tariff normativa to confirm. Does not block S249 acceptance but should be verified
   before any Cataluña autonomica test is cited as an external oracle value.
+
+---
+
+## W09.P41 follow-up rollup — consolidated inventory for Wave-9 execution
+
+**Generated from:** all review sections in this audit document plus the plan's
+`W09.P41` (S198-S251) and `W09.P45` (S203-S239) step inventory.
+**Purpose:** provide the W09 execution wave with a categorised, prioritised
+view of open follow-ups so Steps can be batched by dependency cluster.
+
+### Category 1 — MUST-FIX: quality-gate blockers
+
+These Steps block a wave sign-off or carry an active quality-gate violation.
+They must be resolved before the campaign can reach termination criteria.
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S208 | W01 drift | Pre-existing storage regression breaking `aeat config profile create` in 20+ test files (unsecured backend error); root cause in `src/aeat/adapters/persistence/storage/`. Unblocks S209 and S244. |
+| S209 | W01 drift | Migrate 20 CLI test files from `monkeypatch`/`AEAT_SECRET_STORE_BACKEND=unsecured` to `isolated_runtime_profile` fixture. Blocked behind S208. |
+| S244 | W02-C | MUST-FIX: `test_legal_entity_can_create_modelo_202_work_unit` uses `monkeypatch` + `AEAT_SECRET_STORE_BACKEND=unsecured`. Rewrite with `isolated_runtime_profile` after S208+S209 land. |
+
+S208 → S209 → S244 is a hard dependency chain. S208 is the gating item.
+
+### Category 2 — Error registry correctness
+
+Duplicate registrations and semantic misclassification in
+`src/aeat/core/errors/registry/`.
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S198 | W01 drift | Delete duplicate `AuthProviderReservedError` registration (lines 62-65 and 106-109). |
+| S199 | W01 drift | Delete duplicate `AuthConfigureDanglingActiveProfileError` registration (lines 84-92 and 95-103). |
+| S202 | W01 drift | Audit `StoredCalculationDriftError` taxonomy: class lives under `errors.refused.*` (REFUSED category) but stored-data drift is an integrity failure; decide rename vs. documented exception. |
+
+S198 and S199 are independent. S202 requires a taxonomy decision before code change.
+
+### Category 3 — Source hygiene: dead exports and private symbols
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S201 | W01 | Delete dead `__all__` re-exports of `build_error_envelope` and `json_output_requested` from `src/aeat/entrypoints/cli/_errors.py`. |
+| S206 | W01-C | Remove `_I18N_STRICT_PLACEHOLDERS` from `__all__` in `src/aeat/core/i18n/_render.py`. (Closed in plan but noted here for completeness — verify landed.) |
+
+S201 is a standalone delete; no dependencies.
+
+### Category 4 — Duplicate / consolidation work
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S200 | W01 drift | Consolidate two divergent `_decimal_value` helpers: modelo-binding variant has bool-sentinel handling; borrador variant does not. Extract one canonical helper. `src/aeat/application/modelo/`. |
+| S205 | W01 drift | Consolidate `UserProfileLifecycleRepository.__init__` and `UserProfileSnapshotRepository.__init__` identical signatures into shared base class or factory. `src/aeat/application/user_profile/_repository.py`. |
+
+Both are independent consolidation tasks.
+
+### Category 5 — Persistence boundary and domain integrity
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S214 | W01/W03 | Add `StoredTransactionDriftError` / `ValidationError` guard to `TransactionCatalogueRepository.load()` at `src/aeat/domain/transactions/_repository.py:139`. Mirrors W01.P01.S05 pattern. |
+| S215 | W03 | Replace four `dict[str, object]` return types on ledger payload helpers with typed pydantic models. Lines 1024/1055/1064/1075 of `src/aeat/application/ledger/_actions.py`. Architecture-boundaries gate. |
+
+S214 and S215 are independent. S215 is a broader refactor.
+
+### Category 6 — Test coverage gaps
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S213 | W03-H | Add clarifying comment in M100 binding-schema pin test for the 30-binding sentinel. `src/aeat/application/modelo/test_profile_binding_real_path.py`. |
+| S216 | W03 | Add test coverage for `_id_resolution.py` (95 LOC, no dedicated test file). `src/aeat/application/ledger/_id_resolution.py`. |
+| S217 | W03 | Verify `transaction_catalogue_object_id` at `src/aeat/application/ledger/_actions.py:2607` has callers and coverage; potentially orphan. |
+| S223 | W03 | R7-B: pin regression coverage for `tax_residence_ccaa` enum binding in M100 verify path (variant of S218 fix). `src/aeat/application/filing/__init__.py`. |
+
+S213 is documentation-only. S216/S217 are independent. S223 depends on S218 landing.
+
+### Category 7 — Legal data / registry correctness
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S212 | W03-F | Fix `Real Decreto-ley 4/2004` legal citation typo in M200 `parameters.toml`. `src/aeat/_data/registry/aeat/modelos/200/`. |
+| S251 | W07 | Investigate Cataluña 2024 autonomic tarifa discrepancy: reviewer reconstruction gives 4,522.78 EUR for base 35,400 but S115/S249 oracle values use 4,650.03. Ground against AEAT oracle replay. `src/aeat/_data/registry/aeat/modelos/100/revisions/2024/`. |
+
+S212 is a mechanical typo fix. S251 requires an external oracle run before code change.
+
+### Category 8 — CLI UX / localisation
+
+These Steps are in `W09.P45` and cluster on operator-facing surface gaps found in
+rounds 5-7 of the persona fleet.
+
+| Step | Source | Severity | Description |
+|------|--------|----------|-------------|
+| S203 | R7 parity | MAJOR | Fix 5 i18n ORPHAN placeholders (missing `{kind}`, `{bucket_id}`, `{category}`, `{raw}`, `{target}` kwargs). |
+| S204 | R7 parity | MAJOR | Fix 27 i18n SURPLUS kwargs (dead kwargs at `tr` call sites for diagnostics, auth, operator-surface keys). |
+| S219 | R7-002 | MAJOR | Localise `'No pending filing obligation for this profile'` refusal on `aeat app modelo work file` to es/ca/hu. |
+| S220 | R7-003 | MAJOR | Reject invalid period token at `modelo work create` time, not at calculate time. `src/aeat/entrypoints/cli/_modelo.py`. |
+| S221 | R7-001 | MAJOR | Surface critical storage errors in profile language when active-profile pointer is readable but DEK is malformed. |
+| S222 | R7-001 | MAJOR | Localise ledger CSV date-parse error inner reason (wrapper is localised; inner `'unsupported date format'` is English). |
+| S224 | R7-A | MAJOR | Fix `ledger list` / `ledger view` `CliValidationBoundaryError` on CSV-imported transactions: `currency` field min_length=3 rejects empty strings. |
+| S225 | R7-C | MAJOR | Pre-profile error language defaults to Spanish when `output_language` is unresolvable; either multi-language critical render or documented fallback. |
+| S226 | R7-D | MAJOR | Casilla labels remain in Spanish with `--output-language ca`; investigate registry `casilla.label` localisation. |
+| S229 | R7-INES-3 | MAJOR | Register `--output-language` on `overview calendar` command (currently rejected). |
+| S231 | R7-INES-5 | MAJOR | Disambiguate CLI input-validation refusal from stored-data validation refusal; wrong repair suggestion. |
+| S232 | R7-INES-6 | MINOR | Register `--output-language` on `config profile` subcommand root. |
+| S233 | R7-INES-7 | MINOR | Fix period token notation inconsistency: M111 surfaces as `2026Q1`; rest of system uses `1T`. |
+| S234 | R7-ANNA-D3 | MAJOR | Fix `iva.regime` defaulting to GENERAL for `natural_person` profiles without `actividad_economica`. |
+| S235 | R7-ANNA-D4 | MINOR | Expand wizard non-TTY refusal to list all required flags. |
+| S236 | R7-ANNA-D5 | MINOR | Default `modelo work create --revision` to in-force revision for `--year` via registry lookup. |
+| S237 | R7-MARC-D1 | MAJOR | `ledger classify`/`list`/`view` blocked by silent profile-completeness gate; surface the specific failing field. |
+| S238 | R7-MARC-D3 | MAJOR | `modelo bindings list` without `--year --period` returns bindings for arbitrary revision; ids then fail `work calculate`. |
+| S239 | R7-MARC-D4 | MAJOR | `ledger import --period` rejects all canonical period token forms except omission. |
+
+Grouping within this category: S203/S204 are pure locale-file fixes (independent,
+fast). S229/S232 are `--output-language` parity fixes (independent). S220/S236 are
+CLI input-validation improvements (independent). S237/S238/S239 are ledger/modelo
+UX corrections (independent). S221/S222/S225 share the locale-resolution-under-error
+surface (related, can batch). S224/S231 are validation-error UX fixes (independent
+of each other but same surface as S221/S225). S226 requires a registry-level
+decision before code change. S234 requires wizard scope understanding.
+
+### Category 9 — DSL enhancement
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S250 | W07-C | Add `age_at` formula DSL operator so casillas 0513/0515 can auto-derive age supplements from `renta_taxpayer.birth_date`. Requires DSL extension ADR. `src/aeat/domain/calculations/registry/`. |
+
+S250 is the largest single item here by architectural scope. It requires its own
+ADR before implementation: the DSL extension adds a new operator type to the
+formula evaluator and must integrate with the `valid_from`/`valid_to` date context
+already used for parameter lookups.
+
+### Category 10 — Co-landing convention notes (documentation only)
+
+These Steps carry no code change. They document the multi-step co-landing pattern
+observed across waves so future executor briefs can reinforce the one-Step-per-commit
+convention.
+
+| Step | Source | Description |
+|------|--------|-------------|
+| S240 | W04-A | `d8bec8bd9` co-landed multiple Steps + exec records + `__init__.py` changes. |
+| S241 | W05-A | `03be9b6f4` bundled exec records and step closures. |
+| S242 | W02-A | `30065a92e` S38-S42 co-landed. |
+| S243 | W02-B | `acea52801` S43+S44+S46 co-landed. |
+| S245 | W07-A | `01ac9d698` S113+S114 co-landed. |
+
+These can be addressed as a single documentation commit in W09. No dependency on
+any code Steps.
+
+### Execution priority order for W09
+
+1. **S208** (storage regression root fix) — unblocks S209 and S244; highest leverage.
+2. **S209** (test migration bulk) — unblocks S244; can proceed immediately after S208.
+3. **S244** (M202 test MUST-FIX) — blocked behind S209.
+4. **S198/S199** (duplicate error registrations) — independent, fast, low risk.
+5. **S201** (dead `__all__` exports) — independent, one-liner delete.
+6. **S214** (transaction drift guard) — mirrors established S05 pattern, low risk.
+7. **S212** (M200 citation typo) — one-line data fix.
+8. **S215** (ledger payload typed models) — broader refactor, needs careful review.
+9. **S200/S205** (consolidation) — independent, medium scope.
+10. **S203/S204** (i18n orphan/surplus) — fast locale-file fixes, independent.
+11. **S229/S232** (output-language parity) — independent CLI option registrations.
+12. **S220/S223/S233/S235/S236** (CLI UX minor) — independent, batch-able.
+13. **S224/S231/S237/S238/S239** (CLI UX major) — independent, medium scope each.
+14. **S221/S222/S225** (error-locale surface) — related, can batch.
+15. **S226** (casilla label localisation) — requires registry decision first.
+16. **S234** (iva.regime wizard) — requires wizard scope understanding.
+17. **S202** (error taxonomy decision) — taxonomy decision required before code.
+18. **S216/S217** (ledger test coverage) — independent, medium effort.
+19. **S213** (test comment) — documentation-only.
+20. **S240-S243/S245** (convention notes) — documentation-only, single batch commit.
+21. **S251** (Cataluña tarifa investigation) — external oracle required, non-blocking.
+22. **S250** (age_at DSL operator) — largest scope, requires ADR first; deferred to late W09 or W10.
+
+Total open W09.P41 + W09.P45 Steps: **54** (S198-S251 + S203-S239, excluding already-closed S206/S207/S210/S211/S218/S227/S228/S230).
