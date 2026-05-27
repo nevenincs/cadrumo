@@ -687,7 +687,22 @@ def _resolve_active_profile_pointer():
     return read_profile_bucket_by_id(active)
 
 
-def _atomic_create_profile(*, display_name, facts) -> str:
+def _validate_bundle_schema_version(bundle: object) -> None:
+    """Raise UnsupportedBundleSchemaVersionError if bundle version is not supported."""
+    from ....application.user_profile._bundle import (
+        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
+        UnsupportedBundleSchemaVersionError,
+    )
+
+    version = getattr(bundle, "bundle_schema_version", None)
+    if version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+        raise UnsupportedBundleSchemaVersionError(
+            f"bundle_schema_version {version!r} is not supported; "
+            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}"
+        )
+
+
+def _atomic_create_profile(*, display_name, facts, profile_id: str | None = None) -> str:
     """Provision a new profile bucket through the canonical atomic-create.
 
     Both ``config profile import`` (recovery from a backup) and
@@ -697,9 +712,9 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     pointer in one all-or-nothing unit of work owned by
     ``ProfileRepository.create``, with rollback on any failure.
 
-    A fresh immutable UUID profile identity is minted here;
-    ``display_name`` is the operator-chosen label. The minted UUID is
-    returned so the caller can report it.
+    When ``profile_id`` is supplied (bundle import with D5 identity
+    preservation), it is used as-is; otherwise a fresh UUID is minted.
+    The resolved UUID is returned so the caller can report it.
 
     Cold-start: the active-profile pointer must aim at the new UUID
     before ``workflow_state_repository().update`` opens its per-bucket
@@ -715,7 +730,7 @@ def _atomic_create_profile(*, display_name, facts) -> str:
     )
     from ....domain.user_profile import new_profile_id
 
-    profile_id = new_profile_id()
+    profile_id = profile_id or new_profile_id()
     with profile_create_storage_span(profile_id) as routing_profile_id:
         repository = _profile_state()
         repository.update(
@@ -1194,7 +1209,9 @@ def config_profile_export(
     via the atomic-create provisioner.
     """
 
-    from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+    from ....application.user_profile._bundle import serialize_profile_bundle
+    from ....application.user_profile._orchestration import profile_storage_session
+    from ....domain.user_profile import ProfileNotFoundError
 
     _profile_state().load()
     if name is not None:
@@ -1204,10 +1221,16 @@ def config_profile_export(
         if pointer is None:
             raise CliRefusedBoundaryError(tr("cli.config.errors.no_active_profile"))
     try:
-        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        from ....adapters.persistence.storage import has_active_bucket_session
+        from ....application.workflow._models import resolve_active_bucket_id
+
+        if pointer.bucket_id == resolve_active_bucket_id() and has_active_bucket_session():
+            bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
+        else:
+            with profile_storage_session(pointer.bucket_id):
+                bundle = serialize_profile_bundle(bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise CliRefusedBoundaryError(tr("cli.config.profile.unknown_profile", name=pointer.label)) from exc
-    bundle = UserProfilePortableExport(profile=record)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
     _emit(
@@ -1261,8 +1284,12 @@ def config_profile_import(
     still minting its own immutable UUID identity.
     """
 
-    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError
-    from ....application.workflow._profile_bucket_scan import read_profile_bucket
+    from ....application.user_profile._bundle import (
+        UnsupportedBundleSchemaVersionError,
+        deserialize_profile_bundle,
+    )
+    from ....application.user_profile._orchestration import ProfileAlreadyRegisteredError, profile_storage_session
+    from ....application.workflow._profile_bucket_scan import read_profile_bucket, read_profile_bucket_by_id
     from ....domain.user_profile import UserProfilePortableExport
 
     if not path.is_file():
@@ -1273,24 +1300,58 @@ def config_profile_import(
                 path=str(path),
             )
         )
-    bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
-    record = bundle.profile
-    # An imported bundle becomes a fresh local profile with its own
-    # minted UUID identity; the bundle's stored profile_id was the
-    # identity on the originating machine and is not reused. The
-    # operator-facing label must not collide with a live profile —
-    # `--label` lets the operator land a second copy under a new name.
-    target_label = label.strip() if label is not None and label.strip() else record.display_name
-    if read_profile_bucket(target_label) is not None:
+    try:
+        bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
+    except Exception as exc:
         raise CliRefusedBoundaryError(
-            tr("cli.config.profile.import_label_taken", name=target_label)
+            tr("cli.config.profile.import_invalid_bundle", default=f"bundle parse error: {exc}", error=str(exc))
+        ) from exc
+    try:
+        _validate_bundle_schema_version(bundle)
+    except UnsupportedBundleSchemaVersionError as exc:
+        raise CliRefusedBoundaryError(str(exc)) from exc
+    record = bundle.profile
+    bundle_profile_id = record.profile_id
+
+    # D5 two-tier collision guard: UUID takes precedence over label.
+    # Tier 1: refuse if the bundle's profile_id UUID already exists locally.
+    if read_profile_bucket_by_id(bundle_profile_id) is not None:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.profile.import_uuid_collision",
+                default=(
+                    f"profile already registered (id={bundle_profile_id}); "
+                    "run `aeat config profile delete NAME` before re-importing if you intend to replace it."
+                ),
+                profile_id=bundle_profile_id,
+            )
+        )
+    target_label = label.strip() if label is not None and label.strip() else record.display_name
+    # Tier 2: refuse if the label is taken by a *different* UUID.
+    existing = read_profile_bucket(target_label)
+    if existing is not None and existing.bucket_id != bundle_profile_id:
+        raise CliRefusedBoundaryError(
+            tr(
+                "cli.config.profile.import_label_taken_different_id",
+                default=(
+                    f"label {target_label!r} is already taken by a different profile; "
+                    "pass `--label NEW_NAME` to import under a distinct name."
+                ),
+                name=target_label,
+            )
         )
     try:
-        target_id = _atomic_create_profile(display_name=target_label, facts=record.facts)
+        # Preserve the bundle's profile_id (ADR D5).
+        target_id = _atomic_create_profile(
+            display_name=target_label, facts=record.facts, profile_id=bundle_profile_id
+        )
     except ProfileAlreadyRegisteredError as exc:
         raise CliRefusedBoundaryError(
             tr("cli.config.profile.already_exists", name=target_label)
         ) from exc
+    # Import v2 financial-history objects into the newly-provisioned bucket.
+    with profile_storage_session(target_id):
+        deserialize_profile_bundle(bundle, target_bucket_id=target_id)
     _emit(
         ctx,
         {
