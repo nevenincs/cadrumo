@@ -408,9 +408,9 @@ Track and remediate the 15 findings from .vault/audit/2026-05-27-declaracion-ext
 
 verification-source schema field + coverage-drift audit + production-path gate tests
 
-- [ ] `W08.P34.S181` - Promote verification_source to typed schema field on ExtractionProfileDefinition with Literal options real_aeat_corpus_pdf synthetic_from_aeat_published_text historical_suppression; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W08.P34.S182` - Tag all 16 GROUNDED profiles with the appropriate verification_source enum value reflecting actual provenance; `src/aeat/_data/registry/aeat/modelos/`.
-- [ ] `W08.P34.S183` - Audit calculation-completeness manifests for the 5 modelos with target_casillas REMOVED (M036/M720/M184/M232/M347) to verify removed casillas are marked input_kind informational or otherwise non-extractable; `src/aeat/domain/calculations/registry/`.
+- [x] `W08.P34.S181` - Promote verification_source to typed schema field on ExtractionProfileDefinition with Literal options real_aeat_corpus_pdf synthetic_from_aeat_published_text historical_suppression; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W08.P34.S182` - Tag all 16 GROUNDED profiles with the appropriate verification_source enum value reflecting actual provenance; `src/aeat/_data/registry/aeat/modelos/`.
+- [x] `W08.P34.S183` - Audit calculation-completeness manifests for the 5 modelos with target_casillas REMOVED (M036/M720/M184/M232/M347) to verify removed casillas are marked input_kind informational or otherwise non-extractable; `src/aeat/domain/calculations/registry/`.
 - [x] `W08.P34.S184` - Add production-path tests for both gate validators (validate_declaracion_pdf_specimen_gate and validate_declaracion_pdf_round_trip_gate) exercising RegistryValidator with source_root=bundled_path() not direct corpus_root injection; `src/aeat/domain/calculations/registry/test_provisional_specimen_gate.py src/aeat/domain/calculations/registry/test_corpus_round_trip_gate.py`.
 
 ### Phase `W08.P35` - MEDIUM-severity drifts
