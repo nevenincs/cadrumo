@@ -54,3 +54,13 @@ def test_sede_403_auth_gate_is_distinct_from_dom_drift() -> None:
 
     assert classify_live_iva_acquisition_failure(auth_gate) is LiveIvaAcquisitionFailureMode.AEAT_403
     assert classify_live_iva_acquisition_failure(dom_drift) is LiveIvaAcquisitionFailureMode.DOM_DRIFT
+
+
+def test_certificate_required_auth_gate_is_not_collapsed_to_generic_403() -> None:
+    exc = SedeNavigationError(
+        "AEAT requires certificate",
+        failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+        context={"required_auth_provider": "certificate"},
+    )
+
+    assert classify_live_iva_acquisition_failure(exc) is LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED

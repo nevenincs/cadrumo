@@ -56,6 +56,7 @@ from ...adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket as _secure_object_repository_for_active_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository as _SecureObjectRepository
+from ...application.auth import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...application.auth import ensure_authenticated_aeat_session as _ensure_authenticated_aeat_session
 from ...application.calculations import (
     CalculationObservationRepository as _CalculationObservationRepository,
@@ -269,6 +270,12 @@ class StoredIvaRemoteStateAcquisitionRow(BaseModel):
 
     acquisition_ref: str
     captured_at: datetime
+    auth_status: str
+    auth_outcome_mode: str
+    auth_failure_mode: str | None = None
+    auth_failure_type: str | None = None
+    auth_provider_kind: str | None = None
+    auth_reused_persisted_session: bool | None = None
     year_from: int
     year_to: int
     target_year: int
@@ -329,10 +336,25 @@ class LiveIvaReadOutcome(BaseModel):
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
     captured_count: int | None = None
     calculation_observation_count: int | None = None
+
+
+class LiveIvaAuthOutcome(BaseModel):
+    """Redacted authentication outcome for a live IVA acquisition."""
+
+    model_config = ConfigDict(frozen=True)
+
+    status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
+    failure_mode: LiveIvaAcquisitionFailureMode | None = None
+    failure_type: str | None = None
+    provider_kind: str | None = None
+    reused_persisted_session: bool | None = None
+    fresh: bool | None = None
 
 
 class IvaRemoteStateAcquisitionReport(BaseModel):
@@ -346,6 +368,7 @@ class IvaRemoteStateAcquisitionReport(BaseModel):
     year_to: int
     target_year: int
     target_period: str
+    auth: LiveIvaAuthOutcome
     filed_history: IvaCompensationHistoryCaptureReport | None
     wallet: IvaWalletCaptureReport | None
     outcomes: tuple[LiveIvaReadOutcome, ...]
@@ -372,6 +395,7 @@ class IvaRemoteStateAcquisitionSurfaceManifest(BaseModel):
 
     surface: LiveIvaReadSurface
     status: LiveIvaReadStatus
+    outcome_mode: LiveIvaAcquisitionFailureMode
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
     captured_count: int | None = None
@@ -395,6 +419,7 @@ class IvaRemoteStateAcquisitionManifest(BaseModel):
     year_to: int
     target_year: int
     target_period: str
+    auth: LiveIvaAuthOutcome
     filed_history_succeeded: bool
     wallet_succeeded: bool
     surfaces: tuple[IvaRemoteStateAcquisitionSurfaceManifest, ...]
@@ -910,6 +935,12 @@ def _stored_acquisition_manifest_row(
     return StoredIvaRemoteStateAcquisitionRow(
         acquisition_ref=_evidence_ref(manifest.acquisition_id),
         captured_at=manifest.captured_at,
+        auth_status=manifest.auth.status.value,
+        auth_outcome_mode=manifest.auth.outcome_mode.value,
+        auth_failure_mode=manifest.auth.failure_mode.value if manifest.auth.failure_mode is not None else None,
+        auth_failure_type=manifest.auth.failure_type,
+        auth_provider_kind=manifest.auth.provider_kind,
+        auth_reused_persisted_session=manifest.auth.reused_persisted_session,
         year_from=manifest.year_from,
         year_to=manifest.year_to,
         target_year=manifest.target_year,
@@ -921,7 +952,7 @@ def _stored_acquisition_manifest_row(
 
 
 def _stored_acquisition_surface_text(surface: IvaRemoteStateAcquisitionSurfaceManifest) -> str:
-    parts = [surface.surface.value, f"status={surface.status.value}"]
+    parts = [surface.surface.value, f"status={surface.status.value}", f"outcome={surface.outcome_mode.value}"]
     if surface.failure_mode is not None:
         parts.append(f"failure_mode={surface.failure_mode.value}")
     if surface.failure_type is not None:
@@ -1296,15 +1327,38 @@ async def capture_iva_remote_state(
     if year_from > year_to:
         raise LiveApplicationInputError("from-year must be less than or equal to to-year")
 
-    session, settings = await _active_verified_session(
-        operation="live-iva-remote-state-read",
-        target_url=_PRE303_PRESENTATION_SERVICE_URL,
-    )
+    settings = _load_settings()
+    _AeatAccessGate(settings).require_live_read()
     store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
     filed_history: IvaCompensationHistoryCaptureReport | None = None
     wallet: IvaWalletCaptureReport | None = None
+    auth_result: _AuthenticatedAeatSessionResult | None = None
+    auth_error: BaseException | None = None
     filed_error: BaseException | None = None
     wallet_error: BaseException | None = None
+
+    try:
+        auth_result = await _ensure_authenticated_aeat_session(
+            settings,
+            operation="live-iva-remote-state-read",
+            target_url=_PRE303_PRESENTATION_SERVICE_URL,
+        )
+    except Exception as exc:
+        auth_error = exc
+
+    if auth_result is None:
+        report = build_iva_remote_state_acquisition_report(
+            output_root=store_root,
+            year_from=year_from,
+            year_to=year_to,
+            target_year=target_year,
+            target_period=target_period,
+            auth_error=auth_error,
+        )
+        manifest = persist_iva_remote_state_acquisition_report(report)
+        return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
+
+    session = auth_result.session
 
     try:
         filed_history = await _capture_iva_compensation_history_with_session(
@@ -1335,6 +1389,7 @@ async def capture_iva_remote_state(
         year_to=year_to,
         target_year=target_year,
         target_period=target_period,
+        auth_result=auth_result,
         filed_history=filed_history,
         wallet=wallet,
         filed_history_error=filed_error,
@@ -1352,6 +1407,8 @@ def build_iva_remote_state_acquisition_report(
     target_year: int,
     target_period: str,
     acquisition_manifest_id: str | None = None,
+    auth_result: _AuthenticatedAeatSessionResult | None = None,
+    auth_error: BaseException | None = None,
     filed_history: IvaCompensationHistoryCaptureReport | None = None,
     wallet: IvaWalletCaptureReport | None = None,
     filed_history_error: BaseException | None = None,
@@ -1359,16 +1416,19 @@ def build_iva_remote_state_acquisition_report(
 ) -> IvaRemoteStateAcquisitionReport:
     """Build the redacted combined acquisition report from surface results."""
 
+    auth = _auth_outcome(auth_result=auth_result, error=auth_error)
     outcomes = (
         _surface_outcome(
             LiveIvaReadSurface.FILED_HISTORY,
             report=filed_history,
             error=filed_history_error,
+            auth=auth,
         ),
         _surface_outcome(
             LiveIvaReadSurface.WALLET_CARTERA,
             report=wallet,
             error=wallet_error,
+            auth=auth,
         ),
     )
     return IvaRemoteStateAcquisitionReport(
@@ -1378,6 +1438,7 @@ def build_iva_remote_state_acquisition_report(
         year_to=year_to,
         target_year=target_year,
         target_period=target_period,
+        auth=auth,
         filed_history=filed_history,
         wallet=wallet,
         outcomes=outcomes,
@@ -1433,6 +1494,7 @@ def _iva_remote_state_acquisition_manifest(
             str(report.target_year),
             report.target_period,
             captured_at.isoformat(),
+            report.auth.model_dump_json(),
             *(surface.model_dump_json() for surface in surfaces),
         )
     )
@@ -1446,6 +1508,7 @@ def _iva_remote_state_acquisition_manifest(
         year_to=report.year_to,
         target_year=report.target_year,
         target_period=report.target_period,
+        auth=report.auth,
         filed_history_succeeded=report.filed_history_succeeded,
         wallet_succeeded=report.wallet_succeeded,
         surfaces=surfaces,
@@ -1461,6 +1524,7 @@ def _iva_remote_state_surface_manifest(
         return IvaRemoteStateAcquisitionSurfaceManifest(
             surface=outcome.surface,
             status=outcome.status,
+            outcome_mode=outcome.outcome_mode,
             failure_mode=outcome.failure_mode,
             failure_type=outcome.failure_type,
             captured_count=outcome.captured_count,
@@ -1471,6 +1535,7 @@ def _iva_remote_state_surface_manifest(
     return IvaRemoteStateAcquisitionSurfaceManifest(
         surface=outcome.surface,
         status=outcome.status,
+        outcome_mode=outcome.outcome_mode,
         failure_mode=outcome.failure_mode,
         failure_type=outcome.failure_type,
         captured_count=outcome.captured_count,
@@ -1488,26 +1553,68 @@ def _surface_outcome(
     *,
     report: IvaCompensationHistoryCaptureReport | IvaWalletCaptureReport | None,
     error: BaseException | None,
+    auth: LiveIvaAuthOutcome,
 ) -> LiveIvaReadOutcome:
-    if error is not None:
+    if auth.status is LiveIvaReadStatus.FAILED and auth.failure_type != "MissingAuthResult":
         return LiveIvaReadOutcome(
             surface=surface,
             status=LiveIvaReadStatus.FAILED,
-            failure_mode=classify_live_iva_acquisition_failure(error),
+            outcome_mode=auth.outcome_mode,
+            failure_mode=auth.failure_mode,
+            failure_type=auth.failure_type,
+        )
+    if error is not None:
+        failure_mode = classify_live_iva_acquisition_failure(error)
+        return LiveIvaReadOutcome(
+            surface=surface,
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=failure_mode,
+            failure_mode=failure_mode,
             failure_type=error.__class__.__name__,
         )
     if report is None:
         return LiveIvaReadOutcome(
             surface=surface,
             status=LiveIvaReadStatus.FAILED,
+            outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
             failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
             failure_type="MissingSurfaceReport",
         )
     return LiveIvaReadOutcome(
         surface=surface,
         status=LiveIvaReadStatus.SUCCEEDED,
+        outcome_mode=LiveIvaAcquisitionFailureMode.AUTHENTICATED,
         captured_count=getattr(report, "captured_count", None),
         calculation_observation_count=getattr(report, "calculation_observation_count", None),
+    )
+
+
+def _auth_outcome(
+    *,
+    auth_result: _AuthenticatedAeatSessionResult | None,
+    error: BaseException | None,
+) -> LiveIvaAuthOutcome:
+    if error is not None:
+        failure_mode = classify_live_iva_acquisition_failure(error)
+        return LiveIvaAuthOutcome(
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=failure_mode,
+            failure_mode=failure_mode,
+            failure_type=error.__class__.__name__,
+        )
+    if auth_result is None:
+        return LiveIvaAuthOutcome(
+            status=LiveIvaReadStatus.FAILED,
+            outcome_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_mode=LiveIvaAcquisitionFailureMode.UNKNOWN,
+            failure_type="MissingAuthResult",
+        )
+    return LiveIvaAuthOutcome(
+        status=LiveIvaReadStatus.SUCCEEDED,
+        outcome_mode=LiveIvaAcquisitionFailureMode.AUTHENTICATED,
+        provider_kind=auth_result.provider_kind.value,
+        reused_persisted_session=auth_result.reused_persisted_session,
+        fresh=auth_result.fresh,
     )
 
 
@@ -1550,6 +1657,7 @@ __all__ = [
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
+    "LiveIvaAuthOutcome",
     "LiveIvaReadOutcome",
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
