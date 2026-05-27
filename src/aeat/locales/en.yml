@@ -739,6 +739,9 @@ cli:
         casilla_help: Casilla value with CASILLA=DECIMAL syntax (repeatable). CASILLA
           accepts the casilla id, the registry number, or the BOE printed casilla
           number shown by `aeat app modelo casillas`.
+        casilla_non_numeric_data_type: 'Casilla {key} ("{label}") has data type {data_type}
+          and does not accept decimal overrides. Use --binding for this input type or
+          run `aeat app modelo casillas` to identify the correct numeric casilla.'
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
