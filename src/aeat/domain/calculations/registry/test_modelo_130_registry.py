@@ -173,6 +173,42 @@ def test_modelo_130_previous_filing_bound_casilla_input_without_binding_value_is
         )
 
 
+def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(modelo_130_registry) -> None:
+    """P08.S50 hardening: inputs and binding_values must agree on bound carry-forward values.
+
+    P07.S36 introduced the smuggle-rejection (input present, binding
+    value absent). This test pins the consistency-check that P08.S50
+    adds: when BOTH maps declare the same bound casilla but with
+    DIFFERENT values, the runtime must reject the inconsistency
+    rather than silently pick the binding_values entry. The source-
+    of-truth contract is preserved while the divergence is surfaced.
+    """
+
+    with pytest.raises(
+        RegistryValidationError,
+        match="previous-filing bound casilla projection is inconsistent",
+    ):
+        calculate_registry_snapshot(
+            _snapshot_130(modelo_130_registry, period="2T"),
+            inputs={
+                "01": Decimal("10000"),
+                "02": Decimal("4000"),
+                "05": Decimal("250"),
+                "06": Decimal("100"),
+                "08": Decimal("2000"),
+                "10": Decimal("10"),
+                "15": Decimal("500"),  # claims 500
+                "16": Decimal("0"),
+                "18": Decimal("0"),
+            },
+            date_context={"filing_period": date(2026, 7, 20)},
+            binding_values={
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+                "modelo-130-resultados-negativos-anteriores": Decimal("300"),  # claims 300 — diverges
+            },
+        )
+
+
 def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(modelo_130_registry) -> None:
     """2T pulls the prior quarter's saldo-negativo-fin-periodo seed into C15.
 
