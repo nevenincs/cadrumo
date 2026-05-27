@@ -18,6 +18,7 @@ target_casillas = [
 # All four patterns match exactly once in the instructions document with no false positives.
 confidence = "strict"
 corpus_round_trip_verified = true
+verification_source = "synthetic_from_aeat_published_text"
 min_coverage = "0.5"
 failure_semantics = "fail_hard"
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
