@@ -3503,7 +3503,13 @@ def modelo_export_verb(
 )
 def modelo_project(
     ctx: typer.Context,
-    year: Annotated[int, typer.Option("--year", help=tr("cli.app.modelo.project.year_help", default="Filing year (e.g. 2024)."))],
+    year: Annotated[
+        int,
+        typer.Option(
+            "--year",
+            help=tr("cli.app.modelo.project.year_help", default="Filing year (e.g. 2024)."),
+        ),
+    ],
     ccaa: Annotated[
         str,
         typer.Option(
@@ -3571,7 +3577,7 @@ def modelo_project(
         )
 
     # -- Gather latest calculation revisions for each M130 work unit -------------
-    _QUARTERS = {"1T", "2T", "3T", "4T"}
+    _quarters = {"1T", "2T", "3T", "4T"}
     m130_quarters: dict[str, CalculationRevision] = {}
     for unit in m130_units:
         revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id)
@@ -3580,7 +3586,7 @@ def modelo_project(
         # Use the most recent revision (list is sorted by created_at).
         latest = revisions[-1]
         period = unit.period
-        if period in _QUARTERS:
+        if period in _quarters:
             m130_quarters[period] = latest
 
     if not m130_quarters:
@@ -3599,16 +3605,20 @@ def modelo_project(
     # M130 casilla 02: gastos (quarterly expenses).
     quarters_filed = len(m130_quarters)
     total_rendimiento_neto = sum(
-        rev.casilla_values.get("03", Decimal("0")) for rev in m130_quarters.values()
+        (rev.casilla_values.get("03", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
     )
     total_pagos_fraccionados = sum(
-        rev.casilla_values.get("19", Decimal("0")) for rev in m130_quarters.values()
+        (rev.casilla_values.get("19", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
     )
     total_ingresos = sum(
-        rev.casilla_values.get("01", Decimal("0")) for rev in m130_quarters.values()
+        (rev.casilla_values.get("01", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
     )
     total_gastos = sum(
-        rev.casilla_values.get("02", Decimal("0")) for rev in m130_quarters.values()
+        (rev.casilla_values.get("02", Decimal("0")) for rev in m130_quarters.values()),
+        Decimal("0"),
     )
 
     # Extrapolate to full year when fewer than 4 quarters are available.
@@ -3616,13 +3626,9 @@ def modelo_project(
     if quarters_filed < 4:
         factor = Decimal(4) / Decimal(quarters_filed)
         projected_rendimiento_neto = (total_rendimiento_neto * factor).quantize(Decimal("0.01"))
-        projected_ingresos = (total_ingresos * factor).quantize(Decimal("0.01"))
-        projected_gastos = (total_gastos * factor).quantize(Decimal("0.01"))
         is_extrapolated = True
     else:
         projected_rendimiento_neto = total_rendimiento_neto
-        projected_ingresos = total_ingresos
-        projected_gastos = total_gastos
         is_extrapolated = False
 
     # -- Build M100 snapshot inputs and bindings ---------------------------------
@@ -3744,6 +3750,232 @@ def modelo_project(
         f"m100_cuota_liquida_autonomica\t{cuota_liquida_autonomica}",
         f"m100_cuota_resultante\t{cuota_resultante}",
     ]
+    _emit(ctx, payload, lines)
+
+
+@app.command(
+    "compare",
+    help=tr(
+        "cli.app.modelo.compare_help",
+        default=(
+            "Compare two filing-year calculation revisions for the same modelo. "
+            "Emits per-casilla delta rows (year_b - year_a) grouped by section. "
+            "Uses the most recent VERIFICADO_COMPLETO revision for each year; "
+            "falls back to the latest BORRADOR when no verified revision exists, "
+            "and flags the affected year as a draft in the output."
+        ),
+    ),
+)
+def modelo_compare(
+    ctx: typer.Context,
+    year: Annotated[
+        list[int] | None,
+        typer.Option(
+            "--year",
+            help=tr(
+                "cli.app.modelo.compare.year_help",
+                default=(
+                    "Filing year to include in the comparison. "
+                    "Specify exactly twice: --year 2024 --year 2025."
+                ),
+            ),
+        ),
+    ] = None,
+    modelo: Annotated[
+        str,
+        typer.Option(
+            "--modelo",
+            help=tr(
+                "cli.app.modelo.compare.modelo_help",
+                default="Modelo number to compare (e.g. 100, 130).",
+            ),
+        ),
+    ] = "100",
+) -> None:
+    """Compare two filing-year revisions for the same modelo casilla-by-casilla."""
+
+    _require_active_profile()
+
+    from ...application.modelo import list_work_units as _list_work_units
+    from ...domain.modelos._calculation_revision import CalculationRevisionState
+
+    years = list(year or ())
+    if len(years) != 2:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.compare.need_two_years",
+                default="Exactly two --year values are required (e.g. --year 2024 --year 2025).",
+            )
+        )
+    year_a, year_b = sorted(years)
+
+    # -- Resolve the best revision for each year --------------------------------
+    def _best_revision(
+        filing_year: int,
+    ) -> tuple[CalculationRevision, bool]:
+        """Return (revision, is_draft_fallback) for *filing_year*.
+
+        Prefers the most recent VERIFICADO_COMPLETO revision; falls back to the
+        most recent BORRADOR when no verified revision is available.
+        Raises typer.BadParameter if no revision of either kind exists.
+        """
+        all_units = _list_work_units()
+        units_for_year = [
+            u for u in all_units
+            if str(u.modelo) == modelo and u.filing_year == filing_year
+        ]
+        if not units_for_year:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.compare.no_work_units",
+                    default=f"No Modelo {modelo} work units found for year {filing_year}. "
+                    "Create and calculate a work unit first.",
+                )
+            )
+
+        all_revisions: list[CalculationRevision] = []
+        for unit in units_for_year:
+            all_revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
+
+        if not all_revisions:
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.compare.no_revisions",
+                    default=f"Modelo {modelo} work units for year {filing_year} have no "
+                    "calculation revisions. Run `aeat app modelo work calculate` first.",
+                )
+            )
+
+        verified = [
+            r for r in all_revisions
+            if r.state is CalculationRevisionState.VERIFICADO_COMPLETO
+        ]
+        if verified:
+            return max(verified, key=lambda r: r.created_at), False
+
+        # Draft fallback: most recent BORRADOR.
+        borradores = [
+            r for r in all_revisions
+            if r.state is CalculationRevisionState.BORRADOR
+        ]
+        if borradores:
+            return max(borradores, key=lambda r: r.created_at), True
+
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.compare.no_usable_revisions",
+                default=f"Modelo {modelo} for year {filing_year} has no VERIFICADO_COMPLETO "
+                "or BORRADOR revisions available for comparison.",
+            )
+        )
+
+    rev_a, draft_a = _best_revision(year_a)
+    rev_b, draft_b = _best_revision(year_b)
+
+    # -- Resolve casilla metadata from the snapshot ---------------------------
+    # We use the year_b snapshot as the primary label/section source; fall back
+    # to year_a for casillas that appear only in the older revision.
+    try:
+        authority = _service()._authority
+        snap_b = authority.snapshot(modelo, filing_year=year_b, period="0A")
+        snap_a = authority.snapshot(modelo, filing_year=year_a, period="0A")
+    except RegistrySnapshotError as exc:
+        raise _bad_parameter_from_error(exc) from exc
+
+    # Build lookup: casilla_id -> CasillaDefinition (prefer year_b).
+    casilla_meta: dict[str, object] = {}
+    for snap in (snap_a, snap_b):
+        for cdef in snap.revision.casillas:
+            casilla_meta[cdef.id] = cdef
+
+    def _meta(casilla_id: str) -> tuple[str, str]:
+        """Return (label, primary_section) for a casilla id."""
+        cdef = casilla_meta.get(casilla_id)
+        if cdef is None:
+            return casilla_id, ""
+        label = getattr(cdef, "label", str(casilla_id))
+        sections = getattr(cdef, "section", ())
+        primary_section = sections[0] if sections else ""
+        return label, primary_section
+
+    # -- Build delta rows -----------------------------------------------------
+    all_casilla_ids = sorted(
+        set(rev_a.casilla_values) | set(rev_b.casilla_values)
+    )
+
+    delta_rows: list[dict[str, object]] = []
+    for cid in all_casilla_ids:
+        val_a = rev_a.casilla_values.get(cid, Decimal("0"))
+        val_b = rev_b.casilla_values.get(cid, Decimal("0"))
+        delta = val_b - val_a
+        label, section = _meta(cid)
+        if val_a != Decimal("0"):
+            pct_change: str | None = str(
+                (delta / val_a * Decimal("100")).quantize(Decimal("0.01"))
+            )
+        else:
+            pct_change = None
+
+        delta_rows.append(
+            {
+                "casilla_id": cid,
+                "label": label,
+                "section": section,
+                "year_a_value": str(val_a),
+                "year_b_value": str(val_b),
+                "delta": str(delta),
+                "pct_change": pct_change,
+            }
+        )
+
+    # Group by section for structured output.
+    sections_seen: list[str] = []
+    by_section: dict[str, list[dict[str, object]]] = {}
+    for row in delta_rows:
+        sec = str(row["section"])
+        if sec not in by_section:
+            sections_seen.append(sec)
+            by_section[sec] = []
+        by_section[sec].append(row)
+
+    payload: dict[str, object] = {
+        "operation": "modelo.compare",
+        "modelo": modelo,
+        "year_a": year_a,
+        "year_b": year_b,
+        "year_a_revision_id": rev_a.calculation_revision_id,
+        "year_b_revision_id": rev_b.calculation_revision_id,
+        "year_a_is_draft": draft_a,
+        "year_b_is_draft": draft_b,
+        "sections": [
+            {
+                "section": sec,
+                "rows": by_section[sec],
+            }
+            for sec in sections_seen
+        ],
+        "delta_rows": delta_rows,
+    }
+
+    # Tab-delimited text: header + one row per casilla with non-zero delta.
+    draft_note_a = " (BORRADOR)" if draft_a else ""
+    draft_note_b = " (BORRADOR)" if draft_b else ""
+    lines = [
+        "operation\tmodelo.compare",
+        f"modelo\t{modelo}",
+        f"year_a\t{year_a}{draft_note_a}",
+        f"year_b\t{year_b}{draft_note_b}",
+        "---",
+        "casilla_id\tlabel\tsection\tyear_a\tyear_b\tdelta\tpct_change",
+    ]
+    for row in delta_rows:
+        if row["delta"] == "0" and row["year_a_value"] == "0" and row["year_b_value"] == "0":
+            continue
+        pct = row["pct_change"] if row["pct_change"] is not None else "n/a"
+        lines.append(
+            f"{row['casilla_id']}\t{row['label']}\t{row['section']}"
+            f"\t{row['year_a_value']}\t{row['year_b_value']}\t{row['delta']}\t{pct}"
+        )
     _emit(ctx, payload, lines)
 
 
