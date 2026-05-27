@@ -11,7 +11,10 @@ from __future__ import annotations
 from collections.abc import Iterator
 from typing import ClassVar
 
-from ...adapters.persistence.storage import SensitivityClass
+from ...adapters.persistence.storage import (
+    APPLICATION_FILING_HISTORY_NAMESPACE,
+    SensitivityClass,
+)
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
@@ -25,9 +28,9 @@ from ._runtime_repository import (
 class ModeloHistoryRepository(SecureBoundRepository[ModeloHistory]):
     """Repository over encrypted SQL-backed filing history records."""
 
-    namespace: ClassVar[str] = "aeat.application.filing.history"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = APPLICATION_FILING_HISTORY_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = APPLICATION_FILING_HISTORY_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = APPLICATION_FILING_HISTORY_NAMESPACE.schema_version
     payload_type: ClassVar[type[ModeloHistory]] = ModeloHistory
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:

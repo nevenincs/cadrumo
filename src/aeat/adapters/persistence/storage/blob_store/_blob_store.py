@@ -46,6 +46,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
+from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
 from ..crypto._crypto import KEY_SIZE, EncryptedBlob, decrypt_record, encrypt_record
 from ..envelope._envelope import EncryptionMetadata, Envelope, load_envelope, save_envelope
 from ..errors import (
@@ -65,7 +66,6 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _BLOB_AAD = b"aeat.blob.payload.v1"
 _DEK_AAD = b"aeat.blob.dek-wrap.v1"
-_BLOB_MANIFEST_VERSION = 1
 
 
 class BlobManifest(BaseModel):
@@ -232,7 +232,7 @@ class EncryptedBlobStore:
             )
 
         envelope = Envelope[BlobManifest](
-            schema_version=_BLOB_MANIFEST_VERSION,
+            schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
             written_at=datetime.now(UTC),
             classification=classification,
             payload=manifest,
@@ -270,7 +270,7 @@ class EncryptedBlobStore:
             manifest_path,
             Envelope[BlobManifest],
             expected_class=reference.classification,
-            max_supported_version=_BLOB_MANIFEST_VERSION,
+            max_supported_version=BLOB_MANIFEST_SCHEMA_VERSION,
         )
         manifest = envelope.payload
         if manifest.classification is SensitivityClass.CORPUS:
@@ -362,10 +362,10 @@ class EncryptedBlobStore:
                         exc_info=True,
                     )
                     continue
-                if envelope.schema_version > _BLOB_MANIFEST_VERSION:
+                if envelope.schema_version > BLOB_MANIFEST_SCHEMA_VERSION:
                     raise EnvelopeVersionError(
                         f"envelope at {manifest_path} is at version {envelope.schema_version}; "
-                        f"consumer supports up to {_BLOB_MANIFEST_VERSION}",
+                        f"consumer supports up to {BLOB_MANIFEST_SCHEMA_VERSION}",
                     )
                 yield manifest_path, envelope.payload
 
@@ -435,7 +435,7 @@ class EncryptedBlobStore:
             new_meta = EncryptionMetadata.from_blob(new_wrapped, associated_data=_DEK_AAD)
             new_manifest = manifest.model_copy(update={"wrapped_dek": new_meta})
             new_envelope = Envelope[BlobManifest](
-                schema_version=_BLOB_MANIFEST_VERSION,
+                schema_version=BLOB_MANIFEST_SCHEMA_VERSION,
                 written_at=datetime.now(UTC),
                 classification=manifest.classification,
                 payload=new_manifest,

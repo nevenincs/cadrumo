@@ -29,6 +29,9 @@ from typing import ClassVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.storage import (
+    CALCULATION_OBSERVATIONS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE,
+    IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE,
     Envelope,
     SensitivityClass,
     safe_repository_id,
@@ -141,9 +144,9 @@ def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_
 class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations."""
 
-    namespace: ClassVar[str] = "aeat.calculations.observations"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
     payload_type: ClassVar[type[_ObservationEnvelopePayload]] = _ObservationEnvelopePayload
 
     def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
@@ -210,10 +213,10 @@ class IvaWalletDecisionRepository(SecureBoundRepository[_IvaWalletDecisionEnvelo
     the live AEAT wallet, which downstream calculation chains consult.
     """
 
-    namespace: ClassVar[str] = "aeat.calculations.iva_wallet.reconciliation_decisions"
-    history_namespace: ClassVar[str] = "aeat.calculations.iva_wallet.reconciliation_decision_events"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.namespace
+    history_namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
     payload_type: ClassVar[type[_IvaWalletDecisionEnvelopePayload]] = _IvaWalletDecisionEnvelopePayload
 
     def extract_identifier(self, payload: _IvaWalletDecisionEnvelopePayload) -> str:

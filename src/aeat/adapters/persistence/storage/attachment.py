@@ -26,7 +26,6 @@ from typing import BinaryIO
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ....core.classification import SensitivityClass
 from ....core.logging import get_logger
 from ....domain.attachments._errors import (
     AttachmentNotFoundError,
@@ -34,6 +33,12 @@ from ....domain.attachments._errors import (
     AttachmentValidationError,
 )
 from ....domain.attachments._models import Attachment
+from ._namespace_registry import (
+    ATTACHMENT_BLOB_NAMESPACE as ATTACHMENT_BLOB_STORAGE_NAMESPACE,
+)
+from ._namespace_registry import (
+    ATTACHMENT_MANIFEST_NAMESPACE as ATTACHMENT_MANIFEST_STORAGE_NAMESPACE,
+)
 from .envelope import Envelope
 from .errors import ClassificationError, EnvelopeVersionError
 from .runtime_repository import secure_object_repository_for_active_bucket
@@ -44,10 +49,12 @@ _LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _STREAM_CHUNK_SIZE = 1024 * 1024
 _HEX_DIGITS = frozenset("0123456789abcdef")
-_ATTACHMENT_BLOB_VERSION = 1
-_ATTACHMENT_MANIFEST_VERSION = 1
-_ATTACHMENT_BLOB_NAMESPACE = "aeat.domain.attachments.blobs"
-_ATTACHMENT_MANIFEST_NAMESPACE = "aeat.domain.attachments.manifests"
+_ATTACHMENT_BLOB_VERSION = ATTACHMENT_BLOB_STORAGE_NAMESPACE.schema_version
+_ATTACHMENT_BLOB_SENSITIVITY = ATTACHMENT_BLOB_STORAGE_NAMESPACE.sensitivity
+_ATTACHMENT_MANIFEST_VERSION = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.schema_version
+_ATTACHMENT_MANIFEST_SENSITIVITY = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.sensitivity
+_ATTACHMENT_BLOB_NAMESPACE = ATTACHMENT_BLOB_STORAGE_NAMESPACE.namespace
+_ATTACHMENT_MANIFEST_NAMESPACE = ATTACHMENT_MANIFEST_STORAGE_NAMESPACE.namespace
 
 
 def _require_digest(value: str, *, field_name: str = "attachment_id") -> str:
@@ -112,7 +119,7 @@ class AttachmentStore(BaseModel):
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
             object_key=digest,
             # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=SensitivityClass.FINANCIAL,
+            classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=datetime.now(UTC),
             payload=data,
@@ -142,7 +149,7 @@ class AttachmentStore(BaseModel):
             namespace=_ATTACHMENT_BLOB_NAMESPACE,
             object_key=digest,
             # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            classification=SensitivityClass.FINANCIAL,
+            classification=_ATTACHMENT_BLOB_SENSITIVITY,
             schema_version=_ATTACHMENT_BLOB_VERSION,
             written_at=datetime.now(UTC),
             payload=b"".join(chunks),
@@ -158,7 +165,7 @@ class AttachmentStore(BaseModel):
             _ATTACHMENT_BLOB_NAMESPACE,
             digest,
             # rationale: blob sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_ATTACHMENT_BLOB_SENSITIVITY,
             max_supported_version=_ATTACHMENT_BLOB_VERSION,
         )
         if record is None:
@@ -185,13 +192,13 @@ class AttachmentStore(BaseModel):
         envelope = Envelope[Attachment](
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
             written_at=datetime.now(UTC),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             payload=attachment,
         )
         self._objects_repo().save(
             namespace=_ATTACHMENT_MANIFEST_NAMESPACE,
             object_key=attachment.attachment_id,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_ATTACHMENT_MANIFEST_SENSITIVITY,
             schema_version=_ATTACHMENT_MANIFEST_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
@@ -206,7 +213,7 @@ class AttachmentStore(BaseModel):
             _ATTACHMENT_MANIFEST_NAMESPACE,
             digest,
             # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_ATTACHMENT_MANIFEST_SENSITIVITY,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         )
         if record is None:
@@ -231,7 +238,7 @@ class AttachmentStore(BaseModel):
         for record in self._objects_repo().list_records(
             _ATTACHMENT_MANIFEST_NAMESPACE,
             # rationale: manifest sensitivity is FINANCIAL regardless of modelo; see module docstring.
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_ATTACHMENT_MANIFEST_SENSITIVITY,
             max_supported_version=_ATTACHMENT_MANIFEST_VERSION,
         ):
             try:

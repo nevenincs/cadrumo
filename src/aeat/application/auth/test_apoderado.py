@@ -13,17 +13,22 @@ from aeat.application.auth._apoderado import (
 )
 from aeat.core.config import Settings
 from aeat.domain.auth.apoderamientos import UnknownScopeError
-from aeat.tests.secure_sql import isolated_runtime_profile
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_settings(tmp_path: Path) -> Iterator[Settings]:
+def isolated_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     """Run apoderado tests against a per-test active-profile runtime."""
 
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        yield profile.settings
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="ephemeral") as profile:
+        yield profile
+
+
+@pytest.fixture
+def isolated_settings(isolated_profile: TestRuntimeProfile) -> Settings:
+    return isolated_profile.settings
 
 
 class TestStatus:
@@ -154,8 +159,8 @@ class TestCheck:
 
 
 class TestBucketIsolation:
-    def test_configurations_are_bucket_scoped(self, isolated_settings: Settings) -> None:
-        svc = ApoderadoService(settings=isolated_settings)
+    def test_configurations_are_bucket_scoped(self, isolated_profile: TestRuntimeProfile) -> None:
+        svc = ApoderadoService(settings=isolated_profile.settings)
         svc.configure(bucket_id="bucket-A", represented_nif="NIF-A", scope_tokens=("IVA",))
         svc.configure(bucket_id="bucket-B", represented_nif="NIF-B", scope_tokens=("RENT",))
         a = svc.status(bucket_id="bucket-A")
@@ -164,3 +169,5 @@ class TestBucketIsolation:
         assert a.granted_scopes == ("IVA",)
         assert b.represented_nif == "NIF-B"
         assert b.granted_scopes == ("RENT",)
+        assert (isolated_profile.storage_root / "buckets" / "bucket-A" / "db" / "aeat.db").is_file()
+        assert (isolated_profile.storage_root / "buckets" / "bucket-B" / "db" / "aeat.db").is_file()

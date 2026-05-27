@@ -129,6 +129,7 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
     module monkeypatching, no test double or Mock.
     """
 
+    from ...adapters.persistence.storage import WORKFLOW_STATE_NAMESPACE
     from ._models import WorkflowState
     from ._persistence import WorkflowStateRepository
 
@@ -137,12 +138,18 @@ def test_reset_workflow_state_emit_failure_leaves_row_intact() -> None:
 
     repository = WorkflowStateRepository(emit_reset=_raise)
     repository.save(WorkflowState())
-    assert repository._objects.exists("aeat.workflow", "state")
+    assert repository._objects.exists(
+        WORKFLOW_STATE_NAMESPACE.namespace,
+        WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+    )
 
     with pytest.raises(_EmitError):
         repository.reset_workflow_state()
 
-    assert repository._objects.exists("aeat.workflow", "state"), (
+    assert repository._objects.exists(
+        WORKFLOW_STATE_NAMESPACE.namespace,
+        WORKFLOW_STATE_NAMESPACE.require_default_object_key(),
+    ), (
         "emit-first contract violated: secure-object row was deleted before the "
         "audit event landed; the recovery route lost its trail."
     )
