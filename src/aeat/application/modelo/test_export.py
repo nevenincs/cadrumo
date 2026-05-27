@@ -67,7 +67,7 @@ _PROFILE_SPAN_OPEN = False
 
 def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
-        tax_id="X1234567L",
+        tax_id="taxpayerdefault",
         iva_regime=IVARegime.GENERAL,
     )
 
@@ -354,7 +354,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "12345678Z"
+    taxpayer_nif = "taxpayerbeta"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -408,7 +408,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "12345678Z"
+    taxpayer_nif = "taxpayerbeta"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -471,7 +471,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "12345678Z"
+    taxpayer_nif = "taxpayerbeta"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     _, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,
@@ -508,7 +508,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
-    taxpayer_nif = "12345678Z"
+    taxpayer_nif = "taxpayerbeta"
     bucket_id = _seed_profile(tax_id=taxpayer_nif)
     work_unit_id, calc_rev_id = _seed_revision(
         bucket_id=bucket_id,

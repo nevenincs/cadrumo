@@ -86,8 +86,8 @@ class TestDescendantInfoValidation:
             DescendantInfo(birth_date=date(2010, 1, 1), nif="  ")
 
     def test_nif_is_normalised_to_uppercase(self) -> None:
-        d = DescendantInfo(birth_date=date(2010, 1, 1), nif="12345678z")
-        assert d.nif == "12345678Z"
+        d = DescendantInfo(birth_date=date(2010, 1, 1), nif="taxidabcd")
+        assert d.nif == "TAXIDABCD"
 
     def test_frozen_model_rejects_mutation(self) -> None:
         d = DescendantInfo(birth_date=date(2010, 1, 1))
@@ -308,7 +308,7 @@ class TestDescendantFactsRoundtrip:
         d1 = DescendantInfo(
             birth_date=date(2020, 3, 15),
             discapacidad_grado=33,
-            nif="12345678Z",
+            nif="TAXIDABCD",
         )
         d2 = DescendantInfo(
             birth_date=date(2022, 11, 5),
@@ -355,13 +355,13 @@ class TestParseDescendienteFlag:
 
     def test_full_flag(self) -> None:
         d = parse_descendiente_flag(
-            "NACIMIENTO=2020-03-15,ADOPCION=2024-05-12,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=12345678Z"
+            "NACIMIENTO=2020-03-15,ADOPCION=2024-05-12,DISCAPACIDAD=33,CONVIVENCIA=false,NIF=TAXIDABCD"
         )
         assert d.birth_date == date(2020, 3, 15)
         assert d.adoption_date == date(2024, 5, 12)
         assert d.discapacidad_grado == 33
         assert d.convive_con_contribuyente is False
-        assert d.nif == "12345678Z"
+        assert d.nif == "TAXIDABCD"
 
     def test_missing_nacimiento_raises_value_error(self) -> None:
         with pytest.raises(ValueError, match="NACIMIENTO"):

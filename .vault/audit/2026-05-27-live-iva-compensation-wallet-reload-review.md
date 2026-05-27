@@ -26,3 +26,9 @@ Export and verification readiness already refused persisted blocked wallet decis
 
 RELOAD-006 | MEDIUM | Residual executable AEAT route descriptors must be centralized
 The W09 constants scan found NIF-IVA auth diagnostic endpoint descriptors and the manuals Biblioteca root path embedded in executable source rather than the external constants registry. Resolved 2026-05-27 by enrolling those values in `external_constants.toml`, routing the NIF-IVA and manual-fetch code through the typed registry, and expanding the executable literal guard to cover the touched NIF-IVA, GROI, and manual-fetch modules.
+
+RELOAD-007 | HIGH | Modelo 303 wallet readiness tests must not carry valid-looking taxpayer identifiers
+The Modelo export/readiness wallet tests and adjacent Renta family profile tests still used DNI/NIE-shaped synthetic identifiers in blocked-decision and descendant/ascendant paths. Resolved 2026-05-27 by replacing those literals with non-identifier synthetic taxpayer labels and re-running the focused Modelo 303 wallet export/readiness gate, profile roundtrip gates, and a privacy scan.
+
+RELOAD-008 | MEDIUM | Renta registry drift can mask IVA readiness verification
+The focused Modelo 303 verification gate exposed unrelated Modelo 100 registry drift while validating shared registry resources: missing LIRPF required-text grounding, stale Art. 84 source citations, undeclared Renta family profile selectors, and missing Modelo 130/131 relation inputs in the Art. 84 scenario harness. Resolved 2026-05-27 by validating the local official BOE/AEAT corpus anchors, aligning profile selectors with the central user-profile schema, classifying the year-specific descendant-minimum aggregate as financial profile data, and restoring the Renta Art. 84 scenario gate.
