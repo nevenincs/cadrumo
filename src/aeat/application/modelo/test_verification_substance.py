@@ -322,3 +322,116 @@ def test_observation_tampering_is_detected_by_verify_path(repos) -> None:
     # The provenance cross-check must raise for the tampered revision
     with pytest.raises(StoredCalculationDriftError, match="provenance drift"):
         _assert_revision_content_integrity(tampered_revision)
+
+
+# ---------------------------------------------------------------------------
+# S318: legal_refs / source_refs threading through verification findings
+# ---------------------------------------------------------------------------
+
+# M130 casilla 02 oracle values drawn from:
+#   src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-casillas.toml
+_M130_CASILLA_02_LEGAL_REFS = frozenset(
+    {
+        "rd-439-2007:art-110",
+        "orden-eha-672-2007:art-1",
+        "ley-35-2006:art-99",
+        "rd-439-2007:art-95",
+    }
+)
+_M130_CASILLA_02_SOURCE_REFS = frozenset(
+    {
+        "aeat-dr-130-2019-v12",
+        "aeat-modelo-130-instructions",
+    }
+)
+
+
+def test_missing_required_casilla_finding_carries_registry_provenance(repos) -> None:
+    """A MISSING_REQUIRED_CASILLA finding must carry legal_refs and source_refs
+    drawn from the registry casilla definition.
+
+    S318 regression: before this fix findings had empty legal_refs/source_refs,
+    making provenance invisible at the operator-facing verify surface.
+
+    Expected values are drawn from the M130 casilla 02 TOML definition (the
+    external authority), not hand-computed from the same formula.
+    """
+    wu_repo, cr_repo, vr_repo, bv_repo = repos
+
+    work_unit = create_work_unit(
+        bucket_id="default",
+        modelo="130",
+        filing_year=2026,
+        period="1T",
+        revision_id="2019-y-siguientes",
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    # Deliberately omit casilla 02 (Gastos) so a MISSING_REQUIRED_CASILLA
+    # finding is produced for it.
+    casilla_inputs: dict[str, Decimal] = {
+        "05": Decimal("0"),
+        "06": Decimal("0"),
+        "08": Decimal("0"),
+        "10": Decimal("0"),
+        "16": Decimal("0"),
+        "18": Decimal("0"),
+    }
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=casilla_inputs,
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("0"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T1,
+    )
+    report = verify_modelo_revision(
+        revision.calculation_revision_id,
+        actor="operator-test",
+        workflow_profile=_workflow_profile(),
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        verification_repository=vr_repo,
+        bucket_event_repository=bv_repo,
+        clock=_T2,
+    )
+
+    casilla_02_findings = [
+        f
+        for f in report.findings
+        if f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA and f.casilla_id == "02"
+    ]
+    assert casilla_02_findings, "Expected a MISSING_REQUIRED_CASILLA finding for casilla 02"
+    finding = casilla_02_findings[0]
+
+    # legal_refs must be non-empty and match the TOML oracle.
+    assert finding.legal_refs, "finding.legal_refs must not be empty for a registry-backed casilla"
+    assert frozenset(finding.legal_refs) == _M130_CASILLA_02_LEGAL_REFS, (
+        f"finding.legal_refs {finding.legal_refs!r} does not match registry oracle "
+        f"{sorted(_M130_CASILLA_02_LEGAL_REFS)!r}"
+    )
+
+    # source_refs must also be threaded through.
+    assert finding.source_refs, "finding.source_refs must not be empty for a registry-backed casilla"
+    assert frozenset(finding.source_refs) == _M130_CASILLA_02_SOURCE_REFS, (
+        f"finding.source_refs {finding.source_refs!r} does not match registry oracle "
+        f"{sorted(_M130_CASILLA_02_SOURCE_REFS)!r}"
+    )
+
+
+def test_missing_casilla_finding_legal_refs_empty_when_casilla_def_absent() -> None:
+    """Anti-tautology: _missing_required_casilla_finding with no casilla_def produces empty refs.
+
+    Proves the provenance threading is structural (not a constant default)
+    and would fail the previous test if the casilla lookup returned None.
+    """
+    from aeat.application.modelo._actions import _missing_required_casilla_finding
+
+    finding = _missing_required_casilla_finding("99", "wu-test-id", casilla_def=None)
+    assert finding.legal_refs == (), "finding with no casilla_def must carry empty legal_refs"
+    assert finding.source_refs == (), "finding with no casilla_def must carry empty source_refs"
