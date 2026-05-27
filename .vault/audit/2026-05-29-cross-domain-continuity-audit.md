@@ -1469,3 +1469,71 @@ FU-W07-E does not apply.
 - FU-W07-G: Convention note — `604bf217d` + `f4108869d` both land on S118;
   fixes to a Step's code should be a separate Step or rolled into the original.
   Documentation-only.
+
+---
+
+## W07 Wave-7 consolidation (Task #74 / S120) — wave breakpoint review
+
+**Scope:** All Wave-7 commits reviewed across W07.P31 (Cluster T fix + extension),
+W07.P32 (project verb), and W07.P33 (compare verb). This section consolidates
+per-Step verdicts into a wave-level summary and closes S120.
+
+### Wave-7 commit inventory
+
+| Commit | Step(s) | Phase | Verdict |
+|--------|---------|-------|---------|
+| `01ac9d698` | S113+S114 | P31 | ACCEPT-WITH-FOLLOWUP (FU-W07-A co-landing) |
+| `65a0bc0dd` | S115 | P31 | ACCEPT |
+| `a9ff35af9` | records | P31 | ACCEPT |
+| `6306f5c76` | S246-S248 | P31 ext | ACCEPT-WITH-FOLLOWUP (FU-W07-C age_at DSL) |
+| `d7b25e4a9` | S249 | P31 ext | ACCEPT |
+| `1f553d99c` | S116 | P32 | ACCEPT-WITH-FOLLOWUP (FU-W07-D legal_refs, FU-W07-E hex) |
+| `ca0b17c30` | S117 | P32 | ACCEPT-WITH-FOLLOWUP (FU-W07-F authority parity) |
+| `a51d96b11` | records | P32 | ACCEPT |
+| `604bf217d` | S118 + S116 lint | P33 | ACCEPT-WITH-FOLLOWUP (FU-W07-D, FU-W07-G) |
+| `f4108869d` | S118 fix | P33 | ACCEPT |
+| `e934f020d` | S119 | P33 | ACCEPT |
+| `ee0fbc69e` | records | P33 | ACCEPT |
+
+### Wave-7 architectural health
+
+**Cluster T closure:** Substantively closed. Base mínimo del contribuyente
+(5,550 EUR, LIRPF Art. 57.1) + all supplement families (Art. 57.2/57.3, 58, 59)
+are now modelled as registry parameters with full legal provenance. Remaining
+gap is `age_at` DSL auto-derivation (FU-W07-C, S250).
+
+**New verb hexagonal posture:**
+- `aeat app modelo compare` (S118): CLEAN. Reads stored revisions via
+  application layer; no direct domain engine calls. Preferred pattern.
+- `aeat app modelo project` (S116): PARTIAL VIOLATION (FU-W07-E). Calls
+  `calculate_registry_snapshot` from domain layer directly in the CLI verb.
+  Should be extracted to `application.modelo`.
+
+**Test fixture quality:**
+- S117 and S119 both use `isolated_runtime_profile` with explicit
+  `delenv("AEAT_SECRET_STORE_BACKEND")` and `delenv("AEAT_ALLOW_UNENCRYPTED")`.
+  Consistent with the S208→S209 migration direction. Wave-7 does not introduce
+  new unsecured-backend test debt.
+
+**Co-landing pattern:** Three instances of multi-commit per Step in Wave-7
+(S113+S114 in one commit; S118 fix in a separate commit; S116 lint fixes
+bundled with S118). Convention notes logged as FU-W07-A, FU-W07-G.
+
+**No blocking issues.** All Wave-7 commits are ACCEPT or ACCEPT-WITH-FOLLOWUP.
+Follow-ups are logged as W09 Steps (S245, S250, S256, S257, S258, S251,
+FU-W07-G pending logging).
+
+### Open Wave-7 follow-ups for W09
+
+| ID | Step | Description |
+|----|------|-------------|
+| FU-W07-A | S245 | Co-landing note: `01ac9d698` S113+S114 |
+| FU-W07-B | S246-S249 | Age supplement extensions (resolved by S246-S249 themselves) |
+| FU-W07-C | S250 | `age_at` DSL operator for auto-derivation |
+| FU-W07-D | S256 | Surface `legal_refs`/`source_refs` on projected/delta casilla values |
+| FU-W07-E | S257 | Extract project verb calculation orchestration to `application.modelo` |
+| FU-W07-F | S258 | Document/test authority path parity |
+| FU-W07-G | TBD | Co-landing note: `604bf217d` + `f4108869d` on S118 |
+| FU-S115-CAT | S251 | Cataluña 2024 tarifa bracket discrepancy investigation |
+
+Wave-7 (W07) is CLOSED at this review pass.
