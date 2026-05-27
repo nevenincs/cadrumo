@@ -1275,6 +1275,10 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
+      logout_session_warning: El tancament de sessió ha esborrat el punter del
+        perfil actiu. Els verbs posteriors en aquest terminal seran rebutjats amb
+        NoActiveBucketSessionError fins que executis `aeat config profile switch
+        NOM` (o obris un terminal nou i tornis a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /

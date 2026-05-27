@@ -895,6 +895,7 @@ cli:
       import_missing_bundle: cli.config.profile.import_missing_bundle
       import_path_help: cli.config.profile.import_path_help
       logout_help: cli.config.profile.logout_help
+      logout_session_warning: cli.config.profile.logout_session_warning
       no_active_profile: cli.config.profile.no_active_profile
       rename_help: cli.config.profile.rename_help
       rename_source_help: cli.config.profile.rename_source_help

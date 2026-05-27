@@ -1184,6 +1184,9 @@ cli:
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
       logout_help: Sign out of the active profile by clearing the local pointer
+      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
+        verbs in this terminal will refuse with NoActiveBucketSessionError until you
+        run `aeat config profile switch NAME` (or open a new terminal and re-select).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
