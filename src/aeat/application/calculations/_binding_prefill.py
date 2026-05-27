@@ -66,9 +66,20 @@ def _selector_periods(value: object) -> tuple[str, ...]:
 
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
+_IVA_COMPENSATION_HISTORY_SOURCE_KIND: Final = "aeat_sede_iva_compensation_history"
+_MIXED_OBSERVATION_SOURCE_KIND: Final = "mixed_observation_sources"
 _MODELO_303_IVA_COMPENSATION_BINDING_ID: Final = "modelo-303-compensacion-pendiente-anteriores"
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+
+class _GatheredObservation(BaseModel):
+    """Registry observation plus the persisted source channel that produced it."""
+
+    model_config = _STRICT_FROZEN
+
+    observation: RegistryModeloObservation
+    source_kind: str
 
 
 class PrefilledBinding(BaseModel):
@@ -79,6 +90,7 @@ class PrefilledBinding(BaseModel):
     binding_id: str
     value: Decimal
     provenance: str = _LOCAL_FILING_PROVENANCE
+    source_kind: str = _LOCAL_FILING_PROVENANCE
     source_modelo: str
     source_filing_year: int
     source_periods: tuple[str, ...]
@@ -105,6 +117,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
 
     binding_id: str
     amount: Decimal
+    source_kind: str = _LOCAL_FILING_PROVENANCE
     source_modelo: str
     source_filing_year: int
     source_periods: tuple[str, ...]
@@ -116,12 +129,12 @@ def _gather_observations(
     *,
     repository: CalculationObservationRepository,
     iva_history_repository: IvaCompensationHistoryRepository | None = None,
-) -> tuple[RegistryModeloObservation, ...]:
+) -> tuple[_GatheredObservation, ...]:
     """Walk every previous_filing binding in the revision and pull
     matching observations from the local store.
     """
 
-    needed: dict[tuple[str, int, str], RegistryModeloObservation] = {}
+    needed: dict[tuple[str, int, str], _GatheredObservation] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,
         filing_year=snapshot.filing_year,
@@ -130,15 +143,17 @@ def _gather_observations(
         payload = repository.load_observation(requirement.modelo, requirement.filing_year, requirement.period)
         if payload is not None:
             obs = payload.observation
+            source_kind = payload.source_kind
         elif requirement.modelo == "303" and iva_history_repository is not None:
             state = iva_history_repository.load_period(requirement.filing_year, requirement.period)
             if state is None:
                 continue
             obs = _observation_from_iva_compensation_history(state)
+            source_kind = _IVA_COMPENSATION_HISTORY_SOURCE_KIND
         else:
             continue
         key = (obs.modelo, obs.filing_year, obs.period)
-        needed.setdefault(key, obs)
+        needed.setdefault(key, _GatheredObservation(observation=obs, source_kind=source_kind))
     return tuple(needed.values())
 
 
@@ -212,6 +227,28 @@ def _requirements_by_binding(
     }
 
 
+def _source_kind_for_binding(
+    gathered: tuple[_GatheredObservation, ...],
+    *,
+    source_modelo: str,
+    source_filing_year: int,
+    source_periods: tuple[str, ...],
+) -> str:
+    required_periods = set(source_periods)
+    matched_source_kinds = {
+        item.source_kind
+        for item in gathered
+        if item.observation.modelo == source_modelo
+        and item.observation.filing_year == source_filing_year
+        and item.observation.period in required_periods
+    }
+    if len(matched_source_kinds) == 1:
+        return next(iter(matched_source_kinds))
+    if matched_source_kinds:
+        return _MIXED_OBSERVATION_SOURCE_KIND
+    return _LOCAL_FILING_PROVENANCE
+
+
 def resolve_bindings_from_local_store(
     snapshot: RegistrySnapshot,
     *,
@@ -243,7 +280,7 @@ def resolve_bindings_from_local_store(
 
     resolved_map = resolve_previous_filing_binding_values(
         snapshot.revision,
-        observations,
+        tuple(item.observation for item in observations),
         filing_year=snapshot.filing_year,
         period=snapshot.period,
     )
@@ -268,6 +305,12 @@ def resolve_bindings_from_local_store(
             PrefilledBinding(
                 binding_id=binding_id,
                 value=Decimal(value),
+                source_kind=_source_kind_for_binding(
+                    observations,
+                    source_modelo=source_modelo,
+                    source_filing_year=source_filing_year,
+                    source_periods=source_periods,
+                ),
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
@@ -327,6 +370,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         LocalIvaCompensationRecurrence(
             binding_id=prefilled.binding_id,
             amount=Decimal(amount),
+            source_kind=prefilled.source_kind,
             source_modelo=prefilled.source_modelo,
             source_filing_year=prefilled.source_filing_year,
             source_periods=prefilled.source_periods,

@@ -17,6 +17,7 @@ from ...core.resources import resources
 from ..aggregation import CalculationSourceContext
 from . import _iva_wallet_reconciliation as wallet_reconciliation
 from ._iva_wallet_reconciliation import (
+    IvaCompensationAuthoritySource,
     IvaCompensationOverride,
     IvaCompensationReconciliationInputError,
     IvaWalletDecisionSourceResolver,
@@ -175,6 +176,34 @@ def test_missing_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> 
     assert decision.selected_amount == Decimal("800")
     assert decision.divergence == "wallet_missing"
     assert decision.blocked is False
+
+
+def test_missing_wallet_with_aeat_filed_history_is_explicit_filed_history_only_authority() -> None:
+    filed_history_source = IvaCompensationAuthoritySource(
+        source_kind="filed_history_observation",
+        amount=Decimal("800"),
+        source_locator="303:2025:4T",
+        captured_at=_NOW,
+        source_modelo="303",
+        source_filing_year=2025,
+        source_periods=("4T",),
+    )
+
+    decision = reconcile_iva_compensation_wallet(
+        taxpayer_nif="12345678Z",
+        target_year=2026,
+        target_period="2T",
+        wallet=None,
+        local_recurrence_amount=Decimal("800"),
+        local_recurrence_source=filed_history_source,
+        decided_at=_NOW,
+    )
+
+    assert decision.selected_authority == "filed_history"
+    assert decision.selected_amount == Decimal("800")
+    assert decision.divergence == "filed_history_only"
+    assert decision.blocked is False
+    assert decision.authority_sources == (filed_history_source,)
 
 
 def test_stale_wallet_uses_local_recurrence_as_lower_confidence_fallback() -> None:
