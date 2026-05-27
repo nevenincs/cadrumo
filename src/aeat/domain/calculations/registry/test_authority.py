@@ -44,15 +44,23 @@ def test_authority_snapshot_runs_real_modelo_calculation() -> None:
             "16": Decimal("5.00"),
             "18": Decimal("100.00"),
         },
+        # 1T cannot have a same-ejercicio prior-quarter saldo seed;
+        # the M130 carry-forward selector returns no anchor for 1T
+        # and the bound casilla materialises Decimal("0") with the
+        # absent_by_design provenance marker. binding_values omits
+        # the carry-forward binding to exercise the absent-by-design
+        # path through the runtime, NOT a fictional non-zero seed.
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
-            "modelo-130-resultados-negativos-anteriores": Decimal("20.00"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
     )
 
     assert "19" in result.values
     assert {entry.target for entry in result.entries} >= {"19"}
+    casilla_15 = next(obs for obs in result.observations if obs.casilla_id == "15")
+    assert casilla_15.value == Decimal("0")
+    assert casilla_15.absent_by_design is True
 
 
 def test_authority_snapshot_is_authority_owned_revision_projection() -> None:
