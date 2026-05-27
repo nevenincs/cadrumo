@@ -19,44 +19,39 @@ related:
 
 # `schema-hardening-m184-standardization` `P01.S04`
 
-Records the Modelo 184 standardization review outcome, the post-split
-reviewability baseline, and the next single-file modelo to take onto
-the directory-fragment substrate.
+Recorded the M184 review outcome, final standardization baseline, and next
+single-file normalization edge.
 
 - Modified: `.vault/plan/2026-05-27-schema-hardening-m184-standardization-plan.md`
+- Created: `.vault/audit/2026-05-27-schema-hardening-m184-standardization-review.md`
 - Created: `.vault/exec/2026-05-27-schema-hardening-m184-standardization/2026-05-27-schema-hardening-m184-standardization-P01-S04.md`
+- Created: `.vault/exec/2026-05-27-schema-hardening-m184-standardization/2026-05-27-schema-hardening-m184-standardization-P01-summary.md`
 
 ## Description
 
-The S01 inventory mapped the M184 single-file source into a 13-fragment
-directory layout matching the established loader contract. The S02
-mechanical split landed `manifest.toml` plus the
-`revisions/2015-y-siguientes/` fragment tree without altering any
-casilla definition, binding selector, deadline window, or
-detail-record row builder. The S03 verification confirmed loader
-equivalence (single-file vs directory-mode read parity), referential
-integrity, committed registry validation, and end-to-end
-detail-record row-set assembly + round-trip behavior continue to
-hold from the fragment layout.
+The final review found no stale `184.toml` sibling and confirmed that the
+layout split itself reconstructs the pre-split source exactly. The review also
+found a later committed semantic change to M184's `declaracion_pdf` extraction
+profile in `13f5e39db`. That cross-campaign profile grounding work is outside
+the mechanical split and was preserved.
 
-The post-split reviewability baseline is locked at: 13 TOML
-fragments, largest fragment 95 lines (deadline windows), no single
-fragment over 100 lines. The original 184.toml is removed; the
-fragment tree is the canonical source. The reviewability ceiling
-the directory layout now offers also covers the `casillas/`,
-`constructs/`, and `bindings/` per-fragment slots without disturbing
-the loader merge order or the deterministic snapshot fingerprint.
+Final M184 layout baseline:
 
-The remaining single-file modelos under the root registry tree are
-`193.toml` (478 lines), `347.toml` (373), `309.toml` (363),
-`360.toml` (324), `036.toml` (300), `308.toml`, and `840.toml`.
-`193.toml` is the largest and therefore the next single-file
-normalization edge; the same mechanical split strategy (inventory ->
-manifest + revisions split -> directory-loader verification ->
-baseline record) carries over with no contract change required.
+- `184.toml` does not exist.
+- One fragment-directory revision exists: `2015-y-siguientes`.
+- Modelo 184 has 13 TOML fragments.
+- Largest Modelo 184 fragment: 95 lines.
+- Largest remaining root-level single-file modelo: `193.toml` at 472 lines.
 
 ## Tests
 
 - `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_modelo_184_registry.py src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
-- Result: covered by the S03 verification pass (32 passed) — no
-  additional tests required at the standardization-record step.
+- Result: 32 passed.
+
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_modelo_184_registry.py src/aeat/domain/calculations/registry/test_loader_directory_mode.py src/aeat/domain/calculations/registry/test_committed_registry.py src/aeat/domain/calculations/registry/test_referential_integrity.py src/aeat/domain/calculations/registry/test_detail_record_row_builders.py src/aeat/domain/calculations/registry/test_detail_record_modelo_coverage.py src/aeat/application/calculations/test_row_set_assembly.py src/aeat/application/calculations/test_detail_record_round_trip.py -q`
+- Result: 157 passed.
+
+- Current HEAD rerun including `13f5e39db` profile grounding and parser-boundary coverage: 256 passed.
+
+- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-27-schema-hardening-m184-standardization-plan.md`
+- Result: passed.
