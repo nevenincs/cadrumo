@@ -2075,6 +2075,26 @@ required_text = [
     "base liquidable del ahorro",
 ]
 
+[legal."ley-35-2006:art-52"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/ley-35-2006.json#art-52"
+document_id = "BOE-A-2006-20764"
+article = "52"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a52"
+published_at = 2006-11-29
+effective_from = 2006-11-29
+review_status = "reviewed"
+reviewed_at = 2026-05-27
+reviewed_by = "wgergely"
+notes = "Limite maximo a las reducciones por aportaciones y contribuciones a sistemas de prevision social (planes de pensiones, planes de empleo, PPSE, mutualidades). Aplicable a las reducciones que confluyen en casilla 0468."
+required_text = [
+    "planes de pensiones",
+    "reducción",
+    "límite",
+]
+
 [legal."ley-35-2006:art-79"]
 evidence_tier = "legal_authority"
 authority = "boe"
