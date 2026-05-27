@@ -40,6 +40,7 @@ W15.P33 inventories the secure-storage hierarchy constants that still define per
 | `iva_wallet_reconciliation_decisions` | `aeat.calculations.iva_wallet.reconciliation_decisions` | AUDIT | 1 | `iva-wallet-decision:{sha256(...)}` |
 | `iva_wallet_reconciliation_decision_events` | `aeat.calculations.iva_wallet.reconciliation_decision_events` | AUDIT | 1 | `iva-wallet-decision-event:{sha256(...)}` |
 | `iva_compensation_history` | `aeat.calculations.iva_compensation.history` | AUDIT | 1 | `303:{filing_year}:{period}` |
+| `live_iva_remote_state_acquisitions` | `aeat.application.live.iva_remote_state_acquisitions` | AUDIT | 1 | `live-iva-acquisition:{target_year}:{target_period}:{timestamp}:{sha256(...)}` |
 | `ledger_classification_rules` | `aeat.ledger.classification.rules` | AUDIT | 1 | `{rule_id}` |
 | `live_borrador_100_snapshot` | `aeat.application.live.borrador_100_snapshot` | FINANCIAL | 1 | `modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}` |
 | `live_census_snapshot` | `aeat.application.live.census_snapshot` | IDENTITY | 1 | `census-snapshot:{bucket_id}:{snapshot_id}` |
@@ -58,5 +59,5 @@ The registry also records discovered domain and adapter namespaces so later W03/
 ## Follow-Up
 
 - Replace remaining domain-level namespace and catalogue constants with the registered domain entries in the W03 namespace-registry wave.
-- Add repair-policy fields to namespace definitions when W03.P06/S41 lands, replacing command-surface heuristics with registry metadata.
+- Add repair-policy ownership metadata through `W03.P06.S26` and registry completeness coverage through `W03.P06.S27`, replacing command-surface heuristics with registry metadata.
 - Retire residual literal path assertions in tests by asserting through registry path definitions when those tests are not directly proving filesystem layout.
