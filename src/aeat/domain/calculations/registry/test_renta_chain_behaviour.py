@@ -58,7 +58,8 @@ def _base_2025_inputs() -> dict[str, Decimal]:
         "0516": Decimal("0"),
         "0517": Decimal("0"),
         "0518": Decimal("0"),
-        "0505": Decimal("0"),
+        # 0505 is now computed via renta-2025-base-liquidable-general-sometida-a-gravamen
+        # (max(0, 0500 - 0527)) and cannot be supplied as input.
         # 0528, 0529, 0530, and 0531 are now computed via lookup_bracket
         # / lookup_bracket_by_ccaa against the state and Madrid autonomic
         # bracket parameters; they cannot be supplied as inputs.
@@ -135,13 +136,21 @@ def test_minimo_personal_split_min_uses_smaller_of_base_liquidable_and_total_min
     LIRPF art. 57 parameter ``renta-2025-minimo-contribuyente-base-2025`` =
     €5,550. The other contributing casillas (0513/0515/0517) default to 0
     for a contributor with no age/discapacidad/descendientes mínimos, so
-    0519 = 5550. With 0505 = 1000 < 0519, 0521 must clip to 0505.
+    0519 = 5550.
+
+    0505 is computed as max(0, 0500 - 0527). Supplying 0003 (rendimientos trabajo)
+    = 1000 with all reductions and anualidades at 0 produces 0505 = 1000.
+    With 0505 = 1000 < 0519 = 5550, 0521 must clip to 0505 = 1000.
     """
     expected_minimo = Decimal("5550.00")
     scenario = _scenario_2025(
         "minimo-clip-to-base-liquidable",
-        overrides={"0505": Decimal("1000.00")},
+        # 0003 → 0025 → 0432 = 1000 → 0435 = 1000 → 0500 = 1000 (no reductions)
+        # → 0505 = max(0, 1000 - 0) = 1000  (0527 anualidades alimentos = 0)
+        overrides={"0003": Decimal("1000.00")},
         expected=(
+            RegistryScenarioExpectedOutput(target="0500", value=Decimal("1000.00")),
+            RegistryScenarioExpectedOutput(target="0505", value=Decimal("1000.00")),
             RegistryScenarioExpectedOutput(target="0519", value=expected_minimo),
             RegistryScenarioExpectedOutput(target="0521", value=Decimal("1000.00"), operand_refs=("0505", "0519")),
             # 0522 = min(0519 - 0521, 0510) = min(5550 - 1000, 0) = 0 (0510 default 0)
