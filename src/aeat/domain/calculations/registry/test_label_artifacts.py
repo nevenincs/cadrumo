@@ -10,12 +10,11 @@ from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
-from ._validate_label_artifacts import collect_label_artifact_findings
+from ._validate_label_artifacts import collect_label_artifact_findings, validate_no_label_artifacts
+from ._validate_registry_scope import validate_registry_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
-_CURRENT_UNRESOLVED_PLACEHOLDER_BASELINE = 266
-_CURRENT_UNRESOLVED_PLACEHOLDER_TOKENS = frozenset(("{0}", "{2}"))
 _SAMPLE_UNRESOLVED_PLACEHOLDER = "{" + "0" + "}"
 
 
@@ -64,18 +63,33 @@ def test_label_artifact_inventory_reports_unresolved_format_placeholder() -> Non
     assert finding.placeholder_token == _SAMPLE_UNRESOLVED_PLACEHOLDER
 
 
+def test_label_artifact_validator_reports_unresolved_format_placeholder() -> None:
+    modelo = _modelo_with_label("Importe íntegro {0}([0004]+[0005]-[0006])")
+
+    failures = validate_no_label_artifacts([modelo])
+
+    assert len(failures) == 1
+    assert "modelo 999 revision 2025 casilla 0001" in failures[0]
+    assert "unresolved_format_placeholder" in failures[0]
+
+
 def test_label_artifact_inventory_ignores_normal_casilla_brackets() -> None:
     modelo = _modelo_with_label("Importe íntegro ([0004]+[0005]-[0006])")
 
     assert collect_label_artifact_findings([modelo]) == ()
 
 
-def test_committed_corpus_unresolved_placeholder_baseline_does_not_creep() -> None:
+def test_committed_corpus_has_no_unresolved_label_placeholders() -> None:
     modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
 
     findings = collect_label_artifact_findings(modelos)
 
-    assert len(findings) == _CURRENT_UNRESOLVED_PLACEHOLDER_BASELINE
-    assert {finding.modelo_id for finding in findings} == {"100"}
-    assert {finding.artifact for finding in findings} == {"unresolved_format_placeholder"}
-    assert {finding.placeholder_token for finding in findings} == _CURRENT_UNRESOLVED_PLACEHOLDER_TOKENS
+    assert findings == ()
+
+
+def test_registry_scope_rejects_unresolved_label_placeholder() -> None:
+    modelo = _modelo_with_label("Importe íntegro {0}([0004]+[0005]-[0006])")
+
+    failures = validate_registry_scope([modelo])
+
+    assert any("unresolved_format_placeholder" in failure for failure in failures)

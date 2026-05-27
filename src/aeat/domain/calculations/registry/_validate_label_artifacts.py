@@ -13,6 +13,7 @@ _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")
 __all__ = (
     "LabelArtifactFinding",
     "collect_label_artifact_findings",
+    "validate_no_label_artifacts",
 )
 
 
@@ -47,3 +48,13 @@ def collect_label_artifact_findings(modelos: Iterable[ModeloDefinition]) -> tupl
                         )
                     )
     return tuple(findings)
+
+
+def validate_no_label_artifacts(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
+    """Return failures for unresolved casilla label formatting placeholders."""
+
+    return tuple(
+        f"modelo {finding.modelo_id} revision {finding.revision_id} casilla {finding.casilla_id}: "
+        f"label contains unresolved {finding.artifact} {finding.placeholder_token!r}: {finding.label!r}"
+        for finding in collect_label_artifact_findings(modelos)
+    )
