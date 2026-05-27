@@ -3637,3 +3637,102 @@ pure signature is perfectly suited to this iteration.
 | S305: Fix path | Change `except Exception` handler to warn-and-continue; only raise on confirmed duplicate |
 | S306: Single-profile calendar confirmed? | YES |
 | S306: Fix path | `--all-profiles` flag at CLI layer; `build_overview_calendar` unchanged |
+
+---
+
+## Task #115 — Architecture review: W05.P24.S91-S95 IVA classification enrichment
+
+**Commits:** `c27f35398` (sweep — implementation) + `c95617243` (test file + plan
+step-close) + `dc6e6c63d` (step record)
+**Date:** 2026-05-27
+**Reviewer:** architecture-specialist
+
+### D1 — `iva_category` and `counterparty_eu_member_state` on Transaction
+
+CONFIRMED. `src/aeat/domain/transactions/_models.py` lines 777-778:
+
+```
+iva_category: IvaCategory | None = None
+counterparty_eu_member_state: EUMemberState | None = None
+```
+
+Both fields are on `Transaction`, not on `BusinessClassification`. `_coerce_transaction_enum_fields`
+includes coercion for both (lines 283-284). Import at line 34:
+`from ..iva._schema import EUMemberState, IvaCategory`. Domain-layer placement correct;
+no adapter or application leakage.
+
+### D2 — BusinessClassification remains frozen at 7 members
+
+CONFIRMED. `src/aeat/domain/transactions/_enums.py` lines 49-55 show exactly 7 members:
+`BUSINESS`, `PERSONAL`, `MIXED`, `NOT_YET_PROCESSED`, `PROCESSED_UNCLASSIFIED`,
+`SKIPPED_BY_RULE`, `FAILED_VALIDATION`. No IVA-category additions. `CLASSIFIED_STATES`
+frozenset unchanged. ADR D2 constraint honoured.
+
+### D3 — Casilla 62 not touched
+
+CONFIRMED. No reference to `casilla_62` in `_iva_ledger.py` or `_schema.py`. Scope
+constraint respected.
+
+### D4 — DOMESTIC_NOT_SUBJECT does not feed casilla 59
+
+CONFIRMED. `casilla_59_base_imponible` (line 642 of `_iva_ledger.py`) sums only
+`IvaCategory.INTRA_COMMUNITY_SUPPLY` observations. `DOMESTIC_NOT_SUBJECT` is absent
+from that predicate. `test_domestic_not_subject_services_do_not_populate_casilla_59`
+exercises this directly — a DOMESTIC_NOT_SUBJECT row produces an observation but
+`casilla_59_base_imponible` returns `Decimal("0")`. R12 routing per ADR D4 is correct.
+
+### D5 — Three reject reasons present and gated correctly
+
+CONFIRMED. `IvaLedgerAggregationIssueReason` carries:
+- `DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION` (line 81)
+- `EU_MEMBER_STATE_ON_EXPORT_TRANSACTION` (line 82)
+- `MISSING_COUNTERPARTY_EU_MEMBER_STATE` (line 553)
+
+`_validate_intracom_export_counterparty` at lines 537-568 implements all three rules.
+Gate fires before `_classify_iva_transaction` so rejected transactions produce zero
+observations. Explicit `iva_category` override in `_classify_iva_transaction` (lines
+455-468) takes precedence over the `_RATE_KIND_TO_DOMESTIC_CATEGORY` fallback — correct.
+
+### G2 — Typed pydantic throughout
+
+CONFIRMED. `IvaCategory` and `EUMemberState` are both `StrEnum` members from
+`src/aeat/domain/iva/_schema.py`. No `dict[str, Any]` for any boundary record.
+`IvaLedgerAggregation.issues` is `list[IvaLedgerAggregationIssue]` (typed). No
+`cast()` or `str()` coercion escapes found.
+
+### G6 — Anti-tautology proof on D5 reject tests
+
+CONFIRMED SUFFICIENT. Each D5 test asserts BOTH `len(aggregation.observations) == 0`
+AND the specific `IvaLedgerAggregationIssueReason` value. If the gate were disabled
+and the transaction passed through, `len(observations)` would be 1 and the first
+assert would fail — the test is not tautological. The combined `test_marc_combined_scenario`
+additionally cross-checks `casilla_59 == 5000` while `casilla_60 == 0`, providing
+partition-of-observations confidence.
+
+### S93 — Locale keys
+
+CONFIRMED for en, es, ca. `c27f35398` adds `iva_category_help` and
+`counterparty_eu_member_state_help` under `cli.ledger.classify` in
+`en.yml`, `es.yml`, and `ca.yml` with proper prose. `hu.yml` adds
+the keys but uses the dotted key path as the value rather than a
+Hungarian translation — a minor locale gap, not a blocking defect.
+
+### Test run
+
+All 7 Marc persona tests PASS (`pytest src/aeat/application/aggregation/test_intracom_export.py`
+in 1.85s).
+
+### Follow-up
+
+- **HU locale gap (S93, MINOR):** `hu.yml` should translate
+  `iva_category_help` and `counterparty_eu_member_state_help` rather
+  than using key-path fallbacks.
+- **S94 note:** ADR S94 records that casillas 59+60 remain `input_kind=manual`
+  pending binding-type confirmation. This is intentional; no defect.
+
+### Verdict
+
+**APPROVE.** All ADR constraints D1-D5 and gates G2, G6 are satisfied.
+Implementation is architecturally clean. One minor locale gap in `hu.yml`
+(HU translations absent for the two new keys) is tracked as a non-blocking
+follow-up. S91-S95 are closed.
