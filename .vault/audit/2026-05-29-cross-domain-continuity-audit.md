@@ -3123,3 +3123,128 @@ phase add`) — no hand-editing. Step identifiers must be canonical and gap-free
 `vault plan step check` call closing S80 after the consolidation note is written
 in the audit doc. If plan expansion is triggered, the new Steps are added before
 S80 is closed.
+
+---
+
+## Wave promotion structural decision (Task #103 — 2026-05-27)
+
+**Decision: Option B — create W12 as a dedicated structural-debt cleanup wave.**
+
+### Options evaluated
+
+**Option A — extend W10 with new P59/P60:** W10 (P50-P58) is the deadline-window
+registration wave, all Steps closed. Appending structural-debt cleanup there
+creates a semantic mismatch (calendar data vs. code boundary hygiene). P59 is also
+already occupied by W11.
+
+**Option B — new W12 with two phases:** W11.P59 is the standing quality-gate
+meta-wave (persona fleet, drift sweep, plan expansion on every terminus) — it must
+remain at the end of every wave sequence and cannot be interrupted by content
+phases. Creating W12 with P60 (typed-boundary bulk) and P61 (registry
+validate-helper dedup) inserts cleanly before W11 in the logical sequence. W11
+then remains the eternal quality gate for W12 as well as all prior waves.
+
+**Option C — W09.P41 macro-cluster:** W09.P41 already carries 90+ Steps across
+12 semantic categories. Marking a subset as a macro-cluster does not give the PM
+clean scheduling boundaries and forces W09 dispatch to interleave structural-debt
+work with the much smaller and faster W09 UX/localisation Steps. No structural
+benefit.
+
+### Decision rationale
+
+W12 is the correct home because:
+1. Semantic isolation — typed-boundary and validate-helper work is structural
+   hygiene that deserves its own quality gate (W12 terminus → W11.P59 re-run).
+2. Schedule independence — W12 does not block W09 completion; W09 closes when
+   its own Tier 0/1/2 Steps are done. W12 is a parallel campaign.
+3. Clean phase numbering — the next-available Phase id after W10.P58 is P60
+   (W11.P59 is taken), which is a natural home for the first W12 phase, then P61
+   for the second.
+4. W11 re-use — W11.P59 S192-S195 apply as the W12 quality gate without any
+   new Step authoring; the PM simply re-runs the W11 termination checklist after
+   W12 closes.
+
+### Scope of W12.P60 — typed-boundary bulk (G2 gate)
+
+Covers all `dict[str, Any]`/`dict[str, object]` public boundaries and `cast()`
+escapes surfaced by the S97 UNTYPED_BOUNDARY discovery sweep. The Steps currently
+filed as W09.P41.S277-S280 are the W12.P60 seed; additional sites discovered
+during execution extend P60 with new Step rows.
+
+Target files by sub-phase:
+- S277 — `_bundle.py` single-site annotation (narrowest, land first as a warm-up).
+- S278 — 14 CLI entrypoint payload functions in `_modelo.py`, `_ledger.py`,
+  `_config/__init__`, `_common.py`, `_app_live.py`.
+- S279 — 10 application service payload functions across `auth/`, `filing/`,
+  `aggregation/`, `operator_surface/`, `ledger/`.
+- S280 — 14 `cast()` escapes + 3 `pydantic Any/object` fields in `workflow/`,
+  `registry/`, `review/`, `schedules/`, `workflow/_models`.
+
+### Scope of W12.P61 — registry validate-helper dedup (G5 gate)
+
+Covers the 8-Step `_missing_refs` deduplication in
+`src/aeat/domain/calculations/registry/` surfaced by the W09.P39 discovery sweep
+(S149-S156). The Steps are already authored in W09.P39; P61 simply re-hosts them
+under W12 so they execute as a single coordinated batch (one create + 7 updates)
+rather than 8 independent W09 dispatch slots.
+
+### Execution order within W12
+
+1. W12.P60.S277 (single-site warmup) — validates the typed-annotation pattern.
+2. W12.P60.S278 (CLI entrypoints, 14 sites) — largest visible surface; review
+   after each batch of 3-4 files.
+3. W12.P60.S279 (application services, 10 sites) — follow immediately; same typed
+   pydantic pattern.
+4. W12.P60.S280 (cast() escapes, 14 + 3 sites) — requires per-site decisions
+   (typed alternative vs. inline ADR note); land last in P60.
+5. W12.P61.S149 (create `_validate_helpers.py`) — single new file.
+6. W12.P61.S150-S156 (7 sibling-file imports) — mechanical, batch in one commit.
+
+### CLI commands for the PM to execute
+
+Run these in sequence after checking out the plan file:
+
+```
+PLAN=".vault/plan/2026-05-26-cross-domain-continuity-plan.md"
+
+# 1. Add W12 wave
+uv run --no-sync vaultspec-core vault plan wave add "$PLAN" \
+  --title "structural-debt cleanup — typed-boundary + validate-helper dedup" \
+  --intent "Retire the G2 typed-boundary violations (dict[str,object] public boundaries and cast() escapes) surfaced by the UNTYPED_BOUNDARY discovery sweep, and eliminate the _missing_refs duplication across 7 registry validate modules. Both clusters were promoted from W09.P41 because their combined scope (38 sites + 8 Steps) exceeds what W09 dispatch slots can absorb without starving the W09 UX/localisation work."
+
+# 2. Add W12.P60 — typed-boundary bulk
+uv run --no-sync vaultspec-core vault plan phase add "$PLAN" \
+  --wave W12 \
+  --title "typed-boundary bulk — replace dict[str,object] and cast() escapes" \
+  --intent "Replace all public dict[str,object] return types and cast() type-erasure operations identified by the S97 UNTYPED_BOUNDARY sweep with typed pydantic models or inline ADR-documented boundary exceptions. Execute in sub-batches: S277 (single site) first, then S278 (CLI 14 sites), S279 (application 10 sites), S280 (cast 14+3 sites)."
+
+# 3. Add W12.P61 — registry validate-helper dedup
+uv run --no-sync vaultspec-core vault plan phase add "$PLAN" \
+  --wave W12 \
+  --title "registry validate-helper dedup — _missing_refs consolidation" \
+  --intent "Extract the duplicated _missing_refs helper from 7 registry validate modules into a single src/aeat/domain/calculations/registry/_validate_helpers.py and update all import sites. Steps S149-S156 from W09.P39 are re-homed here and executed as one coordinated batch."
+
+# 4. Move S149-S156 from W09.P39 to W12.P61
+# (use vault plan step move for each; confirm canonical ids after phase add)
+# Example for S149:
+uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P39.S149 --to-phase P61
+
+# Repeat for S150-S156 (adjust Pxx to the actual assigned id after step 3 above)
+
+# 5. Move S277-S280 from W09.P41 to W12.P60
+uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P41.S277 --to-phase P60
+uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P41.S278 --to-phase P60
+uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P41.S279 --to-phase P60
+uv run --no-sync vaultspec-core vault plan step move "$PLAN" W09.P41.S280 --to-phase P60
+```
+
+**Notes for the PM:**
+- Run `vault plan status "$PLAN"` after each wave/phase add to confirm the new
+  canonical identifier before running subsequent commands.
+- The `--to-phase` flag takes the canonical Phase id (`P60`, `P61`) not the
+  display path. Verify with `vault plan query --wave W12` after the add.
+- After the moves, run `vault plan check "$PLAN"` to confirm no id gaps or
+  dangling references.
+- S215 (ledger `_actions.py` four payload helpers) remains in W09.P41 rather than
+  moving to W12 because it is lower in scope (4 sites, one file, already under
+  active coder attention) and should not be gated behind the full P60 batch.
