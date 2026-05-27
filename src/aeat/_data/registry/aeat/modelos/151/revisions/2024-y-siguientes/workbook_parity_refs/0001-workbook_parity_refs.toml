@@ -1,0 +1,9 @@
+[[revisions."2024-y-siguientes".workbook_parity_refs]]
+id = "modelo-151-boe-form-layout"
+workbook_source = "boe-modelo-151-form"
+fixture_id = "modelo-151-boe-form-static-layout"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.00"
+legal_refs = ["ley-35-2006:art-93", "rd-439-2007:art-113"]
+source_refs = ["boe-modelo-151-form"]
