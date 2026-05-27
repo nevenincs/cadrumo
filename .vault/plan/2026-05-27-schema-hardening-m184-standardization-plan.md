@@ -27,5 +27,5 @@ Normalize Modelo 184 from the largest remaining single-file modelo into the gene
 
 - [x] `P01.S01` - Inventory M184 single-file section boundaries and record the mechanical directory split strategy before editing registry data; `.vault/audit`.
 - [x] `P01.S02` - Mechanically split M184 into `manifest.toml` and `revisions/2015-y-siguientes` fragments using the existing generic loader layout; `src/aeat/_data/registry/aeat/modelos/184`.
-- [ ] `P01.S03` - Verify M184 directory loading, registry integrity, detail-record row behavior, and TOML reviewability gates; `src/aeat/domain/calculations/registry tests`.
+- [x] `P01.S03` - Verify M184 directory loading, registry integrity, detail-record row behavior, and TOML reviewability gates; `src/aeat/domain/calculations/registry tests`.
 - [ ] `P01.S04` - Record review outcome, standardization baseline, and the next single-file normalization edge; `.vault/exec`.
