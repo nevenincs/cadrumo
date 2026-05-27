@@ -612,29 +612,6 @@ cli:
         create_reused: cli.app.modelo.work.create_reused
         create_reused_name_match: cli.app.modelo.work.create_reused_name_match
         create_reused_renamed: cli.app.modelo.work.create_reused_renamed
-        create_stub_modelo_refused: 'A(z) %{modelo} modell regisztrált, de ebben a
-          verzióban még nem teljes körűen támogatott. A külföldi virtuális pénznemekről
-          szóló tájékoztató bevallást (721-es modell) közvetlenül az AEAT elektronikus
-          székhelyén kell benyújtani (sede.agenciatributaria.gob.es). A kötelezettség
-          akkor keletkezik, ha a külföldi virtuális pénznemek összesített értéke december
-          31-én meghaladja az 50.000 €-t (Orden HFP/887/2023, BOE-A-2023-17455). Jogi
-          hivatkozások: Ley 11/2021 13. cikk / DA 10ª, Orden HFP/887/2023,
-          RD 1065/2007 42 quáter cikk.'
-        create_stub_modelo_151_refused: 'A(z) %{modelo} modell regisztrált a kötelezettség-nyilvántartásban,
-          de a teljes számítási motor (casillák, képletek, BOE fájl) még nincs implementálva
-          ebben a verzióban. A külföldiek különleges adózási rendszere (Ley Beckham) —
-          Ley 35/2006 93. cikk (LIRPF) és RD 439/2007 113-120. cikkek (RIRPF) — megköveteli
-          a 151-es modell benyújtását közvetlenül az AEAT elektronikus székhelyén:
-          sede.agenciatributaria.gob.es/Sede/procedimientoini/G416.shtml (Orden EHA/2887/2008,
-          BOE-A-2008-16237). Jogi hivatkozások: Ley 35/2006 93. cikk, RD 439/2007
-          113-120. cikk, Orden EHA/2887/2008.'
-        create_stub_modelo_714_refused: 'A(z) %{modelo} modell regisztrált a kötelezettség-nyilvántartásban,
-          de a teljes számítási motor (casillák, adók, BOE fájl) még nincs implementálva
-          ebben a verzióban. A vagyonadót (Ley 19/1991) közvetlenül az AEAT elektronikus
-          székhelyén kell bevallani: sede.agenciatributaria.gob.es/Sede/patrimonio.html
-          (Orden HAC/1023/2021, BOE-A-2021-7593). A kötelezettségi küszöb általánosan
-          nettó vagyon > €700.000 (€600.000 a Valenciai Közösségben). Jogi hivatkozások:
-          Ley 19/1991 28. cikk, Orden HAC/1023/2021.'
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help
@@ -672,6 +649,21 @@ cli:
         revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
         revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
         revisions_help: cli.app.modelo.work.revisions_help
+        row_empty_key: 'Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
+          formátumúnak kell lennie.'
+        row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
+        row_help: 'Gépelt részletsor ismétlődő rekordokat tartalmazó tájékoztató modelokhoz.
+          Formátum: TÍPUS MEZŐ=érték [MEZŐ=érték ...]. A TÍPUS ''miembro'' (M184 tagsor)
+          vagy ''vinculada'' (M232 kapcsolt fél). Több sor megadásához ismételje. M184
+          példa: --row ''miembro nif=12345678A porcentaje=40 importe=10000''. M232 példa:
+          --row ''vinculada nif=A12345678 tipo_operacion=01 importe=50000''.'
+        row_kv_format_error: 'A --row {token} mezőnek KULCS=ÉRTÉK formátumúnak kell
+          lennie.'
+        row_m184_shares_not_100: 'M184 tagsorok: a részesedési arányok összegének pontosan
+          100%-nak kell lennie; {count} sorból {total} jött ki.'
+        row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
+          {supported}.'
+        row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
         runs_help: cli.app.modelo.work.runs_help
         set_not_decimal: cli.app.modelo.work.set_not_decimal
         set_override_help: cli.app.modelo.work.set_override_help
@@ -1653,15 +1645,19 @@ errors:
     auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
     auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
   calc:
+    age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
     binding_value_missing: errors.calc.binding_value_missing
     bound_casilla_binding_value_missing: A(z) {binding_id} kötés értéke nincs megadva.
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
+    bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
     bracket_negative_base: errors.calc.bracket_negative_base
     bracket_no_coverage: errors.calc.bracket_no_coverage
     bracket_no_window: errors.calc.bracket_no_window
     casilla_constraint_violation: errors.calc.casilla_constraint_violation
     casilla_referenced_before_evaluation: errors.calc.casilla_referenced_before_evaluation
     computed_supplied_as_input: errors.calc.computed_supplied_as_input
+    date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
+    date_binding_value_missing: errors.calc.date_binding_value_missing
     dispatch_key_unknown: errors.calc.dispatch_key_unknown
     dispatch_parameter_kind: errors.calc.dispatch_parameter_kind
     divide_by_zero: errors.calc.divide_by_zero

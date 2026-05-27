@@ -700,6 +700,7 @@ def _parse_binding_override(spec: str) -> tuple[str, str]:
 # ---------------------------------------------------------------------------
 
 _ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada"})
+_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset({"porcentaje", "importe"})
 
 
 def _parse_row_spec(spec: str) -> ModeloDetailRow:
@@ -731,7 +732,7 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                 supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
             )
         )
-    kv_pairs: dict[str, str] = {}
+    kv_raw: dict[str, str] = {}
     for token in parts[1:]:
         if "=" not in token:
             raise typer.BadParameter(
@@ -750,13 +751,16 @@ def _parse_row_spec(spec: str) -> ModeloDetailRow:
                     token=token,
                 )
             )
-        kv_pairs[key] = value
+        kv_raw[key] = value
     try:
+        kv_pairs: dict[str, str | Decimal] = {
+            k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
+        }
         if row_type == "miembro":
             return Modelo184MemberRow(row_type="miembro", **kv_pairs)  # type: ignore[arg-type]
         else:
             return Modelo232VinculadaRow(row_type="vinculada", **kv_pairs)  # type: ignore[arg-type]
-    except (ValidationError, TypeError, ValueError) as exc:
+    except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.row_validation_error",

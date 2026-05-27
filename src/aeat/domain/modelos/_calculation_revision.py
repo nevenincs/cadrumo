@@ -49,6 +49,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 
 from ..calculations.registry._bindings import CasillaObservation
 from ._errors import ModeloValidationError
+from ._row_models import Modelo184MemberRow, Modelo232VinculadaRow, ModeloDetailRow
 
 
 class CalculationRevisionState(StrEnum):
@@ -109,6 +110,26 @@ def _canonical_decimal(value: Decimal) -> str:
     return format(value.normalize(), "f")
 
 
+def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:
+    """Stable, sort-canonical projection of detail rows for the hash payload.
+
+    Each row is serialised as a sorted dict of its string/decimal fields.
+    Rows are sorted by (row_type, nif) so insertion order does not affect
+    the revision id — operators can supply rows in any order.
+    """
+
+    def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
+        d: dict[str, object] = {}
+        for field_name, field_value in row.model_dump().items():
+            if isinstance(field_value, Decimal):
+                d[field_name] = str(field_value.normalize())
+            else:
+                d[field_name] = str(field_value)
+        return dict(sorted(d.items()))
+
+    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, r.nif))]
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
@@ -118,6 +139,7 @@ def derive_calculation_revision_id(
     source_transaction_ids: Sequence[str] = (),
     borrador_snapshot_id: str | None = None,
     bindings_sourced_from_borrador: Sequence[str] = (),
+    detail_rows: Sequence[ModeloDetailRow] = (),
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -128,9 +150,14 @@ def derive_calculation_revision_id(
     catalogue's content-addressing invariant then makes a second
     ``calculate`` call idempotent (the existing revision is
     returned, no duplicate is persisted).
+
+    ``detail_rows`` carries typed row observations for informational
+    modelos (M184, M232) that declare row-producer bindings. When rows
+    are present they are serialised into the hash so structurally
+    identical re-runs with the same rows produce the same id.
     """
 
-    payload = {
+    payload: dict[str, object] = {
         "work_unit_id": work_unit_id.strip(),
         "inputs": dict(sorted((k.strip(), v.strip()) for k, v in inputs_snapshot.items())),
         "overrides": dict(sorted((k.strip(), v.strip()) for k, v in binding_overrides.items())),
@@ -143,6 +170,9 @@ def derive_calculation_revision_id(
         payload["borrador_snapshot_id"] = normalized_borrador_snapshot_id
     if normalized_borrador_bindings:
         payload["bindings_sourced_from_borrador"] = normalized_borrador_bindings
+    canonical_rows = _canonical_detail_rows(tuple(detail_rows))
+    if canonical_rows:
+        payload["detail_rows"] = canonical_rows
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
@@ -248,6 +278,13 @@ class CalculationRevision(BaseModel):
     # source_refs trace survives the domain boundary that previously
     # dropped them when only ``casilla_values`` was persisted.
     observations: tuple[CasillaObservation, ...] = Field(default_factory=tuple)
+    # Operator-supplied detail rows for informational modelos whose
+    # content is a list of repeating records rather than scalar casilla
+    # values (M184 atribución members, M232 operaciones vinculadas).
+    # Defaults to () so existing persisted revisions load without schema
+    # migration. Included in the content-addressed revision id so
+    # structurally identical re-runs with the same rows are idempotent.
+    detail_rows: tuple[Modelo184MemberRow | Modelo232VinculadaRow, ...] = Field(default_factory=tuple)
     created_at: datetime
     updated_at: datetime
     verified_at: datetime | None = None
@@ -272,6 +309,7 @@ class CalculationRevision(BaseModel):
             source_transaction_ids=self.source_transaction_ids,
             borrador_snapshot_id=self.borrador_snapshot_id,
             bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
+            detail_rows=self.detail_rows,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
