@@ -10,9 +10,18 @@ Test strategy (non-tautological):
   Then invoke `aeat app modelo project --year 2024 --ccaa madrid` and
   capture the projected M100 casilla values from the JSON response.
 - Oracle side: call `calculate_registry_snapshot` directly with the same
-  accumulated M130 outputs (0505 = sum of casilla 03, 0604 = sum of
-  casilla 19).  These are independent entry paths exercising different
-  code paths through the same registry.
+  accumulated M130 output injected at casilla 0171 (ingresos de explotación,
+  manual-kind leaf) plus 0604 (pagos fraccionados).  These are independent
+  entry paths exercising different code paths through the same registry.
+
+Injection point rationale:
+  Casilla 0505 (base liquidable general sometida a gravamen) is computed
+  (input_kind = "computed", formula = max(0, 0500 − 0527)) and cannot be
+  supplied as a direct engine input — doing so raises RegistryValidationError.
+  The project verb instead injects the M130 rendimiento neto at casilla 0171
+  (Ingresos de explotación, manual-kind), with all EDS gastos at zero.
+  The formula chain 0171→0180→0224→0226→0231→0235→0432→0435→0500→0505
+  propagates the net income through to base liquidable general.
 
 Authority for M130 oracle inputs:
   AEAT DR 130 Instrucciones, Casilla 04 «20 por 100»; Casilla 19
@@ -29,8 +38,8 @@ Authority for M130 oracle inputs:
     casilla 19 (resultado final):     1.600,00 EUR  [= 17 - 18 = 17 - 0]
 
   4 quarters accumulated:
-    0505 (base liquidable general):  32.000,00 EUR
-    0604 (pagos fraccionados):        6.400,00 EUR
+    0171 (ingresos explotación, injection leaf): 32.000,00 EUR
+    0604 (pagos fraccionados):                    6.400,00 EUR
 """
 
 from __future__ import annotations
@@ -164,8 +173,11 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     identical oracle inputs, then invoke `project --year 2024 --ccaa madrid`.
 
     Oracle side: call `calculate_registry_snapshot` directly with the
-    accumulated inputs `0505 = 32.000,00 EUR` and `0604 = 6.400,00 EUR`
-    plus the same default bindings the project verb applies.
+    accumulated inputs `0171 = 32.000,00 EUR` (EDS ingresos de explotación,
+    manual-kind leaf casilla) and `0604 = 6.400,00 EUR` plus the same
+    default bindings the project verb applies.  Casilla 0505 is computed
+    (max(0, 0500 − 0527)) and cannot be supplied as an engine input; both
+    the project verb and this oracle inject at the leaf casilla 0171.
 
     Per `no-tautological-calculation-tests.md` the oracle is the M100
     registry engine itself, not a re-implementation of the projection
@@ -263,7 +275,7 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
     oracle_result = calculate_registry_snapshot(
         m100_snapshot,
         inputs={
-            "0505": _TOTAL_RENDIMIENTO_NETO,
+            "0171": _TOTAL_RENDIMIENTO_NETO,  # EDS ingresos explotación leaf (manual-kind)
             "0604": _TOTAL_PAGOS_FRACCIONADOS,
         },
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
@@ -296,6 +308,6 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         assert projected_value == oracle_value, (
             f"M100 casilla {casilla_id}: project verb returned {projected_value}, "
             f"oracle (direct calculate_registry_snapshot) returned {oracle_value}. "
-            f"Inputs: 0505={_TOTAL_RENDIMIENTO_NETO}, 0604={_TOTAL_PAGOS_FRACCIONADOS}, "
+            f"Inputs: 0171={_TOTAL_RENDIMIENTO_NETO}, 0604={_TOTAL_PAGOS_FRACCIONADOS}, "
             f"ccaa={_CCAA!r}."
         )

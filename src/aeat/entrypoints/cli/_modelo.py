@@ -4693,10 +4693,15 @@ def modelo_project(
         except (InvalidOperation, ValueError):
             extra_enum_bindings[k] = v
 
-    # M100 inputs: projected base liquidable general from M130 rendimiento neto,
-    # pagos fraccionados from M130 casilla 19 sum.
+    # M100 inputs: inject M130 rendimiento neto as EDS ingresos de explotación
+    # (casilla 0171, manual-kind). With all gastos casillas at zero the formula
+    # chain 0171 → 0180 → 0224 → 0226 → 0231 → 0235 → 0432 → 0435 → 0500 → 0505
+    # propagates the projected net income through base liquidable general.
+    # Casilla 0505 is computed (max(0, 0500 − 0527)); supplying it directly as an
+    # input raises RegistryValidationError — hence the injection at the leaf casilla.
+    # Pagos fraccionados go to 0604 (manual-kind, actividades económicas).
     m100_inputs: dict[str, Decimal] = {
-        "0505": projected_rendimiento_neto,  # base liquidable general
+        "0171": projected_rendimiento_neto,  # EDS ingresos explotación (projection leaf)
         "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
     }
