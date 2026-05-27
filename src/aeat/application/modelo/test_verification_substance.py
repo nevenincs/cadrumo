@@ -88,6 +88,37 @@ def test_any_nonzero_fails_when_all_absent() -> None:
     assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values) is False
 
 
+def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
+    """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
+    values: dict[str, Decimal] = {"11": Decimal("300"), "10": Decimal("500")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is True
+
+
+def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
+    """cap_le_when_positive: fails when ceiling > 0 AND limited > ceiling.
+
+    P08.S47 case: M131 C11 (resultados negativos anteriores) MUST NOT
+    exceed C10 (cuota positiva del trimestre) per AEAT instructions
+    "en ningún caso podrá figurar en la casilla 11 un importe superior
+    a la cantidad positiva consignada en la casilla 10".
+    """
+    values: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("500")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is False
+
+
+def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
+    """cap_le_when_positive: predicate holds (no cap) when ceiling ≤ 0.
+
+    The AEAT cap rule only applies when the operator's gross liability
+    is positive. A zero or negative cuota means there's no cap to
+    enforce; the predicate must NOT block in that case.
+    """
+    values_zero: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("0")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero) is True
+    values_negative: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("-50")}
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative) is True
+
+
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
