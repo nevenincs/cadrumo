@@ -3047,6 +3047,7 @@ def _transaction_from_command(
         "notes": command.notes,
         "iva_category": command.iva_category,
         "counterparty_eu_member_state": command.counterparty_eu_member_state,
+        "source_jurisdiction": command.source_jurisdiction,
     }
     if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
         payload.update(
