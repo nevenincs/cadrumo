@@ -39,29 +39,32 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ...core.i18n import tr
+from ...core.i18n import tr as _tr
 from ...domain.deadlines import (
-    DeadlineEngine,
-    HolidayJurisdiction,
-    ModeloDeadline,
-    ObligationStatus,
-    Recovery,
-    Schedule,
-    ScheduleProducer,
-    TaxpayerProfile,
-    shift_deadline,
+    DeadlineEngine as _DeadlineEngine,
+    HolidayJurisdiction as _HolidayJurisdiction,
+    ModeloDeadline as _ModeloDeadline,
+    ObligationStatus as _ObligationStatus,
+    Recovery as _Recovery,
+    Schedule as _Schedule,
+    ScheduleProducer as _ScheduleProducer,
+    TaxpayerProfile as _TaxpayerProfile,
+    shift_deadline as _shift_deadline,
 )
-from ...domain.deadlines._errors import NoDeadlineWindowsError
-from ...domain.deadlines._festivos import DeadlineValidationError
+from ...domain.deadlines._errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
+from ...domain.deadlines._festivos import DeadlineValidationError as _DeadlineValidationError
 from ._applicability import (
     ApplicabilityVerdict,
     ModeloApplicability,
-    PayerFact,
+    PayerFact as _PayerFact,
     derive_modelo_applicability,
-    iter_modelo_applicability_rules,
-    taxpayer_model_is_declared,
+    iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
+    taxpayer_model_is_declared as _taxpayer_model_is_declared,
 )
-from ...domain.deadlines.taxpayer_model import IrpfEstimationRegime, IrpfIncomeCategory
+from ...domain.deadlines.taxpayer_model import (
+    IrpfEstimationRegime as _IrpfEstimationRegime,
+    IrpfIncomeCategory as _IrpfIncomeCategory,
+)
 from ._errors import (
     OverviewAgendaError,
     OverviewBacklogError,
@@ -102,20 +105,20 @@ class OverviewPeriodState(StrEnum):
     UNKNOWN = "unknown"
 
 
-_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[ObligationStatus, OverviewPeriodState] = MappingProxyType(
+_USER_STATE_FOR_OBLIGATION_STATUS: MappingProxyType[_ObligationStatus, OverviewPeriodState] = MappingProxyType(
     {
-        ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
-        ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
-        ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
-        ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
-        ObligationStatus.FILED: OverviewPeriodState.FILED,
-        ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
+        _ObligationStatus.UPCOMING: OverviewPeriodState.DUE,
+        _ObligationStatus.DUE_SOON: OverviewPeriodState.DUE,
+        _ObligationStatus.DUE_TODAY: OverviewPeriodState.DUE,
+        _ObligationStatus.OVERDUE: OverviewPeriodState.LATE,
+        _ObligationStatus.FILED: OverviewPeriodState.FILED,
+        _ObligationStatus.NOT_APPLICABLE: OverviewPeriodState.UNKNOWN,
     }
 )
 """Translates the 6-state engine status into the CLI's 4-state taxonomy."""
 
 
-def user_state_for(obligation_status: ObligationStatus) -> OverviewPeriodState:
+def user_state_for(obligation_status: _ObligationStatus) -> OverviewPeriodState:
     """Return the :class:`OverviewPeriodState` for an engine status."""
     return _USER_STATE_FOR_OBLIGATION_STATUS[obligation_status]
 
@@ -183,7 +186,7 @@ class OverviewCalendarEntry(BaseModel):
             the engine.
         user_state: Precomputed :class:`OverviewPeriodState` derived
             via :func:`user_state_for` for the CLI's 4-column table.
-        recovery: Resolved :class:`Recovery` payload when ``status`` is
+        recovery: Resolved :class:`_Recovery` payload when ``status`` is
             ``OVERDUE``; ``None`` otherwise. Carried through verbatim
             from the underlying :class:`ModeloDeadline`.
     """
@@ -197,11 +200,11 @@ class OverviewCalendarEntry(BaseModel):
     adjusted_closes_on: date
     shift_reason: str = Field(min_length=1, max_length=64)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
-    jurisdictions: tuple[HolidayJurisdiction, ...] = Field(default_factory=tuple)
+    jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
     payment_cutoff_on: date | None = None
-    status: ObligationStatus
+    status: _ObligationStatus
     user_state: OverviewPeriodState
-    recovery: Recovery | None = None
+    recovery: _Recovery | None = None
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:
@@ -248,7 +251,7 @@ class CalendarWarning(BaseModel):
     Attributes:
         code: Stable warning identifier (e.g.
             ``profile.iva_regime_unset``).
-        message: Translation key the renderer feeds through ``tr``.
+        message: Translation key the renderer feeds through ``_tr``.
         fix_command: Concrete shell command the operator can run to
             address the warning (e.g.
             ``aeat config profile edit``).
@@ -404,30 +407,30 @@ class OverviewStatusReport(BaseModel):
 
 
 def _entry_intersects_range(
-    obligation: ModeloDeadline,
+    obligation: _ModeloDeadline,
     calendar_range: OverviewCalendarRange,
 ) -> bool:
     """Return whether ``obligation``'s [opens_on, closes_on] intersects the range."""
     return obligation.closes_on >= calendar_range.from_date and obligation.opens_on <= calendar_range.to_date
 
 
-# Codec: maps a PayerFact value to the profile key and locale warning key
+# Codec: maps a _PayerFact value to the profile key and locale warning key
 # used by the completeness surface. The profile key is the field name on the
 # operator's raw values dict; the locale key names the CalendarWarning message.
-_PAYER_FACT_PROFILE_KEY: dict[PayerFact, tuple[str, str]] = {
-    PayerFact.PAYS_WITHHELD_INCOME: (
+_PAYER_FACT_PROFILE_KEY: dict[_PayerFact, tuple[str, str]] = {
+    _PayerFact.PAYS_WITHHELD_INCOME: (
         "pays_professionals_with_retencion",
         "cli.overview.warning.retencion_profesionales_unset",
     ),
-    PayerFact.PAYS_RENT_WITH_RETENCION: (
+    _PayerFact.PAYS_RENT_WITH_RETENCION: (
         "pays_rent_with_retencion",
         "cli.overview.warning.retencion_arrendamientos_unset",
     ),
-    PayerFact.TRADES_INTRACOMMUNITY: (
+    _PayerFact.TRADES_INTRACOMMUNITY: (
         "does_intracomunitario",
         "cli.overview.warning.intracomunitario_unset",
     ),
-    PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
+    _PayerFact.EXCEEDS_THIRD_PARTY_THRESHOLD: (
         "third_party_transactions_above_347_threshold",
         "cli.overview.warning.terceros_threshold_unset",
     ),
@@ -435,15 +438,15 @@ _PAYER_FACT_PROFILE_KEY: dict[PayerFact, tuple[str, str]] = {
 
 # Codec: maps an estimation regime (when a rule gates on exactly one regime
 # that is not the default directa path) to the profile key + locale warning key.
-_ESTIMATION_REGIME_PROFILE_KEY: dict[IrpfEstimationRegime, tuple[str, str]] = {
-    IrpfEstimationRegime.OBJETIVA: (
+_ESTIMATION_REGIME_PROFILE_KEY: dict[_IrpfEstimationRegime, tuple[str, str]] = {
+    _IrpfEstimationRegime.OBJETIVA: (
         "uses_objective_estimation_irpf",
         "cli.overview.warning.estimacion_objetiva_unset",
     ),
 }
 
 # IVA-subject modelos: those that gate on ACTIVIDAD_ECONOMICA and the IVA
-# regime being set. The IVA regime is not a PayerFact or an estimation regime
+# regime being set. The IVA regime is not a _PayerFact or an estimation regime
 # — it is a separate profile key. This entry is static because the IVA regime
 # concept is not yet encoded in ModeloApplicabilityRule.
 _IVA_REGIME_MODELOS: tuple[str, ...] = ("303", "390")
@@ -454,7 +457,7 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
 
     Iterates :data:`~aeat.domain.calculations.registry._applicability._MODELO_APPLICABILITY_RULES`
     and builds the completeness-warning table from the rule axes rather than
-    maintaining a hardcoded dict. New rules whose gates use a known PayerFact
+    maintaining a hardcoded dict. New rules whose gates use a known _PayerFact
     or estimation regime automatically surface their gating warning without a
     manual update here.
 
@@ -478,7 +481,7 @@ def _gating_fields() -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
     # profile_key → (locale_message_key, fix_command)
     key_to_meta: dict[str, tuple[str, str]] = {}
 
-    for rule in iter_modelo_applicability_rules():
+    for rule in _iter_modelo_applicability_rules():
         # Payer-fact gate
         if rule.required_payer_fact is not None:
             profile_key, locale_key = _PAYER_FACT_PROFILE_KEY.get(
@@ -564,11 +567,11 @@ def _build_completeness_and_warnings(
 
 
 def build_overview_calendar(
-    profile: TaxpayerProfile,
+    profile: _TaxpayerProfile,
     calendar_range: OverviewCalendarRange,
     *,
     today: date,
-    engine: ScheduleProducer | None = None,
+    engine: _ScheduleProducer | None = None,
     raw_values: Mapping[str, object] | None = None,
     show_suppressed: bool = False,
 ) -> OverviewCalendar:
@@ -580,14 +583,14 @@ def build_overview_calendar(
     mapping, and returns the typed result.
 
     Args:
-        profile: The operator's :class:`TaxpayerProfile`.
+        profile: The operator's :class:`_TaxpayerProfile`.
         calendar_range: Inclusive date window to enumerate.
         today: Reference date for engine status classification.
-        engine: Optional :class:`ScheduleProducer` the caller wants to
+        engine: Optional :class:`_ScheduleProducer` the caller wants to
             share across queries — a concrete
             :class:`aeat.domain.deadlines.DeadlineEngine` or any object
             satisfying the schedule-producing protocol. When ``None``,
-            a default :class:`DeadlineEngine` is constructed.
+            a default :class:`_DeadlineEngine` is constructed.
         show_suppressed: When ``True``, populate
             :attr:`OverviewCalendar.suppressed_entries` with the
             obligations filtered out by a non-``APPLICABLE``
@@ -606,7 +609,7 @@ def build_overview_calendar(
         A :class:`OverviewCalendar` with one entry per
         ``(modelo, period)`` whose filing window intersects the range.
     """
-    if not taxpayer_model_is_declared(profile):
+    if not _taxpayer_model_is_declared(profile):
         # An undeclared taxpayer model yields an explicit
         # incomplete answer — never a confident wrong obligation. The
         # engine does not fall back to the autónomo guess.
@@ -617,21 +620,21 @@ def build_overview_calendar(
             warnings=(),
             completeness=CalendarCompleteness(),
             taxpayer_model_declared=False,
-            incomplete_reason=tr("cli.overview.taxpayer_model_undeclared"),
+            incomplete_reason=_tr("cli.overview.taxpayer_model_undeclared"),
         )
 
-    deadline_engine = engine if engine is not None else DeadlineEngine()
-    schedules: list[Schedule] = []
+    deadline_engine = engine if engine is not None else _DeadlineEngine()
+    schedules: list[_Schedule] = []
     for year in calendar_range.covered_years():
         try:
             schedules.append(deadline_engine.compute(profile, year, today=today))
-        except NoDeadlineWindowsError:
+        except _NoDeadlineWindowsError:
             # A year inside the range with no registered deadline
             # windows is a normal "no data yet" state, not an error
             # (registry-track gap R1). The year contributes zero
             # entries; the calendar still answers for every year that
             # does have window data. This catch is deliberately the
-            # narrow ``NoDeadlineWindowsError`` subtype: a genuine
+            # narrow ``_NoDeadlineWindowsError`` subtype: a genuine
             # registry-integrity fault (validation failure,
             # profile-condition evaluation failure) raises the bare
             # ``ScheduleComputationError`` and must propagate — masking
@@ -672,7 +675,7 @@ def build_overview_calendar(
                     )
                 continue
             try:
-                shift = shift_deadline(
+                shift = _shift_deadline(
                     obligation.closes_on,
                     modelo=obligation.modelo,
                     ccaa_code=None,
@@ -681,7 +684,7 @@ def build_overview_calendar(
                 reason = shift.shift_reason
                 holiday_refs = shift.holiday_refs
                 jurisdictions = shift.jurisdictions
-            except DeadlineValidationError:
+            except _DeadlineValidationError:
                 # Holiday calendar not registered for this year; degrade
                 # gracefully — surface the original close date and an
                 # explicit reason so renderers can show that no shift
