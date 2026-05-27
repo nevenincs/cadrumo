@@ -342,6 +342,10 @@ application:
         descartada i no es pot importar. Crea una nova unitat de treball sobre el
         mateix modelo, any i periode per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
+    findings:
+      modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
+        presentar M130 aquest trimestre perquè les retencions i ingressos a compte
+        acumulats a l''any representen el 70% o més dels rendiments íntegres.'
   overview:
     explain:
       errors:
@@ -404,14 +408,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nova factura cobrable
-        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
+          intracomunitàries UE)
         eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que un client t'ha de pagar
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures cobrables registrades
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
-          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
+          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualitza les dades d'una factura cobrable
@@ -458,14 +463,15 @@ cli:
         year_help: Exercici fiscal
       payable_invoice:
         add_help: Registra una nova factura pagable
-        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions
+          intracomunitàries UE)
         eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que has de pagar a un proveïdor
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures pagables registrades
-        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
-          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T
+          triangular, R rectificació, A adquisició béns, I adquisició serveis, M miscel·lània'
         operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualitza les dades d'una factura pagable
@@ -793,6 +799,13 @@ cli:
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
+        autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
+          immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
+          d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
+          el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable
+          al Model 303.'
+        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de
+          ser un import decimal; rebut: {value}'
         borrador_help: Id del snapshot de borrador del model 100 (complet o prefix
           no ambigu). Els seus valors de binding s'usen només per a bindings marcats
           aeat_prefilled; les sobrescriptures --binding de l'operador sempre tenen
@@ -822,6 +835,17 @@ cli:
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
         causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
+        compare_taxation_error: 'La comparació conjunta vs. individual no és disponible:
+          {detail}'
+        compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art.
+          82-84 LIRPF) respecte a tributació individual per a una unitat de treball
+          Model 100 existent. Executa el motor de càlcul del registre dues vegades
+          — una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual)
+          — sobre les mateixes dades de perfil, i emet el diferencial de quota i la
+          recomanació. Operació efímera: no es persisteix cap revisió.'
+        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
+        compare_taxation_work_unit_not_found: Unitat de treball {work_unit_id} no
+          trobada; consulta les unitats actives amb 'aeat app modelo work list'.
         create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
@@ -928,6 +952,7 @@ cli:
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         name_help: Nom de visualització opcional de la unitat de treball
         notes_help: Notes opcionals associades al filing record
+        output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
           el càlcul.
@@ -941,6 +966,9 @@ cli:
           reconegut. --year i --period es componen per separat: passa --year %{year}
           per a l''exercici fiscal i un token de període (0A per anual, Qn per a un
           trimestre o MM per a un mes) a --period.'
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: 'AVÍS: termini voluntari vençut (Art. 27 LGT). Presenteu
+          amb recàrrec abans de rebre un requeriment de l''AEAT.'
         prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta no és compatible
           amb aquesta revisió del model; no s'ha declarat cap casella d'exempció INSS
           (Art. 7.h). Usa --casilla per subministrar els valors directament.
@@ -958,6 +986,24 @@ cli:
         relation_not_decimal: 'El valor de --relation per a {key} no és un decimal:
           {value}.'
         rename_help: Actualitzar el nom de visualització d'una unitat de treball
+        rescate_plan_pensiones_aportaciones_pre_2007_help: Aportacions fetes al pla
+          de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari
+          amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-totales.
+        rescate_plan_pensiones_aportaciones_totales_help: Total d'aportacions al pla
+          de pensions (denominador del prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital
+          i --rescate-plan-pensiones-aportaciones-pre-2007.
+        rescate_plan_pensiones_capital_help: Import brut del rescat del pla de pensions
+          en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007
+          i --rescate-plan-pensiones-aportaciones-totales perquè l'assistent calculi
+          la reducció del 40% i l'injecti a la casella 0011.
+        rescate_plan_pensiones_casilla_not_found: --rescate-plan-pensiones-capital
+          no està suportat per a aquesta revisió de model; no s'ha declarat cap casella
+          de reducció del rendiment del treball per DT 12a LIRPF. Fes servir --casilla
+          per subministrar els valors directament.
+        rescate_plan_pensiones_incomplete: --rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007
+          i --rescate-plan-pensiones-aportaciones-totales s'han de subministrar conjuntament.
+        rescate_plan_pensiones_not_decimal: Els valors --rescate-plan-pensiones-*
+          han de ser imports decimals.
         result_summary_header: resum del resultat  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Accepta un id d'execució de flux o un id d'unitat de
@@ -982,11 +1028,11 @@ cli:
         row_empty_spec: --row no pot estar buit; s'esperava TIPUS CAMP=valor [...]
         row_help: 'Fila de detall tipada per a models informatius amb registres repetibles.
           Format: TIPUS CAMP=valor [CAMP=valor ...]. TIPUS és ''miembro'' (soci/partícip
-          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador
-          intracomunitari M349) o ''contraparte'' (declarada M347). Repetir per afegir
-          més files. Exemple M184: --row ''miembro nif=12345678A porcentaje=40
-          importe=10000''. Exemple M349: --row ''operador codigo_pais=DE
-          nif_comunitario=DE123456789 clave_operacion=E importe=50000''.'
+          M184), ''vinculada'' (operació vinculada M232), ''operador'' (operador intracomunitari
+          M349) o ''contraparte'' (declarada M347). Repetir per afegir més files.
+          Exemple M184: --row ''miembro nif=12345678A porcentaje=40 importe=10000''.
+          Exemple M349: --row ''operador codigo_pais=DE nif_comunitario=DE123456789
+          clave_operacion=E importe=50000''.'
         row_kv_format_error: El camp --row {token} ha de tenir el format CLAU=VALOR.
         row_m184_shares_not_100: 'M184 files miembro: els percentatges de participació
           han de sumar exactament 100%; s''ha obtingut {total} amb {count} files.'
@@ -1003,6 +1049,23 @@ cli:
         runs_help: Llistar les execucions de flux persistides amb els seus ids d'execució,
           de la més recent a la més antiga. Usa un id d'execució amb `aeat app modelo
           work resume`. Només local; mai contacta amb AEAT.
+        sal_beneficio_neto_help: Benefici net de l'exercici de la Societat Laboral
+          (SAL/SLL, Llei 44/2015 art. 14). S'aplica el 10% per calcular la dotació
+          obligatòria a la reserva especial, limitada pel llindar del 50% del capital
+          social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.
+        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015
+          art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva
+          acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto
+          i --sal-reserva-dotada.'
+        sal_reserva_casilla_not_found: --sal-beneficio-neto no està suportat per a
+          aquesta revisió de model; no s'ha declarat cap casella de reserva especial
+          de Societat Laboral. Fes servir --casilla per subministrar els valors directament.
+        sal_reserva_dotada_help: Reserva especial acumulada en exercicis anteriors
+          (Llei 44/2015 art. 14). S'utilitza per comprovar si ja s'ha assolit el límit
+          del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.
+        sal_reserva_incomplete: --sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social
+          s'han de subministrar conjuntament.
+        sal_reserva_not_decimal: Els valors --sal-* han de ser imports decimals.
         set_not_decimal: El valor de --set ha de ser un decimal; s'ha rebut {value}.
         set_override_help: Valor de casella corregit amb sintaxi CASILLA=DECIMAL (repetible;
           almenys un requerit)
@@ -1014,31 +1077,9 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
-        plazo_days_remaining: "days_remaining\t{days_remaining}"
-        plazo_vencido_warning: "AVÍS: termini voluntari vençut (Art. 27 LGT). Presenteu\
-          \ amb recàrrec abans de rebre un requeriment de l'AEAT."
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
-        rescate_plan_pensiones_capital_help: 'Import brut del rescat del pla de pensions en forma de capital (DT 12a LIRPF). Fes-lo servir amb --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales perquè l''assistent calculi la reducció del 40% i l''injecti a la casella 0011.'
-        rescate_plan_pensiones_aportaciones_pre_2007_help: 'Aportacions fetes al pla de pensions fins al 31-des-2006 (base de prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-totales.'
-        rescate_plan_pensiones_aportaciones_totales_help: 'Total d''aportacions al pla de pensions (denominador del prorrateig DT 12a LIRPF). Necessari amb --rescate-plan-pensiones-capital i --rescate-plan-pensiones-aportaciones-pre-2007.'
-        rescate_plan_pensiones_casilla_not_found: '--rescate-plan-pensiones-capital no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reducció del rendiment del treball per DT 12a LIRPF. Fes servir --casilla per subministrar els valors directament.'
-        rescate_plan_pensiones_incomplete: '--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007 i --rescate-plan-pensiones-aportaciones-totales s''han de subministrar conjuntament.'
-        rescate_plan_pensiones_not_decimal: 'Els valors --rescate-plan-pensiones-* han de ser imports decimals.'
-        sal_beneficio_neto_help: 'Benefici net de l''exercici de la Societat Laboral (SAL/SLL, Llei 44/2015 art. 14). S''aplica el 10% per calcular la dotació obligatòria a la reserva especial, limitada pel llindar del 50% del capital social. Fes-lo servir amb --sal-reserva-dotada i --sal-capital-social.'
-        sal_reserva_dotada_help: 'Reserva especial acumulada en exercicis anteriors (Llei 44/2015 art. 14). S''utilitza per comprovar si ja s''ha assolit el límit del 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-capital-social.'
-        sal_capital_social_help: 'Capital social de la Societat Laboral (Llei 44/2015 art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto i --sal-reserva-dotada.'
-        autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament el 21% (art. 90 LISIVA) per calcular la quota meritada. Només aplicable al Model 303.'
-        autoconsumo_promotor_base_not_decimal: '--autoconsumo-promotor-base ha de ser un import decimal; rebut: {value}'
-        sal_reserva_casilla_not_found: '--sal-beneficio-neto no està suportat per a aquesta revisió de model; no s''ha declarat cap casella de reserva especial de Societat Laboral. Fes servir --casilla per subministrar els valors directament.'
-        sal_reserva_incomplete: '--sal-beneficio-neto, --sal-reserva-dotada i --sal-capital-social s''han de subministrar conjuntament.'
-        sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals.'
-        compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art. 82-84 LIRPF) respecte a tributació individual per a una unitat de treball Model 100 existent. Executa el motor de càlcul del registre dues vegades — una amb tipus de declaració = 2 (conjunta) i una altra amb tipus = 1 (individual) — sobre les mateixes dades de perfil, i emet el diferencial de quota i la recomanació. Operació efímera: no es persisteix cap revisió.'
-        compare_taxation_work_unit_not_found: 'Unitat de treball {work_unit_id} no trobada; consulta les unitats actives amb ''aeat app modelo work list''.'
-        compare_taxation_error: 'La comparació conjunta vs. individual no és disponible: {detail}'
-        compare_taxation_recommendation_line: 'RECOMANACIÓ: {recommendation} — {reason}'
-        output_language_help: 'Idioma de sortida per als missatges renderitzats.'
   common:
     errors:
       invalid_iso_date: Format de data invàlid. Es requereix ISO 8601 (AAAA-MM-DD)
@@ -1302,10 +1343,10 @@ cli:
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
-      logout_session_warning: El tancament de sessió ha esborrat el punter del
-        perfil actiu. Els verbs posteriors en aquest terminal seran rebutjats amb
-        NoActiveBucketSessionError fins que executis `aeat config profile switch
-        NOM` (o obris un terminal nou i tornis a seleccionar).
+      logout_session_warning: El tancament de sessió ha esborrat el punter del perfil
+        actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
+        fins que executis `aeat config profile switch NOM` (o obris un terminal nou
+        i tornis a seleccionar).
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
       preflight_help: Report whether the active profile is ready for one modelo /
@@ -1391,7 +1432,11 @@ cli:
       help: Reiniciar àmbits de configuració introduïts per l'operador
       invalid_scope: 'Àmbit no vàlid: %{scope}. Els àmbits vàlids són: %{valid}.'
       requires_yes: El reinici és destructiu. Torna a executar amb --yes per confirmar.
-      scope_help: 'Àmbit a reiniciar. profile: esborra tots els buckets de perfil (manifests, DEKs, declaracions, revisions de llibre major i factures). auth: neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica profile, auth i data junts.'
+      scope_help: 'Àmbit a reiniciar. profile: esborra tots els buckets de perfil
+        (manifests, DEKs, declaracions, revisions de llibre major i factures). auth:
+        neteja la sessió d''autenticació AEAT/SEDE persistida. data: posa en quarantena
+        les files d''objectes segurs il·legibles a tots els espais de noms. all: aplica
+        profile, auth i data junts.'
       yes_help: Confirmar explícitament l'operació de reinici
     set:
       help: Assignar un valor a una clau de configuració
@@ -1782,12 +1827,12 @@ cli:
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   locales:
     app_help: Auditar i generar catàlegs de traducció
+    remove_key_help: Clau de locale amb punts que s'eliminarà.
+    remove_locale_help: Codi de locale que s'ha d'actualitzar.
     scaffold_check_help: Informar de diferències sense escriure fitxers de locale
     set_key_help: cli.locales.set_key_help
     set_locale_help: cli.locales.set_locale_help
     set_value_help: cli.locales.set_value_help
-    remove_locale_help: 'Codi de locale que s''ha d''actualitzar.'
-    remove_key_help: 'Clau de locale amb punts que s''eliminarà.'
   log_levels:
     errors:
       flags_mutually_exclusive: --quiet, --verbose i --debug són mútuament excloents.
@@ -2036,14 +2081,19 @@ cli:
       part_help: Volum del manual (single, part1, part2-deducciones-autonomicas, part3)
       rules_help: Llistar les regles codificades en un manual
       section_help: Identificador opcional de secció a mostrar
+      verify_dangling_rule_section_ref: la regla %{rule_id} referencia una secció
+        desconeguda %{target}
+      verify_dangling_section_ref: la secció %{section_id} referencia una secció desconeguda
+        %{target}
+      verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}:
+        %{messages}'
       verify_help: Verificar la integritat del manual contra el seu contracte
+      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual
+        fetch'' per materialitzar-lo'
+      verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció
+        de %{field_name}'
       view_help: Mostrar l'estructura d'un manual i, opcionalment, una secció
       year_help: Any fiscal del manual (p. ex. 2024)
-      verify_missing_translation: 'la secció %{section_id}: falta la clau de traducció de %{field_name}'
-      verify_dangling_section_ref: 'la secció %{section_id} referencia una secció desconeguda %{target}'
-      verify_dangling_rule_section_ref: 'la regla %{rule_id} referencia una secció desconeguda %{target}'
-      verify_missing_manifest: '%{manifest_path} no existeix; executa ''aeat manual fetch'' per materialitzar-lo'
-      verify_failed: 'la verificació ha fallat per a %{manual_id}/%{year}/%{part}: %{messages}'
     metrics:
       applicability_declaration_count: applicability_declaration_count
       application_link_count: application_link_count
@@ -2145,10 +2195,10 @@ cli:
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
-        app --help`. Els modificadors globals (`--format json`, `--language ca`,
-        `--profile NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS
-        del subcomandament, p. ex. `aeat --format json app ledger list` (no `aeat
-        app ledger list --format json`).'
+        app --help`. Els modificadors globals (`--format json`, `--language ca`, `--profile
+        NOM`, `--quiet`, `--verbose`, `--debug`) han de posar-se ABANS del subcomandament,
+        p. ex. `aeat --format json app ledger list` (no `aeat app ledger list --format
+        json`).'
       quick_start_heading: Inici rapid
       quick_start_import: '  3. `aeat app ledger import <extracte-bancari.csv> --provider
         csv` - afegir els moviments bancaris.'
@@ -2674,6 +2724,8 @@ errors:
       de treball.
     fail_normatives_normative_parse: Un registre normatiu no ha superat la validació
       de l'esquema.
+    fail_observability_run_trace_persistence: El magatzem de traces d'execució no
+      ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
     fail_outbound_storage_network: No s'ha pogut contactar amb el servei d'emmagatzematge.
       Comprova la connexió a internet i torna-ho a provar.
@@ -2727,7 +2779,6 @@ errors:
       amb el resum anual.
     stale_exchange_rate: L'únic tipus de canvi disponible està fora del marge de frescor
       acceptable.
-    fail_observability_run_trace_persistence: 'El magatzem de traces d''execució no ha pogut completar una operació del sistema de fitxers.'
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
   identity:
@@ -3375,8 +3426,8 @@ wizard:
           per categoria
       irpf-special-regime:
         help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
-          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art. 93
-          LIRPF), aplicable els primers 6 anys des del trasllat.
+          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art.
+          93 LIRPF), aplicable els primers 6 anys des del trasllat.
       irpf-special-regime-start-date:
         help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
           Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
@@ -3575,7 +3626,9 @@ wizard:
           en:
             label: Anglès
           es:
-            label: Castellà
+            label: Espanyol
+          eu:
+            label: Basc
           hu:
             label: Hongarès
         prompt: Idioma de sortida de la CLI per a aquest perfil

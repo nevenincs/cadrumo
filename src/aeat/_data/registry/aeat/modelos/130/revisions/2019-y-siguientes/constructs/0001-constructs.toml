@@ -1,7 +1,7 @@
 [[revisions."2019-y-siguientes".constructs]]
 id = "modelo-130-direct-estimation-instalment"
 title = "Modelo 130 direct-estimation instalment filing"
-legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-110-3-b", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
 casillas = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "saldo-negativo-fin-periodo"]
 formulas = [

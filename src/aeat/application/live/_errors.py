@@ -62,6 +62,10 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
         return LiveIvaAcquisitionFailureMode.WRONG_IDENTITY
     if isinstance(exc, SedeError):
         if exc.failure_mode == SedeFailureMode.AUTH_GATE_DETECTED.value:
+            context = exc.context if isinstance(exc.context, dict) else {}
+            required_provider = str(context.get("required_auth_provider") or "").casefold()
+            if required_provider in {"certificate", "certificado"}:
+                return LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED
             return LiveIvaAcquisitionFailureMode.AEAT_403
         if exc.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED.value:
             return LiveIvaAcquisitionFailureMode.DOM_DRIFT

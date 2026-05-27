@@ -34,6 +34,7 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
         "live_cross_references",
         "workbook_parity_refs",
         "verification_expectations",
+        "verification_predicates",
         "application_links",
         "deadline_windows",
         "filing_schedules",
