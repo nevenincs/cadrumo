@@ -127,9 +127,17 @@ fall back to the TRLIRNR baseline.`
 
 ### D2.5 — Representante fiscal surface
 
-TRLIRNR Art 47 requires non-EEA residents to designate a
-representante fiscal (Spanish-resident agent) for IRNR
-correspondence. Phase 1 surfaces the requirement as:
+TRLIRNR Art 10 requires non-EU residents (other than residents
+of EU Member States, with the EEA scope refined by TRLIRNR Art
+10.1 second paragraph) to designate a representante fiscal
+(Spanish-resident agent) for IRNR correspondence. (Earlier
+drafts of this ADR mis-cited TRLIRNR Art 47; Art 47 of
+TRLIRNR governs sucesión en la deuda tributaria — successor-
+tax-liability — and is out of M210 Phase 1 scope. The
+representante mandate lives in Art 10. Ley 58/2003 LGT Art 47
+provides a parallel general-LGT representante rule for any
+non-resident, but the IRNR-specific authority is TRLIRNR Art
+10.) Phase 1 surfaces the requirement as:
 - Profile field `representante_fiscal_nif: str | None` (already
   partially modelled under task #197 / #198, harmonise the field
   shape here).
@@ -138,9 +146,23 @@ correspondence. Phase 1 surfaces the requirement as:
   guard that fires only when `ue_eee_status is False` (using the
   new `implies_nonzero` operator from the dsl-conditional-predicate
   ADR — this M210 work is the first non-M131 use site).
-- Refusal message: `Non-EEA residents must declare a representante
-  fiscal per TRLIRNR Art 47; set --representante-fiscal-nif on the
+- Refusal message: `Non-EU residents must declare a representante
+  fiscal per TRLIRNR Art 10; set --representante-fiscal-nif on the
   profile.`
+
+Scope note: TRLIRNR Art 10's letter excepts only EU Member State
+residents from the representante obligation, not the wider EEA.
+Phase 1 deliberately consults the broader `ue_eee_status`
+property (EU + Norway + Iceland + Liechtenstein), which gives
+a slightly over-permissive exemption (EEA-non-EU residents are
+excused even though Art 10 letter would require them to name a
+representante). The over-permissive direction is conservative
+for AEAT-correspondence purposes because mutual-assistance
+treaties under TRLIRNR Art 24.6 + the EEA-Spain administrative-
+cooperation agreements treat EEA equivalently. A future ADR
+refinement could split the gate to consult an `is_eu_member`
+property (narrower) instead. Documented inline as a follow-on
+hygiene item; Phase 1 leaves the broader gate in place.
 
 The conditional-on-derived-property gating cannot be expressed by
 the current implies_nonzero alone because `ue_eee_status` is a
