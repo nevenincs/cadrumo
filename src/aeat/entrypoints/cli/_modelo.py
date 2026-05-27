@@ -13,9 +13,13 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 
 import click
 import typer
+from pydantic import BaseModel, ValidationError
 
 from ...application.aggregation import (
+    CounterpartObservation,
+    ForeignAssetIngestObservation,
     PerModeloAggregationCommand,
+    RetencionObservation,
     aggregate_per_modelo,
 )
 from ...application.modelo import (
@@ -958,16 +962,42 @@ def formulas(
     _emit(ctx, report, lines)
 
 
-def _parse_json_object_options(values: list[str] | None, *, flag: str) -> tuple[dict[str, object], ...]:
-    parsed: list[dict[str, object]] = []
+def _parse_typed_cli_observations[ObservationT: BaseModel](
+    values: list[str] | None,
+    *,
+    model: type[ObservationT],
+    flag: str,
+) -> tuple[ObservationT, ...]:
+    """Parse a list of raw JSON strings into typed observation models.
+
+    Each string must be a JSON object conforming to *model*'s schema.
+    ``typer.BadParameter`` is raised on JSON syntax errors, non-object
+    JSON, or pydantic validation failures so the CLI error boundary
+    presents a clear operator-facing refusal instead of an opaque
+    traceback.
+    """
+    parsed: list[ObservationT] = []
     for raw in values or ():
         try:
-            value = json.loads(raw)
+            top = json.loads(raw)
         except json.JSONDecodeError as exc:
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_parse_error", flag=flag, pos=exc.pos)) from exc
-        if not isinstance(value, dict):
+        if not isinstance(top, dict):
             raise typer.BadParameter(tr("cli.app.modelo.aggregate.json_not_object", flag=flag))
-        parsed.append(value)
+        try:
+            # model_validate_json uses pydantic's JSON-mode coercions (string →
+            # Decimal, string → StrEnum) even when the model declares strict=True
+            # at the Python-object boundary.
+            parsed.append(model.model_validate_json(raw))
+        except ValidationError as exc:
+            details = "; ".join(f"{'.'.join(str(s) for s in e['loc'])}: {e['msg']}" for e in exc.errors())
+            raise typer.BadParameter(
+                tr(
+                    "cli.app.modelo.aggregate.json_validation_error",
+                    flag=flag,
+                    details=details,
+                )
+            ) from exc
     return tuple(parsed)
 
 
@@ -1009,25 +1039,24 @@ def aggregate_modelo(
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
 
-    command = PerModeloAggregationCommand.model_validate_json(
-        json.dumps(
-            {
-                "modelo": modelo,
-                "period": period,
-                "retencion_observations": _parse_json_object_options(
-                    retencion_observation,
-                    flag="--retencion-observation",
-                ),
-                "counterpart_observations": _parse_json_object_options(
-                    counterpart_observation,
-                    flag="--counterpart-observation",
-                ),
-                "foreign_asset_observations": _parse_json_object_options(
-                    foreign_asset_observation,
-                    flag="--foreign-asset-observation",
-                ),
-            }
-        )
+    command = PerModeloAggregationCommand(
+        modelo=modelo,
+        period=period,
+        retencion_observations=_parse_typed_cli_observations(
+            retencion_observation,
+            model=RetencionObservation,
+            flag="--retencion-observation",
+        ),
+        counterpart_observations=_parse_typed_cli_observations(
+            counterpart_observation,
+            model=CounterpartObservation,
+            flag="--counterpart-observation",
+        ),
+        foreign_asset_observations=_parse_typed_cli_observations(
+            foreign_asset_observation,
+            model=ForeignAssetIngestObservation,
+            flag="--foreign-asset-observation",
+        ),
     )
     result = aggregate_per_modelo(command)
     payload = {
@@ -3617,8 +3646,7 @@ def modelo_project(
     # -- Collect M130 work units for the requested year --------------------------
     all_units = _list_work_units()
     m130_units = [
-        u for u in all_units
-        if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
+        u for u in all_units if str(u.modelo) == "130" and u.filing_year == year and u.state is WorkUnitState.BORRADOR
     ]
 
     if not m130_units:
@@ -3701,9 +3729,7 @@ def modelo_project(
         try:
             extra_inputs[k] = Decimal(v)
         except (InvalidOperation, ValueError) as exc:
-            raise typer.BadParameter(
-                tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)
-            ) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.casilla_not_decimal", key=k, value=v)) from exc
 
     # Binding overrides from --binding flags.
     binding_pairs = dict(_parse_binding_override(spec) for spec in (binding or ()))
@@ -3719,7 +3745,7 @@ def modelo_project(
     # pagos fraccionados from M130 casilla 19 sum.
     m100_inputs: dict[str, Decimal] = {
         "0505": projected_rendimiento_neto,  # base liquidable general
-        "0604": total_pagos_fraccionados,    # pagos fraccionados M130 (manual, actual paid)
+        "0604": total_pagos_fraccionados,  # pagos fraccionados M130 (manual, actual paid)
         **extra_inputs,
     }
 
@@ -3829,10 +3855,7 @@ def modelo_compare(
             "--year",
             help=tr(
                 "cli.app.modelo.compare.year_help",
-                default=(
-                    "Filing year to include in the comparison. "
-                    "Specify exactly twice: --year 2024 --year 2025."
-                ),
+                default=("Filing year to include in the comparison. Specify exactly twice: --year 2024 --year 2025."),
             ),
         ),
     ] = None,
@@ -3876,10 +3899,7 @@ def modelo_compare(
         Raises typer.BadParameter if no revision of either kind exists.
         """
         all_units = _list_work_units()
-        units_for_year = [
-            u for u in all_units
-            if str(u.modelo) == modelo and u.filing_year == filing_year
-        ]
+        units_for_year = [u for u in all_units if str(u.modelo) == modelo and u.filing_year == filing_year]
         if not units_for_year:
             raise typer.BadParameter(
                 tr(
@@ -3905,19 +3925,13 @@ def modelo_compare(
                 )
             )
 
-        verified = [
-            r for r in all_revisions
-            if r.state is CalculationRevisionState.VERIFICADO_COMPLETO
-        ]
+        verified = [r for r in all_revisions if r.state is CalculationRevisionState.VERIFICADO_COMPLETO]
         if verified:
             best = max(verified, key=lambda r: r.created_at)
             return best, False, period_by_unit.get(best.work_unit_id, "0A")
 
         # Draft fallback: most recent BORRADOR.
-        borradores = [
-            r for r in all_revisions
-            if r.state is CalculationRevisionState.BORRADOR
-        ]
+        borradores = [r for r in all_revisions if r.state is CalculationRevisionState.BORRADOR]
         if borradores:
             best = max(borradores, key=lambda r: r.created_at)
             return best, True, period_by_unit.get(best.work_unit_id, "0A")
@@ -3960,9 +3974,7 @@ def modelo_compare(
         return label, primary_section
 
     # -- Build delta rows -----------------------------------------------------
-    all_casilla_ids = sorted(
-        set(rev_a.casilla_values) | set(rev_b.casilla_values)
-    )
+    all_casilla_ids = sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values))
 
     delta_rows: list[dict[str, object]] = []
     for cid in all_casilla_ids:
@@ -3971,9 +3983,7 @@ def modelo_compare(
         delta = val_b - val_a
         label, section = _meta(cid)
         if val_a != Decimal("0"):
-            pct_change: str | None = str(
-                (delta / val_a * Decimal("100")).quantize(Decimal("0.01"))
-            )
+            pct_change: str | None = str((delta / val_a * Decimal("100")).quantize(Decimal("0.01")))
         else:
             pct_change = None
 
