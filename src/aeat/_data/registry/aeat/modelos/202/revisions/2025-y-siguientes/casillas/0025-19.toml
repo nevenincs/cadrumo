@@ -1,7 +1,7 @@
 [[revisions.2025-y-siguientes.casillas]]
 id = "19"
 number = "19"
-label = "Mod. 40.3 LIS B2 — Casos especificos — Base del pago fraccionado"
+label = "Mod. 40.3 LIS B2 — Base del pago fraccionado"
 section = ["liquidacion", "modalidad_40_3_lis", "b2_casos_especificos"]
 data_type = "money"
 semantic_role = "is_pf_mod_40_3_b2_base_pago_fraccionado"
