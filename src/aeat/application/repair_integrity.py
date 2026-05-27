@@ -1,4 +1,4 @@
-"""Backend services for ``aeat config repair integrity`` and ``... repair list``.
+"""Backend services for secure-object integrity and inventory diagnostics.
 
 Implements the subverbs for configuration repair and integrity checks. Each function
 returns a strict Pydantic report consumed by the CLI's ``_emit``
@@ -87,7 +87,7 @@ class RepairIntegrityReport(BaseModel):
 
 
 class RepairListRow(BaseModel):
-    """One row in ``aeat config repair list <namespace>``."""
+    """One row in ``python -m aeat.diagnostics secure-objects list``."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -102,7 +102,7 @@ class RepairListRow(BaseModel):
 
 
 class RepairListReport(BaseModel):
-    """Output of ``aeat config repair list <namespace> [--all|--unreadable]``."""
+    """Output of ``python -m aeat.diagnostics secure-objects list``."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -572,12 +572,6 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             namespace_policies=(_SECURE_OBJECT_POLICY,),
         ),
         _surface("config repair integrity registry", command_family="repair", owner_domains=("registry",)),
-        _surface(
-            "config repair list",
-            command_family="repair",
-            owner_domains=("secure_storage",),
-            namespace_policies=(_SECURE_OBJECT_POLICY,),
-        ),
         _surface("config repair connectivity", command_family="repair", owner_domains=("remote_connectivity",)),
         _surface(
             "config profile import",
