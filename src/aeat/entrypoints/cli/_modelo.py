@@ -3812,11 +3812,12 @@ def modelo_compare(
     # -- Resolve the best revision for each year --------------------------------
     def _best_revision(
         filing_year: int,
-    ) -> tuple[CalculationRevision, bool]:
-        """Return (revision, is_draft_fallback) for *filing_year*.
+    ) -> tuple[CalculationRevision, bool, str]:
+        """Return (revision, is_draft_fallback, period) for *filing_year*.
 
         Prefers the most recent VERIFICADO_COMPLETO revision; falls back to the
         most recent BORRADOR when no verified revision is available.
+        The period is taken from the owning work unit for snapshot lookup.
         Raises typer.BadParameter if no revision of either kind exists.
         """
         all_units = _list_work_units()
@@ -3832,6 +3833,9 @@ def modelo_compare(
                     filing_year=filing_year,
                 )
             )
+
+        # Build a map from work_unit_id to period for snapshot derivation.
+        period_by_unit: dict[str, str] = {u.work_unit_id: u.period for u in units_for_year}
 
         all_revisions: list[CalculationRevision] = []
         for unit in units_for_year:
@@ -3851,7 +3855,8 @@ def modelo_compare(
             if r.state is CalculationRevisionState.VERIFICADO_COMPLETO
         ]
         if verified:
-            return max(verified, key=lambda r: r.created_at), False
+            best = max(verified, key=lambda r: r.created_at)
+            return best, False, period_by_unit.get(best.work_unit_id, "0A")
 
         # Draft fallback: most recent BORRADOR.
         borradores = [
@@ -3859,7 +3864,8 @@ def modelo_compare(
             if r.state is CalculationRevisionState.BORRADOR
         ]
         if borradores:
-            return max(borradores, key=lambda r: r.created_at), True
+            best = max(borradores, key=lambda r: r.created_at)
+            return best, True, period_by_unit.get(best.work_unit_id, "0A")
 
         raise typer.BadParameter(
             tr(
@@ -3869,16 +3875,16 @@ def modelo_compare(
             )
         )
 
-    rev_a, draft_a = _best_revision(year_a)
-    rev_b, draft_b = _best_revision(year_b)
+    rev_a, draft_a, period_a = _best_revision(year_a)
+    rev_b, draft_b, period_b = _best_revision(year_b)
 
     # -- Resolve casilla metadata from the snapshot ---------------------------
     # We use the year_b snapshot as the primary label/section source; fall back
     # to year_a for casillas that appear only in the older revision.
     try:
         authority = _service()._authority
-        snap_b = authority.snapshot(modelo, filing_year=year_b, period="0A")
-        snap_a = authority.snapshot(modelo, filing_year=year_a, period="0A")
+        snap_b = authority.snapshot(modelo, filing_year=year_b, period=period_b)
+        snap_a = authority.snapshot(modelo, filing_year=year_a, period=period_a)
     except RegistrySnapshotError as exc:
         raise _bad_parameter_from_error(exc) from exc
 
