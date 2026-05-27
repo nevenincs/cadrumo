@@ -8,12 +8,13 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from aeat.adapters.persistence.storage import EphemeralMasterKeyProvider
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.entrypoints.cli import app
 from aeat.entrypoints.cli._overview import app as overview_app
+from aeat.tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -29,10 +30,12 @@ def cli_runner() -> CliRunner:
 
 
 @pytest.fixture(autouse=True)
-def _isolated_backend(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    monkeypatch.setenv("AEAT_DATABASE_URL", f"sqlite:///{(tmp_path / 'explain.db').as_posix()}")
+def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
-    with EphemeralMasterKeyProvider():
+    with (
+        isolated_profile_storage_root(tmp_path=tmp_path),
+        profile_create_storage_span("operator"),
+    ):
         try:
             workflow_state_repository().update(
                 lambda state: register_minimal_profile(state, profile_id="operator"),
@@ -67,7 +70,8 @@ def test_explain_renders_envelope_for_known_modelo(cli_runner: CliRunner) -> Non
     with applicable + rationale + profile_facts rows."""
 
     result = cli_runner.invoke(
-        app, ["app", "overview", "explain", "303", "--year", "2026"],
+        app,
+        ["app", "overview", "explain", "303", "--year", "2026"],
     )
     assert result.exit_code == 0, result.output
     assert "modelo\t303" in result.output
@@ -82,7 +86,8 @@ def test_explain_refuses_unknown_modelo(cli_runner: CliRunner) -> None:
     exit code rather than a stack trace."""
 
     result = cli_runner.invoke(
-        app, ["app", "overview", "explain", "999999", "--year", "2026"],
+        app,
+        ["app", "overview", "explain", "999999", "--year", "2026"],
     )
     assert result.exit_code != 0, result.output
 
@@ -93,6 +98,5 @@ def test_explain_help_advertises_local_only(cli_runner: CliRunner) -> None:
     result = cli_runner.invoke(app, ["app", "overview", "explain", "--help"])
     assert result.exit_code == 0, result.output
     assert any(
-        token in result.output.lower()
-        for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
+        token in result.output.lower() for token in ("local-only", "local;", "nunca", "mai contacta", "csak helyi")
     ), result.output
