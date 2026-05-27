@@ -27,9 +27,7 @@ def test_cross_model_relations_resolve_from_observations_for_revision_edge_years
             if not revision.relations:
                 continue
             relation_ids = {relation.id for relation in revision.relations}
-            for filing_year, period in _full_relation_filing_year_periods(
-                revision=revision, relation_ids=relation_ids
-            ):
+            for filing_year, period in _full_relation_filing_year_periods(revision=revision, relation_ids=relation_ids):
                 _assert_relations_resolve_from_observations(
                     revision=revision,
                     filing_year=filing_year,
@@ -77,9 +75,7 @@ def _assert_relations_resolve_from_observations(
         requirements,
         lambda _requirement, period_index: Decimal(period_index + 1),
     )
-    resolved = resolve_relation_values_from_observations(
-        revision, observations, filing_year=filing_year, period=period
-    )
+    resolved = resolve_relation_values_from_observations(revision, observations, filing_year=filing_year, period=period)
     assert set(resolved) == relation_ids, scope
 
 
@@ -235,8 +231,11 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         binding_values={
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
     assert set(relation_values) == {
@@ -303,13 +302,109 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         binding_values={
             "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
             "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
+            "renta-2025-profile-declaration-type": Decimal("1"),
+            "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
+        date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
     )
 
     entries = {entry.target: entry for entry in result.entries}
     assert "renta-2025-rel-130-pagos-fraccionados" in relation_values
     assert "renta-2025-rel-130-pagos-fraccionados" in entries["0604"].operand_refs
+
+
+def test_modelo_100_2024_m131_pagos_fraccionados_cumulative_wires_to_casilla_0604(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    """M100 2024: four quarterly M131 filings of €450 each aggregate to €1800 via relation resolution.
+
+    Verifies the binding/relation wiring from M131 quarterly filings (casilla 15) into the
+    M100 pagos-fraccionados-ingresados aggregation targeting casilla 0604.  Exercises the
+    full relation-source → observation → resolution roundtrip without triggering the full
+    settlement chain (which requires additional profile bindings not under test here).
+
+    Anti-tautology: each quarterly amount is distinct for M130 (100, 200, 300, 400) so a
+    summation error would produce a wrong total.  M131 uses 450 per quarter so the expected
+    M131 aggregate is 1800 and M130 aggregate is 1000.
+    """
+    filing_year = 2024
+    snapshot = registry_snapshot("100", filing_year, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
+
+    m131_quarterly_amounts = (Decimal("450"), Decimal("450"), Decimal("450"), Decimal("450"))
+    m130_quarterly_amounts = (Decimal("100"), Decimal("200"), Decimal("300"), Decimal("400"))
+
+    observations = _observations_from_requirements(
+        requirements,
+        lambda requirement, period_index: _renta_2024_relation_observed_value(
+            requirement,
+            period_index,
+            m130_quarterly_amounts=m130_quarterly_amounts,
+            m131_quarterly_amounts=m131_quarterly_amounts,
+        ),
+    )
+    relation_values = resolve_relation_values_from_observations(
+        snapshot.revision,
+        observations,
+        filing_year=filing_year,
+        period="0A",
+    )
+
+    # Relations must be present and resolved to their correct sums.
+    assert "renta-2024-rel-131-pagos-fraccionados" in relation_values
+    assert "renta-2024-rel-130-pagos-fraccionados" in relation_values
+    assert relation_values["renta-2024-rel-131-pagos-fraccionados"] == Decimal("1800")
+    assert relation_values["renta-2024-rel-130-pagos-fraccionados"] == Decimal("1000")
+
+    # The pagos-fraccionados-ingresados formula must target 0604 and reference both relations.
+    formula = next(f for f in snapshot.revision.formulas if f.id == "renta-2024-pagos-fraccionados-ingresados")
+    assert formula.target == "0604"
+    relation_ids_in_formula = {
+        arg.relation
+        for arg in formula.expression.args  # type: ignore[union-attr]
+        if arg.relation is not None
+    }
+    assert relation_ids_in_formula == {
+        "renta-2024-rel-130-pagos-fraccionados",
+        "renta-2024-rel-131-pagos-fraccionados",
+    }
+
+    # The binding for M131 must declare the correct source_modelo and source_output.
+    binding = next(b for b in snapshot.revision.bindings if b.id == "renta-2024-modelo-131-pagos-fraccionados")
+    assert binding.selector == {"source_modelo": "131", "source_output": "15"}
+
+
+def test_modelo_100_2024_m131_pagos_fraccionados_anti_tautology_proportional_change(
+    registry_snapshot: Callable[[str, int, str], RegistrySnapshot],
+) -> None:
+    """Changing M131 quarterly amount from 300 to 450 causes the resolved relation value to increase by 600.
+
+    This is the anti-tautology proof: the resolution is not a copy of the input but a real
+    sum of four quarterly filings.  Any arithmetic error in the aggregation would break this.
+    """
+    filing_year = 2024
+    snapshot = registry_snapshot("100", filing_year, "0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
+
+    def _resolve_0604_relations(m131_quarterly: Decimal) -> Decimal:
+        obs = _observations_from_requirements(
+            requirements,
+            lambda requirement, period_index: _renta_2024_relation_observed_value(
+                requirement,
+                period_index,
+                m130_quarterly_amounts=(Decimal("100"), Decimal("100"), Decimal("100"), Decimal("100")),
+                m131_quarterly_amounts=(m131_quarterly, m131_quarterly, m131_quarterly, m131_quarterly),
+            ),
+        )
+        rv = resolve_relation_values_from_observations(snapshot.revision, obs, filing_year=filing_year, period="0A")
+        # 0604 = M130 sum + M131 sum = 4*100 + 4*m131_quarterly
+        return rv["renta-2024-rel-130-pagos-fraccionados"] + rv["renta-2024-rel-131-pagos-fraccionados"]
+
+    result_low = _resolve_0604_relations(Decimal("300"))
+    result_high = _resolve_0604_relations(Decimal("450"))
+    # Increase of 150 per quarter * 4 quarters = 600 total
+    assert result_high - result_low == Decimal("600")
 
 
 @pytest.mark.parametrize(
@@ -529,9 +624,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     # realised by the cuota-diferencial formula, which subtracts that
     # aggregated relation value from the cuota del ejercicio a ingresar
     # o a devolver (00599).
-    diferencial_formula = next(
-        formula for formula in revision.formulas if formula.target == "DP200014B:00611"
-    )
+    diferencial_formula = next(formula for formula in revision.formulas if formula.target == "DP200014B:00611")
     assert diferencial_formula.id == "modelo-200-cuota-diferencial"
     assert diferencial_formula.expression.op == "subtract"
     assert "ley-27-2014:art-41" in diferencial_formula.legal_refs
@@ -570,10 +663,7 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
     # is exactly the aggregated 1P/2P/3P pagos fraccionados the relation
     # resolver produced — the netting subtracts the resolver output, not
     # a literal hand-summed by the test author.
-    assert (
-        diferencial_entry.operand_values[1]
-        == relation_values["modelo-200-2024-rel-202-pagos-fraccionados"]
-    )
+    assert diferencial_entry.operand_values[1] == relation_values["modelo-200-2024-rel-202-pagos-fraccionados"]
 
 
 def _observations_from_requirements(
@@ -636,6 +726,29 @@ def _renta_relation_observed_value(requirement: RegistryRelationSourceRequiremen
     if relation_id == "renta-2025-rel-184-atribucion-actividades-economicas":
         return Decimal("60")
     raise AssertionError(f"unhandled relation requirement {relation_id}")
+
+
+def _renta_2024_relation_observed_value(
+    requirement: RegistryRelationSourceRequirement,
+    period_index: int,
+    *,
+    m130_quarterly_amounts: tuple[Decimal, Decimal, Decimal, Decimal],
+    m131_quarterly_amounts: tuple[Decimal, Decimal, Decimal, Decimal],
+) -> Decimal:
+    relation_id = requirement.relation_ids[0]
+    if relation_id == "renta-2024-rel-131-pagos-fraccionados":
+        return m131_quarterly_amounts[period_index]
+    if relation_id == "renta-2024-rel-130-pagos-fraccionados":
+        return m130_quarterly_amounts[period_index]
+    if relation_id in {
+        "renta-2024-rel-111-retenciones-trimestrales",
+        "renta-2024-rel-111-retenciones-mensuales",
+        "renta-2024-rel-115-retenciones-trimestrales",
+        "renta-2024-rel-123-retenciones-trimestrales",
+        "renta-2024-rel-193-retenciones-anuales",
+    }:
+        return Decimal("0")
+    raise AssertionError(f"unhandled 2024 relation requirement {relation_id}")
 
 
 def _renta_relation_observed_value_from_modelo_130_results(
