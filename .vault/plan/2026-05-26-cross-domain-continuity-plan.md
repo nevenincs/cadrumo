@@ -257,8 +257,8 @@ _iva_ledger.py and _renta_ledger.py silently drop non-EUR. Adopt single FX-conve
 
 - [x] `W05.P23.S86` - decide and document FX conversion strategy; `.vault/exec/`.
 - [x] `W05.P23.S87` - add fx_rate and value_in_eur fields on Transaction or aggregation row; `src/aeat/domain/transactions/_raw_transaction.py`.
-- [ ] `W05.P23.S88` - implement chosen FX strategy in import path or aggregation layer; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
-- [ ] `W05.P23.S89` - replace duplicated currency-not-EUR guards with shared predicate; `src/aeat/application/aggregation/`.
+- [x] `W05.P23.S88` - implement chosen FX strategy in import path or aggregation layer; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
+- [x] `W05.P23.S89` - replace duplicated currency-not-EUR guards with shared predicate; `src/aeat/application/aggregation/`.
 - [ ] `W05.P23.S90` - regression test USD invoice imports with FX rate and aggregates with expected EUR value; `src/aeat/application/aggregation/test_fx_conversion.py`.
 
 ### Phase `W05.P24` - classification enums for intracom export and suffered retention
@@ -505,7 +505,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S308` - R8-NURIA-MODERATE bundle export contains cleartext NIF name surnames LOPD risk for gestor sending bundles via email; `encrypt the bundle payload using a recipient-key or a passphrase; preserve the existing v1/v2 schema versioning; `src/aeat/application/user_profile/`.
 - [ ] `W09.P41.S309` - R8-NURIA-MODERATE M131 modulos manual entry path missing; `today binding source is ledger only; add CLI path for direct module-data entry on M131 for clients without integrated bookkeeping; supplements W05.P22 income aggregation work which only covers EDS; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S310` - R8-NURIA-LOW orphan bucket cleanup when profile create fails NIF validation; `today failed creates leave bucket directories without manifest.toml that subsequent uniqueness scans then trip over; add rollback transaction in _atomic_create_profile that removes the bucket directory + DEK on validation failure; `src/aeat/application/user_profile/`.
-- [ ] `W09.P41.S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent; explicit-pathspec staging is mandatory per the parallel-worktree explicit_path_staging memory; brief subsequent peer dispatches with stronger language; `.vaultspec/`.
+- [ ] `W09.P41.S311` - ambient-index commit discipline violation: peer agent's commit 38d82ce95 absorbed coder1's S296 working tree via git add -A or equivalent; `explicit-pathspec staging is mandatory per the parallel-worktree explicit_path_staging memory; brief subsequent peer dispatches with stronger language; `.vaultspec/`.
 
 ### Phase `W09.P42` - twin function merge
 
@@ -554,6 +554,7 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S294` - R8-MARC-C ledger import --period rejects 2026T1 silently with no suggestion of valid format 2026-Q1; `rejection message should suggest the canonical period token form when bare-shape input fails parsing; previously logged as S239 R7-MARC-D4 — re-confirmed open in round-8; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W09.P45.S295` - W09 wording follow-up Tier-2 import-collision tr() default text reads 'already taken by a different profile' regardless of fresh_uuid_mode; `misleading in the fresh-copy path; distinguish UUID-collision vs label-collision messages; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W09.P45.S303` - R8-ROSA-G when profile create rejects a combination of flags surface the SPECIFIC field that failed validation not a generic La entrada del comando no supero la validacion message; `Rosa hit this with taxation-type 2 plus family-minor-children-in-unit and could not identify which pair conflicted; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W09.P45.S312` - FU-W05-D add hu.yml locale key-path fallbacks for the two new W05.P24 IVA classification reject reasons (DOMESTIC_COUNTERPARTY_ON_INTRA_COMMUNITY_TRANSACTION + EU_MEMBER_STATE_ON_EXPORT_TRANSACTION); architect non-blocking follow-up from Task #115 review; `src/aeat/locales/hu.yml`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
