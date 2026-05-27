@@ -335,6 +335,38 @@ model_selectors = ["taxpayer.irpf_income_categories"]
 schedule_predicates = ["taxpayer.irpf_income_categories"]
 legal_refs = ["LIRPF Arts. 17-39 (BOE-A-2006-20764)"]
 
+[[sections.fields]]
+key = "fiscal_residency"
+type = "enum"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Whether the taxpayer has habitual residence in Spain (resident_irpf, subject to IRPF) or not (non_resident_irnr, subject to IRNR under TRLIRNR). Drives which tax and therefore which calendar/modelos apply."
+enum_values = ["resident_irpf", "non_resident_irnr"]
+model_selectors = ["taxpayer.fiscal_residency"]
+schedule_predicates = ["taxpayer.fiscal_residency"]
+legal_refs = ["LIRPF Art. 9 (BOE-A-2006-20764)", "TRLIRNR RDLeg 5/2004 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "country_of_fiscal_residence"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "ISO 3166-1 alpha-2 country code of the taxpayer's fiscal residence when fiscal_residency is non_resident_irnr. Drives the UE/EEE classification for the IRNR rate split (Art. 25.1.a vs Art. 25.1.f TRLIRNR)."
+model_selectors = ["taxpayer.country_of_fiscal_residence"]
+legal_refs = ["TRLIRNR Art. 25 (BOE-A-2004-4527)"]
+
+[[sections.fields]]
+key = "representante_fiscal_nif"
+type = "string"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "NIF of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required by TRLIRNR Art. 10 for non-EU/EEE residents and recommended for EU/EEE residents."
+model_selectors = ["taxpayer.representante_fiscal_nif"]
+legal_refs = ["TRLIRNR Art. 10 (BOE-A-2004-4527)"]
+
 [[sections]]
 key = "vivienda_office"
 title = "Vivienda habitual office afectacion"
