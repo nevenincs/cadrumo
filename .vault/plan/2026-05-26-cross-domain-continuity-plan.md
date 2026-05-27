@@ -106,7 +106,7 @@ _interpolate swallows KeyError on placeholder context mismatches and emits half-
 Mandated breakpoint. Dispatch code-reviewer on Wave-1 commits, round-7 persona fleet, fresh Haiku drift sweep on touched files, consolidate findings audit, EXPAND this plan in place with every new BLOCKER MAJOR.
 
 - [x] `W01.P09.S33` - dispatch vaultspec-code-reviewer against every Wave-1 commit and consolidate verdict; `.vault/exec/`.
-- [ ] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
+- [x] `W01.P09.S34` - dispatch round-7 persona fleet minimum five distinct tax shapes including one round-6 repeat; `.vault/audit/`.
 - [x] `W01.P09.S35` - dispatch fresh Haiku drift sweep over Wave-1 touched files to confirm no new drift; `src/aeat/`.
 - [ ] `W01.P09.S36` - consolidate round-7 findings into a new audit document via vaultspec CLI; `.vault/audit/`.
 - [ ] `W01.P09.S37` - expand this plan in place: every new BLOCKER and MAJOR becomes a new Phase or Step in the appropriate Wave; `re-run vault plan check; `.vault/plan/2026-05-26-cross-domain-continuity-plan.md`.
@@ -493,7 +493,7 @@ _covered_by_namespace defined identically in two locale modules extract to one.
 - [ ] `W09.P45.S236` - R7-ANNA-D5 default modelo work create --revision to the in-force revision for the supplied --year via registry lookup; `today operators must run aeat app modelo describe first to find a valid revision id; reduces friction for the common case while preserving explicit override; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P45.S237` - R7-MARC-D1 ledger classify list view blocked by silent profile-completeness gate; `ledger status review update preflight succeed on same profile; config repair confirms ready; no error message identifies which field triggers the gate; surface the specific gate failure to operator or remove the gate; same defect class as R7-A but on different verbs; `src/aeat/application/ledger/`.
 - [ ] `W09.P45.S238` - R7-MARC-D3 modelo bindings list without --year --period flags returns binding ids for an arbitrary revision (often the latest); `copy-paste of those ids into work calculate fails with unknown registry binding ids; either narrow the unfiltered output to the work-unit-current revision OR surface a warning that filtering is needed; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W09.P45.S239` - R7-MARC-D4 ledger import --period rejects 2024-1T 1T 2024/1T and 2024Q1 with Periode no reconegut; works only when omitted; preflight uses AAAAQN format; align ledger import --period parsing with the canonical period token vocabulary established in W01.P07; `src/aeat/entrypoints/cli/_ledger.py`.
+- [ ] `W09.P45.S239` - R7-MARC-D4 ledger import --period rejects 2024-1T 1T 2024/1T and 2024Q1 with Periode no reconegut; `works only when omitted; preflight uses AAAAQN format; align ledger import --period parsing with the canonical period token vocabulary established in W01.P07; `src/aeat/entrypoints/cli/_ledger.py`.
 
 ### Phase `W09.P46` - modelo period-handling site count audit
 
