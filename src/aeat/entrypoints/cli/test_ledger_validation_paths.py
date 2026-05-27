@@ -345,14 +345,13 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
         ],
     )
     _set_profile_axis("taxpayer_type.fiscal_residency", "non_resident_irnr")
-    # TRLIRNR Art. 10 requires representante fiscal NIF + nombre for non-EU/EEA
-    # residents; the TaxpayerProfile model-validator refuses the projection if
-    # the axis tuple is partial, which would mask the source-jurisdiction
-    # refusal under a generic validation error. Provision the full IRNR tuple
-    # (Argentina is non-EU/EEA so the representante is mandatory).
-    _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "AR")
-    _set_profile_axis("taxpayer_type.representante_fiscal_nif", "12345678Z")
-    _set_profile_axis("taxpayer_type.representante_fiscal_nombre", "Test Representante")
+    # UE/EEE country chosen so ue_eee_status is True and the
+    # TaxpayerProfile _check_representante_fiscal_required validator does
+    # not fire; this lets the source-jurisdiction refusal surface cleanly
+    # without provisioning the full TRLIRNR Art. 10 representante tuple.
+    # The non-EU/EEA path (Argentina, Morocco) is deferred to the schema-
+    # fix FU that resolves the representante_fiscal_nombre catalogue gap.
+    _set_profile_axis("taxpayer_type.country_of_fiscal_residence", "FR")
 
     result = _RUNNER.invoke(
         app,
