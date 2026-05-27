@@ -366,10 +366,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Register a new collectible invoice
+        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices a customer owes you
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered collectible invoices
+        operation_type_help: 'M349 operation type: E supply of goods, S services, T triangular, R rectification,
+          A acquisition of goods, I acquisition of services, M miscellaneous'
+        operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a registered collectible invoice
         update_help: Update collectible invoice details
         view_help: Show collectible invoice details
@@ -415,10 +420,15 @@ cli:
         year_help: Tax year
       payable_invoice:
         add_help: Register a new payable invoice
+        country_code_help: Counterparty ISO 3166-1 alpha-2 country code (intracom EU operations)
+        eu_vat_id_help: Counterparty EU VAT-ID (e.g. DE345678901) for intracom operations
         group_help: Invoices you owe a supplier
         invoice_date_help: Invoice issue date (YYYY-MM-DD)
         invoice_id_help: Invoice id (or unambiguous prefix)
         list_help: List registered payable invoices
+        operation_type_help: 'M349 operation type: E supply of goods, S services, T triangular, R rectification,
+          A acquisition of goods, I acquisition of services, M miscellaneous'
+        operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a registered payable invoice
         update_help: Update payable invoice details
         view_help: Show payable invoice details
@@ -747,6 +757,7 @@ cli:
           and does not accept decimal overrides. Use --binding for this input type
           or run `aeat app modelo casillas` to identify the correct numeric casilla.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
+        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
         create_created: New work unit created.
         create_help: Create or reuse a work unit for (modelo, year, period, revision)
         create_not_applicable_refused: 'Modelo %{modelo} does not apply to the active
@@ -767,16 +778,16 @@ cli:
           Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
           Legislativo 5/2004 TRLIRNR, Art. 28 TRLIRNR (quarterly deadlines: Q1/Q2/Q3/Q4).
           General rate: 19 % EU/EEA residents, 24 % others. File the return at sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
-        create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD — Transfer Tax and
+        create_stub_modelo_600_refused: Modelo %{modelo} (ITP-AJD — Transfer Tax and
           Stamp Duty on property transfers) is not supported for work-unit creation
           in this CLI. This tax is devolved to the Autonomous Communities (Ley 28/1990
           ITPyAJD). File the self-assessment at the Hacienda of the CCAA where the
-          transferred asset is located.'
-        create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD — specific transfers
-          of used motor vehicles) is not supported for work-unit creation in this CLI.
-          This tax is devolved to the Autonomous Communities (Ley 28/1990 ITPyAJD).
+          transferred asset is located.
+        create_stub_modelo_620_refused: Modelo %{modelo} (ITP-AJD — specific transfers
+          of used motor vehicles) is not supported for work-unit creation in this
+          CLI. This tax is devolved to the Autonomous Communities (Ley 28/1990 ITPyAJD).
           File the self-assessment at the Hacienda of the CCAA where the transferred
-          asset is located.'
+          asset is located.
         create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD Inheritances — declaration
           of assets acquired by inheritance) is not supported for work-unit creation
           in this CLI. Legal basis: Ley 29/1987 LISyD. Deadline: 6 months from the
@@ -792,11 +803,14 @@ cli:
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
           for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28, Orden
           HAC/1023/2021. File the return at sede.agenciatributaria.gob.es.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of virtual
-          currencies held abroad) is not supported for work-unit creation in this CLI.
-          Obligation: aggregate holdings exceeding €50,000 at 31 December (Ley 11/2021
-          Art. 13, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter). File the return
-          at sede.agenciatributaria.gob.es.'
+        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
+          virtual currencies held abroad) is not supported for work-unit creation
+          in this CLI. Obligation: aggregate holdings exceeding €50,000 at 31 December
+          (Ley 11/2021 Art. 13, Orden HFP/887/2023, RD 1065/2007 Art. 42 quáter).
+          File the return at sede.agenciatributaria.gob.es.'
+        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 is
+          not supported for this modelo revision; no Art. 81 deducción maternidad
+          casilla is declared. Use --casilla to supply inputs directly.
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -822,6 +836,17 @@ cli:
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be {key_label}={value_label}; got {spec}.'
         list_help: List registered work units, optionally filtered by bucket
+        meses_trabajo_con_hijo_menor_3_help: 'Months worked while the child under
+          3 was in the family unit (Art. 81 LIRPF maternity deduction). Format: HIJO_ID=MESES.
+          Repeatable per child. HIJO_ID is a free label (e.g. 0, 1, ''laia''). Computes
+          sum(min(MESES × 100, 1200)) and injects into casilla 0611. Example: --meses-trabajo-con-hijo-menor-3
+          0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requires
+          HIJO_ID=MESES format; received: {spec}.'
+        meses_trabajo_hijo_not_integer: 'MESES in --meses-trabajo-con-hijo-menor-3
+          must be an integer 0–12; received: {spec}.'
+        meses_trabajo_hijo_out_of_range: 'MESES in --meses-trabajo-con-hijo-menor-3
+          must be 0–12; received {meses} in: {spec}.'
         missing_binding_guidance: '%{base} Supply the value with --binding KEY=VALUE
           on this command, or run `%{discover}` to list every binding the calculation
           still needs.'
@@ -902,6 +927,9 @@ cli:
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
         work_unit_id_help: Stable 64-character SHA-256 identifier of the work unit
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: "WARNING: voluntary filing period expired (Art. 27 LGT).\
+          \ File with surcharge before receiving an AEAT notice."
         year_help: Tax year of the work unit (e.g. 2026)
         year_out_of_range: Filing year %{year} is out of range; supply a year between
           %{minimum} and %{maximum}.
@@ -2880,9 +2908,13 @@ filing:
     schema_mismatch: Mismatch with expected schema
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: '50 %% prorrata (Art. 59 LIRPF) applied for shared
-      custody in %{count} dependent(s). Each parent declares half the applicable mínimo
-      (casillas 0513/0514 and, where applicable, 0515/0516).'
+    custodia_compartida_prorrata_applied: 50 %% prorrata (Art. 59 LIRPF) applied for
+      shared custody in %{count} dependent(s). Each parent declares half the applicable
+      mínimo (casillas 0513/0514 and, where applicable, 0515/0516).
+    deduccion_maternidad_applied: 'Art. 81 LIRPF maternity deduction computed: %{amount}
+      € (casilla 0611). Formula sum(min(months × 100, 1,200)) applied per dependent
+      under 3 with declared working months.'
+    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
   errors:
     foral_regime: Residents in {tax_region} file with the corresponding Hacienda Foral
       under the Concierto Económico (Ley 12/2002), not with the AEAT. This CLI does
@@ -3104,6 +3136,9 @@ wizard:
         help: Tax address postcode
       bienes-extranjero-above-threshold:
         help: Foreign-held assets above legal threshold
+      country-of-fiscal-residence:
+        help: ISO 3166-1 alpha-2 code of the country of fiscal residence (e.g. GB,
+          DE, FR). Required when fiscal-residency is non_resident_irnr.
       descendiente:
         help: 'Per-descendant data for Art. 58 LIRPF mínimo (repeatable). Format:
           NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
@@ -3119,6 +3154,9 @@ wizard:
         help: EU/EEA descendants in family-unit deduction
       family-minor-children-in-unit:
         help: Minor children in family unit
+      fiscal-residency:
+        help: 'Fiscal residency category: resident_irpf (habitual resident in Spain)
+          or non_resident_irnr (non-resident, IRNR taxation RDLeg 5/2004).'
       has-employees:
         help: Has employees and pays salaries with retención
       incn-prior-12-months:
@@ -3129,6 +3167,14 @@ wizard:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
         help: IRPF income category; pass --irpf-income-categories once per category
+      irpf-special-regime:
+        help: IRPF special regime. "general" for most taxpayers. "impatriado" for workers
+          who relocated to Spain and elected the Beckham Law regime (Art. 93 LIRPF),
+          available for the first 6 years after relocation.
+      irpf-special-regime-start-date:
+        help: Date the worker elected the inpatriate regime (YYYY-MM-DD). Only when
+          irpf-special-regime is "impatriado". RIRPF Art. 116. The regime expires
+          at the end of the 6th calendar year.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
@@ -3161,6 +3207,14 @@ wizard:
         help: Pays local rent with retención
       professional-income-withholding-ge-70pct:
         help: At least 70% of professional income with prior retención
+      representante-fiscal-nif:
+        help: NIF/NIE of the fiscal representative in Spain. Required for non-EU/EEA
+          non-residents (Art. 47 LGT + Art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Full name of the fiscal representative in Spain.
+      situacion-familiar:
+        help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
+          is available and which family unit variant applies.'
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:
@@ -3199,8 +3253,9 @@ wizard:
         help: 'First taxpayer marital status: 1 = single, 2 = married, 3 = widowed,
           4 = separated or divorced.'
       taxpayer-marriage-date:
-        help: 'Start date of the current marriage (YYYY-MM-DD). Only when marital status = 2 (married).
-          Derives casillas 0245/0246/0247 (matrimonio sobrevenido, Art. 82 LIRPF).'
+        help: Start date of the current marriage (YYYY-MM-DD). Only when marital status
+          = 2 (married). Derives casillas 0245/0246/0247 (matrimonio sobrevenido,
+          Art. 82 LIRPF).
       taxpayer-sex:
         help: 'First taxpayer sex: H = male, M = female.'
       third-party-transactions-above-347-threshold:
@@ -3255,6 +3310,19 @@ wizard:
         help: How economic-activity net income is determined; selects Modelo 130 vs
           131
         prompt: IRPF estimation regime
+      irpf-special-regime:
+        choices:
+          general:
+            label: General regime
+          impatriado:
+            label: Inbound expatriate — Beckham Law (Art. 93 LIRPF)
+        help: The inpatriate (Beckham Law) regime applies for the first 6 tax years
+          after relocation. Most taxpayers are on the general regime.
+        prompt: IRPF special regime (Beckham Law / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Date the worker opted into the inpatriate regime (RIRPF Art. 116). The
+          regime expires at the end of the 6th calendar year.
+        prompt: Special regime election date (YYYY-MM-DD)
       pays-capital-income-with-retencion:
         prompt: Pays capital income with retención
       pays-professionals-with-retencion:
@@ -3353,6 +3421,19 @@ wizard:
             label: Madrid
           murcia:
             label: Murcia
+      country-of-fiscal-residence:
+        prompt: Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: Non-resident — IRNR (RDLeg 5/2004)
+          resident_irpf:
+            label: Habitual resident in Spain — IRPF
+        prompt: Fiscal residency category
+      representante-fiscal-nif:
+        prompt: NIF/NIE of fiscal representative in Spain (required outside EU/EEA)
+      representante-fiscal-nombre:
+        prompt: Name of fiscal representative in Spain
       tax-residence-ccaa:
         prompt: Tax-residence autonomous community
       title: Tax residence
@@ -3485,6 +3566,13 @@ wizard:
       joint_taxation_situacion_familiar_refused: 'Family situation: joint taxation
         is not permitted for an unregistered civil partnership (Art. 82.1.2° LIRPF).
         Change the family situation or choose individual taxation.'
+      monoparental_requires_hijos_ok: 'Single-parent family unit: minor children requirement
+        verified.'
+      monoparental_requires_hijos_warning: 'Single-parent family unit: joint taxation
+        as a single-parent unit (Art. 82.1.2° LIRPF) requires minor children in the
+        family unit. Without dependent children, joint taxation is not available for
+        this family situation. Enable ''minor children in unit'' or switch to individual
+        taxation.'
       obligations_consistency_ok: 'Withholding obligations: the withholding answers
         are consistent.'
       obligations_inconsistent: 'Withholding obligations: you declared professional

@@ -280,10 +280,14 @@ cli:
     ledger:
       collectible_invoice:
         add_help: cli.app.ledger.collectible_invoice.add_help
+        country_code_help: cli.app.ledger.collectible_invoice.country_code_help
+        eu_vat_id_help: cli.app.ledger.collectible_invoice.eu_vat_id_help
         group_help: cli.app.ledger.collectible_invoice.group_help
         invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
         invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
         list_help: cli.app.ledger.collectible_invoice.list_help
+        operation_type_help: cli.app.ledger.collectible_invoice.operation_type_help
+        operation_type_invalid: cli.app.ledger.collectible_invoice.operation_type_invalid
         remove_help: cli.app.ledger.collectible_invoice.remove_help
         update_help: cli.app.ledger.collectible_invoice.update_help
         view_help: cli.app.ledger.collectible_invoice.view_help
@@ -329,10 +333,14 @@ cli:
         year_help: cli.app.ledger.inventory.year_help
       payable_invoice:
         add_help: cli.app.ledger.payable_invoice.add_help
+        country_code_help: cli.app.ledger.payable_invoice.country_code_help
+        eu_vat_id_help: cli.app.ledger.payable_invoice.eu_vat_id_help
         group_help: cli.app.ledger.payable_invoice.group_help
         invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
         invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
         list_help: cli.app.ledger.payable_invoice.list_help
+        operation_type_help: cli.app.ledger.payable_invoice.operation_type_help
+        operation_type_invalid: cli.app.ledger.payable_invoice.operation_type_invalid
         remove_help: cli.app.ledger.payable_invoice.remove_help
         update_help: cli.app.ledger.payable_invoice.update_help
         view_help: cli.app.ledger.payable_invoice.view_help
@@ -606,6 +614,7 @@ cli:
         casilla_help: cli.app.modelo.work.casilla_help
         casilla_non_numeric_data_type: cli.app.modelo.work.casilla_non_numeric_data_type
         casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
+        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
         create_created: cli.app.modelo.work.create_created
         create_help: cli.app.modelo.work.create_help
         create_not_applicable_refused: cli.app.modelo.work.create_not_applicable_refused
@@ -620,26 +629,26 @@ cli:
         create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR — nem rezidensek
           jövedelemadója) nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban.
           Jogalap: 5/2004. sz. törvényerejű rendelet (TRLIRNR), TRLIRNR 28. cikk (negyedéves
-          határidők: 1N/2N/3N/4N). Általános adókulcs: 19 % EU/EGT-rezidensek, 24 %
-          egyéb. Nyújtsd be a bevallást a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml
+          határidők: 1N/2N/3N/4N). Általános adókulcs: 19 % EU/EGT-rezidensek, 24
+          % egyéb. Nyújtsd be a bevallást a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml
           oldalon.'
-        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD — vagyonátruházási
-          illeték és okiratbélyeg) nem támogatott munkaterv-egység létrehozásához ebben
-          a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
+        create_stub_modelo_600_refused: A(z) %{modelo} nyomtatvány (ITP-AJD — vagyonátruházási
+          illeték és okiratbélyeg) nem támogatott munkaterv-egység létrehozásához
+          ebben a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
           sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
-          autonóm közösség adóhatóságánál kell benyújtani.'
-        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD — használt
+          autonóm közösség adóhatóságánál kell benyújtani.
+        create_stub_modelo_620_refused: A(z) %{modelo} nyomtatvány (ITP-AJD — használt
           járművek átruházása) nem támogatott munkaterv-egység létrehozásához ebben
           a CLI-ban. Ez az adó a spanyol autonóm közösségekre átruházott (28/1990.
           sz. törvény, ITPyAJD). Az önadózást az átruházott vagyontárgy helye szerinti
-          autonóm közösség adóhatóságánál kell benyújtani.'
+          autonóm közösség adóhatóságánál kell benyújtani.
         create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvány (ISD — örökösödési
-          illeték, öröklés útján szerzett vagyontárgyak bevallása) nem támogatott munkaterv-egység
-          létrehozásához ebben a CLI-ban. Jogalap: 29/1987. sz. törvény (LISyD). Határidő:
-          6 hónap az elhunyt halálától, további 6 hónappal meghosszabbítható (RISD
-          67. cikk). A bevallást annál az autonóm közösségnél kell benyújtani, ahol
-          az elhunytnak szokásos lakóhelye volt (22/2009. sz. törvény, 32. cikk). Fordulj
-          az illetékes regionális adóhatósághoz.'
+          illeték, öröklés útján szerzett vagyontárgyak bevallása) nem támogatott
+          munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap: 29/1987. sz. törvény
+          (LISyD). Határidő: 6 hónap az elhunyt halálától, további 6 hónappal meghosszabbítható
+          (RISD 67. cikk). A bevallást annál az autonóm közösségnél kell benyújtani,
+          ahol az elhunytnak szokásos lakóhelye volt (22/2009. sz. törvény, 32. cikk).
+          Fordulj az illetékes regionális adóhatósághoz.'
         create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvány (ISD — hagyatéki
           leltár tájékoztató bevallása, a 650-es nyomtatvánnyal együtt nyújtandó be)
           nem támogatott munkaterv-egység létrehozásához ebben a CLI-ban. Jogalap:
@@ -657,6 +666,7 @@ cli:
           meghaladja az 50 000 €-t (11/2021. sz. törvény 13. cikk, HFP/887/2023. rendelet,
           1065/2007. sz. KR 42/c cikk). Nyújtsd be a bevallást a sede.agenciatributaria.gob.es
           oldalon.'
+        deduccion_maternidad_casilla_not_found: cli.app.modelo.work.deduccion_maternidad_casilla_not_found
         discard_help: cli.app.modelo.work.discard_help
         discard_requires_yes: cli.app.modelo.work.discard_requires_yes
         discard_yes_help: cli.app.modelo.work.discard_yes_help
@@ -673,6 +683,10 @@ cli:
         kv_empty_key_error: cli.app.modelo.work.kv_empty_key_error
         kv_format_error: cli.app.modelo.work.kv_format_error
         list_help: cli.app.modelo.work.list_help
+        meses_trabajo_con_hijo_menor_3_help: cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help
+        meses_trabajo_hijo_bad_format: cli.app.modelo.work.meses_trabajo_hijo_bad_format
+        meses_trabajo_hijo_not_integer: cli.app.modelo.work.meses_trabajo_hijo_not_integer
+        meses_trabajo_hijo_out_of_range: cli.app.modelo.work.meses_trabajo_hijo_out_of_range
         missing_binding_guidance: cli.app.modelo.work.missing_binding_guidance
         modelo_help: cli.app.modelo.work.modelo_help
         name_help: cli.app.modelo.work.name_help
@@ -728,6 +742,8 @@ cli:
         unknown_revision: cli.app.modelo.work.unknown_revision
         verify_help: cli.app.modelo.work.verify_help
         work_unit_id_help: cli.app.modelo.work.work_unit_id_help
+        plazo_days_remaining: cli.app.modelo.work.plazo_days_remaining
+        plazo_vencido_warning: cli.app.modelo.work.plazo_vencido_warning
         year_help: cli.app.modelo.work.year_help
         year_out_of_range: cli.app.modelo.work.year_out_of_range
   common:
@@ -2145,6 +2161,10 @@ filing:
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: profile.descendiente.custodia_compartida_prorrata_applied
+    deduccion_maternidad_applied: profile.descendiente.deduccion_maternidad_applied
+    incremento_guarderia_applied: 'Bölcsőde Art. 81 bis LIRPF pótlék kiszámítva: %{amount}
+      € (0613 rovatszám). Korlát: min(tényleges kiadások, 3 évesnél fiatalabb gyermekek
+      × 1.000 €, tb-járulék 2024).'
   errors:
     foral_regime: profile.errors.foral_regime
     not_configured: profile.errors.not_configured
@@ -2210,9 +2230,21 @@ wizard:
     flags:
       activity:
         help: wizard.setup.flags.activity.help
+      country-of-fiscal-residence:
+        help: wizard.setup.flags.country-of-fiscal-residence.help
       descendiente:
         help: 'Leszármazott adatai az Art. 58 LIRPF személyi adóalap-minimum számításhoz
           (ismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+      fiscal-residency:
+        help: wizard.setup.flags.fiscal-residency.help
+      irpf-special-regime:
+        help: IRPF különleges adórendszer. "general" a legtöbb adózó esetén. "impatriado"
+          a Beckham-törvény (LIRPF 93. cikk) alapján Spanyolországba költözött munkavállalóknak,
+          a beköltözést követő első 6 adóévben.
+      irpf-special-regime-start-date:
+        help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (ÉÉÉÉ-HH-NN).
+          Csak akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikk.
+          A rendszer a 6. naptári év végén jár le.
       incn-prior-12-months:
         help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR küszöb
           felett a 202-es modell a LIS 40.3 cikk szerinti módozatot írja elő; alatta
@@ -2226,12 +2258,22 @@ wizard:
           nem érvényesül.
       notes:
         help: wizard.setup.flags.notes.help
+      representante-fiscal-nif:
+        help: wizard.setup.flags.representante-fiscal-nif.help
+      representante-fiscal-nombre:
+        help: wizard.setup.flags.representante-fiscal-nombre.help
+      situacion-familiar:
+        help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
+          az együttes adózás, és melyik családi egység típus alkalmazandó.'
+      tax-residence-ccaa:
+        help: 'Tartózkodási helye szerinti autonóm közösség. Egy a következők közül:
+          %{choices}.'
       surnames:
         help: wizard.setup.flags.surnames.help
       taxpayer-marriage-date:
-        help: 'A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
+        help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
           = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
-          82. cikk LIRPF).'
+          82. cikk LIRPF).
     iva:
       title: wizard.setup.iva.title
     notes:
@@ -2239,6 +2281,19 @@ wizard:
         prompt: wizard.setup.notes.notes.prompt
       title: wizard.setup.notes.title
     obligations:
+      irpf-special-regime:
+        choices:
+          general:
+            label: Általános rendszer
+          impatriado:
+            label: Külföldről érkező munkavállaló — Beckham-törvény (LIRPF 93. cikk)
+        help: A kiküldöttek (Beckham-törvény) rendszere a beköltözés utáni első 6
+          adóévben alkalmazható. A legtöbb adózó az általános rendszerben adózik.
+        prompt: IRPF különleges adórendszer (Beckham-törvény / LIRPF 93. cikk)
+      irpf-special-regime-start-date:
+        help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (RIRPF
+          116. cikk). A rendszer a 6. naptári év végén jár le.
+        prompt: A különleges adórendszer kezdési dátuma (ÉÉÉÉ-HH-NN)
       title: wizard.setup.obligations.title
     profile:
       activity:
@@ -2251,27 +2306,40 @@ wizard:
         prompt: wizard.setup.profile.surnames.prompt
       title: wizard.setup.profile.title
     residence:
+      country-of-fiscal-residence:
+        prompt: wizard.setup.residence.country-of-fiscal-residence.prompt
+      fiscal-residency:
+        prompt: wizard.setup.residence.fiscal-residency.prompt
+      representante-fiscal-nif:
+        prompt: wizard.setup.residence.representante-fiscal-nif.prompt
+      representante-fiscal-nombre:
+        prompt: wizard.setup.residence.representante-fiscal-nombre.prompt
+      tax-residence-ccaa:
+        prompt: Adóügyi illetékességi autonóm közösség
       title: wizard.setup.residence.title
     spouse:
       title: wizard.setup.spouse.title
     taxpayer:
       situacion-familiar:
-        help: wizard.setup.taxpayer.situacion-familiar.help
-        prompt: wizard.setup.taxpayer.situacion-familiar.prompt
         choices:
           casado:
-            label: wizard.setup.taxpayer.situacion-familiar.choices.casado.label
-            description: wizard.setup.taxpayer.situacion-familiar.choices.casado.description
-          pareja-hecho-registrada:
-            label: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.label
-            description: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-registrada.description
+            description: Érvényes házasság — együttes adózás elérhető (LIRPF 82. cikk
+              1. bek. 1. pont)
+            label: Házas
           pareja-hecho-no-registrada:
-            label: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.label
-            description: wizard.setup.taxpayer.situacion-familiar.choices.pareja-hecho-no-registrada.description
-          soltero:
-            label: wizard.setup.taxpayer.situacion-familiar.choices.soltero.label
+            description: Regisztráció nélküli együttélés — együttes adózás NEM elérhető
+            label: Nem bejegyzett élettársi kapcsolat
+          pareja-hecho-registrada:
+            description: Az autonóm közösség nyilvántartásába bejegyzett — együttes
+              adózás elérhető (LIRPF 82. cikk 1. bek. 2. pont)
+            label: Bejegyzett élettársi kapcsolat
           separado-divorciado:
-            label: wizard.setup.taxpayer.situacion-familiar.choices.separado-divorciado.label
+            label: Elvált vagy különélő
+          soltero:
+            label: Egyedülálló
+        help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
+          az együttes adózás, és melyik családi egység típus alkalmazandó.'
+        prompt: Családi állapot (LIRPF 82. cikk)
       taxpayer-marriage-date:
         prompt: Házasságkötés dátuma (ÉÉÉÉ-HH-NN)
       title: wizard.setup.taxpayer.title
@@ -2289,16 +2357,30 @@ wizard:
           valamelyikében van?
     title: wizard.setup.title
     verifier:
-      activity_present: wizard.setup.verifier.activity_present
-      eu_eea_country_missing: wizard.setup.verifier.eu_eea_country_missing
-      eu_eea_country_ok: wizard.setup.verifier.eu_eea_country_ok
-      joint_taxation_situacion_familiar_ok: wizard.setup.verifier.joint_taxation_situacion_familiar_ok
-      joint_taxation_situacion_familiar_refused: wizard.setup.verifier.joint_taxation_situacion_familiar_refused
-      obligations_consistency_ok: wizard.setup.verifier.obligations_consistency_ok
-      obligations_inconsistent: wizard.setup.verifier.obligations_inconsistent
-      spouse_consistency_missing: wizard.setup.verifier.spouse_consistency_missing
-      spouse_consistency_ok: wizard.setup.verifier.spouse_consistency_ok
-      tax_id_present: wizard.setup.verifier.tax_id_present
+      activity_present: Tevékenység megadva.
+      eu_eea_country_missing: EU/EGT-ország hiányzik. Adja meg a házastárs/élettárs
+        tartózkodási helyének EU/EGT-országát.
+      eu_eea_country_ok: EU/EGT-ország megadva.
+      joint_taxation_situacion_familiar_ok: 'Együttes adózás: a megadott családi állapot
+        megfelel az együttes bevallás feltételeinek.'
+      joint_taxation_situacion_familiar_refused: Együttes adózás nem elérhető ehhez
+        a családi állapothoz. Az együttes bevallás csak házastársak, bejegyzett élettársi
+        kapcsolatban élők, vagy törvényes egyszülős egységben (kiskorú gyermekkel)
+        élők esetén lehetséges.
+      monoparental_requires_hijos_ok: 'Egyszülős adóegység: az eltartott kiskorú gyermekek
+        megléte igazolt.'
+      monoparental_requires_hijos_warning: 'Egyszülős adóegység: az egyszülős együttes
+        adózáshoz (LIRPF 82. cikk 1. bek. 2. pont) kiskorú eltartott gyermek szükséges
+        az adóegységben. Eltartott gyermek nélkül ez a típusú együttes adózás nem
+        lehetséges. Aktiválja az «eltartott kiskorú gyermek» opciót, vagy váltson
+        egyéni adózásra.'
+      obligations_consistency_ok: Kötelezettségek konzisztenciája ellenőrizve.
+      obligations_inconsistent: 'Inkonzisztens kötelezettségek: az IVA/IRPF beállítások
+        ütköznek. Ellenőrizze a tevékenységhez tartozó adókötelezettségeket.'
+      spouse_consistency_missing: Házastárs/élettárs adóazonosítója hiányzik. Együttes
+        adózáshoz meg kell adni a másik fél adóazonosítóját.
+      spouse_consistency_ok: Házastárs/élettárs adatai konzisztensek.
+      tax_id_present: Adóazonosító megadva.
   test:
     description: wizard.test.description
     example:

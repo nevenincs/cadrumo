@@ -402,10 +402,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nueva factura cobrable
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que un cliente te debe pagar
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas cobrables registradas
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
+          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualiza los datos de una factura cobrable
         view_help: Muestra los datos de una factura cobrable
@@ -451,10 +456,15 @@ cli:
         year_help: Ejercicio fiscal
       payable_invoice:
         add_help: Registra una nueva factura pagable
+        country_code_help: Código de país ISO 3166-1 alfa-2 de la contraparte (operaciones intracomunitarias UE)
+        eu_vat_id_help: NIF-IVA intracomunitario de la contraparte (p. ej. DE345678901)
         group_help: Facturas que debes pagar a un proveedor
         invoice_date_help: Fecha de emisión de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefijo no ambiguo)
         list_help: Lista las facturas pagables registradas
+        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular, R rectificación,
+          A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualiza los datos de una factura pagable
         view_help: Muestra los datos de una factura pagable
@@ -1011,6 +1021,9 @@ cli:
         verify_help: Verificar una revisión draft contra el contrato verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caracteres) de la
           unidad de trabajo
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: "AVISO: plazo voluntario vencido (Art. 27 LGT). Presenta\
+          \ con recargo antes de recibir requerimiento de la AEAT."
         year_help: Ejercicio fiscal de la unidad de trabajo (p. ej. 2026)
         year_out_of_range: El ejercicio fiscal %{year} está fuera de rango; indique
           un año entre %{minimum} y %{maximum}.
@@ -3085,7 +3098,9 @@ profile:
     deduccion_maternidad_applied: 'Deducción maternidad Art. 81 LIRPF calculada: %{amount}
       € (casilla 0611). Comprobada la fórmula sum(min(meses × 100, 1.200)) por descendiente
       menor de 3 años con meses de trabajo declarados.'
-    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81 bis LIRPF calculado: %{amount} € (casilla 0613). Límite mínimo de gastos reales, hijos menores de 3 años × 1.000 € y cotizaciones SS satisfechas.'
+    incremento_guarderia_applied: 'Incremento maternidad guardería Art. 81 bis LIRPF
+      calculado: %{amount} € (casilla 0613). Límite mínimo de gastos reales, hijos
+      menores de 3 años × 1.000 € y cotizaciones SS satisfechas.'
   errors:
     foral_regime: Los residentes en {tax_region} tributan ante la Hacienda Foral correspondiente
       bajo el Concierto Económico (Ley 12/2002), no ante la AEAT. Este CLI no modela
@@ -3310,6 +3325,9 @@ wizard:
         help: Código postal del domicilio fiscal
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
+      country-of-fiscal-residence:
+        help: Código ISO 3166-1 alfa-2 del país de residencia fiscal (p.ej. GB, DE, FR).
+          Obligatorio cuando fiscal-residency es non_resident_irnr.
       descendiente:
         help: 'Datos de un descendiente para el mínimo del art. 58 LIRPF (repetible).
           Formato: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,CUSTODIA=true|false][,NIF=XXXXXXXXX]'
@@ -3325,6 +3343,9 @@ wizard:
         help: Descendientes UE/EEE en deducción de unidad familiar
       family-minor-children-in-unit:
         help: Hijos menores en unidad familiar
+      fiscal-residency:
+        help: 'Categoría de residencia fiscal: resident_irpf (residente habitual en
+          España) o non_resident_irnr (no residente, tributación por IRNR RDLeg 5/2004).'
       has-employees:
         help: Tiene empleados y paga salarios con retención
       incn-prior-12-months:
@@ -3336,6 +3357,14 @@ wizard:
       irpf-income-categories:
         help: Categoría de renta IRPF; indique --irpf-income-categories una vez por
           categoría
+      irpf-special-regime:
+        help: Régimen especial IRPF. "general" para la mayoría de contribuyentes. "impatriado"
+          para trabajadores desplazados a España acogidos a la Ley Beckham (Art. 93
+          LIRPF), aplicable los primeros 6 años tras el traslado.
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (AAAA-MM-DD).
+          Solo cuando irpf-special-regime es "impatriado". RIRPF Art. 116. El régimen
+          expira al finalizar el 6.º año natural.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
@@ -3369,6 +3398,11 @@ wizard:
         help: Paga alquiler de local con retención
       professional-income-withholding-ge-70pct:
         help: Al menos 70% de los ingresos profesionales con retención previa
+      representante-fiscal-nif:
+        help: NIF/NIE del representante fiscal en España. Obligatorio para no residentes
+          fuera de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nombre y apellidos del representante fiscal en España.
       situacion-familiar:
         choices:
           casado:
@@ -3488,6 +3522,19 @@ wizard:
         help: Cómo se determina el rendimiento neto de la actividad económica; selecciona
           Modelo 130 o 131
         prompt: Régimen de estimación IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Régimen general
+          impatriado:
+            label: Impatriado — Ley Beckham (Art. 93 LIRPF)
+        help: El régimen de impatriados (Ley Beckham) se aplica durante los primeros
+          6 años tras el traslado. La mayoría tributa en régimen general.
+        prompt: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Fecha en que el trabajador optó por el régimen de impatriados (RIRPF
+          Art. 116). El régimen expira al finalizar el 6.º año natural.
+        prompt: Fecha de inicio del régimen especial (AAAA-MM-DD)
       pays-capital-income-with-retencion:
         prompt: Paga rentas de capital con retención
       pays-professionals-with-retencion:
@@ -3585,6 +3632,19 @@ wizard:
             label: Madrid
           murcia:
             label: Murcia
+      country-of-fiscal-residence:
+        prompt: País de residencia fiscal (código ISO 3166-1 alfa-2, p.ej. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: No residente — IRNR (RDLeg 5/2004)
+          resident_irpf:
+            label: Residente habitual en España — IRPF
+        prompt: Categoría de residencia fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representante fiscal en España (obligatorio fuera UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nombre del representante fiscal en España
       tax-residence-ccaa:
         prompt: Comunidad autónoma de residencia fiscal
       title: Residencia fiscal
@@ -3609,6 +3669,27 @@ wizard:
         prompt: NIF/NIE del cónyuge
       title: Cónyuge
     taxpayer:
+      situacion-familiar:
+        choices:
+          casado:
+            description: Matrimonio vigente — tributación conjunta disponible (Art.
+              82.1.1°)
+            label: Casado/a
+          pareja-hecho-no-registrada:
+            description: Convivencia sin inscripción registral — tributación conjunta
+              NO disponible
+            label: Pareja de hecho no registrada
+          pareja-hecho-registrada:
+            description: Inscrita en el registro autonómico — tributación conjunta
+              disponible (Art. 82.1.2°)
+            label: Pareja de hecho registrada
+          separado-divorciado:
+            label: Separado/a o divorciado/a
+          soltero:
+            label: Soltero/a
+        help: 'Situación familiar a efectos del Art. 82 LIRPF: determina si puede
+          optarse por la declaración conjunta y qué unidad familiar aplica.'
+        prompt: Situación familiar (Art. 82 LIRPF)
       taxpayer-birth-date:
         prompt: Fecha de nacimiento del primer declarante
       taxpayer-death-date:

@@ -404,10 +404,15 @@ cli:
     ledger:
       collectible_invoice:
         add_help: Registra una nova factura cobrable
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que un client t'ha de pagar
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures cobrables registrades
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
+          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura cobrable registrada
         update_help: Actualitza les dades d'una factura cobrable
         view_help: Mostra les dades d'una factura cobrable
@@ -453,10 +458,15 @@ cli:
         year_help: Exercici fiscal
       payable_invoice:
         add_help: Registra una nova factura pagable
+        country_code_help: Codi de país ISO 3166-1 alfa-2 de la contrapart (operacions intracomunitàries UE)
+        eu_vat_id_help: NIF-IVA intracomunitari de la contrapart (p. ex. DE345678901)
         group_help: Factures que has de pagar a un proveïdor
         invoice_date_help: Data d'emissió de la factura (AAAA-MM-DD)
         invoice_id_help: Identificador de la factura (o prefix no ambigu)
         list_help: Llista les factures pagables registrades
+        operation_type_help: 'Tipus d''operació M349: E lliuraments, S serveis, T triangular, R rectificació,
+          A adquisició béns, I adquisició serveis, M miscel·lània'
+        operation_type_invalid: '--operation-type ha de ser un de: {valid}'
         remove_help: Elimina una factura pagable registrada
         update_help: Actualitza les dades d'una factura pagable
         view_help: Mostra les dades d'una factura pagable
@@ -811,6 +821,7 @@ cli:
           casilla numèrica correcta.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
+        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
         create_created: Nova unitat de treball creada.
         create_help: Crear o reutilitzar una unitat de treball per a (model, exercici,
           període, revisió)
@@ -835,28 +846,28 @@ cli:
           en aquest CLI. Base legal: RD Legislatiu 5/2004 TRLIRNR, Art. 28 TRLIRNR
           (termini trimestral: 1T/2T/3T/4T). Tipus general: 19 % UE/EEE, 24 % resta.
           Presenta la declaració a sede.agenciatributaria.gob.es/Sede/procedimientoini/G320.shtml'
-        create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD — Impost sobre
+        create_stub_modelo_600_refused: El model %{modelo} (ITP-AJD — Impost sobre
           Transmissions Patrimonials i Actes Jurídics Documentats) no és compatible
-          amb la creació d''unitats de treball en aquest CLI. És un impost cedit a les
-          comunitats autònomes (Llei 28/1990 ITPyAJD). Presenta l''autoliquidació a
-          la Hisenda de la CA on es troba el bé transmès.'
-        create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD — transmissions
+          amb la creació d'unitats de treball en aquest CLI. És un impost cedit a
+          les comunitats autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació
+          a la Hisenda de la CA on es troba el bé transmès.
+        create_stub_modelo_620_refused: El model %{modelo} (ITP-AJD — transmissions
           específiques de vehicles de motor usats) no és compatible amb la creació
-          d''unitats de treball en aquest CLI. És un impost cedit a les comunitats autònomes
-          (Llei 28/1990 ITPyAJD). Presenta l''autoliquidació a la Hisenda de la CA
-          on es troba el bé transmès.'
+          d'unitats de treball en aquest CLI. És un impost cedit a les comunitats
+          autònomes (Llei 28/1990 ITPyAJD). Presenta l'autoliquidació a la Hisenda
+          de la CA on es troba el bé transmès.
         create_stub_modelo_650_refused: 'El model %{modelo} (ISD Successions — declaració
           de béns adquirits per herència) no és compatible amb la creació d''unitats
           de treball en aquest CLI. Base legal: Llei 29/1987 LISyD. Termini: 6 mesos
-          des de la defunció, prorrogable 6 mesos més (Art. 67 RISD). Presenta la declaració
-          a la Hisenda de la CA on el causant tenia la residència habitual (Llei 22/2009
-          Art. 32). Consulta la Hisenda autonòmica corresponent.'
+          des de la defunció, prorrogable 6 mesos més (Art. 67 RISD). Presenta la
+          declaració a la Hisenda de la CA on el causant tenia la residència habitual
+          (Llei 22/2009 Art. 32). Consulta la Hisenda autonòmica corresponent.'
         create_stub_modelo_660_refused: 'El model %{modelo} (ISD — declaració informativa
           del cabal relicte, acompanya el model 650) no és compatible amb la creació
           d''unitats de treball en aquest CLI. Base legal: Llei 29/1987 LISyD, termini
-          6 mesos (Art. 67 RISD). Presenta la declaració a la Hisenda de la CA on el
-          causant tenia la residència habitual (Llei 22/2009 Art. 32). Consulta la
-          Hisenda autonòmica corresponent.'
+          6 mesos (Art. 67 RISD). Presenta la declaració a la Hisenda de la CA on
+          el causant tenia la residència habitual (Llei 22/2009 Art. 32). Consulta
+          la Hisenda autonòmica corresponent.'
         create_stub_modelo_714_refused: 'El model %{modelo} (Impost sobre el Patrimoni)
           no és compatible amb la creació d''unitats de treball en aquest CLI. Base
           legal: Llei 19/1991 Art. 28, Ordre HAC/1023/2021. Presenta la declaració
@@ -866,6 +877,10 @@ cli:
           d''unitats de treball en aquest CLI. Obligació: saldos superiors a 50.000
           € a 31 de desembre (Llei 11/2021 Art. 13, Ordre HFP/887/2023, RD 1065/2007
           Art. 42 quáter). Presenta la declaració a sede.agenciatributaria.gob.es.'
+        deduccion_maternidad_casilla_not_found: --meses-trabajo-con-hijo-menor-3 no
+          és compatible amb aquesta revisió del model; no s'ha declarat cap casella
+          de deducció maternitat (Art. 81 LIRPF). Usa --casilla per subministrar els
+          valors directament.
         discard_help: Marcar una unitat de treball com descartada (transició d'estat
           auditable)
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
@@ -896,6 +911,17 @@ cli:
           s''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per bucket
+        meses_trabajo_con_hijo_menor_3_help: 'Mesos treballats mentre el fill menor
+          de 3 anys era a la unitat familiar (Art. 81 LIRPF deducció maternitat).
+          Format: FILL_ID=MESOS. Repetible per cada fill. FILL_ID és un identificador
+          lliure (p. ex. 0, 1, ''laia''). Es calcula sum(min(MESOS × 100, 1200)) i
+          s''injecta a la casella 0611.'
+        meses_trabajo_hijo_bad_format: '--meses-trabajo-con-hijo-menor-3 requereix
+          format FILL_ID=MESOS; s''ha rebut: {spec}.'
+        meses_trabajo_hijo_not_integer: 'MESOS a --meses-trabajo-con-hijo-menor-3
+          ha de ser un enter 0–12; s''ha rebut: {spec}.'
+        meses_trabajo_hijo_out_of_range: 'MESOS a --meses-trabajo-con-hijo-menor-3
+          ha d''estar entre 0 i 12; s''ha rebut {meses} a: {spec}.'
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
@@ -980,6 +1006,9 @@ cli:
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         work_unit_id_help: Identificador estable (SHA-256 de 64 caràcters) de la unitat
           de treball
+        plazo_days_remaining: "days_remaining\t{days_remaining}"
+        plazo_vencido_warning: "AVÍS: termini voluntari vençut (Art. 27 LGT). Presenteu\
+          \ amb recàrrec abans de rebre un requeriment de l'AEAT."
         year_help: Exercici fiscal de la unitat de treball (p. ex. 2026)
         year_out_of_range: L'exercici fiscal %{year} està fora de rang; indiqueu un
           any entre %{minimum} i %{maximum}.
@@ -3040,9 +3069,13 @@ filing:
     schema_mismatch: Discrepància amb l'esquema esperat
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: "S'ha aplicat prorrata 50 %% (Art. 59 LIRPF) per
-      custòdia compartida en %{count} descendent(s). Cada progenitor declara la meitat
-      del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516)."
+    custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 59 LIRPF)
+      per custòdia compartida en %{count} descendent(s). Cada progenitor declara la
+      meitat del mínim corresponent (caselles 0513/0514 i, si escau, 0515/0516).
+    deduccion_maternidad_applied: 'Deducció maternitat Art. 81 LIRPF calculada: %{amount}
+      € (casella 0611). Fórmula sum(min(mesos × 100, 1.200)) per descendent menor
+      de 3 anys amb mesos de treball declarats.'
+    incremento_guarderia_applied: profile.descendiente.incremento_guarderia_applied
   errors:
     foral_regime: Els residents a {tax_region} tributen davant la Hisenda Foral corresponent
       en virtut del Concert Econòmic (Llei 12/2002), no davant l'AEAT. Aquest CLI
@@ -3266,6 +3299,9 @@ wizard:
         help: Codi postal del domicili fiscal
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
+      country-of-fiscal-residence:
+        help: Codi ISO 3166-1 alfa-2 del país de residència fiscal (p.ex. GB, DE,
+          FR). Obligatori quan fiscal-residency és non_resident_irnr.
       descendiente:
         help: 'Dades per descendent per al mínim de l''art. 58 LIRPF (repetible).
           Format: NACIMIENTO=YYYY-MM-DD[,ADOPCION=YYYY-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
@@ -3281,6 +3317,9 @@ wizard:
         help: Descendents UE/EEE en deducció d'unitat familiar
       family-minor-children-in-unit:
         help: Fills menors en unitat familiar
+      fiscal-residency:
+        help: 'Categoria de residència fiscal: resident_irpf (resident habitual a
+          Espanya) o non_resident_irnr (no resident, tributació per IRNR RDLeg 5/2004).'
       has-employees:
         help: Té empleats i paga salaris amb retenció
       incn-prior-12-months:
@@ -3292,6 +3331,14 @@ wizard:
       irpf-income-categories:
         help: Categoria de renda IRPF; indiqueu --irpf-income-categories una vegada
           per categoria
+      irpf-special-regime:
+        help: Règim especial IRPF. "general" per a la majoria de contribuents. "impatriado"
+          per a treballadors desplaçats a Espanya acollits a la Llei Beckham (Art. 93
+          LIRPF), aplicable els primers 6 anys des del trasllat.
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
+          Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
+          expira en acabar el 6è any natural.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
@@ -3324,6 +3371,14 @@ wizard:
         help: Paga lloguer de local amb retenció
       professional-income-withholding-ge-70pct:
         help: Almenys 70% dels ingressos professionals amb retenció prèvia
+      representante-fiscal-nif:
+        help: NIF/NIE del representant fiscal a Espanya. Obligatori per a no residents
+          fora de la UE/EEE (art. 47 LGT + art. 10 TRLIRNR RDLeg 5/2004).
+      representante-fiscal-nombre:
+        help: Nom i cognoms del representant fiscal a Espanya.
+      situacion-familiar:
+        help: 'Situació familiar a efectes de l''Art. 82 LIRPF: determina si es pot
+          optar per la declaració conjunta i quina unitat familiar aplica.'
       spouse-birth-date:
         help: Data de naixement del cònjuge
       spouse-disability-grade:
@@ -3363,8 +3418,9 @@ wizard:
         help: 'Estat civil del primer declarant: 1 = solter/a, 2 = casat/da, 3 = vidu/a,
           4 = separat/da o divorciat/da.'
       taxpayer-marriage-date:
-        help: 'Data d''inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil = 2 (casat/da).
-          Calcula caselles 0245/0246/0247 (matrimoni sobrevingut, art. 82 LIRPF).'
+        help: Data d'inici del matrimoni actual (AAAA-MM-DD). Només quan estat civil
+          = 2 (casat/da). Calcula caselles 0245/0246/0247 (matrimoni sobrevingut,
+          art. 82 LIRPF).
       taxpayer-sex:
         help: 'Sexe del primer declarant: H = home, M = dona.'
       third-party-transactions-above-347-threshold:
@@ -3420,6 +3476,19 @@ wizard:
         help: Com es determina el rendiment net de l'activitat econòmica; selecciona
           Model 130 o 131
         prompt: Règim d'estimació IRPF
+      irpf-special-regime:
+        choices:
+          general:
+            label: Règim general
+          impatriado:
+            label: Impatriat — Llei Beckham (Art. 93 LIRPF)
+        help: El règim d'impatriats (Llei Beckham) s'aplica durant els primers 6 anys
+          des del trasllat. La majoria tributa en règim general.
+        prompt: Règim especial IRPF (Llei Beckham / Art. 93 LIRPF)
+      irpf-special-regime-start-date:
+        help: Data en què el treballador va optar pel règim d'impatriats (RIRPF Art.
+          116). El règim expira en acabar el 6è any natural.
+        prompt: Data d'inici del règim especial (AAAA-MM-DD)
       pays-capital-income-with-retencion:
         prompt: Paga rendes de capital amb retenció
       pays-professionals-with-retencion:
@@ -3518,6 +3587,19 @@ wizard:
             label: Madrid
           murcia:
             label: Múrcia
+      country-of-fiscal-residence:
+        prompt: País de residència fiscal (codi ISO 3166-1 alfa-2, p.ex. GB, DE, FR)
+      fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: No resident — IRNR (RDLeg 5/2004)
+          resident_irpf:
+            label: Resident habitual a Espanya — IRPF
+        prompt: Categoria de residència fiscal
+      representante-fiscal-nif:
+        prompt: NIF/NIE del representant fiscal a Espanya (obligatori fora UE/EEE)
+      representante-fiscal-nombre:
+        prompt: Nom del representant fiscal a Espanya
       tax-residence-ccaa:
         prompt: Comunitat autònoma de residència fiscal
       title: Residència fiscal
@@ -3652,6 +3734,13 @@ wizard:
       joint_taxation_situacion_familiar_refused: 'Situació familiar: la declaració
         conjunta no està permesa per a parella de fet no registrada (Art. 82.1.2°
         LIRPF). Canvia la situació familiar o tria tributació individual.'
+      monoparental_requires_hijos_ok: 'Unitat familiar monoparental: requisit de fills
+        a càrrec verificat.'
+      monoparental_requires_hijos_warning: 'Unitat familiar monoparental: la tributació
+        conjunta com a monoparental (Art. 82.1.2° LIRPF) requereix fills menors a
+        càrrec a la unitat familiar. Sense fills a càrrec, la declaració conjunta
+        no és possible per a aquesta situació familiar. Activa «fills menors a càrrec»
+        o canvia a tributació individual.'
       obligations_consistency_ok: 'Obligacions de retenció: les respostes sobre retencions
         són coherents.'
       obligations_inconsistent: 'Obligacions de retenció: has declarat retencions
