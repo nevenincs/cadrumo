@@ -58,10 +58,12 @@ class StaticModeloRepository(ResourceCacheRepository["ModeloDefinition", str]):
         return self._resolve_authority()
 
     def _load(self, key: str) -> ModeloDefinition:
+        from ....domain.calculations.registry import RegistrySnapshotError
+
         authority = self._resolve_authority()
         try:
             return authority.modelo(key)
-        except Exception as exc:
+        except RegistrySnapshotError as exc:
             raise ResourceNotFoundError(
                 f"no modelo definition registered for {key!r}"
             ) from exc
