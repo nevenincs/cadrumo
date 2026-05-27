@@ -346,8 +346,8 @@ The binding renta-2025-modelo-130-pagos-fraccionados exists; the projection is i
 
 Add an aeat app modelo compare verb surfacing prior-period versus current-period casilla deltas.
 
-- [ ] `W07.P33.S118` - add aeat app modelo compare --year 2024 --year 2025 --modelo 100 verb surfacing prior-period versus current-period casilla deltas; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W07.P33.S119` - regression test against two fiscal years; `src/aeat/entrypoints/cli/test_modelo_compare.py`.
+- [x] `W07.P33.S118` - add aeat app modelo compare --year 2024 --year 2025 --modelo 100 verb surfacing prior-period versus current-period casilla deltas; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W07.P33.S119` - regression test against two fiscal years; `src/aeat/entrypoints/cli/test_modelo_compare.py`.
 
 ### Phase `W07.P34` - Wave-7 review and persona re-run BREAKPOINT
 
@@ -471,7 +471,7 @@ address_postcode unused dual IVARegime.GENERAL and CCAA.MADRID defaults ProfileE
 - [ ] `W09.P41.S255` - follow-on to W08.P35.S140 sweep: convert 120 hardcoded f-string error raises across 43 application files identified by the Haiku discovery sweep; `full file list and operator-facing subset filed in S140 Step Record; batch by surface (modelo registry storage etc) per locale CLI rule scaffold-then-fill; mechanical work; `src/aeat/application/`.
 - [ ] `W09.P41.S256` - FU-W07-D surface legal_refs and source_refs on projected M100 casilla values in modelo project verb output payload; `calculation-grounding rule requires every casilla observation to carry its provenance; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W09.P41.S257` - FU-W07-E hexagonal violation in modelo project CLI verb: calculate_registry_snapshot imported from domain.calculations.registry directly at the CLI layer; `extract snapshot acquisition + engine call into a thin application.modelo service function and have the verb call only that service; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W09.P41.S258` - FU-W07-F document or test that resources().modelos.authority and _service()._authority yield identical RegistrySnapshots; the modelo project verb test asserts via two distinct paths but the equivalence is currently implicit; `src/aeat/application/modelo/`.
+- [ ] `W09.P41.S258` - FU-W07-F document or test that resources().modelos.authority and _service()._authority yield identical RegistrySnapshots; `the modelo project verb test asserts via two distinct paths but the equivalence is currently implicit; `src/aeat/application/modelo/`.
 
 ### Phase `W09.P42` - twin function merge
 
