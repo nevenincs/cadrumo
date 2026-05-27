@@ -211,7 +211,10 @@ class PurchaseInvoiceEvidenceService:
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepository | None = None,
     ) -> None:
-        self._settings = settings or Settings()
+        # `load_settings()` honours `override_settings`; bare `Settings()`
+        # bypasses the context-var and lands writes in the project default.
+        from ...core.config import load_settings as _load_settings
+        self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
 
     def add(
