@@ -316,9 +316,9 @@ recurrence or taxpayer override values.
 
 ### Phase `W07.P02` - divergence records and operator review
 
-- [ ] `W07.P02.S05` - Persist divergence decisions that compare AEAT evidence, filed-history-derived recurrence, local ledger recurrence, and explicit taxpayer override without merging the source values. Blocker: persisted filed-history evidence exists, but explicit remote/local divergence decisions are not complete for wallet-missing and filed-history-only states; `src/aeat/application/calculations`.
+- [ ] `W07.P02.S05` - Persist divergence decisions that compare AEAT evidence, filed-history-derived recurrence, local ledger recurrence, and explicit taxpayer override without merging the source values. Partial 2026-05-27: filed-history-derived Modelo 303 recurrence now preserves the persisted observation source kind and direct wallet/cartera absence is classified as explicit `filed_history_only` authority rather than generic local recurrence; persistence/readiness integration remains open; `src/aeat/application/calculations`.
 - [ ] `W07.P02.S06` - Surface blocked, stale, missing-wallet, filed-history-only, and override-required states through workflow/modelo readiness before export or verification. Blocker: Modelo 303 readiness must not treat filed-history-only recurrence as equivalent to direct AEAT wallet/cartera authority without an explicit persisted non-blocking decision; `src/aeat/application/modelo src/aeat/application/workflow`.
-- [ ] `W07.P02.S07` - Add tests for every divergence state using synthetic local ledgers and sanitized official/filed-history shapes, not private taxpayer history. Blocker: fixture and test coverage must remain non-private and non-tautological while still exercising production recurrence and readiness code; `src/aeat/application/calculations src/aeat/application/modelo`.
+- [ ] `W07.P02.S07` - Add tests for every divergence state using synthetic local ledgers and sanitized official/filed-history shapes, not private taxpayer history. Partial 2026-05-27: focused calculation tests now cover `filed_history_only` classification and production IVA-history repository fallback source preservation without private taxpayer fixtures; full readiness/modelo coverage remains open; `src/aeat/application/calculations src/aeat/application/modelo`.
 
 ## Wave `W08` - multiyear IVA calculation grounding
 
@@ -336,7 +336,7 @@ replacement for remote state.
 
 ### Phase `W08.P02` - remote-to-local reconciliation
 
-- [ ] `W08.P02.S04` - Compare persisted AEAT remote evidence against local recurrence and classify exact match, AEAT higher, AEAT lower, stale remote, local incomplete, and override-required outcomes. Partial 2026-05-27: live filed-history evidence can now be promoted into persisted calculation observations for comparison; explicit divergence classification across persisted AEAT evidence and local ledger recurrence remains open; `src/aeat/application/calculations`.
+- [ ] `W08.P02.S04` - Compare persisted AEAT remote evidence against local recurrence and classify exact match, AEAT higher, AEAT lower, stale remote, local incomplete, and override-required outcomes. Partial 2026-05-27: live filed-history evidence can now be promoted into persisted calculation observations for comparison; follow-up 2026-05-27: AEAT filed-history-only recurrence is now a distinct non-blocking divergence state when wallet/cartera is unavailable, while full persisted remote/local ladder coverage remains open; `src/aeat/application/calculations`.
 - [ ] `W08.P02.S05` - Block Modelo 303 prior-compensation prefill when remote/local divergence is unresolved, and require an explicit persisted decision for any override; `src/aeat/application/modelo src/aeat/application/calculations`.
 - [ ] `W08.P02.S06` - Add focused tests spanning at least three fiscal years and multiple filing periods using sanitized, non-private fixtures and production calculation services; `src/aeat/application/calculations src/aeat/application/modelo`.
 
