@@ -1,4 +1,4 @@
-formula_targets_total: 176
+formula_targets_total: 177
 formula_targets_grounded: 4
-formula_targets_ungrounded: 172
+formula_targets_ungrounded: 173
 coverage_pct: 2.3
