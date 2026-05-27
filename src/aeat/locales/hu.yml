@@ -830,6 +830,16 @@ cli:
           scope_help: cli.config.auth.apoderado.configure.scope_help
         configure_help: cli.config.auth.apoderado.configure_help
         help: cli.config.auth.apoderado.help
+        scope:
+          censo: cli.config.auth.apoderado.scope.censo
+          exped: cli.config.auth.apoderado.scope.exped
+          generalnt: cli.config.auth.apoderado.scope.generalnt
+          inform: cli.config.auth.apoderado.scope.inform
+          iva: cli.config.auth.apoderado.scope.iva
+          notific: cli.config.auth.apoderado.scope.notific
+          pagosf: cli.config.auth.apoderado.scope.pagosf
+          rent: cli.config.auth.apoderado.scope.rent
+          reten: cli.config.auth.apoderado.scope.reten
         scopes:
           help: cli.config.auth.apoderado.scopes.help
           list_help: cli.config.auth.apoderado.scopes.list_help
@@ -879,7 +889,12 @@ cli:
       since_help: cli.config.bucket.since_help
       until_help: cli.config.bucket.until_help
     errors:
+      invalid_value: cli.config.errors.invalid_value
       no_active_profile: cli.config.errors.no_active_profile
+      unknown_key: cli.config.errors.unknown_key
+    get:
+      help: cli.config.get.help
+      key_help: cli.config.get.key_help
     google:
       client_json_help: cli.config.google.client_json_help
       detail:
@@ -892,6 +907,19 @@ cli:
         no_metadata_for_refresh: cli.config.google.detail.no_metadata_for_refresh
       errors:
         auth_failed: cli.config.google.errors.auth_failed
+        browser_open: cli.config.google.errors.browser_open
+        client_not_registered: cli.config.google.errors.client_not_registered
+        client_revoked: cli.config.google.errors.client_revoked
+        keychain_locked: cli.config.google.errors.keychain_locked
+        loopback_bind: cli.config.google.errors.loopback_bind
+        network: cli.config.google.errors.network
+        profile_unbound: cli.config.google.errors.profile_unbound
+        scope_insufficient: cli.config.google.errors.scope_insufficient
+        storage: cli.config.google.errors.storage
+        token_expired: cli.config.google.errors.token_expired
+        token_revoked: cli.config.google.errors.token_revoked
+        unsecured_mode: cli.config.google.errors.unsecured_mode
+        validation: cli.config.google.errors.validation
       folder:
         folder_id_help: cli.config.google.folder.folder_id_help
         get_help: cli.config.google.folder.get_help
@@ -900,6 +928,7 @@ cli:
       help: cli.config.google.help
       login_help: cli.config.google.login_help
       logout_help: cli.config.google.logout_help
+      profile_help: cli.config.google.profile_help
       refresh_only_help: cli.config.google.refresh_only_help
       register_help: cli.config.google.register_help
       status_help: cli.config.google.status_help
@@ -931,6 +960,27 @@ cli:
         push_help: cli.config.google.sync.push_help
         push_limit_help: cli.config.google.sync.push_limit_help
         push_namespace_help: cli.config.google.sync.push_namespace_help
+        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+    init:
+      activity_help: cli.config.init.activity_help
+      auth_provider_help: cli.config.init.auth_provider_help
+      certificate_password_env_help: cli.config.init.certificate_password_env_help
+      certificate_path_help: cli.config.init.certificate_path_help
+      drafts_dir_help: cli.config.init.drafts_dir_help
+      dry_run_help: cli.config.init.dry_run_help
+      from_help: cli.config.init.from_help
+      help: cli.config.init.help
+      iva_regime_help: cli.config.init.iva_regime_help
+      manuals_root_help: cli.config.init.manuals_root_help
+      non_interactive_help: cli.config.init.non_interactive_help
+      output_language_help: cli.config.init.output_language_help
+      profile_name_help: cli.config.init.profile_name_help
+      quiet_help: cli.config.init.quiet_help
+      submissions_dir_help: cli.config.init.submissions_dir_help
+      success:
+        next_step: cli.config.init.success.next_step
+      tax_id_help: cli.config.init.tax_id_help
+      tax_residence_ccaa_help: cli.config.init.tax_residence_ccaa_help
     list:
       help: cli.config.list.help
     profile:
@@ -965,6 +1015,16 @@ cli:
       logout_help: cli.config.profile.logout_help
       logout_session_warning: cli.config.profile.logout_session_warning
       no_active_profile: cli.config.profile.no_active_profile
+      preflight_help: cli.config.profile.preflight_help
+      preflight_modelo_help: cli.config.profile.preflight_modelo_help
+      preflight_period_help: cli.config.profile.preflight_period_help
+      preflight_revision_help: cli.config.profile.preflight_revision_help
+      preflight_year_help: cli.config.profile.preflight_year_help
+      remove_help: cli.config.profile.remove_help
+      remove_name_help: cli.config.profile.remove_name_help
+      remove_requires_yes: cli.config.profile.remove_requires_yes
+      remove_yes_help: cli.config.profile.remove_yes_help
+      rename_display_name_help: cli.config.profile.rename_display_name_help
       rename_help: cli.config.profile.rename_help
       rename_source_help: cli.config.profile.rename_source_help
       rename_target_help: cli.config.profile.rename_target_help
@@ -973,6 +1033,10 @@ cli:
       switch_help: cli.config.profile.switch_help
       switch_name_help: cli.config.profile.switch_name_help
       unknown_profile: cli.config.profile.unknown_profile
+      use_help: cli.config.profile.use_help
+      use_name_help: cli.config.profile.use_name_help
+      validate_help: cli.config.profile.validate_help
+      view_help: cli.config.profile.view_help
     repair:
       connectivity_help: cli.config.repair.connectivity_help
       connectivity_target_help: cli.config.repair.connectivity_target_help
@@ -1010,19 +1074,34 @@ cli:
       yes_help: cli.config.repair.yes_help
     reset:
       help: cli.config.reset.help
+      invalid_scope: cli.config.reset.invalid_scope
       requires_yes: cli.config.reset.requires_yes
       scope_help: cli.config.reset.scope_help
       yes_help: cli.config.reset.yes_help
+    set:
+      help: cli.config.set.help
+      key_help: cli.config.set.key_help
+      value_help: cli.config.set.value_help
     setup:
       accept_defaults_help: cli.config.setup.accept_defaults_help
+      errors:
+        missing_required_flags: cli.config.setup.errors.missing_required_flags
+      help: cli.config.setup.help
       profile_name_help: cli.config.setup.profile_name_help
       quiet_help: cli.config.setup.quiet_help
+      success:
+        next_step: cli.config.setup.success.next_step
+        saved: cli.config.setup.success.saved
     status:
       empty_profile: cli.config.status.empty_profile
       help: cli.config.status.help
       next_step: cli.config.status.next_step
+    unset:
+      help: cli.config.unset.help
+      key_help: cli.config.unset.key_help
     workflow_help: cli.config.workflow_help
   diagnostics:
+    app_help: cli.diagnostics.app_help
     browser:
       http_status_label: cli.diagnostics.browser.http_status_label
       markers_label: cli.diagnostics.browser.markers_label
@@ -1037,6 +1116,17 @@ cli:
       registry_integrity_internal: cli.diagnostics.dead_end.registry_integrity_internal
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    profile:
+      errors:
+        invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
+        invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
+      get_help: cli.diagnostics.profile.get_help
+      help: cli.diagnostics.profile.help
+      key_help: cli.diagnostics.profile.key_help
+      profile_help: cli.diagnostics.profile.profile_help
+      set_help: cli.diagnostics.profile.set_help
+      unset_help: cli.diagnostics.profile.unset_help
+      value_help: cli.diagnostics.profile.value_help
     repair:
       audience_internal: cli.diagnostics.repair.audience_internal
       auth_label: cli.diagnostics.repair.auth_label
@@ -1052,6 +1142,14 @@ cli:
       profile_label: cli.diagnostics.repair.profile_label
       python_label: cli.diagnostics.repair.python_label
       version_label: cli.diagnostics.repair.version_label
+    secure_objects:
+      all_help: cli.diagnostics.secure_objects.all_help
+      errors:
+        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
+      help: cli.diagnostics.secure_objects.help
+      list_help: cli.diagnostics.secure_objects.list_help
+      namespace_help: cli.diagnostics.secure_objects.namespace_help
+      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
     summary:
       auth_no_session: cli.diagnostics.summary.auth_no_session
       auth_none: cli.diagnostics.summary.auth_none
@@ -1563,6 +1661,52 @@ cli:
         fordítási kulcsa'
       view_help: cli.registry.manuals.view_help
       year_help: cli.registry.manuals.year_help
+    metrics:
+      applicability_declaration_count: cli.registry.metrics.applicability_declaration_count
+      application_link_count: cli.registry.metrics.application_link_count
+      application_link_surfaces: cli.registry.metrics.application_link_surfaces
+      artefact_refs: cli.registry.metrics.artefact_refs
+      backend_exists: cli.registry.metrics.backend_exists
+      captured_count: cli.registry.metrics.captured_count
+      casilla_count: cli.registry.metrics.casilla_count
+      compared_casillas: cli.registry.metrics.compared_casillas
+      comparison_count: cli.registry.metrics.comparison_count
+      cross_reference_count: cli.registry.metrics.cross_reference_count
+      difference_count: cli.registry.metrics.difference_count
+      differences: cli.registry.metrics.differences
+      drift_count: cli.registry.metrics.drift_count
+      environment: cli.registry.metrics.environment
+      extraction_profile_count: cli.registry.metrics.extraction_profile_count
+      failed_count: cli.registry.metrics.failed_count
+      failure_count: cli.registry.metrics.failure_count
+      formula_count: cli.registry.metrics.formula_count
+      formula_workbook_count: cli.registry.metrics.formula_workbook_count
+      legal_reference_count: cli.registry.metrics.legal_reference_count
+      missing_filed_casillas: cli.registry.metrics.missing_filed_casillas
+      missing_local_casillas: cli.registry.metrics.missing_local_casillas
+      modelo: cli.registry.metrics.modelo
+      modelo_count: cli.registry.metrics.modelo_count
+      modelos: cli.registry.metrics.modelos
+      observation_paths: cli.registry.metrics.observation_paths
+      orphan_oracle_ids: cli.registry.metrics.orphan_oracle_ids
+      passed: cli.registry.metrics.passed
+      registered_oracle_ids: cli.registry.metrics.registered_oracle_ids
+      revision: cli.registry.metrics.revision
+      revision_count: cli.registry.metrics.revision_count
+      row_count: cli.registry.metrics.row_count
+      runner_detail: cli.registry.metrics.runner_detail
+      runner_status: cli.registry.metrics.runner_status
+      scanned_count: cli.registry.metrics.scanned_count
+      scenario_id: cli.registry.metrics.scenario_id
+      source_reference_count: cli.registry.metrics.source_reference_count
+      status: cli.registry.metrics.status
+      tape_path: cli.registry.metrics.tape_path
+      unsupported_xls_count: cli.registry.metrics.unsupported_xls_count
+      verification_expectation_count: cli.registry.metrics.verification_expectation_count
+      verified: cli.registry.metrics.verified
+      workbook_count: cli.registry.metrics.workbook_count
+      workbook_parity_ref_count: cli.registry.metrics.workbook_parity_ref_count
+      workbook_path: cli.registry.metrics.workbook_path
     observation_help: cli.registry.observation_help
     parity_app_help: cli.registry.parity_app_help
     parity_output_help: cli.registry.parity_output_help
@@ -1631,6 +1775,12 @@ cli:
       tagline: cli.root.landing.tagline
       welcome_no_profile: cli.root.landing.welcome_no_profile
       welcome_profile: cli.root.landing.welcome_profile
+  topic:
+    app_help: cli.topic.app_help
+    errors:
+      not_found: cli.topic.errors.not_found
+    opts:
+      slug: cli.topic.opts.slug
 dotted:
   key: dotted.key
 entries:
@@ -2253,6 +2403,8 @@ profile:
     not_configured: profile.errors.not_configured
   keys:
     description: profile.keys.description
+    tax:
+      id: profile.keys.tax.id
 review:
   filing:
     draft_placeholder_summary: review.filing.draft_placeholder_summary
@@ -2262,6 +2414,82 @@ review:
     summary: review.invoice.summary
   transaction:
     summary: review.transaction.summary
+sheets:
+  detalle:
+    headers:
+      acquisition_date: sheets.detalle.headers.acquisition_date
+      amount: sheets.detalle.headers.amount
+      asset_class_code: sheets.detalle.headers.asset_class_code
+      asset_identifier: sheets.detalle.headers.asset_identifier
+      base_imponible: sheets.detalle.headers.base_imponible
+      base_imponible_assigned: sheets.detalle.headers.base_imponible_assigned
+      clave: sheets.detalle.headers.clave
+      counterparty_legal_name: sheets.detalle.headers.counterparty_legal_name
+      counterparty_tax_id: sheets.detalle.headers.counterparty_tax_id
+      country_code: sheets.detalle.headers.country_code
+      currency_code: sheets.detalle.headers.currency_code
+      ingreso_a_cuenta: sheets.detalle.headers.ingreso_a_cuenta
+      member_legal_name: sheets.detalle.headers.member_legal_name
+      member_state_code: sheets.detalle.headers.member_state_code
+      member_tax_id: sheets.detalle.headers.member_tax_id
+      operation_date: sheets.detalle.headers.operation_date
+      operation_kind_code: sheets.detalle.headers.operation_kind_code
+      party_legal_name: sheets.detalle.headers.party_legal_name
+      party_tax_id: sheets.detalle.headers.party_tax_id
+      perceptor_legal_name: sheets.detalle.headers.perceptor_legal_name
+      perceptor_tax_id: sheets.detalle.headers.perceptor_tax_id
+      percibido_dinerario: sheets.detalle.headers.percibido_dinerario
+      percibido_especie: sheets.detalle.headers.percibido_especie
+      rectified_base_previous: sheets.detalle.headers.rectified_base_previous
+      rectified_period: sheets.detalle.headers.rectified_period
+      rectified_year: sheets.detalle.headers.rectified_year
+      refund_amount: sheets.detalle.headers.refund_amount
+      retencion_practicada: sheets.detalle.headers.retencion_practicada
+      share_percentage: sheets.detalle.headers.share_percentage
+      subclave: sheets.detalle.headers.subclave
+      supplier_tax_id: sheets.detalle.headers.supplier_tax_id
+      transfer_pricing_method_code: sheets.detalle.headers.transfer_pricing_method_code
+      valuation_amount: sheets.detalle.headers.valuation_amount
+topic:
+  authentication:
+    body: topic.authentication.body
+    title: topic.authentication.title
+  calendar:
+    body: topic.calendar.body
+    title: topic.calendar.title
+  casilla:
+    body: topic.casilla.body
+    title: topic.casilla.title
+  formats:
+    body: topic.formats.body
+    title: topic.formats.title
+  irpf-regime:
+    body: topic.irpf-regime.body
+    title: topic.irpf-regime.title
+  iva-regime:
+    body: topic.iva-regime.body
+    title: topic.iva-regime.title
+  modelos:
+    body: topic.modelos.body
+    title: topic.modelos.title
+  pago-fraccionado:
+    body: topic.pago-fraccionado.body
+    title: topic.pago-fraccionado.title
+  profile:
+    body: topic.profile.body
+    title: topic.profile.title
+  providers:
+    body: topic.providers.body
+    title: topic.providers.title
+  recargo-extemporaneo:
+    body: topic.recargo-extemporaneo.body
+    title: topic.recargo-extemporaneo.title
+  regimens:
+    body: topic.regimens.body
+    title: topic.regimens.title
+  sii-verifactu:
+    body: topic.sii-verifactu.body
+    title: topic.sii-verifactu.title
 transactions:
   import:
     message_053465: transactions.import.message_053465
@@ -2284,6 +2512,19 @@ wizard:
       title: wizard.demo.section.title
     title: wizard.demo.title
   errors:
+    blank_integer: wizard.errors.blank_integer
+    blank_path: wizard.errors.blank_path
+    blank_secret: wizard.errors.blank_secret
+    blank_text: wizard.errors.blank_text
+    checkbox_required: wizard.errors.checkbox_required
+    checkbox_unknown: wizard.errors.checkbox_unknown
+    checkbox_without_choices: wizard.errors.checkbox_without_choices
+    invalid_confirm: wizard.errors.invalid_confirm
+    invalid_integer: wizard.errors.invalid_integer
+    invalid_postcode: wizard.errors.invalid_postcode
+    invalid_tax_id: wizard.errors.invalid_tax_id
+    select_unknown: wizard.errors.select_unknown
+    select_without_choices: wizard.errors.select_without_choices
     unsupported_console: wizard.errors.unsupported_console
     unsupported_console_edit: wizard.errors.unsupported_console_edit
   other:
@@ -2299,6 +2540,16 @@ wizard:
       path:
         prompt: wizard.setup.certificate.path.prompt
     codes:
+      disability-grade:
+        choices:
+          33-64:
+            label: wizard.setup.codes.disability-grade.choices.33-64.label
+          65-plus:
+            label: wizard.setup.codes.disability-grade.choices.65-plus.label
+          assistance-or-mobility:
+            label: wizard.setup.codes.disability-grade.choices.assistance-or-mobility.label
+          judicial-incapacity:
+            label: wizard.setup.codes.disability-grade.choices.judicial-incapacity.label
       sex:
         choices:
           h:
@@ -2307,23 +2558,57 @@ wizard:
             label: wizard.setup.codes.sex.choices.m.label
     description: wizard.setup.description
     enrollment:
+      enrollment-large-company:
+        prompt: wizard.setup.enrollment.enrollment-large-company.prompt
+      enrollment-public-administration-budget-gt-6000000:
+        prompt: wizard.setup.enrollment.enrollment-public-administration-budget-gt-6000000.prompt
       title: wizard.setup.enrollment.title
+    errors:
+      missing_required_flags: wizard.setup.errors.missing_required_flags
     family:
+      family-descendants-eu-eea-deduction:
+        prompt: wizard.setup.family.family-descendants-eu-eea-deduction.prompt
+      family-minor-children-in-unit:
+        prompt: wizard.setup.family.family-minor-children-in-unit.prompt
       title: wizard.setup.family.title
     flags:
       activity:
         help: wizard.setup.flags.activity.help
+      activity-start-date:
+        help: wizard.setup.flags.activity-start-date.help
+      address-postcode:
+        help: wizard.setup.flags.address-postcode.help
+      bienes-extranjero-above-threshold:
+        help: wizard.setup.flags.bienes-extranjero-above-threshold.help
       country-of-fiscal-residence:
         help: wizard.setup.flags.country-of-fiscal-residence.help
       descendiente:
         help: 'Leszármazott adatai az Art. 58 LIRPF személyi adóalap-minimum számításhoz
           (ismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+      does-intracomunitario:
+        help: wizard.setup.flags.does-intracomunitario.help
+      enrollment-large-company:
+        help: wizard.setup.flags.enrollment-large-company.help
+      enrollment-public-administration-budget-gt-6000000:
+        help: wizard.setup.flags.enrollment-public-administration-budget-gt-6000000.help
+      entity-type:
+        help: wizard.setup.flags.entity-type.help
+      family-descendants-eu-eea-deduction:
+        help: wizard.setup.flags.family-descendants-eu-eea-deduction.help
+      family-minor-children-in-unit:
+        help: wizard.setup.flags.family-minor-children-in-unit.help
       fiscal-residency:
         help: wizard.setup.flags.fiscal-residency.help
+      has-employees:
+        help: wizard.setup.flags.has-employees.help
       incn-prior-12-months:
         help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR küszöb
           felett a 202-es modell a LIS 40.3 cikk szerinti módozatot írja elő; alatta
           mindkét módozat választható. Opcionális.
+      irpf-estimation-regime:
+        help: wizard.setup.flags.irpf-estimation-regime.help
+      irpf-income-categories:
+        help: wizard.setup.flags.irpf-income-categories.help
       irpf-special-regime:
         help: IRPF különleges adórendszer. "general" a legtöbb adózó esetén. "impatriado"
           a Beckham-törvény (LIRPF 93. cikk) alapján Spanyolországba költözött munkavállalóknak,
@@ -2332,6 +2617,20 @@ wizard:
         help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (ÉÉÉÉ-HH-NN).
           Csak akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikk.
           A rendszer a 6. naptári év végén jár le.
+      iva-intracommunity-operations-exceed-50000-eur:
+        help: wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help
+      iva-oss-enrolled:
+        help: wizard.setup.flags.iva-oss-enrolled.help
+      iva-redeme-enrolled:
+        help: wizard.setup.flags.iva-redeme-enrolled.help
+      iva-regime:
+        help: wizard.setup.flags.iva-regime.help
+      iva-roi-enrolled:
+        help: wizard.setup.flags.iva-roi-enrolled.help
+      iva-sii-enrolled:
+        help: wizard.setup.flags.iva-sii-enrolled.help
+      legal-entity-form:
+        help: wizard.setup.flags.legal-entity-form.help
       name:
         help: wizard.setup.flags.name.help
       new-entity-first-two-profit-periods:
@@ -2341,29 +2640,119 @@ wizard:
           nem érvényesül.
       notes:
         help: wizard.setup.flags.notes.help
+      output-language:
+        help: wizard.setup.flags.output-language.help
+      pays-capital-income-with-retencion:
+        help: wizard.setup.flags.pays-capital-income-with-retencion.help
+      pays-professionals-with-retencion:
+        help: wizard.setup.flags.pays-professionals-with-retencion.help
+      pays-rent-with-retencion:
+        help: wizard.setup.flags.pays-rent-with-retencion.help
+      professional-income-withholding-ge-70pct:
+        help: wizard.setup.flags.professional-income-withholding-ge-70pct.help
       representante-fiscal-nif:
         help: wizard.setup.flags.representante-fiscal-nif.help
       representante-fiscal-nombre:
         help: wizard.setup.flags.representante-fiscal-nombre.help
       situacion-familiar:
+        choices:
+          casado:
+            description: wizard.setup.flags.situacion-familiar.choices.casado.description
+            label: wizard.setup.flags.situacion-familiar.choices.casado.label
+          pareja-hecho-no-registrada:
+            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.description
+            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.label
+          pareja-hecho-registrada:
+            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.description
+            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.label
+          separado-divorciado:
+            label: wizard.setup.flags.situacion-familiar.choices.separado-divorciado.label
+          soltero:
+            label: wizard.setup.flags.situacion-familiar.choices.soltero.label
         help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
+        prompt: wizard.setup.flags.situacion-familiar.prompt
+      spouse-birth-date:
+        help: wizard.setup.flags.spouse-birth-date.help
+      spouse-disability-grade:
+        help: wizard.setup.flags.spouse-disability-grade.help
+      spouse-eu-eea-country:
+        help: wizard.setup.flags.spouse-eu-eea-country.help
+      spouse-eu-eea-resident:
+        help: wizard.setup.flags.spouse-eu-eea-resident.help
+      spouse-name:
+        help: wizard.setup.flags.spouse-name.help
+      spouse-non-resident-irpf:
+        help: wizard.setup.flags.spouse-non-resident-irpf.help
+      spouse-sex:
+        help: wizard.setup.flags.spouse-sex.help
+      spouse-surnames:
+        help: wizard.setup.flags.spouse-surnames.help
+      spouse-tax-id:
+        help: wizard.setup.flags.spouse-tax-id.help
       surnames:
         help: wizard.setup.flags.surnames.help
+      tax-id:
+        help: wizard.setup.flags.tax-id.help
       tax-residence-ccaa:
         help: 'Tartózkodási helye szerinti autonóm közösség. Egy a következők közül:
           %{choices}.'
+      taxation-type:
+        help: wizard.setup.flags.taxation-type.help
+      taxpayer-birth-date:
+        help: wizard.setup.flags.taxpayer-birth-date.help
+      taxpayer-death-date:
+        help: wizard.setup.flags.taxpayer-death-date.help
+      taxpayer-disability-grade:
+        help: wizard.setup.flags.taxpayer-disability-grade.help
+      taxpayer-marital-status:
+        help: wizard.setup.flags.taxpayer-marital-status.help
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
           = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
           82. cikk LIRPF).
+      taxpayer-sex:
+        help: wizard.setup.flags.taxpayer-sex.help
+      third-party-transactions-above-347-threshold:
+        help: wizard.setup.flags.third-party-transactions-above-347-threshold.help
+      uses-objective-estimation-irpf:
+        help: wizard.setup.flags.uses-objective-estimation-irpf.help
+    intro: wizard.setup.intro
     iva:
+      iva-intracommunity-operations-exceed-50000-eur:
+        prompt: wizard.setup.iva.iva-intracommunity-operations-exceed-50000-eur.prompt
+      iva-oss-enrolled:
+        prompt: wizard.setup.iva.iva-oss-enrolled.prompt
+      iva-redeme-enrolled:
+        prompt: wizard.setup.iva.iva-redeme-enrolled.prompt
+      iva-regime:
+        prompt: wizard.setup.iva.iva-regime.prompt
+      iva-roi-enrolled:
+        prompt: wizard.setup.iva.iva-roi-enrolled.prompt
+      iva-sii-enrolled:
+        prompt: wizard.setup.iva.iva-sii-enrolled.prompt
       title: wizard.setup.iva.title
     notes:
       notes:
         prompt: wizard.setup.notes.notes.prompt
       title: wizard.setup.notes.title
     obligations:
+      bienes-extranjero-above-threshold:
+        prompt: wizard.setup.obligations.bienes-extranjero-above-threshold.prompt
+      does-intracomunitario:
+        prompt: wizard.setup.obligations.does-intracomunitario.prompt
+      has-employees:
+        prompt: wizard.setup.obligations.has-employees.prompt
+      irpf-estimation-regime:
+        choices:
+          directa-normal:
+            label: wizard.setup.obligations.irpf-estimation-regime.choices.directa-normal.label
+          directa-simplificada:
+            label: wizard.setup.obligations.irpf-estimation-regime.choices.directa-simplificada.label
+          objetiva:
+            label: wizard.setup.obligations.irpf-estimation-regime.choices.objetiva.label
+        help: wizard.setup.obligations.irpf-estimation-regime.help
+        prompt: wizard.setup.obligations.irpf-estimation-regime.prompt
       irpf-special-regime:
         choices:
           general:
@@ -2377,10 +2766,39 @@ wizard:
         help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (RIRPF
           116. cikk). A rendszer a 6. naptári év végén jár le.
         prompt: A különleges adórendszer kezdési dátuma (ÉÉÉÉ-HH-NN)
+      pays-capital-income-with-retencion:
+        prompt: wizard.setup.obligations.pays-capital-income-with-retencion.prompt
+      pays-professionals-with-retencion:
+        prompt: wizard.setup.obligations.pays-professionals-with-retencion.prompt
+      pays-rent-with-retencion:
+        prompt: wizard.setup.obligations.pays-rent-with-retencion.prompt
+      professional-income-withholding-ge-70pct:
+        prompt: wizard.setup.obligations.professional-income-withholding-ge-70pct.prompt
+      third-party-transactions-above-347-threshold:
+        prompt: wizard.setup.obligations.third-party-transactions-above-347-threshold.prompt
       title: wizard.setup.obligations.title
+      uses-objective-estimation-irpf:
+        prompt: wizard.setup.obligations.uses-objective-estimation-irpf.prompt
     profile:
       activity:
         prompt: wizard.setup.profile.activity.prompt
+      activity-start-date:
+        help: wizard.setup.profile.activity-start-date.help
+        prompt: wizard.setup.profile.activity-start-date.prompt
+      address-postcode:
+        prompt: wizard.setup.profile.address-postcode.prompt
+      iva-regime:
+        choices:
+          exento:
+            label: wizard.setup.profile.iva-regime.choices.exento.label
+          general:
+            label: wizard.setup.profile.iva-regime.choices.general.label
+          reagp:
+            label: wizard.setup.profile.iva-regime.choices.reagp.label
+          recargo-equivalencia:
+            label: wizard.setup.profile.iva-regime.choices.recargo-equivalencia.label
+          simplificado:
+            label: wizard.setup.profile.iva-regime.choices.simplificado.label
       name:
         prompt: wizard.setup.profile.name.prompt
       output-language:
@@ -2395,15 +2813,64 @@ wizard:
             label: wizard.setup.profile.output-language.choices.eu.label
           hu:
             label: wizard.setup.profile.output-language.choices.hu.label
+        prompt: wizard.setup.profile.output-language.prompt
       regimes:
         prompt: wizard.setup.profile.regimes.prompt
       surnames:
         prompt: wizard.setup.profile.surnames.prompt
+      tax-id:
+        prompt: wizard.setup.profile.tax-id.prompt
+      taxation-type:
+        choices:
+          individual:
+            description: wizard.setup.profile.taxation-type.choices.individual.description
+            label: wizard.setup.profile.taxation-type.choices.individual.label
+          joint:
+            description: wizard.setup.profile.taxation-type.choices.joint.description
+            label: wizard.setup.profile.taxation-type.choices.joint.label
+        prompt: wizard.setup.profile.taxation-type.prompt
       title: wizard.setup.profile.title
     residence:
+      ccaa:
+        choices:
+          andalucia:
+            label: wizard.setup.residence.ccaa.choices.andalucia.label
+          aragon:
+            label: wizard.setup.residence.ccaa.choices.aragon.label
+          asturias:
+            label: wizard.setup.residence.ccaa.choices.asturias.label
+          baleares:
+            label: wizard.setup.residence.ccaa.choices.baleares.label
+          canarias:
+            label: wizard.setup.residence.ccaa.choices.canarias.label
+          cantabria:
+            label: wizard.setup.residence.ccaa.choices.cantabria.label
+          castilla_la_mancha:
+            label: wizard.setup.residence.ccaa.choices.castilla_la_mancha.label
+          castilla_y_leon:
+            label: wizard.setup.residence.ccaa.choices.castilla_y_leon.label
+          cataluna:
+            label: wizard.setup.residence.ccaa.choices.cataluna.label
+          comunidad_valenciana:
+            label: wizard.setup.residence.ccaa.choices.comunidad_valenciana.label
+          extremadura:
+            label: wizard.setup.residence.ccaa.choices.extremadura.label
+          galicia:
+            label: wizard.setup.residence.ccaa.choices.galicia.label
+          la_rioja:
+            label: wizard.setup.residence.ccaa.choices.la_rioja.label
+          madrid:
+            label: wizard.setup.residence.ccaa.choices.madrid.label
+          murcia:
+            label: wizard.setup.residence.ccaa.choices.murcia.label
       country-of-fiscal-residence:
         prompt: wizard.setup.residence.country-of-fiscal-residence.prompt
       fiscal-residency:
+        choices:
+          non_resident_irnr:
+            label: wizard.setup.residence.fiscal-residency.choices.non_resident_irnr.label
+          resident_irpf:
+            label: wizard.setup.residence.fiscal-residency.choices.resident_irpf.label
         prompt: wizard.setup.residence.fiscal-residency.prompt
       representante-fiscal-nif:
         prompt: wizard.setup.residence.representante-fiscal-nif.prompt
@@ -2413,6 +2880,24 @@ wizard:
         prompt: Adóügyi illetékességi autonóm közösség
       title: wizard.setup.residence.title
     spouse:
+      spouse-birth-date:
+        prompt: wizard.setup.spouse.spouse-birth-date.prompt
+      spouse-disability-grade:
+        prompt: wizard.setup.spouse.spouse-disability-grade.prompt
+      spouse-eu-eea-country:
+        prompt: wizard.setup.spouse.spouse-eu-eea-country.prompt
+      spouse-eu-eea-resident:
+        prompt: wizard.setup.spouse.spouse-eu-eea-resident.prompt
+      spouse-name:
+        prompt: wizard.setup.spouse.spouse-name.prompt
+      spouse-non-resident-irpf:
+        prompt: wizard.setup.spouse.spouse-non-resident-irpf.prompt
+      spouse-sex:
+        prompt: wizard.setup.spouse.spouse-sex.prompt
+      spouse-surnames:
+        prompt: wizard.setup.spouse.spouse-surnames.prompt
+      spouse-tax-id:
+        prompt: wizard.setup.spouse.spouse-tax-id.prompt
       title: wizard.setup.spouse.title
     taxpayer:
       situacion-familiar:
@@ -2435,21 +2920,82 @@ wizard:
         help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
         prompt: Családi állapot (LIRPF 82. cikk)
+      taxpayer-birth-date:
+        prompt: wizard.setup.taxpayer.taxpayer-birth-date.prompt
+      taxpayer-death-date:
+        prompt: wizard.setup.taxpayer.taxpayer-death-date.prompt
+      taxpayer-disability-grade:
+        prompt: wizard.setup.taxpayer.taxpayer-disability-grade.prompt
+      taxpayer-marital-status:
+        choices:
+          casado:
+            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label
+          separado-divorciado:
+            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label
+          soltero:
+            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label
+          viudo:
+            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label
+        prompt: wizard.setup.taxpayer.taxpayer-marital-status.prompt
       taxpayer-marriage-date:
         prompt: Házasságkötés dátuma (ÉÉÉÉ-HH-NN)
+      taxpayer-sex:
+        prompt: wizard.setup.taxpayer.taxpayer-sex.prompt
       title: wizard.setup.taxpayer.title
     taxpayer-type:
+      entity-type:
+        choices:
+          attribution-entity:
+            label: wizard.setup.taxpayer-type.entity-type.choices.attribution-entity.label
+          legal-entity:
+            label: wizard.setup.taxpayer-type.entity-type.choices.legal-entity.label
+          natural-person:
+            label: wizard.setup.taxpayer-type.entity-type.choices.natural-person.label
+        help: wizard.setup.taxpayer-type.entity-type.help
+        prompt: wizard.setup.taxpayer-type.entity-type.prompt
       incn-prior-12-months:
         help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e Önt a 202-es
           modell a LIS 40. cikk 3. bekezdése szerinti módozatra (6 000 000 EUR felett).
           Hagyja üresen, ha nem ismeri az adatot.
         prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban? (euróban,
           opcionális)
+      irpf-income-categories:
+        choices:
+          actividad-economica:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.actividad-economica.label
+          capital-inmobiliario:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.capital-inmobiliario.label
+          capital-mobiliario:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.capital-mobiliario.label
+          ganancias-patrimoniales:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.ganancias-patrimoniales.label
+          pension:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.pension.label
+          trabajo:
+            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.trabajo.label
+        help: wizard.setup.taxpayer-type.irpf-income-categories.help
+        prompt: wizard.setup.taxpayer-type.irpf-income-categories.prompt
+      legal-entity-form:
+        choices:
+          cooperativa:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.cooperativa.label
+          other:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.other.label
+          sa:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sa.label
+          sin-fines-lucrativos:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sin-fines-lucrativos.label
+          sl:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sl.label
+          sociedad-civil-mercantil:
+            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sociedad-civil-mercantil.label
+        prompt: wizard.setup.taxpayer-type.legal-entity-form.prompt
       new-entity-first-two-profit-periods:
         help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás a 15 százalékos
           kedvezményes adókulccsal adózik az említett két adóévben.
         prompt: Újonnan alapított jogi személyként az első két nyereséges adóévének
           valamelyikében van?
+      title: wizard.setup.taxpayer-type.title
     title: wizard.setup.title
     verifier:
       activity_present: Tevékenység megadva.

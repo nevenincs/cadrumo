@@ -1374,6 +1374,7 @@ cli:
       key_help: Key to clear
     workflow_help: Show config workflow help
   diagnostics:
+    app_help: cli.diagnostics.app_help
     browser:
       http_status_label: HTTP status
       markers_label: Markers
@@ -1389,6 +1390,17 @@ cli:
         profile and not something you can fix yourself.
     next_action:
       inspect_registry_toml: cli.diagnostics.next_action.inspect_registry_toml
+    profile:
+      errors:
+        invalid_value_fallback: cli.diagnostics.profile.errors.invalid_value_fallback
+        invalid_value_with_choices: cli.diagnostics.profile.errors.invalid_value_with_choices
+      get_help: cli.diagnostics.profile.get_help
+      help: cli.diagnostics.profile.help
+      key_help: cli.diagnostics.profile.key_help
+      profile_help: cli.diagnostics.profile.profile_help
+      set_help: cli.diagnostics.profile.set_help
+      unset_help: cli.diagnostics.profile.unset_help
+      value_help: cli.diagnostics.profile.value_help
     repair:
       audience_internal: internal application issue
       auth_label: Auth
@@ -1404,6 +1416,14 @@ cli:
       profile_label: Profile
       python_label: Python
       version_label: Version
+    secure_objects:
+      all_help: cli.diagnostics.secure_objects.all_help
+      errors:
+        conflicting_filters: cli.diagnostics.secure_objects.errors.conflicting_filters
+      help: cli.diagnostics.secure_objects.help
+      list_help: cli.diagnostics.secure_objects.list_help
+      namespace_help: cli.diagnostics.secure_objects.namespace_help
+      unreadable_help: cli.diagnostics.secure_objects.unreadable_help
     summary:
       auth_no_session: Authentication provider %{provider} has no ready session
       auth_none: Authentication is not configured
@@ -3304,8 +3324,23 @@ wizard:
       representante-fiscal-nombre:
         help: Full name of the fiscal representative in Spain.
       situacion-familiar:
+        choices:
+          casado:
+            description: wizard.setup.flags.situacion-familiar.choices.casado.description
+            label: wizard.setup.flags.situacion-familiar.choices.casado.label
+          pareja-hecho-no-registrada:
+            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.description
+            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-no-registrada.label
+          pareja-hecho-registrada:
+            description: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.description
+            label: wizard.setup.flags.situacion-familiar.choices.pareja-hecho-registrada.label
+          separado-divorciado:
+            label: wizard.setup.flags.situacion-familiar.choices.separado-divorciado.label
+          soltero:
+            label: wizard.setup.flags.situacion-familiar.choices.soltero.label
         help: 'Family situation under Art. 82 LIRPF: determines whether joint taxation
           is available and which family unit variant applies.'
+        prompt: wizard.setup.flags.situacion-familiar.prompt
       spouse-birth-date:
         help: Spouse birth date
       spouse-disability-grade:

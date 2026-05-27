@@ -34,7 +34,7 @@ from typing import Annotated
 import click
 import typer
 
-from ...core.i18n import tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
@@ -173,7 +173,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "output-language": typer.Option(
         "--output-language",
-        click_type=click.Choice(["es", "en", "ca", "hu"]),
+        click_type=click.Choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
         help=tr("wizard.setup.flags.output-language.help"),
     ),
     "taxpayer-sex": typer.Option(
