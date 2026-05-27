@@ -13,6 +13,7 @@ from aeat.application.modelo import (
     create_work_unit,
     discard_work_unit,
 )
+from aeat.domain.modelos._errors import ModeloError
 from aeat.domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -40,6 +41,34 @@ def repos(tmp_path: Path):
             VerificationReportCatalogueRepository(objects=objects),
             BucketEventHistoryRepository(objects=objects),
         )
+
+
+def test_create_rejects_unknown_revision_with_helpful_list(repos) -> None:
+    """``create_work_unit`` must refuse a revision id the modelo registry does
+    not declare, naming the modelo and listing the available revisions so the
+    operator can re-issue the command with a valid id.
+
+    Persona-testimonial finding (MED, 2026-05-20-cli-persona-testimonials-audit):
+    passing ``--revision "bad-revision"`` previously created a content-addressed
+    work unit that was unreachable on subsequent ``work calculate`` (snapshot
+    miss). The boundary now catches the typo at create-time.
+    """
+    wu_repo, _, _, _, bv_repo = repos
+    with pytest.raises(ModeloError) as exc:
+        create_work_unit(
+            bucket_id="default",
+            modelo="130",
+            filing_year=2026,
+            period="1T",
+            revision_id="bad-revision",
+            repository=wu_repo,
+            bucket_event_repository=bv_repo,
+        )
+    message = str(exc.value)
+    assert "bad-revision" in message
+    assert "modelo '130'" in message
+    assert "Available revisions:" in message
+    assert "2019-y-siguientes" in message
 
 
 def test_history_for_missing_work_unit_raises(repos) -> None:
