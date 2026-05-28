@@ -64,6 +64,15 @@ target_casillas = [
     {casilla_id = "0500", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+liquidable\s+general\s*\['},
     # 0510 — base liquidable del ahorro (ley-35-2006:art-50)
     {casilla_id = "0510", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Base\s+liquidable\s+del\s+ahorro\s*\['},
+    # Leaf inputs for the actividades-económicas ED formula chain.
+    # Only 0171 (ingresos de explotación) is individually printed in the declaracion_pdf;
+    # casillas 0172-0179 are absent from this summary form — only their total (0180) is shown.
+    # The formula 0180 = sum(0171..0179) therefore cannot be verified from the corpus alone.
+    # Corpus sanitisation (all amounts replaced with 1.001.000,00) further prevents arithmetic
+    # verification of any closure — documented in test_verification_chain.py M100 section.
+    #
+    # 0171 — ingresos de explotación (ley-35-2006:art-27; leaf input for 0180)
+    {casilla_id = "0171", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Ingresos\s+de\s+explotaci[oó]n'},
 ]
 confidence = "strict"
 corpus_round_trip_verified = true
