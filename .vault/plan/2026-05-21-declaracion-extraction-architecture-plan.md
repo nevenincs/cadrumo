@@ -522,4 +522,4 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 M100 verification chain currently EXTRACTION-ONLY because leaf inputs (017x family — base imponible general components) are absent from the declaracion_pdf profile target_casillas. M100 has full cuota-chain formulas in the registry but engine can't recompute without those leaves supplied as observations. Expand the M100 (2021/2022/2023) profiles target_casillas to include the leaf inputs via bbox_anchored where the printed form supports them. Transitions M100 ×3 revisions EXTRACTION-ONLY → VERIFIED across the 3 corpus PDFs.
 
-- [ ] `W10.P50.S207` - Expand M100 (2021/2022/2023) declaracion_pdf profiles target_casillas to include leaf inputs so engine recomputes cuota-chain closure (tasklist #79); `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
+- [x] `W10.P50.S207` - Expand M100 (2021/2022/2023) declaracion_pdf profiles target_casillas to include leaf inputs so engine recomputes cuota-chain closure (tasklist #79); `src/aeat/_data/registry/aeat/modelos/100/revisions/`.
