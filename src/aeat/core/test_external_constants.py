@@ -467,3 +467,65 @@ def test_manuals_http_timeout_is_settings() -> None:
     settings = Settings()
 
     assert settings.aeat_manuals_http_timeout_s == 60.0
+
+
+# ---------------------------------------------------------------------------
+# S178 — BINARY_MIME_TYPE centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_binary_mime_type_value() -> None:
+    """``BINARY_MIME_TYPE`` equals the IANA-registered opaque-binary MIME type."""
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    assert BINARY_MIME_TYPE == "application/octet-stream"
+
+
+def test_google_drive_reads_binary_mime_from_external_constants() -> None:
+    """The Google Drive adapter imports ``BINARY_MIME_TYPE`` rather than a local literal."""
+
+    import importlib
+    import importlib.util
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    spec = importlib.util.find_spec("aeat.adapters.outbound.storage._google_drive")
+    assert spec is not None, "_google_drive module not found"
+    mod = importlib.import_module("aeat.adapters.outbound.storage._google_drive")
+
+    # The module-level alias resolves to the canonical constant.
+    assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
+
+
+def test_blob_store_put_default_content_type_reads_from_external_constants() -> None:
+    """``EncryptedBlobStore.put`` default ``content_type`` is bound to ``BINARY_MIME_TYPE``."""
+
+    import inspect
+
+    from aeat.adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    sig = inspect.signature(EncryptedBlobStore.put)
+    default = sig.parameters["content_type"].default
+    assert default == BINARY_MIME_TYPE
+
+
+def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
+    """``FiledDeclaracionArtefact`` content_type field no longer carries a raw literal.
+
+    We assert that the module imports ``BINARY_MIME_TYPE`` from
+    ``aeat.core.external_constants`` and that the imported value equals the
+    expected MIME type, giving a transitive identity guarantee without
+    executing the live AEAT browser path.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
+
+    # The module must expose the constant under the local alias used at the call site.
+    assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
+    assert mod._BINARY_MIME_TYPE == "application/octet-stream"
