@@ -286,10 +286,10 @@ time and at runtime.
 - [x] `W01.P07.S164` - add real-behavior test asserting every aggregation source-kind tuple matches the StrEnum surface; `src/aeat/application/aggregation/test_service.py`.
 - [x] `W01.P07.S165` - replace the 4 raw `"pending"` / `"reviewed"` / `"skipped"` returns with `ReviewStatusFilter` members; `src/aeat/application/invoices/_projection.py`.
 - [x] `W01.P07.S166` - add real-behavior test asserting review-status returns are the StrEnum members at every former bare-string site; `src/aeat/application/invoices/test_projection.py`.
-- [ ] `W01.P07.S167` - replace the IVA-regime bare-string `frozenset({"SIMPLIFICADO"})` and `click.Choice(["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"])` with `IVARegime` enum members; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P07.S168` - add real-behavior test asserting IVA-regime branching uses the enum surface; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P07.S169` - promote the registry-schema `"draft" | "casilla" | "binding" | ...` Literal to `CasillaFieldKind(StrEnum)`; `src/aeat/domain/calculations/registry/_schema.py`.
-- [ ] `W01.P07.S170` - add real-behavior test asserting CasillaFieldKind rejects unknown tokens; `src/aeat/domain/calculations/registry/test_schema.py`.
+- [x] `W01.P07.S167` - replace the IVA-regime bare-string `frozenset({"SIMPLIFICADO"})` and `click.Choice(["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"])` with `IVARegime` enum members; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P07.S168` - add real-behavior test asserting IVA-regime branching uses the enum surface; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P07.S169` - promote the registry-schema `"draft" | "casilla" | "binding" | ...` Literal to `CasillaFieldKind(StrEnum)`; `src/aeat/domain/calculations/registry/_schema.py`.
+- [x] `W01.P07.S170` - add real-behavior test asserting CasillaFieldKind rejects unknown tokens; `src/aeat/domain/calculations/registry/test_schema.py`.
 - [x] `W01.P07.S171` - introduce `CLASSIFIED_BY_MANUAL: Final[str] = "manual"` in `aeat.application.ledger._models`; `replace the three bare-string sites; `src/aeat/application/ledger/_models.py`.
 - [x] `W01.P07.S172` - add real-behavior test asserting ledger classification reads through the constant; `src/aeat/application/ledger/test_models.py`.
 - [ ] `W01.P07.S173` - promote `OracleEnvironment` Literal to `StrEnum`; `replace the six default-value sites; `src/aeat/domain/calculations/registry/_live_parity.py`.
