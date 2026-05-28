@@ -836,31 +836,44 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     ],
 )
 def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse Spanish-language M390 corpus PDFs and verify covered closure casillas.
+    """Round-trip: parse synthetic M390 corpus fixtures and verify formula-consistent casilla values.
 
-    Ground truth is derived from reading the printed declaracion-resumen anual text
-    directly. The sanitised corpus replaces real amounts with 1.000,00 synthetic
-    values.
+    Ground truth is derived from the _Modelo390CorpusFixture leaf inputs in _generate.py.
+    The fixtures are synthetic formula-consistent PDFs (verification_source =
+    synthetic_from_aeat_published_text) replacing the earlier sanitised-real-form PDFs
+    that carried uniform 1.000,00 amounts making resultado-regimen-general inconsistent.
 
-    The 2021 corpus PDF is in English (non-standard AEAT account language) and uses
-    English-language labels that do not match the Spanish named_label patterns; it is
-    excluded from this parametrised test.
+    All five bbox_anchored leaf casillas are printed (boxes 02/04/06/26/49), including
+    zero-value ones, so the extractor captures all five inputs.
 
-    Casilla identity mapped from the printed form (named_label targets):
-    - iva.anual.cuota-devengada-total  (box 47): "Total cuotas IVA y recargo de equivalencia"
-    - iva.anual.cuota-deducible-total  (box 64): "Suma de deducciones"
-    - iva.anual.resultado-regimen-general (box 65): "Resultado régimen general (47 - 64)"
-    - iva.anual.compensacion-ultimo-periodo-97 (box 97): "A compensar"
-    - iva.anual.compensacion-generada-ejercicio-no-97 (box 662):
-      "Cuotas pendientes de compensación generadas en el ejercicio"
-
-    bbox_anchored targets extracted at anchor_x≈407–425 (right cuota column):
-    - iva.anual.repercutido.general (box 06, 21% rate): present in corpus (value 1.000,00)
-    - iva.anual.soportado.interiores (box 49): present in corpus (value 1.000,00)
-    - iva.anual.repercutido.super-reducido (box 02, 4% rate): blank in corpus — absent
-    - iva.anual.repercutido.reducido (box 04, 10% rate): blank in corpus — absent
-    - iva.anual.autorepercutido.intracomunitaria (box 26): blank in corpus — absent
+    Per-specimen expected values (derived from _compute_m390_closure leaf inputs):
+      2022-0A: c06=10500, c04=0, c02=0, c26=0, c49=8400 → c47=10500, c64=8400, c65=2100
+      2023-0A: c06=12600, c04=0, c02=0, c26=0, c49=9800 → c47=12600, c64=9800, c65=2800
     """
+    _EXPECTED: dict[str, dict[str, Decimal]] = {
+        "2022-0A": {
+            "iva.anual.repercutido.general": Decimal("10500.00"),
+            "iva.anual.repercutido.reducido": Decimal("0.00"),
+            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+            "iva.anual.soportado.interiores": Decimal("8400.00"),
+            "iva.anual.cuota-devengada-total": Decimal("10500.00"),
+            "iva.anual.cuota-deducible-total": Decimal("8400.00"),
+            "iva.anual.resultado-regimen-general": Decimal("2100.00"),
+        },
+        "2023-0A": {
+            "iva.anual.repercutido.general": Decimal("12600.00"),
+            "iva.anual.repercutido.reducido": Decimal("0.00"),
+            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+            "iva.anual.soportado.interiores": Decimal("9800.00"),
+            "iva.anual.cuota-devengada-total": Decimal("12600.00"),
+            "iva.anual.cuota-deducible-total": Decimal("9800.00"),
+            "iva.anual.resultado-regimen-general": Decimal("2800.00"),
+        },
+    }
+    expected = _EXPECTED[pdf_stem]
+
     pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -880,32 +893,16 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    assert set(values.keys()) == {
-        "iva.anual.cuota-devengada-total",
-        "iva.anual.cuota-deducible-total",
-        "iva.anual.resultado-regimen-general",
-        "iva.anual.compensacion-ultimo-periodo-97",
-        "iva.anual.compensacion-generada-ejercicio-no-97",
-        "iva.anual.soportado.interiores",
-        "iva.anual.repercutido.general",
-    }
+    assert set(values.keys()) == set(expected.keys()), (
+        f"{pdf_stem}: extracted casilla set mismatch.\n"
+        f"  expected: {sorted(expected)}\n"
+        f"  got:      {sorted(values)}"
+    )
 
-    # All 7 present casillas carry 1.000,00 in both corpus specimens; ground truth
-    # derived from reading the printed form text. The three bbox_anchored leaf casillas
-    # (boxes 02/04/26) are blank in the corpus — partial extraction is expected and
-    # accepted (min_coverage = "0").
-    for casilla_id in (
-        "iva.anual.cuota-devengada-total",
-        "iva.anual.cuota-deducible-total",
-        "iva.anual.resultado-regimen-general",
-        "iva.anual.compensacion-ultimo-periodo-97",
-        "iva.anual.compensacion-generada-ejercicio-no-97",
-        "iva.anual.soportado.interiores",
-        "iva.anual.repercutido.general",
-    ):
-        assert values[casilla_id] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla {casilla_id!r} expected Decimal('1000.00') "
-            f"from corpus PDF text, got {values[casilla_id]!r}"
+    for casilla_id, expected_value in expected.items():
+        assert values[casilla_id] == expected_value, (
+            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, "
+            f"got {values[casilla_id]!r}"
         )
 
 
