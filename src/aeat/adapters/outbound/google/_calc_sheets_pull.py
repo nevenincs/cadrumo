@@ -34,6 +34,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....core.decimal import coerce_decimal
 from ....application.storage.calc_sheets import collect_row_sets
 from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._layout import SheetLayout, plan_layout
@@ -315,15 +316,6 @@ def _classify_metadata_match(
     return ("matches" if matches else "stale"), metadata
 
 
-def _coerce_decimal(raw: Any) -> Decimal | None:
-    if raw is None or raw == "":
-        return None
-    try:
-        return Decimal(str(raw))
-    except (InvalidOperation, ValueError):
-        return None
-
-
 def _coerce_value(raw: Any) -> Decimal | str | bool | None:
     if raw is None or raw == "":
         return None
@@ -335,7 +327,7 @@ def _coerce_value(raw: Any) -> Decimal | str | bool | None:
         except (InvalidOperation, ValueError):
             return None
     if isinstance(raw, str):
-        as_decimal = _coerce_decimal(raw)
+        as_decimal = coerce_decimal(raw)
         if as_decimal is not None:
             return as_decimal
         return raw
@@ -554,7 +546,7 @@ def _decode_relation_edits(
     for relation_id in relation_ids:
         raw = _raw_cell_value(value_ranges, cursor)
         cursor += 1
-        coerced = _coerce_decimal(raw)
+        coerced = coerce_decimal(raw)
         if coerced is not None:
             cells_read += 1
         provenance, source_filing_year, source_periods, resolved_at = _parse_relation_metadata(
