@@ -85,6 +85,7 @@ from ..export import serialize_tabular_rows
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
+    CLASSIFIED_BY_MANUAL,
     ApplyRulesAppliedRow,
     ApplyRulesResult,
     BulkClassifyFailure,
@@ -3056,7 +3057,7 @@ def _transaction_from_command(
         payload.update(
             {
                 "classified_at": occurred_at,
-                "classified_by": command.classified_by_override if command.classified_by_override else "manual",
+                "classified_by": command.classified_by_override if command.classified_by_override else CLASSIFIED_BY_MANUAL,
                 "classification_reason": command.source_command,
                 "classification_confidence": Decimal("1"),
             }
@@ -3554,7 +3555,7 @@ def apply_classification_rules(
             return False
         if tx.business_classification is BusinessClassification.NOT_YET_PROCESSED:
             return True
-        return reaffirm and tx.classified_by == "manual"
+        return reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
 
     active_txs = [tx for tx in catalogue.transactions.values() if _in_scope(tx)]
     transactions_scanned = len(active_txs)

@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Self
+from typing import Final, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -716,6 +716,12 @@ class BulkClassifyResult(BaseModel):
 
 
 BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
+
+#: Sentinel value written to ``classified_by`` when the operator provides the
+#: classification directly (no rule engine involved).  The field is open-form
+#: and also accepts ``"rule:<id>"`` payloads, so this is a named constant rather
+#: than an enum member.
+CLASSIFIED_BY_MANUAL: Final[str] = "manual"
 
 
 class ApplyRulesAppliedRow(BaseModel):
