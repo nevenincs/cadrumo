@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from collections.abc import Awaitable
-from contextlib import nullcontext
+from contextlib import asynccontextmanager, nullcontext
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -1367,87 +1367,88 @@ async def _capture_iva_remote_state_for_active_storage(
 ) -> IvaRemoteStateAcquisitionReport:
     """Run the combined read while the profile bucket session is active."""
 
-    if year_from > year_to:
-        raise LiveApplicationInputError("from-year must be less than or equal to to-year")
+    async with _suppress_live_iva_playwright_cancellation_noise():
+        if year_from > year_to:
+            raise LiveApplicationInputError("from-year must be less than or equal to to-year")
 
-    settings = _load_settings()
-    _AeatAccessGate(settings).require_live_read()
-    store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
-    filed_history: IvaCompensationHistoryCaptureReport | None = None
-    wallet: IvaWalletCaptureReport | None = None
-    auth_result: _AuthenticatedAeatSessionResult | None = None
-    auth_error: BaseException | None = None
-    filed_error: BaseException | None = None
-    wallet_error: BaseException | None = None
+        settings = _load_settings()
+        _AeatAccessGate(settings).require_live_read()
+        store_root = output_root if output_root is not None else settings.aeat_audit_dir / "live" / "iva-remote-state"
+        filed_history: IvaCompensationHistoryCaptureReport | None = None
+        wallet: IvaWalletCaptureReport | None = None
+        auth_result: _AuthenticatedAeatSessionResult | None = None
+        auth_error: BaseException | None = None
+        filed_error: BaseException | None = None
+        wallet_error: BaseException | None = None
 
-    try:
-        auth_result = await _ensure_authenticated_aeat_session(
-            settings,
-            operation="live-iva-remote-state-read",
-            target_url=_PRE303_PRESENTATION_SERVICE_URL,
-        )
-    except Exception as exc:
-        auth_error = exc
+        try:
+            auth_result = await _ensure_authenticated_aeat_session(
+                settings,
+                operation="live-iva-remote-state-read",
+                target_url=_PRE303_PRESENTATION_SERVICE_URL,
+            )
+        except Exception as exc:
+            auth_error = exc
 
-    if auth_result is None:
+        if auth_result is None:
+            report = build_iva_remote_state_acquisition_report(
+                output_root=store_root,
+                year_from=year_from,
+                year_to=year_to,
+                target_year=target_year,
+                target_period=target_period,
+                auth_error=auth_error,
+            )
+            manifest = persist_iva_remote_state_acquisition_report(report)
+            return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
+
+        session = auth_result.session
+
+        try:
+            filed_history = await _await_live_iva_surface(
+                _capture_iva_compensation_history_with_session(
+                    session,
+                    settings=settings,
+                    year_from=year_from,
+                    year_to=year_to,
+                    output_root=store_root / "filed-history",
+                ),
+                surface=LiveIvaReadSurface.FILED_HISTORY,
+                timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+            )
+        except Exception as exc:
+            filed_error = exc
+
+        try:
+            wallet = await _await_live_iva_surface(
+                _capture_iva_compensation_wallet_with_session(
+                    session,
+                    settings=settings,
+                    target_year=target_year,
+                    target_period=target_period,
+                    taxpayer_nif=taxpayer_nif,
+                    output_root=store_root / "wallet",
+                ),
+                surface=LiveIvaReadSurface.WALLET_CARTERA,
+                timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+            )
+        except Exception as exc:
+            wallet_error = exc
+
         report = build_iva_remote_state_acquisition_report(
             output_root=store_root,
             year_from=year_from,
             year_to=year_to,
             target_year=target_year,
             target_period=target_period,
-            auth_error=auth_error,
+            auth_result=auth_result,
+            filed_history=filed_history,
+            wallet=wallet,
+            filed_history_error=filed_error,
+            wallet_error=wallet_error,
         )
         manifest = persist_iva_remote_state_acquisition_report(report)
         return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
-
-    session = auth_result.session
-
-    try:
-        filed_history = await _await_live_iva_surface(
-            _capture_iva_compensation_history_with_session(
-                session,
-                settings=settings,
-                year_from=year_from,
-                year_to=year_to,
-                output_root=store_root / "filed-history",
-            ),
-            surface=LiveIvaReadSurface.FILED_HISTORY,
-            timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
-        )
-    except Exception as exc:
-        filed_error = exc
-
-    try:
-        wallet = await _await_live_iva_surface(
-            _capture_iva_compensation_wallet_with_session(
-                session,
-                settings=settings,
-                target_year=target_year,
-                target_period=target_period,
-                taxpayer_nif=taxpayer_nif,
-                output_root=store_root / "wallet",
-            ),
-            surface=LiveIvaReadSurface.WALLET_CARTERA,
-            timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
-        )
-    except Exception as exc:
-        wallet_error = exc
-
-    report = build_iva_remote_state_acquisition_report(
-        output_root=store_root,
-        year_from=year_from,
-        year_to=year_to,
-        target_year=target_year,
-        target_period=target_period,
-        auth_result=auth_result,
-        filed_history=filed_history,
-        wallet=wallet,
-        filed_history_error=filed_error,
-        wallet_error=wallet_error,
-    )
-    manifest = persist_iva_remote_state_acquisition_report(report)
-    return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
 
 
 async def _await_live_iva_surface[T](
@@ -1466,6 +1467,39 @@ async def _await_live_iva_surface[T](
             surface=surface.value,
             timeout_ms=timeout_ms,
         ) from exc
+
+
+@asynccontextmanager
+async def _suppress_live_iva_playwright_cancellation_noise():
+    """Suppress Playwright TargetClosed loop noise caused by bounded live-surface cancellation."""
+
+    loop = asyncio.get_running_loop()
+    previous_handler = loop.get_exception_handler()
+
+    def handler(loop: asyncio.AbstractEventLoop, context: dict[str, object]) -> None:
+        if _is_playwright_target_closed_context(context):
+            return
+        if previous_handler is not None:
+            previous_handler(loop, context)
+            return
+        loop.default_exception_handler(context)
+
+    loop.set_exception_handler(handler)
+    try:
+        yield
+        await asyncio.sleep(0)
+    finally:
+        loop.set_exception_handler(previous_handler)
+
+
+def _is_playwright_target_closed_context(context: dict[str, object]) -> bool:
+    exception = context.get("exception")
+    if exception is None:
+        return False
+    return (
+        type(exception).__name__ == "TargetClosedError"
+        and "Target page, context or browser has been closed" in str(exception)
+    )
 
 
 def build_iva_remote_state_acquisition_report(
