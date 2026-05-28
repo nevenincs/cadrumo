@@ -74,19 +74,8 @@ _HEX_WORK_UNIT_ID_LENGTH = 64
 """Length of the SHA-256 hex digest used as the work-unit identifier."""
 
 
-_WorkUnitId = Annotated[
-    str,
-    StringConstraints(
-        strip_whitespace=True,
-        min_length=_HEX_WORK_UNIT_ID_LENGTH,
-        max_length=_HEX_WORK_UNIT_ID_LENGTH,
-        pattern=r"^[0-9a-f]{64}$",
-    ),
-]
-_BucketId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
+from ._ids import BucketId as _BucketId
+from ._ids import WorkUnitId as _WorkUnitId
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),

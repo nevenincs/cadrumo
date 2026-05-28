@@ -10,6 +10,12 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.errors import AeatError
 from ...domain.buckets._event import BucketEventObjectType
+from ...domain.modelos._ids import (
+    BucketId,
+    CalculationRevisionId,
+    FilingRecordId,
+    WorkUnitId,
+)
 
 
 class EvidenceBundleNotFoundError(AeatError):
@@ -74,10 +80,10 @@ class EvidenceBundle(BaseModel):
 
     bundle_id: str = Field(min_length=64, max_length=64)
     manifest_version: int = Field(ge=1)
-    bucket_id: str = Field(min_length=1)
-    work_unit_id: str = Field(min_length=1)
-    calculation_revision_id: str | None = Field(default=None)
-    filing_record_id: str | None = Field(default=None)
+    bucket_id: BucketId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId | None = Field(default=None)
+    filing_record_id: FilingRecordId | None = Field(default=None)
     records: tuple[EvidenceRecordRef, ...] = Field(default_factory=tuple)
     verification_state: BundleVerificationState = BundleVerificationState.PENDING
     completeness_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
