@@ -54,7 +54,7 @@ from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
 from ....domain.calculations.registry._ids import CasillaId
-from ....domain.calculations.registry._schema import CasillaDefinition
+from ....domain.calculations.registry._schema import CasillaDefinition, InputKind
 from ....domain.calculations.registry._schema import RegistrySnapshot
 from ._engine import build_export_plan
 from ._layout import plan_layout
@@ -280,9 +280,9 @@ def _compute_local(
     # has a value) holds without forcing the caller to enumerate them.
     full_inputs: dict[CasillaId, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind == "computed":
+        if casilla.input_kind == InputKind.COMPUTED:
             continue
-        if casilla.input_kind == "informational":
+        if casilla.input_kind == InputKind.INFORMATIONAL:
             continue
         full_inputs[casilla.id] = inputs_by_id.get(casilla.id, Decimal("0"))
     binding_defaults = {binding.id: scenario.bindings.get(binding.id, Decimal("0")) for binding in revision.bindings}
@@ -392,7 +392,7 @@ def _collect_parity_rows(
     casillas: list[CasillaParity] = []
     divergences: list[CasillaParity] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind != "computed":
+        if casilla.input_kind != InputKind.COMPUTED:
             continue
         local = local_values.get(casilla.id)
         sheets_v = sheets_values.get(casilla.id)

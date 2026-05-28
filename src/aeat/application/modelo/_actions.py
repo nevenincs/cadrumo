@@ -37,6 +37,7 @@ from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
     ConvenioRateRow,
+    InputKind,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -48,7 +49,7 @@ from ...domain.calculations.registry import (
     input_casilla_alias_map,
     materialize_relation_binding_values,
 )
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
+from ...domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -1322,7 +1323,7 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # IVA regimes that do not use ledger aggregation for IVA repercutido; these
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
-_IVA_LEDGER_EXEMPT_REGIMES = frozenset({"SIMPLIFICADO"})
+_IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
@@ -1644,7 +1645,7 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
 ) -> dict[str, Decimal]:
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind != "bound" or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
         value = binding_values.get(casilla.binding)
         if value is not None:
@@ -1678,7 +1679,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
     promoted: dict[str, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():
         casilla = casillas_by_id.get(casilla_id)
-        if casilla is None or casilla.input_kind != "bound" or not casilla.binding:
+        if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != "previous_filing":
@@ -1755,7 +1756,7 @@ def _resolve_declaration_period_inputs(
 
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind != "informational":
+        if casilla.input_kind != InputKind.INFORMATIONAL:
             continue
         if casilla.semantic_role == "filing_year":
             resolved[casilla.id] = Decimal(filing_year)
@@ -1780,7 +1781,7 @@ def _merge_bucket_bound_inputs(
     computed = sorted(
         casilla_id
         for casilla_id in bound_inputs
-        if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
+        if casilla_id in casillas and casillas[casilla_id].input_kind == InputKind.COMPUTED
     )
     if computed:
         raise ModeloAggregationBindingError(
@@ -1798,7 +1799,7 @@ def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: fro
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding in source_owned_binding_ids
+        if casilla.input_kind == InputKind.BOUND and casilla.binding in source_owned_binding_ids
     )
 
 
@@ -2215,9 +2216,9 @@ def _required_input_casillas_for_revision(
     optional: list[str] = []
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
-        if casilla.input_kind == "manual" and casilla.required:
+        if casilla.input_kind == InputKind.MANUAL and casilla.required:
             required.append(casilla_id)
-        elif casilla.input_kind in ("manual", "bound", "computed"):
+        elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):
             optional.append(casilla_id)
     return tuple(required), tuple(optional)
 
@@ -2881,7 +2882,7 @@ def _collect_revision_verification_findings(
     revision_keys = set(target.inputs_snapshot)
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
-        if casilla.input_kind == "manual" and casilla.required:
+        if casilla.input_kind == InputKind.MANUAL and casilla.required:
             if casilla_id in revision_keys:
                 resolved_casillas.append(casilla_id)
             else:

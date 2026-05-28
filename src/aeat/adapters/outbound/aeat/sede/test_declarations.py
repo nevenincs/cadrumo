@@ -35,6 +35,7 @@ from aeat.application.filing import (
 from aeat.core.config import Settings
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import (
+    InputKind,
     RegistryValidationError,
     calculate_registry_snapshot,
     parse_export_payload,
@@ -774,7 +775,7 @@ class TestSubmittedFileObservation:
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != "computed"
+            if casilla.input_kind != InputKind.COMPUTED
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
@@ -803,7 +804,7 @@ class TestSubmittedFileObservation:
             filing_year=2026,
             period="1T",
         )
-        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"}
+        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED}
         assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
 
         calculated = calculate_registry_snapshot(

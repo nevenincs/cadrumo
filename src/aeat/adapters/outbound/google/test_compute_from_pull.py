@@ -21,6 +21,7 @@ import pytest
 
 from ....core.resources import resources
 from ...outbound.storage._errors import OutboundStorageConflictError
+from ....domain.calculations.registry._schema import InputKind
 from ._calc_sheets_pull import (
     BindingEdit,
     OperatorEdit,
@@ -74,7 +75,7 @@ def _operator_edits_for(snapshot, values: dict[str, Decimal | str | None]) -> tu
 
     edits: list[OperatorEdit] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind in ("computed", "informational"):
+        if casilla.input_kind in (InputKind.COMPUTED, InputKind.INFORMATIONAL):
             continue
         edits.append(
             OperatorEdit(

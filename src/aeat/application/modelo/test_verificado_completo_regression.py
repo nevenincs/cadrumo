@@ -34,6 +34,7 @@ from aeat.application.modelo import (
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
 from aeat.domain.deadlines import IVARegime, TaxpayerProfile
+from aeat.domain.calculations.registry import InputKind
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._repository import WorkUnitCatalogueRepository
 from aeat.domain.modelos._verification_report import (
@@ -60,7 +61,7 @@ def _required_manual_casillas_for_m130() -> tuple[str, ...]:
         _M130_MODELO, filing_year=_M130_FILING_YEAR, period=_M130_PERIOD
     )
     return tuple(
-        str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == "manual"
+        str(c.id) for c in snap.revision.casillas if c.required and c.input_kind == InputKind.MANUAL
     )
 
 

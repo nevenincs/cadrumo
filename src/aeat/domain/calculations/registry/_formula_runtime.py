@@ -18,6 +18,7 @@ from ._schema import (
     DataBindingDefinition,
     DatedValue,
     FormulaExpression,
+    InputKind,
     ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
@@ -309,7 +310,7 @@ def _initial_values(
     computed = sorted(
         casilla_id
         for casilla_id in inputs
-        if casillas[casilla_id].input_kind == "computed" or casilla_id in formula_targets
+        if casillas[casilla_id].input_kind == InputKind.COMPUTED or casilla_id in formula_targets
     )
     if computed:
         raise RegistryValidationError(
@@ -340,7 +341,7 @@ def _initial_values(
     smuggled_previous_filing_bound = sorted(
         casilla_id
         for casilla_id in inputs
-        if casillas[casilla_id].input_kind == "bound"
+        if casillas[casilla_id].input_kind == InputKind.BOUND
         and casillas[casilla_id].binding is not None
         and (binding_def := bindings_by_id.get(casillas[casilla_id].binding or "")) is not None
         and binding_def.source == "previous_filing"
@@ -366,7 +367,7 @@ def _initial_values(
     inconsistent_previous_filing_projections: list[str] = []
     for casilla_id, input_value in inputs.items():
         casilla = casillas[casilla_id]
-        if casilla.input_kind != "bound" or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != "previous_filing":
@@ -394,7 +395,7 @@ def _initial_values(
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()
     for casilla in revision.casillas:
-        if casilla.input_kind == "computed":
+        if casilla.input_kind == InputKind.COMPUTED:
             continue
         # Previous-filing bound casillas MUST resolve through the binding
         # pipeline because the silent zero fallback masked dead-binding
@@ -402,7 +403,7 @@ def _initial_values(
         # under this rule still receive a Decimal("0") placeholder via the
         # absent-by-design path; the string value is consumed through a
         # parallel provenance channel.
-        if casilla.input_kind == "bound":
+        if casilla.input_kind == InputKind.BOUND:
             binding_id = casilla.binding
             binding = bindings_by_id.get(binding_id or "")
             if binding is not None and binding.source == "previous_filing":

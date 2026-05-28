@@ -13,6 +13,7 @@ from ....domain.calculations.registry._schema import (
     CasillaDefinition,
     DataBindingDefinition,
     FormulaDefinition,
+    InputKind,
     ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
@@ -865,9 +866,9 @@ def _collect_cell_constraints(
     for casilla in revision.casillas:
         if casilla.constraints is None:
             continue
-        if casilla.input_kind == "computed":
+        if casilla.input_kind == InputKind.COMPUTED:
             address = layout.calculos_cells.get(casilla.id)
-        elif casilla.input_kind in ("manual", "bound"):
+        elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND):
             address = layout.entradas_cells.get(casilla.id)
         else:
             continue
