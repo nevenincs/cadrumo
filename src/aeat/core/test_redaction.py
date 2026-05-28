@@ -1,0 +1,85 @@
+from __future__ import annotations
+
+import pytest
+
+from aeat.core.classification import (
+    OutputSensitivityClass,
+    SensitivityClass,
+    default_output_policy_for,
+    default_policy_for,
+)
+from aeat.core.redaction import (
+    CLI_BUCKET_ID_PLACEHOLDER,
+    CLI_OBJECT_KEY_PLACEHOLDER,
+    CLI_PROFILE_ID_PLACEHOLDER,
+    redact_for_cli_output,
+    redact_structured_for_cli_output,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+_PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
+_NIF = "12345678Z"
+_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+_URL = "https://example.test/private/path?token=secret"
+_OBJECT_KEY = "wallet:2026-secret"
+
+
+def test_cli_output_text_redacts_sensitive_canaries() -> None:
+    rendered = redact_for_cli_output(
+        f"profile={_PROFILE_ID} nif={_NIF} bearer {_JWT} url={_URL} object_key={_OBJECT_KEY}"
+    )
+
+    assert _PROFILE_ID not in rendered
+    assert _NIF not in rendered
+    assert _JWT not in rendered
+    assert _URL not in rendered
+    assert _OBJECT_KEY not in rendered
+    assert CLI_PROFILE_ID_PLACEHOLDER in rendered
+    assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
+    assert "https://example.test" in rendered
+    assert "private/path" not in rendered
+    assert "sha256:" in rendered
+    assert "token:sha256:" in rendered
+
+
+def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
+    payload = {
+        "profile_id": _PROFILE_ID,
+        "bucket_id": "bucket-alpha",
+        "object_key": _OBJECT_KEY,
+        "label": "operator",
+        "nested": {
+            "tax_id": _NIF,
+            "callback": _URL,
+            "authorization": f"bearer {_JWT}",
+            "notes": ("attachment:raw-key", "public note"),
+        },
+    }
+
+    redacted = redact_structured_for_cli_output(payload)
+
+    assert redacted == {
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
+        "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
+        "label": "operator",
+        "nested": {
+            "tax_id": "sha256:1c9f9632",
+            "callback": "https://example.test",
+            "authorization": "token:sha256:0a2c77ea",
+            "notes": (CLI_OBJECT_KEY_PLACEHOLDER, "public note"),
+        },
+    }
+    assert payload["profile_id"] == _PROFILE_ID
+    assert payload["nested"]["notes"][0] == "attachment:raw-key"
+
+
+def test_cli_public_output_policy_is_emit_only_while_diagnostic_persists() -> None:
+    cli_policy = default_output_policy_for(OutputSensitivityClass.CLI_PUBLIC)
+    diagnostic_output_policy = default_output_policy_for(OutputSensitivityClass.DIAGNOSTIC)
+    diagnostic_storage_policy = default_policy_for(SensitivityClass.DIAGNOSTIC)
+
+    assert cli_policy.persisted_as is None
+    assert diagnostic_output_policy.persisted_as is SensitivityClass.DIAGNOSTIC
+    assert diagnostic_output_policy.redaction_rules == diagnostic_storage_policy.redaction_rules
