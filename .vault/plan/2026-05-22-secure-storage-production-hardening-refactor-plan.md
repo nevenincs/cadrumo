@@ -38,6 +38,8 @@ related:
      - NEVER use [[wiki-links]] or markdown links in the
        document body. -->
 
+<!-- RETIRED: S422, S423 -->
+
 # `secure-storage-production-hardening` `refactor` plan
 
 ## Wave `W01` - custody and route fail-closed foundation
@@ -139,7 +141,7 @@ This Wave removes or records remaining alternate persistence classes after the c
 
 Migrate sensitive JSON and JSONL stores to secure objects or persist accepted exception ADRs before further expansion.
 
-- [ ] `W05.P09.S36` - inventory evidence, ledger, inventory, live, and snapshot bucket-local JSON stores; `src/aeat/application`.
+- [x] `W05.P09.S36` - inventory evidence, ledger, inventory, live, and snapshot bucket-local JSON stores; `src/aeat/application`.
 - [ ] `W05.P09.S37` - migrate evidence bundle persistence behind runtime-created secure-object repositories; `src/aeat/application/evidence`.
 - [ ] `W05.P09.S38` - migrate inventory persistence behind runtime-created secure-object repositories; `src/aeat/application/inventory`.
 - [ ] `W05.P09.S39` - migrate live snapshot persistence behind runtime-created secure-object repositories; `src/aeat/application/live`.
@@ -1008,3 +1010,14 @@ Persist remaining owners, add missing executable rows, and enforce review-time o
 - [ ] `W16.P36.S419` - Persist observation-pool closeout with remaining owners, deferrals, and review signoff; `.vault/audit`.
 - [ ] `W16.P36.S420` - Add missing plan rows or wave assignments for secure-storage observations that lack an existing executable owner; `.vault/plan`.
 - [ ] `W16.P36.S421` - Add a recurring guard that future secure-storage audit findings cite an owning plan row before execution continues; `.vault/audit`.
+
+## Wave `W17` - ledger side-store migration follow-up
+
+This Wave adopts the ledger JSONL side stores discovered during W05.P09.S36 without disrupting canonical plan ordering. It requires the purchase-invoice evidence and business-operation invoice stores to migrate behind runtime-created secure-object repositories, or to receive explicit exception ADR coverage if migration is rejected after implementation research.
+
+### Phase `W17.P37` - ledger JSONL secure-object migration
+
+Close the two W05.P09.S36 ledger side-store findings with runtime-created secure-object repositories or an explicit ADR-backed exception before the side-store hardening campaign is treated as complete.
+
+- [ ] `W17.P37.S424` - migrate purchase invoice evidence JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_evidence.py`.
+- [ ] `W17.P37.S425` - migrate payable and collectible business-operation invoice JSONL persistence behind runtime-created secure-object repositories; `src/aeat/application/ledger/_business_operation_invoice.py`.
