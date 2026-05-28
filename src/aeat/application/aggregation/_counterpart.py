@@ -23,6 +23,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
+from ._source_kinds import AggregationSourceKind
 
 CounterpartSourceKind = Literal[
     "ledger_transaction",
@@ -31,12 +32,12 @@ CounterpartSourceKind = Literal[
     "collectible_invoice",
 ]
 
-_CANONICAL_SOURCE_KINDS: frozenset[CounterpartSourceKind] = frozenset(
+_CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {
-        "ledger_transaction",
-        "purchase_invoice_evidence",
-        "payable_invoice",
-        "collectible_invoice",
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
     },
 )
 

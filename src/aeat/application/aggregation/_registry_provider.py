@@ -20,12 +20,17 @@ from ...domain.calculations.registry import (
 )
 from ._counterpart import CounterpartAggregation, OperationKind349
 from ._errors import AggregationUnsupportedModeloError, AggregationValidationError, t
-from ._service import PerModeloAggregationCommand, PerModeloAggregationProvider, aggregate_per_modelo
+from ._service import AggregationSourceKind, PerModeloAggregationCommand, PerModeloAggregationProvider, aggregate_per_modelo
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-_COUNTERPART_BINDING_SOURCE_KINDS = frozenset(
-    ("ledger_transaction", "purchase_invoice_evidence", "payable_invoice", "collectible_invoice")
+_COUNTERPART_BINDING_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
+    (
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
+    )
 )
 
 _OPERATION_KIND_349_TO_CLAVE = {
