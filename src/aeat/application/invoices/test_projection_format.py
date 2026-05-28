@@ -20,9 +20,14 @@ from decimal import Decimal
 
 import pytest
 
-from ._projection import _format_decimal
+from ...core.decimal import format_decimal as _canonical_format_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
+
+
+def _format_decimal(value: Decimal | None) -> str:
+    """Thin wrapper matching the old projection._format_decimal contract."""
+    return _canonical_format_decimal(value, normalize=True, none_value="0")
 
 
 # ---------------------------------------------------------------------------

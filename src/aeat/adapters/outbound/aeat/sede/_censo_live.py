@@ -20,10 +20,10 @@ decides whether that is a refusal.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings
+from .....core.decimal import format_decimal
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
@@ -178,9 +178,11 @@ def census_fact_set_to_mapping(fact_set: CensoFactSet) -> Mapping[str, str]:
     if fact_set.elected_withholding_pct is not None:
         pairs.append(("census.elected_withholding_pct", fact_set.elected_withholding_pct))
     if fact_set.vivienda_office_total_m2 is not None:
-        pairs.append(("vivienda_office.total_m2", _format_decimal(fact_set.vivienda_office_total_m2)))
+        _m2_text = format_decimal(fact_set.vivienda_office_total_m2, normalize=True)
+        pairs.append(("vivienda_office.total_m2", _m2_text if "." in _m2_text else f"{_m2_text}.00"))
     if fact_set.vivienda_office_office_m2 is not None:
-        pairs.append(("vivienda_office.office_m2", _format_decimal(fact_set.vivienda_office_office_m2)))
+        _m2_text = format_decimal(fact_set.vivienda_office_office_m2, normalize=True)
+        pairs.append(("vivienda_office.office_m2", _m2_text if "." in _m2_text else f"{_m2_text}.00"))
     if fact_set.iae_epigraph is not None:
         pairs.append(("activities.iae_epigraph", fact_set.iae_epigraph))
     return dict(pairs)
@@ -203,15 +205,6 @@ def _populated_count(fact_set: CensoFactSet) -> int:
         if value is not None
     )
 
-
-def _format_decimal(value: Decimal) -> str:
-    """Format a m² Decimal without trailing zeros, preserving two-place precision when present."""
-
-    normalized = value.normalize()
-    text = format(normalized, "f")
-    if "." not in text:
-        return f"{text}.00"
-    return text
 
 
 __all__ = [

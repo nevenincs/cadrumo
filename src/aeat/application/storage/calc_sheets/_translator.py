@@ -22,9 +22,9 @@ the caller to surface a typed CLI error.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from decimal import Decimal
 from typing import Final
 
+from ....core.decimal import format_decimal
 from ....core.errors import AeatError
 from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
 from ....domain.calculations.registry._schema import FormulaExpression
@@ -185,7 +185,7 @@ _ARG_OP_BUILDERS: Mapping[str, Callable[[str, list[str]], str]] = {
 
 def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     if expression.literal is not None:
-        return _format_decimal(expression.literal)
+        return format_decimal(expression.literal)
     if expression.casilla is not None:
         return _casilla_reference(expression.casilla, layout=layout)
     if expression.parameter is not None:
@@ -379,13 +379,6 @@ def _parameter_reference(parameter: ParameterId, *, layout: SheetLayout) -> str:
         )
     return cell.anchor.qualified()
 
-
-def _format_decimal(value: Decimal) -> str:
-    # Sheets accepts Decimal literals as plain numbers. We render in
-    # fixed-point form (no scientific notation) so very large or very
-    # small values still parse as numbers.
-    text = format(value, "f")
-    return text if text else "0"
 
 
 def _expect_arg_count(op: str, args: list[str], expected: int) -> None:
