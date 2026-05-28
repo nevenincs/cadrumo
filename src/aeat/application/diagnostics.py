@@ -15,6 +15,7 @@ from aeat import __version__
 from ..core.config import PROJECT_ROOT, Settings
 from ..core.errors import SiteHealthError
 from ..core.i18n import tr
+from ._errors import DiagnosticModelError
 from ..core.logging import default_log_file_path, get_logger
 from ..core.resources import bundled_path
 
@@ -125,16 +126,20 @@ class DiagnosticCheck(BaseModel):
         next_action = self.next_action if self.next_action else None
         dead_end = self.dead_end if self.dead_end else None
         if next_action is not None and dead_end is not None:
-            raise ValueError("DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both")
+            raise DiagnosticModelError(
+                "DiagnosticCheck may set at most one of `next_action` or `dead_end`, not both"
+            )
         if self.status in {"fail", "warn"}:
             if next_action is None and dead_end is None:
-                raise ValueError(
+                raise DiagnosticModelError(
                     f"DiagnosticCheck(status={self.status!r}) must populate one of "
                     "`next_action` or `dead_end`; silent failing rows are forbidden"
                 )
         else:  # status == "ok"
             if next_action is not None or dead_end is not None:
-                raise ValueError("DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`")
+                raise DiagnosticModelError(
+                    "DiagnosticCheck(status='ok') must not carry `next_action` or `dead_end`"
+                )
         return self
 
 
