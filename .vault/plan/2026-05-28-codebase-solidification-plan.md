@@ -211,12 +211,12 @@ payloads.
 
 - [x] `W01.P04.S119` - introduce `ReplayPayload(BaseModel)` base + per-oracle subclasses; `replace `dict[str, Any]` return from `decode_replay_json_payload`; `src/aeat/domain/calculations/registry/_live_parity.py`.
 - [x] `W01.P04.S120` - add roundtrip test asserting `ReplayPayload.model_validate` rejects partial / mistyped payloads; `src/aeat/domain/calculations/registry/test_live_parity.py`.
-- [ ] `W01.P04.S121` - replace manual dict unpacking with `AeatNifIvaReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
-- [ ] `W01.P04.S122` - add roundtrip test asserting NIF-IVA replay payload validates and round-trips strictly; `src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py`.
-- [ ] `W01.P04.S123` - replace manual dict unpacking with `GroiReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
-- [ ] `W01.P04.S124` - add roundtrip test asserting GROI replay payload validates strictly; `src/aeat/domain/calculations/registry/test_groi_oracle.py`.
-- [ ] `W01.P04.S125` - replace manual dict unpacking with `RentaWebOpenReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
-- [ ] `W01.P04.S126` - add roundtrip test asserting Renta WEB Open replay payload validates strictly; `src/aeat/domain/calculations/registry/test_renta_web_open_oracle.py`.
+- [x] `W01.P04.S121` - replace manual dict unpacking with `AeatNifIvaReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
+- [x] `W01.P04.S122` - add roundtrip test asserting NIF-IVA replay payload validates and round-trips strictly; `src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py`.
+- [x] `W01.P04.S123` - replace manual dict unpacking with `GroiReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
+- [x] `W01.P04.S124` - add roundtrip test asserting GROI replay payload validates strictly; `src/aeat/domain/calculations/registry/test_groi_oracle.py`.
+- [x] `W01.P04.S125` - replace manual dict unpacking with `RentaWebOpenReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
+- [x] `W01.P04.S126` - add roundtrip test asserting Renta WEB Open replay payload validates strictly; `src/aeat/domain/calculations/registry/test_renta_web_open_oracle.py`.
 - [ ] `W01.P04.S127` - verify `_entry_from_payload` enforces `CachedEntry.model_validate` before consuming fields; `src/aeat/adapters/outbound/llm/_cache.py`.
 - [ ] `W01.P04.S128` - add roundtrip test asserting LLM cache entries reject malformed persisted payloads; `src/aeat/adapters/outbound/llm/test_cache.py`.
 - [ ] `W01.P04.S129` - confirm Google Sheets / Drive `dict[str, Any]` returns retain their inline rationale; `add audit-note assertion test that the rationale comment survives refactors; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
