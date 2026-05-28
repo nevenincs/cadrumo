@@ -10,15 +10,13 @@ exclusively from ``aeat.domain.normatives`` and MUST NOT reach into private
 ``_schema``, ``_loader``, ``_lookup``, ``_cite``, or ``_verify``
 modules.
 
-Example:
-    ```python
-    from . import NORMATIVE_CATALOGUE, cite, find_articulo
+Example::
 
-    reference = NORMATIVE_CATALOGUE.get("ley-35-2006")
-    if reference is not None:
-        art_32 = find_articulo(NORMATIVE_CATALOGUE, "ley-35-2006", "32")
-        print(cite(reference, art_32))
-    ```
+    >>> from aeat.domain.normatives import NORMATIVE_CATALOGUE, cite, find_articulo
+    >>> reference = NORMATIVE_CATALOGUE.get("ley-35-2006")
+    >>> if reference is not None:
+    ...     art_32 = find_articulo(NORMATIVE_CATALOGUE, "ley-35-2006", "32")
+    ...     print(cite(reference, art_32))
 """
 
 from __future__ import annotations
