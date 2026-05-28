@@ -1,0 +1,109 @@
+---
+tags:
+  - '#plan'
+  - '#schema-hardening'
+date: '2026-05-28'
+tier: L2
+related:
+  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]'
+  - '[[2026-05-27-schema-hardening-casilla-continuity-contract-research]]'
+  - '[[2026-05-28-schema-hardening-m100-continuity-inventory-research]]'
+---
+
+<!-- DO NOT add 'Related:', 'tags:', 'date:', or other frontmatter fields
+     outside the YAML frontmatter above -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - The related: field carries the AUTHORISING documents (ADR, research,
+       reference, prior plan) for every Step in this plan. Steps inherit this
+       chain; per-row reference footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+# `schema-hardening` `continuity ADR conformance` plan
+
+Conform the landed continuity implementation to the accepted generic
+continuity ADR before authoring more corpus continuity metadata.
+
+## Proposed Changes
+
+The current substrate already has generic schema, loader, advisory reporting,
+strict opt-in validation, and one M100 data slice. This plan treats those as
+implementation under review, not as a reason to improvise new schema. Work must
+first record an ADR conformance audit. Code changes are allowed only when the
+audit identifies a generic gap in `src/aeat/domain/calculations/registry`, and
+data changes are allowed only after validator behavior is proven by tests.
+
+No M100-only schema, loader branch, validator branch, or template compiler is
+authorised by this plan.
+
+## Success Signals
+
+- The conformance audit maps each ADR decision D1 through D5 to implemented
+  code, tests, and any gap.
+- Generic validator behavior covers the accepted evolution kinds, including
+  retired or intentionally repurposed continuity boundaries, without relying on
+  modelo id checks.
+- Registry file-size regression is guarded so a single modelo TOML cannot grow
+  back into an unauditable artifact.
+- Any M100 continuity additions are explicit data applications of the generic
+  contract, not new schema or special-case behavior.
+
+## Failure Signals
+
+- Any code path checks `modelo.id == "100"` to define continuity semantics.
+- Any implementation infers continuity from repeated numeric casilla id alone.
+- Any strict corpus rollout lacks source and legal grounding.
+- Any test passes by faking, monkeypatching, skipping, or mirroring validator
+  logic instead of exercising real schema or registry objects.
+
+## Steps
+
+### Phase `P01` - implementation conformance audit
+
+Compare the landed continuity schema, loader, validator, tests, and M100 data slice against the accepted generic continuity ADR before any further data rollout.
+
+- [ ] `P01.S01` - Audit implemented continuity substrate against ADR D1-D5 and record mismatches; `.vault/research`.
+
+### Phase `P02` - generic validator conformance
+
+Close generic continuity-validator gaps without adding modelo-specific schema or loader branches.
+
+- [ ] `P02.S02` - Add generic retirement and unmatched-continuity validation semantics; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
+- [ ] `P02.S03` - Add real-behavior tests for retired repurposed and unmatched continuity decisions; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
+
+### Phase `P03` - corpus and file-size gates
+
+Apply the generic substrate to corpus safety gates only after validator conformance is proven.
+
+- [ ] `P03.S04` - Add registry TOML file-size and fragmentation regression gate; `src/aeat/domain/calculations/registry`.
+- [ ] `P03.S05` - Author the next evidence-grounded M100 continuity slice using only generic continuity records; `src/aeat/_data/registry/aeat/modelos/100`.
+
+### Phase `P04` - evidence and closeout
+
+Record execution evidence, residual risks, and explicit pass or fail signals for the conformance slice.
+
+- [ ] `P04.S06` - Record verification evidence residual risks and next-step decision points; `.vault/exec`.
+
+## Parallelization
+
+`P01.S01` must land before any code or data change. `P02.S02` and `P02.S03`
+must land together or in validator-then-test order. `P03.S04` can start after
+the audit if it does not depend on validator changes. `P03.S05` must wait for
+P02 to pass because corpus rollout must use proven validator semantics. P04 is
+closeout only.
+
+## Verification
+
+The plan is complete when every Step is closed and these checks pass:
+
+- `uv run --no-sync ruff check src/aeat/domain/calculations/registry`
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_cross_revision_drift.py -q`
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_loader_directory_mode.py -q`
+- `uv run --no-sync pytest src/aeat/domain/calculations/registry/test_committed_registry.py -q`
+- `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-05-28-schema-hardening-continuity-conformance-plan.md`
+
+If any command fails, the Step Record must state the failing command and whether
+the failure is authored by this plan or pre-existing shared-worktree state.
