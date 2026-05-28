@@ -13,6 +13,9 @@ reference rule names without a circular import. This module ships:
   list / tuple containers and redacts every string leaf in place;
 * :func:`redact_for_log`, the convenience wrapper for log lines and
   exception messages;
+* :func:`redact_for_cli_output` and
+  :func:`redact_structured_for_cli_output`, the public CLI success-output
+  profile for rendered text and JSON-shaped payloads;
 * :func:`default_rules_for` and :func:`default_rules_for_class`, the
   resolvers that turn rule names stored on a
   :class:`~aeat.core.classification.ClassificationPolicy` into the
@@ -48,9 +51,17 @@ from urllib.parse import urlparse
 
 from ..classification import (
     ClassificationPolicy as _ClassificationPolicy,
+)
+from ..classification import (
     RedactionRule as _RedactionRule,
+)
+from ..classification import (
     RedactionStrategy as _RedactionStrategy,
+)
+from ..classification import (
     SensitivityClass as _SensitivityClass,
+)
+from ..classification import (
     default_policy_for as _default_policy_for,
 )
 
@@ -72,6 +83,48 @@ _OPAQUE_BEARER_PATTERN = (
 
 # Generic URL pattern. Drops everything except the host component.
 _URL_PATTERN = r"https?://[^\s\"'<>]+"
+
+CLI_PROFILE_ID_PLACEHOLDER = "<profile-id>"
+CLI_BUCKET_ID_PLACEHOLDER = "<bucket-id>"
+CLI_OBJECT_KEY_PLACEHOLDER = "<object-key>"
+
+_CLI_UUID_PATTERN = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+)
+_CLI_OBJECT_KEY_ASSIGNMENT_PATTERN = re.compile(
+    r"(?i)(?P<label>\b(?:object[_-]?key|lookup[_-]?key|secure[_-]?object[_-]?key)\b)"
+    r"(?P<sep>\s*[:=]\s*)"
+    r"(?P<value>[^\s,;]+)"
+)
+_CLI_OBJECT_KEY_TOKEN_PATTERN = re.compile(
+    r"(?i)\b(?:wallet|transaction-catalogue|invoice|attachment|justificante):[^\s,;]+"
+)
+_CLI_PROFILE_ID_KEYS = frozenset(
+    {
+        "active_profile_id",
+        "bucket_profile_id",
+        "profile_bucket_id",
+        "profile_id",
+        "repository_profile_id",
+    }
+)
+_CLI_BUCKET_ID_KEYS = frozenset(
+    {
+        "active_bucket_id",
+        "bucket_id",
+        "repository_bucket_id",
+        "storage_bucket_id",
+    }
+)
+_CLI_OBJECT_KEY_KEYS = frozenset(
+    {
+        "lookup_key",
+        "object_key",
+        "secure_object_key",
+        "storage_object_key",
+    }
+)
 
 
 def _sha256_prefix(value: str) -> str:
@@ -263,6 +316,52 @@ def redact_structured(value: object, *, rules: tuple[_RedactionRule, ...]) -> ob
     return value
 
 
+def _normalise_cli_key(key: object | None) -> str | None:
+    if key is None:
+        return None
+    return re.sub(r"[^a-z0-9]+", "_", str(key).strip().lower()).strip("_")
+
+
+def _cli_placeholder_for_key(key: object | None, value: object) -> str | None:
+    if value is None or value == "":
+        return None
+    normalised = _normalise_cli_key(key)
+    if normalised in _CLI_PROFILE_ID_KEYS:
+        return CLI_PROFILE_ID_PLACEHOLDER
+    if normalised in _CLI_BUCKET_ID_KEYS:
+        return CLI_BUCKET_ID_PLACEHOLDER
+    if normalised in _CLI_OBJECT_KEY_KEYS:
+        return CLI_OBJECT_KEY_PLACEHOLDER
+    return None
+
+
+def _redact_cli_string(text: str) -> str:
+    redacted = redact_for_log(text)
+    redacted = _CLI_UUID_PATTERN.sub(CLI_PROFILE_ID_PLACEHOLDER, redacted)
+    redacted = _CLI_OBJECT_KEY_ASSIGNMENT_PATTERN.sub(
+        lambda match: (
+            f"{match.group('label')}{match.group('sep')}{CLI_OBJECT_KEY_PLACEHOLDER}"
+        ),
+        redacted,
+    )
+    return _CLI_OBJECT_KEY_TOKEN_PATTERN.sub(CLI_OBJECT_KEY_PLACEHOLDER, redacted)
+
+
+def _redact_structured_for_cli_output(value: object, *, key: object | None = None) -> object:
+    placeholder = _cli_placeholder_for_key(key, value)
+    if placeholder is not None:
+        return placeholder
+    if isinstance(value, str):
+        return _redact_cli_string(value)
+    if isinstance(value, dict):
+        return {k: _redact_structured_for_cli_output(v, key=k) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_redact_structured_for_cli_output(item) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_redact_structured_for_cli_output(item) for item in value)
+    return value
+
+
 def redact_for_log(text: str) -> str:
     """Redact a string against the AUDIT-class rule set for log/error use.
 
@@ -297,11 +396,53 @@ def redact_for_log(text: str) -> str:
     return redact(text, rules=default_rules_for_class(_SensitivityClass.AUDIT))
 
 
+def redact_for_cli_output(text: str) -> str:
+    """Redact a rendered operator-facing CLI output line.
+
+    The CLI public-output profile composes the AUDIT rule set used by
+    logs/errors with additional profile, bucket, and secure-object key
+    handling. It deliberately keeps display labels untouched and targets
+    machine identifiers, storage lookup values, URL paths, bearer tokens,
+    and tax identities that should not be emitted as success output.
+
+    Args:
+        text: Rendered CLI text.
+
+    Returns:
+        Redacted CLI-safe text.
+    """
+    if not isinstance(text, str):
+        raise TypeError(f"redact_for_cli_output() expects str; got {type(text).__name__}")
+    return _redact_cli_string(text)
+
+
+def redact_structured_for_cli_output(value: object) -> object:
+    """Recursively redact a JSON-shaped value for public CLI output.
+
+    Unlike :func:`redact_structured`, this helper is key-aware so values
+    under canonical profile, bucket, and secure-object key fields become
+    stable placeholders before JSON serialization. Container shape is
+    preserved and the input object is never mutated.
+
+    Args:
+        value: JSON-shaped payload to prepare for CLI success output.
+
+    Returns:
+        A redacted copy with the same nested shape.
+    """
+    return _redact_structured_for_cli_output(value)
+
+
 __all__ = [
+    "CLI_BUCKET_ID_PLACEHOLDER",
+    "CLI_OBJECT_KEY_PLACEHOLDER",
+    "CLI_PROFILE_ID_PLACEHOLDER",
     "default_rules",
     "default_rules_for",
     "default_rules_for_class",
     "redact",
+    "redact_for_cli_output",
     "redact_for_log",
     "redact_structured",
+    "redact_structured_for_cli_output",
 ]

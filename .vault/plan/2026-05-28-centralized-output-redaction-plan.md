@@ -11,6 +11,16 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `centralized-output-redaction` `centralized CLI output redaction` plan
 
 Centralize success-output redaction so CLI text, CLI JSON, error rendering, logs, diagnostics, and observability derive privacy behavior from one redaction subsystem instead of command-local patches.
@@ -29,7 +39,7 @@ This Wave creates the central output-redaction substrate and makes the common CL
 
 Define one canonical rule vocabulary for output, logging, errors, and diagnostics.
 
-- [ ] `W01.P01.S01` - add CLI-output redaction profiles and profile/bucket/object-key rules; `src/aeat/core/redaction/__init__.py`.
+- [x] `W01.P01.S01` - add CLI-output redaction profiles and profile/bucket/object-key rules; `src/aeat/core/redaction/__init__.py`.
 - [ ] `W01.P01.S02` - extend sensitivity policy names for CLI public output without weakening diagnostic persistence rules; `src/aeat/core/classification/__init__.py`.
 - [ ] `W01.P01.S03` - add structured output-redaction tests for UUID, NIF, token, URL, and object-key canaries; `src/aeat/core/test_redaction.py`.
 - [ ] `W01.P01.S04` - migrate logging sensitive-key matching to shared redaction rule helpers; `src/aeat/core/logging.py`.
