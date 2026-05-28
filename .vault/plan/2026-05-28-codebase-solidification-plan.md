@@ -125,8 +125,8 @@ through the affected logger.
 - [ ] `W01.P02.S52` - add real-behavior test asserting overview logger scrubs taxpayer data; `src/aeat/entrypoints/cli/test_overview.py`.
 - [ ] `W01.P02.S53` - replace the inline `_logging.getLogger(__name__)` with module-level `get_logger`; `src/aeat/core/errors/_registry.py`.
 - [ ] `W01.P02.S54` - add real-behavior test asserting error-registry resolution-failure debug log scrubs sensitive context; `src/aeat/core/errors/test_registry.py`.
-- [ ] `W01.P02.S55` - replace the inline `logging.getLogger(__name__).warning` with module-level `get_logger`; `src/aeat/core/observability/_sink.py`.
-- [ ] `W01.P02.S56` - add real-behavior test asserting sink-failure warning carries scrubbed exception traceback; `src/aeat/core/observability/test_sink.py`.
+- [x] `W01.P02.S55` - replace the inline `logging.getLogger(__name__).warning` with module-level `get_logger`; `src/aeat/core/observability/_sink.py`.
+- [x] `W01.P02.S56` - add real-behavior test asserting sink-failure warning carries scrubbed exception traceback; `src/aeat/core/observability/test_sink.py`.
 - [ ] `W01.P02.S57` - add `pdfminer` to the `loggers` block of `configure_logging()` dictConfig; `delete the in-place mutation; `src/aeat/adapters/inbound/pdf/_pdfplumber.py`.
 - [ ] `W01.P02.S58` - add real-behavior test asserting `pdfminer` logger level is governed by `aeat.core.logging` dictConfig; `src/aeat/core/test_logging.py`.
 - [ ] `W01.P02.S59` - delete the duplicated `pdfminer` mutation; `rely on the centralized `loggers` block; `src/aeat/domain/calculations/registry/_record_design.py`.
