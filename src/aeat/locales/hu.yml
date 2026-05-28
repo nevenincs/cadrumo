@@ -1795,52 +1795,52 @@ cli:
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
     verbose_help: 'Részletek és következő lépés megjelenítése, ha elérhető.'
   registry:
-    app_help: cli.registry.app_help
-    audit_oracles_environment_help: cli.registry.audit_oracles_environment_help
-    audit_oracles_help: cli.registry.audit_oracles_help
-    casilla_help: cli.registry.casilla_help
+    app_help: 'Adónyomtatvány-nyilvántartás kezelése.'
+    audit_oracles_environment_help: 'Az élő paritási katalógus környezete az audit elvégzéséhez (production, test_environment vagy both).'
+    audit_oracles_help: 'Élő paritási orákulumkötés-eltérések felszínre hozása indításkor.'
+    casilla_help: 'Az összehasonlítandó mező azonosítója; ismételje meg az alapértelmezett számított mezők felülbírálásához.'
     citations:
-      app_help: cli.registry.citations.app_help
-      articulo_help: cli.registry.citations.articulo_help
-      list_help: cli.registry.citations.list_help
-      normative_id_help: cli.registry.citations.normative_id_help
-      tag_help: cli.registry.citations.tag_help
-      verify_help: cli.registry.citations.verify_help
-      view_help: cli.registry.citations.view_help
-    inspect_help: cli.registry.inspect_help
-    inspect_registry_root_help: cli.registry.inspect_registry_root_help
+      app_help: 'A jogi norma-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...).'
+      articulo_help: 'A megjelenítendő konkrét cikk (pl. 91.Uno.2.1°).'
+      list_help: 'A jogi korpuszban kodifikált normák listázása.'
+      normative_id_help: 'Stabil normaazonosító (pl. ley-37-1992).'
+      tag_help: 'Szűrés adójogi tag alapján (pl. irpf, iva).'
+      verify_help: 'A jogi norma-korpusz integritásának ellenőrzése.'
+      view_help: 'Egy norma és opcionálisan egy cikkének megjelenítése.'
+    inspect_help: 'A nyilvántartás állapotának és hivatkozásainak vizsgálata.'
+    inspect_registry_root_help: 'A nyilvántartás gyökérkönyvtárának elérési útja.'
     manuals:
-      app_help: cli.registry.manuals.app_help
-      kind_help: cli.registry.manuals.kind_help
-      list_help: cli.registry.manuals.list_help
-      manual_help: cli.registry.manuals.manual_help
-      part_help: cli.registry.manuals.part_help
-      rules_help: cli.registry.manuals.rules_help
-      section_help: cli.registry.manuals.section_help
+      app_help: 'Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).'
+      kind_help: 'Szűrés kézikönyvi szabálytípus alapján.'
+      list_help: 'A helyileg elérhető kézikönyv-részek listázása.'
+      manual_help: 'Kézikönyv-azonosító (renta, iva, sociedades).'
+      part_help: 'Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).'
+      rules_help: 'Egy kézikönyvben kodifikált szabályok listázása.'
+      section_help: 'Opcionális szakaszazonosító a megjelenítéshez.'
       verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik:
         %{target}'
       verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik:
         %{target}'
       verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}:
         %{messages}'
-      verify_help: cli.registry.manuals.verify_help
+      verify_help: 'A kézikönyv integritásának ellenőrzése a szerződésével szemben.'
       verify_missing_manifest: '%{manifest_path} hiányzik; futtasd az ''aeat manual
         fetch'' parancsot a létrehozásához'
       verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name}
         fordítási kulcsa'
-      view_help: cli.registry.manuals.view_help
-      year_help: cli.registry.manuals.year_help
+      view_help: 'Egy kézikönyv szerkezetének és opcionálisan egy szakaszának megjelenítése.'
+      year_help: 'A kézikönyv adóéve (pl. 2024).'
     metrics:
-      applicability_declaration_count: cli.registry.metrics.applicability_declaration_count
-      application_link_count: cli.registry.metrics.application_link_count
-      application_link_surfaces: cli.registry.metrics.application_link_surfaces
-      artefact_refs: cli.registry.metrics.artefact_refs
-      backend_exists: cli.registry.metrics.backend_exists
-      captured_count: cli.registry.metrics.captured_count
-      casilla_count: cli.registry.metrics.casilla_count
-      compared_casillas: cli.registry.metrics.compared_casillas
-      comparison_count: cli.registry.metrics.comparison_count
-      cross_reference_count: cli.registry.metrics.cross_reference_count
+      applicability_declaration_count: 'Alkalmazhatósági nyilatkozatok száma'
+      application_link_count: 'Alkalmazási hivatkozások száma'
+      application_link_surfaces: 'Alkalmazási hivatkozási felületek'
+      artefact_refs: 'Artefakt-hivatkozások'
+      backend_exists: 'Tár létezik'
+      captured_count: 'Rögzített elemek száma'
+      casilla_count: 'Mezők száma'
+      compared_casillas: 'Összehasonlított mezők'
+      comparison_count: 'Összehasonlítások száma'
+      cross_reference_count: 'Kereszthivatkozások száma'
       difference_count: cli.registry.metrics.difference_count
       differences: cli.registry.metrics.differences
       drift_count: cli.registry.metrics.drift_count

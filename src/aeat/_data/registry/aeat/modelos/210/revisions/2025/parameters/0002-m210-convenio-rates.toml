@@ -1,0 +1,54 @@
+# M210 IRNR Convenio doble imposición rate overrides (Phase 1 seed).
+#
+# Convenio-rate-table parameter mapping (country_code, tipo_renta) to the
+# treaty rate that REPLACES the TRLIRNR Art 25 baseline when a profile
+# declares a treaty country. Replacement semantics, not stacking, per
+# m210-irnr-full-engine ADR §D2.4. The override applies only when the
+# profile's fiscal-residence country has a Convenio row for the
+# tipo_renta being filed; otherwise the m210-tipo-gravamen-2025
+# baseline applies.
+#
+# S389b runtime helper (_resolve_m210_rate) emits BLOCKING findings
+# when a profile-declared treaty country has no row for the requested
+# tipo_renta, or when the row carries the NOT_YET_AUTHORED placeholder.
+
+[[revisions."2025".parameters]]
+id = "m210-convenio-rates"
+data_type = "convenio_rate_table"
+unit = "percent"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
+[[revisions."2025".parameters.convenio_rates]]
+country_code = "GB"
+tipo_renta = "general"
+rate = "0.24"
+legal_ref_anchor = "boe-a-2014-5171"
+notes = "Convenio España-UK Art 7 rendimientos sin establecimiento permanente; tarifa coincide con TRLIRNR baseline"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.convenio_rates]]
+country_code = "MA"
+tipo_renta = "interest"
+rate = "0.10"
+legal_ref_anchor = "boe-a-1985-13340"
+notes = "Convenio España-Marruecos Art 14 intereses; override 10 por ciento del baseline TRLIRNR Art 25.1.f del 19 por ciento"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.convenio_rates]]
+country_code = "AR"
+tipo_renta = "pension"
+rate = "NOT_YET_AUTHORED"
+legal_ref_anchor = "BOE-CONVENIO-AR-NOT-FOUND"
+notes = "Convenio España-Argentina pensiones tarifa pendiente de verificación corpus BOE; placeholder activa BLOCKING finding al lookup"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
