@@ -1841,60 +1841,60 @@ cli:
       compared_casillas: 'Összehasonlított mezők'
       comparison_count: 'Összehasonlítások száma'
       cross_reference_count: 'Kereszthivatkozások száma'
-      difference_count: cli.registry.metrics.difference_count
-      differences: cli.registry.metrics.differences
-      drift_count: cli.registry.metrics.drift_count
-      environment: cli.registry.metrics.environment
-      extraction_profile_count: cli.registry.metrics.extraction_profile_count
-      failed_count: cli.registry.metrics.failed_count
-      failure_count: cli.registry.metrics.failure_count
-      formula_count: cli.registry.metrics.formula_count
-      formula_workbook_count: cli.registry.metrics.formula_workbook_count
-      legal_reference_count: cli.registry.metrics.legal_reference_count
-      missing_filed_casillas: cli.registry.metrics.missing_filed_casillas
-      missing_local_casillas: cli.registry.metrics.missing_local_casillas
-      modelo: cli.registry.metrics.modelo
-      modelo_count: cli.registry.metrics.modelo_count
-      modelos: cli.registry.metrics.modelos
-      observation_paths: cli.registry.metrics.observation_paths
-      orphan_oracle_ids: cli.registry.metrics.orphan_oracle_ids
-      passed: cli.registry.metrics.passed
-      registered_oracle_ids: cli.registry.metrics.registered_oracle_ids
-      revision: cli.registry.metrics.revision
-      revision_count: cli.registry.metrics.revision_count
-      row_count: cli.registry.metrics.row_count
-      runner_detail: cli.registry.metrics.runner_detail
-      runner_status: cli.registry.metrics.runner_status
-      scanned_count: cli.registry.metrics.scanned_count
-      scenario_id: cli.registry.metrics.scenario_id
-      source_reference_count: cli.registry.metrics.source_reference_count
-      status: cli.registry.metrics.status
-      tape_path: cli.registry.metrics.tape_path
-      unsupported_xls_count: cli.registry.metrics.unsupported_xls_count
-      verification_expectation_count: cli.registry.metrics.verification_expectation_count
-      verified: cli.registry.metrics.verified
-      workbook_count: cli.registry.metrics.workbook_count
-      workbook_parity_ref_count: cli.registry.metrics.workbook_parity_ref_count
-      workbook_path: cli.registry.metrics.workbook_path
-    observation_help: cli.registry.observation_help
-    parity_app_help: cli.registry.parity_app_help
-    parity_output_help: cli.registry.parity_output_help
-    parity_replay_help: cli.registry.parity_replay_help
-    parity_run_help: cli.registry.parity_run_help
-    parity_scenario_help: cli.registry.parity_scenario_help
-    parity_store_root_help: cli.registry.parity_store_root_help
-    parity_tape_help: cli.registry.parity_tape_help
-    source_observation_help: cli.registry.source_observation_help
-    verify_filed_state_help: cli.registry.verify_filed_state_help
-    verify_help: cli.registry.verify_help
-    verify_source_root_help: cli.registry.verify_source_root_help
-    workbooks_app_help: cli.registry.workbooks_app_help
-    workbooks_limit_help: cli.registry.workbooks_limit_help
-    workbooks_output_help: cli.registry.workbooks_output_help
-    workbooks_resume_help: cli.registry.workbooks_resume_help
-    workbooks_root_help: cli.registry.workbooks_root_help
-    workbooks_timeout_help: cli.registry.workbooks_timeout_help
-    workbooks_verify_help: cli.registry.workbooks_verify_help
+      difference_count: 'Eltérések száma'
+      differences: 'Eltérések'
+      drift_count: 'Eltolódások száma'
+      environment: 'Környezet'
+      extraction_profile_count: 'Kinyerési profilok száma'
+      failed_count: 'Sikertelenek száma'
+      failure_count: 'Hibák száma'
+      formula_count: 'Képletek száma'
+      formula_workbook_count: 'Képlet-munkafüzetek száma'
+      legal_reference_count: 'Jogszabályi hivatkozások száma'
+      missing_filed_casillas: 'Hiányzó benyújtott mezők'
+      missing_local_casillas: 'Hiányzó helyi mezők'
+      modelo: 'Nyomtatvány'
+      modelo_count: 'Nyomtatványok száma'
+      modelos: 'Nyomtatványok'
+      observation_paths: 'Megfigyelési útvonalak'
+      orphan_oracle_ids: 'Árva orákulum-azonosítók'
+      passed: 'Sikeres'
+      registered_oracle_ids: 'Regisztrált orákulum-azonosítók'
+      revision: 'Revízió'
+      revision_count: 'Revíziók száma'
+      row_count: 'Sorok száma'
+      runner_detail: 'Futtató részletei'
+      runner_status: 'Futtató állapota'
+      scanned_count: 'Átvizsgált elemek száma'
+      scenario_id: 'Forgatókönyv-azonosító'
+      source_reference_count: 'Forráshivatkozások száma'
+      status: 'Állapot'
+      tape_path: 'Szalag elérési útja'
+      unsupported_xls_count: 'Nem támogatott XLS-ek száma'
+      verification_expectation_count: 'Ellenőrzési elvárások száma'
+      verified: 'Ellenőrzött'
+      workbook_count: 'Munkafüzetek száma'
+      workbook_parity_ref_count: 'Munkafüzet paritás-hivatkozások száma'
+      workbook_path: 'Munkafüzet elérési útja'
+    observation_help: 'A titkosított benyújtott bevallás megfigyelési manifesztje az ellenőrzéshez.'
+    parity_app_help: 'Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.'
+    parity_output_help: 'A generált paritási szalag célpontja (JSON-fájl).'
+    parity_replay_help: 'Egy archivált paritási szalag visszajátszása az aktuális nyilvántartási futásidővel szemben.'
+    parity_run_help: 'Egy tárolt paritási forgatókönyv futtatása és az eredmény archiválása.'
+    parity_scenario_help: 'Egy paritási forgatókönyv JSON-fájljának elérési útja.'
+    parity_store_root_help: 'A generált paritási szalagok tárolásához használt gyökérkönyvtár.'
+    parity_tape_help: 'Egy tárolt paritási szalag JSON-fájljának elérési útja.'
+    source_observation_help: 'A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt titkosított forrásmegfigyelési manifeszt.'
+    verify_filed_state_help: 'A helyi nyilvántartási számítás kimenetének összehasonlítása a rögzített benyújtott AEAT-állapottal.'
+    verify_help: 'A helyi nyilvántartás integritásának ellenőrzése.'
+    verify_source_root_help: 'Az ellenőrzendő forráskönyvtár elérési útja.'
+    workbooks_app_help: 'Nyilvántartási munkafüzetek kezelése.'
+    workbooks_limit_help: 'A fordítandó munkafüzetek számbeli korlátja.'
+    workbooks_output_help: 'A fordított munkafüzetek kimeneti könyvtára.'
+    workbooks_resume_help: 'A munkafüzetek fordításának folytatása az utolsó ponttól.'
+    workbooks_root_help: 'A munkafüzetdefiníciókat tartalmazó gyökérkönyvtár.'
+    workbooks_timeout_help: 'A fordítás maximális időkorlátja (másodpercekben).'
+    workbooks_verify_help: 'A generált munkafüzetek integritásának ellenőrzése.'
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'
@@ -2830,6 +2830,7 @@ errors:
     refused_workflow_aborted: A munkafolyamatot megszakították.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_auth_diagnostic_phone_state: 'A megadott telefonállapot-érték nem ismert. Használjon egy érvényes operátori telefonállapot-értéket.'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:
