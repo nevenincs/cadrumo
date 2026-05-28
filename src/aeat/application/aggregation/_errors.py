@@ -9,8 +9,18 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreError
 from ...core.i18n import Translatable as tr
+
+
+class AggregationConfigError(CoreError, ValueError):
+    """Raised when an aggregation service composition invariant is violated.
+
+    Inherits from ``ValueError`` so pydantic field and model validators
+    surface it through ``ValidationError`` without special handling.
+    Inherits from ``CoreError`` so it participates in the central error
+    registry and ``build_error_envelope``.
+    """
 
 
 class AggregationError(AeatError):
@@ -76,6 +86,7 @@ def t(message: str) -> tr:
 
 __all__ = [
     "AggregationCategoryCoverageError",
+    "AggregationConfigError",
     "AggregationError",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
