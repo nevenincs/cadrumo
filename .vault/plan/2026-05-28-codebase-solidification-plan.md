@@ -177,8 +177,8 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S94` - add real-behavior test asserting IVA-wallet finding next-action is localized; `src/aeat/application/modelo/test_actions.py`.
 - [x] `W01.P03.S95` - replace `_iva_wallet_blocked_message` body with `tr("application.modelo.errors.iva_wallet_blocked", ...)`; `src/aeat/application/modelo/_actions.py`.
 - [x] `W01.P03.S96` - add real-behavior test asserting the IVA-wallet-blocked envelope carries the localized message in `translated_message`; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S97` - route the missing-required-casilla finding `message=` through `tr("application.modelo.findings.missing_required_casilla", casilla_id=...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S98` - add real-behavior test asserting missing-required-casilla output is localized; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S97` - route the missing-required-casilla finding `message=` through `tr("application.modelo.findings.missing_required_casilla", casilla_id=...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S98` - add real-behavior test asserting missing-required-casilla output is localized; `src/aeat/application/modelo/test_actions.py`.
 - [x] `W01.P03.S99` - thread `translated_message="adapters.sede.errors.no_auth_session"` on every `SedeNavigationError` raise across `_auth_state.py`, `_walker.py`, `_iva_compensation_wallet.py`, `_notifications.py`, `_declarations.py`; `src/aeat/adapters/outbound/aeat/sede/_auth_state.py`.
 - [x] `W01.P03.S100` - add real-behavior test asserting every SedeNavigationError raise surfaces the localized translated_message at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_auth_state.py`.
 - [x] `W01.P03.S101` - thread `translated_message="adapters.sede.errors.empty_identity_nif"` on the empty-NIF raise; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
@@ -191,14 +191,14 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S108` - extend the modelo describe test to confirm BadParameter messages are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [x] `W01.P03.S109` - replace the two `raise typer.BadParameter(str(exc))` sites for DT12 / SAL computation with `tr("cli.app.modelo.work.dt12_computation_error", ...)` / `tr("cli.app.modelo.work.sal_computation_error", ...)`; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W01.P03.S110` - add real-behavior test asserting DT12 / SAL computation error surfaces are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W01.P03.S111` - thread `translated_message=` keys on the two `SedeParseError` raises for empty IVA wallet period / amount cells; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
-- [ ] `W01.P03.S112` - add real-behavior test asserting localized IVA-wallet empty-cell envelopes at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py`.
-- [ ] `W01.P03.S113` - replace the DT12 advisory `next_action=` with `tr("application.modelo.findings.dt12a_reduccion_next_action")`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S114` - add real-behavior test asserting DT12 advisory next-action is localized; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S115` - wrap the locales-CLI `typer.echo` messages in `tr("locales.cli.*")` for developer-tooling consistency; `src/aeat/locales/cli.py`.
-- [ ] `W01.P03.S116` - add real-behavior test asserting locales-CLI emits use the catalogue under each supported output language; `src/aeat/locales/test_cli.py`.
-- [ ] `W01.P03.S117` - introduce `DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"` in `aeat.core.i18n._render` and route every `"es"` fallback through it; `src/aeat/core/i18n/_render.py`.
-- [ ] `W01.P03.S118` - add real-behavior test asserting every `"es"` fallback now reads from `DEFAULT_OUTPUT_LANGUAGE`; `src/aeat/core/i18n/test_render_override.py`.
+- [x] `W01.P03.S111` - thread `translated_message=` keys on the two `SedeParseError` raises for empty IVA wallet period / amount cells; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
+- [x] `W01.P03.S112` - add real-behavior test asserting localized IVA-wallet empty-cell envelopes at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py`.
+- [x] `W01.P03.S113` - replace the DT12 advisory `next_action=` with `tr("application.modelo.findings.dt12a_reduccion_next_action")`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S114` - add real-behavior test asserting DT12 advisory next-action is localized; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S115` - wrap the locales-CLI `typer.echo` messages in `tr("locales.cli.*")` for developer-tooling consistency; `src/aeat/locales/cli.py`.
+- [x] `W01.P03.S116` - add real-behavior test asserting locales-CLI emits use the catalogue under each supported output language; `src/aeat/locales/test_cli.py`.
+- [x] `W01.P03.S117` - introduce `DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"` in `aeat.core.i18n._render` and route every `"es"` fallback through it; `src/aeat/core/i18n/_render.py`.
+- [x] `W01.P03.S118` - add real-behavior test asserting every `"es"` fallback now reads from `DEFAULT_OUTPUT_LANGUAGE`; `src/aeat/core/i18n/test_render_override.py`.
 
 ### Phase `W01.P04` - enroll typed pydantic models at boundaries
 
@@ -326,14 +326,14 @@ inputs.
 - [x] `W01.P08.S194` - add real-behavior test asserting the type-guard narrows correctly for valid / invalid callables; `src/aeat/entrypoints/cli/test_errors.py`.
 - [x] `W01.P08.S195` - add inline rationale to every remaining production `cast()` call or refactor to remove the cast; `track each remaining cast as a Wave 2 follow-up Step; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
 - [x] `W01.P08.S196` - add real-behavior test asserting the inline-rationale comment survives a refactor and the cast contract still holds; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
-- [ ] `W01.P08.S197` - refine the Google adapter `-> Any` returns using `google-api-python-client-stubs` if present; `otherwise wrap the response in a `TypedDict`; `src/aeat/adapters/outbound/google/_api.py`.
-- [ ] `W01.P08.S198` - add real-behavior test asserting Google API responses validate against the typed shape; `src/aeat/adapters/outbound/google/test_api.py`.
-- [ ] `W01.P08.S199` - refine the calc-sheets-pull `-> Any` returns using TypedDict or pydantic; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
-- [ ] `W01.P08.S200` - add real-behavior test asserting calc-sheets pull response typing; `src/aeat/adapters/outbound/google/test_calc_sheets_pull.py`.
-- [ ] `W01.P08.S201` - replace `**kwargs: Any` on `invoke_cached_cli` with a TypedDict covering the Click invoke surface; `src/aeat/tests/cli_runner.py`.
-- [ ] `W01.P08.S202` - add real-behavior test asserting CLI test runner rejects unknown kwargs at type-check; `src/aeat/tests/test_cli_runner.py`.
-- [ ] `W01.P08.S203` - add overload signatures to `_scrub_value` so the recursive heterogeneous payload contract is typed precisely; `src/aeat/core/logging.py`.
-- [ ] `W01.P08.S204` - add real-behavior test asserting the overload contract preserves type for str / Mapping / tuple / list / set inputs; `src/aeat/core/test_logging.py`.
+- [x] `W01.P08.S197` - refine the Google adapter `-> Any` returns using `google-api-python-client-stubs` if present; `otherwise wrap the response in a `TypedDict`; `src/aeat/adapters/outbound/google/_api.py`.
+- [x] `W01.P08.S198` - add real-behavior test asserting Google API responses validate against the typed shape; `src/aeat/adapters/outbound/google/test_api.py`.
+- [x] `W01.P08.S199` - refine the calc-sheets-pull `-> Any` returns using TypedDict or pydantic; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
+- [x] `W01.P08.S200` - add real-behavior test asserting calc-sheets pull response typing; `src/aeat/adapters/outbound/google/test_calc_sheets_pull.py`.
+- [x] `W01.P08.S201` - replace `**kwargs: Any` on `invoke_cached_cli` with a TypedDict covering the Click invoke surface; `src/aeat/tests/cli_runner.py`.
+- [x] `W01.P08.S202` - add real-behavior test asserting CLI test runner rejects unknown kwargs at type-check; `src/aeat/tests/test_cli_runner.py`.
+- [x] `W01.P08.S203` - add overload signatures to `_scrub_value` so the recursive heterogeneous payload contract is typed precisely; `src/aeat/core/logging.py`.
+- [x] `W01.P08.S204` - add real-behavior test asserting the overload contract preserves type for str / Mapping / tuple / list / set inputs; `src/aeat/core/test_logging.py`.
 
 ### Phase `W01.P09` - audit test-suite semantic intent and actual coverage
 
