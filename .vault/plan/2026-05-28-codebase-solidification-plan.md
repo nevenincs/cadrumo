@@ -119,8 +119,8 @@ paths; centralize third-party-logger silencing in
 Step that asserts secret scrubbing actually fires on records emitted
 through the affected logger.
 
-- [ ] `W01.P02.S49` - replace module-level `_LOGGER = logging.getLogger(__name__)` with `get_logger(__name__)`; `src/aeat/entrypoints/cli/_stdio.py`.
-- [ ] `W01.P02.S50` - add real-behavior test asserting CLI stdio logger applies `SecretScrubbingFilter` to NIF-shaped records; `src/aeat/entrypoints/cli/test_stdio.py`.
+- [x] `W01.P02.S49` - replace module-level `_LOGGER = logging.getLogger(__name__)` with `get_logger(__name__)`; `src/aeat/entrypoints/cli/_stdio.py`.
+- [x] `W01.P02.S50` - add real-behavior test asserting CLI stdio logger applies `SecretScrubbingFilter` to NIF-shaped records; `src/aeat/entrypoints/cli/test_stdio.py`.
 - [x] `W01.P02.S51` - hoist the function-body `_log = logging.getLogger(__name__)` to module-level `get_logger(__name__)`; `src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W01.P02.S52` - add real-behavior test asserting overview logger scrubs taxpayer data; `src/aeat/entrypoints/cli/test_overview.py`.
 - [x] `W01.P02.S53` - replace the inline `_logging.getLogger(__name__)` with module-level `get_logger`; `src/aeat/core/errors/_registry.py`.
@@ -360,7 +360,7 @@ strengthens the test, never weakens or skips it.
 - [x] `W01.P09.S218` - add real-behavior test asserting persistence boundary inventory matches roundtrip-test inventory; `src/aeat/test_roundtrip_coverage.py`.
 - [x] `W01.P09.S219` - sample 20 random production-test pairings for semantic-intent drift (test asserts incidental shape rather than behaviour); `record each as a follow-up Step; `src/aeat`.
 - [x] `W01.P09.S220` - add real-behavior test asserting the sample-review process runs against a deterministic seed and produces reproducible output; `src/aeat/test_semantic_intent_sampler.py`.
-- [ ] `W01.P09.S221` - enumerate every `try: ... except: pass` shape in test files; `replace each with a specific exception assertion; `src/aeat`.
-- [ ] `W01.P09.S222` - add real-behavior test asserting zero bare-except shapes survive in the test surface; `src/aeat/test_no_bare_except.py`.
-- [ ] `W01.P09.S223` - enumerate every test that constructs a pydantic model with only the required fields populated (per `aeat-roundtrip-discipline.md`'s "populate every defaultable field" rule); `record each as a follow-up Step; `src/aeat`.
-- [ ] `W01.P09.S224` - add real-behavior test asserting roundtrip-fixture builders saturate every defaultable field; `src/aeat/test_roundtrip_fixture_saturation.py`.
+- [x] `W01.P09.S221` - enumerate every `try: ... except: pass` shape in test files; `replace each with a specific exception assertion; `src/aeat`.
+- [x] `W01.P09.S222` - add real-behavior test asserting zero bare-except shapes survive in the test surface; `src/aeat/test_no_bare_except.py`.
+- [x] `W01.P09.S223` - enumerate every test that constructs a pydantic model with only the required fields populated (per `aeat-roundtrip-discipline.md`'s "populate every defaultable field" rule); `record each as a follow-up Step; `src/aeat`.
+- [x] `W01.P09.S224` - add real-behavior test asserting roundtrip-fixture builders saturate every defaultable field; `src/aeat/test_roundtrip_fixture_saturation.py`.
