@@ -16,8 +16,14 @@ from aeat.application.user_profile._orchestration import (
 )
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
+from aeat.core.i18n import tr
 from aeat.diagnostics.__main__ import app
 from aeat.tests.secure_sql import isolated_profile_storage_root
+
+
+def _unset_placeholder() -> str:
+    """Resolve the locale-authoritative unset placeholder at call time."""
+    return tr("cli.diagnostics.profile.unset_placeholder")
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -118,7 +124,7 @@ def test_profile_unset_explicit_profile_updates_named_bucket_not_active_bucket(r
     result = runner.invoke(app, ["profile", "unset", "identity.name", "--profile", "named"])
 
     assert result.exit_code == 0, result.output
-    assert "identity.name\t<unset>" in result.output
+    assert f"identity.name\t{_unset_placeholder()}" in result.output
     assert _read_fact("named", "identity.name") is None
     assert _read_fact("active", "identity.name") == "Test Operator"
 
@@ -131,6 +137,36 @@ def test_profile_unset_uses_canonical_case_insensitive_key(runner: CliRunner) ->
     result = runner.invoke(app, ["profile", "unset", "IDENTITY.NAME"])
 
     assert result.exit_code == 0, result.output
-    assert "identity.name\t<unset>" in result.output
+    assert f"identity.name\t{_unset_placeholder()}" in result.output
     assert "IDENTITY.NAME" not in result.output
     assert _read_fact("active", "identity.name") is None
+
+
+def test_profile_get_unset_value_emits_localized_placeholder(runner: CliRunner) -> None:
+    """The unset placeholder in profile get is resolved through the locale, not hardcoded."""
+    _seed_profile("active")
+    select_profile_with_lifecycle_span("active")
+    dispose_engine()
+    # identity.surnames is optional and absent in a minimal seeded profile.
+    result = runner.invoke(app, ["profile", "get", "identity.surnames"])
+
+    assert result.exit_code == 0, result.output
+    placeholder = _unset_placeholder()
+    assert f"identity.surnames\t{placeholder}" in result.output
+    # Confirm the literal English fallback is absent when locale resolves differently.
+    if placeholder != "<unset>":
+        assert "identity.surnames\t<unset>" not in result.output
+
+
+def test_profile_unset_emits_localized_placeholder(runner: CliRunner) -> None:
+    """The unset placeholder in profile unset is resolved through the locale, not hardcoded."""
+    _seed_profile("active")
+    select_profile_with_lifecycle_span("active")
+    dispose_engine()
+
+    result = runner.invoke(app, ["profile", "unset", "identity.name"])
+
+    assert result.exit_code == 0, result.output
+    assert f"identity.name\t{_unset_placeholder()}" in result.output
+    if _unset_placeholder() != "<unset>":
+        assert "identity.name\t<unset>" not in result.output
