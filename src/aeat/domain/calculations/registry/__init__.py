@@ -195,6 +195,7 @@ from ._runtime_graph import (
 from ._schedules import applicable_filing_schedules, evaluate_profile_conditions, profile_condition_matches
 from ._schema import (
     ApplicationLinkDefinition,
+    BboxAnchorSpec,
     BracketEntry,
     CalculationCompletenessCasilla,
     CalculationCompletenessManifest,
@@ -294,6 +295,7 @@ __all__ = [
     "RENTA_WEB_OPEN_APP_URL",
     "RENTA_WEB_OPEN_LANDING_URL",
     "ApplicationLinkDefinition",
+    "BboxAnchorSpec",
     "BracketEntry",
     "CalculationCompletenessCasilla",
     "CalculationCompletenessManifest",
