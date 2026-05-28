@@ -15,15 +15,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 import pytest
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 
 from ._errors import RegistryValidationError
+
 from ._live_parity import (
     LiveParityCatalogue,
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
+    ReplayPayload,
     assert_oracle_operations_allowed,
+    decode_replay_json_payload,
     evaluate_planned_operations,
     pre_flight_oracle_operations,
 )
@@ -365,3 +368,96 @@ def test_oracle_verify_payload_raises_when_planned_operation_blocked() -> None:
 
     with pytest.raises(RegistryValidationError, match=r"policy|method|forbidden|operation"):
         oracle.verify_payload(policy, b"", expected={})
+
+
+# ---------------------------------------------------------------------------
+# ReplayPayload roundtrip tests (S120)
+# ---------------------------------------------------------------------------
+
+
+def test_replay_payload_accepts_well_formed_payload() -> None:
+    """decode_replay_json_payload returns a typed ReplayPayload for valid input."""
+    raw = b'{"observed": {"B01": "conforme", "B02": "no_conforme"}, "raw_evidence_locator": "https://example.com/r/1"}'
+    result = decode_replay_json_payload(raw, surface_label="test surface")
+    assert isinstance(result, ReplayPayload)
+    assert result.observed == {"B01": "conforme", "B02": "no_conforme"}
+    assert result.raw_evidence_locator == "https://example.com/r/1"
+
+
+def test_replay_payload_accepts_payload_without_locator() -> None:
+    """raw_evidence_locator is optional; absent key decodes cleanly."""
+    raw = b'{"observed": {"X99": "ok"}}'
+    result = decode_replay_json_payload(raw, surface_label="test surface")
+    assert result.raw_evidence_locator is None
+    assert dict(result.observed) == {"X99": "ok"}
+
+
+def test_replay_payload_rejects_missing_observed_field() -> None:
+    """model_validate raises ValidationError when 'observed' is absent."""
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"raw_evidence_locator": None})
+
+
+def test_replay_payload_rejects_observed_with_non_string_values() -> None:
+    """strict=True rejects integer values in observed — no coercion."""
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": {"B01": 42}})
+
+
+def test_replay_payload_rejects_observed_with_non_string_keys() -> None:
+    """strict=True rejects non-string keys in observed mapping."""
+    # JSON always produces str keys; the path that matters is Python-level
+    # model_validate with a dict that has non-str keys.
+    with pytest.raises((ValidationError, Exception)):
+        ReplayPayload.model_validate({"observed": {1: "value"}})
+
+
+def test_replay_payload_rejects_extra_fields() -> None:
+    """extra='forbid' rejects unknown top-level keys."""
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": {}, "unexpected_key": "x"})
+
+
+def test_replay_payload_rejects_non_object_observed() -> None:
+    """observed must be a mapping, not a list or scalar."""
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": ["a", "b"]})
+
+
+def test_decode_replay_json_payload_rejects_non_utf8_bytes() -> None:
+    """Non-UTF-8 bytes raise RegistryValidationError, not a bare codec error."""
+    raw = b"\xff\xfe invalid utf-8"
+    with pytest.raises(RegistryValidationError, match="UTF-8 JSON"):
+        decode_replay_json_payload(raw, surface_label="test surface")
+
+
+def test_decode_replay_json_payload_rejects_json_array() -> None:
+    """A JSON array at the top level is rejected as not a JSON object."""
+    raw = b'["observed", {}]'
+    with pytest.raises(RegistryValidationError, match="JSON object"):
+        decode_replay_json_payload(raw, surface_label="test surface")
+
+
+def test_decode_replay_json_payload_rejects_invalid_json() -> None:
+    """Malformed JSON raises RegistryValidationError."""
+    raw = b"{not valid json"
+    with pytest.raises(RegistryValidationError, match="UTF-8 JSON"):
+        decode_replay_json_payload(raw, surface_label="test surface")
+
+
+def test_replay_payload_anti_tautology() -> None:
+    """Mutating the decoded payload's required field surfaces a real failure.
+
+    Encodes the boundary contract: loading a payload with 'observed' deleted
+    must NOT succeed. This proves the roundtrip test cannot silently pass
+    when the schema is broken.
+    """
+    import json
+
+    good = {"observed": {"B01": "ok"}}
+    broken = {k: v for k, v in good.items() if k != "observed"}
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate(broken)
+    # Confirm the good payload does validate (proving the test isn't vacuous).
+    result = ReplayPayload.model_validate(good)
+    assert result.observed == {"B01": "ok"}

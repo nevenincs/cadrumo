@@ -125,18 +125,7 @@ class RentaWebOpenReplayDriver:
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
         document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
-        observed = document.get("observed")
-        if not isinstance(observed, dict):
-            raise RegistryValidationError("Renta WEB Open replay payload must contain an observed object")
-        values: dict[str, str] = {}
-        for key, value in observed.items():
-            if not isinstance(key, str) or not isinstance(value, str):
-                raise RegistryValidationError("Renta WEB Open replay observed values must be string keyed strings")
-            values[key] = value
-        locator = document.get("raw_evidence_locator")
-        if locator is not None and not isinstance(locator, str):
-            raise RegistryValidationError("Renta WEB Open replay raw_evidence_locator must be a string")
-        return RentaWebOpenObservation(values=values, raw_evidence_locator=locator)
+        return RentaWebOpenObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
 
 
 class RentaWebOpenOracle:

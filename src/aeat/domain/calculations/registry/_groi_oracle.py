@@ -146,18 +146,7 @@ class GroiReplayDriver:
     ) -> GroiObservation:
         del expected
         document = decode_replay_json_payload(payload, surface_label="GROI replay")
-        observed = document.get("observed")
-        if not isinstance(observed, dict):
-            raise RegistryValidationError("GROI replay payload must contain an observed object")
-        values: dict[str, str] = {}
-        for nif, verdict in observed.items():
-            if not isinstance(nif, str) or not isinstance(verdict, str):
-                raise RegistryValidationError("GROI replay observed values must be string-keyed strings")
-            values[nif] = verdict
-        locator = document.get("raw_evidence_locator")
-        if locator is not None and not isinstance(locator, str):
-            raise RegistryValidationError("GROI replay raw_evidence_locator must be a string")
-        return GroiObservation(values=values, raw_evidence_locator=locator)
+        return GroiObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
 
 
 class GroiOracle(BaseCheckerOracle[GroiObservation]):
