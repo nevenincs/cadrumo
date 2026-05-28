@@ -48,6 +48,9 @@ W15.P33 inventories the secure-storage hierarchy constants that still define per
 | `ledger_classification_rules` | `aeat.ledger.classification.rules` | AUDIT | 1 | `{rule_id}` |
 | `live_borrador_100_snapshot` | `aeat.application.live.borrador_100_snapshot` | FINANCIAL | 1 | `modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}` |
 | `live_census_snapshot` | `aeat.application.live.census_snapshot` | IDENTITY | 1 | `census-snapshot:{bucket_id}:{snapshot_id}` |
+| `live_expedientes_snapshot` | `aeat.application.live.expedientes_snapshot` | FINANCIAL | 1 | `expedientes-snapshot:{bucket_id}:{snapshot_id}` |
+| `live_notifications_snapshot` | `aeat.application.live.notifications_snapshot` | FINANCIAL | 1 | `notifications-snapshot:{bucket_id}:{snapshot_id}` |
+| `live_verify_observations` | `aeat.application.live.verify_observations` | IDENTITY | 1 | `verify-observation:{bucket_id}:{observation_id}` |
 | `aeat_browser_sessions` | `aeat.outbound.aeat.auth.sessions` | SESSION | 1 | `{storage_state_path_posix}` |
 | `clave_movil_diagnostics` | `aeat.outbound.aeat.auth.clave_movil.diagnostics` | SESSION | 1 | `{diagnostic_id_or_timestamp_iso}` |
 | `google_oauth_client` | `aeat.google.oauth.client` | SECRET | 1 | `{profile}` |

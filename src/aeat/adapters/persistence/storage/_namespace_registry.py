@@ -352,6 +352,42 @@ LIVE_CENSUS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     object_key_grammar="census-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
 )
+TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="test_snapshot_base_probe",
+    namespace="aeat.application.live.test_snapshot_base_probe",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="snapshot-base-probe:{bucket_id}:{snapshot_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_expedientes_snapshot",
+    namespace="aeat.application.live.expedientes_snapshot",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="expedientes-snapshot:{bucket_id}:{snapshot_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_notifications_snapshot",
+    namespace="aeat.application.live.notifications_snapshot",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="notifications-snapshot:{bucket_id}:{snapshot_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
+LIVE_VERIFY_OBSERVATION_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_verify_observations",
+    namespace="aeat.application.live.verify_observations",
+    owner="aeat.application.live",
+    sensitivity=SensitivityClass.IDENTITY,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="verify-observation:{bucket_id}:{observation_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+)
 ATTACHMENT_BLOB_NAMESPACE = SecureObjectNamespaceDefinition(
     key="attachment_blobs",
     namespace="aeat.domain.attachments.blobs",
@@ -680,6 +716,10 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LEDGER_CLASSIFICATION_RULES_NAMESPACE,
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSUS_SNAPSHOT_NAMESPACE,
+        TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+        LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+        LIVE_VERIFY_OBSERVATION_NAMESPACE,
         ATTACHMENT_BLOB_NAMESPACE,
         ATTACHMENT_MANIFEST_NAMESPACE,
         AEAT_BROWSER_SESSION_NAMESPACE,
@@ -730,7 +770,10 @@ __all__ = [
     "LEDGER_CLASSIFICATION_RULES_NAMESPACE",
     "LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE",
     "LIVE_CENSUS_SNAPSHOT_NAMESPACE",
+    "LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE",
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
+    "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
+    "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",
     "LLM_USAGE_NAMESPACE",
     "PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE",
@@ -744,6 +787,7 @@ __all__ = [
     "SECURE_OBJECT_WORKFLOW_STATE_KEY",
     "STORAGE_NAMESPACE_REGISTRY",
     "STORAGE_PATH_DEFINITIONS",
+    "TEST_SNAPSHOT_BASE_PROBE_NAMESPACE",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
     "WORKFLOW_RUN_NAMESPACE",
