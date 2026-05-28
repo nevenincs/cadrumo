@@ -253,8 +253,8 @@ asserts every caller now imports from the canonical home.
 - [ ] `W01.P05.S150` - add real-behavior test asserting each date variant rejects the foreign format; `src/aeat/core/parsing/test_dates.py`.
 - [x] `W01.P05.S151` - consolidate `_format_decimal` into `aeat.core.decimal._format`; `delete the four peer copies; `src/aeat/core/decimal/_format.py`.
 - [x] `W01.P05.S152` - add real-behavior test asserting decimal-format produces stable output for representative values; `src/aeat/core/decimal/test_format.py`.
-- [ ] `W01.P05.S153` - reconcile `_coerce_decimal` signatures; `canonicalize under `aeat.core.decimal._coerce`; delete the three peer copies; `src/aeat/core/decimal/_coerce.py`.
-- [ ] `W01.P05.S154` - add real-behavior test asserting coerce-decimal handles None / int / str / Decimal / malformed inputs per the canonical signature; `src/aeat/core/decimal/test_coerce.py`.
+- [x] `W01.P05.S153` - reconcile `_coerce_decimal` signatures; `canonicalize under `aeat.core.decimal._coerce`; delete the three peer copies; `src/aeat/core/decimal/_coerce.py`.
+- [x] `W01.P05.S154` - add real-behavior test asserting coerce-decimal handles None / int / str / Decimal / malformed inputs per the canonical signature; `src/aeat/core/decimal/test_coerce.py`.
 
 ### Phase `W01.P06` - eliminate stubs and dead branches
 
