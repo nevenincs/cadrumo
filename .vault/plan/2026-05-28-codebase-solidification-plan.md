@@ -131,10 +131,10 @@ through the affected logger.
 - [x] `W01.P02.S58` - add real-behavior test asserting `pdfminer` logger level is governed by `aeat.core.logging` dictConfig; `src/aeat/core/test_logging.py`.
 - [x] `W01.P02.S59` - delete the duplicated `pdfminer` mutation; `rely on the centralized `loggers` block; `src/aeat/domain/calculations/registry/_record_design.py`.
 - [x] `W01.P02.S60` - extend the dictConfig test to confirm both `_pdfplumber.py` and `_record_design.py` paths defer to centralized config; `src/aeat/core/test_logging.py`.
-- [ ] `W01.P02.S61` - replace the root-logger level-patch traversal with a `set_log_level(level)` helper exposed by `aeat.core.logging`; `src/aeat/entrypoints/cli/_log_levels.py`.
-- [ ] `W01.P02.S62` - add real-behavior test asserting the helper updates root + every attached handler under every dictConfig variant; `src/aeat/entrypoints/cli/test_log_levels.py`.
-- [ ] `W01.P02.S63` - install `SecretScrubbingFilter` on the sink before `root_logger.addHandler(sink)`; `expose `attach_run_sink(sink)` helper in `aeat.core.logging`; `src/aeat/core/observability/_context.py`.
-- [ ] `W01.P02.S64` - add real-behavior test asserting JSONL run sink records are scrubbed before persistence; `src/aeat/core/observability/test_context_propagation.py`.
+- [x] `W01.P02.S61` - replace the root-logger level-patch traversal with a `set_log_level(level)` helper exposed by `aeat.core.logging`; `src/aeat/entrypoints/cli/_log_levels.py`.
+- [x] `W01.P02.S62` - add real-behavior test asserting the helper updates root + every attached handler under every dictConfig variant; `src/aeat/entrypoints/cli/test_log_levels.py`.
+- [x] `W01.P02.S63` - install `SecretScrubbingFilter` on the sink before `root_logger.addHandler(sink)`; `expose `attach_run_sink(sink)` helper in `aeat.core.logging`; `src/aeat/core/observability/_context.py`.
+- [x] `W01.P02.S64` - add real-behavior test asserting JSONL run sink records are scrubbed before persistence; `src/aeat/core/observability/test_context_propagation.py`.
 - [ ] `W01.P02.S65` - replace the auth-waiting `print(line, file=stream, flush=True)` with a typed CLI renderer routed through a structured logger; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
 - [ ] `W01.P02.S66` - add real-behavior test asserting auth waiting messages never carry unmasked verification codes through stderr; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
 - [ ] `W01.P02.S67` - replace `sys.stdout.write` with an injected render primitive; `src/aeat/application/wizard/_prompter.py`.
