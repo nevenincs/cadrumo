@@ -280,8 +280,8 @@ time and at runtime.
 
 - [x] `W01.P07.S159` - promote `InputKind` Literal to `StrEnum`; `place it alongside the Casilla model in the registry schema; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `W01.P07.S160` - add real-behavior test asserting `InputKind` rejects unknown tokens and round-trips through the registry; `src/aeat/domain/calculations/registry/test_schema.py`.
-- [ ] `W01.P07.S161` - replace the 27 bare-string `input_kind == "..."` comparisons across 12 files with `InputKind.<MEMBER>`; `src/aeat/application/filing/__init__.py`.
-- [ ] `W01.P07.S162` - add real-behavior test asserting every former bare-string comparison still produces its historical truth value under the enum surface; `src/aeat/application/filing/test_init.py`.
+- [x] `W01.P07.S161` - replace the 27 bare-string `input_kind == "..."` comparisons across 12 files with `InputKind.<MEMBER>`; `src/aeat/application/filing/__init__.py`.
+- [x] `W01.P07.S162` - add real-behavior test asserting every former bare-string comparison still produces its historical truth value under the enum surface; `src/aeat/application/filing/test_init.py`.
 - [x] `W01.P07.S163` - replace the 53 raw `"ledger_transaction"` / `"purchase_invoice_evidence"` / `"payable_invoice"` / `"collectible_invoice"` literals with `AggregationSourceKind` members across 8 files; `src/aeat/application/aggregation/_counterpart.py`.
 - [x] `W01.P07.S164` - add real-behavior test asserting every aggregation source-kind tuple matches the StrEnum surface; `src/aeat/application/aggregation/test_service.py`.
 - [x] `W01.P07.S165` - replace the 4 raw `"pending"` / `"reviewed"` / `"skipped"` returns with `ReviewStatusFilter` members; `src/aeat/application/invoices/_projection.py`.
