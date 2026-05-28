@@ -2798,45 +2798,43 @@ Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamen
       bienes-extranjero-above-threshold:
         prompt: 'Külföldi vagyon meghaladja a jogszabályi küszöbértéket'
       does-intracomunitario:
-        prompt: wizard.setup.obligations.does-intracomunitario.prompt
+        prompt: 'Végez intraközösségi ügyleteket'
       has-employees:
-        prompt: wizard.setup.obligations.has-employees.prompt
+        prompt: 'Alkalmazottai vannak és forrásadóval terhelt béreket fizet'
       irpf-estimation-regime:
         choices:
           directa-normal:
-            label: wizard.setup.obligations.irpf-estimation-regime.choices.directa-normal.label
+            label: 'Közvetlen becslés, normál'
           directa-simplificada:
-            label: wizard.setup.obligations.irpf-estimation-regime.choices.directa-simplificada.label
+            label: 'Közvetlen becslés, egyszerűsített'
           objetiva:
-            label: wizard.setup.obligations.irpf-estimation-regime.choices.objetiva.label
-        help: wizard.setup.obligations.irpf-estimation-regime.help
-        prompt: wizard.setup.obligations.irpf-estimation-regime.prompt
+            label: 'Objektív becslés (módszerek)'
+        help: 'A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza, hogy Modelo 130 vagy 131 alkalmazandó-e'
+        prompt: 'IRPF becslési rend'
       irpf-special-regime:
         choices:
           general:
-            label: Általános rendszer
+            label: 'Általános adózási rend'
           impatriado:
-            label: Külföldről érkező munkavállaló — Beckham-törvény (LIRPF 93. cikk)
-        help: A kiküldöttek (Beckham-törvény) rendszere a beköltözés utáni első 6
-          adóévben alkalmazható. A legtöbb adózó az általános rendszerben adózik.
-        prompt: IRPF különleges adórendszer (Beckham-törvény / LIRPF 93. cikk)
+            label: 'Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)'
+        help: 'A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első 6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.'
+        prompt: 'IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)'
       irpf-special-regime-start-date:
-        help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (RIRPF
-          116. cikk). A rendszer a 6. naptári év végén jár le.
-        prompt: A különleges adórendszer kezdési dátuma (ÉÉÉÉ-HH-NN)
+        help: 'A munkavállaló kiküldött adózási rendbe lépésének dátuma (RIRPF 116. cikkely). Az adózási rend a 6. naptári év végén jár le.'
+        prompt: 'A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)'
       pays-capital-income-with-retencion:
-        prompt: wizard.setup.obligations.pays-capital-income-with-retencion.prompt
+        prompt: 'Forrásadóval terhelt tőkejövedelmet fizet'
       pays-professionals-with-retencion:
-        prompt: wizard.setup.obligations.pays-professionals-with-retencion.prompt
+        prompt: 'Forrásadóval terhelt díjazást fizet szakembereknek'
       pays-rent-with-retencion:
-        prompt: wizard.setup.obligations.pays-rent-with-retencion.prompt
+        prompt: 'Forrásadóval terhelt helyi bérleti díjat fizet'
       professional-income-withholding-ge-70pct:
-        prompt: wizard.setup.obligations.professional-income-withholding-ge-70pct.prompt
+        prompt: 'A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt'
       third-party-transactions-above-347-threshold:
-        prompt: wizard.setup.obligations.third-party-transactions-above-347-threshold.prompt
-      title: wizard.setup.obligations.title
+        prompt: 'Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét'
+      title: 'Modelo kötelezettségek'
       uses-objective-estimation-irpf:
-        prompt: wizard.setup.obligations.uses-objective-estimation-irpf.prompt
+        prompt: 'IRPF objektív becslés szerint adózik'
     profile:
       activity:
         prompt: wizard.setup.profile.activity.prompt
