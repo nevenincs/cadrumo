@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.invoices import Invoice, InvoiceCatalogue, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.invoices._errors import InvoiceValidationError
 
@@ -46,7 +47,7 @@ def parse_invoice_payload(raw: str, *, default_kind: InvoiceKind | str) -> tuple
         if isinstance(raw_kind, str):
             payload["kind"] = raw_kind.lower()
 
-        payload.setdefault("currency", "EUR")
+        payload.setdefault("currency", DEFAULT_CURRENCY)
         payload.setdefault("counterparty_country", "ES")
         payload.setdefault("payment_status", "PAID")
         payload.setdefault("counterparty_name", payload.get("counterparty_tax_id", "Unknown"))

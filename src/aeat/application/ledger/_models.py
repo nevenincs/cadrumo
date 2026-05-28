@@ -10,6 +10,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.iva._schema import EUMemberState, IvaCategory
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
@@ -45,7 +46,7 @@ class ManualLedgerTransactionCommand(BaseModel):
     booked_date: date
     value_date: date | None = None
     amount: Decimal
-    currency: str = Field(default="EUR", min_length=3)
+    currency: str = Field(default=DEFAULT_CURRENCY, min_length=3)
     direction: TransactionDirection
     counterparty: str | None = None
     description: str = Field(min_length=1)

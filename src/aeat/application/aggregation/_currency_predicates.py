@@ -12,6 +12,7 @@ This module provides two predicates that replace the three independent
 
 from __future__ import annotations
 
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions._models import Transaction
 
 
@@ -32,7 +33,7 @@ def is_non_eur_without_conversion(transaction: Transaction) -> bool:
     Returns:
         ``True`` if the currency is foreign and no EUR equivalent is available.
     """
-    return transaction.raw.currency != "EUR" and transaction.value_in_eur is None
+    return transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None
 
 
 def effective_eur_amount(transaction: Transaction) -> object:

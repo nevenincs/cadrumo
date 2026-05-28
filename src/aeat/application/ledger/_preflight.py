@@ -7,6 +7,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator
 
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -177,7 +178,7 @@ def _issues_for_transaction(transaction: Transaction) -> tuple[LedgerPreflightIs
         )
     if transaction.business_classification is BusinessClassification.PERSONAL:
         return ()
-    if transaction.raw.currency != "EUR":
+    if transaction.raw.currency != DEFAULT_CURRENCY:
         issues.append(
             LedgerPreflightIssue(
                 **common,

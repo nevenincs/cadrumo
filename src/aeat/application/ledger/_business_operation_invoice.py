@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.time import _now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -163,7 +164,7 @@ class BusinessOperationInvoice(BaseModel):
     counterparty_name: str = Field(default="", max_length=200)
     invoice_number: str = Field(min_length=1, max_length=100)
     invoice_date: str = Field(min_length=10, max_length=10)
-    currency: str = Field(default="EUR", min_length=3, max_length=3)
+    currency: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     taxable_base: Decimal = Field(default=Decimal("0"))
     iva_rate: Decimal | None = Field(default=None)
     iva_amount: Decimal = Field(default=Decimal("0"))
@@ -357,7 +358,7 @@ class _BusinessOperationInvoiceService:
         invoice_number: str,
         invoice_date: str,
         counterparty_name: str = "",
-        currency: str = "EUR",
+        currency: str = DEFAULT_CURRENCY,
         taxable_base: Decimal = Decimal("0"),
         iva_rate: Decimal | None = None,
         iva_amount: Decimal = Decimal("0"),
