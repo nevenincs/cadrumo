@@ -3235,6 +3235,7 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_auth_diagnostic_phone_state: 'El valor de estado del teléfono proporcionado no se reconoce. Utilice uno de los valores válidos de estado de teléfono del operador.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

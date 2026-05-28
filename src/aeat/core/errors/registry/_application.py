@@ -147,6 +147,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._errors.AuthDiagnosticPhoneStateError",
+        ErrorCode(
+            code="REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_diagnostic_phone_state",
+            default_suggestion="aeat app auth diagnostics --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.config_reset.ConfigResetUnconfirmedError",
         ErrorCode(
             code="REFUSED_CONFIG_RESET_UNCONFIRMED",

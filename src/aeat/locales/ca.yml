@@ -3206,6 +3206,7 @@ errors:
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_auth_diagnostic_phone_state: 'El valor d’estat del telèfon proporcionat no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

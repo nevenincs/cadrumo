@@ -10,9 +10,11 @@ import pytest
 
 from ...adapters.outbound.aeat.auth import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from ...adapters.persistence.storage import SensitivityClass
+from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.external_constants import load_external_constants
 from ...tests.secure_sql import isolated_runtime_profile
 from ._diagnostics import list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
+from ._errors import AuthDiagnosticPhoneStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -148,5 +150,20 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert relisted.rows[0].phone_state == "app_did_not_prompt"
         assert relisted.rows[0].phone_state_reported_at == report.reported_at
         assert record_auth_diagnostic_phone_state("missing", "app_did_not_prompt") is None
-        with pytest.raises(ValueError):
+        with pytest.raises(AuthDiagnosticPhoneStateError) as exc_info:
             record_auth_diagnostic_phone_state("diag-new", "guessed")
+        assert exc_info.value.context == {"phone_state": "guessed"}
+
+
+def test_auth_diagnostic_phone_state_error_is_in_error_registry() -> None:
+    assert "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE" in ERROR_REGISTRY
+
+
+def test_auth_diagnostic_phone_state_error_round_trips_through_build_error_envelope() -> None:
+    err = AuthDiagnosticPhoneStateError(
+        "not_a_valid_state", context={"phone_state": "not_a_valid_state"}
+    )
+    envelope = build_error_envelope(err)
+    assert envelope.code == "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE"
+    assert envelope.category == "REFUSED"
+    assert envelope.message
