@@ -2129,6 +2129,221 @@ def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) 
     c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
 
 
+@dataclass(frozen=True)
+class _Modelo390CorpusFixture:
+    """Synthetic M390 corpus fixture with formula-consistent casilla values.
+
+    The closure casilla ``iva.anual.resultado-regimen-general`` (form box 65) is
+    derived from the registry formula:
+      box65 = box47 - box64
+            = (box06 + box04 + box02 + box26) - (box49 + box26)
+
+    Where:
+      box02 = iva.anual.repercutido.super-reducido   (4% rate, leaf input)
+      box04 = iva.anual.repercutido.reducido          (10% rate, leaf input)
+      box06 = iva.anual.repercutido.general           (21% rate, leaf input)
+      box26 = iva.anual.autorepercutido.intracomunitaria (intracom 21%, leaf input)
+      box49 = iva.anual.soportado.interiores          (total ded. interiores, leaf input)
+
+    Computed:
+      box47 = box06 + box04 + box02 + box26           [cuota-devengada-total]
+      box64 = box49 + box26                            [cuota-deducible-total]
+      box65 = box47 - box64                            [resultado-regimen-general]
+
+    No intracomunitaria (box26=0) in the simple-case fixture.
+    No compensation carry-forwards (97/662 = 0).
+
+    Registry source: src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/
+      formulas/0001-formulas.toml (modelo-390-iva-anual-cuota-devengada-total,
+      modelo-390-iva-anual-cuota-deducible-total,
+      modelo-390-iva-anual-resultado-regimen-general)
+    Legal refs: ley-37-1992:art-88, art-90, art-91, art-92; orden-eha-3111-2009:art-1
+    """
+
+    filename: str
+    ejercicio: str
+    tax_id: str
+    c06: Decimal  # repercutido.general 21% (leaf input, box 06)
+    c04: Decimal  # repercutido.reducido 10% (leaf input, box 04)
+    c02: Decimal  # repercutido.super-reducido 4% (leaf input, box 02)
+    c26: Decimal  # autorepercutido.intracomunitaria (leaf input, box 26)
+    c49: Decimal  # soportado.interiores (leaf input, box 49)
+    # Derived via _compute_m390_closure:
+    c47: Decimal  # cuota-devengada-total = c06 + c04 + c02 + c26
+    c64: Decimal  # cuota-deducible-total = c49 + c26
+    c65: Decimal  # resultado-regimen-general = c47 - c64
+
+
+def _compute_m390_closure(
+    c06: Decimal,
+    c04: Decimal,
+    c02: Decimal,
+    c26: Decimal,
+    c49: Decimal,
+) -> tuple[Decimal, Decimal, Decimal]:
+    """Compute M390 closure casillas from leaf inputs.
+
+    Formula chain (no compensation carry-forward):
+      c47 = c06 + c04 + c02 + c26    [modelo-390-iva-anual-cuota-devengada-total]
+      c64 = c49 + c26                 [modelo-390-iva-anual-cuota-deducible-total]
+      c65 = c47 - c64                 [modelo-390-iva-anual-resultado-regimen-general]
+
+    All values rounded to money-2 (2 decimal places) consistent with registry
+    rounding declarations.
+
+    Arithmetic grounded in Orden EHA/3111/2009 art. 1 and the registry formula
+    expressions in formulas/0001-formulas.toml.
+    """
+    c47 = (c06 + c04 + c02 + c26).quantize(Decimal("0.01"))
+    c64 = (c49 + c26).quantize(Decimal("0.01"))
+    c65 = (c47 - c64).quantize(Decimal("0.01"))
+    return c47, c64, c65
+
+
+# M390 corpus fixtures: 2 specimens (2022-0A, 2023-0A).
+# Leaf inputs chosen to represent a realistic IVA autonomo annual summary:
+#   - box06 (21% devengado) ~50 000 EUR gross annual IVA at 21% → ~10 500 EUR
+#   - box04/02 = 0 (no reduced/super-reduced IVA activities — simple case)
+#   - box26 = 0 (no intracomunitaria acquisitions — simple case)
+#   - box49 (deducible interiores) = ~80% of box06 → leaves ~20% net to pay
+# Per-specimen variation: box06 and box49 differ slightly between 2022 and 2023.
+# This ensures distinct per-specimen PDF bytes and realistic non-uniform values.
+
+def _m390_fixture(
+    filename: str,
+    ejercicio: str,
+    tax_id: str,
+    c06: Decimal,
+    c49: Decimal,
+) -> _Modelo390CorpusFixture:
+    """Construct a simple-case M390 fixture (no reduced/super-reduced/intracomunitaria).
+
+    c04=c02=c26=0 for all specimens in this suite (no reduced-rate activities,
+    no intracomunitaria acquisitions).  c47/c64/c65 are derived via the formula.
+    """
+    _zero = Decimal("0.00")
+    c47, c64, c65 = _compute_m390_closure(c06, _zero, _zero, _zero, c49)
+    return _Modelo390CorpusFixture(
+        filename=filename,
+        ejercicio=ejercicio,
+        tax_id=tax_id,
+        c06=c06,
+        c04=_zero,
+        c02=_zero,
+        c26=_zero,
+        c49=c49,
+        c47=c47,
+        c64=c64,
+        c65=c65,
+    )
+
+
+_MODELO_390_CORPUS_FIXTURES: tuple[_Modelo390CorpusFixture, ...] = (
+    _m390_fixture("390/2022-0A.pdf", "2022", "Y0000001S", Decimal("10500.00"), Decimal("8400.00")),
+    _m390_fixture("390/2023-0A.pdf", "2023", "Y0000001S", Decimal("12600.00"), Decimal("9800.00")),
+)
+
+
+# M390 bbox layout constants.
+# The declaracion_pdf extraction profile uses anchor_x_min=407.0, anchor_x_max=425.0
+# for the leaf bbox_anchored casillas (boxes 02/04/06/26/49), with value_offset="right_of_number".
+# Place box numbers within the anchor window; values at x=480 (right of anchor).
+_M390_BOX_X = 414.0   # x-position for box number text (within anchor 407-425)
+_M390_VAL_X = 480.0   # x-position for value text (right of box number)
+_M390_ROW_STEP = 14.0  # vertical spacing between casilla rows (points)
+
+
+def _draw_modelo_390_corpus(c: canvas.Canvas, fixture: _Modelo390CorpusFixture) -> None:
+    """Render a synthetic M390 corpus fixture page onto ``c``.
+
+    Layout mirrors the real AEAT-generated M390 PDF structure in the region
+    relevant to the extraction profile:
+
+    Leaf casillas (bbox_anchored, anchor_x_min=407, anchor_x_max=425):
+      Box numbers at x=414 (within anchor window), Spanish-formatted amounts
+      at x=480 (right_of_number offset) on the same y-row.
+      Boxes printed: 06 (c06), 04 (c04), 02 (c02), 26 (c26), 49 (c49).
+      Zero-value boxes are printed so the extractor can read them; absent boxes
+      would default to zero in the engine anyway, but printing them confirms
+      formula-consistency for all five inputs.
+
+    Computed casillas (named_label, profile patterns verbatim):
+      "Total cuotas IVA y recargo de equivalencia <amount>"      [box 47 / cuota-devengada-total]
+      "Suma de deducciones <amount>"                              [box 64 / cuota-deducible-total]
+      "Resultado regimen general (47 - 64) <amount>"             [box 65 / resultado-regimen-general]
+
+    Formula consistency:
+      c47 = c06 + c04 + c02 + c26   [cuota-devengada-total]
+      c64 = c49 + c26               [cuota-deducible-total]
+      c65 = c47 - c64               [resultado-regimen-general]
+
+    Non-tautology: _compute_m390_closure replicates the arithmetic of the real
+    engine. If the registry formula changes and the fixtures are not regenerated,
+    test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible will
+    fail — the test cannot pass trivially because the engine result and the fixture
+    are computed independently (engine: runtime TOML evaluation; fixture:
+    formula replicated at generation time).
+
+    Accents stripped to stay within the ASCII-safe pdfplumber extraction path,
+    consistent with all prior synthetic corpus fixtures in this suite.
+
+    NIF line: _TAX_ID_RE matches "NIF: <tax_id>" (consistent with M303 corpus layout).
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(
+        20 * mm,
+        y,
+        "Impuesto sobre el Valor Anadido  Modelo 390",
+    )
+    y -= 10 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}   Periodo: 0A")
+    y -= 8 * mm
+    c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
+    y -= 12 * mm
+
+    # Leaf casillas: box number at _M390_BOX_X (within anchor 407-425), value at _M390_VAL_X.
+    # Print all five leaf inputs (including zeros) so the extractor captures them.
+    # Profile bbox_anchor: box_number_pattern = "^NN$", value_offset = "right_of_number"
+    leaf_rows: tuple[tuple[str, Decimal], ...] = (
+        ("06", fixture.c06),  # repercutido.general 21%
+        ("04", fixture.c04),  # repercutido.reducido 10%
+        ("02", fixture.c02),  # repercutido.super-reducido 4%
+        ("26", fixture.c26),  # autorepercutido.intracomunitaria
+        ("49", fixture.c49),  # soportado.interiores (deducible)
+    )
+    for box_num, value in leaf_rows:
+        c.setFont("Helvetica", 10)
+        c.drawString(_M390_BOX_X, y, box_num)
+        c.drawString(_M390_VAL_X, y, _fmt_spanish(value))
+        y -= _M390_ROW_STEP
+
+    y -= 4 * mm
+
+    # Named-label rows: label text verbatim from the extraction profile pattern.
+    # Profile patterns (accents stripped):
+    #   cuota-devengada-total:    'Total\s+cuotas\s+IVA\s+y\s+recargo\s+de\s+equivalencia'
+    #   cuota-deducible-total:    'Suma\s+de\s+deducciones'
+    #   resultado-regimen-general:'Resultado\s+r[eé]gimen\s+general\s+\(47\s*-\s*64\)'
+    c.drawString(
+        20 * mm,
+        y,
+        f"Total cuotas IVA y recargo de equivalencia {_fmt_spanish(fixture.c47)}",
+    )
+    y -= 6 * mm
+    c.drawString(20 * mm, y, f"Suma de deducciones {_fmt_spanish(fixture.c64)}")
+    y -= 6 * mm
+    c.drawString(
+        20 * mm,
+        y,
+        f"Resultado regimen general (47 - 64) {_fmt_spanish(fixture.c65)}",
+    )
+    y -= 10 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+
+
 def main() -> None:
     """Regenerate every fixture PDF in-place."""
     out_dir = Path(__file__).parent
@@ -2353,6 +2568,20 @@ def main() -> None:
         c.setCreator("aeat fixture generator")
         c.setProducer("aeat-test-fixture-generator")
         _draw_modelo_303_corpus(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+
+    for fixture in _MODELO_390_CORPUS_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Modelo 390 {fixture.ejercicio} 0A")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m390 corpus")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_390_corpus(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")
