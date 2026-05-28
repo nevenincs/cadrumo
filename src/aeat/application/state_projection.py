@@ -335,7 +335,11 @@ def _build_auth_readiness(
             # workflow-state path into the Settings instance the backend
             # sees so ``configure`` and ``status`` cannot disagree on
             # whether the certificate is configured.
-            backend_settings = Settings()
+            # `load_settings()` honours `override_settings`; bare `Settings()`
+            # bypasses the context-var and shows the project default cert
+            # path even when a test overrides it.
+            from ..core.config import load_settings as _load_settings
+            backend_settings = _load_settings()
             if (
                 provider == AuthProviderKind.CERTIFICATE.value
                 and auth.certificate_path

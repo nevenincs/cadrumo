@@ -1222,7 +1222,13 @@ def _append_bucket_event(
 ) -> WorkflowState:
     from ..workflow._models import WorkflowEvent
 
-    bucket_id = state.active_profile_bucket_id() or "default"
+    # Auth flows can run before a profile is bound (e.g. `auth configure`
+    # during initial setup). Falling back to the literal "default" silently
+    # pools the unbound-session event into any operator's bucket that
+    # happens to be named "default" — agent-audited as CRIT bucket-isolation
+    # leak. Use a clearly system-scoped sentinel that cannot collide with
+    # a real profile UUID so repair surfaces can spot + clear these.
+    bucket_id = state.active_profile_bucket_id() or "__unbound_session__"
     event = WorkflowEvent(action=action, bucket_id=bucket_id, object_id=object_id)
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event)})
 
