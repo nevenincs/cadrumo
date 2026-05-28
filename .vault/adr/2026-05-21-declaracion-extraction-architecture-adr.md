@@ -424,3 +424,51 @@ The four remaining `provisional_pending_specimen = true` profiles
 specimens, only WebFetched AEAT-published printed-form text) remain in
 that state until real specimens are acquired and verified, per the
 2026-05-26 amendment's discipline.
+
+---
+
+## Amendment 2026-05-28 — Verification chain landed (W09.P40.S197)
+
+### New module: `test_verification_chain.py`
+
+`src/aeat/adapters/inbound/declaracion/test_verification_chain.py` (596 lines)
+implements the project-mission end-to-end fidelity gate. The test chain:
+
+1. `parse_declaracion(corpus_pdf)` → `DeclaracionObservation.values`
+2. Filter extracted casillas to non-computed → `inputs: dict[str, Decimal]`
+3. `calculate_registry_snapshot(snapshot, inputs=inputs, binding_values=...)` → `RegistryCalculationResult`
+4. Assert `result.values[closure_casilla_id] == extracted[closure_casilla_id]`
+
+All centralized infrastructure confirmed: `calculate_registry_snapshot` from
+`aeat.domain.calculations.registry`, `RegistryValidationError` from same package,
+`DeclaracionParseError` from `aeat.adapters.inbound.declaracion`, `parse_declaracion`
+from `aeat.adapters.inbound.declaracion`, `FIXTURES_DIR` from `aeat.tests`.
+No new exceptions, no new schemas, no mocks.
+
+### Per-modelo verdict
+
+| Modelo | Corpus | Engine formula verified | Verdict |
+|--------|--------|------------------------|---------|
+| M111 2024-1T/2T/3T | 3 PDFs | `28=sum(col-C)`, `30=28−29` | VERIFIED |
+| M111 2024-4T | 1 PDF | negative filing; inputs=∅ | FORMULA-MISMATCH (corpus) |
+| M130 2021-2T..2024-4T | 15 PDFs | `19=f(01..18)` | FORMULA-MISMATCH (corpus non-consistent) |
+| M303 2023-1T..2024-4T | 8 PDFs | no registry formulas | VERIFIED (extraction) |
+| M390 2022/2023 | 2 PDFs | leaf inputs not in profile | BINDING-GAP |
+| M180 2024-0A | 1 synthetic | relation binding (M115) required | BINDING-GAP |
+| M190 2024-0A | 1 real corpus | no formulas in registry | VERIFIED (extraction) |
+
+### FORMULA-MISMATCH root cause
+
+The M130 and M111-4T corpus PDFs were created for extraction testing only —
+the sanitiser placed arbitrary round amounts in each field independently
+without preserving the arithmetic chain. The engine computes arithmetically
+correct results from the extracted inputs; the mismatch is a corpus-consistency
+defect, not an engine defect. To achieve VERIFIED for M130, corpus PDFs must
+be generated with formula-consistent synthetic values.
+
+### Follow-up items surfaced
+
+1. M130 formula-consistent corpus fixtures needed (15 PDFs).
+2. M111 2024-4T negative-filing fixture: leaf inputs must be printed or casilla 30 must be 0.
+3. M390 extraction profile expansion: add leaf sub-total casillas to enable engine verification.
+4. M180 relation supply: requires M115 quarterly data as `relation_values`.
