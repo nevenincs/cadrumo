@@ -135,10 +135,10 @@ through the affected logger.
 - [x] `W01.P02.S62` - add real-behavior test asserting the helper updates root + every attached handler under every dictConfig variant; `src/aeat/entrypoints/cli/test_log_levels.py`.
 - [x] `W01.P02.S63` - install `SecretScrubbingFilter` on the sink before `root_logger.addHandler(sink)`; `expose `attach_run_sink(sink)` helper in `aeat.core.logging`; `src/aeat/core/observability/_context.py`.
 - [x] `W01.P02.S64` - add real-behavior test asserting JSONL run sink records are scrubbed before persistence; `src/aeat/core/observability/test_context_propagation.py`.
-- [ ] `W01.P02.S65` - replace the auth-waiting `print(line, file=stream, flush=True)` with a typed CLI renderer routed through a structured logger; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W01.P02.S66` - add real-behavior test asserting auth waiting messages never carry unmasked verification codes through stderr; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
-- [ ] `W01.P02.S67` - replace `sys.stdout.write` with an injected render primitive; `src/aeat/application/wizard/_prompter.py`.
-- [ ] `W01.P02.S68` - add real-behavior test asserting wizard prompter routes through the structured render path; `src/aeat/application/wizard/test_prompter.py`.
+- [x] `W01.P02.S65` - replace the auth-waiting `print(line, file=stream, flush=True)` with a typed CLI renderer routed through a structured logger; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W01.P02.S66` - add real-behavior test asserting auth waiting messages never carry unmasked verification codes through stderr; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
+- [x] `W01.P02.S67` - replace `sys.stdout.write` with an injected render primitive; `src/aeat/application/wizard/_prompter.py`.
+- [x] `W01.P02.S68` - add real-behavior test asserting wizard prompter routes through the structured render path; `src/aeat/application/wizard/test_prompter.py`.
 - [x] `W01.P02.S69` - guard the module-level `print(...)` in the normatives docstring example behind `if __name__ == "__main__":` or convert to a proper doctest block; `src/aeat/domain/normatives/__init__.py`.
 - [x] `W01.P02.S70` - add real-behavior test asserting importing `aeat.domain.normatives` produces no stdout output; `src/aeat/domain/normatives/test_init.py`.
 - [x] `W01.P02.S71` - guard the LLM-adapter docstring example `print(response.text)` behind `if __name__ == "__main__":`; `src/aeat/adapters/outbound/llm/__init__.py`.
@@ -292,8 +292,8 @@ time and at runtime.
 - [x] `W01.P07.S170` - add real-behavior test asserting CasillaFieldKind rejects unknown tokens; `src/aeat/domain/calculations/registry/test_schema.py`.
 - [x] `W01.P07.S171` - introduce `CLASSIFIED_BY_MANUAL: Final[str] = "manual"` in `aeat.application.ledger._models`; `replace the three bare-string sites; `src/aeat/application/ledger/_models.py`.
 - [x] `W01.P07.S172` - add real-behavior test asserting ledger classification reads through the constant; `src/aeat/application/ledger/test_models.py`.
-- [ ] `W01.P07.S173` - promote `OracleEnvironment` Literal to `StrEnum`; `replace the six default-value sites; `src/aeat/domain/calculations/registry/_live_parity.py`.
-- [ ] `W01.P07.S174` - add real-behavior test asserting OracleEnvironment members round-trip through every replaced default; `src/aeat/domain/calculations/registry/test_live_parity.py`.
+- [x] `W01.P07.S173` - promote `OracleEnvironment` Literal to `StrEnum`; `replace the six default-value sites; `src/aeat/domain/calculations/registry/_live_parity.py`.
+- [x] `W01.P07.S174` - add real-behavior test asserting OracleEnvironment members round-trip through every replaced default; `src/aeat/domain/calculations/registry/test_live_parity.py`.
 - [x] `W01.P07.S175` - introduce `DEFAULT_CURRENCY: Final[str] = "EUR"` in `aeat.core.external_constants`; `replace the 20 `"EUR"` sites across 8 files; `src/aeat/core/external_constants.py`.
 - [x] `W01.P07.S176` - add real-behavior test asserting every former currency literal now reads from the constant; `src/aeat/core/test_external_constants.py`.
 - [x] `W01.P07.S177` - introduce `BINARY_MIME_TYPE: Final[str] = "application/octet-stream"` in `aeat.core.external_constants`; `replace the three sites including the already-extracted `_BINARY_MIME`; `src/aeat/core/external_constants.py`.
