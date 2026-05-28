@@ -706,10 +706,10 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
-        label_bindings: cli.app.modelo.describe.label_bindings
+        label_bindings: 'Kötések'
         label_cadence: 'Gyakoriság'
         label_casillas: 'Mezők'
-        label_formulas: cli.app.modelo.describe.label_formulas
+        label_formulas: 'Képletek'
         label_modelo: 'Modelo'
         label_official_name: 'Hivatalos név'
         label_periods: 'Időszakok'
