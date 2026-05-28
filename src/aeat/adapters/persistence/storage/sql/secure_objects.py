@@ -24,6 +24,7 @@ from ..errors import (
     EnvelopeVersionError,
     RepositoryError,
     SecureObjectRevisionConflictError,
+    SecureObjectUnreadableError,
     StorageValidationError,
 )
 from . import _orm
@@ -761,31 +762,32 @@ class SecureObjectRepository:
         expected_class: SensitivityClass,
         max_supported_version: int,
     ) -> Iterator[SecureObjectRecord]:
-        """Yield every decryptable object under ``namespace``.
+        """Yield every object under ``namespace`` or fail on unreadable rows.
 
-        Rows whose payload cannot be decrypted under the current master
-        key are skipped; one ``WARNING`` log line summarises the count at
-        the end of the iteration. Use :meth:`iter_records_with_failures`
-        to receive a typed per-row outcome instead of skipping silently.
+        The default listing path is fail-closed: it first walks the
+        namespace through :meth:`iter_records_with_failures`, and if any
+        row is unreadable it raises :class:`SecureObjectUnreadableError`
+        before yielding a readable subset. Use
+        :meth:`iter_records_with_failures` for explicit diagnostic
+        iteration over mixed readable/unreadable rows.
         """
-        unreadable = 0
+        records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
             namespace,
             expected_class=expected_class,
             max_supported_version=max_supported_version,
         ):
             if isinstance(item, SecureObjectRecord):
-                yield item
-            else:
-                unreadable += 1
-        if unreadable > 0:
-            _log.warning(
-                "secure_objects: skipped %d unreadable row(s) in namespace %s; "
-                "the master key under which they were sealed is no longer available "
-                "(run 'aeat config repair' for details).",
-                unreadable,
+                records.append(item)
+                continue
+            _log.debug(
+                "secure_objects: refusing default list for namespace=%s because row id=%s is unreadable (%s)",
                 namespace,
+                item.row_id,
+                item.reason,
             )
+            raise SecureObjectUnreadableError(namespace, item.row_id)
+        yield from records
 
     def iter_records_with_failures(
         self,
@@ -849,20 +851,50 @@ class SecureObjectRepository:
                 )
                 continue
             if classification is not expected_class:
-                raise ClassificationError(
-                    f"secure object {namespace}/{object_key.hex()} has classification "
-                    f"{classification}; consumer expected {expected_class}",
+                yield SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=(
+                        f"classification {classification.value!r} does not match "
+                        f"expected {expected_class.value!r}"
+                    ),
                 )
+                continue
             if schema_version > max_supported_version:
-                raise EnvelopeVersionError(
-                    f"secure object {namespace}/{object_key.hex()} is at version "
-                    f"{schema_version}; consumer supports up to {max_supported_version}",
+                yield SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=(
+                        f"schema version {schema_version} exceeds supported "
+                        f"{max_supported_version}"
+                    ),
                 )
-            self._enforce_registered_row_schema(
-                namespace=namespace,
-                schema_version=schema_version,
-                definition=namespace_definition,
-            )
+                continue
+            try:
+                self._enforce_registered_row_schema(
+                    namespace=namespace,
+                    schema_version=schema_version,
+                    definition=namespace_definition,
+                )
+            except EnvelopeVersionError as exc:
+                yield SecureObjectUnreadable(
+                    namespace=namespace,
+                    row_id=row_id,
+                    object_key=object_key,
+                    classification=classification_str,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    reason=str(exc),
+                )
+                continue
             try:
                 payload_plain = decrypt_encrypted_bytes_column(payload_wire)
             except DecryptionError as exc:

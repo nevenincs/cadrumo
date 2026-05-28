@@ -14,11 +14,18 @@ from pydantic import ValidationError
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
+from .._namespace_registry import (
+    STORAGE_NAMESPACE_REGISTRY,
+    WORKFLOW_STATE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+    StorageNamespaceScope,
+)
 from ..errors import (
     ClassificationError,
     EnvelopeVersionError,
     SecureObjectRevisionConflictError,
+    SecureObjectUnreadableError,
     StorageValidationError,
 )
 from ._orm import Base, SecureObjectRow
@@ -285,18 +292,16 @@ def _seed_under_key(
             engine.dispose()
 
 
-def test_list_records_skips_rows_sealed_under_a_prior_master_key(
+def test_list_records_fails_closed_when_any_row_is_unreadable(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A row written under master key K1 must not crash a list_records call under K2.
+    """A row written under master key K1 must fail default listing under K2.
 
-    The architectural defect this guards against: ``list_records`` used to
-    materialise every row through the SQLAlchemy column processor in one
-    pass, so a single ``InvalidTag`` (caused by a row written under a
-    rotated master key) aborted the entire iteration. The fault-isolated
-    iterator must skip the unreadable row and let the readable subset
-    flow through, while emitting a structured warning.
+    The default listing surface is fail-closed: it must not yield the
+    readable subset if another row in the same namespace cannot be
+    decrypted. ``iter_records_with_failures`` remains the opt-in
+    diagnostic path for mixed readable/unreadable namespaces.
     """
     db_path = tmp_path / "rotated.db"
     key_old = EphemeralMasterKeyProvider()
@@ -327,8 +332,11 @@ def test_list_records_skips_rows_sealed_under_a_prior_master_key(
                 payload=b"plaintext-from-current-generation",
             )
 
-            with caplog.at_level(logging.WARNING, logger="aeat.adapters.persistence.storage.sql.secure_objects"):
-                yielded = list(
+            with (
+                caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.sql.secure_objects"),
+                pytest.raises(SecureObjectUnreadableError) as raised,
+            ):
+                list(
                     repo.list_records(
                         namespace,
                         expected_class=SensitivityClass.FINANCIAL,
@@ -336,11 +344,131 @@ def test_list_records_skips_rows_sealed_under_a_prior_master_key(
                     )
                 )
 
-            assert len(yielded) == 1
-            assert yielded[0].payload == b"plaintext-from-current-generation"
-            assert any("skipped 1 unreadable row" in rec.message for rec in caplog.records), (
-                f"expected one structured warning summarising the skip count; got {[r.message for r in caplog.records]}"
+            assert raised.value.namespace == namespace
+            assert raised.value.row_id >= 1
+            assert any("refusing default list" in rec.message for rec in caplog.records), (
+                f"expected debug diagnostics for fail-closed listing; got {[r.message for r in caplog.records]}"
             )
+            explicit = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+            assert len([item for item in explicit if isinstance(item, SecureObjectRecord)]) == 1
+            assert len([item for item in explicit if isinstance(item, SecureObjectUnreadable)]) == 1
+        finally:
+            engine.dispose()
+
+
+def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Path) -> None:
+    """The fail-closed list path buffers all readable rows before yielding."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "metadata-order.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.metadata.order"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="readable-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"readable-early-row",
+            )
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET classification = ? WHERE namespace = ?",
+                    (SensitivityClass.AUDIT.value, namespace),
+                )
+            iterator = repo.list_records(
+                namespace,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                next(iterator)
+        finally:
+            engine.dispose()
+
+
+def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) -> None:
+    """Readable namespaces still yield records through the default list path."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "readable-list.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace="aeat.test.readable.list",
+                object_key="readable-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"readable-list-payload",
+            )
+
+            yielded = list(
+                repo.list_records(
+                    "aeat.test.readable.list",
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+
+            assert [record.payload for record in yielded] == [b"readable-list-payload"]
+        finally:
+            engine.dispose()
+
+
+def test_list_records_rejects_unreadable_row_before_readable_subset(
+    tmp_path: Path,
+) -> None:
+    """The exception surfaces even when a readable row was also stored."""
+
+    db_path = tmp_path / "rotated-readable.db"
+    key_old = EphemeralMasterKeyProvider()
+    key_new = EphemeralMasterKeyProvider()
+    namespace = "aeat.test.rotation.readable"
+
+    _seed_under_key(
+        db_path=db_path,
+        provider=key_old,
+        namespace=namespace,
+        natural_key="row-under-old-key",
+        payload=b"plaintext-from-old-generation",
+    )
+
+    with key_new:
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="row-under-new-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"plaintext-from-current-generation",
+            )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                list(
+                    repo.list_records(
+                        namespace,
+                        expected_class=SensitivityClass.FINANCIAL,
+                        max_supported_version=1,
+                    )
+                )
+
         finally:
             engine.dispose()
 
@@ -403,6 +531,104 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
                 assert ghost.namespace == namespace
                 assert ghost.row_id > 0
                 assert "tag verification failed" in ghost.reason.lower() or "decrypt" in ghost.reason.lower()
+        finally:
+            engine.dispose()
+
+
+def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: Path) -> None:
+    """Row-level metadata failures surface as typed unreadable outcomes."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "metadata-failures.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.metadata.failures"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="classification-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"classification-row",
+            )
+            repo.save(
+                namespace=namespace,
+                object_key="schema-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=datetime.now(UTC),
+                payload=b"schema-row",
+            )
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET classification = ? WHERE namespace = ? AND schema_version = ?",
+                    (SensitivityClass.AUDIT.value, namespace, 1),
+                )
+
+            outcomes = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+
+            assert len(outcomes) == 2
+            assert all(isinstance(item, SecureObjectUnreadable) for item in outcomes)
+            reasons = {item.reason for item in outcomes if isinstance(item, SecureObjectUnreadable)}
+            assert any("classification" in reason for reason in reasons)
+            assert any("schema version" in reason for reason in reasons)
+        finally:
+            engine.dispose()
+
+
+def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path) -> None:
+    """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "registry-schema-drift.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.registry.schema"
+        registry = StorageHierarchyRegistry(
+            namespaces=(
+                SecureObjectNamespaceDefinition(
+                    key="test_registry_schema",
+                    namespace=namespace,
+                    owner="aeat.test",
+                    sensitivity=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    object_key_grammar="{id}",
+                    scope=StorageNamespaceScope.PROFILE_LOCAL,
+                ),
+            ),
+            paths=(),
+        )
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="schema-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=datetime.now(UTC),
+                payload=b"schema-row",
+            )
+
+            outcomes = list(
+                SecureObjectRepository(engine=engine, namespace_registry=registry).iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=2,
+                )
+            )
+
+            assert len(outcomes) == 1
+            assert isinstance(outcomes[0], SecureObjectUnreadable)
+            assert outcomes[0].schema_version == 2
+            assert "schema" in outcomes[0].reason
         finally:
             engine.dispose()
 
