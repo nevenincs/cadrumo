@@ -22,7 +22,7 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from ..config import PROJECT_ROOT, Settings
+from ..config import PROJECT_ROOT, Settings, load_settings
 from ..logging import get_logger
 from ._fingerprint import (
     compute_corpus_sha256,
@@ -126,7 +126,10 @@ def _build_initial_context(
     buggy caller from escaping the configured runs directory through
     inputs like ``"../etc"``.
     """
-    settings = Settings()
+    # `load_settings()` honours `override_settings`; bare `Settings()`
+    # bypasses the context-var so test-side corpus-sha overrides never
+    # propagate to the run-context fingerprint.
+    settings = load_settings()
     started_at = datetime.now(UTC)
     effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
     return RunContextInfo(

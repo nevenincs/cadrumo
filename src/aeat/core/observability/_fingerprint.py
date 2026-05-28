@@ -18,7 +18,7 @@ import os
 import time
 from pathlib import Path
 
-from ..config import Settings
+from ..config import Settings, load_settings
 from ..logging import get_logger
 
 _log = get_logger(__name__)
@@ -231,7 +231,10 @@ def read_cert_fingerprint() -> str:
     we hash whatever DER bytes are visible on disk. When no path is
     configured we return ``""``.
     """
-    settings = Settings()
+    # `load_settings()` honours `override_settings`; bare `Settings()`
+    # bypasses the context-var so a test that overrides the cert path
+    # sees the project-default fingerprint instead of its own.
+    settings = load_settings()
     cert_path = settings.aeat_certificate_path
     if cert_path is None or not cert_path.exists():
         return ""

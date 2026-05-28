@@ -23,14 +23,23 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from .....core.config import Settings as _Settings
+from .....core.config import load_settings as _load_settings
 from .._namespace_registry import BUCKET_LOCK_FILENAME
 from ._errors import BucketBusyError
 
 if TYPE_CHECKING:
     from ._layout import BucketPaths
 
-_POLL_INTERVAL_SECONDS = _Settings().aeat_bucket_lock_poll_interval_s
+
+def _poll_interval_seconds() -> float:
+    """Return the currently effective bucket-lock poll interval in seconds.
+
+    Resolved per-call via :func:`load_settings` so an
+    :func:`override_settings` block (test scope) is honoured. Replaces a
+    module-level constant that snapshotted ``Settings()`` at import time
+    and could not be overridden after the module had loaded.
+    """
+    return _load_settings().aeat_bucket_lock_poll_interval_s
 
 
 def lock_path(paths: BucketPaths) -> Path:
@@ -156,7 +165,7 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
         if time.monotonic() >= deadline:
             holding_pid = _read_pid(target) or 0
             raise BucketBusyError(bucket_id=paths.bucket_id, holding_pid=holding_pid)
-        time.sleep(_POLL_INTERVAL_SECONDS)
+        time.sleep(_poll_interval_seconds())
 
 
 def release_lock(paths: BucketPaths) -> None:

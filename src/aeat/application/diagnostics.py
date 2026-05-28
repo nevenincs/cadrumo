@@ -369,7 +369,10 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
 def probe_browser_connectivity(settings: Settings | None = None) -> SiteHealthStatus:
     """Probe the configured AEAT browser target through the browser adapter."""
 
-    resolved = settings or Settings()
+    # `load_settings()` honours `override_settings`; bare `Settings()`
+    # bypasses the context-var.
+    from ..core.config import load_settings as _load_settings
+    resolved = settings or _load_settings()
     return asyncio.run(_probe_browser_connectivity(resolved))
 
 
