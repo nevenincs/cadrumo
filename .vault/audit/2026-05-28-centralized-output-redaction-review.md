@@ -120,3 +120,7 @@ CRO-001 status: resolved. String JSON member names carrying profile UUID, NIF, U
 
 CRO-002 | HIGH | Redacted JSON member-name collisions silently drop entries
 The CRO-001 fix redacts dict member names in `src/aeat/core/redaction/__init__.py`, but the dict comprehension collapses distinct sensitive keys to shared placeholders or shared host-only tokens. For example, two object-key members such as `wallet:a` and `wallet:b` both become `<object-key>`, so JSON rendering keeps only the last value. This preserves secrecy but violates the S08/S09 JSON shape/data-preservation contract by silently losing payload entries. Current tests include one sensitive key per redaction class, so they do not prove collision-safe behavior or detect data loss.
+
+## W01.P02.S08/S09 Second Follow-up Re-Review
+
+CRO-002 status: resolved. Redacted mapping-key collisions now receive deterministic suffixes (`#2`, `#3`, ...), preserving all entries while keeping raw sensitive member names out of rendered JSON. Focused helper and renderer tests cover the two-object-key collision path, and a direct three-key probe retained all values. HIGH findings present: no. CRITICAL findings present: no.
