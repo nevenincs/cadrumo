@@ -38,6 +38,7 @@ from ...domain.calculations.registry._bindings import (
     resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry._schema import RegistrySnapshot
+from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
 from ._observations_repository import CalculationObservationRepository
 
@@ -53,7 +54,9 @@ def _selector_year_delta(value: object) -> int:
         return value
     if isinstance(value, str):
         return int(value)
-    raise TypeError(f"binding selector 'filing_year_delta' must be int|str, got {type(value).__name__}")
+    raise BindingPrefillTypeError(
+        f"binding selector 'filing_year_delta' must be int|str, got {type(value).__name__}"
+    )
 
 
 def _selector_periods(value: object) -> tuple[str, ...]:
@@ -62,7 +65,9 @@ def _selector_periods(value: object) -> tuple[str, ...]:
         return (value,)
     if isinstance(value, tuple) and all(isinstance(item, str) for item in value):
         return tuple(str(item) for item in value)
-    raise TypeError(f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}")
+    raise BindingPrefillTypeError(
+        f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}"
+    )
 
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
