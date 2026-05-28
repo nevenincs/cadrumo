@@ -106,6 +106,12 @@ adapters:
         template_not_detected: No se pudo detectar automáticamente la plantilla de
           {path}; indica --modelo y --año para forzarla.
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+  sede:
+    errors:
+      empty_identity_nif: 'El NIF de identidad de la sesión AEAT está vacío; no se puede vincular la observación de presentación.'
+      iva_wallet_empty_amount_cell: 'La celda de importe de la cartera de compensación de IVA está vacía.'
+      iva_wallet_empty_period_cell: 'La celda de periodo de la cartera de compensación de IVA está vacía.'
+      no_auth_session: 'La sesión de autenticación de AEAT no existe o no está persistida; ejecute primero `aeat config auth status`.'
 aggregation:
   iva_ledger:
     errors:
@@ -342,7 +348,10 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
       m210_baseline_tipo_deferred:
-        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable, o espere a que el corpus baseline incorpore esta fila.'
+        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
+          aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
+          profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
+          o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_rate_missing:
         next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
           para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
@@ -1130,10 +1139,14 @@ cli:
           un año entre %{minimum} y %{maximum}.
   common:
     errors:
+      draft_id_not_found: ID de borrador %{draft_id} no encontrado
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
+      no_active_profile_error_value: sin-perfil-activo
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: 'Periodo no reconocido: %{raw}.'
+    next:
+      create_profile_command: aeat config profile create NOMBRE
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -2342,7 +2355,8 @@ cli:
     language_help: Idioma de la interfaz (p. ej. es, en, ca).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar al inicio (%{dependency}). Ejecuta aeat config repair.'
+    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
+      al inicio (%{dependency}). Ejecuta aeat config repair.'
     unavailable_app_help: Este comando no está disponible en la configuración actual.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
@@ -2596,7 +2610,9 @@ errors:
       sea una hoja de tipo {expected_kind}.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: errors.calc.unsupported_comparison_op
     unsupported_op: errors.calc.unsupported_op
   censo:
@@ -2619,6 +2635,8 @@ errors:
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
+    error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
+      vivo agotó el tiempo antes de devolver evidencia de la AEAT.
     error_application_registry: La orquestación del registro de modelos falló o fue
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
@@ -2633,6 +2651,7 @@ errors:
       están incompletas o son contradictorias.
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
+    error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
     error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
@@ -2802,7 +2821,6 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    error_application_live_iva_surface_timeout: 'La superficie de lectura de IVA en vivo agotó el tiempo antes de devolver evidencia de la AEAT.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.

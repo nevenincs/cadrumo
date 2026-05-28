@@ -157,10 +157,10 @@ f-string emits at the CLI boundary. Each fix Step is paired with a
 verification Step that asserts the locale catalogue carries the key
 and the operator surface emits the localized payload.
 
-- [ ] `W01.P03.S77` - replace the bare `_bad(f"draft id ...")` with `tr("cli.common.errors.draft_id_not_found", draft_id=draft_id)`; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W01.P03.S78` - add real-behavior test asserting the draft-id-not-found surface emits the localized payload; `src/aeat/entrypoints/cli/test_common.py`.
-- [ ] `W01.P03.S79` - route the no-active-profile dict / text emit through `_no_active_profile_refusal()` and `tr()` keys; `src/aeat/entrypoints/cli/_common.py`.
-- [ ] `W01.P03.S80` - add real-behavior test asserting no-active-profile output is localized in text and JSON channels; `src/aeat/entrypoints/cli/test_common.py`.
+- [x] `W01.P03.S77` - replace the bare `_bad(f"draft id ...")` with `tr("cli.common.errors.draft_id_not_found", draft_id=draft_id)`; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W01.P03.S78` - add real-behavior test asserting the draft-id-not-found surface emits the localized payload; `src/aeat/entrypoints/cli/test_common.py`.
+- [x] `W01.P03.S79` - route the no-active-profile dict / text emit through `_no_active_profile_refusal()` and `tr()` keys; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W01.P03.S80` - add real-behavior test asserting no-active-profile output is localized in text and JSON channels; `src/aeat/entrypoints/cli/test_common.py`.
 - [ ] `W01.P03.S81` - add `cli.ledger.errors.id_prefix_unknown` catch-all and route the raw-message passthrough through `tr()`; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P03.S82` - add real-behavior test asserting ledger id-prefix fallthrough emits the localized payload; `src/aeat/entrypoints/cli/test_ledger.py`.
 - [ ] `W01.P03.S83` - wrap the eight `describe` label rows in `tr("cli.app.modelo.describe.label_*")` keys; `src/aeat/entrypoints/cli/_modelo.py`.
