@@ -183,10 +183,10 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S100` - add real-behavior test asserting every SedeNavigationError raise surfaces the localized translated_message at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_auth_state.py`.
 - [x] `W01.P03.S101` - thread `translated_message="adapters.sede.errors.empty_identity_nif"` on the empty-NIF raise; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [x] `W01.P03.S102` - add real-behavior test asserting empty-NIF localized envelope at the live-filing observation boundary; `src/aeat/adapters/outbound/aeat/sede/test_declarations.py`.
-- [ ] `W01.P03.S103` - wrap the wizard `typer.echo("status\t...")` English verbs in `tr("wizard.commands.status.created")` / `tr("wizard.commands.status.updated")`; `src/aeat/application/wizard/_commands.py`.
-- [ ] `W01.P03.S104` - add real-behavior test asserting wizard status verbs are localized; `src/aeat/application/wizard/test_commands.py`.
-- [ ] `W01.P03.S105` - replace `<unset>` literal in profile diagnostics emit with `tr("cli.diagnostics.profile.unset_placeholder")`; `src/aeat/diagnostics/profile.py`.
-- [ ] `W01.P03.S106` - add real-behavior test asserting profile-diagnostics unset placeholder is localized; `src/aeat/diagnostics/test_profile.py`.
+- [x] `W01.P03.S103` - wrap the wizard `typer.echo("status\t...")` English verbs in `tr("wizard.commands.status.created")` / `tr("wizard.commands.status.updated")`; `src/aeat/application/wizard/_commands.py`.
+- [x] `W01.P03.S104` - add real-behavior test asserting wizard status verbs are localized; `src/aeat/application/wizard/test_commands.py`.
+- [x] `W01.P03.S105` - replace `<unset>` literal in profile diagnostics emit with `tr("cli.diagnostics.profile.unset_placeholder")`; `src/aeat/diagnostics/profile.py`.
+- [x] `W01.P03.S106` - add real-behavior test asserting profile-diagnostics unset placeholder is localized; `src/aeat/diagnostics/test_profile.py`.
 - [ ] `W01.P03.S107` - replace `raise typer.BadParameter(message)` with a `tr()`-mediated lookup for the registry-snapshot describe path; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P03.S108` - extend the modelo describe test to confirm BadParameter messages are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [ ] `W01.P03.S109` - replace the two `raise typer.BadParameter(str(exc))` sites for DT12 / SAL computation with `tr("cli.app.modelo.work.dt12_computation_error", ...)` / `tr("cli.app.modelo.work.sal_computation_error", ...)`; `src/aeat/entrypoints/cli/_modelo.py`.
