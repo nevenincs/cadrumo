@@ -342,9 +342,14 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
       m210_convenio_rate_missing:
-        next_action: 'Autorice la fila Convenio España-{cc} en m210-convenio-rates para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country para usar el baseline TRLIRNR Art 25.'
+        next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
+          para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
+          para usar el baseline TRLIRNR Art 25.
       m210_convenio_rate_not_yet_authored:
-        next_action: 'La fila Convenio España-{cc} para tipo_renta={tipo_renta} contiene el marcador NOT_YET_AUTHORED según ADR D2.4. Autorice la tarifa verificada del corpus BOE antes de poder completar la declaración; abra una tarea de seguimiento bloqueada por corpus citando el artículo del Convenio.'
+        next_action: La fila Convenio España-{cc} para tipo_renta={tipo_renta} contiene
+          el marcador NOT_YET_AUTHORED según ADR D2.4. Autorice la tarifa verificada
+          del corpus BOE antes de poder completar la declaración; abra una tarea de
+          seguimiento bloqueada por corpus citando el artículo del Convenio.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
@@ -3065,6 +3070,9 @@ errors:
       puede ejecutar con los datos indicados.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
       resuelve a un bucket registrado.
+    refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
+      no se reconoce. Utilice uno de los valores válidos de estado de teléfono del
+      operador.
     refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
     refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
@@ -3098,6 +3106,7 @@ errors:
       periodo sin clasificar. Clasifícalas todas antes de agregar.
     refused_financial_aggregation_unsupported_modelo: No hay un contrato de agregación
       disponible para el modelo solicitado.
+    refused_financial_bank_statement_parse: 'El análisis del extracto bancario financiero ha fallado.'
     refused_financial_ledger_no_active_bucket: La operación del libro necesita un
       perfil activo. Crea o selecciona un perfil y vuelve a intentarlo.
     refused_financial_ledger_transaction_id_prefix: El prefijo de identificador de
@@ -3235,7 +3244,6 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_auth_diagnostic_phone_state: 'El valor de estado del teléfono proporcionado no se reconoce. Utilice uno de los valores válidos de estado de teléfono del operador.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

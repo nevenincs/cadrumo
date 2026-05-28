@@ -322,9 +322,14 @@ application:
         %{work_unit_id}.'
     findings:
       m210_convenio_rate_missing:
-        next_action: 'Hozzon létre Convenio España-{cc} sort a m210-convenio-rates paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country értékét a TRLIRNR Art 25 alapérték használatához.'
+        next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
+          paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
+          értékét a TRLIRNR Art 25 alapérték használatához.
       m210_convenio_rate_not_yet_authored:
-        next_action: 'A Convenio España-{cc} sor a tipo_renta={tipo_renta} értékhez NOT_YET_AUTHORED jelölővel rendelkezik az ADR D2.4 szerint. Az ellenőrzött BOE-korpusz tarifa szerzői joga szükséges, mielőtt a bevallás befejeződhetne; nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.'
+        next_action: A Convenio España-{cc} sor a tipo_renta={tipo_renta} értékhez
+          NOT_YET_AUTHORED jelölővel rendelkezik az ADR D2.4 szerint. Az ellenőrzött
+          BOE-korpusz tarifa szerzői joga szükséges, mielőtt a bevallás befejeződhetne;
+          nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
@@ -943,7 +948,7 @@ cli:
       period_empty: Az adóidőszak nem lehet üres.
       period_unrecognised: Ismeretlen időszak.
   config:
-    app_help: cli.config.app_help
+    app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
       apoderado:
         check_help: cli.config.auth.apoderado.check_help
@@ -1222,21 +1227,23 @@ cli:
       key_help: cli.config.unset.key_help
     workflow_help: cli.config.workflow_help
   diagnostics:
-    app_help: 'Mérnöki diagnosztika az AEAT belső részeihez.'
+    app_help: Mérnöki diagnosztika az AEAT belső részeihez.
     browser:
-      http_status_label: 'HTTP-állapot'
-      markers_label: 'Jelzők'
-      markers_none: 'nincs'
-      observed_at_label: 'Megfigyelve'
-      retry_after_label: 'Újrapróbálás után'
-      state_label: 'Állapot'
-      target_browser: 'böngésző'
-      target_label: 'Cél'
+      http_status_label: HTTP-állapot
+      markers_label: Jelzők
+      markers_none: nincs
+      observed_at_label: Megfigyelve
+      retry_after_label: Újrapróbálás után
+      state_label: Állapot
+      target_browser: böngésző
+      target_label: Cél
     dead_end:
-      registry_bundled: 'Belső hiba: a nyilvántartás a csomagba van bundlelve és nem javítható manuálisan.'
-      registry_integrity_internal: 'Belső alkalmazáshiba; nem az Ön profiljával kapcsolatos, és Ön nem tudja maga javítani.'
+      registry_bundled: 'Belső hiba: a nyilvántartás a csomagba van bundlelve és nem
+        javítható manuálisan.'
+      registry_integrity_internal: Belső alkalmazáshiba; nem az Ön profiljával kapcsolatos,
+        és Ön nem tudja maga javítani.
     next_action:
-      inspect_registry_toml: 'Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.'
+      inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     profile:
       errors:
         ambiguous_profile: 'Ambiguous profile label: %{profile}'
@@ -1255,20 +1262,20 @@ cli:
       unset_help: Clear one profile key value.
       value_help: Value to store.
     repair:
-      audience_internal: 'belső alkalmazáshiba'
-      auth_label: 'Hitelesítés'
-      checks_heading: 'Ellenőrzések'
-      detail_label: 'Részletek'
+      audience_internal: belső alkalmazáshiba
+      auth_label: Hitelesítés
+      checks_heading: Ellenőrzések
+      detail_label: Részletek
       finding_label: '-'
-      finding_optional: 'opcionális'
-      finding_required: 'kötelező'
-      logs_label: 'Naplók'
-      next_label: 'Következő'
-      note_label: 'Megjegyzés'
-      overall_label: 'Összesítés'
-      profile_label: 'Profil'
-      python_label: 'Python'
-      version_label: 'Verzió'
+      finding_optional: opcionális
+      finding_required: kötelező
+      logs_label: Naplók
+      next_label: Következő
+      note_label: Megjegyzés
+      overall_label: Összesítés
+      profile_label: Profil
+      python_label: Python
+      version_label: Verzió
     secure_objects:
       all_help: Return every key, including unreadable rows.
       errors:
@@ -1279,52 +1286,59 @@ cli:
       namespace_help: Namespace to inventory.
       unreadable_help: Restrict the listing to undecryptable rows.
     summary:
-      auth_no_session: 'A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.'
-      auth_none: 'A hitelesítés nincs konfigurálva.'
+      auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
+      auth_none: A hitelesítés nincs konfigurálva.
       auth_session_ready: 'A hitelesítési munkamenet kész: %{provider}.'
-      auth_state_unreadable: 'A hitelesítési készség nem ellenőrizhető, amíg a biztonságos munkafolyamat állapota nem olvasható.'
+      auth_state_unreadable: A hitelesítési készség nem ellenőrizhető, amíg a biztonságos
+        munkafolyamat állapota nem olvasható.
       profile_keys_set: '%{present}/%{total} profilkulcs beállítva.'
       profile_missing_keys: '%{count} profilkulcs hiányzik.'
-      profile_none: 'Nincs beállított profil.'
-      profile_storage: 'active_profile=%{active_profile} source=%{source} status=%{status}'
+      profile_none: Nincs beállított profil.
+      profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'A profil nem olvasható: %{status}'
       registry_counts: '%{modelos} nyomtatvány és %{casillas} mező a nyilvántartásban.'
       registry_integrity_failed: 'Nyilvántartási integritásellenőrzés: SIKERTELEN.'
       registry_integrity_ok: 'Nyilvántartási integritásellenőrzés: OK.'
       registry_integrity_skipped: 'Nyilvántartási integritásellenőrzés: kihagyva.'
-      registry_unavailable: 'A nyilvántartás nem érhető el.'
-      secure_objects_empty: 'A biztonságos objektumtár üres.'
-      secure_objects_readable: '%{readable} olvasható biztonságos objektum-névtér: %{namespaces}.'
-      secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható sor.'
-      state_backend_readable: 'Az állapot-tár olvasható.'
-      state_backend_unreadable: 'Az állapot-tár nem olvasható.'
-      venv_in_sync: 'A virtuális környezet szinkronban van.'
-      venv_stale: 'A virtuális környezet elavult.'
+      registry_unavailable: A nyilvántartás nem érhető el.
+      secure_objects_empty: A biztonságos objektumtár üres.
+      secure_objects_readable: '%{readable} olvasható biztonságos objektum-névtér:
+        %{namespaces}.'
+      secure_objects_unreadable: '%{unreadable} olvashatatlan sor, %{readable} olvasható
+        sor.'
+      state_backend_readable: Az állapot-tár olvasható.
+      state_backend_unreadable: Az állapot-tár nem olvasható.
+      venv_in_sync: A virtuális környezet szinkronban van.
+      venv_stale: A virtuális környezet elavult.
     version:
-      no_revisions: 'Nincsenek elérhető nyilvántartási revíziók.'
-      registry_summary: '%{package} %{version}: %{modelos} nyomtatvány, %{casillas} mező, %{formulas} képlet, %{revisions} revízió.'
-      registry_unavailable: '%{package} %{version}: a nyilvántartás nem érhető el (%{error}).'
+      no_revisions: Nincsenek elérhető nyilvántartási revíziók.
+      registry_summary: '%{package} %{version}: %{modelos} nyomtatvány, %{casillas}
+        mező, %{formulas} képlet, %{revisions} revízió.'
+      registry_unavailable: '%{package} %{version}: a nyilvántartás nem érhető el
+        (%{error}).'
   ledger:
     add:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      amount_help: 'Előjeles tranzakciós összeg a bucket pénznemében.'
-      attachment_help: 'Kiegészítő mellékletek azonosítója (ismételhető).'
-      business_pct_help: 'Üzleti célú arány 0 és 1 között (csak MIXED besorolásnál).'
-      category_help: 'Levonható költség kategóriaidentifikátora (csak kiadásoknál; bevételekhez nem szükséges).'
-      classification_help: 'Üzleti besorolás (BUSINESS / PERSONAL / MIXED / ...).'
-      counterparty_help: 'Szerződő fél leírása.'
-      currency_help: 'Háromjegyű ISO 4217 pénznemkód.'
-      date_help: 'Könyvelési dátum (ÉÉÉÉ-HH-NN).'
-      description_help: 'Nem üres narratíva.'
-      direction_help: 'Tranzakció iránya (INCOMING / OUTGOING / INTERNAL_TRANSFER).'
-      help: 'Egyetlen kézi főkönyvi tranzakció hozzáadása az aktív profilmappában.'
-      idempotency_key_help: 'A hívó által megadott idempotencia-kulcs, amelyet a sorral együtt tárolnak.'
-      irpf_category_help: 'IRPF-specifikus kategóriakulcs.'
-      iva_amount_help: 'Opcionális IVA-összeg a soron.'
-      iva_rate_help: 'Opcionális IVA-kulcs tizedes törtként.'
-      notes_help: 'A tranzakcióval együtt tárolt üzemeltetői megjegyzések.'
-      prorrata_reference_help: 'IVA prorrata alapjának hivatkozása.'
-      purchase_invoice_evidence_help: 'Kanonikus vásárlásiszámla-bizonyíték azonosítója.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      amount_help: Előjeles tranzakciós összeg a bucket pénznemében.
+      attachment_help: Kiegészítő mellékletek azonosítója (ismételhető).
+      business_pct_help: Üzleti célú arány 0 és 1 között (csak MIXED besorolásnál).
+      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
+        bevételekhez nem szükséges).
+      classification_help: Üzleti besorolás (BUSINESS / PERSONAL / MIXED / ...).
+      counterparty_help: Szerződő fél leírása.
+      currency_help: Háromjegyű ISO 4217 pénznemkód.
+      date_help: Könyvelési dátum (ÉÉÉÉ-HH-NN).
+      description_help: Nem üres narratíva.
+      direction_help: Tranzakció iránya (INCOMING / OUTGOING / INTERNAL_TRANSFER).
+      help: Egyetlen kézi főkönyvi tranzakció hozzáadása az aktív profilmappában.
+      idempotency_key_help: A hívó által megadott idempotencia-kulcs, amelyet a sorral
+        együtt tárolnak.
+      irpf_category_help: IRPF-specifikus kategóriakulcs.
+      iva_amount_help: Opcionális IVA-összeg a soron.
+      iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
+      notes_help: A tranzakcióval együtt tárolt üzemeltetői megjegyzések.
+      prorrata_reference_help: IVA prorrata alapjának hivatkozása.
+      purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
@@ -1334,243 +1348,303 @@ cli:
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
       source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
         nem rezidens IRNR profiloknal.
-      taxable_base_help: 'ÁFA-mentes alapösszeg.'
-      usage_ratio_help: 'Felhasználási arány azonosítója az arányos üzleti használathoz.'
-      value_date_help: 'Értékdátum (ÉÉÉÉ-HH-NN).'
-      taxable_help: 'ÁFA-mentes alapösszeg.'
+      taxable_base_help: ÁFA-mentes alapösszeg.
+      usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
+      value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      business_pct_help: 'Üzleti célú arány 0 és 1 között.'
-      category_help: 'Levonható költség kategóriaidentifikátora (csak kiadásoknál; bevételekhez nem szükséges).'
-      help: 'Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.'
-      id_help: 'A kiosztandó főkönyvi tranzakció azonosítója.'
-      prorrata_reference_help: 'IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.'
-      usage_ratio_help: 'Felhasználási arány azonosítója az arányos üzleti használathoz.'
-    app_help: 'Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      business_pct_help: Üzleti célú arány 0 és 1 között.
+      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
+        bevételekhez nem szükséges).
+      help: Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.
+      id_help: A kiosztandó főkönyvi tranzakció azonosítója.
+      prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
+      usage_ratio_help: Felhasználási arány azonosítója az arányos üzleti használathoz.
+    app_help: Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.
     archive:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      help: 'Egyetlen főkönyvi tranzakció archiválása az aktív profilmappában.'
-      id_help: 'Az archiválandó főkönyvi tranzakció azonosítója.'
-      reason_help: 'Az életciklus-előzményekben rögzített ok.'
-      yes_help: 'A főkönyvi tranzakció archiválásának megerősítése.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      help: Egyetlen főkönyvi tranzakció archiválása az aktív profilmappában.
+      id_help: Az archiválandó főkönyvi tranzakció azonosítója.
+      reason_help: Az életciklus-előzményekben rögzített ok.
+      yes_help: A főkönyvi tranzakció archiválásának megerősítése.
     attach:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      attachment_help: 'A tranzakcióhoz csatolandó biztonságos melléklet azonosítója; több melléklet esetén ismételje meg.'
-      help: 'Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.'
-      id_help: 'A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.'
-      purchase_invoice_evidence_help: 'A tranzakciót alátámasztó vásárlásiszámla-bizonyíték azonosítója.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
+        több melléklet esetén ismételje meg.
+      help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
+      id_help: A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó vásárlásiszámla-bizonyíték
+        azonosítója.
     categories:
-      family_column: 'Kategóriacsalád'
-      header: 'ELISMERT FŐKÖNYVI KIADÁSI KATEGÓRIÁK'
-      help: 'A --category-id által elfogadott kiadási kategóriaazonosítók listázása, kategóriacsaládok szerint csoportosítva.'
-      id_column: 'kategória-azonosító (ezt az értéket adja meg)'
-      income_note: 'Csak levonható kiadásokhoz. A bevételi (INCOMING) tranzakciókat az irány határozza meg, és nem kell --category-id; a `ledger check` és `ledger preflight` nem jelöli hiányzóként a kategóriát bevételeknél.'
-      usage_example: 'Adja meg az azonosítót egyszerűen, pl. --category-id {example} (nem kategóriacsaládos vagy összetett kulcs).'
+      family_column: Kategóriacsalád
+      header: ELISMERT FŐKÖNYVI KIADÁSI KATEGÓRIÁK
+      help: A --category-id által elfogadott kiadási kategóriaazonosítók listázása,
+        kategóriacsaládok szerint csoportosítva.
+      id_column: kategória-azonosító (ezt az értéket adja meg)
+      income_note: Csak levonható kiadásokhoz. A bevételi (INCOMING) tranzakciókat
+        az irány határozza meg, és nem kell --category-id; a `ledger check` és `ledger
+        preflight` nem jelöli hiányzóként a kategóriát bevételeknél.
+      usage_example: Adja meg az azonosítót egyszerűen, pl. --category-id {example}
+        (nem kategóriacsaládos vagy összetett kulcs).
     check:
       bucket_id_help: 'Vizsgálandó bucket azonosítója (alapértelmezés: az aktív profilmappa).'
-      help: 'Főkönyvi tranzakciók vizsgálata a megcímzett bucketben és rendellenesség-sorok jelentése az összes érintett időszakra összesítve. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+      help: Főkönyvi tranzakciók vizsgálata a megcímzett bucketben és rendellenesség-sorok
+        jelentése az összes érintett időszakra összesítve. Csak helyi; soha nem lép
+        kapcsolatba az AEAT-tal.
     classify:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
         skipped, %{fail} failed'
-      business_pct_help: 'Üzleti célú arány 0 és 1 között; kötelező --classification MIXED esetén, és elutasított minden más besorolásnál.'
-      business_pct_requires_mixed: 'Elutasítva. A --business-pct csak MIXED besorolásra vonatkozik. Egy BUSINESS vagy PERSONAL sor teljes egészében üzleti vagy magáncélú; hagyja el a --business-pct értéket, vagy adja meg a --classification MIXED értéket.'
-      category_help: 'Levonható költség kategóriaidentifikátora (csak kiadásoknál; bevételekhez nem szükséges).'
-      classification_help: 'A tranzakció üzleti besorolási állapota.'
+      business_pct_help: Üzleti célú arány 0 és 1 között; kötelező --classification
+        MIXED esetén, és elutasított minden más besorolásnál.
+      business_pct_requires_mixed: Elutasítva. A --business-pct csak MIXED besorolásra
+        vonatkozik. Egy BUSINESS vagy PERSONAL sor teljes egészében üzleti vagy magáncélú;
+        hagyja el a --business-pct értéket, vagy adja meg a --classification MIXED
+        értéket.
+      category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
+        bevételekhez nem szükséges).
+      classification_help: A tranzakció üzleti besorolási állapota.
       classification_required: --classification is required when --from-csv is not
         provided.
-      counterparty_eu_member_state_help: 'A szerződő fél EU-tagállama (ISO 3166-1 alpha-2 kisbetűs, pl. de); kötelező --iva-category intra_community_supply esetén, tiltott export_third_country_zero_rated esetén.'
+      counterparty_eu_member_state_help: A szerződő fél EU-tagállama (ISO 3166-1 alpha-2
+        kisbetűs, pl. de); kötelező --iva-category intra_community_supply esetén,
+        tiltott export_third_country_zero_rated esetén.
       from_csv_exclusive: --from-csv cannot be combined with --id or --classification.
       from_csv_help: Path to a CSV file with columns transaction_id, classification[,
         category_id].
       from_csv_not_found: 'CSV file not found: %{path}'
-      help: 'Egyetlen főkönyvi tranzakció besorolása az aktív profilmappában.'
-      id_help: 'A besorolandó főkönyvi tranzakció azonosítója.'
+      help: Egyetlen főkönyvi tranzakció besorolása az aktív profilmappában.
+      id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: --id is required when --from-csv is not provided.
-      irpf_category_help: 'IRPF-kategória a nyomtatványszámításokhoz.'
-      iva_amount_help: 'IVA-összeg.'
-      iva_category_help: 'Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl. intra_community_supply, export_third_country_zero_rated, domestic_not_subject).'
-      iva_rate_help: 'IVA-kulcs tizedes törtként, pl. 0,21.'
-      mixed_requires_business_pct: 'Elutasítva. A --classification MIXED értékhez üzleti arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja be a sort BUSINESS vagy PERSONAL kategóriába.'
-      reaffirm_help: 'Egy már besorolt tranzakció besorolásának megerősítése.'
-      reaffirmed: 'Besorolás megerősítve.'
-      taxable_base_help: 'Adóköteles alapösszeg.'
+      irpf_category_help: IRPF-kategória a nyomtatványszámításokhoz.
+      iva_amount_help: IVA-összeg.
+      iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
+        intra_community_supply, export_third_country_zero_rated, domestic_not_subject).
+      iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
+      mixed_requires_business_pct: Elutasítva. A --classification MIXED értékhez üzleti
+        arány szükséges. Adjon meg --business-pct értéket 0 és 1 között, vagy sorolja
+        be a sort BUSINESS vagy PERSONAL kategóriába.
+      reaffirm_help: Egy már besorolt tranzakció besorolásának megerősítése.
+      reaffirmed: Besorolás megerősítve.
+      taxable_base_help: Adóköteles alapösszeg.
     errors:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
-      command_input_invalid_fallback: 'Egy vagy több mező érvényesítése sikertelen.'
-      confirm_required: 'Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez, vagy először használja a --dry-run kapcsolót.'
-      filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen.'
-      id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
-      id_prefix_empty: 'A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális karaktert.'
-      id_prefix_not_found: 'Nem található tranzakció a(z) %{prefix!r} előtaggal.'
-      id_prefix_not_hex: 'A(z) %{prefix!r} tranzakcióazonosító-előtag nem hexadecimális karaktert tartalmaz (engedélyezett: 0-9, a-f).'
-      id_prefix_too_long: 'A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64 karakternél (teljes SHA-256 kivonat).'
+      command_input_invalid_fallback: Egy vagy több mező érvényesítése sikertelen.
+      confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez,
+        vagy először használja a --dry-run kapcsolót.
+      filter_parse_error: A főkönyvi szűrő elemzése sikertelen.
+      id_prefix_collision: 'A(z) %{prefix!r} tranzakcióazonosító-előtag több tranzakcióra
+        illeszkedik: %{candidates}. Hosszabbítsa meg az előtagot az egyértelműsítéshez.'
+      id_prefix_empty: A tranzakcióazonosító-előtag üres; adjon meg legalább egy hexadecimális
+        karaktert.
+      id_prefix_not_found: Nem található tranzakció a(z) %{prefix!r} előtaggal.
+      id_prefix_not_hex: 'A(z) %{prefix!r} tranzakcióazonosító-előtag nem hexadecimális
+        karaktert tartalmaz (engedélyezett: 0-9, a-f).'
+      id_prefix_too_long: A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64
+        karakternél (teljes SHA-256 kivonat).
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}'
-      unknown_category: 'Ismeretlen --category-id {category!r}. Adjon meg egyszerű kategóriaazonosítót, pl. {example!r} – nem kategóriacsaládos vagy összetett kulcsot. Futtassa: `aeat app ledger categories` az összes elismert azonosító listázásához.'
-      unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert szolgáltatók: {providers}.'
+      unknown_category: 'Ismeretlen --category-id {category!r}. Adjon meg egyszerű
+        kategóriaazonosítót, pl. {example!r} – nem kategóriacsaládos vagy összetett
+        kulcsot. Futtassa: `aeat app ledger categories` az összes elismert azonosító
+        listázásához.'
+      unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
+        szolgáltatók: {providers}.'
     export:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      format_help: 'Exportálási sorosítási formátum.'
-      help: 'Kanonikus főkönyvsorok exportálása az aktív profilmappából.'
-      include_inactive_help: 'Archivált és elrejtett főkönyvi tranzakciók bevonása.'
-      output_help: 'Az exportált főkönyvfájl mentési útvonala.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      format_help: Exportálási sorosítási formátum.
+      help: Kanonikus főkönyvsorok exportálása az aktív profilmappából.
+      include_inactive_help: Archivált és elrejtett főkönyvi tranzakciók bevonása.
+      output_help: Az exportált főkönyvfájl mentési útvonala.
     history:
-      help: 'Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.'
-      id_help: 'A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális előtag).'
-      include_split_siblings_help: 'A lánc kibővítése minden olyan felosztási testvér eseményeivel, amely ugyanazzal a split_group_id-val rendelkezik.'
+      help: Egyetlen főkönyvi tranzakcióazonosító kronológiai bucket-eseménylánca.
+      id_help: A megvizsgálandó főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
+        előtag).
+      include_split_siblings_help: A lánc kibővítése minden olyan felosztási testvér
+        eseményeivel, amely ugyanazzal a split_group_id-val rendelkezik.
     import:
-      all_rows_skipped: 'Nem importáltak új bejegyzéseket: minden {skipped} elemzett sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
-      dry_run_help: 'Az importálás futtatása próba módban (mentés nélkül).'
-      dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják, mi történne valódi importálásnál.'
-      help: 'Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.'
-      likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a duplikátuma egy másik fájlból vagy formátumból. Tekintse meg: `aeat app ledger list`.'
-      no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett, de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
-      path_help: 'A bankikivonati fájl vagy könyvtár elérési útja.'
-      period_help: 'A fiscális időszak az importáláshoz.'
+      all_rows_skipped: 'Nem importáltak új bejegyzéseket: minden {skipped} elemzett
+        sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
+      dry_run_help: Az importálás futtatása próba módban (mentés nélkül).
+      dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
+        mi történne valódi importálásnál.'
+      help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
+      likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
+        a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
+        duplikátuma egy másik fájlból vagy formátumból. Tekintse meg: `aeat app ledger
+        list`.'
+      no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
+        de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
+        (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'
+      path_help: A bankikivonati fájl vagy könyvtár elérési útja.
+      period_help: A fiscális időszak az importáláshoz.
       provider_help: 'Kivonatformátum-szolgáltató. Elismert értékek: {providers}'
-      source_help: 'Az importált sorok ellenőrzéséhez használt eredeti fájl.'
-      verbose_help: 'Részletes információ megjelenítése importálás közben.'
-      verify_help: 'Bejegyzések ellenőrzése importálás után.'
+      source_help: Az importált sorok ellenőrzéséhez használt eredeti fájl.
+      verbose_help: Részletes információ megjelenítése importálás közben.
+      verify_help: Bejegyzések ellenőrzése importálás után.
     labels:
-      active: 'Aktív'
-      amount: 'Összeg'
-      archived: 'Archivált'
-      bucket: 'Mappa'
-      business_classification: 'Besorolás'
-      business_pct: 'Üzleti %'
-      category_id: 'Kategória'
-      checked: 'Ellenőrzött tranzakciók'
-      children: 'Gyermek elemek'
-      counterparty: 'Szerződő fél'
-      created_event_id: 'Létrehozó bucket-esemény'
-      currency: 'Pénznem'
-      date: 'Dátum'
-      description: 'Leírás'
-      dialect: 'Észlelt formátum'
-      direction: 'Irány'
-      dry_run: 'PRÓBA MÓD'
-      event_count: 'Események száma'
-      event_id: 'Eseményazonosító'
-      export_id: 'Export azonosítója'
-      id: 'Azonosító'
-      imported: 'Importált bejegyzések'
-      irpf_category: 'IRPF-kategória'
-      iva_amount: 'IVA-összeg'
-      iva_rate: 'IVA-kulcs'
-      lifecycle_state: 'Életciklus-állapot'
-      merged_id: 'Egyesített tranzakcióazonosító'
-      notes: 'Megjegyzések'
-      notice: 'Értesítés'
-      output: 'Kimenet'
-      parent_id: 'Szülő tranzakcióazonosító'
-      pending: 'Felülvizsgálatra vár'
-      period: 'Időszak'
-      readiness_issues: 'Készültségi problémák'
-      ready: 'Kész'
-      removed: 'Eltávolítva'
-      reset: 'Alaphelyzetbe állítva'
-      review_status: 'Felülvizsgálati állapot'
-      reviewed: 'Felülvizsgált'
-      rows: 'Sorok'
-      sha256: 'SHA-256'
-      skipped: 'Kihagyva'
-      source: 'Forrás'
-      split_group_id: 'Felosztási csoportazonosító'
-      stashed: 'Elrejtett'
-      taxable_base: 'Adóköteles alap'
-      valid: 'Érvényes'
-      value_date: 'Értékdátum'
-      warning: 'Figyelmeztetés'
-      warnings: 'Figyelmeztetések'
-      no: 'Nem'
-      yes: 'Igen'
-      no: 'Nem'
+      active: Aktív
+      amount: Összeg
+      archived: Archivált
+      bucket: Mappa
+      business_classification: Besorolás
+      business_pct: Üzleti %
+      category_id: Kategória
+      checked: Ellenőrzött tranzakciók
+      children: Gyermek elemek
+      counterparty: Szerződő fél
+      created_event_id: Létrehozó bucket-esemény
+      currency: Pénznem
+      date: Dátum
+      description: Leírás
+      dialect: Észlelt formátum
+      direction: Irány
+      dry_run: PRÓBA MÓD
+      event_count: Események száma
+      event_id: Eseményazonosító
+      export_id: Export azonosítója
+      id: Azonosító
+      imported: Importált bejegyzések
+      irpf_category: IRPF-kategória
+      iva_amount: IVA-összeg
+      iva_rate: IVA-kulcs
+      lifecycle_state: Életciklus-állapot
+      merged_id: Egyesített tranzakcióazonosító
+      'no': Nem
+      notes: Megjegyzések
+      notice: Értesítés
+      output: Kimenet
+      parent_id: Szülő tranzakcióazonosító
+      pending: Felülvizsgálatra vár
+      period: Időszak
+      readiness_issues: Készültségi problémák
+      ready: Kész
+      removed: Eltávolítva
+      reset: Alaphelyzetbe állítva
+      review_status: Felülvizsgálati állapot
+      reviewed: Felülvizsgált
+      rows: Sorok
+      sha256: SHA-256
+      skipped: Kihagyva
+      source: Forrás
+      split_group_id: Felosztási csoportazonosító
+      stashed: Elrejtett
+      taxable_base: Adóköteles alap
+      valid: Érvényes
+      value_date: Értékdátum
+      warning: Figyelmeztetés
+      warnings: Figyelmeztetések
+      'yes': Igen
     link:
-      actor_help: 'A bucket-eseményeken rögzített üzemeltetői felirat.'
+      actor_help: A bucket-eseményeken rögzített üzemeltetői felirat.
       errors:
-        cross_bucket_invoice: 'A számla egy másik buckethez tartozik, mint az aktív profil.'
-        invoice_not_found: 'A számla nem szerepel az aktív profil számlakatalógusában.'
+        cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
+          profil.
+        invoice_not_found: A számla nem szerepel az aktív profil számlakatalógusában.
         missing_target: 'Adjon meg legalább egyet: --invoice-id vagy --evidence-id.'
-      evidence_id_help: 'A tranzakcióhoz csatolandó vásárlásiszámla-bizonyíték azonosítója.'
-      help: 'Főkönyvi tranzakció összekapcsolása számlával és/vagy vásárlásiszámla-bizonyítékkal egyetlen kanonikus hívásban. Keresztbucket-hivatkozásokat elutasít. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
-      id_help: 'Főkönyvi tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).'
-      invoice_id_help: 'A tranzakcióhoz kétirányúan kötendő számla azonosítója.'
+      evidence_id_help: A tranzakcióhoz csatolandó vásárlásiszámla-bizonyíték azonosítója.
+      help: Főkönyvi tranzakció összekapcsolása számlával és/vagy vásárlásiszámla-bizonyítékkal
+        egyetlen kanonikus hívásban. Keresztbucket-hivatkozásokat elutasít. Csak helyi;
+        soha nem lép kapcsolatba az AEAT-tal.
+      id_help: Főkönyvi tranzakcióazonosító (SHA-256 vagy egyértelmű előtag).
+      invoice_id_help: A tranzakcióhoz kétirányúan kötendő számla azonosítója.
     list:
-      header: 'KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK'
-      help: 'Főkönyvi tranzakciók listázása az aktív profilmappában.'
+      header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
+      help: Főkönyvi tranzakciók listázása az aktív profilmappában.
     merge:
-      actor_help: 'Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen rögzítenek.'
-      child_id_help: 'Egy gyermek azonosítója (vagy egyértelmű előtag) az egyesítéshez. Ismételje meg minden testvér esetén; részleges egyesítések elutasítva.'
+      actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_MERGED eseményen
+        rögzítenek.
+      child_id_help: Egy gyermek azonosítója (vagy egyértelmű előtag) az egyesítéshez.
+        Ismételje meg minden testvér esetén; részleges egyesítések elutasítva.
       errors:
-        min_two_children: 'A ledger merge parancshoz legalább két --child-id értéke szükséges.'
-      help: 'Felosztott gyermekek teljes kohortjának újraegyesítése egy friss tranzakcióba.'
-      reason_help: 'A bucket-esemény adatcsomagjában és az életciklus-előzményekben rögzített ok.'
-      yes_help: 'Az egyesítés megerősítése (minden gyermeket és a szülőt archiválja, és megőriz egy friss tartalom-azonosítójú egyesített tranzakciót).'
+        min_two_children: A ledger merge parancshoz legalább két --child-id értéke
+          szükséges.
+      help: Felosztott gyermekek teljes kohortjának újraegyesítése egy friss tranzakcióba.
+      reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
+        rögzített ok.
+      yes_help: Az egyesítés megerősítése (minden gyermeket és a szülőt archiválja,
+        és megőriz egy friss tartalom-azonosítójú egyesített tranzakciót).
     preflight:
-      help: 'Hiányzó főkönyvi adatok (kategória, adóköteles alap, IVA-összeg/kulcs, pénznem, arányossági hivatkozás) jelentése az aktív bucket tranzakcióira egy adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
-      period_help: 'Kanonikus időszak (pl. 2026N1, 2026-03, 2026).'
+      help: Hiányzó főkönyvi adatok (kategória, adóköteles alap, IVA-összeg/kulcs,
+        pénznem, arányossági hivatkozás) jelentése az aktív bucket tranzakcióira egy
+        adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
+      period_help: Kanonikus időszak (pl. 2026N1, 2026-03, 2026).
     remove:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      dry_run_help: 'Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése nélkül.'
-      help: 'Egyetlen főkönyvi tranzakció eltávolítása az aktív profilmappából.'
-      id_help: 'Az eltávolítandó főkönyvi tranzakció azonosítója.'
-      reason_help: 'Az eltávolítási előzményekben rögzített ok.'
-      yes_help: 'A főkönyvi tranzakció törlésének megerősítése.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      dry_run_help: Az eltávolítás hatásainak jelentése a főkönyvi tranzakció törlése
+        nélkül.
+      help: Egyetlen főkönyvi tranzakció eltávolítása az aktív profilmappából.
+      id_help: Az eltávolítandó főkönyvi tranzakció azonosítója.
+      reason_help: Az eltávolítási előzményekben rögzített ok.
+      yes_help: A főkönyvi tranzakció törlésének megerősítése.
     reset:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      dry_run_help: 'A reset hatásainak jelentése a főkönyvi katalógus törlése nélkül.'
-      help: 'Az aktív profilmappa főkönyvi katalógusának alaphelyzetbe állítása.'
-      reason_help: 'A reset-előzményekben rögzített ok.'
-      yes_help: 'Az aktív főkönyvi katalógus törlésének megerősítése.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      dry_run_help: A reset hatásainak jelentése a főkönyvi katalógus törlése nélkül.
+      help: Az aktív profilmappa főkönyvi katalógusának alaphelyzetbe állítása.
+      reason_help: A reset-előzményekben rögzített ok.
+      yes_help: Az aktív főkönyvi katalógus törlésének megerősítése.
     review:
-      filter_help: 'Sorok szűrése állapot, időszak, probléma vagy importálás alapján.'
-      header: 'KÖNYVELÉSI FŐKÖNYVI FELÜLVIZSGÁLATI MUNKAMENET'
-      help: 'Főkönyvi bejegyzések interaktív felülvizsgálata és érvényesítése.'
-      id_help: 'A felülvizsgálandó bejegyzés azonosítója.'
-      no_rows: 'Nincs felülvizsgálatra váró főkönyvi bejegyzés.'
-      verbose_help: 'Részletes információ megjelenítése felülvizsgálat közben.'
+      filter_help: Sorok szűrése állapot, időszak, probléma vagy importálás alapján.
+      header: KÖNYVELÉSI FŐKÖNYVI FELÜLVIZSGÁLATI MUNKAMENET
+      help: Főkönyvi bejegyzések interaktív felülvizsgálata és érvényesítése.
+      id_help: A felülvizsgálandó bejegyzés azonosítója.
+      no_rows: Nincs felülvizsgálatra váró főkönyvi bejegyzés.
+      verbose_help: Részletes információ megjelenítése felülvizsgálat közben.
     split:
-      actor_help: 'Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_SPLIT eseményen rögzítenek.'
-      child_amount_help: 'Egy gyermek összege (előjeles Decimal a szülő pénznemében). Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-description értékekkel.'
-      child_description_help: 'Egy gyermek narratívája. Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-amount értékekkel.'
+      actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_SPLIT eseményen
+        rögzítenek.
+      child_amount_help: Egy gyermek összege (előjeles Decimal a szülő pénznemében).
+        Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-description
+        értékekkel.
+      child_description_help: Egy gyermek narratívája. Ismételje meg minden gyermek
+        esetén; a darabszámnak egyeznie kell a --child-amount értékekkel.
       errors:
-        child_args_mismatch: 'A ledger split parancshoz ugyanannyi --child-amount és --child-description argumentum szükséges.'
-        min_two_children: 'A ledger split parancshoz legalább két --child-amount / --child-description pár szükséges.'
-      help: 'Egy szülőtranzakció felosztása N gyermek tranzakcióra, amelyek összege pontosan egyenlő a szülő összegével.'
-      id_help: 'A felosztandó szülőtranzakció azonosítója (vagy egyértelmű hexadecimális előtag).'
-      reason_help: 'A bucket-esemény adatcsomagjában és az életciklus-előzményekben rögzített ok.'
-      yes_help: 'A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz N gyermek tranzakciót).'
+        child_args_mismatch: A ledger split parancshoz ugyanannyi --child-amount és
+          --child-description argumentum szükséges.
+        min_two_children: A ledger split parancshoz legalább két --child-amount /
+          --child-description pár szükséges.
+      help: Egy szülőtranzakció felosztása N gyermek tranzakcióra, amelyek összege
+        pontosan egyenlő a szülő összegével.
+      id_help: A felosztandó szülőtranzakció azonosítója (vagy egyértelmű hexadecimális
+        előtag).
+      reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
+        rögzített ok.
+      yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
+        N gyermek tranzakciót).
     stash:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      help: 'Egyetlen főkönyvi tranzakció elrejtése az aktív profilmappában.'
-      id_help: 'Az elrejtendő főkönyvi tranzakció azonosítója.'
-      reason_help: 'Az életciklus-előzményekben rögzített ok.'
-      yes_help: 'A főkönyvi tranzakció elrejtésének megerősítése.'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      help: Egyetlen főkönyvi tranzakció elrejtése az aktív profilmappában.
+      id_help: Az elrejtendő főkönyvi tranzakció azonosítója.
+      reason_help: Az életciklus-előzményekben rögzített ok.
+      yes_help: A főkönyvi tranzakció elrejtésének megerősítése.
     status:
-      help: 'A főkönyv állapotának és számítási készültségének összefoglalása az aktív profilmappában.'
-      period_help: 'A preflight-ellenőrzéshez vizsgálandó fiscális időszak (ÉÉÉÉ-HH vagy nyomtatvány-időszak).'
+      help: A főkönyv állapotának és számítási készültségének összefoglalása az aktív
+        profilmappában.
+      period_help: A preflight-ellenőrzéshez vizsgálandó fiscális időszak (ÉÉÉÉ-HH
+        vagy nyomtatvány-időszak).
     track:
-      help: 'Egyetlen főkönyvi tranzakció eseményleszármazásának megjelenítése.'
-      transaction_id_help: 'A vizsgálandó főkönyvi tranzakció azonosítója.'
+      help: Egyetlen főkönyvi tranzakció eseményleszármazásának megjelenítése.
+      transaction_id_help: A vizsgálandó főkönyvi tranzakció azonosítója.
     update:
-      actor_help: 'Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.'
-      amount_help: 'Új előjeles összeg (teljes csere).'
-      counterparty_help: 'Új szerződő fél leírása.'
-      currency_help: 'Új háromjegyű ISO 4217 pénznemkód.'
-      date_help: 'Új könyvelési dátum (ÉÉÉÉ-HH-NN).'
-      description_help: 'Új narratíva.'
-      direction_help: 'Új tranzakciós irány.'
-      help: 'Egyetlen főkönyvi tranzakció frissítése teljes csere mezőszémantikával.'
-      id_help: 'A frissítendő főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális előtag).'
-      irpf_category_help: 'Új IRPF-specifikus kategóriakulcs.'
-      iva_amount_help: 'Új IVA-összeg.'
-      iva_rate_help: 'Új IVA-kulcs tizedes törtként.'
-      notes_help: 'Új üzemeltetői megjegyzések.'
-      taxable_base_help: 'Új ÁFA-mentes alapösszeg.'
-      value_date_help: 'Új értékdátum (ÉÉÉÉ-HH-NN).'
+      actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
+      amount_help: Új előjeles összeg (teljes csere).
+      counterparty_help: Új szerződő fél leírása.
+      currency_help: Új háromjegyű ISO 4217 pénznemkód.
+      date_help: Új könyvelési dátum (ÉÉÉÉ-HH-NN).
+      description_help: Új narratíva.
+      direction_help: Új tranzakciós irány.
+      help: Egyetlen főkönyvi tranzakció frissítése teljes csere mezőszémantikával.
+      id_help: A frissítendő főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
+        előtag).
+      irpf_category_help: Új IRPF-specifikus kategóriakulcs.
+      iva_amount_help: Új IVA-összeg.
+      iva_rate_help: Új IVA-kulcs tizedes törtként.
+      notes_help: Új üzemeltetői megjegyzések.
+      taxable_base_help: Új ÁFA-mentes alapösszeg.
+      value_date_help: Új értékdátum (ÉÉÉÉ-HH-NN).
     view:
-      help: 'Egyetlen főkönyvi tranzakció megtekintése az aktív profilmappában.'
-      transaction_id_help: 'A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális előtag).'
+      help: Egyetlen főkönyvi tranzakció megtekintése az aktív profilmappában.
+      transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
+        előtag).
   locales:
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
     remove_key_help: Eltávolítandó pontozott locale-kulcs.
@@ -1587,127 +1661,132 @@ cli:
         %{allowed}; kapott: %{value}.'
   operator_surface:
     errors:
-      accepted_roots_only: 'A CLI csak a config és az app gyökérparancsokat fogadja el.'
-      contract_not_accepted: 'A kért parancs kívül esik az elfogadott üzemeltetői felületen.'
-      source_kind_options: 'A forrástípus csak a következők egyike lehet: ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice.'
+      accepted_roots_only: A CLI csak a config és az app gyökérparancsokat fogadja
+        el.
+      contract_not_accepted: A kért parancs kívül esik az elfogadott üzemeltetői felületen.
+      source_kind_options: 'A forrástípus csak a következők egyike lehet: ledger_transaction,
+        purchase_invoice_evidence, payable_invoice vagy collectible_invoice.'
       unknown_source_kind: 'Ismeretlen forrástípus: %{value}.'
     help:
       app:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
-        heading: 'aeat app - operatív adóügyi munka'
-        ledger_allocate: 'Üzleti célú vagy adóelosztási metaadatok hozzárendelése.'
-        ledger_archive: 'Főkönyvi tranzakció archiválása az előzmények törlése nélkül.'
-        ledger_attach: 'Bizonyíték csatolása egy főkönyvi tranzakcióhoz.'
-        ledger_classify: 'Importált sorok adókezelési besorolása.'
-        ledger_export: 'Főkönyvi adatok exportálása felülvizsgálatra.'
-        ledger_import: 'Banki vagy könyvelési tranzakciók importálása.'
-        ledger_list: 'Importált tranzakciók listázása.'
-        ledger_remove: 'Tranzakció eltávolítása explicit megerősítéssel.'
-        ledger_reset: 'Főkönyvi adatok törlése explicit megerősítéssel.'
-        ledger_review: 'Figyelmet igénylő importált sorok felülvizsgálata.'
-        ledger_stash: 'Egy sor kiemelése az aktív felülvizsgálati sorból.'
-        ledger_status: 'A főkönyv állapotának és számláinak megjelenítése.'
-        ledger_update: 'Főkönyvi tranzakció frissítése.'
-        ledger_view: 'Egyetlen tranzakció megtekintése.'
-        live_filed_capture: 'Csak olvasható megfigyelés rögzítése az AEAT-ból.'
-        live_filed_capture_sources: 'Rögzítési forráslehetőségek listázása.'
-        live_filed_list: 'Helyileg rögzített benyújtott bevallás-megfigyelések listázása.'
-        modelo_bindings: 'Nyilvántartási kötésfedettség vizsgálata.'
-        modelo_describe: 'Egy nyomtatvány-revízió leírása.'
-        modelo_list: 'Támogatott nyomtatványok listázása.'
-        modelo_work: 'Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.'
-        overview_status: 'Az aktuális profil és munkállapot összefoglalása.'
-        paragraph_operational_workflow: 'Az app-parancsok az aktív profilmappán működnek.'
-        registry_inspect: 'Nyilvántartási metaadatok vizsgálata.'
-        registry_verify: 'Helyi nyilvántartás integritásának ellenőrzése.'
-        review_queue: 'Üzemeltetői felülvizsgálatra váró elemek listázása.'
-        review_view: 'Egyetlen felülvizsgálati elem megtekintése.'
-        section_ledger: 'Főkönyv'
-        section_live_reads: 'Élő, csak olvasható megfigyelések'
-        section_modelo: 'Nyomtatvány'
-        section_overview: 'Áttekintés'
-        section_review_and_registry: 'Felülvizsgálat és nyilvántartás'
+        heading: aeat app - operatív adóügyi munka
+        ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
+        ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
+        ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
+        ledger_classify: Importált sorok adókezelési besorolása.
+        ledger_export: Főkönyvi adatok exportálása felülvizsgálatra.
+        ledger_import: Banki vagy könyvelési tranzakciók importálása.
+        ledger_list: Importált tranzakciók listázása.
+        ledger_remove: Tranzakció eltávolítása explicit megerősítéssel.
+        ledger_reset: Főkönyvi adatok törlése explicit megerősítéssel.
+        ledger_review: Figyelmet igénylő importált sorok felülvizsgálata.
+        ledger_stash: Egy sor kiemelése az aktív felülvizsgálati sorból.
+        ledger_status: A főkönyv állapotának és számláinak megjelenítése.
+        ledger_update: Főkönyvi tranzakció frissítése.
+        ledger_view: Egyetlen tranzakció megtekintése.
+        live_filed_capture: Csak olvasható megfigyelés rögzítése az AEAT-ból.
+        live_filed_capture_sources: Rögzítési forráslehetőségek listázása.
+        live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
+        modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
+        modelo_describe: Egy nyomtatvány-revízió leírása.
+        modelo_list: Támogatott nyomtatványok listázása.
+        modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
+        overview_status: Az aktuális profil és munkállapot összefoglalása.
+        paragraph_operational_workflow: Az app-parancsok az aktív profilmappán működnek.
+        registry_inspect: Nyilvántartási metaadatok vizsgálata.
+        registry_verify: Helyi nyilvántartás integritásának ellenőrzése.
+        review_queue: Üzemeltetői felülvizsgálatra váró elemek listázása.
+        review_view: Egyetlen felülvizsgálati elem megtekintése.
+        section_ledger: Főkönyv
+        section_live_reads: Élő, csak olvasható megfigyelések
+        section_modelo: Nyomtatvány
+        section_overview: Áttekintés
+        section_review_and_registry: Felülvizsgálat és nyilvántartás
       config:
-        auth_clear: 'Helyi hitelesítési metaadatok törlése.'
-        auth_configure: 'Hitelesítési szolgáltató konfigurálása.'
-        auth_providers: 'Támogatott hitelesítési szolgáltatók listázása.'
-        auth_status: 'Beállított hitelesítési állapot megjelenítése.'
-        auth_test: 'Helyi hitelesítési készség ellenőrzése.'
-        diagnostics_logs: 'A beállított naplóútvonal és a legújabb sorok megjelenítése.'
-        diagnostics_quarantine: 'Olvashatatlan biztonságos objektumok karanténba helyezése.'
-        diagnostics_repair: 'Helyi konfiguráció és tár állapotának diagnosztikája.'
-        diagnostics_reset_state: 'Olvashatatlan munkafolyamat-állapot alaphelyzetbe állítása.'
-        first_run_bootstrap: 'Helyi adóprofilmappa létrehozása.'
-        first_run_edit: 'A profilvarázsló újrafuttatása meglévő profilhoz.'
+        auth_clear: Helyi hitelesítési metaadatok törlése.
+        auth_configure: Hitelesítési szolgáltató konfigurálása.
+        auth_providers: Támogatott hitelesítési szolgáltatók listázása.
+        auth_status: Beállított hitelesítési állapot megjelenítése.
+        auth_test: Helyi hitelesítési készség ellenőrzése.
+        diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
+        diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
+        diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
+        diagnostics_reset_state: Olvashatatlan munkafolyamat-állapot alaphelyzetbe
+          állítása.
+        first_run_bootstrap: Helyi adóprofilmappa létrehozása.
+        first_run_edit: A profilvarázsló újrafuttatása meglévő profilhoz.
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
-        heading: 'aeat config - profil, hitelesítés, diagnosztika'
-        paragraph_durable_state: 'A config-parancsok a helyi tartós állapotot kezelik.'
-        profile_census: 'AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.'
-        profile_delete: 'Profil törlése explicit megerősítés után.'
-        profile_duplicate: 'Profil másolása új azonosítóra.'
-        profile_list: 'Profiladatok listázása.'
-        profile_rename: 'Profil átnevezése és mappájának áthelyezése.'
-        profile_show: 'Egy profil adatainak megjelenítése.'
-        profile_status: 'Az aktív profil készültségének megjelenítése.'
-        profile_switch: 'Az aktív profil váltása.'
-        section_authentication: 'Hitelesítés'
-        section_diagnostics: 'Diagnosztika'
-        section_first_run: 'Első futtatás'
-        section_profile_inspection: 'Profiladatok vizsgálata'
-        section_profile_lifecycle: 'Profil életciklusa'
+        heading: aeat config - profil, hitelesítés, diagnosztika
+        paragraph_durable_state: A config-parancsok a helyi tartós állapotot kezelik.
+        profile_census: AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.
+        profile_delete: Profil törlése explicit megerősítés után.
+        profile_duplicate: Profil másolása új azonosítóra.
+        profile_list: Profiladatok listázása.
+        profile_rename: Profil átnevezése és mappájának áthelyezése.
+        profile_show: Egy profil adatainak megjelenítése.
+        profile_status: Az aktív profil készültségének megjelenítése.
+        profile_switch: Az aktív profil váltása.
+        section_authentication: Hitelesítés
+        section_diagnostics: Diagnosztika
+        section_first_run: Első futtatás
+        section_profile_inspection: Profiladatok vizsgálata
+        section_profile_lifecycle: Profil életciklusa
       root:
-        diagnostics_live_filed: 'Rögzített benyújtott bevallás-megfigyelések listázása.'
-        diagnostics_overview: 'Az aktív munkaterület készültségének összefoglalása.'
-        diagnostics_registry_inspect: 'Nyilvántartási metaadatok vizsgálata.'
-        diagnostics_repair: 'Helyi konfiguráció és tár állapotának diagnosztikája.'
-        diagnostics_review_queue: 'Függőben lévő felülvizsgálati munka listázása.'
+        diagnostics_live_filed: Rögzített benyújtott bevallás-megfigyelések listázása.
+        diagnostics_overview: Az aktív munkaterület készültségének összefoglalása.
+        diagnostics_registry_inspect: Nyilvántartási metaadatok vizsgálata.
+        diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
+        diagnostics_review_queue: Függőben lévő felülvizsgálati munka listázása.
         footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
-        heading: 'aeat - helyi-alapú spanyol adózási munkafolyamat'
-        ledger_allocate: 'Üzleti célú vagy adóelosztási metaadatok hozzárendelése.'
-        ledger_archive: 'Főkönyvi tranzakció archiválása az előzmények törlése nélkül.'
-        ledger_attach: 'Bizonyíték csatolása egy főkönyvi tranzakcióhoz.'
-        ledger_classify: 'Importált sorok besorolása.'
-        ledger_export: 'Főkönyvi adatok exportálása.'
-        ledger_import: 'Banki vagy könyvelési tranzakciók importálása.'
-        ledger_list: 'Importált tranzakciók listázása.'
-        ledger_remove: 'Tranzakció eltávolítása megerősítéssel.'
-        ledger_reset: 'Főkönyvi adatok törlése megerősítéssel.'
-        ledger_review: 'Importált sorok felülvizsgálata.'
-        ledger_stash: 'Egy sor kiemelése az aktív felülvizsgálatból.'
-        ledger_status: 'A főkönyv állapotának és számláinak megjelenítése.'
-        ledger_update: 'Főkönyvi tranzakció frissítése.'
-        ledger_view: 'Egyetlen tranzakció megtekintése.'
-        modelo_bindings_list: 'Nyilvántartási kötésfedettség listázása.'
-        modelo_list: 'Támogatott nyomtatványok listázása.'
-        modelo_work: 'Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.'
+        heading: aeat - helyi-alapú spanyol adózási munkafolyamat
+        ledger_allocate: Üzleti célú vagy adóelosztási metaadatok hozzárendelése.
+        ledger_archive: Főkönyvi tranzakció archiválása az előzmények törlése nélkül.
+        ledger_attach: Bizonyíték csatolása egy főkönyvi tranzakcióhoz.
+        ledger_classify: Importált sorok besorolása.
+        ledger_export: Főkönyvi adatok exportálása.
+        ledger_import: Banki vagy könyvelési tranzakciók importálása.
+        ledger_list: Importált tranzakciók listázása.
+        ledger_remove: Tranzakció eltávolítása megerősítéssel.
+        ledger_reset: Főkönyvi adatok törlése megerősítéssel.
+        ledger_review: Importált sorok felülvizsgálata.
+        ledger_stash: Egy sor kiemelése az aktív felülvizsgálatból.
+        ledger_status: A főkönyv állapotának és számláinak megjelenítése.
+        ledger_update: Főkönyvi tranzakció frissítése.
+        ledger_view: Egyetlen tranzakció megtekintése.
+        modelo_bindings_list: Nyilvántartási kötésfedettség listázása.
+        modelo_list: Támogatott nyomtatványok listázása.
+        modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
         paragraph_two_roots: 'A CLI-nek pontosan két gyökere van: config és app.'
-        paragraph_type_help: 'A config parancsot helyi állapothoz, az app parancsot adóügyi munkához használja.'
-        section_daily_ledger: 'Napi főkönyvi munka'
-        section_diagnostics: 'Diagnosztika'
-        section_modelo_lifecycle: 'Nyomtatvány életciklusa'
-        section_setup: 'Beállítás'
-        setup_configure_auth: 'AEAT-hitelesítés konfigurálása.'
-        setup_create_profile: 'Profilmappa létrehozása.'
-        setup_inspect_profile: 'Profilparancsok vizsgálata.'
+        paragraph_type_help: A config parancsot helyi állapothoz, az app parancsot
+          adóügyi munkához használja.
+        section_daily_ledger: Napi főkönyvi munka
+        section_diagnostics: Diagnosztika
+        section_modelo_lifecycle: Nyomtatvány életciklusa
+        section_setup: Beállítás
+        setup_configure_auth: AEAT-hitelesítés konfigurálása.
+        setup_create_profile: Profilmappa létrehozása.
+        setup_inspect_profile: Profilparancsok vizsgálata.
     landing:
       active_profile_message: 'Az aktív profil: %{profile}.'
-      no_active_profile_message: 'Nincs aktív profil beállítva.'
+      no_active_profile_message: Nincs aktív profil beállítva.
       text_template: '%{message} Következő: %{command}'
     retired:
-      archive_reason: 'Az archiválás a config bucket alá van összevonva.'
-      data_reason: 'Az adatmunka az app ledger alá van összevonva.'
-      declaration_reason: 'A bevallási munka az app modelo alá van összevonva.'
-      filing_reason: 'A benyújtási munka az app modelo alá van összevonva.'
-      financial_reason: 'A pénzügyi munka az app ledger alá van összevonva.'
-      invoice_reason: 'A számlakezelés az app ledger alá van összevonva.'
-      llm_reason: 'A besorolás az app ledger classify parancs alatt érhető el.'
-      preflight_reason: 'A preflight-ellenőrzés a nyomtatvány-ellenőrzéshez tartozik.'
-      presentation_reason: 'Az exportok az app modelo export alá tartoznak.'
-      sanitize_reason: 'A főkönyv-ellenőrzések az app ledger check parancs alatt érhetők el.'
-      setup_reason: 'A beállítás és a konfiguráció a config gyökér alá van összevonva.'
-      submit_reason: 'Az élő benyújtás véglegesen le van tiltva.'
-      topic_reason: 'A témakeresés az app registry citations alá van összevonva.'
-      workflow_reason: 'A munkafolyamat-műveletek az app modelo alá vannak összevonva.'
+      archive_reason: Az archiválás a config bucket alá van összevonva.
+      data_reason: Az adatmunka az app ledger alá van összevonva.
+      declaration_reason: A bevallási munka az app modelo alá van összevonva.
+      filing_reason: A benyújtási munka az app modelo alá van összevonva.
+      financial_reason: A pénzügyi munka az app ledger alá van összevonva.
+      invoice_reason: A számlakezelés az app ledger alá van összevonva.
+      llm_reason: A besorolás az app ledger classify parancs alatt érhető el.
+      preflight_reason: A preflight-ellenőrzés a nyomtatvány-ellenőrzéshez tartozik.
+      presentation_reason: Az exportok az app modelo export alá tartoznak.
+      sanitize_reason: A főkönyv-ellenőrzések az app ledger check parancs alatt érhetők
+        el.
+      setup_reason: A beállítás és a konfiguráció a config gyökér alá van összevonva.
+      submit_reason: Az élő benyújtás véglegesen le van tiltva.
+      topic_reason: A témakeresés az app registry citations alá van összevonva.
+      workflow_reason: A munkafolyamat-műveletek az app modelo alá vannak összevonva.
   overview:
     agenda:
       allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
@@ -1789,114 +1868,123 @@ cli:
       title: Munkaterület állapota
       transactions_empty: Még nem importáltak banki tranzakciókat.
       transactions_present: '%{count} banki tranzakció érhető el a főkönyvben.'
-      work_units_empty: 'Még nem indítottak modellómunka-egységet.'
-      work_units_present: '%{count} modellómunka-egység folyamatban van a helyi tárban – a modellómunkája mentve van; folytassa: `aeat app modelo work list`.'
-      work_units_present_with_discarded: '%{count} aktív modellómunka-egység (%{discarded} eldobott) a helyi tárban – az aktív modellómunkája mentve van; folytassa: `aeat app modelo work list`.'
-    status_help: 'Profil, főkönyv és nyomtatvány-készültség megjelenítése.'
+      work_units_empty: Még nem indítottak modellómunka-egységet.
+      work_units_present: '%{count} modellómunka-egység folyamatban van a helyi tárban
+        – a modellómunkája mentve van; folytassa: `aeat app modelo work list`.'
+      work_units_present_with_discarded: '%{count} aktív modellómunka-egység (%{discarded}
+        eldobott) a helyi tárban – az aktív modellómunkája mentve van; folytassa:
+        `aeat app modelo work list`.'
+    status_help: Profil, főkönyv és nyomtatvány-készültség megjelenítése.
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
-    verbose_help: 'Részletek és következő lépés megjelenítése, ha elérhető.'
+    verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
   registry:
-    app_help: 'Adónyomtatvány-nyilvántartás kezelése.'
-    audit_oracles_environment_help: 'Az élő paritási katalógus környezete az audit elvégzéséhez (production, test_environment vagy both).'
-    audit_oracles_help: 'Élő paritási orákulumkötés-eltérések felszínre hozása indításkor.'
-    casilla_help: 'Az összehasonlítandó mező azonosítója; ismételje meg az alapértelmezett számított mezők felülbírálásához.'
+    app_help: Adónyomtatvány-nyilvántartás kezelése.
+    audit_oracles_environment_help: Az élő paritási katalógus környezete az audit
+      elvégzéséhez (production, test_environment vagy both).
+    audit_oracles_help: Élő paritási orákulumkötés-eltérések felszínre hozása indításkor.
+    casilla_help: Az összehasonlítandó mező azonosítója; ismételje meg az alapértelmezett
+      számított mezők felülbírálásához.
     citations:
-      app_help: 'A jogi norma-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...).'
-      articulo_help: 'A megjelenítendő konkrét cikk (pl. 91.Uno.2.1°).'
-      list_help: 'A jogi korpuszban kodifikált normák listázása.'
-      normative_id_help: 'Stabil normaazonosító (pl. ley-37-1992).'
-      tag_help: 'Szűrés adójogi tag alapján (pl. irpf, iva).'
-      verify_help: 'A jogi norma-korpusz integritásának ellenőrzése.'
-      view_help: 'Egy norma és opcionálisan egy cikkének megjelenítése.'
-    inspect_help: 'A nyilvántartás állapotának és hivatkozásainak vizsgálata.'
-    inspect_registry_root_help: 'A nyilvántartás gyökérkönyvtárának elérési útja.'
+      app_help: A jogi norma-korpusz vizsgálata (Ley 37/1992, Ley 35/2006, ...).
+      articulo_help: A megjelenítendő konkrét cikk (pl. 91.Uno.2.1°).
+      list_help: A jogi korpuszban kodifikált normák listázása.
+      normative_id_help: Stabil normaazonosító (pl. ley-37-1992).
+      tag_help: Szűrés adójogi tag alapján (pl. irpf, iva).
+      verify_help: A jogi norma-korpusz integritásának ellenőrzése.
+      view_help: Egy norma és opcionálisan egy cikkének megjelenítése.
+    inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
+    inspect_registry_root_help: A nyilvántartás gyökérkönyvtárának elérési útja.
     manuals:
-      app_help: 'Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).'
-      kind_help: 'Szűrés kézikönyvi szabálytípus alapján.'
-      list_help: 'A helyileg elérhető kézikönyv-részek listázása.'
-      manual_help: 'Kézikönyv-azonosító (renta, iva, sociedades).'
-      part_help: 'Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).'
-      rules_help: 'Egy kézikönyvben kodifikált szabályok listázása.'
-      section_help: 'Opcionális szakaszazonosító a megjelenítéshez.'
+      app_help: Az AEAT Manuál práctico rekordok vizsgálata (Renta, IVA, Sociedades).
+      kind_help: Szűrés kézikönyvi szabálytípus alapján.
+      list_help: A helyileg elérhető kézikönyv-részek listázása.
+      manual_help: Kézikönyv-azonosító (renta, iva, sociedades).
+      part_help: Kézikönyv-kötet (single, part1, part2-deducciones-autonomicas, part3).
+      rules_help: Egy kézikönyvben kodifikált szabályok listázása.
+      section_help: Opcionális szakaszazonosító a megjelenítéshez.
       verify_dangling_rule_section_ref: '%{rule_id} szabály ismeretlen szakaszra hivatkozik:
         %{target}'
       verify_dangling_section_ref: '%{section_id} szakasz ismeretlen szakaszra hivatkozik:
         %{target}'
       verify_failed: 'az ellenőrzés sikertelen ehhez: %{manual_id}/%{year}/%{part}:
         %{messages}'
-      verify_help: 'A kézikönyv integritásának ellenőrzése a szerződésével szemben.'
+      verify_help: A kézikönyv integritásának ellenőrzése a szerződésével szemben.
       verify_missing_manifest: '%{manifest_path} hiányzik; futtasd az ''aeat manual
         fetch'' parancsot a létrehozásához'
       verify_missing_translation: '%{section_id} szakasz: hiányzik a(z) %{field_name}
         fordítási kulcsa'
-      view_help: 'Egy kézikönyv szerkezetének és opcionálisan egy szakaszának megjelenítése.'
-      year_help: 'A kézikönyv adóéve (pl. 2024).'
+      view_help: Egy kézikönyv szerkezetének és opcionálisan egy szakaszának megjelenítése.
+      year_help: A kézikönyv adóéve (pl. 2024).
     metrics:
-      applicability_declaration_count: 'Alkalmazhatósági nyilatkozatok száma'
-      application_link_count: 'Alkalmazási hivatkozások száma'
-      application_link_surfaces: 'Alkalmazási hivatkozási felületek'
-      artefact_refs: 'Artefakt-hivatkozások'
-      backend_exists: 'Tár létezik'
-      captured_count: 'Rögzített elemek száma'
-      casilla_count: 'Mezők száma'
-      compared_casillas: 'Összehasonlított mezők'
-      comparison_count: 'Összehasonlítások száma'
-      cross_reference_count: 'Kereszthivatkozások száma'
-      difference_count: 'Eltérések száma'
-      differences: 'Eltérések'
-      drift_count: 'Eltolódások száma'
-      environment: 'Környezet'
-      extraction_profile_count: 'Kinyerési profilok száma'
-      failed_count: 'Sikertelenek száma'
-      failure_count: 'Hibák száma'
-      formula_count: 'Képletek száma'
-      formula_workbook_count: 'Képlet-munkafüzetek száma'
-      legal_reference_count: 'Jogszabályi hivatkozások száma'
-      missing_filed_casillas: 'Hiányzó benyújtott mezők'
-      missing_local_casillas: 'Hiányzó helyi mezők'
-      modelo: 'Nyomtatvány'
-      modelo_count: 'Nyomtatványok száma'
-      modelos: 'Nyomtatványok'
-      observation_paths: 'Megfigyelési útvonalak'
-      orphan_oracle_ids: 'Árva orákulum-azonosítók'
-      passed: 'Sikeres'
-      registered_oracle_ids: 'Regisztrált orákulum-azonosítók'
-      revision: 'Revízió'
-      revision_count: 'Revíziók száma'
-      row_count: 'Sorok száma'
-      runner_detail: 'Futtató részletei'
-      runner_status: 'Futtató állapota'
-      scanned_count: 'Átvizsgált elemek száma'
-      scenario_id: 'Forgatókönyv-azonosító'
-      source_reference_count: 'Forráshivatkozások száma'
-      status: 'Állapot'
-      tape_path: 'Szalag elérési útja'
-      unsupported_xls_count: 'Nem támogatott XLS-ek száma'
-      verification_expectation_count: 'Ellenőrzési elvárások száma'
-      verified: 'Ellenőrzött'
-      workbook_count: 'Munkafüzetek száma'
-      workbook_parity_ref_count: 'Munkafüzet paritás-hivatkozások száma'
-      workbook_path: 'Munkafüzet elérési útja'
-    observation_help: 'A titkosított benyújtott bevallás megfigyelési manifesztje az ellenőrzéshez.'
-    parity_app_help: 'Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.'
-    parity_output_help: 'A generált paritási szalag célpontja (JSON-fájl).'
-    parity_replay_help: 'Egy archivált paritási szalag visszajátszása az aktuális nyilvántartási futásidővel szemben.'
-    parity_run_help: 'Egy tárolt paritási forgatókönyv futtatása és az eredmény archiválása.'
-    parity_scenario_help: 'Egy paritási forgatókönyv JSON-fájljának elérési útja.'
-    parity_store_root_help: 'A generált paritási szalagok tárolásához használt gyökérkönyvtár.'
-    parity_tape_help: 'Egy tárolt paritási szalag JSON-fájljának elérési útja.'
-    source_observation_help: 'A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt titkosított forrásmegfigyelési manifeszt.'
-    verify_filed_state_help: 'A helyi nyilvántartási számítás kimenetének összehasonlítása a rögzített benyújtott AEAT-állapottal.'
-    verify_help: 'A helyi nyilvántartás integritásának ellenőrzése.'
-    verify_source_root_help: 'Az ellenőrzendő forráskönyvtár elérési útja.'
-    workbooks_app_help: 'Nyilvántartási munkafüzetek kezelése.'
-    workbooks_limit_help: 'A fordítandó munkafüzetek számbeli korlátja.'
-    workbooks_output_help: 'A fordított munkafüzetek kimeneti könyvtára.'
-    workbooks_resume_help: 'A munkafüzetek fordításának folytatása az utolsó ponttól.'
-    workbooks_root_help: 'A munkafüzetdefiníciókat tartalmazó gyökérkönyvtár.'
-    workbooks_timeout_help: 'A fordítás maximális időkorlátja (másodpercekben).'
-    workbooks_verify_help: 'A generált munkafüzetek integritásának ellenőrzése.'
+      applicability_declaration_count: Alkalmazhatósági nyilatkozatok száma
+      application_link_count: Alkalmazási hivatkozások száma
+      application_link_surfaces: Alkalmazási hivatkozási felületek
+      artefact_refs: Artefakt-hivatkozások
+      backend_exists: Tár létezik
+      captured_count: Rögzített elemek száma
+      casilla_count: Mezők száma
+      compared_casillas: Összehasonlított mezők
+      comparison_count: Összehasonlítások száma
+      cross_reference_count: Kereszthivatkozások száma
+      difference_count: Eltérések száma
+      differences: Eltérések
+      drift_count: Eltolódások száma
+      environment: Környezet
+      extraction_profile_count: Kinyerési profilok száma
+      failed_count: Sikertelenek száma
+      failure_count: Hibák száma
+      formula_count: Képletek száma
+      formula_workbook_count: Képlet-munkafüzetek száma
+      legal_reference_count: Jogszabályi hivatkozások száma
+      missing_filed_casillas: Hiányzó benyújtott mezők
+      missing_local_casillas: Hiányzó helyi mezők
+      modelo: Nyomtatvány
+      modelo_count: Nyomtatványok száma
+      modelos: Nyomtatványok
+      observation_paths: Megfigyelési útvonalak
+      orphan_oracle_ids: Árva orákulum-azonosítók
+      passed: Sikeres
+      registered_oracle_ids: Regisztrált orákulum-azonosítók
+      revision: Revízió
+      revision_count: Revíziók száma
+      row_count: Sorok száma
+      runner_detail: Futtató részletei
+      runner_status: Futtató állapota
+      scanned_count: Átvizsgált elemek száma
+      scenario_id: Forgatókönyv-azonosító
+      source_reference_count: Forráshivatkozások száma
+      status: Állapot
+      tape_path: Szalag elérési útja
+      unsupported_xls_count: Nem támogatott XLS-ek száma
+      verification_expectation_count: Ellenőrzési elvárások száma
+      verified: Ellenőrzött
+      workbook_count: Munkafüzetek száma
+      workbook_parity_ref_count: Munkafüzet paritás-hivatkozások száma
+      workbook_path: Munkafüzet elérési útja
+    observation_help: A titkosított benyújtott bevallás megfigyelési manifesztje az
+      ellenőrzéshez.
+    parity_app_help: Forgatókönyv- és szalag-paritásfuttató a kézi számítások ellenőrzéséhez.
+    parity_output_help: A generált paritási szalag célpontja (JSON-fájl).
+    parity_replay_help: Egy archivált paritási szalag visszajátszása az aktuális nyilvántartási
+      futásidővel szemben.
+    parity_run_help: Egy tárolt paritási forgatókönyv futtatása és az eredmény archiválása.
+    parity_scenario_help: Egy paritási forgatókönyv JSON-fájljának elérési útja.
+    parity_store_root_help: A generált paritási szalagok tárolásához használt gyökérkönyvtár.
+    parity_tape_help: Egy tárolt paritási szalag JSON-fájljának elérési útja.
+    source_observation_help: A korábbi benyújtási kötések vagy kapcsolatok által megkövetelt
+      titkosított forrásmegfigyelési manifeszt.
+    verify_filed_state_help: A helyi nyilvántartási számítás kimenetének összehasonlítása
+      a rögzített benyújtott AEAT-állapottal.
+    verify_help: A helyi nyilvántartás integritásának ellenőrzése.
+    verify_source_root_help: Az ellenőrzendő forráskönyvtár elérési útja.
+    workbooks_app_help: Nyilvántartási munkafüzetek kezelése.
+    workbooks_limit_help: A fordítandó munkafüzetek számbeli korlátja.
+    workbooks_output_help: A fordított munkafüzetek kimeneti könyvtára.
+    workbooks_resume_help: A munkafüzetek fordításának folytatása az utolsó ponttól.
+    workbooks_root_help: A munkafüzetdefiníciókat tartalmazó gyökérkönyvtár.
+    workbooks_timeout_help: A fordítás maximális időkorlátja (másodpercekben).
+    workbooks_verify_help: A generált munkafüzetek integritásának ellenőrzése.
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
       és nyomtatvány-megállapítások osztályozása.'
@@ -2671,6 +2759,8 @@ errors:
       végre a megadott bemenettel.
     refused_auth_configure_dangling_active_profile: Az aktív-profil mutató nem oldódik
       fel egy regisztrált bucket-re.
+    refused_auth_diagnostic_phone_state: A megadott telefonállapot-érték nem ismert.
+      Használjon egy érvényes operátori telefonállapot-értéket.
     refused_auth_login_live_tests_disabled: Az eles bejelentkezesi probak le vannak
       tiltva.
     refused_auth_login_precondition: A bejelentkezes elofeltetele nem teljesul.
@@ -2705,6 +2795,7 @@ errors:
       még osztályozásra szorul. Osztályozza mindegyiket az összesítés előtt.
     refused_financial_aggregation_unsupported_modelo: Nincs összesítési szerződés
       a kért modelóhoz.
+    refused_financial_bank_statement_parse: 'A pénzügyi bankikivonás elemzése sikertelen.'
     refused_financial_ledger_no_active_bucket: A főkönyvi művelethez aktív profil
       szükséges. Hozzon létre vagy válasszon ki egy profilt, és próbálja újra.
     refused_financial_ledger_transaction_id_prefix: A tranzakció-azonosító előtag
@@ -2832,7 +2923,6 @@ errors:
     refused_workflow_aborted: A munkafolyamatot megszakították.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
-    refused_auth_diagnostic_phone_state: 'A megadott telefonállapot-érték nem ismert. Használjon egy érvényes operátori telefonállapot-értéket.'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:
