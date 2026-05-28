@@ -332,6 +332,7 @@ application:
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo 303 (%{divergence}): %{reason}'
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
@@ -351,6 +352,10 @@ application:
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
+      cross_casilla_invariant_next_action: 'Ensure all casillas required by predicate %{predicate_id} are non-zero before verifying.'
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated: %{expression}'
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id} = %{ingreso_value} pero casilla %{reduccion_id} (reduccion trabajo) es cero. Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones anteriores al 31-dic-2006, puede aplicar la reduccion del 40%% DT 12a LIRPF.'
+      iva_wallet_next_action: 'Revise la decision de conciliacion del saldo IVA antes de verificar o exportar este Modelo 303.'
       m210_baseline_tipo_deferred:
         next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
           aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
@@ -368,6 +373,7 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
+      registry_snapshot_unresolved: 'registry snapshot for modelo=%{modelo} filing_year=%{filing_year} period=%{period} could not be resolved'
   overview:
     explain:
       errors:
@@ -726,17 +732,17 @@ cli:
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
-        label_bindings: 'Vinculaciones'
-        label_cadence: 'Periodicidad'
-        label_casillas: 'Casillas'
-        label_formulas: 'Fórmulas'
-        label_modelo: 'Modelo'
-        label_official_name: 'Nombre oficial'
-        label_periods: 'Períodos'
-        label_revision: 'Revisión'
-        label_revision_ids: 'Ids de revisión'
-        label_tax_domain: 'Ámbito fiscal'
-        label_title: 'Título'
+        label_bindings: Vinculaciones
+        label_cadence: Periodicidad
+        label_casillas: Casillas
+        label_formulas: Fórmulas
+        label_modelo: Modelo
+        label_official_name: Nombre oficial
+        label_periods: Períodos
+        label_revision: Revisión
+        label_revision_ids: Ids de revisión
+        label_tax_domain: Ámbito fiscal
+        label_title: Título
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_error: 'Error de registro: %{message}'
         period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,

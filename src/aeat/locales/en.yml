@@ -297,6 +297,7 @@ application:
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}): %{reason}'
       iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
         history. For the first M303 filing of a fresh profile, seed the opening balance
         with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
@@ -675,17 +676,17 @@ cli:
         Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
-        label_bindings: 'Bindings'
-        label_cadence: 'Cadence'
-        label_casillas: 'Casillas'
-        label_formulas: 'Formulas'
-        label_modelo: 'Modelo'
-        label_official_name: 'Official name'
-        label_periods: 'Periods'
-        label_revision: 'Revision'
-        label_revision_ids: 'Revision ids'
-        label_tax_domain: 'Tax domain'
-        label_title: 'Title'
+        label_bindings: Bindings
+        label_cadence: Cadence
+        label_casillas: Casillas
+        label_formulas: Formulas
+        label_modelo: Modelo
+        label_official_name: Official name
+        label_periods: Periods
+        label_revision: Revision
+        label_revision_ids: Revision ids
+        label_tax_domain: Tax domain
+        label_title: Title
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_error: 'Registry error: %{message}'
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
