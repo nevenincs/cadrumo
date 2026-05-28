@@ -7,33 +7,23 @@ m210-irnr-full-engine ADR (§D2.4):
   TRLIRNR Art 25.1.a baseline rate (24%); the override path resolves
   to the same Decimal as the baseline. Exercises the real registry
   snapshot end-to-end.
-- Khadija (MA): the Convenio override REPLACES the TRLIRNR baseline.
-  A snapshot-mutation pair proves the test reads the registry
-  parameter rather than a hardcoded expectation (anti-tautology).
-- Felipe (AR): the ``NOT_YET_AUTHORED`` placeholder fires the
-  ``m210-convenio-rate-not-yet-authored`` BLOCKING finding; the
-  rate slot is ``None``.
+- Khadija (MA / interest): the Convenio override REPLACES the TRLIRNR
+  baseline. The real MA/interest Convenio row authored under S389b
+  carries rate=0.10; the helper returns the override. A mutation-pair
+  anti-tautology test rewrites the same row to rate=0.15 and asserts
+  the helper picks the mutated value.
+- Felipe (AR / pension): the real AR/pension Convenio row carries
+  ``NOT_YET_AUTHORED``; the helper emits the
+  ``m210-convenio-rate-not-yet-authored`` BLOCKING finding. The
+  ``pension`` baseline row stays absent per task #229 corpus-blocking;
+  this case exercises the patched helper's "baseline absent BUT
+  Convenio override exists" branch (post-S401).
 - Non-Convenio fall-through (ZW): a country with no Convenio row at
   all fires the ``m210-convenio-rate-missing`` BLOCKING finding.
-
-Implementation note on the snapshot surface
--------------------------------------------
-
-The helper short-circuits to ``(None, [])`` when the
-``m210-tipo-gravamen-2025`` baseline parameter has no row for the
-requested ``tipo_renta`` — that gate runs BEFORE the Convenio table
-is consulted. The Phase 1 baseline table only declares rows for
-``general`` / ``ue_residente`` / ``ganancia_patrimonial`` /
-``inmobiliaria``; ``interest`` / ``pension`` (the tipos the
-testimonial personas Khadija and Felipe file under in the real-world
-narrative) are not yet authored on the baseline side. To exercise
-the Convenio-override branches for the Khadija and Felipe personas
-without depending on baseline rows that S389b did not author, the
-mutation surface adds a synthetic ``(country, "general")`` Convenio
-row on top of the real snapshot. The mutation pattern is the
-ADR-endorsed "construct a minimal mutated snapshot inline" form, and
-gives the Phase 1 personas a real exercise of the Convenio code paths
-under the real registry's baseline coverage.
+- Deferred-baseline / no-treaty (resident persona, ``pension``): a
+  profile with no ``country_of_fiscal_residence`` cannot fall back to
+  a Convenio override; the patched helper emits the
+  ``m210-baseline-tipo-deferred`` BLOCKING finding (post-S401 branch).
 """
 
 from __future__ import annotations
@@ -71,21 +61,43 @@ def _irnr_profile(country_code: str) -> TaxpayerProfile:
     )
 
 
-def _snapshot_with_extra_convenio_row(
-    base: RegistrySnapshot, extra: ConvenioRateRow
-) -> RegistrySnapshot:
-    """Return a copy of ``base`` with an additional Convenio row appended.
+def _resident_profile() -> TaxpayerProfile:
+    """Build a RESIDENT_IRPF profile with no ``country_of_fiscal_residence``.
 
-    The original parameter (and its legal_refs / source_refs) is
-    preserved; the new row joins ``convenio_rates`` so the helper
-    finds it on lookup. Frozen pydantic models are duplicated via
-    ``model_copy`` at parameter, revision, and snapshot levels.
+    Used to exercise the deferred-baseline / no-treaty branch.
+    """
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.RESIDENT_IRPF,
+    )
+
+
+def _snapshot_with_mutated_convenio_row(
+    base: RegistrySnapshot,
+    *,
+    country_code: str,
+    tipo_renta: str,
+    new_rate: str,
+) -> RegistrySnapshot:
+    """Return a copy of ``base`` with the (country, tipo_renta) row's rate replaced.
+
+    Anti-tautology proof aid: prove the helper reads the registry
+    parameter rather than a constant by mutating an existing row's
+    rate field. Frozen pydantic models are duplicated via
+    ``model_copy`` at row, parameter, revision, and snapshot levels.
     """
 
     convenio_param = next(
         p for p in base.revision.parameters if p.id == "m210-convenio-rates"
     )
-    new_rows = (*convenio_param.convenio_rates, extra)
+    new_rows = tuple(
+        row.model_copy(update={"rate": new_rate})
+        if row.country_code == country_code and row.tipo_renta == tipo_renta
+        else row
+        for row in convenio_param.convenio_rates
+    )
     new_param = convenio_param.model_copy(update={"convenio_rates": new_rows})
     new_parameters = tuple(
         new_param if p.id == "m210-convenio-rates" else p
@@ -123,91 +135,66 @@ def test_olivia_gb_general_resolves_convenio_override_matching_baseline(
     assert findings == []
 
 
-def test_khadija_ma_general_convenio_override_replaces_baseline(
+def test_khadija_ma_interest_convenio_override_replaces_baseline(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Khadija (MA / general): Convenio override REPLACES the TRLIRNR baseline.
+    """Khadija (MA / interest): real Convenio override REPLACES the baseline.
 
-    Adds a synthetic MA/general Convenio row at 10% on top of the real
-    snapshot. The helper resolves the (MA, general) lookup against the
-    mutated parameter and returns the override rate, NOT the 24%
-    baseline. Replacement semantics per ADR §D2.4 (not stacking).
+    The real MA/interest Convenio row authored in S389b carries
+    ``rate="0.10"``. The helper resolves the (MA, interest) lookup
+    against the real snapshot and returns the override rate, NOT the
+    24% TRLIRNR Art 25.1.a interest baseline added in S401. Replacement
+    semantics per ADR §D2.4 (not stacking).
     """
 
-    extra = ConvenioRateRow(
-        country_code="MA",
-        tipo_renta="general",
-        rate="0.10",
-        legal_ref_anchor="boe-a-1985-13340",
-        notes="synthetic Convenio España-Marruecos override for general tipo_renta",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
-    )
-    snapshot = _snapshot_with_extra_convenio_row(m210_snapshot, extra)
-
     profile = _irnr_profile("MA")
-    rate, findings = _resolve_m210_rate(profile, "general", 2025, snapshot)
+    rate, findings = _resolve_m210_rate(profile, "interest", 2025, m210_snapshot)
 
     assert rate == Decimal("0.10")
     assert findings == []
 
 
-def test_khadija_ma_general_anti_tautology_mutation_pair(
+def test_khadija_ma_interest_anti_tautology_mutation_pair(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
     """Anti-tautology proof: helper reads the registry parameter, not a constant.
 
-    Same shape as the Khadija happy-path test but with the MA/general
-    Convenio rate set to ``"0.15"`` instead of ``"0.10"``. The helper
-    must return ``Decimal("0.15")``. If a future regression hardcoded
-    the override rate to 0.10 (or to the baseline 0.24), this
-    assertion would fail.
+    Mutates the real MA/interest Convenio row to ``rate="0.15"``. The
+    helper must return ``Decimal("0.15")``. If a future regression
+    hardcoded the override rate to 0.10 (the registry value) or to the
+    0.24 baseline, this assertion would fail.
     """
 
-    extra = ConvenioRateRow(
+    snapshot = _snapshot_with_mutated_convenio_row(
+        m210_snapshot,
         country_code="MA",
-        tipo_renta="general",
-        rate="0.15",
-        legal_ref_anchor="boe-a-1985-13340",
-        notes="anti-tautology mutation: rate replaced with 0.15",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
+        tipo_renta="interest",
+        new_rate="0.15",
     )
-    snapshot = _snapshot_with_extra_convenio_row(m210_snapshot, extra)
 
     profile = _irnr_profile("MA")
-    rate, findings = _resolve_m210_rate(profile, "general", 2025, snapshot)
+    rate, findings = _resolve_m210_rate(profile, "interest", 2025, snapshot)
 
     assert rate == Decimal("0.15")
     assert findings == []
 
 
-def test_felipe_ar_general_not_yet_authored_emits_blocking_finding(
+def test_felipe_ar_pension_not_yet_authored_emits_blocking_finding(
     m210_snapshot: RegistrySnapshot,
 ) -> None:
-    """Felipe (AR / general): the ``NOT_YET_AUTHORED`` sentinel fires a BLOCKING finding.
+    """Felipe (AR / pension): real ``NOT_YET_AUTHORED`` sentinel fires a BLOCKING finding.
 
-    Adds a synthetic AR/general Convenio row carrying the
-    ``NOT_YET_AUTHORED`` placeholder on top of the real snapshot. The
-    helper recognises the sentinel, returns ``(None, [finding])`` and
-    surfaces the ``m210-convenio-rate-not-yet-authored`` predicate id
-    in the finding message. The rate slot is ``None`` so downstream
-    formula evaluation cannot proceed until the row is authored.
+    The real AR/pension Convenio row authored in S389b carries the
+    ``NOT_YET_AUTHORED`` placeholder. The helper recognises the
+    sentinel, returns ``(None, [finding])`` and surfaces the
+    ``m210-convenio-rate-not-yet-authored`` predicate id. The
+    ``pension`` baseline row remains absent under task #229
+    corpus-blocking; this test exercises the patched
+    "baseline absent BUT Convenio override exists" branch (S401).
     """
 
-    extra = ConvenioRateRow(
-        country_code="AR",
-        tipo_renta="general",
-        rate="NOT_YET_AUTHORED",
-        legal_ref_anchor="BOE-CONVENIO-AR-NOT-FOUND",
-        notes="synthetic Convenio España-Argentina placeholder for general tipo_renta",
-        valid_from=date(2025, 1, 1),
-        valid_to=date(2025, 12, 31),
-    )
-    snapshot = _snapshot_with_extra_convenio_row(m210_snapshot, extra)
-
     profile = _irnr_profile("AR")
-    rate, findings = _resolve_m210_rate(profile, "general", 2025, snapshot)
+    rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
 
     assert rate is None
     assert len(findings) == 1
@@ -215,7 +202,7 @@ def test_felipe_ar_general_not_yet_authored_emits_blocking_finding(
     assert "m210-convenio-rate-not-yet-authored" in finding.message
     message_lower = finding.message.lower()
     assert "ar" in message_lower
-    assert "general" in message_lower
+    assert "pension" in message_lower
 
 
 def test_non_convenio_country_zw_general_emits_missing_finding(
@@ -241,3 +228,26 @@ def test_non_convenio_country_zw_general_emits_missing_finding(
     message_lower = finding.message.lower()
     assert "zw" in message_lower
     assert "general" in message_lower
+
+
+def test_resident_pension_deferred_baseline_emits_blocking_finding(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """Resident persona / pension: deferred-baseline + no treaty fires BLOCKING.
+
+    A profile with no ``country_of_fiscal_residence`` cannot claim a
+    Convenio override; when the requested ``tipo_renta`` (pension) has
+    no baseline row under the task #229 corpus-blocking deferral, the
+    patched helper emits the ``m210-baseline-tipo-deferred`` BLOCKING
+    finding (S401 branch). The rate slot is ``None``.
+    """
+
+    profile = _resident_profile()
+    rate, findings = _resolve_m210_rate(profile, "pension", 2025, m210_snapshot)
+
+    assert rate is None
+    assert len(findings) == 1
+    finding = findings[0]
+    assert "m210-baseline-tipo-deferred" in finding.message
+    message_lower = finding.message.lower()
+    assert "pension" in message_lower
