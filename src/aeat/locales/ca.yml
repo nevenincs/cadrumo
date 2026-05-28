@@ -1590,8 +1590,13 @@ cli:
         identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
         per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
         Beckham de l'art. 93 LIRPF.
-      source_jurisdiction_required_beckham: 'El règim impatriat (art. 93 LIRPF, Beckham) tracta de forma diferent els rendiments de font espanyola i els de font estrangera; --source-jurisdiction s''ha de declarar explícitament a cada apunt. Un valor per defecte silenciós ES inclouria rendiments de font estrangera a la base de l''IRPF (art. 93.5 segregació).'
-      source_jurisdiction_required_irnr: '--source-jurisdiction es obligatori per a perfils de no resident IRNR.'
+      source_jurisdiction_required_beckham: El règim impatriat (art. 93 LIRPF, Beckham)
+        tracta de forma diferent els rendiments de font espanyola i els de font estrangera;
+        --source-jurisdiction s'ha de declarar explícitament a cada apunt. Un valor
+        per defecte silenciós ES inclouria rendiments de font estrangera a la base
+        de l'IRPF (art. 93.5 segregació).
+      source_jurisdiction_required_irnr: --source-jurisdiction es obligatori per a
+        perfils de no resident IRNR.
       taxable_base_help: Import de base imposable
       usage_ratio_help: Id de proporció d'ús professional proporcional
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
@@ -2712,6 +2717,8 @@ errors:
     error_storage_bucket: S'ha produït un error en el cicle de vida del bucket d'emmagatzematge.
     error_submission_validation: Un model d'enviament no ha superat la validació.
     error_transaction_catalogue: El catàleg de transaccions no és vàlid o és inconsistent.
+    error_transaction_classification_rule: Una regla de classificació del llibre major
+      no és vàlida.
     error_transaction_llm_classifier: Ha fallat la classificació de la transacció
       amb el model de llenguatge.
     error_transaction_not_found: No s'ha trobat la transacció sol·licitada.
@@ -2885,6 +2892,7 @@ errors:
       superat la validació estricta.
     integrity_outbound_storage: El contingut descarregat no ha superat les comprovacions
       d'integritat (resum, mida o etiqueta).
+    integrity_outbound_storage_corruption: errors.integrity.integrity_outbound_storage_corruption
     integrity_portals_portal_integrity: El registre de portals de l'AEAT infringeix
       una invariant estructural.
     integrity_profile_snapshot_hash_mismatch: El resum de la instantània del perfil
@@ -2929,6 +2937,7 @@ errors:
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
+    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
     internal_wizard_script_overflow: 'Error intern: l''assistent s''ha tancat amb
       respostes guionades sense consumir.'
     internal_wizard_script_underflow: 'Error intern: l''assistent ha demanat més respostes

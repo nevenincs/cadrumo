@@ -1505,6 +1505,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.transactions._errors.ClassificationRuleError",
+        ErrorCode(
+            code="ERROR_TRANSACTION_CLASSIFICATION_RULE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_transaction_classification_rule",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.fincas._errors.FincaValidationError",
         ErrorCode(
             code="ERROR_RENTAL_VALIDATION",

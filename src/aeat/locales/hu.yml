@@ -1221,8 +1221,12 @@ cli:
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
-      source_jurisdiction_required_beckham: 'Az impatriado (LIRPF 93. cikk, Beckham) különbözőképp kezeli a spanyol és külföldi forrású jövedelmet; a --source-jurisdiction értéket minden tételnél kifejezetten meg kell adni. A csendes ES alapérték a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).'
-      source_jurisdiction_required_irnr: 'A --source-jurisdiction megadasa kotelezo nem rezidens IRNR profiloknal.'
+      source_jurisdiction_required_beckham: Az impatriado (LIRPF 93. cikk, Beckham)
+        különbözőképp kezeli a spanyol és külföldi forrású jövedelmet; a --source-jurisdiction
+        értéket minden tételnél kifejezetten meg kell adni. A csendes ES alapérték
+        a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
+      source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
+        nem rezidens IRNR profiloknal.
       taxable_base_help: cli.ledger.add.taxable_base_help
       usage_ratio_help: cli.ledger.add.usage_ratio_help
       value_date_help: cli.ledger.add.value_date_help
@@ -2134,6 +2138,7 @@ errors:
     error_storage_bucket: errors.error.error_storage_bucket
     error_submission_validation: errors.error.error_submission_validation
     error_transaction_catalogue: errors.error.error_transaction_catalogue
+    error_transaction_classification_rule: errors.error.error_transaction_classification_rule
     error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
     error_transaction_not_found: errors.error.error_transaction_not_found
     error_transaction_persistence: errors.error.error_transaction_persistence
@@ -2243,6 +2248,7 @@ errors:
     integrity_observability_aeat_corpus_drift: errors.integrity.integrity_observability_aeat_corpus_drift
     integrity_observability_run_trace_validation: errors.integrity.integrity_observability_run_trace_validation
     integrity_outbound_storage: errors.integrity.integrity_outbound_storage
+    integrity_outbound_storage_corruption: errors.integrity.integrity_outbound_storage_corruption
     integrity_portals_portal_integrity: errors.integrity.integrity_portals_portal_integrity
     integrity_profile_snapshot_hash_mismatch: errors.integrity.integrity_profile_snapshot_hash_mismatch
     integrity_profile_snapshot_not_found: errors.integrity.integrity_profile_snapshot_not_found
@@ -2266,6 +2272,7 @@ errors:
     internal_cli_unexpected_boundary: errors.internal.internal_cli_unexpected_boundary
     internal_observability_run_context_missing: errors.internal.internal_observability_run_context_missing
     internal_output_rendering: errors.internal.internal_output_rendering
+    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
     internal_wizard_script_overflow: errors.internal.internal_wizard_script_overflow
     internal_wizard_script_underflow: errors.internal.internal_wizard_script_underflow
     internal_workflow_abort_signal: errors.internal.internal_workflow_abort_signal
@@ -2556,203 +2563,236 @@ transactions:
     message: transactions.test_diagnostics.message
 wizard:
   choices:
-    general: 'Általános'
-    irpf: 'IRPF'
-    iva: 'IVA'
-    simplificado: 'Egyszerűsített'
+    general: Általános
+    irpf: IRPF
+    iva: IVA
+    simplificado: Egyszerűsített
   demo:
-    description: 'Bemutató szekció a varázslófunkció teszteléséhez'
+    description: Bemutató szekció a varázslófunkció teszteléséhez
     section:
-      title: 'Bemutató szekció'
-    title: 'Bemutató'
+      title: Bemutató szekció
+    title: Bemutató
   errors:
     blank_integer: 'Egész szám megadása kötelező a következőhöz: %{prompt_key}.'
     blank_path: 'Útvonal megadása kötelező a következőhöz: %{prompt_key}.'
     blank_secret: 'Titkos érték megadása kötelező a következőhöz: %{prompt_key}.'
     blank_text: 'Érték megadása kötelező a következőhöz: %{prompt_key}.'
     checkbox_required: 'Válasszon legalább egy lehetőséget a következőhöz: %{prompt_key}.'
-    checkbox_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes lehetőségek: %{choices}.'
-    checkbox_without_choices: 'A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek megadva.'
+    checkbox_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
+      lehetőségek: %{choices}.'
+    checkbox_without_choices: A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek
+      megadva.
     invalid_confirm: 'Érvénytelen logikai válasz a következőhöz: %{prompt_key}: %{raw}.'
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
-    invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}. A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
-    invalid_tax_id: 'Érvénytelen NIF/NIE/CIF a következőhöz: %{prompt_key}: %{raw}. %{detail}'
-    select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes lehetőségek: %{choices}.'
-    select_without_choices: 'A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek megadva.'
-    unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez a futtatás azonban nem rendelkezik ilyennel.
-Még semmi nem lett mentve.
+    invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
+      A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
+    invalid_tax_id: 'Érvénytelen NIF/NIE/CIF a következőhöz: %{prompt_key}: %{raw}.
+      %{detail}'
+    select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes
+      lehetőségek: %{choices}.'
+    select_without_choices: A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek
+      megadva.
+    unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez
+      a futtatás azonban nem rendelkezik ilyennel. Még semmi nem lett mentve.
 
-Ezt a profilt kétféleképpen hozhatja létre:
+      Ezt a profilt kétféleképpen hozhatja létre:
 
-1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás használatához:
-     aeat config profile create NAME
+      1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás
+      használatához: aeat config profile create NAME
 
-2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
-     aeat config profile create NAME --quiet --tax-id NIF'
-    unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot megnyitni ebben a futtatásban.
-Még semmi nem lett mentve.
+      2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
+      aeat config profile create NAME --quiet --tax-id NIF'
+    unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot
+      megnyitni ebben a futtatásban. Még semmi nem lett mentve.
 
-Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt:
-  aeat config profile edit %{profile_name} --quiet --<mező> ÉRTÉK
+      Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt: aeat config
+      profile edit %{profile_name} --quiet --<mező> ÉRTÉK
 
-Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
-  aeat config profile edit %{profile_name}'
+      Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
+      aeat config profile edit %{profile_name}'
   other:
-    description: 'Egyéb konfigurációs lehetőségek'
+    description: Egyéb konfigurációs lehetőségek
     section:
-      title: 'Egyéb beállítások'
-    title: 'Egyéb'
+      title: Egyéb beállítások
+    title: Egyéb
   progress:
     question_prefix: '%{q_n}. kérdés / %{q_total}'
     section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: 'Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)'
+        prompt: Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)
     codes:
       disability-grade:
         choices:
           33-64:
-            label: 'Fogyatékossági fokozat 33%-tól 64%-ig'
+            label: Fogyatékossági fokozat 33%-tól 64%-ig
           65-plus:
-            label: 'Fogyatékossági fokozat 65% vagy magasabb'
+            label: Fogyatékossági fokozat 65% vagy magasabb
           assistance-or-mobility:
-            label: 'Harmadik személy segítsége vagy korlátozott mozgásképesség'
+            label: Harmadik személy segítsége vagy korlátozott mozgásképesség
           judicial-incapacity:
-            label: 'Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű'
+            label: Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű
       sex:
         choices:
           h:
-            label: 'H - férfi'
+            label: H - férfi
           m:
-            label: 'M - nő'
-    description: 'Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor számára'
+            label: M - nő
+    description: Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor
+      számára
     enrollment:
       enrollment-large-company:
-        prompt: 'Nagyvállalati bejegyzés'
+        prompt: Nagyvállalati bejegyzés
       enrollment-public-administration-budget-gt-6000000:
-        prompt: 'Közigazgatási költségvetés meghaladja a 6 000 000-t'
-      title: 'Bejegyzés'
+        prompt: Közigazgatási költségvetés meghaladja a 6 000 000-t
+      title: Bejegyzés
     errors:
-      missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet módú futtatáshoz: %{missing}'
+      missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet módú futtatáshoz:
+        %{missing}'
     family:
       family-descendants-eu-eea-deduction:
-        prompt: 'EU/EEE leszármazottak a családi egység levonásban'
+        prompt: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
-        prompt: 'Kiskorú gyermekek a családi egységben'
-      title: 'Családi egység'
+        prompt: Kiskorú gyermekek a családi egységben
+      title: Családi egység
     flags:
       activity:
-        help: 'Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri'
+        help: Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri
       activity-start-date:
-        help: 'Adóhatósághoz bejelentkezés / tevékenység kezdési dátuma (ÉÉÉÉ-HH-NN). Opcionális; ha meg van adva, az előtte lévő időszakok kötelezettségei nem jelennek meg.'
+        help: Adóhatósághoz bejelentkezés / tevékenység kezdési dátuma (ÉÉÉÉ-HH-NN).
+          Opcionális; ha meg van adva, az előtte lévő időszakok kötelezettségei nem
+          jelennek meg.
       address-postcode:
-        help: 'Adóügyi lakcím irányítószáma'
+        help: Adóügyi lakcím irányítószáma
       bienes-extranjero-above-threshold:
-        help: 'Külföldi vagyon meghaladja a jogszabályi küszöbértéket'
+        help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
       country-of-fiscal-residence:
-        help: 'Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB, DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.'
+        help: Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB,
+          DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.
       descendiente:
-        help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+        help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető).
+          Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
-        help: 'Végez intraközösségi ügyleteket'
+        help: Végez intraközösségi ügyleteket
       enrollment-large-company:
-        help: 'Nagyvállalati bejegyzés'
+        help: Nagyvállalati bejegyzés
       enrollment-public-administration-budget-gt-6000000:
-        help: 'Közigazgatási költségvetés meghaladja a 6 000 000-t'
+        help: Közigazgatási költségvetés meghaladja a 6 000 000-t
       entity-type:
-        help: 'Természetes személy, jogi személy vagy jövedelemattribúciós szervezet'
+        help: Természetes személy, jogi személy vagy jövedelemattribúciós szervezet
       family-descendants-eu-eea-deduction:
-        help: 'EU/EEE leszármazottak a családi egység levonásban'
+        help: EU/EEE leszármazottak a családi egység levonásban
       family-minor-children-in-unit:
-        help: 'Kiskorú gyermekek a családi egységben'
+        help: Kiskorú gyermekek a családi egységben
       fiscal-residency:
-        help: 'Adóügyi illetőségi kategória: resident_irpf (Spanyolországban szokásos lakóhellyel rendelkező) vagy non_resident_irnr (nem rezidens, IRNR szerinti adózás, RDLeg 5/2004).'
+        help: 'Adóügyi illetőségi kategória: resident_irpf (Spanyolországban szokásos
+          lakóhellyel rendelkező) vagy non_resident_irnr (nem rezidens, IRNR szerinti
+          adózás, RDLeg 5/2004).'
       has-employees:
-        help: 'Alkalmazottai vannak és forrásadóval terhelt béreket fizet'
+        help: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       incn-prior-12-months:
-        help: 'Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban, euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti módozatot írja elő; alatta mindkét módozat választható. Opcionális.'
+        help: Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban,
+          euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti
+          módozatot írja elő; alatta mindkét módozat választható. Opcionális.
       irpf-estimation-regime:
-        help: 'A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza, hogy Modelo 130 vagy 131 alkalmazandó-e'
+        help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
+          hogy Modelo 130 vagy 131 alkalmazandó-e
       irpf-income-categories:
-        help: 'IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót kategóriánként egyszer'
+        help: IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót
+          kategóriánként egyszer
       irpf-special-regime:
-        help: 'IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado" Spanyolországba áthelyezett és a Beckham-törvény szerinti adózást (LIRPF 93. cikkely) választó munkavállalók számára, az áthelyezés utáni első 6 évre.'
+        help: IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado"
+          Spanyolországba áthelyezett és a Beckham-törvény szerinti adózást (LIRPF
+          93. cikkely) választó munkavállalók számára, az áthelyezés utáni első 6
+          évre.
       irpf-special-regime-start-date:
-        help: 'A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely. Az adózási rend a 6. naptári év végén jár le.'
+        help: A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak
+          akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely.
+          Az adózási rend a 6. naptári év végén jár le.
       iva-intracommunity-operations-exceed-50000-eur:
-        help: 'Intraközösségi ügyletek meghaladják az 50 000 EUR-t'
+        help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
-        help: 'OSS-be bejelentkezett'
+        help: OSS-be bejelentkezett
       iva-redeme-enrolled:
-        help: 'Az adózó be van-e jegyezve a REDEME-be'
+        help: Az adózó be van-e jegyezve a REDEME-be
       iva-regime:
-        help: 'IVA adózási rend'
+        help: IVA adózási rend
       iva-roi-enrolled:
-        help: 'ROI-ba bejelentkezett'
+        help: ROI-ba bejelentkezett
       iva-sii-enrolled:
-        help: 'Az adózó be van-e jegyezve az SII-be'
+        help: Az adózó be van-e jegyezve az SII-be
       legal-entity-form:
-        help: 'Elismert jogi forma, ha az entitástípus jogi személy'
+        help: Elismert jogi forma, ha az entitástípus jogi személy
       name:
-        help: 'A helyi áttekintésekben megjelenő megjelenítési név'
+        help: A helyi áttekintésekben megjelenő megjelenítési név
       new-entity-first-two-profit-periods:
-        help: 'Jelölje be, ha az újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs érvényes.'
+        help: Jelölje be, ha az újonnan létrehozott jogi személy az első két nyereséges
+          adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs
+          igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs
+          érvényes.
       notes:
-        help: 'Megjegyzések saját nyilvántartáshoz (opcionális)'
+        help: Megjegyzések saját nyilvántartáshoz (opcionális)
       output-language:
-        help: 'CLI kimeneti nyelv ehhez a profilhoz'
+        help: CLI kimeneti nyelv ehhez a profilhoz
       pays-capital-income-with-retencion:
-        help: 'Forrásadóval terhelt tőkejövedelmet fizet'
+        help: Forrásadóval terhelt tőkejövedelmet fizet
       pays-professionals-with-retencion:
-        help: 'Forrásadóval terhelt díjazást fizet szakembereknek'
+        help: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
-        help: 'Forrásadóval terhelt helyi bérleti díjat fizet'
+        help: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
-        help: 'A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt'
+        help: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       representante-fiscal-nif:
-        help: 'A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg 5/2004).'
+        help: A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n
+          kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg
+          5/2004).
       representante-fiscal-nombre:
-        help: 'A spanyolországi adóügyi képviselő teljes neve.'
+        help: A spanyolországi adóügyi képviselő teljes neve.
       situacion-familiar:
         choices:
           casado:
-            description: 'Érvényes házasság – közös adóbevallás elérhető (82.1.1° cikkely)'
-            label: 'Házas'
+            description: Érvényes házasság – közös adóbevallás elérhető (82.1.1° cikkely)
+            label: Házas
           pareja-hecho-no-registrada:
-            description: 'Bejegyzés nélküli élettársi kapcsolat – közös adóbevallás NEM elérhető'
-            label: 'Nem bejegyzett élettársi kapcsolat'
+            description: Bejegyzés nélküli élettársi kapcsolat – közös adóbevallás
+              NEM elérhető
+            label: Nem bejegyzett élettársi kapcsolat
           pareja-hecho-registrada:
-            description: 'Autonóm közösségi nyilvántartásban bejegyzett – közös adóbevallás elérhető (82.1.2° cikkely)'
-            label: 'Bejegyzett élettársi kapcsolat'
+            description: Autonóm közösségi nyilvántartásban bejegyzett – közös adóbevallás
+              elérhető (82.1.2° cikkely)
+            label: Bejegyzett élettársi kapcsolat
           separado-divorciado:
-            label: 'Különváltan élő vagy elvált'
+            label: Különváltan élő vagy elvált
           soltero:
-            label: 'Egyedülálló'
-        help: 'Családi helyzet az LIRPF 82. cikkelye szerint: meghatározza, hogy elérhető-e a közös adóbevallás és melyik családi egység változat alkalmazandó.'
-        prompt: 'Családi helyzet (LIRPF 82. cikkely)'
+            label: Egyedülálló
+        help: 'Családi helyzet az LIRPF 82. cikkelye szerint: meghatározza, hogy elérhető-e
+          a közös adóbevallás és melyik családi egység változat alkalmazandó.'
+        prompt: Családi helyzet (LIRPF 82. cikkely)
       spouse-birth-date:
-        help: 'Házastárs születési dátuma'
+        help: Házastárs születési dátuma
       spouse-disability-grade:
-        help: 'Házastárs fogyatékossági fokozata (ha alkalmazható): 1 = 33%-64%, 2 = 65% vagy magasabb, 3 = bírói cselekvőképesség-korlátozás, 4 = harmadik személy segítsége vagy korlátozott mozgásképesség.'
+        help: 'Házastárs fogyatékossági fokozata (ha alkalmazható): 1 = 33%-64%, 2
+          = 65% vagy magasabb, 3 = bírói cselekvőképesség-korlátozás, 4 = harmadik
+          személy segítsége vagy korlátozott mozgásképesség.'
       spouse-eu-eea-country:
-        help: 'Házastárs EU/EGT országa'
+        help: Házastárs EU/EGT országa
       spouse-eu-eea-resident:
-        help: 'Házastárs EU/EGT-ben él'
+        help: Házastárs EU/EGT-ben él
       spouse-name:
-        help: 'Házastárs keresztneve'
+        help: Házastárs keresztneve
       spouse-non-resident-irpf:
-        help: 'Házastárs nem rezidens IRPF szerint'
+        help: Házastárs nem rezidens IRPF szerint
       spouse-sex:
         help: 'Házastárs neme: H = férfi, M = nő.'
       spouse-surnames:
-        help: 'Házastárs vezetéknevei'
+        help: Házastárs vezetéknevei
       spouse-tax-id:
-        help: 'Házastárs NIF/NIE száma'
+        help: Házastárs NIF/NIE száma
       surnames:
-        help: 'Vezetéknevei vagy cégneve az exportfejlécekhez'
+        help: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        help: 'Adóazonosító (NIF/NIE) az aktív profilhoz'
+        help: Adóazonosító (NIF/NIE) az aktív profilhoz
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
@@ -2778,161 +2818,171 @@ Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamen
     intro: wizard.setup.intro
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
-        prompt: 'Intraközösségi ügyletek meghaladják az 50 000 EUR-t'
+        prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
-        prompt: 'OSS-be bejelentkezett'
+        prompt: OSS-be bejelentkezett
       iva-redeme-enrolled:
-        prompt: 'REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)'
+        prompt: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
       iva-regime:
-        prompt: 'IVA adózási rend'
+        prompt: IVA adózási rend
       iva-roi-enrolled:
-        prompt: 'ROI-ba bejelentkezett'
+        prompt: ROI-ba bejelentkezett
       iva-sii-enrolled:
-        prompt: 'SII-be bejelentkezett (azonnali információszolgáltatás)'
-      title: 'IVA'
+        prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
+      title: IVA
     notes:
       notes:
-        prompt: 'Megjegyzések saját nyilvántartáshoz (opcionális)'
-      title: 'Megjegyzések saját nyilvántartáshoz'
+        prompt: Megjegyzések saját nyilvántartáshoz (opcionális)
+      title: Megjegyzések saját nyilvántartáshoz
     obligations:
       bienes-extranjero-above-threshold:
-        prompt: 'Külföldi vagyon meghaladja a jogszabályi küszöbértéket'
+        prompt: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
       does-intracomunitario:
-        prompt: 'Végez intraközösségi ügyleteket'
+        prompt: Végez intraközösségi ügyleteket
       has-employees:
-        prompt: 'Alkalmazottai vannak és forrásadóval terhelt béreket fizet'
+        prompt: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       irpf-estimation-regime:
         choices:
           directa-normal:
-            label: 'Közvetlen becslés, normál'
+            label: Közvetlen becslés, normál
           directa-simplificada:
-            label: 'Közvetlen becslés, egyszerűsített'
+            label: Közvetlen becslés, egyszerűsített
           objetiva:
-            label: 'Objektív becslés (módszerek)'
-        help: 'A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza, hogy Modelo 130 vagy 131 alkalmazandó-e'
-        prompt: 'IRPF becslési rend'
+            label: Objektív becslés (módszerek)
+        help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
+          hogy Modelo 130 vagy 131 alkalmazandó-e
+        prompt: IRPF becslési rend
       irpf-special-regime:
         choices:
           general:
-            label: 'Általános adózási rend'
+            label: Általános adózási rend
           impatriado:
-            label: 'Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)'
-        help: 'A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első 6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.'
-        prompt: 'IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)'
+            label: Bejövő expatriált – Beckham-törvény (LIRPF 93. cikkely)
+        help: A kiküldött (Beckham-törvény) adózási rend az áthelyezés utáni első
+          6 adóévre alkalmazható. A legtöbb adózó az általános rend szerint adózik.
+        prompt: IRPF különleges adózási rend (Beckham-törvény / LIRPF 93. cikkely)
       irpf-special-regime-start-date:
-        help: 'A munkavállaló kiküldött adózási rendbe lépésének dátuma (RIRPF 116. cikkely). Az adózási rend a 6. naptári év végén jár le.'
-        prompt: 'A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)'
+        help: A munkavállaló kiküldött adózási rendbe lépésének dátuma (RIRPF 116.
+          cikkely). Az adózási rend a 6. naptári év végén jár le.
+        prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
       pays-capital-income-with-retencion:
-        prompt: 'Forrásadóval terhelt tőkejövedelmet fizet'
+        prompt: Forrásadóval terhelt tőkejövedelmet fizet
       pays-professionals-with-retencion:
-        prompt: 'Forrásadóval terhelt díjazást fizet szakembereknek'
+        prompt: Forrásadóval terhelt díjazást fizet szakembereknek
       pays-rent-with-retencion:
-        prompt: 'Forrásadóval terhelt helyi bérleti díjat fizet'
+        prompt: Forrásadóval terhelt helyi bérleti díjat fizet
       professional-income-withholding-ge-70pct:
-        prompt: 'A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt'
+        prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
-        prompt: 'Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét'
-      title: 'Modelo kötelezettségek'
+        prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+      title: Modelo kötelezettségek
       uses-objective-estimation-irpf:
-        prompt: 'IRPF objektív becslés szerint adózik'
+        prompt: IRPF objektív becslés szerint adózik
     profile:
       activity:
-        prompt: wizard.setup.profile.activity.prompt
+        prompt: Gazdasági tevékenység (egyszerű szöveg is megfelelő; használja az
+          IAE fejezetet, ha ismeri)
       activity-start-date:
-        help: wizard.setup.profile.activity-start-date.help
-        prompt: wizard.setup.profile.activity-start-date.prompt
+        help: Ha meg van adva, az előtte lévő időszakok bevallásai nem jelennek meg
+          lejártként. Hagyja üresen, ha nem tudja.
+        prompt: Mikortól van bevallási kötelezettsége / mikor regisztrált? (ÉÉÉÉ-HH-NN,
+          opcionális)
       address-postcode:
-        prompt: wizard.setup.profile.address-postcode.prompt
+        prompt: Adóügyi lakcím irányítószáma
       iva-regime:
         choices:
           exento:
-            label: wizard.setup.profile.iva-regime.choices.exento.label
+            label: Mentes
           general:
-            label: wizard.setup.profile.iva-regime.choices.general.label
+            label: Általános adózási rend
           reagp:
-            label: wizard.setup.profile.iva-regime.choices.reagp.label
+            label: Mezőgazdaság, állattenyésztés és halászat különleges adózási rendje
+              (REAGP)
           recargo-equivalencia:
-            label: wizard.setup.profile.iva-regime.choices.recargo-equivalencia.label
+            label: Egyenértékűségi pótlék
           simplificado:
-            label: wizard.setup.profile.iva-regime.choices.simplificado.label
+            label: Egyszerűsített adózási rend
       name:
-        prompt: wizard.setup.profile.name.prompt
+        prompt: A helyi áttekintésekben megjelenő megjelenítési név
       output-language:
         choices:
           ca:
-            label: wizard.setup.profile.output-language.choices.ca.label
+            label: Katalán
           en:
-            label: wizard.setup.profile.output-language.choices.en.label
+            label: Angol
           es:
-            label: wizard.setup.profile.output-language.choices.es.label
+            label: Spanyol
           hu:
-            label: wizard.setup.profile.output-language.choices.hu.label
-        prompt: wizard.setup.profile.output-language.prompt
+            label: Magyar
+        prompt: CLI kimeneti nyelv ehhez a profilhoz
       regimes:
-        prompt: wizard.setup.profile.regimes.prompt
+        prompt: Válassza ki az alkalmazandó adózási rendeket
       surnames:
-        prompt: wizard.setup.profile.surnames.prompt
+        prompt: Vezetéknevei vagy cégneve az exportfejlécekhez
       tax-id:
-        prompt: wizard.setup.profile.tax-id.prompt
+        prompt: Adóazonosító (NIF/NIE) a bevallásokhoz
       taxation-type:
         choices:
           individual:
-            description: wizard.setup.profile.taxation-type.choices.individual.description
-            label: wizard.setup.profile.taxation-type.choices.individual.label
+            description: Akkor használja, ha kizárólag saját egyéni bevallását nyújtja
+              be
+            label: 1 - egyéni
           joint:
-            description: wizard.setup.profile.taxation-type.choices.joint.description
-            label: wizard.setup.profile.taxation-type.choices.joint.label
-        prompt: wizard.setup.profile.taxation-type.prompt
-      title: wizard.setup.profile.title
+            description: Csak a családi egység közös adózásához használja
+            label: 2 - közös
+        prompt: Adózási típus kódja
+      title: Profil azonosítása
     residence:
       ccaa:
         choices:
           andalucia:
-            label: wizard.setup.residence.ccaa.choices.andalucia.label
+            label: Andalúzia
           aragon:
-            label: wizard.setup.residence.ccaa.choices.aragon.label
+            label: Aragónia
           asturias:
-            label: wizard.setup.residence.ccaa.choices.asturias.label
+            label: Asztúria
           baleares:
-            label: wizard.setup.residence.ccaa.choices.baleares.label
+            label: Baleár-szigetek
           canarias:
-            label: wizard.setup.residence.ccaa.choices.canarias.label
+            label: Kanári-szigetek
           cantabria:
-            label: wizard.setup.residence.ccaa.choices.cantabria.label
+            label: Kantábria
           castilla_la_mancha:
-            label: wizard.setup.residence.ccaa.choices.castilla_la_mancha.label
+            label: Kasztília-La Mancha
           castilla_y_leon:
-            label: wizard.setup.residence.ccaa.choices.castilla_y_leon.label
+            label: Kasztília és León
           cataluna:
-            label: wizard.setup.residence.ccaa.choices.cataluna.label
+            label: Katalónia
           comunidad_valenciana:
-            label: wizard.setup.residence.ccaa.choices.comunidad_valenciana.label
+            label: Valenciai Közösség
           extremadura:
-            label: wizard.setup.residence.ccaa.choices.extremadura.label
+            label: Extremadura
           galicia:
-            label: wizard.setup.residence.ccaa.choices.galicia.label
+            label: Galícia
           la_rioja:
-            label: wizard.setup.residence.ccaa.choices.la_rioja.label
+            label: La Rioja
           madrid:
-            label: wizard.setup.residence.ccaa.choices.madrid.label
+            label: Madrid
           murcia:
-            label: wizard.setup.residence.ccaa.choices.murcia.label
+            label: Murcia
       country-of-fiscal-residence:
-        prompt: wizard.setup.residence.country-of-fiscal-residence.prompt
+        prompt: Adóügyi lakóhely szerinti ország (ISO 3166-1 alfa-2 kód, pl. GB, DE,
+          FR)
       fiscal-residency:
         choices:
           non_resident_irnr:
-            label: wizard.setup.residence.fiscal-residency.choices.non_resident_irnr.label
+            label: Nem rezidens – IRNR (RDLeg 5/2004)
           resident_irpf:
-            label: wizard.setup.residence.fiscal-residency.choices.resident_irpf.label
-        prompt: wizard.setup.residence.fiscal-residency.prompt
+            label: Spanyolországban szokásos lakóhellyel rendelkező – IRPF
+        prompt: Adóügyi illetőségi kategória
       representante-fiscal-nif:
-        prompt: wizard.setup.residence.representante-fiscal-nif.prompt
+        prompt: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n kívüli
+          esetén kötelező)
       representante-fiscal-nombre:
-        prompt: wizard.setup.residence.representante-fiscal-nombre.prompt
+        prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
         prompt: Adóügyi illetékességi autonóm közösség
-      title: wizard.setup.residence.title
+      title: Adóügyi illetőség
     spouse:
       spouse-birth-date:
         prompt: wizard.setup.spouse.spouse-birth-date.prompt
@@ -2975,116 +3025,102 @@ Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamen
           az együttes adózás, és melyik családi egység típus alkalmazandó.'
         prompt: Családi állapot (LIRPF 82. cikk)
       taxpayer-birth-date:
-        prompt: wizard.setup.taxpayer.taxpayer-birth-date.prompt
+        prompt: Az első adózó születési dátuma
       taxpayer-death-date:
-        prompt: wizard.setup.taxpayer.taxpayer-death-date.prompt
+        prompt: Az első adózó elhalálozásának dátuma
       taxpayer-disability-grade:
-        prompt: wizard.setup.taxpayer.taxpayer-disability-grade.prompt
+        prompt: Az első adózó fogyatékossági kódja
       taxpayer-marital-status:
         choices:
           casado:
-            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.casado.label
+            label: 2 - házas
           separado-divorciado:
-            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.separado-divorciado.label
+            label: 4 - különváltan élő vagy elvált
           soltero:
-            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.soltero.label
+            label: 1 - egyedülálló
           viudo:
-            label: wizard.setup.taxpayer.taxpayer-marital-status.choices.viudo.label
-        prompt: wizard.setup.taxpayer.taxpayer-marital-status.prompt
+            label: 3 - özvegy
+        prompt: Az első adózó családi állapota
       taxpayer-marriage-date:
         prompt: Házasságkötés dátuma (ÉÉÉÉ-HH-NN)
       taxpayer-sex:
-        prompt: wizard.setup.taxpayer.taxpayer-sex.prompt
-      title: wizard.setup.taxpayer.title
+        prompt: Az első adózó neme
+      title: Első adózó
     taxpayer-type:
       entity-type:
         choices:
           attribution-entity:
-            label: wizard.setup.taxpayer-type.entity-type.choices.attribution-entity.label
+            label: Jövedelemattribúciós szervezet
           legal-entity:
-            label: wizard.setup.taxpayer-type.entity-type.choices.legal-entity.label
+            label: Jogi személy (társaság)
           natural-person:
-            label: wizard.setup.taxpayer-type.entity-type.choices.natural-person.label
-        help: wizard.setup.taxpayer-type.entity-type.help
-        prompt: wizard.setup.taxpayer-type.entity-type.prompt
+            label: Természetes személy
+        help: Természetes személy (IRPF), jogi személy (Impuesto sobre Sociedades)
+          vagy jövedelemattribúciós szervezet
+        prompt: Entitástípus
       incn-prior-12-months:
-        help: Erre azért van szükségünk, hogy eldönthessük, kötelezi-e Önt a 202-es
-          modell a LIS 40. cikk 3. bekezdése szerinti módozatra (6 000 000 EUR felett).
-          Hagyja üresen, ha nem ismeri az adatot.
-        prompt: Mennyi volt az Ön nettó árbevétele az elmúlt 12 hónapban? (euróban,
-          opcionális)
+        help: Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az
+          LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett).
+          Hagyja üresen, ha nem tudja.
+        prompt: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban, opcionális)
       irpf-income-categories:
         choices:
           actividad-economica:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.actividad-economica.label
+            label: 'Gazdasági tevékenység'
           capital-inmobiliario:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.capital-inmobiliario.label
+            label: 'Ingatlanvagyon-jövedelem (bérbeadás)'
           capital-mobiliario:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.capital-mobiliario.label
+            label: 'Ingóvagyon-jövedelem'
           ganancias-patrimoniales:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.ganancias-patrimoniales.label
+            label: 'Tőkenyereség'
           pension:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.pension.label
+            label: 'Nyugdíj'
           trabajo:
-            label: wizard.setup.taxpayer-type.irpf-income-categories.choices.trabajo.label
-        help: wizard.setup.taxpayer-type.irpf-income-categories.help
-        prompt: wizard.setup.taxpayer-type.irpf-income-categories.prompt
+            label: 'Munkaviszonyból származó jövedelem'
+        help: 'Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység vált ki Modelo 130/131 kötelezettséget'
+        prompt: 'IRPF jövedelemkategóriák'
       legal-entity-form:
         choices:
           cooperativa:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.cooperativa.label
+            label: 'Szövetkezet'
           other:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.other.label
+            label: 'Egyéb jogi forma'
           sa:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sa.label
+            label: 'Részvénytársaság (S.A.)'
           sin-fines-lucrativos:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sin-fines-lucrativos.label
+            label: 'Nonprofit szervezet'
           sl:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sl.label
+            label: 'Korlátolt felelősségű társaság (S.L.)'
           sociedad-civil-mercantil:
-            label: wizard.setup.taxpayer-type.legal-entity-form.choices.sociedad-civil-mercantil.label
-        prompt: wizard.setup.taxpayer-type.legal-entity-form.prompt
+            label: 'Kereskedelmi célú polgári társaság'
+        prompt: 'Jogi forma'
       new-entity-first-two-profit-periods:
-        help: Csak jogi személyekre vonatkozik. Ha bejelöli, a vállalkozás a 15 százalékos
-          kedvezményes adókulccsal adózik az említett két adóévben.
-        prompt: Újonnan alapított jogi személyként az első két nyereséges adóévének
-          valamelyikében van?
-      title: wizard.setup.taxpayer-type.title
-    title: wizard.setup.title
+        help: 'Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os kedvezményes adókulcs szerint adózik az adott két időszakban.'
+        prompt: 'Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében?'
+      title: 'Adózói típus'
+    title: 'Beallitasi varazslо'
     verifier:
-      activity_present: Tevékenység megadva.
-      eu_eea_country_missing: EU/EGT-ország hiányzik. Adja meg a házastárs/élettárs
-        tartózkodási helyének EU/EGT-országát.
-      eu_eea_country_ok: EU/EGT-ország megadva.
-      joint_taxation_situacion_familiar_ok: 'Együttes adózás: a megadott családi állapot
-        megfelel az együttes bevallás feltételeinek.'
-      joint_taxation_situacion_familiar_refused: Együttes adózás nem elérhető ehhez
-        a családi állapothoz. Az együttes bevallás csak házastársak, bejegyzett élettársi
-        kapcsolatban élők, vagy törvényes egyszülős egységben (kiskorú gyermekkel)
-        élők esetén lehetséges.
-      monoparental_requires_hijos_ok: 'Egyszülős adóegység: az eltartott kiskorú gyermekek
-        megléte igazolt.'
-      monoparental_requires_hijos_warning: 'Egyszülős adóegység: az egyszülős együttes
-        adózáshoz (LIRPF 82. cikk 1. bek. 2. pont) kiskorú eltartott gyermek szükséges
-        az adóegységben. Eltartott gyermek nélkül ez a típusú együttes adózás nem
-        lehetséges. Aktiválja az «eltartott kiskorú gyermek» opciót, vagy váltson
-        egyéni adózásra.'
-      obligations_consistency_ok: Kötelezettségek konzisztenciája ellenőrizve.
-      obligations_inconsistent: 'Inkonzisztens kötelezettségek: az IVA/IRPF beállítások
-        ütköznek. Ellenőrizze a tevékenységhez tartozó adókötelezettségeket.'
-      spouse_consistency_missing: Házastárs/élettárs adóazonosítója hiányzik. Együttes
-        adózáshoz meg kell adni a másik fél adóazonosítóját.
-      spouse_consistency_ok: Házastárs/élettárs adatai konzisztensek.
-      tax_id_present: Adóazonosító megadva.
+      activity_present: 'Gazdasagi tevekenyseg: ellenorzi, hogy a profil tartalmaz-e tevekenysеget.'
+      eu_eea_country_missing: 'Hazastars lakohelye: EU vagy EGT lakohelyet jelolt meg, de az orszag hianzik. Adja meg a lakohely orszagat.'
+      eu_eea_country_ok: 'Hazastars lakohelye: az EU vagy EGT szerinti lakohely orszaga osszehangban van.'
+      joint_taxation_situacion_familiar_ok: 'Csaladi helyzet: a kozos adobevallas osszehangban van a bevallott csaladi helyzettel.'
+      joint_taxation_situacion_familiar_refused: 'Csaladi helyzet: a kozos adobevallas nem engedelyezett nem bejegyzett elettarsi kapcsolat eseten (LIRPF 82.1.2 cikkely). Modositsa a csaladi helyzetet, vagy valassza az egyeni adozast.'
+      monoparental_requires_hijos_ok: 'Egyszulos csaladi egyseg: a kiskoru gyermekekkel kapcsolatos kovetelmenye teljesitve.'
+      monoparental_requires_hijos_warning: 'Egyszulos csaladi egyseg: az egyszulos egysegkent valo kozos adobevallas (LIRPF 82.1.2 cikkely) kiskoru gyermekeket igenyel a csaladi egysegben. Eltartott gyermekek nelkul a kozos bevallas nem lehetseges ennel a csaladi helyzetnél. Engedelyezze az eltartott kiskoru gyermekek opciót, vagy valtson egyeni adozasra.'
+      obligations_consistency_ok: 'Forrasado-kotelezettsegek: a forrasadora vonatkozo valaszok osszehangban vannak.'
+      obligations_inconsistent: 'Forrasado-kotelezettsegek: szakmai forrasadot jelolt meg, de nem jelezte, hogy forrasadoval fizet szakembereknek. Ellenorizze ezeket az adatokat.'
+      spouse_consistency_missing: 'Kozos adobevallas: a hazastars adoazonositoja hianzik. Adja meg a kozos bevallashoz.'
+      spouse_consistency_ok: 'Kozos adobevallas: a hazastars adatai osszehangban vannak.'
+      tax_id_present: 'Adoazonositоs: ellenorzi, hogy a profil tartalmaz-e NIF vagy NIE azonositot.'
   test:
-    description: wizard.test.description
+    description: 'Tesztelje a konfiguraciot es a csatlakozast'
     example:
       choices:
         'yes':
           description: wizard.test.example.choices.yes.description
           label: wizard.test.example.choices.yes.label
-      help: wizard.test.example.help
-      prompt: wizard.test.example.prompt
+      help: 'Pelda sugoszoveg tesztelheshez'
+      prompt: 'Pelda teszt kerdes'
     main:
-      title: wizard.test.main.title
-    title: wizard.test.title
+      title: 'Fo teszt'
+    title: 'Teszt'
