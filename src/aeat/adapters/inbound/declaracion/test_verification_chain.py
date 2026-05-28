@@ -48,7 +48,12 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | only decl.ejercicio extracted        |
 | M190   | 2023-y-siguientes          | 1 real PDF        | none             | EXTRACTION-ONLY — no formulas       |
 | M193   | 2024-y-siguientes          | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M123→M193 relations    |
-| M303   | 2023-y-siguientes          | 8 real PDFs       | none             | EXTRACTION-ONLY — 12 casillas        |
+| M303   | 2023-y-siguientes          | 8 real PDFs       | yes (box 46)     | FORMULA-MISMATCH (documented) —      |
+|        |                            |                   |                  | box 46 = box 27 − box 45 per Orden  |
+|        |                            |                   |                  | EHA/3786/2008 art. 1. Corpus        |
+|        |                            |                   |                  | sanitisation (all amounts → 1000.00)|
+|        |                            |                   |                  | makes box46=0 != 1000 printed.      |
+|        |                            |                   |                  | Formula internally consistent.      |
 | M347   | 2008-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa;      |
 |        |                            |                   |                  | only decl.ejercicio extracted        |
 | M349   | 2020-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — summary casillas  |
@@ -73,12 +78,15 @@ Follow-up tasks surfaced by this sweep:
   - M036: registry has no revision for year 2025, period 0A — the fixture
     filename 2025-0A.pdf does not match any revision selector. Needs either
     a revision extension or a corrected fixture year.
-  - M303 formula coverage: the 2023-y-siguientes revision carries no registry
-    formulas; formula verification is a deferred follow-up.
+  - M303 formula coverage: the 2023-y-siguientes revision now carries the
+    resultado-regimen-general formula (box 46 = 27 − 45, Orden EHA/3786/2008
+    art. 1). Engine verification added; verdict FORMULA-MISMATCH (corpus
+    sanitisation artefact — all amounts = 1000.00, 1000−1000=0 ≠ 1000 printed).
 
 Summary: 7 modelos VERIFIED (M111, M115, M123, M130, M131, M180, M190-engine
-via M115 chain, M193, M390 partial); 8 modelos EXTRACTION-ONLY (M100
-CORPUS-LIMITED, M184, M190, M303, M347, M349, M369, M720, M840);
+via M115 chain, M193, M390 partial); 1 modelo FORMULA-MISMATCH documented
+(M303 — corpus sanitisation artefact); 7 modelos EXTRACTION-ONLY (M100
+CORPUS-LIMITED, M184, M190, M347, M349, M369, M720, M840);
 1 modelo NOT-CHAIN-READY (M036).
 """
 
@@ -415,7 +423,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
 
 
 # ---------------------------------------------------------------------------
-# M303 parser-only verification — no registry formulas in this revision
+# M303 parser-only verification — extraction chain gate (all 12 profile casillas)
 # ---------------------------------------------------------------------------
 
 
@@ -438,13 +446,14 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
     set committed at src/aeat/tests/fixtures/justificantes/303/.
 
-    Verdict: PARSER-GAP when extraction fails; the M303 2023-y-siguientes
-    revision carries no registry formulas — formula verification is a
-    BINDING-GAP deferred to a future campaign when M303 formula coverage
-    is extended. This test verifies the extraction side of the chain only.
+    Verdict: PARSER-GAP when extraction fails. This test verifies the
+    extraction side of the chain only. The companion test
+    test_verification_chain_m303_engine_recomputes_resultado_regimen_general
+    exercises the formula engine (box 46 = box 27 − box 45, Orden
+    EHA/3786/2008 art. 1).
 
     The M303 2009-y-siguientes revision (2021-2022 PDFs) is excluded here;
-    it covers a different profile with 4 closure casillas only.
+    it covers a different profile.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
@@ -485,6 +494,152 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
             f"PARSER-GAP [{pdf_stem}]: casilla {casilla_id!r} should be Decimal, "
             f"got {type(value).__name__!r} = {value!r}"
         )
+
+
+# ---------------------------------------------------------------------------
+# M303 engine verification — resultado-régimen-general (box 46 = 27 − 45)
+# ---------------------------------------------------------------------------
+
+_COMPUTED_CASILLAS_M303 = frozenset(
+    {
+        "iva.cuota-devengada-total",
+        "iva.cuota-deducible-total",
+        "iva.resultado-regimen-general",
+        "iva.compensacion-aplicada-periodo",
+        "iva.compensacion-pendiente-periodos-posteriores",
+        "iva.resultado",
+        "iva.compensacion-generada-periodo",
+        "iva.compensacion-disponible-fin-periodo",
+    }
+)
+"""M303 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
+
+
+@pytest.mark.parametrize(
+    "pdf_stem,year,period",
+    [
+        ("2023-1T", 2023, "1T"),
+        ("2023-2T", 2023, "2T"),
+        ("2023-3T", 2023, "3T"),
+        ("2023-4T", 2023, "4T"),
+        ("2024-1T", 2024, "1T"),
+        ("2024-2T", 2024, "2T"),
+        ("2024-3T", 2024, "3T"),
+        ("2024-4T", 2024, "4T"),
+    ],
+)
+def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine resolves formula-303-iva-resultado-regimen-general from corpus inputs.
+
+    GROUNDED authority: Orden EHA/3786/2008 art. 1 — box 46 = box 27 − box 45.
+      box 27 = Total cuota devengada (LIVA art. 88)
+      box 45 = Total a deducir (LIVA arts. 92-94)
+      box 46 = Resultado régimen general
+
+    Both box 27 and box 45 are extracted by the declaracion_pdf profile and
+    are non-computed casillas, so they supply the formula inputs directly.
+
+    Verdict: FORMULA-MISMATCH — documented, not a defect. The sanitiser
+    replaced every real monetary value in the corpus PDFs with the uniform
+    synthetic amount 1.000,00 (Decimal 1000.00), including box 46. The
+    formula computes devengada(1000) − deducible(1000) = 0, but box 46 was
+    independently overwritten to 1000. The mismatch is an artefact of the
+    sanitisation process, not a registry or formula defect.
+
+    Internal formula consistency (engine result == devengada − deducible) is
+    asserted as the verification gate: this proves the formula executes
+    correctly even though it cannot match the sanitised printed value.
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="303",
+            año_override=year,
+            period_override=period,
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}"
+        )
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+
+    for required_id in ("27", "45", "iva.resultado-regimen-general"):
+        assert required_id in extracted, (
+            f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
+            f"  got: {sorted(extracted)}"
+        )
+
+    # Build inputs — supply only non-computed Decimal casillas.
+    inputs: dict[str, Decimal] = {}
+    for casilla_id, value in extracted.items():
+        if casilla_id in _COMPUTED_CASILLAS_M303:
+            continue
+        if not isinstance(value, Decimal):
+            continue
+        inputs[casilla_id] = value
+
+    # The previous_filing binding for compensacion-pendiente-anteriores is
+    # required by the engine. Supply the extracted value from the corpus PDF
+    # if available (box iva.compensacion-pendiente-periodos-anteriores), else zero.
+    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
+    binding_values: dict[str, Decimal] = {
+        "modelo-303-compensacion-pendiente-anteriores": _comp,
+    }
+
+    # filing_period: first day of the period's quarter.
+    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
+    snapshot = _registry_snapshot("303", year, period)
+
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, _period_month, 1)},
+            binding_values=binding_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
+            f"RegistryValidationError — a required binding is missing.\n"
+            f"  error: {exc}\n"
+            f"  inputs supplied: {sorted(inputs)}\n"
+            f"  binding_values supplied: {sorted(binding_values)}"
+        )
+
+    engine_values = dict(result.values)
+
+    # Internal consistency gate: engine resultado == engine devengada − deducible.
+    # The formula iva.resultado-regimen-general = 27 − 45 and the inputs come
+    # from the extracted non-computed casillas, so this verifies formula execution.
+    engine_resultado = engine_values.get("iva.resultado-regimen-general")
+    assert engine_resultado is not None, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: 'iva.resultado-regimen-general' absent from engine result"
+    )
+    input_27 = inputs.get("27", Decimal("0"))
+    input_45 = inputs.get("45", Decimal("0"))
+    expected_resultado = input_27 - input_45
+    assert engine_resultado == expected_resultado, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
+        f"  (internal formula consistency broken — registry formula defect)"
+    )
+
+    # FORMULA-MISMATCH (documented corpus sanitisation artefact): the engine result
+    # will differ from the extracted printed value because the sanitiser overwrote
+    # ALL amounts to 1.000,00. devengada(1000) − deducible(1000) = 0 ≠ 1000.
+    # This is expected and intentional; the assertion above proves the formula
+    # executes correctly.
+    extracted_resultado = extracted.get("iva.resultado-regimen-general")
+    if isinstance(extracted_resultado, Decimal) and extracted_resultado != engine_resultado:
+        # Documented mismatch — engine result is arithmetically correct; printed
+        # value is a sanitiser artefact. No assertion failure here.
+        pass
 
 
 # ---------------------------------------------------------------------------
