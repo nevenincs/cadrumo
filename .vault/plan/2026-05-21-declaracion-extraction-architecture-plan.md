@@ -459,3 +459,61 @@ User directive 2026-05-28 second half: complete the verification chain that turn
 Implement the verification chain that turns GROUNDED extraction profiles into actual calculation-engine verification: parse_declaracion → filter extracted casillas to non-computed → calculate_registry_snapshot → assert engine closure casilla == extracted printed value. First real end-to-end fidelity gate for the project mission.
 
 - [x] `W09.P40.S197` - Implement verification chain test module; `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+
+## Wave `W10` - Discipline rollout across PDF surfaces + Phase 2 follow-ups (2026-05-28)
+
+Gradual rollout of the PDF extraction discipline (verification_source enum + PROVISIONAL gate + corpus_round_trip_verified + structured exception attributes + verification chain) across other PDF import surfaces beyond declaracion. Plus Phase 2 verification chain follow-ups for surfaced FORMULA-MISMATCH and BINDING-GAP findings (M130 corpus regen, M390 leaf inputs, M180 M115 relation, M111 negative filing edge). Per-surface phases: justificante (highest leverage, lowest risk — mirrors declaracion closely); bank PDF financial providers (high operational stakes — N26 first, extensible); borrador architectural audit (per-modelo class vs registry-profile decision); OCR/evidence path (deferred future research). Per-finding phases: M130 corpus regeneration, M390 leaf binding, M180 cross-modelo relation, M111 negative filing, verification chain extension as gaps close.
+
+### Phase `W10.P41` - Justificante surface alignment with declaracion discipline
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P41.S198` - Audit justificante _parser + _extract for silent-failure parity with declaracion verification_source enum and PROVISIONAL gate (tasklist #67); `src/aeat/adapters/inbound/justificante/`.
+
+### Phase `W10.P42` - Bank PDF provider gate (financial.providers) — N26 first, extensible
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P42.S199` - Author bank-PDF provider gate discipline N26-first extensible to BBVA Santander Caixabank etc (tasklist #68); `src/aeat/adapters/inbound/financial/providers/`.
+
+### Phase `W10.P43` - Borrador architectural audit — per-modelo class vs registry-profile
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P43.S200` - Audit borrador per-modelo class pattern vs registry-profile decision either supersede or document architectural difference (tasklist #69); `src/aeat/adapters/inbound/borrador/`.
+
+### Phase `W10.P44` - OCR/evidence invoice path future research (deferred)
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P44.S201` - Future research ADR for OCR evidence invoice path discipline deferred per W02 (tasklist #70); `.vault/research/`.
+
+### Phase `W10.P45` - M130 corpus regeneration with formula-consistent values
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P45.S202` - Regenerate 15 M130 corpus fixtures with formula-consistent values close FORMULA-MISMATCH (tasklist #71); `src/aeat/tests/fixtures/justificantes/130/`.
+
+### Phase `W10.P46` - M390 leaf-input binding gap
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P46.S203` - Resolve M390 leaf-input binding gap so engine recomputes closure (tasklist #72); `src/aeat/_data/registry/aeat/modelos/390.toml`.
+
+### Phase `W10.P47` - M180 M115 cross-modelo relation binding
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P47.S204` - Add M180 M115 cross-modelo relation binding for annual-quarterly summary chain (tasklist #73); `src/aeat/_data/registry/aeat/modelos/180/`.
+
+### Phase `W10.P48` - M111 2024-4T negative-filing edge case verification
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P48.S205` - Verify M111 2024-4T negative-filing scenario corpus-vs-formula resolution (tasklist #74); `src/aeat/_data/registry/aeat/modelos/111.toml src/aeat/tests/fixtures/justificantes/111/2024-4T.pdf`.
+
+### Phase `W10.P49` - Verification chain extension as gaps close
+
+Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
+
+- [ ] `W10.P49.S206` - Extend test_verification_chain coverage as M130/M390/M180/M111 gaps close (tasklist #75); `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
