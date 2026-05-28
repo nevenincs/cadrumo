@@ -35,6 +35,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 
 from .....core.config import Settings
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
@@ -440,7 +441,10 @@ async def _fetch_and_parse(
     storage_state = storage_state_for_session(session)
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)

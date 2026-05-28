@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core.config import Settings
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import (
     RemoteOperation,
@@ -86,7 +87,10 @@ async def fetch_iva_compensation_wallet(
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
@@ -586,7 +590,10 @@ def _wallet_row_from_cells(cells: list[str]) -> IvaCompensationWalletRow:
     year = _parse_year(cells[0])
     period = cells[1].strip().upper()
     if not period:
-        raise SedeParseError("IVA wallet period cell is empty")
+        raise SedeParseError(
+            "IVA wallet period cell is empty",
+            translated_message=tr("adapters.sede.errors.iva_wallet_empty_period_cell"),
+        )
     return IvaCompensationWalletRow(
         generation_year=year,
         generation_period=period,
@@ -609,7 +616,10 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     cleaned = cleaned.replace(".", "").replace(",", ".")
     cleaned = re.sub(r"[^0-9.\-]", "", cleaned)
     if not cleaned:
-        raise SedeParseError("IVA wallet amount cell is empty")
+        raise SedeParseError(
+            "IVA wallet amount cell is empty",
+            translated_message=tr("adapters.sede.errors.iva_wallet_empty_amount_cell"),
+        )
     try:
         amount = Decimal(cleaned)
     except InvalidOperation as exc:

@@ -45,6 +45,7 @@ import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from .....core.config import Settings
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import (
@@ -340,7 +341,10 @@ async def _open_register_page(
     storage_state = storage_state_for_session(session)
     storage_state_path = session.storage_state_path
     if storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     from .....application.workflow._models import require_active_bucket_id
 
     profile = Profile(
@@ -910,7 +914,10 @@ async def capture_filed_declaration_observation(
     """
     authenticated_identity = (session.identity_nif or "").strip()
     if not authenticated_identity:
-        raise SedeNavigationError("AeatSession.identity_nif is empty; cannot bind live filing observation")
+        raise SedeNavigationError(
+            "AeatSession.identity_nif is empty; cannot bind live filing observation",
+            translated_message=tr("adapters.sede.errors.empty_identity_nif"),
+        )
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
     async with _open_register_page(session, settings=settings, playwright=playwright) as (
@@ -955,7 +962,10 @@ async def _capture_filed_declaration_observation_from_row(
 ) -> FiledDeclaracionObservation:
     authenticated_identity = (session.identity_nif or "").strip()
     if not authenticated_identity:
-        raise SedeNavigationError("AeatSession.identity_nif is empty; cannot bind live filing observation")
+        raise SedeNavigationError(
+            "AeatSession.identity_nif is empty; cannot bind live filing observation",
+            translated_message=tr("adapters.sede.errors.empty_identity_nif"),
+        )
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
     observation_key = (
