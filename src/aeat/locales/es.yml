@@ -1614,8 +1614,15 @@ cli:
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
         el filtro Beckham del art. 93 LIRPF.
-      source_jurisdiction_required_beckham: 'El régimen impatriado (art. 93 LIRPF, Beckham) trata de forma distinta los rendimientos de fuente española y los de fuente extranjera; --source-jurisdiction debe declararse explícitamente en cada apunte. Un valor por defecto silencioso ES incluiría rentas de fuente extranjera en la base del IRPF (art. 93.5 segregación).'
-      source_jurisdiction_required_irnr: 'Los perfiles no residentes (IRNR) deben declarar --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10). Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran en la base del IRNR.'
+      source_jurisdiction_required_beckham: El régimen impatriado (art. 93 LIRPF,
+        Beckham) trata de forma distinta los rendimientos de fuente española y los
+        de fuente extranjera; --source-jurisdiction debe declararse explícitamente
+        en cada apunte. Un valor por defecto silencioso ES incluiría rentas de fuente
+        extranjera en la base del IRPF (art. 93.5 segregación).
+      source_jurisdiction_required_irnr: Los perfiles no residentes (IRNR) deben declarar
+        --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
+        Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
+        en la base del IRNR.
       taxable_base_help: Importe de base imponible
       usage_ratio_help: Id de proporción de uso profesional proporcional
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
@@ -2742,6 +2749,8 @@ errors:
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
     error_submission_validation: Un modelo de envío no superó la validación.
     error_transaction_catalogue: El catálogo de transacciones no es válido o es inconsistente.
+    error_transaction_classification_rule: Una regla de clasificación del libro mayor
+      no es válida.
     error_transaction_llm_classifier: Falló la clasificación de la transacción con
       el modelo de lenguaje.
     error_transaction_not_found: No se encontró la transacción solicitada.
@@ -2911,6 +2920,7 @@ errors:
       superó la validación estricta.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
+    integrity_outbound_storage_corruption: 'Un fichero de metadatos sidecar contiene un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.'
     integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
       una invariante estructural.
     integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
@@ -2955,6 +2965,7 @@ errors:
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
+    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
     internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
       guionizadas sin consumir.'
     internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas
@@ -3181,8 +3192,8 @@ errors:
       Vuelve a activarla con `aeat config profile switch NOMBRE`.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
-    refused_taxation_comparison: La comparación tributaria conjunta/individual no puede
-      realizarse para este modelo o instantánea.
+    refused_taxation_comparison: La comparación tributaria conjunta/individual no
+      puede realizarse para este modelo o instantánea.
     refused_topic_not_found: No se encontró el tema solicitado.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.

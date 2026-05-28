@@ -1499,8 +1499,13 @@ cli:
         the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source,
         FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham
         filter.
-      source_jurisdiction_required_beckham: 'The impatriado (Art. 93 LIRPF) Beckham regime treats Spanish-source and foreign-source income distinctly; --source-jurisdiction must be declared explicitly on every ledger entry. A silent ES default would quietly include foreign-source amounts in the IRPF base (Art. 93.5 segregation).'
-      source_jurisdiction_required_irnr: 'Non-resident IRNR profiles must declare --source-jurisdiction explicitly (TRLIRNR RDLeg 5/2004 Art. 2 / Art. 10). Use a two-letter ISO 3166-1 alpha-2 country code; only ES rows enter the IRNR base.'
+      source_jurisdiction_required_beckham: The impatriado (Art. 93 LIRPF) Beckham
+        regime treats Spanish-source and foreign-source income distinctly; --source-jurisdiction
+        must be declared explicitly on every ledger entry. A silent ES default would
+        quietly include foreign-source amounts in the IRPF base (Art. 93.5 segregation).
+      source_jurisdiction_required_irnr: Non-resident IRNR profiles must declare --source-jurisdiction
+        explicitly (TRLIRNR RDLeg 5/2004 Art. 2 / Art. 10). Use a two-letter ISO 3166-1
+        alpha-2 country code; only ES rows enter the IRNR base.
       taxable_base_help: VAT-exclusive base amount
       usage_ratio_help: Usage-ratio id for proportional business use
       value_date_help: Value date (YYYY-MM-DD)
@@ -2594,6 +2599,7 @@ errors:
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
     error_submission_validation: A submission model failed validation.
     error_transaction_catalogue: The transaction catalogue is invalid or inconsistent.
+    error_transaction_classification_rule: A ledger classification rule is invalid.
     error_transaction_llm_classifier: The transaction classification by the language
       model failed.
     error_transaction_not_found: The requested transaction was not found.
@@ -2745,6 +2751,7 @@ errors:
       validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or etag).
+    integrity_outbound_storage_corruption: 'A sidecar metadata file contains a field with an unexpected type; the storage object is corrupted.'
     integrity_portals_portal_integrity: The AEAT portal registry violates a structural
       invariant.
     integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
@@ -2787,6 +2794,7 @@ errors:
       was recorded outside an active run context.'
     internal_output_rendering: 'Internal error: the command output could not be rendered
       safely.'
+    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
     internal_wizard_script_overflow: 'Internal error: the wizard closed with unconsumed
       scripted answers.'
     internal_wizard_script_underflow: 'Internal error: the wizard asked for more answers

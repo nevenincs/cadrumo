@@ -73,8 +73,8 @@ envelope.
 - [ ] `W01.P01.S12` - add real-behavior test asserting verify adapter type-error envelope; `src/aeat/adapters/outbound/aeat/verify/test_verify.py`.
 - [ ] `W01.P01.S13` - introduce `BrowserAdapterTypeError(CoreError)`; `replace the three `TypeError` raises across `_renta_web_open.py`, `_nif_iva_check.py`, `_groi_check.py`; `src/aeat/adapters/outbound/aeat/sede/_errors.py`.
 - [ ] `W01.P01.S14` - add real-behavior test asserting browser-adapter-type-error envelope and registry binding; `src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py`.
-- [ ] `W01.P01.S15` - introduce `StorageCorruptionError(CoreError)`; `replace the `TypeError`; `src/aeat/adapters/outbound/storage/_local.py`.
-- [ ] `W01.P01.S16` - add real-behavior test asserting storage-corruption-error envelope round-trip; `src/aeat/adapters/outbound/storage/test_local.py`.
+- [x] `W01.P01.S15` - introduce `StorageCorruptionError(CoreError)`; `replace the `TypeError`; `src/aeat/adapters/outbound/storage/_local.py`.
+- [x] `W01.P01.S16` - add real-behavior test asserting storage-corruption-error envelope round-trip; `src/aeat/adapters/outbound/storage/test_local.py`.
 - [ ] `W01.P01.S17` - introduce `ObservationKeyError(CoreValidationError)`; `replace the five `ValueError` raises at observation-key validation; `src/aeat/application/calculations/_observations_repository.py`.
 - [ ] `W01.P01.S18` - add real-behavior test asserting observation-key-error envelope for each replaced raise; `src/aeat/application/calculations/test_observations_repository.py`.
 - [ ] `W01.P01.S19` - introduce `AuthDiagnosticPhoneStateError(CoreValidationError)`; `replace the raw `ValueError(phone_state)`; `src/aeat/application/auth/_diagnostics.py`.
@@ -105,8 +105,8 @@ envelope.
 - [ ] `W01.P01.S44` - add real-behavior test asserting aggregation-config envelope at every replaced raise; `src/aeat/application/aggregation/test_service.py`.
 - [ ] `W01.P01.S45` - introduce `DiagnosticModelError(CoreValidationError)`; `replace the `ValueError` / `TypeError` raises in `DiagnosticCheck` invariants; `src/aeat/application/diagnostics.py`.
 - [ ] `W01.P01.S46` - add real-behavior test asserting diagnostic-model envelope at every replaced raise; `src/aeat/application/test_diagnostics.py`.
-- [ ] `W01.P01.S47` - introduce `ClassificationRuleError(CoreValidationError)`; `replace the regex-validation `ValueError`; `src/aeat/domain/transactions/_classification_rule.py`.
-- [ ] `W01.P01.S48` - add real-behavior test asserting classification-rule envelope on invalid regex; `src/aeat/domain/transactions/test_classification_rule.py`.
+- [x] `W01.P01.S47` - introduce `ClassificationRuleError(CoreValidationError)`; `replace the regex-validation `ValueError`; `src/aeat/domain/transactions/_classification_rule.py`.
+- [x] `W01.P01.S48` - add real-behavior test asserting classification-rule envelope on invalid regex; `src/aeat/domain/transactions/test_classification_rule.py`.
 
 ### Phase `W01.P02` - enroll the centralized logging factory
 
@@ -239,8 +239,8 @@ asserts every caller now imports from the canonical home.
 
 - [x] `W01.P05.S137` - split `_ensure_utc` into `_coerce_utc_aware` and `_validate_utc_aware`; `move both to a canonical module under `aeat.core.time`; `src/aeat/core/time/_utc.py`.
 - [x] `W01.P05.S138` - add real-behavior test asserting the coercion and the validation variants behave per their documented contracts on naive / aware / mixed inputs; `src/aeat/core/time/test_utc.py`.
-- [ ] `W01.P05.S139` - migrate the four `_ensure_utc` call-sites (`auth/certificate.py`, `storage/bucket/_manifest.py`, `storage/master_key/_recovery_record.py`, `user_profile/_aggregate.py`) to the explicit variants; `delete the four local copies; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
-- [ ] `W01.P05.S140` - extend the test surface to cover every migrated call-site under its real boundary; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
+- [x] `W01.P05.S139` - migrate the four `_ensure_utc` call-sites (`auth/certificate.py`, `storage/bucket/_manifest.py`, `storage/master_key/_recovery_record.py`, `user_profile/_aggregate.py`) to the explicit variants; `delete the four local copies; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
+- [x] `W01.P05.S140` - extend the test surface to cover every migrated call-site under its real boundary; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
 - [ ] `W01.P05.S141` - move `_now` / `_utcnow` to `aeat.core.time._clock`; `delete the six local copies; `src/aeat/core/time/_clock.py`.
 - [ ] `W01.P05.S142` - add real-behavior test asserting every former call-site reads the canonical clock; `src/aeat/core/time/test_clock.py`.
 - [ ] `W01.P05.S143` - parametrize `_storage_path` into one shared helper under `aeat.application._storage_paths`; `delete the seven local copies; `src/aeat/application/_storage_paths.py`.
