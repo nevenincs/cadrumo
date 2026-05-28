@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     CasillaObservation,
@@ -22,7 +23,13 @@ from ...domain.calculations.registry import (
 from ...domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ...tests.secure_sql import isolated_runtime_profile
 from ..aggregation import CalculationSourceContext
-from ._binding_prefill import extract_modelo_303_local_iva_compensation_recurrence, resolve_bindings_from_local_store
+from ._binding_prefill import (
+    _selector_periods,
+    _selector_year_delta,
+    extract_modelo_303_local_iva_compensation_recurrence,
+    resolve_bindings_from_local_store,
+)
+from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository, IvaCompensationPeriodState
 from ._multi_year import PreviousFilingSourceResolver
 from ._observations_repository import CalculationObservationRepository
@@ -231,3 +238,26 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     assert recurrence.source_periods == ("4T",)
     assert report.prefilled
     assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
+
+
+def test_binding_prefill_type_error_is_registered_in_error_registry() -> None:
+    assert "REFUSED_BINDING_PREFILL_TYPE" in ERROR_REGISTRY
+
+
+def test_binding_prefill_type_error_round_trips_through_build_error_envelope() -> None:
+    exc = BindingPrefillTypeError(
+        "binding selector 'filing_year_delta' must be int|str, got list"
+    )
+    envelope = build_error_envelope(exc, trace_id=None)
+    assert envelope.code == "REFUSED_BINDING_PREFILL_TYPE"
+    assert envelope.retryable is False
+
+
+def test_selector_year_delta_raises_binding_prefill_type_error_for_invalid_type() -> None:
+    with pytest.raises(BindingPrefillTypeError, match="filing_year_delta"):
+        _selector_year_delta([])
+
+
+def test_selector_periods_raises_binding_prefill_type_error_for_invalid_type() -> None:
+    with pytest.raises(BindingPrefillTypeError, match="source_periods"):
+        _selector_periods(42)

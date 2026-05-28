@@ -834,6 +834,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._errors.BindingPrefillTypeError",
+        ErrorCode(
+            code="REFUSED_BINDING_PREFILL_TYPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_calculations_casilla_constraint",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
