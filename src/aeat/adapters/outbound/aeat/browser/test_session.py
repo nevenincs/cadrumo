@@ -590,3 +590,27 @@ def test_navigate_probe_passes_on_ok_fixture() -> None:
     assert body, "ok fixture body must be non-empty for the probe test to be meaningful"
     result = _probe_or_raise(_PROBE_URL, 200, {}, body, rate_limit_retry_after_default=300)
     assert result is None
+
+
+def test_build_context_kwargs_boundary_rationale_comment_present() -> None:
+    # ``_build_context_kwargs`` returns ``dict[str, Any]`` because the dict
+    # is spread into ``browser.new_context(**kwargs)`` whose Playwright stubs
+    # accept heterogeneous keyword arguments (storage_state, proxy,
+    # viewport, locale, ...).  The ``"irreducible"`` boundary rationale
+    # comment must remain in session.py to document why Any is unavoidable
+    # at this third-party API boundary.
+    import pathlib
+
+    session_path = pathlib.Path(__file__).parent / "session.py"
+    assert session_path.exists(), f"session.py not found at {session_path}"
+    source = session_path.read_text(encoding="utf-8")
+    assert "irreducible" in source, (
+        "Boundary rationale comment containing 'irreducible' is missing from "
+        "browser/session.py. The ``dict[str, Any]`` return annotation on "
+        "_build_context_kwargs must document that Any is the correct type at "
+        "the Playwright new_context() boundary."
+    )
+    assert "_build_context_kwargs" in source, (
+        "_build_context_kwargs function must be present in browser/session.py; "
+        "the boundary rationale test references this function by name."
+    )
