@@ -19,6 +19,7 @@ from ._errors import (
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
+    StorageCorruptionError,
 )
 from ._factory import get_storage_provider
 from ._protocol import StorageProvider
@@ -37,6 +38,7 @@ __all__ = [
     "ProviderKind",
     "ProviderObjectMetadata",
     "ProviderProbeReport",
+    "StorageCorruptionError",
     "StorageProvider",
     "get_storage_provider",
 ]
