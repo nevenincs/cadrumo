@@ -9,3 +9,17 @@ predicate_id = "modelo-131-2024-c11-cap-by-c10"
 expression = 'cap_le_when_positive(["11", "10"])'
 finding_kind = "BLOCKING_RULE"
 legal_refs = ["rd-439-2007:art-110"]
+
+# AEAT M131 structural correctness rule: when C01 (suma de rendimientos
+# netos) is strictly positive, C07 (suma de pagos fraccionados previos)
+# MUST be non-zero — a positive base imponible cannot produce a zero
+# cumulative pago-fraccionado-previo line because every positive base
+# row feeds C02/C04/C06 which together sum into C07 via the engine
+# formulas. A zero C07 with a positive C01 is a registry-graph
+# wiring defect, not a cuota-mínima regulatory miss; the regulatory
+# floor is corpus-blocked under task #226 and stays out of scope.
+[[revisions."2024".verification_predicates]]
+predicate_id = "modelo-131-2024-c01-implies-c07"
+expression = 'implies_nonzero(["01", "07"])'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["rd-439-2007:art-110"]
