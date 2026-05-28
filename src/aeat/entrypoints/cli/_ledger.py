@@ -72,6 +72,7 @@ from ...domain.transactions import (
     TransactionDirection,
     TransactionIdPrefixError,
 )
+from ...core.logging import get_logger
 from ._common import (
     _bad,
     _canonical_period,
@@ -82,6 +83,8 @@ from ._common import (
     _state,
     _tx_repo,
 )
+
+_log = get_logger(__name__)
 from ...domain.deadlines._models import IrpfSpecialRegime
 from ...domain.profile._renta_codes import FiscalResidency
 
@@ -281,7 +284,7 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
                     candidates=candidates.strip() or "?",
                 )
             ) from exc
-        raise _bad(raw_message) from exc
+        raise _bad(tr("cli.ledger.errors.id_prefix_unknown", message=raw_message)) from exc
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
@@ -1841,11 +1844,12 @@ app.add_typer(ratios_app, name="ratios")
 def _ratios_bucket_id() -> str:
     """Return the active workflow bucket id or raise the standard CLI refusal."""
 
+    from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise
 
     try:
         return active_bucket_id_or_raise()
-    except Exception as exc:  # NoActiveProfileError + downstream raises
+    except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
 
 
@@ -1858,11 +1862,12 @@ def _ratios_bucket_and_profile() -> tuple[str, str | None]:
     silent because there is no profile to look up snapshots against.
     """
 
+    from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise, resolve_active_bucket_id
 
     try:
         bucket_id = active_bucket_id_or_raise()
-    except Exception as exc:  # NoActiveProfileError + downstream raises
+    except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
     return bucket_id, resolve_active_bucket_id()
 
@@ -3187,11 +3192,12 @@ app.add_typer(rule_app, name="rule")
 
 
 def _rule_bucket_id() -> str:
+    from ...application.workflow._errors import NoActiveProfileError
     from ...application.workflow._models import active_bucket_id_or_raise
 
     try:
         return active_bucket_id_or_raise()
-    except Exception as exc:
+    except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
 
 
