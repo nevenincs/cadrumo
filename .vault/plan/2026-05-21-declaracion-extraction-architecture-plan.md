@@ -498,7 +498,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P46.S203` - Resolve M390 leaf-input binding gap so engine recomputes closure (tasklist #72); `src/aeat/_data/registry/aeat/modelos/390.toml`.
+- [x] `W10.P46.S203` - Resolve M390 leaf-input binding gap so engine recomputes closure (tasklist #72); `src/aeat/_data/registry/aeat/modelos/390.toml`.
 
 ### Phase `W10.P47` - M180 M115 cross-modelo relation binding
 
