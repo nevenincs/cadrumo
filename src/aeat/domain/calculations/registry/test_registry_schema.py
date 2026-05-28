@@ -24,6 +24,8 @@ from . import (
 )
 from ._loader import load_registry_tree
 from ._schema import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
     ConvenioRateRow,
     ExportFieldDefinition,
     ExtractionTargetDefinition,
@@ -871,6 +873,96 @@ def test_extraction_target_numeric_casilla_rejects_label_pattern() -> None:
             value_kind="amount",
             label_pattern="Retenciones",
         )
+
+
+def test_casilla_accepts_continuidad_id_roundtrip() -> None:
+    casilla = CasillaDefinition.model_validate(
+        {
+            "id": "0700",
+            "number": "0700",
+            "label": "Base liquidable general",
+            "section": ("base",),
+            "data_type": "money",
+            "continuidad_id": "renta.base-liquidacion.general",
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
+
+    restored = CasillaDefinition.model_validate(casilla.model_dump())
+
+    assert restored == casilla
+    assert restored.continuidad_id == "renta.base-liquidacion.general"
+
+
+def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
+    with pytest.raises(ValidationError, match="continuidad_id"):
+        CasillaDefinition.model_validate(
+            {
+                "id": "0700",
+                "number": "0700",
+                "label": "Base liquidable general",
+                "section": ("base",),
+                "continuidad_id": "Renta Base",
+                "legal_refs": ("ley-35-2006:art-48",),
+                "source_refs": ("aeat-manual",),
+            }
+        )
+
+
+def test_casilla_continuidad_evolution_rejects_same_revision_pair() -> None:
+    with pytest.raises(ValidationError, match="must span two different revisions"):
+        CasillaContinuidadEvolutionDefinition(
+            id="renta-2024-self-evolution",
+            continuidad_id="renta.base-liquidacion.general",
+            from_revision="2024",
+            to_revision="2024",
+            evolution_kind="label_evolved",
+            legal_refs=("ley-35-2006:art-48",),
+            source_refs=("aeat-manual",),
+        )
+
+
+def test_modelo_revision_defaults_to_advisory_continuidad_validation() -> None:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": "2024",
+            "valid_from": date(2024, 1, 1),
+            "period_selector": {"years": (2024,), "periods": ("0A",)},
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
+
+    assert revision.continuidad_validation == "advisory"
+    assert revision.casilla_continuidad_evolutions == ()
+
+
+def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": "2025",
+            "valid_from": date(2025, 1, 1),
+            "period_selector": {"years": (2025,), "periods": ("0A",)},
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+            "continuidad_validation": "strict",
+            "casilla_continuidad_evolutions": (
+                {
+                    "id": "renta-2024-2025-base-general-label",
+                    "continuidad_id": "renta.base-liquidacion.general",
+                    "from_revision": "2024",
+                    "to_revision": "2025",
+                    "evolution_kind": "label_evolved",
+                    "legal_refs": ("ley-35-2006:art-48",),
+                    "source_refs": ("aeat-manual",),
+                },
+            ),
+        }
+    )
+
+    assert revision.continuidad_validation == "strict"
+    assert revision.casilla_continuidad_evolutions[0].continuidad_id == "renta.base-liquidacion.general"
 
 
 def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla_id() -> None:

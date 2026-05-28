@@ -465,6 +465,14 @@ EvidenceTier = Literal[
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]
+ContinuidadId = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=128,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
 FormulaOperator = Literal[
     "add",
     "subtract",
@@ -1562,7 +1570,7 @@ class ParameterDefinition(RegistryModel):
                 )
 
     def _validate_keyed_bracket_table_shape(self) -> None:
-        """Verify a keyed_bracket_table parameter has keyed_brackets, no values, no numeric brackets, and no duplicate keys.
+        """Verify a keyed_bracket_table parameter has a valid keyed shape.
 
         Four contracts mirror the numeric ``bracket_table`` shape:
         * non-empty ``keyed_brackets`` tuple
@@ -1599,7 +1607,7 @@ class ParameterDefinition(RegistryModel):
             seen.add(pair)
 
     def _validate_convenio_rate_table_shape(self) -> None:
-        """Verify a convenio_rate_table parameter carries convenio_rates with unique (country, tipo_renta, valid_from) triples.
+        """Verify a convenio_rate_table parameter carries unique convenio rate rows.
 
         Mirrors the keyed_bracket_table contract structure:
         * non-empty ``convenio_rates`` tuple
@@ -1695,6 +1703,33 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+
+
+class CasillaContinuidadEvolutionDefinition(RegistryModel):
+    """Declared cross-revision evolution for one casilla continuity chain."""
+
+    id: RecordId
+    continuidad_id: ContinuidadId
+    from_revision: RevisionId
+    to_revision: RevisionId
+    evolution_kind: Literal[
+        "unchanged",
+        "label_evolved",
+        "legal_refs_evolved",
+        "label_and_legal_refs_evolved",
+        "repurposed",
+        "retired",
+    ]
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_revision_pair(self) -> CasillaContinuidadEvolutionDefinition:
+        if self.from_revision == self.to_revision:
+            raise RegistryValidationError(
+                f"casilla continuidad evolution {self.id!r} must span two different revisions"
+            )
+        return self
 
 
 class CasillaAlias(RegistryModel):
@@ -1865,6 +1900,14 @@ class CasillaDefinition(RegistryModel):
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
+    continuidad_id: ContinuidadId | None = Field(
+        default=None,
+        description=(
+            "Stable cross-revision continuity key for non-overlapping annual "
+            "forms. When present, it identifies the legal concept continuity "
+            "chain independently of the revision-local casilla id."
+        ),
+    )
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
@@ -2334,6 +2377,8 @@ class ModeloRevision(RegistryModel):
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
+    continuidad_validation: Literal["advisory", "strict"] = "advisory"
+    casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:
