@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
+from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
@@ -300,7 +301,7 @@ class CsvProvider(FinancialProvider):
     def _decode_bytes(self, source_bytes: bytes) -> tuple[str, str]:
         """Decode bytes using the configured preference order."""
         preferred = load_settings().financial_default_csv_encoding.strip() or "utf-8"
-        candidates = (preferred, "utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
+        candidates = (preferred, *CSV_ENCODING_FALLBACK_CHAIN)
         seen: set[str] = set()
         for candidate in candidates:
             normalized = candidate.lower()
