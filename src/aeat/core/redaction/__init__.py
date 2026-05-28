@@ -354,12 +354,27 @@ def _redact_structured_for_cli_output(value: object, *, key: object | None = Non
     if isinstance(value, str):
         return _redact_cli_string(value)
     if isinstance(value, dict):
-        return {k: _redact_structured_for_cli_output(v, key=k) for k, v in value.items()}
+        redacted: dict[object, object] = {}
+        for item_key, item_value in value.items():
+            redacted_key = _redact_cli_string(item_key) if isinstance(item_key, str) else item_key
+            unique_key = _unique_mapping_key(redacted_key, redacted)
+            redacted[unique_key] = _redact_structured_for_cli_output(item_value, key=item_key)
+        return redacted
     if isinstance(value, list):
         return [_redact_structured_for_cli_output(item) for item in value]
     if isinstance(value, tuple):
         return tuple(_redact_structured_for_cli_output(item) for item in value)
     return value
+
+
+def _unique_mapping_key(candidate: object, existing: Mapping[object, object]) -> object:
+    if candidate not in existing:
+        return candidate
+    base = str(candidate)
+    suffix = 2
+    while f"{base}#{suffix}" in existing:
+        suffix += 1
+    return f"{base}#{suffix}"
 
 
 def redact_for_log(text: str) -> str:

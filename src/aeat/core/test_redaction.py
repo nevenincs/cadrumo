@@ -23,6 +23,7 @@ _NIF = "12345678Z"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
+_OTHER_OBJECT_KEY = "wallet:2026-other"
 
 
 def test_cli_output_text_redacts_sensitive_canaries() -> None:
@@ -50,6 +51,12 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "object_key": _OBJECT_KEY,
         "label": "operator",
         "nested": {
+            _PROFILE_ID: "profile keyed",
+            _NIF: "tax keyed",
+            _URL: "url keyed",
+            f"bearer {_JWT}": "token keyed",
+            _OBJECT_KEY: "object keyed",
+            _OTHER_OBJECT_KEY: "second object keyed",
             "tax_id": _NIF,
             "callback": _URL,
             "authorization": f"bearer {_JWT}",
@@ -65,6 +72,12 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
         "label": "operator",
         "nested": {
+            CLI_PROFILE_ID_PLACEHOLDER: "profile keyed",
+            "sha256:1c9f9632": "tax keyed",
+            "https://example.test": "url keyed",
+            "token:sha256:0a2c77ea": "token keyed",
+            CLI_OBJECT_KEY_PLACEHOLDER: "object keyed",
+            f"{CLI_OBJECT_KEY_PLACEHOLDER}#2": "second object keyed",
             "tax_id": "sha256:1c9f9632",
             "callback": "https://example.test",
             "authorization": "token:sha256:0a2c77ea",
@@ -73,6 +86,7 @@ def test_cli_output_structured_redacts_keyed_values_and_string_leaves() -> None:
     }
     assert payload["profile_id"] == _PROFILE_ID
     assert payload["nested"]["notes"][0] == "attachment:raw-key"
+    assert payload["nested"][_OTHER_OBJECT_KEY] == "second object keyed"
 
 
 def test_cli_public_output_policy_is_emit_only_while_diagnostic_persists() -> None:
