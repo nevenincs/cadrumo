@@ -129,7 +129,7 @@ Make partial reads opt-in and propagate unreadable-row diagnostics into calculat
 - [x] `W04.P08.S32` - make default sensitive namespace listing fail closed on unreadable rows; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `W04.P08.S33` - stream iter_records_with_failures in bounded batches; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `W04.P08.S34` - propagate storage degradation diagnostics from source resolvers to the calculation mesh; `src/aeat/application`.
-- [ ] `W04.P08.S35` - add real-behavior tests for unreadable-row fail-closed and explicit partial reads; `src/aeat/adapters/persistence/storage`.
+- [x] `W04.P08.S35` - add real-behavior tests for unreadable-row fail-closed and explicit partial reads; `src/aeat/adapters/persistence/storage`.
 
 ## Wave `W05` - side-store and remote mirror hardening
 
