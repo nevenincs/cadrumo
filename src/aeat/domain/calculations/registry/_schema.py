@@ -2381,11 +2381,12 @@ def _normalise_fichero_boe_encoding(declared: str) -> str:
 # in this constant.
 KNOWN_VERIFICATION_PREDICATE_OPERATORS: frozenset[str] = frozenset(
     {
+        "advisory_when_ratio_ge",
         "all_nonzero",
         "any_nonzero",
         "cap_le_when_positive",
-        "advisory_when_ratio_ge",
         "implies_nonzero",
+        "profile_field_required",
     }
 )
 
@@ -2424,6 +2425,19 @@ class VerificationPredicateDefinition(RegistryModel):
       consequent value evaluates to ``Decimal(0)`` and therefore
       violates the predicate when the antecedent is positive. Added by
       the dsl-conditional-predicate ADR.
+    - ``profile_field_required("profile_field_name", "applicability_filter")``
+      — profile-state-aware conditional non-zero requirement. Returns
+      ``True`` (predicate holds) when the named ``applicability_filter``
+      evaluates ``False`` against the TaxpayerProfile, OR when the named
+      profile field is present and non-empty. Returns ``False``
+      (predicate violated) only when the applicability filter activates
+      AND the profile field is ``None`` / empty. A sibling of
+      ``implies_nonzero`` per the dsl-conditional-predicate ADR — the
+      conditional non-zero requirement is the same semantic shape, but
+      the gating signal is profile state (e.g. fiscal_residency,
+      ue_eee_status) rather than another casilla value. First use site:
+      M210 representante-fiscal gate per m210-irnr-full-engine ADR
+      §D2.5 (TRLIRNR Art 10).
     """
 
     predicate_id: str = Field(min_length=1, max_length=128)
