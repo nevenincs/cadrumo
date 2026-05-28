@@ -14,19 +14,19 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.adapters.outbound.storage import (
-    ProviderKind,
-    ProviderObjectMetadata,
-    ProviderProbeReport,
     OutboundStorageConflictError,
     OutboundStorageError,
     OutboundStorageIntegrityError,
     OutboundStorageNetworkError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
-    StorageProvider,
     OutboundStorageQuotaError,
     OutboundStorageUnavailableError,
     OutboundStorageValidationError,
+    ProviderKind,
+    ProviderObjectMetadata,
+    ProviderProbeReport,
+    StorageProvider,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
