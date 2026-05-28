@@ -468,7 +468,7 @@ Gradual rollout of the PDF extraction discipline (verification_source enum + PRO
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P41.S198` - Audit justificante _parser + _extract for silent-failure parity with declaracion verification_source enum and PROVISIONAL gate (tasklist #67); `src/aeat/adapters/inbound/justificante/`.
+- [x] `W10.P41.S198` - Audit justificante _parser + _extract for silent-failure parity with declaracion verification_source enum and PROVISIONAL gate (tasklist #67); `src/aeat/adapters/inbound/justificante/`.
 
 ### Phase `W10.P42` - Bank PDF provider gate (financial.providers) — N26 first, extensible
 

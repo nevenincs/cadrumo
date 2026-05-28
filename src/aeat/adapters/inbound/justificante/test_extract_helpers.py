@@ -103,6 +103,24 @@ def test_parse_decimal_raises_on_malformed_input() -> None:
         _parse_decimal("not-a-number")
 
 
+def test_parse_decimal_raises_with_malformed_attribute_when_field_supplied() -> None:
+    """Structured attribute shape: malformed=(field,) is set when field name is passed."""
+    with pytest.raises(JustificanteParseError) as exc_info:
+        _parse_decimal("not-a-number", field="total_a_ingresar")
+    exc = exc_info.value
+    assert exc.malformed == ("total_a_ingresar",)
+    assert exc.missing == ()
+    assert exc.ambiguous == ()
+    assert exc.coverage is None
+
+
+def test_parse_decimal_malformed_attribute_empty_when_no_field() -> None:
+    """Without a field argument the malformed tuple is empty."""
+    with pytest.raises(JustificanteParseError) as exc_info:
+        _parse_decimal("bad")
+    assert exc_info.value.malformed == ()
+
+
 # ---------------------------------------------------------------------------
 # _parse_datetime
 # ---------------------------------------------------------------------------
@@ -139,3 +157,12 @@ def test_parse_datetime_strips_surrounding_whitespace() -> None:
 def test_parse_datetime_raises_on_unrecognised_format() -> None:
     with pytest.raises(JustificanteParseError, match="unrecognised datetime literal"):
         _parse_datetime("not-a-datetime")
+
+
+def test_parse_datetime_raises_with_malformed_presented_at_attribute() -> None:
+    """Structured attribute: malformed=('presented_at',) when datetime is unrecognised."""
+    with pytest.raises(JustificanteParseError) as exc_info:
+        _parse_datetime("not-a-datetime")
+    exc = exc_info.value
+    assert exc.malformed == ("presented_at",)
+    assert exc.missing == ()
