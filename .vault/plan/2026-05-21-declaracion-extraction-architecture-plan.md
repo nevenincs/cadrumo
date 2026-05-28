@@ -516,4 +516,4 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P49.S206` - Extend test_verification_chain coverage as M130/M390/M180/M111 gaps close (tasklist #75); `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `W10.P49.S206` - Extend test_verification_chain coverage as M130/M390/M180/M111 gaps close (tasklist #75); `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.

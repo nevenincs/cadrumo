@@ -627,3 +627,43 @@ is:
 2. No `borrador_pdf` TOML extraction profiles need to be authored unless a future
    use-case requires registry-authority-driven casilla selection from the borrador
    surface (at which point the Protocol boundary already accommodates it).
+
+## 2026-05-28 amendment — verification chain extension closed (W10 wrap-up)
+
+Commit `0a64250eb`. Step `W10.P49.S206`. Extends `test_verification_chain.py`
+from 32 tests (Phase 2 baseline) to 45 tests (W10 close).
+
+### Per-modelo verdict table (final)
+
+| Modelo | Revisions              | Specimens         | Closure formulas | Verdict |
+|--------|------------------------|-------------------|------------------|---------|
+| M100   | 2021, 2022, 2023       | 3 real PDFs       | yes (complex)    | EXTRACTION-ONLY — mid-chain casillas extracted; deep actividades leaf inputs (017x) absent from declaracion_pdf profile. Follow-up: extend profile. |
+| M111   | 2024                   | 4 real PDFs       | yes              | VERIFIED (1T/2T/3T) + NEGATIVA correctly handled (4T) |
+| M115   | 2019-y-siguientes      | 1 synthetic PDF   | yes              | VERIFIED — 03=percent(02,rate), 05=03-04 |
+| M123   | 2019-2023              | 1 synthetic PDF   | yes              | VERIFIED — 06-legacy=03+05, 08-legacy=06-07 |
+| M123   | 2024-y-siguientes      | 1 synthetic PDF   | yes              | VERIFIED — 03=01+02, 06=04+05, 09=07+08, 12=10+11, 14=12-13 |
+| M130   | 2021-y-siguientes      | 15 synthetic PDFs | yes              | VERIFIED — casilla 19 closure, 2021–2024 |
+| M131   | 2026                   | 1 synthetic PDF   | yes              | VERIFIED — 07=02+04+06, 10=07-08-09, 13=10-11-12, 15=13-14 |
+| M180   | 2023-y-siguientes      | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M115→M180 relation_values |
+| M184   | 2015-y-siguientes      | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa; decl.ejercicio only |
+| M190   | 2023-y-siguientes      | 1 real PDF        | none             | EXTRACTION-ONLY — no formulas in registry |
+| M193   | 2024-y-siguientes      | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M123→M193 relation_values |
+| M303   | 2023-y-siguientes      | 8 real PDFs       | none             | EXTRACTION-ONLY — 12 casillas; formulas deferred |
+| M347   | 2008-y-siguientes      | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa; decl.ejercicio only |
+| M349   | 2020-y-siguientes      | 1 synthetic PDF   | none             | EXTRACTION-ONLY — 4 summary casillas; no aggregation formulas |
+| M369   | esquema-union          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — decl.ejercicio + decl.periodo |
+| M390   | 2022-y-siguientes      | 2 real PDFs       | yes              | VERIFIED (cuota-devengada-total + cuota-deducible-total); FORMULA-MISMATCH resultado (documented sanitiser artefact) |
+| M720   | 2013-y-siguientes      | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa; decl.ejercicio only |
+| M840   | 2003-y-siguientes      | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa; decl.tipo-declaracion + decl.ejercicio |
+
+### Summary
+
+- **9 modelos VERIFIED** (formula chain closes end-to-end): M111, M115, M123 ×2, M130, M131, M180, M193, M390 (partial).
+- **8 modelos EXTRACTION-ONLY** (parser verified; no closure formulas or leaf inputs absent): M100, M184, M190, M303, M347, M349, M369, M720, M840.
+- **1 modelo NOT-CHAIN-READY** (registry gap): M036 — no revision selector for year=2025 period=0A.
+
+### Tracked follow-up items
+
+1. **M100 leaf profile extension**: add actividades-económicas leaf casillas (017x series) to the declaracion_pdf extraction profile to enable full ED formula chain verification.
+2. **M036 revision gap**: the synthetic fixture `2025-0A.pdf` does not match any revision selector. Investigate `2025-02-03-y-siguientes` period_selector and either extend it for period=0A or regenerate the fixture for the correct year.
+3. **M303 formula coverage**: the 2023-y-siguientes revision carries no registry formulas; formula verification requires a dedicated future campaign.
