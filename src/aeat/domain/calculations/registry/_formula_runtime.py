@@ -385,7 +385,11 @@ def _initial_values(
             "of truth and the inputs projection must match it: "
             + "; ".join(inconsistent_previous_filing_projections),
             translated_message="errors.calc.bound_projection_inconsistent",
-            context={"casilla_ids": ",".join(c.split(":")[0].split("'")[1] for c in inconsistent_previous_filing_projections)},
+            context={
+                "casilla_ids": ",".join(
+                    c.split(":")[0].split("'")[1] for c in inconsistent_previous_filing_projections
+                )
+            },
         )
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()

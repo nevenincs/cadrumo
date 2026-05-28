@@ -18,7 +18,6 @@ import pytest
 from pydantic import AnyUrl, ValidationError
 
 from ._errors import RegistryValidationError
-
 from ._live_parity import (
     LiveParityCatalogue,
     OracleSurfaceKind,
@@ -452,7 +451,6 @@ def test_replay_payload_anti_tautology() -> None:
     must NOT succeed. This proves the roundtrip test cannot silently pass
     when the schema is broken.
     """
-    import json
 
     good = {"observed": {"B01": "ok"}}
     broken = {k: v for k, v in good.items() if k != "observed"}
