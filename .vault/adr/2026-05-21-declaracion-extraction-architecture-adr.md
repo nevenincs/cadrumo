@@ -352,3 +352,75 @@ layout — introducing new record fields or restructuring the perceptor
 block — a new revision with an appropriate `year_from` boundary would be
 added at that point, following the same named-revision pattern already
 used for other modelos in the registry.
+
+## 2026-05-28 amendment — bbox extraction primitive landed
+
+### Third match strategy: bbox_anchored
+
+Task-66 Phase 1 (commits `ad285e970` schema + parser + profiles + tests,
+`e6c4a2879` plan tracking) implemented the bbox extraction primitive that
+this ADR named as the future extension in the original 2026-05-21 decision.
+The `ExtractionTargetDefinition.match_strategy` Literal gained a third
+value `bbox_anchored`, alongside a new `BboxAnchorSpec` frozen pydantic
+model capturing the bbox extraction configuration (`box_number_pattern`,
+`value_offset`, optional `column_anchor` for multi-column disambiguation,
+and bbox spatial constraints `anchor_x_min`/`anchor_x_max`/`value_x_max`).
+
+The parser's `_find_casilla_hits` in `adapters/inbound/declaracion/_parser.py`
+now branches on three match strategies. The bbox branch uses
+`pdfplumber.Page.extract_words` to locate the box-number word matching
+the pattern, then resolves the value word from the same row using
+`value_offset` ("left_of_number" for line-end-numeric forms like M111/M130;
+analogous for above/right where layouts vary). The branch integrates with
+the existing `DeclaracionParseError` structured attributes (`missing`,
+`malformed`, `ambiguous`, `coverage`) — no new exception types — so the
+post-rush audit hardening (`DeclaracionParseError` extended in commit
+`e2de32c62`) carries through unchanged.
+
+### Structural gap class closed: line-end box numbers
+
+The silent-failure class exposed by the 2026-05-26 amendment (M111 and
+M130 corpus PDFs structurally defeating numeric_casilla because casilla
+numbers appear at line-end merged with value tokens) is closed for both
+modelos plus M131 (which shares the same layout family). Each modelo's
+`declaracion_pdf` extraction profile was converted target-by-target from
+numeric_casilla to bbox_anchored with empirically-determined spatial
+constraints inspected from the corresponding corpus PDFs:
+
+- M111 (29 targets across 3 column groups, per-column anchor_x +
+  value_x_max)
+- M130 (19 targets in the right-column layout at x0~464,
+  anchor_x 450-480)
+- M131-2026 (15 targets single-box-per-row, no x-constraints needed)
+
+The three corresponding gap tests (`test_parser_modelo_130_corpus_*_gap`,
+`test_parser_modelo_131_*_gap`, plus the M111 gap material from task-37)
+are replaced with real round-trip tests asserting per-casilla extraction
+against the corpus PDFs. After the conversion each profile flips
+`provisional_pending_specimen = false` and `corpus_round_trip_verified = true`
+with `verification_source = "real_aeat_corpus_pdf"` (M111/M130) or
+`synthetic_from_aeat_published_text` (M131 since its only fixture is
+synthetic per the prior closure).
+
+### Snapshot-build validator: validate_bbox_anchor_consistency
+
+Defense-in-depth registry rule added in `_validate_extraction_profiles.py`
++ `_validate_record_sections.py`: when `match_strategy == "bbox_anchored"`,
+`bbox_anchor` must be present and well-formed; when the strategy is
+numeric_casilla or named_label, `bbox_anchor` must be None. The
+model_validator on `ExtractionTargetDefinition` enforces this at
+construction time; the snapshot-build validator catches the same
+invariant at registry-tree load time so a hand-edited TOML with a
+mis-strategy cannot pass validation.
+
+### Still deferred
+
+The bbox primitive closes the line-end-numeric structural gap. It does
+NOT address: OCR fallback for image-only PDFs (W02 original deferral
+stands), arbitrary-table-cell extraction for forms outside the
+single-column or fixed-column-layout families, or non-Latin-script forms.
+The four remaining `provisional_pending_specimen = true` profiles
+(M036, M184, M193, M232 ×2, M347, M720 — those without real-AEAT-PDF
+specimens, only WebFetched AEAT-published printed-form text) remain in
+that state until real specimens are acquired and verified, per the
+2026-05-26 amendment's discipline.
