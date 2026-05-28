@@ -161,10 +161,10 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S78` - add real-behavior test asserting the draft-id-not-found surface emits the localized payload; `src/aeat/entrypoints/cli/test_common.py`.
 - [x] `W01.P03.S79` - route the no-active-profile dict / text emit through `_no_active_profile_refusal()` and `tr()` keys; `src/aeat/entrypoints/cli/_common.py`.
 - [x] `W01.P03.S80` - add real-behavior test asserting no-active-profile output is localized in text and JSON channels; `src/aeat/entrypoints/cli/test_common.py`.
-- [ ] `W01.P03.S81` - add `cli.ledger.errors.id_prefix_unknown` catch-all and route the raw-message passthrough through `tr()`; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P03.S82` - add real-behavior test asserting ledger id-prefix fallthrough emits the localized payload; `src/aeat/entrypoints/cli/test_ledger.py`.
-- [ ] `W01.P03.S83` - wrap the eight `describe` label rows in `tr("cli.app.modelo.describe.label_*")` keys; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W01.P03.S84` - add real-behavior test asserting `aeat app modelo describe` labels are localized per output language; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W01.P03.S81` - add `cli.ledger.errors.id_prefix_unknown` catch-all and route the raw-message passthrough through `tr()`; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W01.P03.S82` - add real-behavior test asserting ledger id-prefix fallthrough emits the localized payload; `src/aeat/entrypoints/cli/test_ledger.py`.
+- [x] `W01.P03.S83` - wrap the eight `describe` label rows in `tr("cli.app.modelo.describe.label_*")` keys; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P03.S84` - add real-behavior test asserting `aeat app modelo describe` labels are localized per output language; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [ ] `W01.P03.S85` - route the cross-casilla-invariant finding `message=` through `tr("application.modelo.findings.cross_casilla_invariant_violated", ...)`; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P03.S86` - add real-behavior test asserting verification-report cross-casilla finding is localized in text and JSON; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P03.S87` - route the cross-casilla `next_action=` through `tr("application.modelo.findings.cross_casilla_invariant_next_action", predicate_id=...)`; `src/aeat/application/modelo/_actions.py`.
@@ -187,10 +187,10 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S104` - add real-behavior test asserting wizard status verbs are localized; `src/aeat/application/wizard/test_commands.py`.
 - [x] `W01.P03.S105` - replace `<unset>` literal in profile diagnostics emit with `tr("cli.diagnostics.profile.unset_placeholder")`; `src/aeat/diagnostics/profile.py`.
 - [x] `W01.P03.S106` - add real-behavior test asserting profile-diagnostics unset placeholder is localized; `src/aeat/diagnostics/test_profile.py`.
-- [ ] `W01.P03.S107` - replace `raise typer.BadParameter(message)` with a `tr()`-mediated lookup for the registry-snapshot describe path; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W01.P03.S108` - extend the modelo describe test to confirm BadParameter messages are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W01.P03.S109` - replace the two `raise typer.BadParameter(str(exc))` sites for DT12 / SAL computation with `tr("cli.app.modelo.work.dt12_computation_error", ...)` / `tr("cli.app.modelo.work.sal_computation_error", ...)`; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W01.P03.S110` - add real-behavior test asserting DT12 / SAL computation error surfaces are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W01.P03.S107` - replace `raise typer.BadParameter(message)` with a `tr()`-mediated lookup for the registry-snapshot describe path; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P03.S108` - extend the modelo describe test to confirm BadParameter messages are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W01.P03.S109` - replace the two `raise typer.BadParameter(str(exc))` sites for DT12 / SAL computation with `tr("cli.app.modelo.work.dt12_computation_error", ...)` / `tr("cli.app.modelo.work.sal_computation_error", ...)`; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P03.S110` - add real-behavior test asserting DT12 / SAL computation error surfaces are localized; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [ ] `W01.P03.S111` - thread `translated_message=` keys on the two `SedeParseError` raises for empty IVA wallet period / amount cells; `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
 - [ ] `W01.P03.S112` - add real-behavior test asserting localized IVA-wallet empty-cell envelopes at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_iva_compensation_wallet.py`.
 - [ ] `W01.P03.S113` - replace the DT12 advisory `next_action=` with `tr("application.modelo.findings.dt12a_reduccion_next_action")`; `src/aeat/application/modelo/_actions.py`.

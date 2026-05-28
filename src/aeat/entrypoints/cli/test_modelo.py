@@ -118,9 +118,10 @@ def test_work_calculate_binding_help_points_at_bindings_list() -> None:
 
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0, result.output
-    # The CliRunner wraps long help text across multiple lines; collapse
-    # whitespace before asserting on the embedded phrase.
-    collapsed = " ".join(result.output.split())
+    # The CliRunner renders Rich panel box-drawing characters (│, └, etc.)
+    # that interleave with wrapped text.  Strip non-ASCII before collapsing.
+    ascii_only = "".join(c for c in result.output if c.isascii())
+    collapsed = " ".join(ascii_only.split())
     assert "bindings list --missing" in collapsed
 
 

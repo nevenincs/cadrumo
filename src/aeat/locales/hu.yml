@@ -311,6 +311,7 @@ application:
         egy mező értéke szükséges; a megadott leképezés üres.
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}): %{reason}'
       iva_wallet_not_seeded: A Modelo 303 számításához feltöltött IVA-kompenzáció
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
         előzményt.
@@ -329,6 +330,10 @@ application:
       work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
     findings:
+      cross_casilla_invariant_next_action: 'Ensure all casillas required by predicate %{predicate_id} are non-zero before verifying.'
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated: %{expression}'
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id} = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
+      iva_wallet_next_action: 'Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.'
       m210_baseline_tipo_deferred:
         next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs
           egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben).
@@ -347,6 +352,7 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
+      registry_snapshot_unresolved: 'registry snapshot for modelo=%{modelo} filing_year=%{filing_year} period=%{period} could not be resolved'
   overview:
     explain:
       errors:
@@ -706,17 +712,17 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
-        label_bindings: 'Kötések'
-        label_cadence: 'Gyakoriság'
-        label_casillas: 'Mezők'
-        label_formulas: 'Képletek'
-        label_modelo: 'Modelo'
-        label_official_name: 'Hivatalos név'
-        label_periods: 'Időszakok'
-        label_revision: 'Verzió'
-        label_revision_ids: 'Verzióazonosítók'
-        label_tax_domain: 'Adózási terület'
-        label_title: 'Cím'
+        label_bindings: Kötések
+        label_cadence: Gyakoriság
+        label_casillas: Mezők
+        label_formulas: Képletek
+        label_modelo: Modelo
+        label_official_name: Hivatalos név
+        label_periods: Időszakok
+        label_revision: Verzió
+        label_revision_ids: Verzióazonosítók
+        label_tax_domain: Adózási terület
+        label_title: Cím
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_error: 'Nyilvántartási hiba: %{message}'
         period_help: 'A nyomtatvány-revíziót feloldó időszaktokent: 0A éves, 1T-4T
