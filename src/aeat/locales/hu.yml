@@ -2399,124 +2399,109 @@ errors:
     refused_cli_validation_boundary: 'A parancs bemenete nem ment át az érvényesítésen. Futtassa az  parancsot, vagy állítsa vissza a profil állapotát.'
     refused_config_reset_unconfirmed: 'A konfigurációs visszaállítást nem erősítette meg. Futtassa újra a parancsot, megerősítve a műveletet.'
     refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
-    refused_evidence_bundle_not_found: errors.refused.refused_evidence_bundle_not_found
-    refused_evidence_bundle_verification: errors.refused.refused_evidence_bundle_verification
-    refused_filing_calculate: errors.refused.refused_filing_calculate
-    refused_financial_aggregation_category_coverage: errors.refused.refused_financial_aggregation_category_coverage
-    refused_financial_aggregation_missing_classification: errors.refused.refused_financial_aggregation_missing_classification
-    refused_financial_aggregation_unsupported_modelo: errors.refused.refused_financial_aggregation_unsupported_modelo
-    refused_financial_ledger_no_active_bucket: errors.refused.refused_financial_ledger_no_active_bucket
-    refused_financial_ledger_transaction_id_prefix: errors.refused.refused_financial_ledger_transaction_id_prefix
-    refused_financial_provider_invalid_source: errors.refused.refused_financial_provider_invalid_source
-    refused_financial_provider_unsupported_source: errors.refused.refused_financial_provider_unsupported_source
-    refused_financial_provider_validation: errors.refused.refused_financial_provider_validation
-    refused_financial_usage_ratios_census_mismatch: errors.refused.refused_financial_usage_ratios_census_mismatch
-    refused_google_profile_unbound: errors.refused.refused_google_profile_unbound
-    refused_google_unsecured_mode: errors.refused.refused_google_unsecured_mode
-    refused_google_validation: errors.refused.refused_google_validation
-    refused_inventory_actividad_conflict: errors.refused.refused_inventory_actividad_conflict
-    refused_inventory_actividad_not_found: errors.refused.refused_inventory_actividad_not_found
-    refused_inventory_service_input: errors.refused.refused_inventory_service_input
-    refused_ledger_business_operation_invoice_input: errors.refused.refused_ledger_business_operation_invoice_input
-    refused_ledger_business_operation_invoice_not_found: errors.refused.refused_ledger_business_operation_invoice_not_found
-    refused_ledger_evidence_input: errors.refused.refused_ledger_evidence_input
-    refused_ledger_evidence_not_found: errors.refused.refused_ledger_evidence_not_found
-    refused_live_borrador_snapshot_not_found: errors.refused.refused_live_borrador_snapshot_not_found
-    refused_live_censo_snapshot_not_found: errors.refused.refused_live_censo_snapshot_not_found
-    refused_live_expedientes_snapshot_not_found: errors.refused.refused_live_expedientes_snapshot_not_found
-    refused_live_notifications_snapshot_not_found: errors.refused.refused_live_notifications_snapshot_not_found
-    refused_live_portal_not_found: errors.refused.refused_live_portal_not_found
-    refused_live_verify_observation_not_found: errors.refused.refused_live_verify_observation_not_found
-    refused_llm_config: errors.refused.refused_llm_config
-    refused_llm_validation: errors.refused.refused_llm_validation
-    refused_modelo_100_borrador_binding: errors.refused.refused_modelo_100_borrador_binding
-    refused_modelo_amendment_override_casilla: errors.refused.refused_modelo_amendment_override_casilla
-    refused_modelo_amendment_verification: errors.refused.refused_modelo_amendment_verification
-    refused_modelo_workflow_gate: errors.refused.refused_modelo_workflow_gate
-    refused_no_active_profile: errors.refused.refused_no_active_profile
-    refused_operator_surface_contract: errors.refused.refused_operator_surface_contract
-    refused_outbound_storage_conflict: errors.refused.refused_outbound_storage_conflict
-    refused_outbound_storage_quota: errors.refused.refused_outbound_storage_quota
-    refused_outbound_storage_validation: errors.refused.refused_outbound_storage_validation
-    refused_output_format: errors.refused.refused_output_format
-    refused_profile_already_exists: errors.refused.refused_profile_already_exists
-    refused_profile_asset_validation: errors.refused.refused_profile_asset_validation
-    refused_profile_basis_cap_exceeded: errors.refused.refused_profile_basis_cap_exceeded
-    refused_profile_binding_resolution: errors.refused.refused_profile_binding_resolution
-    refused_profile_foral_regime: A kiválasztott forális adórendszer nem modellezhető
-      ezzel a profillal. Válasszon támogatott adórendszert.
-    refused_profile_inventory_validation: errors.refused.refused_profile_inventory_validation
-    refused_profile_lifo_forbidden: errors.refused.refused_profile_lifo_forbidden
-    refused_profile_not_configured: errors.refused.refused_profile_not_configured
-    refused_profile_not_found: errors.refused.refused_profile_not_found
-    refused_profile_preflight_missing: errors.refused.refused_profile_preflight_missing
-    refused_profile_schema_validation: errors.refused.refused_profile_schema_validation
-    refused_review_edit_parse: errors.refused.refused_review_edit_parse
-    refused_review_filter_parse: errors.refused.refused_review_filter_parse
-    refused_review_kind_reserved: errors.refused.refused_review_kind_reserved
-    refused_sanitization_already_sanitized: errors.refused.refused_sanitization_already_sanitized
-    refused_sanitization_signature_present: errors.refused.refused_sanitization_signature_present
-    refused_sanitization_unknown_surface: errors.refused.refused_sanitization_unknown_surface
-    refused_sanitization_validation: errors.refused.refused_sanitization_validation
-    refused_storage_bucket_already_present: errors.refused.refused_storage_bucket_already_present
-    refused_storage_bucket_no_active: errors.refused.refused_storage_bucket_no_active
-    refused_storage_master_key_no_active_session: errors.refused.refused_storage_master_key_no_active_session
-    refused_storage_passphrase_too_short: errors.refused.refused_storage_passphrase_too_short
-    refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
-    refused_storage_session_expired: errors.refused.refused_storage_session_expired
-    refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
-    refused_taxation_comparison: errors.refused.refused_taxation_comparison
-    refused_topic_not_found: errors.refused.refused_topic_not_found
-    refused_user_profile_validation: errors.refused.refused_user_profile_validation
-    refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
-    refused_wizard_status: errors.refused.refused_wizard_status
-    refused_wizard_unsupported_console: errors.refused.refused_wizard_unsupported_console
-    refused_wizard_validation: errors.refused.refused_wizard_validation
-    refused_workflow_aborted: errors.refused.refused_workflow_aborted
-    refused_workflow_resume: errors.refused.refused_workflow_resume
-    unsupported_currency: errors.refused.unsupported_currency
+    refused_evidence_bundle_not_found: 'Nem létezik igazoláscsomag a megadott azonosítóval.'
+    refused_evidence_bundle_verification: 'Az igazoláscsomag-ellenőrzés meghiúsult, és a művelet nem volt kikényszerítve.'
+    refused_filing_calculate: 'A benyújtás-számítás vagy összefoglalás nem ment át az invariáns-ellenőrzésen.'
+    refused_financial_aggregation_category_coverage: 'Egy tranzakcióhoz hiányzik a kategória- vagy profil-lefedettség. Osztályozza a tranzakciót az összesítés előtt.'
+    refused_financial_aggregation_missing_classification: 'Néhány időszaki tranzakció még osztályozásra szorul. Osztályozza mindegyiket az összesítés előtt.'
+    refused_financial_aggregation_unsupported_modelo: 'Nincs összesítési szerződés a kért modelóhoz.'
+    refused_financial_ledger_no_active_bucket: 'A főkönyvi művelethez aktív profil szükséges. Hozzon létre vagy válasszon ki egy profilt, és próbálja újra.'
+    refused_financial_ledger_transaction_id_prefix: 'A tranzakció-azonosító előtag nulla vagy több tranzakcióra illeszkedik. Adjon meg hosszabb előtagot.'
+    refused_financial_provider_invalid_source: 'A forrásdokumentum olvashatatlan vagy szerkezetileg érvénytelen.'
+    refused_financial_provider_unsupported_source: 'Egyetlen szolgáltató sem tudja értelmezni ezt a forrásdokumentumot.'
+    refused_financial_provider_validation: 'Egy mező a pénzügyi dokumentumban (dátum vagy összeg) nem ment át az érvényesítésen.'
+    refused_financial_usage_ratios_census_mismatch: 'Egy mentett otthoni irodahasználati arány eltér a censustól, amely a kötelező jogi forrás. Igazítsa a census értékéhez.'
+    refused_google_profile_unbound: 'Nincs aktív profil kötve. Válasszon profilt, vagy használja a --profile kapcsolót.'
+    refused_google_unsecured_mode: 'A Google nem engedélyezhető nem biztonságos tárolási módban olyan profillal, amely valódi NIF-et tartalmaz.'
+    refused_google_validation: 'A megadott Google-paraméterek nem mentek át az érvényesítésen.'
+    refused_inventory_actividad_conflict: 'Már létezik készlet az adott tevékenységhez és évhez.'
+    refused_inventory_actividad_not_found: 'Nem létezik készlet a megadott tevékenységhez és évhez.'
+    refused_inventory_service_input: 'Egy megadott bemenet sérti a készlet szerződést. Javítsa a bemenetet, és próbálja újra.'
+    refused_ledger_business_operation_invoice_input: 'Egy megadott bemenet sérti az üzleti művelet-számla szerződést. Javítsa a bemenetet, és próbálja újra.'
+    refused_ledger_business_operation_invoice_not_found: 'Nem létezik üzleti művelet-számla a megadott azonosítóval.'
+    refused_ledger_evidence_input: 'Egy megadott igazolás-bemenet sérti a vásárlási számla szerződést. Javítsa a bemenetet, és próbálja újra.'
+    refused_ledger_evidence_not_found: 'Nem létezik vásárlási számla igazolás a megadott azonosítóval.'
+    refused_live_borrador_snapshot_not_found: 'Nem létezik Modelo 100 tervezet-pillanatkép a megadott azonosítóval.'
+    refused_live_censo_snapshot_not_found: 'Nem létezik Modelo 036 census-pillanatkép a megadott azonosítóval.'
+    refused_live_expedientes_snapshot_not_found: 'Nem létezik expediente-pillanatkép a megadott azonosítóval.'
+    refused_live_notifications_snapshot_not_found: 'Nem létezik értesítési pillanatkép a megadott azonosítóval.'
+    refused_live_portal_not_found: 'Nem létezik AEAT portál a megadott azonosítóval.'
+    refused_live_verify_observation_not_found: 'Nem létezik ellenőrzési megfigyelés a megadott azonosítóval.'
+    refused_llm_config: 'A nyelvi modell kliens konfigurációja érvénytelen vagy hiányos.'
+    refused_llm_validation: 'Egy nyelvi modell objektum nem ment át az érvényesítésen.'
+    refused_modelo_100_borrador_binding: 'A Modelo 100 tervezet értékei nem vehetők fel a számításhoz.'
+    refused_modelo_amendment_override_casilla: 'A módosítás felülbírálata olyan mezőre irányul, amelyet a nyilvántartás nem deklarál az adott modelóhoz, évhez és időszakhoz.'
+    refused_modelo_amendment_verification: 'A módosítás javított mező-leképezése nem ment át az ellenőrzésen. Kötelező mezők hiányoznak.'
+    refused_modelo_workflow_gate: 'A munkafolyamat-kapu elutasította a benyújtás-átmenetet. A bevallás nem tekinthető jogilag benyújtottnak.'
+    refused_no_active_profile: 'Ehhez a művelethez aktív profil szükséges. Hozzon létre vagy válasszon ki egy profilt, és próbálja újra.'
+    refused_operator_surface_contract: 'A kért felület kívül esik az elfogadott szerződésen.'
+    refused_outbound_storage_conflict: 'A tárolási művelet ütközik egy már meglévő objektummal.'
+    refused_outbound_storage_quota: 'A tárolási háttérrendszer elutasította a műveletet, mert a kvóta kimerült.'
+    refused_outbound_storage_validation: 'A tárolási művelet paraméterei nem mentek át az érvényesítésen.'
+    refused_output_format: 'A kért kimeneti formátum nem támogatott.'
+    refused_profile_already_exists: 'Ilyen adatokkal rendelkező profil már létezik.'
+    refused_profile_asset_validation: 'Egy profil vagyonelem-rekordja nem ment át az érvényesítésen.'
+    refused_profile_basis_cap_exceeded: 'A halmozott amortizáció meghaladná a vagyonelem bekerülési értékét.'
+    refused_profile_binding_resolution: 'A számításhoz szükséges profiladatot nem sikerült a megfelelő kötési csatornává feloldani.'
+    refused_profile_foral_regime: 'A kiválasztott foral adózási rend nem modellezett ebben a profilban. Válasszon egy támogatott adózási rendet.'
+    refused_profile_inventory_validation: 'Egy profil készlet-főkönyve nem ment át az érvényesítésen.'
+    refused_profile_lifo_forbidden: 'A LIFO készletértékelés adózási célból nem megengedett. Használjon FIFO-t, súlyozott átlagárat vagy átlagköltséget.'
+    refused_profile_not_configured: 'A RENTA-ellenőrzéshez adóügyi illetőségi profil szükséges. A folytatás előtt töltse ki a profilt.'
+    refused_profile_not_found: 'Nem létezik profil a megadott azonosítóval.'
+    refused_profile_preflight_missing: 'A modelo-előzetes-ellenőrzés nem talált kötelező profilválasztót. A folytatás előtt töltse ki a profilt.'
+    refused_profile_schema_validation: 'A profiladatok sértik a séma-szerződést. Javítsa a megjelenített értékeket.'
+    refused_review_edit_parse: 'A  paramétert nem sikerült elemezni. Ellenőrizze a megadott érték szintaxisát.'
+    refused_review_filter_parse: 'A  paramétert nem sikerült elemezni. Ellenőrizze a megadott szűrő szintaxisát.'
+    refused_review_kind_reserved: 'A megadott  érték foglalt és nem használható.'
+    refused_sanitization_already_sanitized: 'A forrásdokumentum már sanitizálva van.'
+    refused_sanitization_signature_present: 'A forrás PDF digitális aláírást tartalmaz. A módosítás érvényteleníti az aláírást; emberi felülvizsgálat szükséges.'
+    refused_sanitization_unknown_surface: 'Olyan személyes adatfelületet észleltek, amelyet a sanitizáló nem tud kezelni. Emberi felülvizsgálat szükséges.'
+    refused_sanitization_validation: 'A sanitizáló paraméterei nem mentek át az érvényesítésen.'
+    refused_storage_bucket_already_present: 'Az importálás ütközik egy már létező tárolási bucket-tel.'
+    refused_storage_bucket_no_active: 'Nem oldható fel aktív bucket. Válasszon ki egy profilt, és próbálja újra.'
+    refused_storage_master_key_no_active_session: 'A titkosításhoz aktív munkamenet szükséges. Futtassa az  parancsot, és próbálja újra.'
+    refused_storage_passphrase_too_short: 'A jelmondat túl rövid. Legalább 8 karakterből kell állnia.'
+    refused_storage_secret_already_exists: 'Ilyen kulcsú titkos adat már létezik. Használja a felülírás lehetőséget a csere érdekében.'
+    refused_storage_session_expired: 'Az aktív munkamenet inaktivitás miatt lejárt. Aktiválja újra az  paranccsal.'
+    refused_storage_unsecured_mode: 'A nem biztonságos tároló háttérrendszert az szükséges engedélyezés nélkül kérték. Valós adatokhoz nem biztonságos.'
+    refused_taxation_comparison: 'A közös-vs-egyéni adózás összehasonlítása nem végezhető el ennél a modelónál vagy pillanatképnél.'
+    refused_topic_not_found: 'A kért téma nem található.'
+    refused_user_profile_validation: 'Egy felhasználói profil értéke érvénytelen. Javítsa a megjelenített mezőt.'
+    refused_wizard_missing_flag: 'A --quiet meghívás kihagyott egy kötelező kérdést. Adja meg a hiányzó értéket, vagy futtassa a varázslót interaktívan.'
+    refused_wizard_status: 'A varázsló nem tudta feloldani az aktív profilt.'
+    refused_wizard_unsupported_console: 'Az aktuális terminál nem képes futtatni az interaktív varázslót. Futtassa egy támogatott terminálban.'
+    refused_wizard_validation: 'Egy varázsló-válasz nem ment át az érvényesítésen. Javítsa a megjelenített értéket.'
+    refused_workflow_aborted: 'A munkafolyamatot megszakították.'
+    refused_workflow_resume: 'A korábbi munkafolyamat-futás nem folytatható.'
+    unsupported_currency: 'A megadott devizakód nem támogatott.'
   snapshot:
-    modelo_not_registered: A modelo nincs regisztralva.
+    modelo_not_registered: 'A modello nincs regisztrálva a nyilvántartásban.'
   storage:
     engine:
-      create_failed: Nem sikerült létrehozni a tárolási adatbázismotort. Ellenőrizd
-        a beállított tárolási útvonalat, majd próbáld újra.
-      empty_database_url: A beállított adatbázis-URL üres. Válassz profilt, vagy állítsd
-        be a tárolást, mielőtt újra próbálkozol.
+      create_failed: 'A tárolási adatbázis-motort nem sikerült létrehozni. Ellenőrizze a konfigurált tárolási útvonalat, és próbálja újra.'
+      empty_database_url: 'A konfigurált adatbázis URL üres. A próbálkozás előtt válasszon profilt, vagy konfigurálja a tárolást.'
     namespace:
-      classification_mismatch: A(z) %{namespace} secure-object névtér %{expected}
-        érzékenységgel van regisztrálva, de a hívó %{classification} értéket használt.
-      schema_mismatch: A(z) %{namespace} secure-object névtér %{expected} sémával
-        van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.
-      unregistered: A(z) %{namespace} secure-object névtér nincs regisztrálva runtime
-        tároláshoz.
+      classification_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{expected} érzékenységhez van regisztrálva, de a hívó %{classification} osztályozást használt.'
+      schema_mismatch: 'A(z) %{namespace} biztonságos objektum névtér a(z) %{expected} sémához van regisztrálva, de a hívó a(z) %{schema_version} sémát használta.'
+      unregistered: 'A(z) %{namespace} biztonságos objektum névtér nincs regisztrálva futásidejű tároláshoz.'
     runtime:
-      cold_bootstrap_active_profile_refused: Hideginditasi tarhely csak aktiv profil
-        kivalasztasa elott hasznalhato.
-      cold_bootstrap_explicit_database_refused: Hideginditasi tarhely nem kerulheti
-        meg az explicit adatbazis-utvonalat.
-      no_active_session: Nincs aktív bucket-munkamenet. Futtasd az `aeat config profile
-        switch NAME` parancsot egy profil feloldásához.
-      no_detail: Nem érkezett részletes készenléti hiba.
-      not_ready: 'A tárolási runtime nem áll készen profilhoz kötött tárolásra: %{details}'
-      route_bucket_mismatch: Az adatbázisútvonal nem egyezik az aktív bucket-munkamenettel.
-      route_not_active_bucket: Az adatbázisútvonal nincs aktív profil-buckethez kötve.
-      session_changed: Az aktív bucket-munkamenet megváltozott. Oldd fel újra a célprofilt.
-      session_expired: Az aktív bucket-munkamenet lejárt. Futtasd az `aeat config
-        profile switch NAME` parancsot a profil újraaktiválásához.
-      session_sealed: Az aktív bucket-munkamenet le van zárva. Futtasd az `aeat config
-        profile switch NAME` parancsot a profil újraaktiválásához.
-      unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos backendet használja.
-        Az éles, profilhoz kötött tároláshoz fájl- vagy kulcstartó-alapú őrzés szükséges.
-    stored_data_validation_boundary: Egy tárolt profil- vagy munkafolyamat-rekord
-      már nem felel meg a várt sémának — a lemezen lévő adatok eltérnek az aktuális
-      formátumtól. Futtasd az `aeat config repair` parancsot a diagnosztikához és
-      helyreállításhoz.
+      cold_bootstrap_active_profile_refused: 'A hidegindítási tároló csak aktív profil bucket kiválasztása előtt érhető el.'
+      cold_bootstrap_explicit_database_refused: 'A hidegindítási tároló nem kerülheti meg a megadott adatbázis-útvonalat.'
+      no_active_session: 'Nincs nyitott aktív bucket-munkamenet. Profil feloldásához futtassa az  parancsot.'
+      no_detail: 'Nem jelentetett részletes készültségi problémát.'
+      not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz: %{details}'
+      route_bucket_mismatch: 'Az adatbázis-útvonal nem egyezik az aktív bucket-munkamenettel.'
+      route_not_active_bucket: 'Az adatbázis-útvonal nincs aktív profil bucket-hez csatolva.'
+      session_changed: 'Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.'
+      session_expired: 'Az aktív bucket-munkamenet lejárt. Profil újraaktiváláshoz futtassa az  parancsot.'
+      session_sealed: 'Az aktív bucket-munkamenet le van zárva. Profil újraaktiváláshoz futtassa az  parancsot.'
+      unsecured_backend: 'Az aktív bucket-munkamenet a nem biztonságos háttérrendszert használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet szükséges.'
+    stored_data_validation_boundary: 'Egy tárolt profil vagy munkafolyamat-rekord már nem egyezik a várt sémával – a lemezen lévő adatok eltértek a jelenlegi formátumtól. A diagnosztikához és helyreállításhoz futtassa az  parancsot.'
   transaction:
-    import_source_invalid: errors.transaction.import_source_invalid
-    ledger_import_failed: errors.transaction.ledger_import_failed
-    ledger_import_requires_bucket: errors.transaction.ledger_import_requires_bucket
-    unknown_ledger_provider: errors.transaction.unknown_ledger_provider
+    import_source_invalid: 'A forrás nem érvényes főkönyvi dokumentum'
+    ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'
+    ledger_import_requires_bucket: 'A főkönyvi forrásimporthoz aktív profil szükséges, kivéve, ha száraz-futási mód van használatban.'
+    unknown_ledger_provider: 'Ismeretlen főkönyv-szolgáltató: {provider!r}. Elismert szolgáltatók: {providers}.'
 filing:
   validation:
     deadline_missed: filing.validation.deadline_missed
