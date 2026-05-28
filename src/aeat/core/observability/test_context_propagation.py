@@ -9,6 +9,7 @@ every recorded event carries the same ``run_id`` set by the outer
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
@@ -214,3 +215,93 @@ class TestRunIdPropagation:
         assert events, "expected at least one event after running the chain"
         run_ids = {evt.run_id for evt in events}
         assert run_ids == {run_id}
+
+
+class TestRunSinkScrubbing:
+    """Real-behavior tests: JSONL sink records are scrubbed before persistence.
+
+    The :func:`attach_run_sink` helper (S63) installs a
+    :class:`aeat.core.logging.SecretScrubbingFilter` on the sink before
+    attaching it to the root logger.  The JSONL serialiser also applies
+    the DIAGNOSTIC-class redaction rule set, which SHA256-prefixes any
+    NIF-shaped value.  Both layers must fire before bytes hit disk.
+
+    No mocks: real :func:`run_context`, real JSONL file, real redaction.
+    """
+
+    # A valid Spanish NIF pattern: 8 digits + check letter.
+    _PLAIN_NIF = "12345678Z"
+
+    def test_nif_shaped_field_is_sha256_prefixed_in_jsonl(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """A NIF-shaped value in a GenericPayload field must not appear in plain text."""
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+
+        with run_context(entrypoint="aeat test scrub nif", arguments=()) as info:
+            record_event(
+                RunEventKind.ASSERTION,
+                payload=RunEventPayload(
+                    generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
+                ),
+            )
+            run_id = info.run_id
+
+        jsonl_path = tmp_path / run_id / "events.jsonl"
+        assert jsonl_path.exists(), f"JSONL sink file not found: {jsonl_path}"
+
+        raw_text = jsonl_path.read_text(encoding="utf-8")
+        assert self._PLAIN_NIF not in raw_text, (
+            f"plain NIF {self._PLAIN_NIF!r} found in JSONL output — scrubbing did not fire"
+        )
+        # The DIAGNOSTIC rule SHA256-prefixes NIF spans.
+        assert "sha256:" in raw_text, (
+            "expected sha256: prefix in JSONL output to confirm NIF was redacted, not absent"
+        )
+
+    def test_scrubbing_filter_present_on_sink_after_attach(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """The sink handler must carry a SecretScrubbingFilter after attach_run_sink."""
+        from ..logging import SecretScrubbingFilter, attach_run_sink
+        from ._sink import JsonlRunSink
+
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+        sink = JsonlRunSink(tmp_path / "test_events.jsonl", run_id="a" * 16)
+        attach_run_sink(sink)
+        try:
+            has_filter = any(isinstance(f, SecretScrubbingFilter) for f in sink.filters)
+            assert has_filter, "SecretScrubbingFilter not installed on sink by attach_run_sink"
+        finally:
+            import logging
+
+            logging.getLogger().removeHandler(sink)
+            sink.close()
+
+    def test_jsonl_lines_are_valid_json(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Every JSONL line must deserialise cleanly after scrubbing is applied."""
+        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
+
+        with run_context(entrypoint="aeat test scrub json", arguments=()) as info:
+            record_event(
+                RunEventKind.NAVIGATION,
+                payload=RunEventPayload(
+                    generic=GenericPayload(fields=(("taxpayer_nif", self._PLAIN_NIF),))
+                ),
+            )
+            run_id = info.run_id
+
+        jsonl_path = tmp_path / run_id / "events.jsonl"
+        lines = [ln for ln in jsonl_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        assert lines, "no JSONL lines written"
+        for line in lines:
+            parsed = json.loads(line)
+            assert isinstance(parsed, dict), f"expected JSON object per line, got {type(parsed)}"

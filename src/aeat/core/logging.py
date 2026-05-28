@@ -324,6 +324,54 @@ def configure_logging() -> None:
     _CONFIGURED = True
 
 
+def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
+    """Apply ``level`` to the root logger and every attached handler.
+
+    The root logger itself is always set to ``logging.DEBUG`` so no
+    record is discarded before reaching a handler; each handler then
+    applies its own level gate.  ``FileHandler`` instances receive
+    ``file_level`` (default ``DEBUG``) to keep the diagnostic log
+    comprehensive.  All other handlers (typically the stderr stream
+    handler) receive ``level``.
+
+    :func:`configure_logging` is called first so the dictConfig contract
+    is in place before any level mutation.
+
+    Args:
+        level: The effective level for non-file handlers (e.g.
+            ``logging.INFO`` for verbose mode).
+        file_level: The level applied to :class:`logging.FileHandler`
+            instances (default ``logging.DEBUG``).
+    """
+    configure_logging()
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    for handler in root_logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.setLevel(file_level)
+        else:
+            handler.setLevel(level)
+
+
+def attach_run_sink(sink: logging.Handler) -> None:
+    """Install ``SecretScrubbingFilter`` on ``sink`` then attach it to root.
+
+    Ensures every record flowing through the JSONL run sink is scrubbed
+    before it reaches the serialiser, even when the root-logger filter
+    has already scrubbed the shared record in-place.  The filter is
+    idempotent: a second call with the same sink is a no-op because the
+    guard checks ``root_logger.handlers`` for an existing instance.
+
+    Args:
+        sink: The :class:`logging.Handler` (typically
+            :class:`aeat.core.observability._sink.JsonlRunSink`) to
+            attach to the root logger.
+    """
+    if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
+        sink.addFilter(SecretScrubbingFilter())
+    logging.getLogger().addHandler(sink)
+
+
 def get_logger(name: str) -> logging.Logger:
     """Returns a configured logger for the given module name.
 

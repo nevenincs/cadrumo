@@ -22,8 +22,8 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict
 
-from ..config import PROJECT_ROOT, Settings, load_settings
-from ..logging import get_logger
+from ..config import PROJECT_ROOT, load_settings
+from ..logging import attach_run_sink, get_logger
 from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
@@ -243,7 +243,7 @@ def run_context(
     # bound first.
     run_token = RUN_CONTEXT_VAR.set(info)
     step_token = STEP_CONTEXT_VAR.set(info.initial_step_id)
-    root_logger.addHandler(sink)
+    attach_run_sink(sink)
     # Pessimistic default: only flip to OK once the yielded body returns
     # cleanly. If STEP_START itself raises, or the yield is never reached,
     # outcome stays FAILED so the persisted trace does not lie.
