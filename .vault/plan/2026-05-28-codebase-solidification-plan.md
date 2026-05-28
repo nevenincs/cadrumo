@@ -165,18 +165,18 @@ and the operator surface emits the localized payload.
 - [x] `W01.P03.S82` - add real-behavior test asserting ledger id-prefix fallthrough emits the localized payload; `src/aeat/entrypoints/cli/test_ledger.py`.
 - [x] `W01.P03.S83` - wrap the eight `describe` label rows in `tr("cli.app.modelo.describe.label_*")` keys; `src/aeat/entrypoints/cli/_modelo.py`.
 - [x] `W01.P03.S84` - add real-behavior test asserting `aeat app modelo describe` labels are localized per output language; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W01.P03.S85` - route the cross-casilla-invariant finding `message=` through `tr("application.modelo.findings.cross_casilla_invariant_violated", ...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S86` - add real-behavior test asserting verification-report cross-casilla finding is localized in text and JSON; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S87` - route the cross-casilla `next_action=` through `tr("application.modelo.findings.cross_casilla_invariant_next_action", predicate_id=...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S88` - extend the verification-report test to confirm cross-casilla `next_action` localization; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S89` - route the registry-snapshot-unresolved finding through `tr("application.modelo.findings.registry_snapshot_unresolved", ...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S90` - add real-behavior test asserting registry-snapshot-unresolved is localized in verification output; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S91` - route the DT12-reducción advisory `message=` through `tr("application.modelo.findings.dt12a_reduccion_possible", ...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S92` - add real-behavior test asserting DT12-reducción advisory is localized; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S93` - route the IVA-wallet `next_action=` through `tr("application.modelo.findings.iva_wallet_next_action")`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S94` - add real-behavior test asserting IVA-wallet finding next-action is localized; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S95` - replace `_iva_wallet_blocked_message` body with `tr("application.modelo.errors.iva_wallet_blocked", ...)`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P03.S96` - add real-behavior test asserting the IVA-wallet-blocked envelope carries the localized message in `translated_message`; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S85` - route the cross-casilla-invariant finding `message=` through `tr("application.modelo.findings.cross_casilla_invariant_violated", ...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S86` - add real-behavior test asserting verification-report cross-casilla finding is localized in text and JSON; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S87` - route the cross-casilla `next_action=` through `tr("application.modelo.findings.cross_casilla_invariant_next_action", predicate_id=...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S88` - extend the verification-report test to confirm cross-casilla `next_action` localization; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S89` - route the registry-snapshot-unresolved finding through `tr("application.modelo.findings.registry_snapshot_unresolved", ...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S90` - add real-behavior test asserting registry-snapshot-unresolved is localized in verification output; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S91` - route the DT12-reducción advisory `message=` through `tr("application.modelo.findings.dt12a_reduccion_possible", ...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S92` - add real-behavior test asserting DT12-reducción advisory is localized; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S93` - route the IVA-wallet `next_action=` through `tr("application.modelo.findings.iva_wallet_next_action")`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S94` - add real-behavior test asserting IVA-wallet finding next-action is localized; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P03.S95` - replace `_iva_wallet_blocked_message` body with `tr("application.modelo.errors.iva_wallet_blocked", ...)`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P03.S96` - add real-behavior test asserting the IVA-wallet-blocked envelope carries the localized message in `translated_message`; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P03.S97` - route the missing-required-casilla finding `message=` through `tr("application.modelo.findings.missing_required_casilla", casilla_id=...)`; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P03.S98` - add real-behavior test asserting missing-required-casilla output is localized; `src/aeat/application/modelo/test_actions.py`.
 - [x] `W01.P03.S99` - thread `translated_message="adapters.sede.errors.no_auth_session"` on every `SedeNavigationError` raise across `_auth_state.py`, `_walker.py`, `_iva_compensation_wallet.py`, `_notifications.py`, `_declarations.py`; `src/aeat/adapters/outbound/aeat/sede/_auth_state.py`.
