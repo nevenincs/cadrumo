@@ -118,6 +118,13 @@ def cli_keys_referenced_in_source() -> tuple[str, ...]:
 
     keys: set[str] = set()
     for module in _cli_entrypoints_root().rglob("*.py"):
+        # Test modules cite translation-key prefixes in assertions
+        # (e.g. `"cli.app.live.iva_wallet.acquisition.outcome"` used as a
+        # leak-detection sentinel in `not in label` checks). Those are
+        # introspection literals, not `tr()` call sites; auditing them
+        # as required catalogue entries would fabricate dead translations.
+        if module.name.startswith(("test_", "_test_")):
+            continue
         source = module.read_text(encoding="utf-8")
         for match in _CLI_KEY_PATTERN.finditer(source):
             keys.add(match.group(1))
