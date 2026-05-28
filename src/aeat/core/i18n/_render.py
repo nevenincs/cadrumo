@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
+from typing import Final
 
 import i18n
 import yaml
@@ -23,6 +24,7 @@ from ..logging import get_logger
 
 _log = get_logger(__name__)
 _INITIALISED = False
+DEFAULT_OUTPUT_LANGUAGE: Final[str] = "es"
 SUPPORTED_OUTPUT_LANGUAGES: tuple[str, ...] = ("es", "en", "ca", "hu")
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
 _SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
@@ -157,7 +159,7 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     try:
         settings = load_settings()
     except (KeyError, ValueError, AttributeError):
-        return "es"
+        return DEFAULT_OUTPUT_LANGUAGE
     if "aeat_output_language" in settings.model_fields_set:
         explicit = _normalise_supported_language(settings.aeat_output_language)
         if explicit is not None:
@@ -165,7 +167,7 @@ def _cached_output_language(_cache_key: tuple[object, ...]) -> str:
     profile_language = _active_profile_output_language()
     if profile_language is not None:
         return profile_language
-    return _normalise_supported_language(settings.aeat_output_language) or "es"
+    return _normalise_supported_language(settings.aeat_output_language) or DEFAULT_OUTPUT_LANGUAGE
 
 
 def _active_profile_output_language() -> str | None:
@@ -287,6 +289,7 @@ def _interpolate(rendered: str, values: Mapping[str, object]) -> str:
 
 
 __all__ = [
+    "DEFAULT_OUTPUT_LANGUAGE",
     "SUPPORTED_OUTPUT_LANGUAGES",
     "UnmatchedPlaceholderError",
     "output_language",

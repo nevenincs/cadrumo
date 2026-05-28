@@ -15,8 +15,10 @@ from ._iva_compensation_wallet import (
     PRE303_PRESENTATION_SERVICE_URL,
     _assert_read_browser_action,
     _assert_read_http,
+    _parse_spanish_decimal,
     _wallet_execute_gate_status,
     _wallet_page_shape_context,
+    _wallet_row_from_cells,
     is_aeat_wallet_auth_gate_redirect,
     parse_iva_compensation_wallet_html,
 )
@@ -268,3 +270,56 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
     assert (
         f"{_EXTERNAL.aeat.domains.www1}{_EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL
+
+
+# ---------------------------------------------------------------------------
+# S111/S112 — empty IVA wallet period/amount cells carry translated_message
+# ---------------------------------------------------------------------------
+
+
+def test_parse_spanish_decimal_empty_cell_raises_with_translated_message() -> None:
+    """_parse_spanish_decimal raises SedeParseError with a rendered translated_message.
+
+    The translated_message must be set (not None) and must be a rendered locale
+    string (not the raw key) so the CLI error boundary can surface a localised
+    operator message for the empty-amount-cell condition.
+    """
+    with pytest.raises(SedeParseError) as exc_info:
+        _parse_spanish_decimal("")
+
+    exc = exc_info.value
+    assert exc.translated_message is not None
+    # Must not be the raw locale key (self-referencing fallback).
+    assert exc.translated_message != "adapters.sede.errors.iva_wallet_empty_amount_cell"
+    # Must be a non-trivial rendered string.
+    assert len(exc.translated_message) > 10
+
+
+def test_wallet_row_from_cells_empty_period_raises_with_translated_message() -> None:
+    """_wallet_row_from_cells raises SedeParseError with a rendered translated_message.
+
+    A row where cells[1] (the period) is blank must carry a non-None
+    translated_message that is a rendered locale string (not the raw key)
+    so CLI error rendering can localise the operator message.
+    """
+    cells = ["2026", "", "1.500,00", "300,00", "1.200,00"]
+
+    with pytest.raises(SedeParseError) as exc_info:
+        _wallet_row_from_cells(cells)
+
+    exc = exc_info.value
+    assert exc.translated_message is not None
+    # Must not be the raw locale key.
+    assert exc.translated_message != "adapters.sede.errors.iva_wallet_empty_period_cell"
+    assert len(exc.translated_message) > 10
+
+
+def test_parse_spanish_decimal_whitespace_only_cell_raises_with_translated_message() -> None:
+    """A whitespace-only amount cell normalises to empty and raises SedeParseError."""
+    with pytest.raises(SedeParseError) as exc_info:
+        _parse_spanish_decimal("   \xa0  ")
+
+    exc = exc_info.value
+    assert exc.translated_message is not None
+    assert exc.translated_message != "adapters.sede.errors.iva_wallet_empty_amount_cell"
+    assert len(exc.translated_message) > 10
