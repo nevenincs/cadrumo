@@ -328,6 +328,11 @@ class GoogleDriveProvider:
         return any file lacking both — protects operator-placed files
         whose name happens to collide with the 8-char prefix space.
 
+        ``dict[str, Any]`` is the irreducible Google Drive API boundary
+        shape: drive.files().list() returns heterogeneous metadata
+        (id, name, size, md5Checksum, modifiedTime, appProperties)
+        that the google-api-python-client stubs surface as ``Any``.
+
         Returns:
             The Drive entry dict when a marker-verified match exists.
             `None` when no marker-verified match exists (including the
