@@ -504,7 +504,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P47.S204` - Add M180 M115 cross-modelo relation binding for annual-quarterly summary chain (tasklist #73); `src/aeat/_data/registry/aeat/modelos/180/`.
+- [x] `W10.P47.S204` - Add M180 M115 cross-modelo relation binding for annual-quarterly summary chain (tasklist #73); `src/aeat/_data/registry/aeat/modelos/180/`.
 
 ### Phase `W10.P48` - M111 2024-4T negative-filing edge case verification
 
