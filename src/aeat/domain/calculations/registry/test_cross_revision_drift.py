@@ -14,12 +14,13 @@ from __future__ import annotations
 
 import warnings
 from datetime import date
+from pathlib import Path
 
 import pytest
 
 from aeat.core.resources import bundled_path
 
-from . import load_registry_tree
+from . import load_modelo_directory, load_registry_tree
 from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from ._validate import (
     RegistryValidator,
@@ -93,6 +94,89 @@ def _modelo(
         "source_refs": ("aeat-manual",),
         "revisions": revision_payloads,
     })
+
+
+def _write_continuity_modelo_directory(
+    tmp_path: Path,
+    *,
+    strict: bool,
+    include_evolution: bool,
+) -> Path:
+    target = tmp_path / "999"
+    revisions_dir = target / "revisions"
+    revisions_dir.mkdir(parents=True)
+    (target / "manifest.toml").write_text(
+        """
+[modelo]
+id = "999"
+title = "Continuity test"
+official_name = "Continuity test"
+tax_domain = "test"
+cadence = "annual"
+jurisdiction = "ES-AEAT"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (revisions_dir / "2024.toml").write_text(
+        """
+[revisions."2024"]
+valid_from = 2024-01-01
+period_selector = { years = [2024], periods = ["0A"] }
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2024".casillas]]
+id = "0700"
+number = "700"
+label = "Old base"
+section = ["test"]
+data_type = "money"
+continuidad_id = "base"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    strict_line = 'continuidad_validation = "strict"\n' if strict else ""
+    evolution_block = (
+        """
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "base-label-2025"
+continuidad_id = "base"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".rstrip()
+        if include_evolution
+        else ""
+    )
+    (revisions_dir / "2025.toml").write_text(
+        f"""
+[revisions."2025"]
+valid_from = 2025-01-01
+period_selector = {{ years = [2025], periods = ["0A"] }}
+{strict_line}legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casillas]]
+id = "0700"
+number = "700"
+label = "New base"
+section = ["test"]
+data_type = "money"
+continuidad_id = "base"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+{evolution_block}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    return target
 
 
 class TestCrossRevisionConsistency:
@@ -367,6 +451,33 @@ class TestCrossRevisionConsistency:
         )
 
         assert validate_registry_scope([m]) == ()
+
+    def test_directory_loaded_advisory_continuity_inventory_reports_evolution(self, tmp_path: Path) -> None:
+        modelo = load_modelo_directory(
+            _write_continuity_modelo_directory(tmp_path, strict=False, include_evolution=True)
+        )
+
+        summaries = summarize_non_overlapping_cross_revision_casilla_drift([modelo])
+
+        assert len(summaries) == 1
+        summary = summaries[0]
+        assert summary.field == "label"
+        assert summary.continuidad_ids == ("base",)
+        assert summary.evolution_kinds == ("label_evolved",)
+        assert summary.covered_by_evolution_count == 1
+        assert validate_registry_scope([modelo]) == ()
+
+    def test_directory_loaded_strict_continuity_hard_fails_uncovered_drift(self, tmp_path: Path) -> None:
+        modelo = load_modelo_directory(
+            _write_continuity_modelo_directory(tmp_path, strict=True, include_evolution=False)
+        )
+
+        failures = validate_registry_scope([modelo])
+
+        assert len(failures) == 1
+        assert "strict continuity drift" in failures[0]
+        assert "0700" in failures[0]
+        assert "label" in failures[0]
 
 
 def test_cross_revision_validator_accepts_committed_corpus() -> None:
