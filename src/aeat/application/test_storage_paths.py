@@ -1,7 +1,7 @@
 """Real-behaviour tests for the shared storage_path helper.
 
-Each parametrize case mirrors one of the seven former local ``_storage_path``
-implementations.  The tests assert:
+Each parametrize case mirrors a remaining local ``storage_path`` consumer.
+The tests assert:
 
 1. The returned path has the expected stem and extension.
 2. The parent directory is created by the helper (mkdir side-effect).
@@ -22,22 +22,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 @pytest.mark.parametrize(
     "sub_path, bucket_id, extension, expected_stem, expected_suffix",
     [
-        # evidence/_service.py: aeat_audit_dir / "evidence-bundles"
-        (
-            ("evidence-bundles",),
-            "bundle-abc123",
-            ".jsonl",
-            "bundle-abc123",
-            ".jsonl",
-        ),
-        # inventory/_service.py: aeat_ledgers_dir / "inventory"  (.json variant)
-        (
-            ("inventory",),
-            "inv-2024",
-            ".json",
-            "inv-2024",
-            ".json",
-        ),
         # ledger/_business_operation_invoice.py: aeat_invoices_dir / kind.value
         (
             ("invoices", "payable"),
@@ -54,39 +38,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
             "bucket-evidence-01",
             ".jsonl",
         ),
-        # live/_expedientes.py: aeat_audit_dir / "live" / "expedientes"
-        (
-            ("live", "expedientes"),
-            "exp-bucket-x",
-            ".jsonl",
-            "exp-bucket-x",
-            ".jsonl",
-        ),
-        # live/_notifications.py: aeat_audit_dir / "live" / "notifications"
-        (
-            ("live", "notifications"),
-            "notif-bucket-y",
-            ".jsonl",
-            "notif-bucket-y",
-            ".jsonl",
-        ),
-        # live/_verify.py: aeat_audit_dir / "live" / "verify"
-        (
-            ("live", "verify"),
-            "verify-bucket-z",
-            ".jsonl",
-            "verify-bucket-z",
-            ".jsonl",
-        ),
     ],
     ids=[
-        "evidence-bundles",
-        "inventory-json",
         "invoices-kind",
         "purchase-invoice-evidence",
-        "live-expedientes",
-        "live-notifications",
-        "live-verify",
     ],
 )
 def test_storage_path_layout(
