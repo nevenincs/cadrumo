@@ -33,8 +33,9 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._errors import SedeError, SedeFailureMode
+from aeat.core.parsing import _parse_bool
 
+from ._errors import SedeError, SedeFailureMode
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -244,17 +245,6 @@ def _parse_cadastral(raw: str | None) -> str | None:
             raw=raw,
         )
     return cleaned
-
-
-def _parse_bool(raw: str | None) -> bool | None:
-    if raw is None:
-        return None
-    cleaned = raw.strip().lower()
-    if cleaned in {"sí", "si", "yes", "true", "1"}:
-        return True
-    if cleaned in {"no", "false", "0"}:
-        return False
-    return None
 
 
 def _parse_date(raw: str | None, *, field: str) -> date | None:

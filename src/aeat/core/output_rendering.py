@@ -12,6 +12,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from .errors import AeatError
+from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
 
 class OutputRenderingError(AeatError):
@@ -54,11 +55,15 @@ def render_command_output(
             translated_message="errors.refused.refused_output_format",
         ) from exc
     if output_format is OutputFormat.JSON:
+        redacted_payload = redact_structured_for_cli_output(jsonable_output_payload(payload))
         return RenderedCommandOutput(
             format=output_format,
-            text=json.dumps(jsonable_output_payload(payload), default=_json_default, ensure_ascii=False),
+            text=json.dumps(redacted_payload, default=_json_default, ensure_ascii=False),
         )
-    return RenderedCommandOutput(format=output_format, text="\n".join(lines))
+    return RenderedCommandOutput(
+        format=output_format,
+        text="\n".join(redact_for_cli_output(line) for line in lines),
+    )
 
 
 def _json_default(value: object) -> object:

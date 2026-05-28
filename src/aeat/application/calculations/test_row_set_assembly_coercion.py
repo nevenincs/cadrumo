@@ -14,7 +14,8 @@ from decimal import Decimal
 
 import pytest
 
-from ._row_set_assembly import _coerce_decimal, _coerce_iso_date, _coerce_text
+from aeat.core.decimal import coerce_decimal as _coerce_decimal
+from ._row_set_assembly import _coerce_iso_date, _coerce_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 

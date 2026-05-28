@@ -4,6 +4,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
+from ...core.external_constants import DEFAULT_CURRENCY
 from ._models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
@@ -31,7 +32,7 @@ class CurrencyNormalizationService:
 
     def normalize(self, amount: MonetaryAmount, rate_date: date) -> NormalizedAmount:
         """Normalize an amount to EUR using the rate for the given date."""
-        if amount.currency == "EUR":
+        if amount.currency == DEFAULT_CURRENCY:
             return NormalizedAmount(
                 original=amount,
                 eur_amount=amount.amount,

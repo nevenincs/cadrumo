@@ -467,3 +467,144 @@ def test_manuals_http_timeout_is_settings() -> None:
     settings = Settings()
 
     assert settings.aeat_manuals_http_timeout_s == 60.0
+
+
+# ---------------------------------------------------------------------------
+# S178 — BINARY_MIME_TYPE centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_binary_mime_type_value() -> None:
+    """``BINARY_MIME_TYPE`` equals the IANA-registered opaque-binary MIME type."""
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    assert BINARY_MIME_TYPE == "application/octet-stream"
+
+
+def test_google_drive_reads_binary_mime_from_external_constants() -> None:
+    """The Google Drive adapter imports ``BINARY_MIME_TYPE`` rather than a local literal."""
+
+    import importlib
+    import importlib.util
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    spec = importlib.util.find_spec("aeat.adapters.outbound.storage._google_drive")
+    assert spec is not None, "_google_drive module not found"
+    mod = importlib.import_module("aeat.adapters.outbound.storage._google_drive")
+
+    # The module-level alias resolves to the canonical constant.
+    assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
+
+
+# ---------------------------------------------------------------------------
+# S175 / S176 — DEFAULT_CURRENCY centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_default_currency_value() -> None:
+    """``DEFAULT_CURRENCY`` equals the ISO 4217 Euro code."""
+
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert DEFAULT_CURRENCY == "EUR"
+
+
+def test_default_currency_is_final_str() -> None:
+    """``DEFAULT_CURRENCY`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert isinstance(DEFAULT_CURRENCY, str)
+
+
+def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
+    """The manual ledger transaction command default currency comes from ``DEFAULT_CURRENCY``."""
+
+    import inspect
+
+    from aeat.application.ledger._models import ManualLedgerTransactionCommand
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    # Construct with no explicit currency — the field default must resolve to DEFAULT_CURRENCY.
+    # We verify by inspecting that the module imports DEFAULT_CURRENCY (not a local literal).
+    import aeat.application.ledger._models as _models_mod
+
+    assert hasattr(_models_mod, "DEFAULT_CURRENCY"), (
+        "_models module must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _models_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+    # Also verify the field default is not a hardcoded literal in the model schema.
+    schema = ManualLedgerTransactionCommand.model_json_schema()
+    props = schema.get("properties", {})
+    currency_prop = props.get("currency", {})
+    assert currency_prop.get("default") == DEFAULT_CURRENCY
+
+
+def test_currency_service_reads_native_eur_from_external_constants() -> None:
+    """The currency normalisation service uses ``DEFAULT_CURRENCY`` for native EUR check."""
+
+    import aeat.domain.currency._service as _service_mod
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert hasattr(_service_mod, "DEFAULT_CURRENCY"), (
+        "_service module must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _service_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+
+def test_aggregation_predicates_read_currency_from_external_constants() -> None:
+    """The aggregation currency predicate uses ``DEFAULT_CURRENCY``, not a local literal."""
+
+    import aeat.application.aggregation._currency_predicates as _pred_mod
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert hasattr(_pred_mod, "DEFAULT_CURRENCY"), (
+        "_currency_predicates must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _pred_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+
+def test_config_financial_base_currency_default_equals_default_currency() -> None:
+    """``Settings.financial_base_currency`` default equals ``DEFAULT_CURRENCY``."""
+
+    from aeat.core.config import Settings
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    settings = Settings()
+    assert settings.financial_base_currency == DEFAULT_CURRENCY
+
+
+def test_blob_store_put_default_content_type_reads_from_external_constants() -> None:
+    """``EncryptedBlobStore.put`` default ``content_type`` is bound to ``BINARY_MIME_TYPE``."""
+
+    import inspect
+
+    from aeat.adapters.persistence.storage.blob_store._blob_store import EncryptedBlobStore
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    sig = inspect.signature(EncryptedBlobStore.put)
+    default = sig.parameters["content_type"].default
+    assert default == BINARY_MIME_TYPE
+
+
+def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
+    """``FiledDeclaracionArtefact`` content_type field no longer carries a raw literal.
+
+    We assert that the module imports ``BINARY_MIME_TYPE`` from
+    ``aeat.core.external_constants`` and that the imported value equals the
+    expected MIME type, giving a transitive identity guarantee without
+    executing the live AEAT browser path.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import BINARY_MIME_TYPE
+
+    mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
+
+    # The module must expose the constant under the local alias used at the call site.
+    assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
+    assert mod._BINARY_MIME_TYPE == "application/octet-stream"

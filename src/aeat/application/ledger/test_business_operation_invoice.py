@@ -486,15 +486,14 @@ class TestIntracomFieldsPersistence:
         import json
         from datetime import UTC, datetime
 
+        from aeat.application._storage_paths import storage_path
         from aeat.application.ledger._business_operation_invoice import (
             BusinessOperationInvoiceSourceKind,
-            _storage_path,
         )
 
         bucket_id = "bucket-legacy"
         kind = BusinessOperationInvoiceSourceKind.PAYABLE_INVOICE
-        path = _storage_path(isolated_settings, kind, bucket_id)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        path = storage_path(isolated_settings.aeat_invoices_dir / kind.value, bucket_id)
         # Write a record in the pre-intracom schema (no country_code / eu_vat_id / operation_type)
         legacy = {
             "invoice_id": "abc123",

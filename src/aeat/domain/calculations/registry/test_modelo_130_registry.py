@@ -194,7 +194,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
 
     snapshot = _snapshot_130(modelo_130_registry, period=target_period)
     saldo_seed = Decimal("750.00")
-    filing_year = 2026 if target_period in ("2T", "3T") else 2026
+    filing_year = 2026
 
     prior_observation = RegistryModeloObservation(
         modelo="130",
@@ -235,7 +235,13 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
             "16": Decimal("0"),
             "18": Decimal("0"),
         },
-        date_context={"filing_period": date(filing_year if target_period != "4T" else filing_year + 1, filing_date_month, 20)},
+        date_context={
+            "filing_period": date(
+                filing_year if target_period != "4T" else filing_year + 1,
+                filing_date_month,
+                20,
+            )
+        },
         binding_values={
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             **resolved_bindings,

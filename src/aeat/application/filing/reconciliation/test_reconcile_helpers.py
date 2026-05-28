@@ -18,11 +18,11 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.decimal import format_decimal as _format_decimal
 from ....domain.filing import ModeloBuilderError
 from ._reconcile import (
     _canonical_draft_period_token,
     _canonical_tax_id,
-    _format_decimal,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]

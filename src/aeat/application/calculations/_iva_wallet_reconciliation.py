@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from ...adapters.outbound.aeat.sede import IvaCompensationWalletObservation
 from ...core.errors import AeatError
 from ...domain.calculations.registry._schema import RegistrySnapshot
+from ._errors import IvaWalletReconciliationError
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -565,7 +566,7 @@ def _is_wallet_stale(
     if captured_at is None:
         return False
     if max_wallet_age_days < 0:
-        raise ValueError("max_wallet_age_days must be non-negative")
+        raise IvaWalletReconciliationError("max_wallet_age_days must be non-negative")
     return decided_at - captured_at > timedelta(days=max_wallet_age_days)
 
 

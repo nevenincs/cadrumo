@@ -185,6 +185,64 @@ async def test_verify_csv_closes_self_owned_session_and_playwright() -> None:
     assert result is False
 
 
+@pytest.mark.asyncio
+async def test_build_default_browser_session_raises_browser_adapter_type_error_on_wrong_type(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When default_browser_session_factory returns a non-VerifyBrowserSessionLike
+    object, _build_default_browser_session must raise BrowserAdapterTypeError —
+    a typed, registered envelope — not the bare built-in TypeError.
+
+    A hand-rolled sentinel that is not a VerifyBrowserSessionLike is returned
+    by the factory; the raised exception class is asserted directly so any
+    regression to bare TypeError fails this test.
+    """
+    import aeat.adapters.outbound.aeat.browser as browser_module
+    from aeat.core.config import Settings
+
+    class _NotASession:
+        """Intentionally wrong type — satisfies no browser-session protocol."""
+
+    sentinel = _NotASession()
+
+    async def _bad_factory(settings: Settings) -> object:
+        return sentinel
+
+    monkeypatch.setattr(browser_module, "default_browser_session_factory", _bad_factory)
+
+    with pytest.raises(verify_module._BrowserAdapterTypeError) as exc_info:
+        await verify_module._build_default_browser_session()
+
+    assert "_NotASession" in str(exc_info.value)
+
+
+def test_browser_adapter_type_error_is_registered() -> None:
+    """BrowserAdapterTypeError must be present in ERROR_REGISTRY under the
+    expected code so the error infrastructure can build a typed envelope
+    without KeyError at runtime.
+    """
+    from aeat.core.errors import ERROR_REGISTRY
+
+    assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY, (
+        "'ERROR_SEDE_BROWSER_ADAPTER_TYPE' not found in ERROR_REGISTRY; "
+        "add it to src/aeat/core/errors/registry/_adapters.py"
+    )
+
+
+def test_browser_adapter_type_error_round_trips_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid ErrorEnvelope for BrowserAdapterTypeError
+    without raising — confirming the registry binding covers the full envelope pipeline.
+    """
+    from aeat.core.errors import build_error_envelope
+    from aeat.adapters.outbound.aeat.sede._errors import BrowserAdapterTypeError
+
+    exc = BrowserAdapterTypeError("default_browser_session_factory returned an incompatible type: <class 'object'>")
+    envelope = build_error_envelope(exc)
+
+    assert envelope.code == "ERROR_SEDE_BROWSER_ADAPTER_TYPE"
+    assert envelope.category == "ERROR"
+
+
 def test_verify_csv_guard_rejects_non_read_method() -> None:
     with pytest.raises(RegistryValidationError, match="remote write method"):
         verify_module._assert_verify_http("POST", verify_module._VERIFY_URL)

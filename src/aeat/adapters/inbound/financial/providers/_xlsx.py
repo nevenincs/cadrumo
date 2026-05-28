@@ -70,6 +70,10 @@ class XlsxProvider(FinancialProvider):
     name = "XLSX provider"
     supported_extensions = frozenset({".xlsx"})
     source_format = SourceFormat.XLSX
+    # Corpus fixture is a synthetic XLSX generated from the standard bank
+    # export column schema; layout fidelity confirmed against the spec.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
     def __init__(self) -> None:
         """Initialise the validation metadata placeholders."""

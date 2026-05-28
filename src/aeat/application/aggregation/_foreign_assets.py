@@ -17,12 +17,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-_CANONICAL_SOURCE_KINDS: frozenset[str] = frozenset(
+from ._source_kinds import AggregationSourceKind
+
+_CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {
-        "ledger_transaction",
-        "purchase_invoice_evidence",
-        "payable_invoice",
-        "collectible_invoice",
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
     },
 )
 

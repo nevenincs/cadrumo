@@ -42,7 +42,7 @@ def test_master_key_persists_across_provider_instances(tmp_path: Path) -> None:
         store_dir=tmp_path / "secrets",
         passphrase_callback=lambda: "smoke-passphrase",
     )
-    key_a = first.get_master_key()
+    key_a = first.provision_master_key()
 
     second = FileFallbackMasterKeyProvider(
         store_dir=tmp_path / "secrets",

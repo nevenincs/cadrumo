@@ -56,6 +56,12 @@ from ._applicability import (
 )
 
 __all__ = [
+    "_ATTRIBUTION_PASS_THROUGH_LEGAL_REFS",
+    "_INCOMPLETE_LEGAL_REFS",
+    "_INCOMPLETE_UNDECLARED_REASON",
+    "_INCOMPLETE_UNDETERMINED_REASON",
+    "_INCOMPLETE_UNRULED_REASON",
+    "_MODELO_APPLICABILITY_RULES",
     "ApplicabilityVerdict",
     "Modelo202Modality",
     "Modelo202ModalityVerdict",

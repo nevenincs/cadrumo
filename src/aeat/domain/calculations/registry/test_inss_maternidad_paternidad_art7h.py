@@ -29,8 +29,6 @@ current working tree. The CLI help-surface test verifies end-to-end wiring.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 
 from aeat.core.resources import bundled_path

@@ -228,6 +228,60 @@ class TestCsvDetection:
             parse_justificante(target)
 
 
+class TestJustificanteParseErrorStructuredAttributes:
+    """JustificanteParseError mirrors DeclaracionParseError's structured attribute shape.
+
+    Tests close the brittleness class where callers check message strings instead of
+    typed attributes to determine the failure kind.
+    """
+
+    def test_default_attributes_are_empty(self) -> None:
+        exc = JustificanteParseError("bare message")
+        assert exc.missing == ()
+        assert exc.malformed == ()
+        assert exc.ambiguous == ()
+        assert exc.coverage is None
+
+    def test_missing_attribute_roundtrips(self) -> None:
+        exc = JustificanteParseError("field absent", missing=("modelo", "period"))
+        assert exc.missing == ("modelo", "period")
+        assert exc.malformed == ()
+
+    def test_malformed_attribute_roundtrips(self) -> None:
+        from decimal import Decimal
+
+        exc = JustificanteParseError("bad value", malformed=("total_a_ingresar",), coverage=Decimal("0.75"))
+        assert exc.malformed == ("total_a_ingresar",)
+        assert exc.coverage == Decimal("0.75")
+
+    def test_ambiguous_attribute_roundtrips(self) -> None:
+        exc = JustificanteParseError("ambiguous", ambiguous=("csv",))
+        assert exc.ambiguous == ("csv",)
+
+    def test_subclass_csv_not_found_inherits_structured_attributes(self) -> None:
+        exc = JustificanteCsvNotFoundError("no csv", missing=("csv",))
+        assert exc.missing == ("csv",)
+        assert isinstance(exc, JustificanteParseError)
+
+    def test_missing_field_raised_by_require(self, tmp_path: Path) -> None:
+        """_require() populates missing=(field,) on the raised error."""
+        from ._extract import _require
+
+        with pytest.raises(JustificanteParseError) as exc_info:
+            _require(None, "modelo")
+        assert exc_info.value.missing == ("modelo",)
+
+    def test_empty_text_raises_missing_text(self, tmp_path: Path) -> None:
+        """Empty text raises with missing=('text',)."""
+        from ._extract import extract_justificante
+
+        pdf = tmp_path / "empty.pdf"
+        pdf.write_bytes(b"%PDF-1.4\n%%EOF\n")
+        with pytest.raises(JustificanteParseError) as exc_info:
+            extract_justificante("", pdf)
+        assert exc_info.value.missing == ("text",)
+
+
 class TestJustificanteModel:
     """Strict-mode guardrails on the :class:`Justificante` pydantic model."""
 

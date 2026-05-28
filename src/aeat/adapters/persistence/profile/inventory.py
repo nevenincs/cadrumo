@@ -17,16 +17,17 @@ from ....domain.profile.inventory import (
     MovementRecord,
     compute_inventory_valuation,
 )
-from ..storage import SensitivityClass
+from ..storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ..storage.runtime_repository import secure_object_repository_for_active_bucket
 from ..storage.sql import SecureObjectRepository
 
 _log = get_logger(__name__)
 
 INVENTORY_LEDGER_FILENAME = "inventory-ledger.secure-object"
-_SECURE_OBJECT_VERSION = 1
-_INVENTORY_NAMESPACE = "aeat.persistence.profile.inventory"
-_LEDGER_OBJECT_KEY = "default"
+_SECURE_OBJECT_VERSION = PROFILE_INVENTORY_LEDGER_NAMESPACE.schema_version
+_INVENTORY_NAMESPACE = PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace
+_INVENTORY_SENSITIVITY = PROFILE_INVENTORY_LEDGER_NAMESPACE.sensitivity
+_LEDGER_OBJECT_KEY = PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key()
 
 
 def load_inventory() -> tuple[InventoryLedger, ...]:
@@ -146,7 +147,7 @@ class InventoryLedgerRepository:
             record = self._objects.load(
                 _INVENTORY_NAMESPACE,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_INVENTORY_SENSITIVITY,
                 max_supported_version=_SECURE_OBJECT_VERSION,
             )
             if record is None:
@@ -242,7 +243,7 @@ class InventoryLedgerRepository:
         self._objects.save(
             namespace=_INVENTORY_NAMESPACE,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_INVENTORY_SENSITIVITY,
             schema_version=_SECURE_OBJECT_VERSION,
             written_at=datetime.now(UTC),
             payload=document.model_dump_json().encode("utf-8"),

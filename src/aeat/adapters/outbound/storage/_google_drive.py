@@ -33,6 +33,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from ....core.config import Settings as _Settings
+from ....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageError,
@@ -48,7 +49,6 @@ from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
 
 _VAULT_FOLDER_NAME = _Settings().aeat_google_drive_vault_folder_name
 _FOLDER_MIME = "application/vnd.google-apps.folder"
-_BINARY_MIME = "application/octet-stream"
 _HMAC_PREFIX_LEN = 8
 _FILE_EXTENSION = ".bin"
 _DEFAULT_LABEL = "object"
@@ -652,7 +652,7 @@ def _build_media_body(payload: bytes) -> Any:
             f"googleapiclient.http not importable: {exc}",
             suggestion="uv sync",
         ) from exc
-    return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME, resumable=False)
+    return MediaIoBaseUpload(io.BytesIO(payload), mimetype=_BINARY_MIME_TYPE, resumable=False)
 
 
 def _metadata_from_drive_entry(

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from ._base import (
+    BankStatementParseError,
+    CorpusVerificationSource,
     FinancialProvider,
     FinancialProviderError,
     FinancialValidationError,
@@ -17,6 +19,8 @@ from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
 
 __all__ = [
+    "BankStatementParseError",
+    "CorpusVerificationSource",
     "CsvProvider",
     "FinancialProvider",
     "FinancialProviderError",

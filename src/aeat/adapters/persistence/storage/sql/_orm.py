@@ -125,7 +125,8 @@ class SecureObjectRow(Base):
     workflow state that must not land as standalone JSON files. The
     ``payload`` column is a SQL BLOB encrypted by
     :class:`aeat.adapters.persistence.storage.crypto.EncryptedBytes`;
-    the remaining fields are routing and audit metadata.
+    the remaining fields are routing, revision-lineage, and integrity
+    metadata.
     """
 
     __tablename__ = "secure_objects"
@@ -143,6 +144,15 @@ class SecureObjectRow(Base):
     classification: Mapped[str] = mapped_column(String(32), nullable=False)
     schema_version: Mapped[int] = mapped_column(Integer, nullable=False)
     written_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    previous_revision_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    previous_payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    payload_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    ciphertext_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    revision_written_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    write_provenance: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    source_event_id: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    conflict_policy: Mapped[str | None] = mapped_column(String(32), nullable=True)
     payload: Mapped[bytes] = mapped_column(EncryptedBytes(), nullable=False)
 
 

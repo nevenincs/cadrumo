@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
@@ -80,6 +81,51 @@ Used as the value type for casillas declaring `data_type = "nif"`,
 and by any cross-domain consumer (filing draft assembly, oracle
 replay, export layouts) that needs to validate a NIF, NIE, or CIF
 identifier independently of a casilla declaration.
+"""
+
+
+class InputKind(StrEnum):
+    """Registry-authoritative classification of how a casilla value is supplied.
+
+    Each member's string value matches the TOML literal used in registry
+    source files so serialisation is transparent across every persistence
+    boundary (TOML, JSON, SQL, CLI).
+    """
+
+    MANUAL = "manual"
+    BOUND = "bound"
+    COMPUTED = "computed"
+    INFORMATIONAL = "informational"
+
+
+def _coerce_input_kind(value: object) -> object:
+    """Coerce a TOML string literal to the canonical InputKind member.
+
+    Accepts an ``InputKind`` instance directly (no-op) or a plain string
+    matching one of the declared member values.  Rejects non-string and
+    non-member inputs at the schema boundary so every persisted and
+    deserialised casilla carries a typed enum value.
+    """
+    if isinstance(value, InputKind):
+        return value
+    if isinstance(value, str):
+        try:
+            return InputKind(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"input_kind {value!r} is not a recognised InputKind member; "
+                f"expected one of {[m.value for m in InputKind]}"
+            ) from None
+    raise RegistryValidationError(
+        f"input_kind must be a string, got {type(value).__name__!r}"
+    )
+
+
+InputKindValue = Annotated[InputKind, BeforeValidator(_coerce_input_kind)]
+"""Annotated InputKind that coerces TOML string literals to enum members.
+
+Use this as the field type on pydantic models that ingest TOML or JSON
+payloads where ``input_kind`` is stored as a plain string.
 """
 
 
@@ -465,6 +511,14 @@ EvidenceTier = Literal[
 LegalRefs = Annotated[tuple[LegalRefId, ...], Field(min_length=1)]
 SourceRefs = Annotated[tuple[SourceRefId, ...], Field(min_length=1)]
 SourceCitationText = Annotated[tuple[str, ...], Field(min_length=1)]
+ContinuidadId = Annotated[
+    str,
+    Field(
+        min_length=1,
+        max_length=128,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
 FormulaOperator = Literal[
     "add",
     "subtract",
@@ -1396,6 +1450,84 @@ class BracketEntry(RegistryModel):
         return self
 
 
+class KeyedBracketEntry(RegistryModel):
+    """One row of a string-keyed rate-lookup table.
+
+    Sister shape to :class:`BracketEntry` for parameters that dispatch on
+    a categorical enum value rather than a piecewise-linear numeric
+    interval. Each row binds a ``key`` (e.g. an IRNR ``tipo_renta`` code:
+    ``general`` / ``ue_residente`` / ``ganancia_patrimonial`` /
+    ``inmobiliaria``) to a ``value`` (typically a Decimal rate) within a
+    ``valid_from``/``valid_to`` window. Lookup is exact-match on
+    ``(key, year)`` — there is no notion of interval overlap because the
+    domain is enum-discrete, not numeric-continuous.
+
+    First consumer: M210 IRNR Phase 1 ``m210-tipo-gravamen-2025`` per
+    the m210-irnr-full-engine ADR.
+    """
+
+    key: str = Field(min_length=1, max_length=64)
+    value: DecimalValue
+    valid_from: date
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_keyed_bracket(self) -> KeyedBracketEntry:
+        if self.valid_to is not None and self.valid_to < self.valid_from:
+            raise RegistryValidationError("keyed_bracket valid_to must be on or after valid_from")
+        return self
+
+
+class ConvenioRateRow(RegistryModel):
+    """One row of an IRNR Convenio doble imposición rate-override table.
+
+    Sister shape to :class:`KeyedBracketEntry` for parameters that
+    dispatch on a ``(country_code, tipo_renta)`` pair returning the
+    treaty rate that REPLACES the TRLIRNR baseline when a profile
+    declares ``convenio_doble_imposicion_country``. The replacement
+    semantics (not stacking) is enforced at lookup time by the runtime
+    helper authored in S389b.
+
+    The ``rate`` field is a string carrying either a parseable Decimal
+    (e.g. ``"0.10"``) or the literal ``"NOT_YET_AUTHORED"`` sentinel
+    that triggers a BLOCKING finding at lookup time. The sentinel
+    allows the parameter to carry a placeholder row for a country +
+    tipo_renta combination whose Convenio article number is known
+    but whose rate has not been corpus-verified yet, without
+    deferring the entire row to a follow-up Step.
+
+    First consumer: M210 IRNR Phase 1 ``m210-convenio-rates`` per
+    the m210-irnr-full-engine ADR §D2.4.
+    """
+
+    country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    tipo_renta: str = Field(min_length=1, max_length=64)
+    rate: str = Field(min_length=1, max_length=32)
+    legal_ref_anchor: str = Field(min_length=1, max_length=128)
+    notes: str | None = Field(default=None, max_length=512)
+    valid_from: date
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_convenio_rate_row(self) -> ConvenioRateRow:
+        if self.valid_to is not None and self.valid_to < self.valid_from:
+            raise RegistryValidationError(
+                "convenio_rate_row valid_to must be on or after valid_from"
+            )
+        # The rate field is either the NOT_YET_AUTHORED sentinel or a
+        # parseable Decimal string. Parsing here surfaces malformed
+        # values at construction time rather than at lookup time.
+        if self.rate != "NOT_YET_AUTHORED":
+            try:
+                Decimal(self.rate)
+            except (ArithmeticError, ValueError) as exc:
+                raise RegistryValidationError(
+                    f"convenio_rate_row rate must be a parseable Decimal or "
+                    f"'NOT_YET_AUTHORED'; got {self.rate!r}"
+                ) from exc
+        return self
+
+
 def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:
     """Return True when two adjacent brackets share a valid_from window and overlap.
 
@@ -1417,10 +1549,22 @@ def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) 
 
 class ParameterDefinition(RegistryModel):
     id: ParameterId
-    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean", "bracket_table"]
+    data_type: Literal[
+        "decimal",
+        "money",
+        "integer",
+        "ratio",
+        "text",
+        "boolean",
+        "bracket_table",
+        "keyed_bracket_table",
+        "convenio_rate_table",
+    ]
     unit: str
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
+    keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
+    convenio_rates: tuple[ConvenioRateRow, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxis | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -1430,6 +1574,10 @@ class ParameterDefinition(RegistryModel):
     def _validate_bracket_table(self) -> ParameterDefinition:
         if self.data_type == "bracket_table":
             self._validate_bracket_table_shape()
+        elif self.data_type == "keyed_bracket_table":
+            self._validate_keyed_bracket_table_shape()
+        elif self.data_type == "convenio_rate_table":
+            self._validate_convenio_rate_table_shape()
         else:
             self._validate_non_bracket_table_shape()
         return self
@@ -1449,6 +1597,14 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
         if self.values:
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets"
+            )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix bracket_table and convenio_rates"
+            )
         if self.bracket_axis is None:
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
         sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
@@ -1459,11 +1615,97 @@ class ParameterDefinition(RegistryModel):
                     f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
                 )
 
+    def _validate_keyed_bracket_table_shape(self) -> None:
+        """Verify a keyed_bracket_table parameter has a valid keyed shape.
+
+        Four contracts mirror the numeric ``bracket_table`` shape:
+        * non-empty ``keyed_brackets`` tuple
+        * no ``values`` (dated scalar map is mutually exclusive)
+        * no ``brackets`` (numeric-interval table is mutually exclusive)
+        * no two ``keyed_brackets`` share the same ``(key, valid_from)``
+          pair (exact-match lookup requires a unique row per key per
+          window; duplicates would make the lookup non-deterministic)
+        """
+        if not self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets"
+            )
+        if self.values:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values"
+            )
+        if self.brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets"
+            )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and convenio_rates"
+            )
+        seen: set[tuple[str, date]] = set()
+        for row in self.keyed_brackets:
+            pair = (row.key, row.valid_from)
+            if pair in seen:
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} keyed_brackets contains duplicate "
+                    f"(key, valid_from) pair {pair!r}"
+                )
+            seen.add(pair)
+
+    def _validate_convenio_rate_table_shape(self) -> None:
+        """Verify a convenio_rate_table parameter carries unique convenio rate rows.
+
+        Mirrors the keyed_bracket_table contract structure:
+        * non-empty ``convenio_rates`` tuple
+        * no ``values`` (dated scalar map is mutually exclusive)
+        * no ``brackets`` (numeric-interval table is mutually exclusive)
+        * no ``keyed_brackets`` (single-key shape is mutually exclusive)
+        * no two ``convenio_rates`` share the same
+          ``(country_code, tipo_renta, valid_from)`` triple — the
+          runtime lookup is exact-match on the pair within the active
+          window, so duplicates would make the result non-deterministic
+        """
+        if not self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates"
+            )
+        if self.values:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and dated values"
+            )
+        if self.brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and numeric brackets"
+            )
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and keyed_brackets"
+            )
+        seen: set[tuple[str, str, date]] = set()
+        for row in self.convenio_rates:
+            triple = (row.country_code, row.tipo_renta, row.valid_from)
+            if triple in seen:
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} convenio_rates contains duplicate "
+                    f"(country_code, tipo_renta, valid_from) triple {triple!r}"
+                )
+            seen.add(triple)
+
     def _validate_non_bracket_table_shape(self) -> None:
-        """Reject brackets / bracket_axis on a non-bracket_table parameter."""
+        """Reject brackets / keyed_brackets / convenio_rates / bracket_axis on a non-bracket-table parameter."""
         if self.brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
+            )
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares keyed_brackets but data_type is {self.data_type!r}; "
+                "use 'keyed_bracket_table'"
+            )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares convenio_rates but data_type is {self.data_type!r}; "
+                "use 'convenio_rate_table'"
             )
         if self.bracket_axis is not None:
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
@@ -1507,6 +1749,33 @@ class FormulaDefinition(RegistryModel):
     legal_refs: LegalRefs
     source_refs: SourceRefs
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
+
+
+class CasillaContinuidadEvolutionDefinition(RegistryModel):
+    """Declared cross-revision evolution for one casilla continuity chain."""
+
+    id: RecordId
+    continuidad_id: ContinuidadId
+    from_revision: RevisionId
+    to_revision: RevisionId
+    evolution_kind: Literal[
+        "unchanged",
+        "label_evolved",
+        "legal_refs_evolved",
+        "label_and_legal_refs_evolved",
+        "repurposed",
+        "retired",
+    ]
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @model_validator(mode="after")
+    def _validate_revision_pair(self) -> CasillaContinuidadEvolutionDefinition:
+        if self.from_revision == self.to_revision:
+            raise RegistryValidationError(
+                f"casilla continuidad evolution {self.id!r} must span two different revisions"
+            )
+        return self
 
 
 class CasillaAlias(RegistryModel):
@@ -1671,12 +1940,20 @@ class CasillaDefinition(RegistryModel):
         "date",
     ] = "money"
     required: bool = False
-    input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
+    input_kind: InputKindValue = InputKind.MANUAL
     formula: FormulaId | None = None
     binding: BindingId | None = None
     export_refs: tuple[ExportFieldId, ...] = ()
     constraints: CasillaConstraints | None = None
     form_number: str | None = Field(default=None, min_length=1, max_length=16)
+    continuidad_id: ContinuidadId | None = Field(
+        default=None,
+        description=(
+            "Stable cross-revision continuity key for non-overlapping annual "
+            "forms. When present, it identifies the legal concept continuity "
+            "chain independently of the revision-local casilla id."
+        ),
+    )
     semantic_role: str | None = Field(default=None, min_length=1, max_length=128)
     semantic_role_cardinality: Literal["shared", "intentional_singleton"] = "shared"
     semantic_role_cardinality_reason: str | None = Field(default=None, min_length=1, max_length=256)
@@ -2146,6 +2423,8 @@ class ModeloRevision(RegistryModel):
     dependency_classifications: tuple[DependencyClassificationDefinition, ...] = ()
     completeness_manifest: CalculationCompletenessManifest | None = None
     verification_predicates: tuple[VerificationPredicateDefinition, ...] = ()
+    continuidad_validation: Literal["advisory", "strict"] = "advisory"
+    casilla_continuidad_evolutions: tuple[CasillaContinuidadEvolutionDefinition, ...] = ()
 
     @model_validator(mode="after")
     def _validate_window(self) -> ModeloRevision:

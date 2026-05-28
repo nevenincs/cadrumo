@@ -16,13 +16,14 @@ overflow.
 
 from __future__ import annotations
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.logging import get_logger
 from ._errors import AmortizationLedgerCapExceededError
 from ._models import FincaAmortizacionLedgerEntry, Finca, FincaRendimientoRecord
+from ._rounding import _round_to_cents
 
 _logger = get_logger(__name__)
 
@@ -33,13 +34,6 @@ DAYS_PER_YEAR: Decimal = Decimal("365")
 """Pro-rate denominator. The BOE wording uses "anual" — we adopt 365
 days for every year (including leap years), matching AEAT's manual
 práctico Renta worked-example convention."""
-
-_CENT = Decimal("0.01")
-
-
-def _round_to_cents(value: Decimal) -> Decimal:
-    """Half-up to euro-cent precision."""
-    return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
 class AmortizationComputation(BaseModel):

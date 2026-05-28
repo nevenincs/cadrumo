@@ -17,7 +17,7 @@ filing-line identifiers.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -35,15 +35,10 @@ from ._repository import (
     FincaRepository,
     FincaRendimientoRepository,
 )
+from ._rounding import _round_to_cents
 from ._tier_resolver import TierResolution, resolve_reduccion
 
 _log = get_logger(__name__)
-_CENT = Decimal("0.01")
-
-
-
-def _round_to_cents(value: Decimal) -> Decimal:
-    return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
 class FincaAttribution(BaseModel):

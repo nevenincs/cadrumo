@@ -187,6 +187,21 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "open",
     ): "translation scaffold generation",
     (
+        "src/aeat/locales/manager.py",
+        "_replace_existing_yaml_leaf",
+        "path.write_text",
+    ): "locale CLI translation-catalogue update; non-financial YAML message text",
+    (
+        "src/aeat/locales/manager.py",
+        "_append_yaml_leaf",
+        "path.write_text",
+    ): "locale CLI translation-catalogue append; non-financial YAML message text",
+    (
+        "src/aeat/locales/manager.py",
+        "_remove_existing_yaml_leaf",
+        "path.write_text",
+    ): "locale CLI translation-catalogue removal; non-financial YAML message text",
+    (
         "src/aeat/adapters/persistence/storage/bucket/_lockfile.py",
         "_try_create_lock",
         "os.open",
@@ -242,11 +257,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "command.output_path.write_bytes",
     ): "explicit operator-directed ledger transaction export to a caller-chosen path",
     (
-        "src/aeat/application/evidence/_service.py",
-        "_save",
-        "path.write_text",
-    ): "per-bucket evidence-bundle record store; typed pydantic JSONL in the operator-local bucket directory",
-    (
         "src/aeat/application/ledger/_evidence.py",
         "_save",
         "path.write_text",
@@ -256,11 +266,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_save",
         "path.write_text",
     ): "per-bucket business-operation-invoice record store; typed pydantic JSONL in the bucket directory",
-    (
-        "src/aeat/application/inventory/_service.py",
-        "_save_document",
-        "path.write_text",
-    ): "per-bucket inventory-ledger record store; typed pydantic JSON in the operator-local bucket directory",
     (
         "src/aeat/application/live/_verify.py",
         "_save",

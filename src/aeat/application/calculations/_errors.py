@@ -23,3 +23,27 @@ class BindingPrefillTypeError(CoreValidationError):
     when a field value does not match the expected ``int | str`` or
     ``str | tuple[str, ...]`` shape.
     """
+
+
+class ObservationKeyError(CoreValidationError):
+    """Raised when an observation key component fails its repository contract.
+
+    The repository key for a ``(modelo, filing_year, period)`` triple must
+    satisfy the :func:`safe_repository_id` contract for string components and
+    fall within the supported year range ``[2000, 2099]`` for the integer
+    year component. Any violation of those constraints raises this error
+    instead of a bare :class:`ValueError` so the failure propagates through
+    the typed error registry and produces a structured envelope.
+    """
+
+
+class IvaWalletReconciliationError(CoreError):
+    """Raised when an IVA wallet reconciliation invariant is violated.
+
+    Covers pre-condition checks on the reconciliation inputs that fall outside
+    pydantic model validation — for example, a negative ``max_wallet_age_days``
+    argument supplied to the staleness predicate. Raising a typed
+    :class:`CoreError` subclass instead of a bare :class:`ValueError` ensures
+    the failure propagates through the error registry and produces a structured
+    envelope with a stable error code.
+    """

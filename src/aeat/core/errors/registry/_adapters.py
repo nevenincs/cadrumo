@@ -479,6 +479,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.SecureObjectRevisionConflictError",
+        ErrorCode(
+            code="FAIL_STORAGE_SECURE_OBJECT_REVISION_CONFLICT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_secure_object_revision_conflict",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.RetentionPolicyError",
         ErrorCode(
             code="INTEGRITY_STORAGE_RETENTION_POLICY",
@@ -611,6 +622,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.aeat.sede._errors.BrowserAdapterTypeError",
+        ErrorCode(
+            code="ERROR_SEDE_BROWSER_ADAPTER_TYPE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_sede_browser_adapter_type",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.outbound.aeat.auth._errors.AuthError",
         ErrorCode(
             code="AUTH_AUTH",
@@ -715,6 +737,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_FINANCIAL_PROVIDER_VALIDATION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_financial_provider_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.inbound.financial.providers._base.BankStatementParseError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_BANK_STATEMENT_PARSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_bank_statement_parse",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -1178,6 +1211,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_storage_bucket_recovery_verification",
             default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.errors.NamespaceRegistryError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_NAMESPACE_REGISTRY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_namespace_registry",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

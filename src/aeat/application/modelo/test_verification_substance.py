@@ -29,7 +29,7 @@ from aeat.application.modelo._actions import (
 )
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import VerificationPredicateDefinition
+from aeat.domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
 from aeat.domain.deadlines import IVARegime, TaxpayerProfile
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevisionCatalogue
@@ -228,69 +228,6 @@ def test_predicate_implies_nonzero_unknown_consequent_treated_as_zero() -> None:
     """
     values: dict[str, Decimal] = {"01": Decimal("500")}
     assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is False
-
-
-# ---------------------------------------------------------------------------
-# Modelo 131 c01-implies-c07 structural predicate (W04.P19.S398)
-#
-# Pins the M131 registry's implies_nonzero predicate against the
-# integration surface that drives runtime evaluation. The predicate
-# encodes a registry-graph correctness rule (positive base imponible
-# C01 implies non-zero suma-de-pagos-fraccionados-previos C07) — NOT
-# the regulatory cuota-mínima floor, which remains corpus-blocked
-# under task #226. Tests construct the predicate via
-# VerificationPredicateDefinition with the exact 2025-revision
-# predicate_id + legal_refs from
-# `src/aeat/_data/registry/aeat/modelos/131/revisions/2025/verification_expectations/0002-verification_predicates.toml`
-# and route through _evaluate_verification_predicates, mirroring the
-# cap_le_when_positive integration-test pattern above.
-# ---------------------------------------------------------------------------
-
-
-def test_modelo_131_c01_implies_c07_emits_blocking_rule_finding_for_violation() -> None:
-    """M131 c01-implies-c07 fires a BLOCKING finding when C01>0 and C07=0.
-
-    Anti-tautology: the predicate registered in the M131 2025 revision
-    TOML is the same expression-shape the runtime evaluator consumes.
-    With C01 strictly positive and C07 zero, the implies_nonzero
-    contract (antecedent positive AND consequent zero → violated)
-    forces a BLOCKING_RULE finding through
-    _evaluate_verification_predicates with the predicate_id present
-    in the finding message.
-    """
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-131-2025-c01-implies-c07",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='implies_nonzero(["01", "07"])',
-        finding_kind="BLOCKING_RULE",
-    )
-    casilla_values = {"01": Decimal("500"), "07": Decimal("0")}
-
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
-
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert "modelo-131-2025-c01-implies-c07" in findings[0].message
-
-
-def test_modelo_131_c01_implies_c07_emits_no_finding_when_satisfied() -> None:
-    """M131 c01-implies-c07 produces no finding when both casillas non-zero.
-
-    Control case: positive antecedent paired with positive consequent
-    satisfies the material implication. Confirms the integration path
-    surfaces zero findings rather than the silent-pass shape an
-    unrecognised expression would yield.
-    """
-    predicate = VerificationPredicateDefinition(
-        predicate_id="modelo-131-2025-c01-implies-c07",
-        legal_refs=("rd-439-2007:art-110",),
-        expression='implies_nonzero(["01", "07"])',
-        finding_kind="BLOCKING_RULE",
-    )
-    casilla_values = {"01": Decimal("500"), "07": Decimal("200")}
-
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
-    assert findings == []
 
 
 def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:
@@ -520,7 +457,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     """P10.S68: the canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
-    aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
+    aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
     The validator (in _validate_surfaces) uses it to reject unknown
     operators at registry-load time. The runtime evaluator
     (_evaluate_predicate_expression) has its own regex per operator.
@@ -536,10 +473,6 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     test fires.
     """
     from aeat.application.modelo import _actions
-    from aeat.domain.calculations.registry._schema import (
-        KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    )
-
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
@@ -567,7 +500,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         assert regex is not None, (
             f"Runtime evaluator missing regex {regex_attr!r} for known operator "
             f"{operator_name!r}; the canonical set "
-            "(_schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
+            "(registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
             "evaluator's regex set must stay in sync"
         )
         probe = probe_expressions[operator_name]

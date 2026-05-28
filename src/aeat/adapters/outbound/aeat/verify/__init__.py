@@ -37,6 +37,7 @@ from .....domain.calculations.registry import (
     assert_remote_operation_allowed as _assert_remote_operation_allowed,
 )
 from .....domain.justificante._errors import JustificanteVerificationError as _JustificanteVerificationError
+from ..sede._errors import BrowserAdapterTypeError as _BrowserAdapterTypeError
 from .._playwright import PlaywrightError as _PlaywrightError
 
 _logger = _get_logger(__name__)
@@ -122,7 +123,9 @@ async def _build_default_browser_session() -> VerifyBrowserSessionLike:
     settings = load_settings()
     session = await default_browser_session_factory(settings)
     if not isinstance(session, VerifyBrowserSessionLike):
-        raise TypeError(f"default_browser_session_factory returned an incompatible type: {type(session)}")
+        raise _BrowserAdapterTypeError(
+            f"default_browser_session_factory returned an incompatible type: {type(session)}"
+        )
     return session
 
 

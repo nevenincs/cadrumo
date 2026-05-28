@@ -4,6 +4,7 @@ label = "Ejercicio 2023"
 valid_from = 2023-01-01
 valid_to = 2023-12-31
 period_selector = { years = [2023], periods = ["0A"] }
+continuidad_validation = "strict"
 legal_refs = [
     "ley-35-2006:art-27",
     "ley-35-2006:art-28",

@@ -208,17 +208,20 @@ def _strip_accents(value: str) -> str:
     return "".join(c for c in unicodedata.normalize("NFKD", value) if not unicodedata.combining(c))
 
 
-def _parse_decimal(raw: str) -> Decimal:
+def _parse_decimal(raw: str, field: str | None = None) -> Decimal:
     """Parse an AEAT-formatted decimal string (``1.234,56`` or ``1234.56``).
 
     Args:
         raw: Raw numeric substring captured from the PDF.
+        field: Optional field name to populate ``malformed`` on the raised error.
 
     Returns:
         A :class:`decimal.Decimal` preserving the printed precision.
 
     Raises:
         JustificanteParseError: If the string is not a recognisable number.
+            When ``field`` is supplied, ``malformed=(field,)`` is set on the
+            exception so callers can assert on the structured attribute.
     """
     cleaned = raw.strip().replace(" ", "")
     if "," in cleaned and "." in cleaned:
@@ -232,7 +235,11 @@ def _parse_decimal(raw: str) -> Decimal:
     try:
         return Decimal(cleaned)
     except InvalidOperation as exc:
-        raise JustificanteParseError(f"invalid decimal literal: {raw!r}") from exc
+        malformed = (field,) if field is not None else ()
+        raise JustificanteParseError(
+            f"invalid decimal literal: {raw!r}",
+            malformed=malformed,
+        ) from exc
 
 
 def _parse_datetime(raw: str) -> datetime:
@@ -270,13 +277,17 @@ def _parse_datetime(raw: str) -> datetime:
                 fmt_exc,
             )
             continue
-    raise JustificanteParseError(f"unrecognised datetime literal: {raw!r}")
+    raise JustificanteParseError(f"unrecognised datetime literal: {raw!r}", malformed=("presented_at",))
 
 
 def _require(match: re.Match[str] | None, field: str) -> str:
-    """Return ``match.group(1)`` or raise a parse error naming ``field``."""
+    """Return ``match.group(1)`` or raise a parse error naming ``field``.
+
+    The raised :exc:`JustificanteParseError` has ``missing=(field,)`` set so
+    callers can assert on the structured attribute rather than the message string.
+    """
     if match is None:
-        raise JustificanteParseError(f"could not locate required field: {field}")
+        raise JustificanteParseError(f"could not locate required field: {field}", missing=(field,))
     return match.group(1).strip()
 
 
@@ -297,7 +308,7 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             cannot be coerced into its target type.
     """
     if not text.strip():
-        raise JustificanteParseError(f"empty text extracted from {pdf_path}")
+        raise JustificanteParseError(f"empty text extracted from {pdf_path}", missing=("text",))
     normalised = _strip_accents(text)
     csv_value = _extract_csv(text, normalised, pdf_path)
     modelo = _require(_MODELO_RE.search(normalised), "modelo")
@@ -327,7 +338,10 @@ def extract_justificante(text: str, pdf_path: Path) -> Justificante:
             parsed_at=parsed_at,
         )
     except ValidationError as exc:
-        raise JustificanteParseError(f"failed to validate Justificante for {pdf_path}: {exc}") from exc
+        raise JustificanteParseError(
+            f"failed to validate Justificante for {pdf_path}: {exc}",
+            malformed=("record",),
+        ) from exc
     _logger.info(
         "extract_justificante: parsed modelo=%s period=%s ejercicio=%s csv=%s",
         modelo,
@@ -385,7 +399,7 @@ def _extract_period_and_ejercicio(normalised: str) -> tuple[str, str | None]:
         return period, ejercicio
     if ejercicio is not None:
         return ejercicio, ejercicio
-    raise JustificanteParseError("could not locate required field: period")
+    raise JustificanteParseError("could not locate required field: period", missing=("period",))
 
 
 def _extract_presented_at(normalised: str) -> datetime:
@@ -399,7 +413,7 @@ def _extract_presented_at(normalised: str) -> datetime:
         or _PRESENTED_AT_EN_RE.search(normalised)
     )
     if annual_match is None:
-        raise JustificanteParseError("could not locate required field: presented_at")
+        raise JustificanteParseError("could not locate required field: presented_at", missing=("presented_at",))
     return _parse_datetime(f"{annual_match.group(1)} {annual_match.group(2)}")
 
 
@@ -422,9 +436,12 @@ def _extract_verification_url(text: str, pdf_path: Path) -> AnyHttpUrl:
     """Locate the verification URL and validate it as an AnyHttpUrl."""
     url_match = _URL_RE.search(text)
     if url_match is None:
-        raise JustificanteParseError(f"no verification URL found in {pdf_path}")
+        raise JustificanteParseError(f"no verification URL found in {pdf_path}", missing=("verification_url",))
     verification_url_raw = url_match.group(0).rstrip(".,);")
     try:
         return TypeAdapter(AnyHttpUrl).validate_python(verification_url_raw)
     except ValidationError as exc:
-        raise JustificanteParseError(f"invalid verification URL in {pdf_path}: {verification_url_raw!r}") from exc
+        raise JustificanteParseError(
+            f"invalid verification URL in {pdf_path}: {verification_url_raw!r}",
+            malformed=("verification_url",),
+        ) from exc

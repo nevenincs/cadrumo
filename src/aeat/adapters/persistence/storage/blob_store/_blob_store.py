@@ -44,6 +44,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
+from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION
@@ -174,7 +175,7 @@ class EncryptedBlobStore:
         plaintext: bytes,
         *,
         classification: SensitivityClass,
-        content_type: str = "application/octet-stream",
+        content_type: str = BINARY_MIME_TYPE,
     ) -> BlobReference:
         """Persist ``plaintext`` and return a reference for retrieval.
 

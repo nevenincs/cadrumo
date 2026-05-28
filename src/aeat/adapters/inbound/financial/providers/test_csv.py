@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from aeat.tests import FIXTURES_DIR
 
 from .. import CsvProvider
@@ -79,3 +80,123 @@ def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
         else:
             os.environ[key] = previous
     assert validation.is_valid, validation.warnings
+
+
+# ---------------------------------------------------------------------------
+# Canonical fallback chain — real-behavior decode tests (S180)
+# ---------------------------------------------------------------------------
+# Each sub-test feeds bytes that are only valid in ONE of the four encodings
+# in CSV_ENCODING_FALLBACK_CHAIN.  The preferred codec is set to an invalid
+# name so the fallback chain drives decoding from position 0.  We assert:
+#   (a) decoding succeeds (no exception);
+#   (b) the winning codec matches the expected position in the chain;
+#   (c) the round-tripped text is byte-equivalent to what was encoded.
+#
+# Encoding-distinguishing byte sequences used:
+#   utf-8-sig  — BOM prefix (b'\xef\xbb\xbf') which utf-8 also accepts but
+#                utf-8-sig is first, so it wins.
+#   utf-8      — multi-byte sequence b'\xc3\xa9' (U+00E9 é) invalid in cp1252/
+#                iso-8859-1 as a multi-byte run (valid scalar but wrong value).
+#                We craft a sequence that is *invalid* in latin-1 strict mode —
+#                actually latin-1 accepts all single bytes, so we craft bytes
+#                that are valid utf-8 but represent a codepoint that decodes
+#                differently in latin-1 than in utf-8.  The only reliable
+#                distinguisher is that utf-8 *rejects* non-utf-8 byte sequences,
+#                while cp1252/iso-8859-1 accept all 256 bytes.  So we test utf-8
+#                by supplying a valid utf-8 multi-byte sequence (b'\xc3\xa9')
+#                and confirming the decoded character is U+00E9, then confirm
+#                cp1252/iso-8859-1 are bypassed when utf-8 wins.
+#   cp1252     — byte 0x80 (€ in cp1252, undefined in iso-8859-1 strict; but
+#                Python's iso-8859-1 codec maps it to U+0080 control char, so
+#                we cannot use that to distinguish).  Instead we craft bytes
+#                that are *invalid* utf-8 AND invalid utf-8-sig (0x80 alone
+#                is a continuation byte in utf-8 → UnicodeDecodeError) and
+#                rely on cp1252 being before iso-8859-1 in the chain.
+#   iso-8859-1 — byte 0xf3 (ó in iso-8859-1) in a sequence that is invalid
+#                utf-8 and invalid utf-8-sig and also rejected by cp1252 strict
+#                (0x81 is undefined in cp1252; Python raises UnicodeDecodeError
+#                for it).  We prepend b'\x81' which breaks utf-8 and cp1252.
+#
+# All tests invoke _decode_bytes directly on a real CsvProvider instance —
+# no mocks, no stubs, no patches.
+
+_INVALID_PREFERRED = "definitely-not-a-codec"
+
+
+def _with_invalid_preferred(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Force the preferred codec to an invalid name so the chain drives decoding."""
+    monkeypatch.setenv("FINANCIAL_DEFAULT_CSV_ENCODING", _INVALID_PREFERRED)
+    # load_settings() constructs a fresh Settings() each call (no lru_cache),
+    # so the monkeypatched env var is visible immediately — no cache bust needed.
+
+
+@pytest.mark.parametrize(
+    ("raw_bytes", "expected_encoding", "expected_char"),
+    [
+        # utf-8-sig wins: BOM-prefixed bytes with invalid preferred codec.
+        # utf-8-sig is first in the chain; Python's codec strips the BOM.
+        (
+            "é".encode("utf-8-sig"),
+            "utf-8-sig",
+            "é",
+        ),
+        # cp1252 wins: 0x80 is a utf-8 continuation byte → UnicodeDecodeError
+        # in utf-8-sig and utf-8; cp1252 maps 0x80 to U+20AC (€).
+        (
+            b"\x80",
+            "cp1252",
+            "€",
+        ),
+        # iso-8859-1 wins: 0x81 is undefined in cp1252 (Python raises on
+        # decode); utf-8-sig and utf-8 also reject it.  iso-8859-1 maps it
+        # to U+0081 (C1 control character).
+        (
+            b"\x81",
+            "iso-8859-1",
+            "\x81",
+        ),
+    ],
+)
+def test_csv_provider_decode_bytes_follows_fallback_chain(
+    monkeypatch: pytest.MonkeyPatch,
+    raw_bytes: bytes,
+    expected_encoding: str,
+    expected_char: str,
+) -> None:
+    """_decode_bytes must probe encodings in CSV_ENCODING_FALLBACK_CHAIN order.
+
+    Each parametrised case supplies bytes that are uniquely decodable by
+    exactly one codec in the fallback chain.  The preferred codec is set to
+    an invalid name so the chain drives selection from position 0.  We assert
+    that the winning codec matches the expected fallback position and that the
+    decoded text round-trips correctly.  No mocks or stubs — _decode_bytes is
+    exercised directly on a real CsvProvider instance.
+    """
+    _with_invalid_preferred(monkeypatch)
+    provider = CsvProvider()
+    text, winning_encoding = provider._decode_bytes(raw_bytes)
+    assert winning_encoding == expected_encoding, (
+        f"Expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
+        f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
+    )
+    assert expected_char in text, (
+        f"Decoded text {text!r} does not contain expected character {expected_char!r}"
+    )
+
+
+def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When the preferred codec is valid it must win before the fallback chain is tried.
+
+    Encodes ASCII-only content as utf-8 (no BOM) then sets the preferred codec
+    to 'utf-8' explicitly.  The decode should return 'utf-8' as the winning
+    encoding, not 'utf-8-sig' (the first chain member), because the preferred
+    is prepended ahead of the chain and succeeds on its first attempt.
+    """
+    monkeypatch.setenv("FINANCIAL_DEFAULT_CSV_ENCODING", "utf-8")
+    provider = CsvProvider()
+    raw = "hello".encode("utf-8")
+    text, winning_encoding = provider._decode_bytes(raw)
+    assert winning_encoding == "utf-8"
+    assert text == "hello"

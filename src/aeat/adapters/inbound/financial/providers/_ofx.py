@@ -75,6 +75,10 @@ class OfxProvider(FinancialProvider):
     name = "OFX provider"
     supported_extensions = frozenset({".ofx", ".qfx"})
     source_format = SourceFormat.OFX
+    # Corpus fixture is a synthetic OFX generated from the standard OFX 1.x spec;
+    # the format is self-describing so structural fidelity is confirmed by parsing.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that the OFX file can be parsed and carries at least one transaction."""

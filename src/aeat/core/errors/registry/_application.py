@@ -147,6 +147,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._errors.AuthDiagnosticPhoneStateError",
+        ErrorCode(
+            code="REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_diagnostic_phone_state",
+            default_suggestion="aeat app auth diagnostics --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.config_reset.ConfigResetUnconfirmedError",
         ErrorCode(
             code="REFUSED_CONFIG_RESET_UNCONFIRMED",
@@ -164,6 +175,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_topic_not_found",
             default_suggestion="aeat app registry citations",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.aggregation._errors.AggregationConfigError",
+        ErrorCode(
+            code="ERROR_AGGREGATION_CONFIG",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aggregation_config",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
@@ -389,6 +411,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.workflow._errors.UnhandledWorkflowError",
+        ErrorCode(
+            code="INTERNAL_WORKFLOW_UNHANDLED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_workflow_unhandled",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",
@@ -570,6 +603,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_WIZARD_COMPILE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_wizard_compile",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.wizard._errors.WizardAnswerTypeError",
+        ErrorCode(
+            code="REFUSED_WIZARD_ANSWER_TYPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_answer_type",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -845,6 +889,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._errors.ObservationKeyError",
+        ErrorCode(
+            code="ERROR_OBSERVATION_KEY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_observation_key",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._errors.IvaWalletReconciliationError",
+        ErrorCode(
+            code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_wallet_reconciliation_invariant",
+            default_suggestion="aeat app live iva-wallet pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
@@ -917,6 +983,39 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTEGRITY,
             message_key="errors.storage.stored_data_validation_boundary",
             default_suggestion="aeat app modelo work calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application._errors.DiagnosticModelError",
+        ErrorCode(
+            code="REFUSED_DIAGNOSTIC_MODEL_INVARIANT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_diagnostic_model_invariant",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.export._errors.ExportFormatError",
+        ErrorCode(
+            code="REFUSED_EXPORT_FORMAT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_export_format",
+            default_suggestion="aeat app modelo calc export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.export._errors.ExportFieldError",
+        ErrorCode(
+            code="REFUSED_EXPORT_FIELD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_export_field",
+            default_suggestion="aeat app modelo calc export --help",
             retryable=False,
             runbook_id=None,
         ),

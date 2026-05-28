@@ -13,13 +13,14 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Literal, NoReturn, cast
 
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
-from ...core.errors import BaseSeverity, SiteHealthError
+from ...core.errors import BaseSeverity, SiteHealthError, build_error_envelope
 from ...core.logging import get_logger
+from ...core.time import _now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,
@@ -31,7 +32,7 @@ from ...domain.deadlines import (
 from ...domain.filing import ModeloBuilderError
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ._errors import WorkflowAbortSignalError, WorkflowComponentError, WorkflowError
+from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError
 from ._models import (
     DeclaracionPointer,
     SiteHealthAlert,
@@ -57,6 +58,7 @@ from ._protocols import (
 )
 
 _CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
+
 
 def _period_to_year(period: str) -> int | None:
     """Extract the leading 4-digit calendar year from a period string.
@@ -94,11 +96,6 @@ def _registry_period_token(period: str) -> tuple[int, str]:
 
 
 _logger = get_logger(__name__)
-
-
-def _utcnow() -> datetime:
-    """Return current UTC time. Factored for test determinism hooks."""
-    return datetime.now(tz=UTC)
 
 
 def _classify_cert_expiry(
@@ -283,8 +280,7 @@ class WorkflowEngine:
             stripped = resumed_from.strip()
             if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
                 raise ValueError(
-                    "resumed_from must be a 16-character lowercase hex run id; "
-                    f"got {resumed_from!r}",
+                    f"resumed_from must be a 16-character lowercase hex run id; got {resumed_from!r}",
                 )
             resumed_from = stripped
         return await self._drive(
@@ -488,9 +484,7 @@ class WorkflowEngine:
         """
         started = _utcnow()
         try:
-            schedule: Schedule = compute_obligation_schedule(
-                self._deadline_engine, profile, today=today
-            )
+            schedule: Schedule = compute_obligation_schedule(self._deadline_engine, profile, today=today)
         except SiteHealthError as exc:
             self._record_site_unavailable(
                 stage=WorkflowStage.COMPUTING_DEADLINES,
@@ -972,10 +966,7 @@ class WorkflowEngine:
                     summary=errors_summary,
                     details={
                         "error_count": str(len(error_findings)),
-                        "next_action": (
-                            "Run: aeat app modelo work verification-report list"
-                            " <calculation_revision_id>"
-                        ),
+                        "next_action": ("Run: aeat app modelo work verification-report list <calculation_revision_id>"),
                     },
                 )
             )
@@ -1193,7 +1184,12 @@ class WorkflowEngine:
         """Record a failed step and raise ``WorkflowAbortSignalError(UNHANDLED_EXCEPTION)``.
 
         Centralises the wrap-and-record ritual so every stage method
-        surfaces an unexpected exception identically.
+        surfaces an unexpected exception identically.  A synthetic
+        :class:`~aeat.application.workflow._errors.UnhandledWorkflowError`
+        is constructed and passed to :func:`~aeat.core.errors.build_error_envelope`
+        so the unhandled path produces a structured
+        :class:`~aeat.core.errors.ErrorEnvelope` with a stable
+        ``INTERNAL_WORKFLOW_UNHANDLED`` code for downstream telemetry.
         """
         _logger.warning(
             "workflow stage raised an unhandled exception stage=%s",
@@ -1201,6 +1197,16 @@ class WorkflowEngine:
             exc_info=(type(exc), exc, exc.__traceback__),
         )
         unhandled_summary = _summary_text(f"Unhandled {type(exc).__name__} at stage={stage.value}: {exc}")
+        synthetic = UnhandledWorkflowError(
+            f"{stage.value} raised {type(exc).__name__}: {exc}",
+            context={
+                "stage": stage.value,
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        synthetic.__cause__ = exc
+        build_error_envelope(synthetic)
         steps.append(
             WorkflowStep(
                 stage=stage,
@@ -1214,12 +1220,10 @@ class WorkflowEngine:
                 },
             )
         )
-        wrapped = WorkflowComponentError(f"{stage.value} component raised {type(exc).__name__}: {exc}")
-        wrapped.__cause__ = exc
         raise WorkflowAbortSignalError(
             reason=WorkflowAbortReason.UNHANDLED_EXCEPTION,
             summary=unhandled_summary,
-        ) from wrapped
+        ) from synthetic
 
     def _record_site_unavailable(
         self,

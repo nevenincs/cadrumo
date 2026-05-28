@@ -24,15 +24,16 @@ Structurally read-only:
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
-from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.time import _now
+from .._storage_paths import storage_path
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -70,16 +71,6 @@ class VerifyObservation(BaseModel):
     persisted_at: datetime
 
 
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
-
-
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    root = settings.aeat_audit_dir / "live" / "verify"
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.jsonl"
-
-
 def _derive_observation_id(
     *,
     surface: VerifySurface,
@@ -92,7 +83,7 @@ def _derive_observation_id(
 
 
 def _load(settings: Settings, bucket_id: str) -> list[VerifyObservation]:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_audit_dir / "live" / "verify", bucket_id)
     if not path.exists():
         return []
     return [
@@ -103,7 +94,7 @@ def _load(settings: Settings, bucket_id: str) -> list[VerifyObservation]:
 
 
 def _save(settings: Settings, bucket_id: str, observations: list[VerifyObservation]) -> None:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_audit_dir / "live" / "verify", bucket_id)
     payload = "\n".join(o.model_dump_json() for o in observations)
     if payload:
         payload += "\n"

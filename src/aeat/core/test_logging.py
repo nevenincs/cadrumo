@@ -174,6 +174,40 @@ def test_secret_scrubbing_handles_colon_assignments() -> None:
     assert "token: <redacted>" in rendered
 
 
+def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> None:
+    """NIF, URL, and bearer-token shapes should not need local log key hints."""
+
+    logger, root_logger, handler, stream = _capture_logger_output()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+    try:
+        logger.info(
+            "taxpayer=%s callback=%s session=%s",
+            "12345678Z",
+            "https://example.test/private/path?token=secret",
+            jwt,
+            extra={
+                "cookie": "<redacted>",
+                "bearer_header": "<redacted>",
+                "region": "es",
+            },
+        )
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    rendered = stream.getvalue()
+    assert "12345678Z" not in rendered
+    assert "https://example.test/private/path?token=secret" not in rendered
+    assert jwt not in rendered
+    assert "taxpayer=sha256:1c9f9632" in rendered
+    assert "callback=https://example.test" in rendered
+    assert "private/path" not in rendered
+    assert "token=secret" not in rendered
+    assert "session=token=<redacted>" in rendered
+
+
 def test_secret_scrubbing_preserves_exc_info_for_downstream_handlers() -> None:
     """Scrubbed tracebacks should not destroy the original exception tuple."""
 

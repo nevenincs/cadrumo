@@ -13,9 +13,11 @@ from ...adapters.outbound.aeat.sede import (
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.resources import resources
 from ..aggregation import CalculationSourceContext
 from . import _iva_wallet_reconciliation as wallet_reconciliation
+from ._errors import IvaWalletReconciliationError
 from ._iva_wallet_reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationOverride,
@@ -289,4 +291,41 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
             wallet=wallet,
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
+        )
+
+
+# ---------------------------------------------------------------------------
+# S42 — IvaWalletReconciliationError registry and raise-site coverage
+# ---------------------------------------------------------------------------
+
+
+def test_iva_wallet_reconciliation_error_is_registered_in_error_registry() -> None:
+    assert "REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT" in ERROR_REGISTRY
+
+
+def test_iva_wallet_reconciliation_error_round_trips_through_build_error_envelope() -> None:
+    exc = IvaWalletReconciliationError("max_wallet_age_days must be non-negative")
+    envelope = build_error_envelope(exc, trace_id=None)
+    assert envelope.code == "REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT"
+    assert envelope.retryable is False
+    assert envelope.suggestion == "aeat app live iva-wallet pull"
+
+
+def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -> None:
+    """Negative max_wallet_age_days violates the staleness-predicate precondition.
+
+    The staleness helper is exercised by supplying a fresh wallet with a
+    negative age limit so the guard is reached.  The expected raise is the
+    typed CoreError subclass, not a bare ValueError.
+    """
+
+    with pytest.raises(IvaWalletReconciliationError, match="non-negative"):
+        reconcile_iva_compensation_wallet(
+            taxpayer_nif=_TAXPAYER_REF,
+            target_year=2026,
+            target_period="2T",
+            wallet=_wallet(Decimal("1200")),
+            local_recurrence_amount=Decimal("1200"),
+            decided_at=_NOW,
+            max_wallet_age_days=-1,
         )

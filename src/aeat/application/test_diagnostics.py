@@ -732,3 +732,101 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
     # test above against a constructed report.
     assert check.name == "registry.integrity"
     assert check.audience in {"operator", "internal"}
+
+
+# ---------------------------------------------------------------------------
+# S46: DiagnosticModelError registration and invariant-replacement tests
+# ---------------------------------------------------------------------------
+
+
+def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
+    """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
+
+    from aeat.core.errors import ERROR_REGISTRY, get_registered_error_code
+
+    from ._errors import DiagnosticModelError
+
+    code = get_registered_error_code(DiagnosticModelError)
+    assert code.code in ERROR_REGISTRY
+    assert ERROR_REGISTRY[code.code] == code
+
+
+def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
+
+    from aeat.core.errors import build_error_envelope
+
+    from ._errors import DiagnosticModelError
+
+    err = DiagnosticModelError("invariant violated")
+    envelope = build_error_envelope(err)
+    assert envelope.code == "REFUSED_DIAGNOSTIC_MODEL_INVARIANT"
+    assert envelope.message
+
+
+def _assert_validation_error_caused_by_diagnostic_model_error(exc_info: pytest.ExceptionInfo, match: str) -> None:
+    """Assert a pydantic ValidationError wraps a DiagnosticModelError with the given message."""
+
+    from ._errors import DiagnosticModelError
+
+    val_err = exc_info.value
+    causes = [e["ctx"]["error"] for e in val_err.errors() if "error" in e.get("ctx", {})]
+    matching = [c for c in causes if isinstance(c, DiagnosticModelError) and match in str(c)]
+    assert matching, (
+        f"Expected a DiagnosticModelError cause matching {match!r}; "
+        f"got causes: {causes!r}"
+    )
+
+
+def test_diagnostic_check_both_recovery_fields_raises_diagnostic_model_error() -> None:
+    """Setting both next_action and dead_end raises a ValidationError whose cause is DiagnosticModelError."""
+
+    with pytest.raises(ValidationError) as exc_info:
+        DiagnosticCheck(
+            name="x",
+            status="fail",
+            summary="y",
+            next_action="aeat config repair",
+            dead_end="terminal",
+        )
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "at most one of")
+
+
+def test_diagnostic_check_fail_without_recovery_raises_diagnostic_model_error() -> None:
+    """A fail row with no recovery field raises a ValidationError whose cause is DiagnosticModelError."""
+
+    with pytest.raises(ValidationError) as exc_info:
+        DiagnosticCheck(name="x", status="fail", summary="y")
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must populate one of")
+
+
+def test_diagnostic_check_warn_without_recovery_raises_diagnostic_model_error() -> None:
+    """A warn row with no recovery field raises a ValidationError whose cause is DiagnosticModelError."""
+
+    with pytest.raises(ValidationError) as exc_info:
+        DiagnosticCheck(name="x", status="warn", summary="y")
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must populate one of")
+
+
+def test_diagnostic_check_ok_with_next_action_raises_diagnostic_model_error() -> None:
+    """An ok row carrying next_action raises a ValidationError whose cause is DiagnosticModelError."""
+
+    with pytest.raises(ValidationError) as exc_info:
+        DiagnosticCheck(name="x", status="ok", summary="y", next_action="aeat config repair")
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must not carry")
+
+
+def test_diagnostic_check_ok_with_dead_end_raises_diagnostic_model_error() -> None:
+    """An ok row carrying dead_end raises a ValidationError whose cause is DiagnosticModelError."""
+
+    with pytest.raises(ValidationError) as exc_info:
+        DiagnosticCheck(name="x", status="ok", summary="y", dead_end="no route")
+    _assert_validation_error_caused_by_diagnostic_model_error(exc_info, "must not carry")
+
+
+def test_diagnostic_model_error_is_subclass_of_value_error() -> None:
+    """DiagnosticModelError is a ValueError subclass for legacy catch compatibility."""
+
+    from ._errors import DiagnosticModelError
+
+    assert issubclass(DiagnosticModelError, ValueError)

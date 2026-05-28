@@ -377,7 +377,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
     assert result_sl.values["DP200014:00558"] == Decimal("23"), (
         "SL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
     )
-    # Cuota integra: 1.000.000 base × 23 % = 230.000.
+    # Cuota integra: 1.000.000 base x 23 % = 230.000.
     assert result_sal.values["DP200014:00562"] == Decimal("230000.00"), (
         "SAL cuota integra at ERD 23 % on 1M base = 230.000"
     )

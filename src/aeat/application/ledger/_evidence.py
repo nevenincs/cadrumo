@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -26,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.time import _now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -34,6 +35,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({".pdf"})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
@@ -118,16 +120,8 @@ class PurchaseInvoiceEvidenceResult(BaseModel):
     bucket_event_ids: tuple[str, ...] = ()
 
 
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
-
-
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    return settings.aeat_purchase_invoice_evidence_dir / f"{bucket_id}.jsonl"
-
-
 def _load(settings: Settings, bucket_id: str) -> list[PurchaseInvoiceEvidence]:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_purchase_invoice_evidence_dir, bucket_id)
     if not path.is_file():
         return []
     records: list[PurchaseInvoiceEvidence] = []
@@ -140,8 +134,7 @@ def _load(settings: Settings, bucket_id: str) -> list[PurchaseInvoiceEvidence]:
 
 
 def _save(settings: Settings, bucket_id: str, records: list[PurchaseInvoiceEvidence]) -> None:
-    path = _storage_path(settings, bucket_id)
-    path.parent.mkdir(parents=True, exist_ok=True)
+    path = storage_path(settings.aeat_purchase_invoice_evidence_dir, bucket_id)
     body = "\n".join(record.model_dump_json() for record in records)
     if body:
         body += "\n"

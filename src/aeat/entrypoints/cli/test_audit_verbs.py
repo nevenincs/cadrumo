@@ -22,7 +22,7 @@ from aeat.application.evidence import EvidenceBundleService
 from aeat.application.user_profile._orchestration import profile_create_storage_span
 from aeat.application.user_profile._testing import register_minimal_profile
 from aeat.application.workflow._persistence import workflow_state_repository
-from aeat.core.config import Settings, override_settings
+from aeat.core.config import override_settings
 from aeat.core.i18n import tr
 from aeat.entrypoints.cli import app
 from aeat.tests.secure_sql import isolated_profile_storage_root
@@ -55,7 +55,7 @@ def _seed_bundle() -> str:
     state = workflow_state_repository().load()
     bucket_id = state.active_profile_bucket_id()
     assert bucket_id is not None
-    bundle = EvidenceBundleService(settings=Settings()).build(
+    bundle = EvidenceBundleService().build(
         bucket_id=bucket_id,
         work_unit_id="wu-001",
         record_payloads={

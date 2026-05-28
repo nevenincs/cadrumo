@@ -84,6 +84,17 @@ class ProfileLockedError(WorkflowError):
     """
 
 
+class UnhandledWorkflowError(WorkflowComponentError):
+    """Raised when a workflow stage propagates an exception with no typed handler.
+
+    Wraps every bare ``except Exception`` catch inside
+    :meth:`aeat.application.workflow._engine.WorkflowEngine._record_unhandled`
+    so the unhandled path produces a structured :class:`ErrorEnvelope` with
+    a stable ``INTERNAL_WORKFLOW_UNHANDLED`` code rather than an opaque
+    ``UNHANDLED_EXCEPTION`` abort reason alone.
+    """
+
+
 class WorkflowAbortSignalError(WorkflowError):  # internal control-flow signal, not a public error type
     """Internal control-flow signal raised by stage methods to bail out.
 

@@ -16,6 +16,7 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
+from ....core.external_constants import DEFAULT_CURRENCY
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, ModeloRevision
 
@@ -2318,7 +2319,7 @@ class Modelo720RowObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     asset_class_code: str = Field(min_length=1, max_length=4)
     country_code: str = Field(min_length=2, max_length=2)
-    currency_code: str = Field(default="EUR", min_length=3, max_length=3)
+    currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     asset_identifier: str = Field(default="", max_length=128)
     acquisition_date: date
     valuation_amount: Decimal

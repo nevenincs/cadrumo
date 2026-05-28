@@ -28,10 +28,11 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping
 from json import JSONDecodeError, loads
-from typing import TYPE_CHECKING, Any, Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._remote_state_guard import (
     RemoteOperation,
@@ -44,6 +45,8 @@ from ._schedules import profile_condition_matches
 if TYPE_CHECKING:
     from ._schema import LiveCrossReferenceDecision, ModeloDefinition
 
+_log = get_logger(__name__)
+
 __all__ = [
     "BaseCheckerOracle",
     "CrossReferenceApplicability",
@@ -55,6 +58,7 @@ __all__ = [
     "ParityFieldComparison",
     "ParityResult",
     "ParityVerdict",
+    "ReplayPayload",
     "audit_oracle_bindings",
     "audit_registry_oracle_bindings",
     "build_planned_operations",
@@ -590,13 +594,30 @@ def collect_orphan_oracle_ids(
     return tuple(sorted(set(catalogue.ids()) - bound))
 
 
-def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> dict[str, Any]:
-    """Decode a UTF-8 JSON replay payload to a top-level JSON object.
+class ReplayPayload(_ParityModel):
+    """Typed envelope for a decoded replay JSON payload.
 
-    Shared by replay drivers: enforces UTF-8 encoding, valid JSON, and a
-    top-level object (dict) shape. ``surface_label`` is interpolated into
-    the error messages so callers can identify their oracle in failures
-    (e.g. ``"AEAT NIF-IVA replay"``).
+    Every replay driver shares the same top-level JSON contract: an
+    ``observed`` mapping of string keys to string values (the surface's
+    response data) and an optional ``raw_evidence_locator`` that links
+    back to the raw HTTP response artifact for audit trails.
+
+    ``model_config`` inherits ``strict=True, frozen=True, extra="forbid"``
+    from :class:`_ParityModel`, so unknown keys are rejected at validation
+    time and the field types are not coerced.
+    """
+
+    observed: Mapping[str, str]
+    raw_evidence_locator: str | None = Field(default=None, max_length=512)
+
+
+def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> ReplayPayload:
+    """Decode a UTF-8 JSON replay payload into a typed :class:`ReplayPayload`.
+
+    Shared by replay drivers: enforces UTF-8 encoding, valid JSON, a
+    top-level object (dict) shape, and the :class:`ReplayPayload` schema.
+    ``surface_label`` is interpolated into the error messages so callers
+    can identify their oracle in failures (e.g. ``"AEAT NIF-IVA replay"``).
     """
 
     try:
@@ -605,7 +626,8 @@ def decode_replay_json_payload(raw: bytes, *, surface_label: str) -> dict[str, A
         raise RegistryValidationError(f"{surface_label} payload must be UTF-8 JSON") from exc
     if not isinstance(document, dict):
         raise RegistryValidationError(f"{surface_label} payload must be a JSON object")
-    return document
+    _log.debug("decoding replay payload for %s", surface_label)
+    return ReplayPayload.model_validate(document)
 
 
 class _CheckerDriver[CheckerObservation](Protocol):

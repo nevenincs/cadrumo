@@ -47,7 +47,7 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
     assert snapshot.revision.id == "2019-y-siguientes"
     assert snapshot.revision.period_selector.year_from == 2019
     assert {entry.target for entry in result.entries} == {
-        "04", "07", "09", "11", "12", "13", "14", "17", "19",
+        "03", "04", "07", "09", "11", "12", "13", "14", "17", "19",
         "saldo-negativo-fin-periodo",
     }
     assert "rd-439-2007:art-110" in snapshot.legal

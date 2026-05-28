@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -23,11 +24,16 @@ from . import (
 )
 from ._loader import load_registry_tree
 from ._schema import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+    ConvenioRateRow,
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
+    KeyedBracketEntry,
     ModeloDefinition,
     ModeloRevision,
+    ParameterDefinition,
     SupportRemovalDecisionDefinition,
     VerificationPredicateDefinition,
 )
@@ -869,6 +875,96 @@ def test_extraction_target_numeric_casilla_rejects_label_pattern() -> None:
         )
 
 
+def test_casilla_accepts_continuidad_id_roundtrip() -> None:
+    casilla = CasillaDefinition.model_validate(
+        {
+            "id": "0700",
+            "number": "0700",
+            "label": "Base liquidable general",
+            "section": ("base",),
+            "data_type": "money",
+            "continuidad_id": "renta.base-liquidacion.general",
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
+
+    restored = CasillaDefinition.model_validate(casilla.model_dump())
+
+    assert restored == casilla
+    assert restored.continuidad_id == "renta.base-liquidacion.general"
+
+
+def test_casilla_continuidad_id_uses_registry_id_shape() -> None:
+    with pytest.raises(ValidationError, match="continuidad_id"):
+        CasillaDefinition.model_validate(
+            {
+                "id": "0700",
+                "number": "0700",
+                "label": "Base liquidable general",
+                "section": ("base",),
+                "continuidad_id": "Renta Base",
+                "legal_refs": ("ley-35-2006:art-48",),
+                "source_refs": ("aeat-manual",),
+            }
+        )
+
+
+def test_casilla_continuidad_evolution_rejects_same_revision_pair() -> None:
+    with pytest.raises(ValidationError, match="must span two different revisions"):
+        CasillaContinuidadEvolutionDefinition(
+            id="renta-2024-self-evolution",
+            continuidad_id="renta.base-liquidacion.general",
+            from_revision="2024",
+            to_revision="2024",
+            evolution_kind="label_evolved",
+            legal_refs=("ley-35-2006:art-48",),
+            source_refs=("aeat-manual",),
+        )
+
+
+def test_modelo_revision_defaults_to_advisory_continuidad_validation() -> None:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": "2024",
+            "valid_from": date(2024, 1, 1),
+            "period_selector": {"years": (2024,), "periods": ("0A",)},
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+        }
+    )
+
+    assert revision.continuidad_validation == "advisory"
+    assert revision.casilla_continuidad_evolutions == ()
+
+
+def test_modelo_revision_accepts_strict_continuidad_validation_with_evolution() -> None:
+    revision = ModeloRevision.model_validate(
+        {
+            "id": "2025",
+            "valid_from": date(2025, 1, 1),
+            "period_selector": {"years": (2025,), "periods": ("0A",)},
+            "legal_refs": ("ley-35-2006:art-48",),
+            "source_refs": ("aeat-manual",),
+            "continuidad_validation": "strict",
+            "casilla_continuidad_evolutions": (
+                {
+                    "id": "renta-2024-2025-base-general-label",
+                    "continuidad_id": "renta.base-liquidacion.general",
+                    "from_revision": "2024",
+                    "to_revision": "2025",
+                    "evolution_kind": "label_evolved",
+                    "legal_refs": ("ley-35-2006:art-48",),
+                    "source_refs": ("aeat-manual",),
+                },
+            ),
+        }
+    )
+
+    assert revision.continuidad_validation == "strict"
+    assert revision.casilla_continuidad_evolutions[0].continuidad_id == "renta.base-liquidacion.general"
+
+
 def test_extraction_profile_target_casillas_uniqueness_rejects_duplicate_casilla_id() -> None:
     """target_casillas with duplicate casilla_id values raises ValidationError."""
     from pydantic import ValidationError as PydanticValidationError
@@ -1273,3 +1369,212 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
     with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
         type(window).model_validate(payload)
+
+
+# ---------------------------------------------------------------------------
+# keyed_bracket_table parameter shape (W09.P41.S388)
+#
+# Sister shape to bracket_table for parameters that dispatch on a
+# categorical enum key rather than a numeric interval. First consumer:
+# M210 IRNR m210-tipo-gravamen-2025 (tipo_renta → rate).
+# ---------------------------------------------------------------------------
+
+
+def _keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
+    return KeyedBracketEntry(
+        key=key,
+        value=Decimal(value),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+
+
+def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
+    """A keyed_bracket_table with two distinct keys parses cleanly."""
+    parameter = ParameterDefinition(
+        id="test-keyed-rate-table",
+        data_type="keyed_bracket_table",
+        unit="percent",
+        keyed_brackets=(
+            _keyed_bracket("general", "0.24"),
+            _keyed_bracket("ue_residente", "0.19"),
+        ),
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+    assert parameter.data_type == "keyed_bracket_table"
+    assert len(parameter.keyed_brackets) == 2
+    assert parameter.keyed_brackets[0].key == "general"
+    assert parameter.keyed_brackets[0].value == Decimal("0.24")
+    assert parameter.keyed_brackets[1].key == "ue_residente"
+    assert parameter.keyed_brackets[1].value == Decimal("0.19")
+
+
+def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
+    """A keyed_bracket_table with two rows sharing (key, valid_from) is rejected.
+
+    Anti-tautology: the duplicate fixture deliberately reuses the
+    SAME ``key`` AND the SAME ``valid_from`` across two rows with
+    different values. If the validator silently dedup'd or kept the
+    first row, the test would pass without surfacing the contract
+    violation. The expected outcome is RegistryValidationError —
+    the (key, valid_from) pair must be unique because the runtime
+    lookup is exact-match and a duplicate would make the result
+    non-deterministic.
+    """
+    # Pydantic wraps the inner RegistryValidationError raised from
+    # @model_validator(mode="after") into its ValidationError because
+    # RegistryValidationError does not extend ValueError. The substring
+    # match still asserts the inner message text reaches the surface.
+    with pytest.raises(ValidationError, match="duplicate"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-duplicate",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            keyed_brackets=(
+                _keyed_bracket("general", "0.24"),
+                _keyed_bracket("general", "0.30"),
+            ),
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None:
+    """A keyed_bracket_table parameter cannot also carry numeric brackets.
+
+    The two shapes are mutually exclusive by design — a parameter
+    is either numeric-interval (``bracket_table``) or enum-keyed
+    (``keyed_bracket_table``), never both. Mixing produces an
+    ambiguous lookup contract; the validator rejects it at
+    construction time.
+    """
+    from ._schema import BracketEntry as _BracketEntry
+
+    numeric_bracket = _BracketEntry(
+        lower_bound=Decimal("0"),
+        upper_bound=Decimal("12450"),
+        fixed_addition=Decimal("0"),
+        marginal_rate=Decimal("0.19"),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+    with pytest.raises(ValidationError, match="cannot mix"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-mixed",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            brackets=(numeric_bracket,),
+            keyed_brackets=(_keyed_bracket("general", "0.24"),),
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+# ---------------------------------------------------------------------------
+# convenio_rate_table parameter shape (W09.P41.S389a)
+#
+# Sister shape to keyed_bracket_table for IRNR Convenio doble imposición
+# overrides keyed on (country_code, tipo_renta). The rate field accepts
+# the NOT_YET_AUTHORED sentinel so partially-authored treaty rosters
+# can land at construction time and surface BLOCKING findings at
+# lookup time. First consumer: M210 IRNR m210-convenio-rates (S389b).
+# ---------------------------------------------------------------------------
+
+
+def _convenio_row(
+    country_code: str,
+    tipo_renta: str,
+    rate: str,
+    *,
+    legal_ref_anchor: str = "convenio-art-7",
+    notes: str | None = None,
+) -> ConvenioRateRow:
+    return ConvenioRateRow(
+        country_code=country_code,
+        tipo_renta=tipo_renta,
+        rate=rate,
+        legal_ref_anchor=legal_ref_anchor,
+        notes=notes,
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+
+
+def test_convenio_rate_table_parses_with_mixed_decimal_and_not_yet_authored() -> None:
+    """A convenio_rate_table accepts both parseable Decimal rates and NOT_YET_AUTHORED.
+
+    Anti-tautology: the fixture mixes a concrete 0.10 row with a
+    NOT_YET_AUTHORED row so the assertion proves both pathways
+    persist their declared ``rate`` field literally — i.e. the
+    sentinel is not coerced to None or to a Decimal, and the
+    concrete Decimal row is not coerced to the sentinel.
+    """
+    parameter = ParameterDefinition(
+        id="test-convenio-rates",
+        data_type="convenio_rate_table",
+        unit="ratio",
+        convenio_rates=(
+            _convenio_row("MA", "interest", "0.10", legal_ref_anchor="convenio-es-ma-art-14"),
+            _convenio_row("AR", "pension", "NOT_YET_AUTHORED", legal_ref_anchor="convenio-es-ar-pending"),
+        ),
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+    assert parameter.data_type == "convenio_rate_table"
+    assert len(parameter.convenio_rates) == 2
+    assert parameter.convenio_rates[0].country_code == "MA"
+    assert parameter.convenio_rates[0].tipo_renta == "interest"
+    assert parameter.convenio_rates[0].rate == "0.10"
+    assert parameter.convenio_rates[1].country_code == "AR"
+    assert parameter.convenio_rates[1].tipo_renta == "pension"
+    assert parameter.convenio_rates[1].rate == "NOT_YET_AUTHORED"
+
+
+def test_convenio_rate_table_rejects_duplicate_triple() -> None:
+    """A convenio_rate_table with two rows sharing (country, tipo_renta, valid_from) is rejected.
+
+    Anti-tautology: the duplicate fixture deliberately reuses the same
+    ``(country_code, tipo_renta, valid_from)`` triple across two rows
+    with DIFFERENT ``rate`` values. If the validator silently dedup'd
+    or kept the first row, the test would pass without surfacing the
+    contract violation. The expected outcome is RegistryValidationError
+    wrapped in ValidationError because pydantic catches it from the
+    after-validator.
+    """
+    with pytest.raises(ValidationError, match="duplicate"):
+        ParameterDefinition(
+            id="test-convenio-rates-duplicate",
+            data_type="convenio_rate_table",
+            unit="ratio",
+            convenio_rates=(
+                _convenio_row("MA", "interest", "0.10"),
+                _convenio_row("MA", "interest", "0.15"),
+            ),
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+def test_convenio_rate_table_rejects_malformed_rate_string() -> None:
+    """A ConvenioRateRow with a rate field that is neither a Decimal nor the sentinel is rejected.
+
+    Anti-tautology: the fixture uses a clearly-malformed rate
+    (``"not-a-rate"``) that cannot parse as Decimal AND is not the
+    NOT_YET_AUTHORED literal. If the row-level validator silently
+    accepted any string the test would pass without surfacing the
+    parse failure. The expected outcome is ValidationError wrapping
+    the row's RegistryValidationError raised from
+    ``_validate_convenio_rate_row``.
+    """
+    with pytest.raises(ValidationError, match="parseable Decimal"):
+        ConvenioRateRow(
+            country_code="MA",
+            tipo_renta="interest",
+            rate="not-a-rate",
+            legal_ref_anchor="convenio-es-ma-art-14",
+            valid_from=date(2025, 1, 1),
+            valid_to=date(2025, 12, 31),
+        )

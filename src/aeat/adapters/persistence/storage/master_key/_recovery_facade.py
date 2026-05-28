@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ..bucket._errors import RecoveryVerificationError
 from ..crypto._crypto import EncryptedBlob
-from ..errors import DecryptionError
+from ..errors import DecryptionError, StorageValidationError
 from ._bucket_session import BucketSession
 from ._recovery import (
     RecoveryKey,
@@ -117,7 +117,7 @@ def unwrap_recovery_envelope(*, envelope: RecoveryRecord, mnemonic: str) -> byte
 
     try:
         entropy = decode_mnemonic(mnemonic)
-    except Exception as exc:  # ValueError / StorageValidationError surface here
+    except StorageValidationError as exc:
         raise RecoveryVerificationError(str(exc)) from exc
 
     blob = _blob_from_envelope(envelope)

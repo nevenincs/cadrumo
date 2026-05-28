@@ -64,7 +64,7 @@ from ._adapter_utils import (
     registry_failure_message,
 )
 from ._browser_stage import build_playwright_stage_runner
-from ._errors import SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
+from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError, SedeParseError
 
 logger = get_logger(__name__)
 _EXTERNAL = Settings.external_constants()
@@ -276,7 +276,10 @@ async def collect_groi_observations(
 
         _raw_page = await context.new_page()
         if not isinstance(_raw_page, _Page):
-            raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+            raise BrowserAdapterTypeError(
+                f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}",
+                context={"actual_type": type(_raw_page).__name__},
+            )
         page: _Page = _raw_page
         await _playwright_stage(
             page.set_viewport_size(_DEFAULT_VIEWPORT),
@@ -302,7 +305,7 @@ async def collect_groi_observations(
             observations.append(GroiNifVerdict(nif=nif, verdict=verdict, raw_evidence_locator=page.url))
 
         return GroiResult(observations=tuple(observations))
-    except (SedeError, SiteHealthError, BrowserError):
+    except (BrowserAdapterTypeError, SedeError, SiteHealthError, BrowserError):
         raise
     except Exception as exc:
         logger.error(

@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.config import Settings
 
@@ -227,3 +229,53 @@ def test_overall_verdict_mismatch_when_any_field_mismatched_even_with_unverifiab
     assert _overall_verdict((_MATCH_FIELD, _MISMATCH_FIELD)) == "mismatch"
     assert _overall_verdict((_UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
     assert _overall_verdict((_MATCH_FIELD, _UNVERIFIABLE_FIELD, _MISMATCH_FIELD)) == "mismatch"
+
+
+# ---------------------------------------------------------------------------
+# S126 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# ---------------------------------------------------------------------------
+
+
+def test_replay_payload_roundtrip_via_renta_web_open_driver() -> None:
+    """ReplayPayload.model_validate accepts the canonical JSON shape and the
+    Renta WEB Open replay driver round-trips the same envelope faithfully."""
+
+    from ._live_parity import ReplayPayload
+    from ._renta_web_open_oracle import RentaWebOpenReplayDriver
+
+    raw = json.dumps(
+        {
+            "observed": {"0180": "12345.67", "0224": "0.00"},
+            "raw_evidence_locator": "corpus/aeat_official/renta_web_open/sample.json",
+        }
+    ).encode()
+
+    # Direct schema validation — strict, frozen, extra=forbid.
+    payload = ReplayPayload.model_validate(json.loads(raw))
+    assert payload.observed == {"0180": "12345.67", "0224": "0.00"}
+    assert payload.raw_evidence_locator == "corpus/aeat_official/renta_web_open/sample.json"
+
+    # Drive through the production reader path.
+    driver = RentaWebOpenReplayDriver()
+    observation = driver.collect_observation(raw, expected={})
+
+    assert observation.values == {"0180": "12345.67", "0224": "0.00"}
+    assert observation.raw_evidence_locator == payload.raw_evidence_locator
+
+
+def test_replay_payload_strict_rejects_extra_fields_renta_web_open() -> None:
+    """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError, match="Extra"):
+        ReplayPayload.model_validate({"observed": {}, "stray_key": "oops"})
+
+
+def test_replay_payload_strict_rejects_non_string_value_in_observed_renta_web_open() -> None:
+    """Mapping[str, str] under strict mode rejects non-string values."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": {"0180": 12345.67}})

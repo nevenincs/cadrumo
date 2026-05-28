@@ -36,6 +36,7 @@ _REVISION_APPEND_ARRAYS: frozenset[str] = frozenset(
         "verification_expectations",
         "verification_predicates",
         "application_links",
+        "casilla_continuidad_evolutions",
         "deadline_windows",
         "filing_schedules",
         "support_removal_decisions",

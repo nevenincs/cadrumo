@@ -4,7 +4,7 @@ The Modelo 200 cuota-integra formula (``DP200014:00562``) now applies
 the LIS Art. 29 tipo de gravamen as a tranche / sub-form table through
 ``lookup_bracket_by_entity_type``. Three lanes coexist:
 
-1. **General sub-form**: post-nivelación base × 25% (LIS Art. 29.1, default rate).
+1. **General sub-form**: post-nivelación base x 25% (LIS Art. 29.1, default rate).
 2. **Micro-empresa**: bracket scale 17/20 (2025) or 19/21 (2026) on the
    first 50.000 € tranche and rest, when INCN of the prior 12 months
    is below 1.000.000 € (LIS Art. 29.1 par. 1; AEAT Manual de Sociedades
@@ -29,8 +29,7 @@ from functools import lru_cache
 import pytest
 
 from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry import build_snapshot, load_registry_tree
-from aeat.domain.calculations.registry import calculate_registry_snapshot
+from aeat.domain.calculations.registry import build_snapshot, calculate_registry_snapshot, load_registry_tree
 from aeat.domain.calculations.registry.applicability import (
     Modelo202Modality,
     derive_modelo_202_modality,
@@ -219,7 +218,7 @@ def test_micro_empresa_lane_anchor_at_50000_eur_first_tranche_boundary() -> None
     AEAT folleto actividades económicas 4.3 publishes the LIS Art. 29.1
     micro-empresa scale for 2025 as 17% on the 0-50.000 € tranche and
     20% on the rest. The cuota at the tranche boundary (base = 50.000)
-    is therefore 50.000 × 17% = 8.500 — published directly in the AEAT
+    is therefore 50.000 x 17% = 8.500 — published directly in the AEAT
     folleto's worked tranche table as the rest-tranche fixed_addition
     that carries forward.
 
@@ -278,7 +277,7 @@ def test_new_entity_override_applies_15_percent_regardless_of_subform() -> None:
     )
     assert sl_cuota == Decimal("150000.00"), (
         "new-entity override cuota must equal LIS Art. 29 par. 4 15% "
-        "applied to the post-nivelación base (1.000.000 × 15% = 150.000)"
+        "applied to the post-nivelación base (1.000.000 x 15% = 150.000)"
     )
     assert sl_cuota == coop_cuota, (
         "the new-entity override must bypass the sub-form dispatch — "
@@ -410,7 +409,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     the engine result.  The oracle values are derived from the formula
     specification: for a common-regime entity (100 %) with
     ``00592 = 20.000``, ``01766 = 0``, ``01784 = 0``, the formula
-    produces ``00599 = (100/100) × 20.000 = 20.000``.  The 20.000
+    produces ``00599 = (100/100) x 20.000 = 20.000``.  The 20.000
     figure is the AEAT Manual de Sociedades 2024 (pages 399/401) cuota
     líquida before the retenciones are netted; using it here as a
     structural probe (not a netted cuota-ejercicio figure) is
@@ -436,7 +435,7 @@ def test_cuota_ejercicio_00599_is_non_zero_when_estado_porcentaje_binding_suppli
     cuota_ejercicio = result.values["DP200014B:00599"]
     assert cuota_ejercicio == Decimal("20000.00"), (
         "DP200014B:00599 must equal 20.000 when tributacion_estado_porcentaje = 100 "
-        "and cuota_liquida 00592 = 20.000; the formula (100/100) × 20.000 = 20.000"
+        "and cuota_liquida 00592 = 20.000; the formula (100/100) x 20.000 = 20.000"
     )
 
 

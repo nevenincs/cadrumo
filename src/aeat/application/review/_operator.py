@@ -7,6 +7,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..aggregation._source_kinds import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
 from ._aggregator import ReviewQueue
@@ -56,10 +57,10 @@ class ReviewQueueReport(BaseModel):
 
 
 _ACCEPTED_KIND_TO_INTERNAL: dict[str, frozenset[ReviewItemKind]] = {
-    "ledger_transaction": frozenset({ReviewItemKind.TRANSACTION}),
-    "purchase_invoice_evidence": frozenset({ReviewItemKind.INVOICE}),
-    "payable_invoice": frozenset({ReviewItemKind.INVOICE}),
-    "collectible_invoice": frozenset({ReviewItemKind.INVOICE}),
+    AggregationSourceKind.LEDGER_TRANSACTION: frozenset({ReviewItemKind.TRANSACTION}),
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE: frozenset({ReviewItemKind.INVOICE}),
+    AggregationSourceKind.PAYABLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
+    AggregationSourceKind.COLLECTIBLE_INVOICE: frozenset({ReviewItemKind.INVOICE}),
     "modelo_finding": frozenset({ReviewItemKind.FINDING}),
     "live_notification": frozenset(),
     "sync_divergence": frozenset(),
@@ -136,8 +137,8 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
     if isinstance(item, TransactionReviewItem):
         return ReviewQueueRow(
             item_id=item.item_id,
-            kind="ledger_transaction",
-            source_kind="ledger_transaction",
+            kind=AggregationSourceKind.LEDGER_TRANSACTION,
+            source_kind=AggregationSourceKind.LEDGER_TRANSACTION,
             affected_object_id=item.source.transaction_id,
             bucket_id=bucket_id,
             modelo=item.modelo,
@@ -152,7 +153,7 @@ def _to_row(item: ReviewItem, *, state: ReviewState, bucket_id: str) -> ReviewQu
             summary=_render_summary(item.summary),
         )
     if isinstance(item, InvoiceReviewItem):
-        source_kind = "collectible_invoice" if item.source.kind.value == "ISSUED" else "payable_invoice"
+        source_kind = AggregationSourceKind.COLLECTIBLE_INVOICE if item.source.kind.value == "ISSUED" else AggregationSourceKind.PAYABLE_INVOICE
         return ReviewQueueRow(
             item_id=item.item_id,
             kind=source_kind,

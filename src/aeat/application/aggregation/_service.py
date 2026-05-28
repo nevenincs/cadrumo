@@ -20,7 +20,7 @@ from ._counterpart import (
     aggregate_counterpart_347,
     aggregate_counterpart_349,
 )
-from ._errors import AggregationUnsupportedModeloError, t
+from ._errors import AggregationConfigError, AggregationUnsupportedModeloError, t
 from ._foreign_assets import ForeignAssetIngestObservation, ForeignAssetsAggregation, aggregate_foreign_assets_720
 from ._retenciones import (
     RetencionesAggregation,
@@ -32,18 +32,10 @@ from ._retenciones import (
     aggregate_retenciones_190,
     aggregate_retenciones_193,
 )
+from ._source_kinds import AggregationSourceKind
 
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-
-class AggregationSourceKind(StrEnum):
-    """Accepted source-kind taxonomy for per-modelo aggregation providers."""
-
-    LEDGER_TRANSACTION = "ledger_transaction"
-    PURCHASE_INVOICE_EVIDENCE = "purchase_invoice_evidence"
-    PAYABLE_INVOICE = "payable_invoice"
-    COLLECTIBLE_INVOICE = "collectible_invoice"
 
 
 class PerModeloAggregationProvider(StrEnum):
@@ -86,7 +78,7 @@ class PerModeloAggregationProviderContract(BaseModel):
     @classmethod
     def _modelos_are_unique(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if len(value) != len(set(value)):
-            raise ValueError("provider modelos must be unique")
+            raise AggregationConfigError("provider modelos must be unique")
         return value
 
 
@@ -135,17 +127,17 @@ class PerModeloAggregationContract(BaseModel):
     ) -> tuple[PerModeloAggregationProviderContract, ...]:
         providers = tuple(provider.provider for provider in value)
         if len(providers) != len(set(providers)):
-            raise ValueError("per-modelo aggregation providers must be unique")
+            raise AggregationConfigError("per-modelo aggregation providers must be unique")
         modelos = tuple(modelo for provider in value for modelo in provider.modelos)
         if len(modelos) != len(set(modelos)):
-            raise ValueError("per-modelo aggregation modelos must be owned by exactly one provider")
+            raise AggregationConfigError("per-modelo aggregation modelos must be owned by exactly one provider")
         return value
 
     @field_validator("accepted_source_kinds")
     @classmethod
     def _source_kinds_are_exact(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
         if value != ACCEPTED_SOURCE_KINDS:
-            raise ValueError("source kinds must match the accepted four-kind taxonomy")
+            raise AggregationConfigError("source kinds must match the accepted four-kind taxonomy")
         return value
 
 
@@ -173,7 +165,7 @@ class PerModeloAggregationCommand(BaseModel):
         )
         if invalid:
             names = ", ".join(candidate.value for candidate in invalid)
-            raise ValueError(f"observations for {names} cannot be supplied for modelo {self.modelo}")
+            raise AggregationConfigError(f"observations for {names} cannot be supplied for modelo {self.modelo}")
         return self
 
     @computed_field
@@ -203,17 +195,17 @@ class PerModeloAggregationResult(BaseModel):
     @classmethod
     def _source_kinds_are_unique(cls, value: tuple[AggregationSourceKind, ...]) -> tuple[AggregationSourceKind, ...]:
         if len(value) != len(set(value)):
-            raise ValueError("result source_kinds must be unique")
+            raise AggregationConfigError("result source_kinds must be unique")
         return value
 
     @model_validator(mode="after")
     def _envelope_matches_payload(self) -> PerModeloAggregationResult:
         if self.aggregation.modelo != self.modelo:
-            raise ValueError(
+            raise AggregationConfigError(
                 f"aggregation modelo {self.aggregation.modelo!r} does not match result modelo {self.modelo!r}",
             )
         if self.aggregation.period != self.period:
-            raise ValueError(
+            raise AggregationConfigError(
                 f"aggregation period {self.aggregation.period!r} does not match result period {self.period!r}",
             )
         expected_payload_types = {
@@ -223,7 +215,7 @@ class PerModeloAggregationResult(BaseModel):
         }
         expected_type = expected_payload_types[self.provider]
         if not isinstance(self.aggregation, expected_type):
-            raise ValueError(
+            raise AggregationConfigError(
                 f"provider {self.provider.value!r} does not match aggregation payload "
                 f"{type(self.aggregation).__name__!r}",
             )

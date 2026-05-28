@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from ._decimal import canonical_decimal
 from .providers import (
+    BankStatementParseError,
+    CorpusVerificationSource,
     CsvProvider,
     FinancialProvider,
     FinancialProviderError,
@@ -26,6 +28,8 @@ from .providers import (
 )
 
 __all__ = [
+    "BankStatementParseError",
+    "CorpusVerificationSource",
     "CsvProvider",
     "FinancialProvider",
     "FinancialProviderError",

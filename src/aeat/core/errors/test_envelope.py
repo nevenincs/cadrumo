@@ -38,12 +38,15 @@ def test_error_envelope_serializes_deterministically() -> None:
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
+    jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
     error = LockAcquisitionError(
         context={
             "api_token": "top-secret",
             "cookie": "session-cookie",
             "cert_password": "hunter2",
             "profile_tax_id": "X1234567L",
+            "callback": "https://example.test/private/path?token=secret",
+            "session_detail": f"bearer {jwt}",
         }
     )
 
@@ -58,7 +61,14 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "top-secret" not in rendered_text
     assert "session-cookie" not in rendered_text
     assert "hunter2" not in rendered_text
-    assert "X1234567L" in rendered_json
+    assert "X1234567L" not in rendered_json
+    assert "X1234567L" not in rendered_text
+    assert "sha256:2a000539" in rendered_json
+    assert "https://example.test/private/path?token=secret" not in rendered_json
+    assert "https://example.test" in rendered_json
+    assert "private/path" not in rendered_json
+    assert jwt not in rendered_json
+    assert "token:sha256:0a2c77ea" in rendered_json
 
 
 def test_schema_version_is_present() -> None:

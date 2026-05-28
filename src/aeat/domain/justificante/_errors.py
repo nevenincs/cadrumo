@@ -9,6 +9,8 @@ filing import callers can catch the whole domain at once.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ...core.errors import AeatError
 
 
@@ -21,7 +23,38 @@ class JustificanteError(PdfModeloImportError):
 
 
 class JustificanteParseError(JustificanteError):
-    """Raised when a PDF cannot be parsed into a :class:`Justificante`."""
+    """Raised when a PDF cannot be parsed into a :class:`Justificante`.
+
+    Mirrors :class:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`'s
+    structured-attribute shape so callers can assert on typed attributes rather than
+    parsing the message string.
+
+    When the error originates from a field-extraction failure the following
+    structured attributes are populated:
+
+    Attributes:
+        missing: Tuple of field names that produced no match in the PDF text.
+        malformed: Tuple of field names whose captured value could not be coerced
+            to the target type (e.g. an invalid decimal literal).
+        ambiguous: Tuple of field names that matched more than one region.
+        coverage: Fraction of required fields successfully extracted
+            (``Decimal``).  ``None`` when the error is not a coverage failure.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        missing: tuple[str, ...] = (),
+        malformed: tuple[str, ...] = (),
+        ambiguous: tuple[str, ...] = (),
+        coverage: Decimal | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.missing: tuple[str, ...] = missing
+        self.malformed: tuple[str, ...] = malformed
+        self.ambiguous: tuple[str, ...] = ambiguous
+        self.coverage: Decimal | None = coverage
 
 
 class JustificanteCsvNotFoundError(JustificanteParseError):

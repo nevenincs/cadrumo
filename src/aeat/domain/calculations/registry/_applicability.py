@@ -97,7 +97,6 @@ from ...deadlines.taxpayer_model import (
     EntityType,
     IrpfEstimationRegime,
     IrpfIncomeCategory,
-    IrpfSpecialRegime,
     TaxpayerProfile,
 )
 
@@ -1461,10 +1460,10 @@ def derive_modelo_202_modality(profile: TaxpayerProfile) -> Modelo202ModalityVer
 
 __all__ = [
     "ApplicabilityVerdict",
-    "ModeloApplicability",
-    "ModeloApplicabilityRule",
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
+    "ModeloApplicability",
+    "ModeloApplicabilityRule",
     "PayerFact",
     "TaxRoute",
     "derive_modelo_202_modality",

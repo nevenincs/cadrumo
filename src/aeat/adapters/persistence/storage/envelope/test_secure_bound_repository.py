@@ -18,14 +18,16 @@ from typing import ClassVar
 
 import pytest
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
 
 from .....core.config import Settings, override_settings
 from .. import EphemeralMasterKeyProvider, SensitivityClass
-from ..errors import EnvelopeVersionError, StorageValidationError
+from ..errors import EnvelopeVersionError, SecureObjectUnreadableError, StorageValidationError
 from ..sql import SecureObjectRepository
 from ..sql._orm import Base
 from ..sql.engine import create_engine_from_settings
+from ..sql.secure_objects import SecureObjectRecord, SecureObjectUnreadable
+from ..sql.session import session_scope
 from ._envelope import Envelope
 from ._secure_repository import SecureBoundRepository
 
@@ -164,5 +166,69 @@ def test_secure_bound_repository_rejects_future_schema_version(
 
             with pytest.raises(EnvelopeVersionError):
                 repo.load("future")
+        finally:
+            engine.dispose()
+
+
+def test_secure_bound_repository_iter_ids_fails_closed_on_unreadable_row(
+    tmp_path: Path,
+) -> None:
+    """Bound repository enumeration must not return a readable subset."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        repo, engine = _bound_repo_with_engine(tmp_path)
+        try:
+            repo.save(_DummyPayload(id="alpha", value=42))
+            repo.save(_DummyPayload(id="beta", value=99))
+            with session_scope(engine) as session:
+                session.execute(
+                    text(
+                        "UPDATE secure_objects SET payload = X'00' "
+                        "WHERE id = ("
+                        "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
+                        ")"
+                    ),
+                    {"namespace": _DummyRepository.namespace},
+                )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                tuple(repo.iter_ids())
+        finally:
+            engine.dispose()
+
+
+def test_secure_bound_repository_underlying_iterator_still_reports_partial_failures(
+    tmp_path: Path,
+) -> None:
+    """The explicit diagnostic iterator remains available for repair-style callers."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        repo, engine = _bound_repo_with_engine(tmp_path)
+        try:
+            repo.save(_DummyPayload(id="alpha", value=42))
+            repo.save(_DummyPayload(id="beta", value=99))
+            with session_scope(engine) as session:
+                session.execute(
+                    text(
+                        "UPDATE secure_objects SET payload = X'00' "
+                        "WHERE id = ("
+                        "SELECT MIN(id) FROM secure_objects WHERE namespace = :namespace"
+                        ")"
+                    ),
+                    {"namespace": _DummyRepository.namespace},
+                )
+
+            outcomes = tuple(
+                repo._objects.iter_records_with_failures(
+                    _DummyRepository.namespace,
+                    expected_class=_DummyRepository.sensitivity,
+                    max_supported_version=_DummyRepository.schema_version,
+                )
+            )
+
+            assert len([item for item in outcomes if isinstance(item, SecureObjectRecord)]) == 1
+            assert len([item for item in outcomes if isinstance(item, SecureObjectUnreadable)]) == 1
         finally:
             engine.dispose()

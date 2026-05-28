@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from aeat.core.resources import bundled_path
-from aeat.domain.calculations.registry._loader import load_legal_parameters_only
+from aeat.domain.calculations.registry import load_legal_parameters_only
 from aeat.domain.fincas._errors import FincaValidationError
 from aeat.domain.fincas._imputacion_parameters import (
     LirpfArt85ImputacionParameters,

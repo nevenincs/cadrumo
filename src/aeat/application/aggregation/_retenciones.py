@@ -22,6 +22,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
+from ._source_kinds import AggregationSourceKind
 
 
 class RetencionScheme(StrEnum):
@@ -45,11 +46,11 @@ class RetencionScheme(StrEnum):
     CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
 
 
-_CANONICAL_SOURCE_KINDS = (
-    "ledger_transaction",
-    "purchase_invoice_evidence",
-    "payable_invoice",
-    "collectible_invoice",
+_CANONICAL_SOURCE_KINDS: tuple[AggregationSourceKind, ...] = (
+    AggregationSourceKind.LEDGER_TRANSACTION,
+    AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+    AggregationSourceKind.PAYABLE_INVOICE,
+    AggregationSourceKind.COLLECTIBLE_INVOICE,
 )
 
 

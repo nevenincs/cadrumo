@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import load_settings
+from .....core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from .....core.logging import get_logger
 from .....domain.transactions import RawTransaction, SourceFormat
 from ._base import (
@@ -177,6 +178,10 @@ class CsvProvider(FinancialProvider):
     name = "CSV provider"
     supported_extensions = frozenset({".csv", ".txt"})
     source_format = SourceFormat.CSV
+    # Corpus fixtures are synthetic CSVs modelled on real bank export schemas;
+    # column-mapping fidelity is confirmed against published specifications.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate CSV structure, encoding, and layout support."""
@@ -296,7 +301,7 @@ class CsvProvider(FinancialProvider):
     def _decode_bytes(self, source_bytes: bytes) -> tuple[str, str]:
         """Decode bytes using the configured preference order."""
         preferred = load_settings().financial_default_csv_encoding.strip() or "utf-8"
-        candidates = (preferred, "utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
+        candidates = (preferred, *CSV_ENCODING_FALLBACK_CHAIN)
         seen: set[str] = set()
         for candidate in candidates:
             normalized = candidate.lower()

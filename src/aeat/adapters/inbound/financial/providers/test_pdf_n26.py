@@ -4,6 +4,22 @@ Exercises :class:`aeat.adapters.inbound.financial.providers.PdfN26Provider`
 end-to-end against committed N26 statement fixtures. Each fixture is paired
 with a manually transcribed expected-row JSON so the test asserts that the
 provider's parsed transactions match the human-verified ground truth.
+
+Detection invariant
+-------------------
+Every corpus PDF must be detected as ``PdfN26Provider`` by
+:func:`detect_provider`. A failure here means either the detection
+heuristic is broken or the fixture is not a valid N26 statement PDF —
+both are loud failures rather than silent ones.
+
+Corpus discipline
+-----------------
+``PdfN26Provider.verification_source`` must be
+``"synthetic_from_bank_published_text"`` (fixtures generated from
+portfolio-performance sanitised text) until real operator statements
+replace them, at which point ``verification_source`` is upgraded to
+``"real_bank_corpus_pdf"`` and ``provisional_pending_specimen`` stays
+``False``.
 """
 
 from __future__ import annotations
@@ -17,6 +33,7 @@ import pytest
 from aeat.tests import FIXTURES_DIR
 
 from .. import PdfN26Provider
+from ._detection import detect_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -72,3 +89,52 @@ def test_pdf_n26_provider_rejects_non_n26_pdf(tmp_path: Path) -> None:
     validation = PdfN26Provider().validate_source(source)
     assert not validation.is_valid
     assert "n26" in validation.warnings[0].lower()
+
+
+# ---------------------------------------------------------------------------
+# Detection invariant: every N26 corpus PDF must detect as PdfN26Provider
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "fixture_name",
+    [
+        "n26-savings-2024-06.pdf",
+        "n26-savings-2025-01.pdf",
+        "n26-savings-2025-05.pdf",
+    ],
+)
+def test_detect_provider_identifies_n26_corpus_pdf(fixture_name: str) -> None:
+    """detect_provider must return PdfN26Provider for every N26 corpus fixture.
+
+    A mis-detection (returning None or a different provider) signals either
+    that the detection heuristic is broken or the fixture is not a valid N26
+    statement — both are real failures that must surface loudly.
+    """
+    fixture = _FIXTURES / fixture_name
+    provider = detect_provider(fixture)
+    assert provider is not None, f"detect_provider returned None for {fixture_name}"
+    assert isinstance(provider, PdfN26Provider), (
+        f"expected PdfN26Provider, got {type(provider).__name__} for {fixture_name}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Corpus discipline: verification_source and provisional_pending_specimen
+# ---------------------------------------------------------------------------
+
+
+def test_pdf_n26_provider_verification_source_is_declared() -> None:
+    """PdfN26Provider must declare its corpus verification source.
+
+    The fixture corpus is synthetic PDFs generated from the
+    portfolio-performance sanitised text dumps.  Until real operator
+    statements are acquired and round-trip-verified, the provider's
+    ``verification_source`` is ``"synthetic_from_bank_published_text"``
+    and ``provisional_pending_specimen`` is ``False`` (the synthetic
+    corpus is sufficient to confirm the regex family is correct; no
+    round-trip gap exists — it only becomes provisional if the corpus
+    is known to be structurally incompatible with real layouts).
+    """
+    assert PdfN26Provider.verification_source == "synthetic_from_bank_published_text"
+    assert PdfN26Provider.provisional_pending_specimen is False

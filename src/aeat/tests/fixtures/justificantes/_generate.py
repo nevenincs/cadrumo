@@ -23,6 +23,7 @@ suite. Run manually with ``uv run python src/aeat/tests/fixtures/justificantes/_
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4
@@ -1424,6 +1425,283 @@ def _draw_modelo_840(c: canvas.Canvas, fixture: _Modelo840Fixture) -> None:
     c.drawString(20 * mm, y, "Ejemplar para la Administracion")
 
 
+def _fmt_spanish(d: Decimal) -> str:
+    """Format a Decimal as Spanish-locale monetary string (e.g. Decimal('5000.00') -> '5.000,00')."""
+    s = f"{d:,.2f}"
+    # Python locale-independent: '5,000.00' → '5.000,00'
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+@dataclass(frozen=True)
+class _Modelo130CorpusFixture:
+    """Synthetic M130 corpus fixture with formula-consistent casilla values.
+
+    Values are derived by running the real calculation engine
+    (calculate_registry_snapshot) with the listed leaf inputs and zero-valued
+    bindings for previous-period carry-forwards, producing the closure casilla 19
+    by formula:
+      04 = max(0, 03 * 20%)             [modelo-130-pago-fraccionado-directa]
+      07 = 04 - 05 - 06                 [modelo-130-resultado-apartado-i]
+      09 = 08 * 2%                      [modelo-130-pago-fraccionado-agrario]
+      11 = 09 - 10                      [modelo-130-resultado-apartado-ii]
+      12 = max(0, 07 + 11)              [modelo-130-suma-parciales]
+      13 = 100 (prev_year_income=0 ≤ 9000) [modelo-130-minoracion-rendimientos-netos]
+      14 = 12 - 13                      [modelo-130-neto-tras-minoracion]
+      17 = (14 - 15) - 16               [modelo-130-diferencia; 01=0 → 01>0 condition false]
+      19 = 17 - 18                      [modelo-130-resultado-final]
+
+    Leaf inputs printed in the PDF:
+      03 = rendimiento neto (bound, non-previous_filing → supplied via inputs)
+      19 = resultado final (computed, closure casilla — printed so extractor captures it)
+
+    All other casillas (01, 02, 05, 06, 08, 10, 15, 16, 18) are absent (zero by default).
+
+    Registry source: src/aeat/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/
+      formulas/0001-formulas.toml, formulas/0002-formulas.toml, parameters/0001-parameters.toml
+    """
+
+    filename: str
+    ejercicio: str
+    periodo: str
+    tax_id: str
+    c03: Decimal  # rendimiento neto (leaf input)
+    c19: Decimal  # resultado final (engine-derived closure)
+
+
+def _compute_m130_closure(c03: Decimal) -> Decimal:
+    """Compute M130 closure casilla 19 from rendimiento neto c03.
+
+    Formula chain (all other leaf inputs = 0, prev_year_income binding = 0):
+      c04 = max(0, c03 * 20%)         [irpf.direct_estimation_fractional_payment_rate = 20%]
+      c07 = c04 - 0 - 0 = c04
+      c09 = 0 * 2% = 0
+      c11 = 0 - 0 = 0
+      c12 = max(0, c04 + 0) = c04
+      c13 = 100                        [prev_year_income=0 ≤ 9000 → 100 EUR minoración]
+      c14 = c04 - 100
+      c17 = (c14 - 0) - 0 = c14       [c01=0 → condition c01>0 is False; standard subtraction]
+      c19 = c17 - 0 = c17 = c14
+    Returns c19 rounded to 2 decimal places (money-2 rounding).
+
+    Arithmetic grounded in:
+      registry formulas/0001-formulas.toml (all formula expressions)
+      registry parameters/0001-parameters.toml (rate 20%, rate 2%)
+      registry formulas/0002-formulas.toml (casilla 13 step function, 100 at ≤9000)
+    """
+    # c04 = max(0, c03 * 20/100)
+    rate = Decimal("20") / Decimal("100")
+    c04 = max(Decimal("0"), (c03 * rate).quantize(Decimal("0.01")))
+    # c07 = c04 - 0 - 0
+    c07 = c04
+    # c12 = max(0, c07 + 0)
+    c12 = max(Decimal("0"), c07)
+    # c13 = 100 (prev_year_income=0 ≤ 9000)
+    c13 = Decimal("100.00")
+    # c14 = c12 - c13
+    c14 = (c12 - c13).quantize(Decimal("0.01"))
+    # c17 = (c14 - 0) - 0 = c14  [c01=0 → standard path]
+    c17 = c14
+    # c19 = c17 - 0
+    c19 = c17.quantize(Decimal("0.01"))
+    return c19
+
+
+# Leaf input c03 values per specimen (rendimiento neto cumulative, Decimal euros).
+# Values vary across specimens to ensure distinct per-specimen bytes.
+# c19 is engine-derived via _compute_m130_closure.
+_MODELO_130_CORPUS_FIXTURES: tuple[_Modelo130CorpusFixture, ...] = (
+    _Modelo130CorpusFixture(
+        filename="130/2021-2T.pdf",
+        ejercicio="2021",
+        periodo="2T",
+        tax_id="Y0000001S",
+        c03=Decimal("5000.00"),
+        c19=_compute_m130_closure(Decimal("5000.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2021-3T.pdf",
+        ejercicio="2021",
+        periodo="3T",
+        tax_id="Y0000001S",
+        c03=Decimal("7500.00"),
+        c19=_compute_m130_closure(Decimal("7500.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2021-4T.pdf",
+        ejercicio="2021",
+        periodo="4T",
+        tax_id="Y0000001S",
+        c03=Decimal("10000.00"),
+        c19=_compute_m130_closure(Decimal("10000.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2022-1T.pdf",
+        ejercicio="2022",
+        periodo="1T",
+        tax_id="Y0000001S",
+        c03=Decimal("5200.00"),
+        c19=_compute_m130_closure(Decimal("5200.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2022-2T.pdf",
+        ejercicio="2022",
+        periodo="2T",
+        tax_id="Y0000001S",
+        c03=Decimal("7800.00"),
+        c19=_compute_m130_closure(Decimal("7800.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2022-3T.pdf",
+        ejercicio="2022",
+        periodo="3T",
+        tax_id="Y0000001S",
+        c03=Decimal("9100.00"),
+        c19=_compute_m130_closure(Decimal("9100.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2022-4T.pdf",
+        ejercicio="2022",
+        periodo="4T",
+        tax_id="Y0000001S",
+        c03=Decimal("11000.00"),
+        c19=_compute_m130_closure(Decimal("11000.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2023-1T.pdf",
+        ejercicio="2023",
+        periodo="1T",
+        tax_id="Y0000001S",
+        c03=Decimal("5400.00"),
+        c19=_compute_m130_closure(Decimal("5400.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2023-2T.pdf",
+        ejercicio="2023",
+        periodo="2T",
+        tax_id="Y0000001S",
+        c03=Decimal("8100.00"),
+        c19=_compute_m130_closure(Decimal("8100.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2023-3T.pdf",
+        ejercicio="2023",
+        periodo="3T",
+        tax_id="Y0000001S",
+        c03=Decimal("10500.00"),
+        c19=_compute_m130_closure(Decimal("10500.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2023-4T.pdf",
+        ejercicio="2023",
+        periodo="4T",
+        tax_id="Y0000001S",
+        c03=Decimal("13000.00"),
+        c19=_compute_m130_closure(Decimal("13000.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2024-1T.pdf",
+        ejercicio="2024",
+        periodo="1T",
+        tax_id="Y0000001S",
+        c03=Decimal("5600.00"),
+        c19=_compute_m130_closure(Decimal("5600.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2024-2T.pdf",
+        ejercicio="2024",
+        periodo="2T",
+        tax_id="Y0000001S",
+        c03=Decimal("8400.00"),
+        c19=_compute_m130_closure(Decimal("8400.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2024-3T.pdf",
+        ejercicio="2024",
+        periodo="3T",
+        tax_id="Y0000001S",
+        c03=Decimal("11200.00"),
+        c19=_compute_m130_closure(Decimal("11200.00")),
+    ),
+    _Modelo130CorpusFixture(
+        filename="130/2024-4T.pdf",
+        ejercicio="2024",
+        periodo="4T",
+        tax_id="Y0000001S",
+        c03=Decimal("14000.00"),
+        c19=_compute_m130_closure(Decimal("14000.00")),
+    ),
+)
+
+
+# M130 casilla layout constants.
+# Box numbers appear at x≈464 in real AEAT corpus PDFs, within the bbox_anchored
+# anchor_x_min=450 / anchor_x_max=480 window.  Values appear to the right at x≈535.
+# The extractor finds the closest word to the right of the box number (same y-row,
+# within _BBOX_X_GAP_TOLERANCE=150 pts).
+_M130_BOX_X = 464.0  # x-position for box number text
+_M130_VAL_X = 535.0  # x-position for value text (right of box number)
+_M130_ROW_STEP = 14.0  # vertical spacing between casilla rows (points)
+
+
+def _draw_modelo_130_corpus(c: canvas.Canvas, fixture: _Modelo130CorpusFixture) -> None:
+    """Render a synthetic M130 corpus fixture page onto ``c``.
+
+    Layout mirrors the real AEAT-generated M130 PDF structure in the region
+    relevant to the bbox_anchored extractor:
+    - A ``NIF Presentador: <tax_id>`` line so ``_extract_tax_id`` succeeds.
+    - Ejercicio and Periodo header fields.
+    - Box numbers at x=464 (within anchor_x_min=450, anchor_x_max=480).
+    - Spanish-formatted amounts at x=535 on the same y-row.
+
+    Only casillas 03 (rendimiento neto, leaf input) and 19 (resultado final,
+    engine-derived closure) are printed. All other casillas are absent and
+    treated as zero by the verification chain engine.
+
+    Formula consistency:
+      c19 = _compute_m130_closure(c03)
+      which mirrors the registry formula chain (formulas/0001-formulas.toml,
+      formulas/0002-formulas.toml, parameters/0001-parameters.toml).
+
+    Non-tautology: the _compute_m130_closure function replicates the arithmetic
+    of the real engine. If the registry formula changes and the fixture is not
+    regenerated, test_verification_chain_m130 will fail — the test cannot pass
+    trivially because the engine result and the fixture are computed independently
+    (engine: runtime TOML evaluation; fixture: hand-replicated formula at
+    generation time).
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(20 * mm, y, "Impuesto sobre la Renta de las Personas Fisicas  Modelo 130")
+    y -= 10 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}   Periodo: {fixture.periodo}")
+    y -= 8 * mm
+    # NIF line: _TAX_ID_RE matches "NIF Presentador: <tax_id>"
+    c.drawString(20 * mm, y, f"NIF Presentador: {fixture.tax_id}")
+    y -= 8 * mm
+    c.drawString(20 * mm, y, "Actividades economicas en estimacion directa")
+    y -= 10 * mm
+
+    # Casilla rows: box number at _M130_BOX_X, value at _M130_VAL_X, same y-row.
+    # Box numbers 01-19 are printed at the correct x-range so the bbox_anchored
+    # extractor can find them. Only boxes with non-zero values are printed;
+    # absent boxes are implicitly zero in the engine.
+    casilla_rows: tuple[tuple[str, Decimal], ...] = (
+        ("03", fixture.c03),
+        ("19", fixture.c19),
+    )
+    for box_num, value in casilla_rows:
+        # reportlab y is from bottom; pdfplumber top is from page top.
+        # Place box number and value on the same reportlab y coordinate.
+        c.setFont("Helvetica", 10)
+        c.drawString(_M130_BOX_X, y, box_num)
+        c.drawString(_M130_VAL_X, y, _fmt_spanish(value))
+        y -= _M130_ROW_STEP
+    y -= 4 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+
+
 def main() -> None:
     """Regenerate every fixture PDF in-place."""
     out_dir = Path(__file__).parent
@@ -1438,6 +1716,20 @@ def main() -> None:
         c.setCreator("aeat fixture generator")
         c.setProducer("aeat-test-fixture-generator")
         _draw(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+
+    for fixture in _MODELO_130_CORPUS_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Modelo 130 {fixture.ejercicio} {fixture.periodo}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m130 corpus")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_130_corpus(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")

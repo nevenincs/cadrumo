@@ -32,6 +32,7 @@ from pydantic_core import core_schema
 
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
+from ...core.external_constants import DEFAULT_CURRENCY
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -935,7 +936,7 @@ class Transaction(BaseModel):
             raise TransactionValidationError(
                 "fx_rate and value_in_eur must both be set or both be absent"
             )
-        if self.raw.currency == "EUR" and (fx_set or eur_set):
+        if self.raw.currency == DEFAULT_CURRENCY and (fx_set or eur_set):
             raise TransactionValidationError(
                 "fx_rate and value_in_eur must be absent for EUR-native transactions"
             )

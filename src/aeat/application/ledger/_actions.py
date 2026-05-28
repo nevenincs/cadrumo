@@ -28,6 +28,7 @@ from ...adapters.inbound.financial.providers import (
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.errors import resolve_error_message
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -297,7 +298,7 @@ def _apply_fx_conversion(
     normalizer or a missing rate also yield ``(None, None)``, preserving the
     coupling invariant on :class:`Transaction`.
     """
-    if raw.currency == "EUR" or currency_normalizer is None:
+    if raw.currency == DEFAULT_CURRENCY or currency_normalizer is None:
         return (None, None)
     rate_date = raw.value_date or raw.booked_date
     result = currency_normalizer.normalize(MonetaryAmount(amount=raw.amount, currency=raw.currency), rate_date)

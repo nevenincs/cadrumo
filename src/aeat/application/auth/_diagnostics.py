@@ -14,6 +14,7 @@ from ...adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.external_constants import load_external_constants
+from ._errors import AuthDiagnosticPhoneStateError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
@@ -138,7 +139,9 @@ def record_auth_diagnostic_phone_state(
     """Attach the operator-observed Cl@ve app state to an encrypted diagnostic."""
 
     if phone_state not in AUTH_DIAGNOSTIC_PHONE_STATES:
-        raise ValueError(phone_state)
+        raise AuthDiagnosticPhoneStateError(
+            phone_state, context={"phone_state": phone_state}
+        )
     objects = _secure_objects()
     record = objects.load(
         _DIAGNOSTIC_NAMESPACE,

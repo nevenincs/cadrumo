@@ -25,21 +25,23 @@ from __future__ import annotations
 
 import re
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.time import _now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
     BucketEventType,
     append_bucket_event,
 )
+from .._storage_paths import storage_path
 
 
 class BusinessOperationInvoiceSourceKind(StrEnum):
@@ -162,7 +164,7 @@ class BusinessOperationInvoice(BaseModel):
     counterparty_name: str = Field(default="", max_length=200)
     invoice_number: str = Field(min_length=1, max_length=100)
     invoice_date: str = Field(min_length=10, max_length=10)
-    currency: str = Field(default="EUR", min_length=3, max_length=3)
+    currency: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     taxable_base: Decimal = Field(default=Decimal("0"))
     iva_rate: Decimal | None = Field(default=None)
     iva_amount: Decimal = Field(default=Decimal("0"))
@@ -282,20 +284,10 @@ def _emit_invoice_event(
     return event.event_id
 
 
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
-
-
-def _storage_path(settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str) -> Path:
-    root = settings.aeat_invoices_dir / kind.value
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.jsonl"
-
-
 def _load(
     settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str
 ) -> list[BusinessOperationInvoice]:
-    path = _storage_path(settings, kind, bucket_id)
+    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
     if not path.exists():
         return []
     records: list[BusinessOperationInvoice] = []
@@ -312,7 +304,7 @@ def _save(
     bucket_id: str,
     records: list[BusinessOperationInvoice],
 ) -> None:
-    path = _storage_path(settings, kind, bucket_id)
+    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
     payload = "\n".join(record.model_dump_json() for record in records)
     if payload:
         payload += "\n"
@@ -366,7 +358,7 @@ class _BusinessOperationInvoiceService:
         invoice_number: str,
         invoice_date: str,
         counterparty_name: str = "",
-        currency: str = "EUR",
+        currency: str = DEFAULT_CURRENCY,
         taxable_base: Decimal = Decimal("0"),
         iva_rate: Decimal | None = None,
         iva_amount: Decimal = Decimal("0"),

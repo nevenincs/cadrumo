@@ -8,6 +8,7 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import (
     ModeloRevision,
     resolve_ledger_iva_aggregation_binding_values,
@@ -35,9 +36,11 @@ from ._source_mesh import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 class ModeloLedgerBindingAggregation(BaseModel):
@@ -131,11 +134,19 @@ class LedgerIvaAggregationSourceResolver:
         if not _revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        aggregation = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=context.bucket_id,
-            period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
-            transaction_repository=self._transaction_repository,
-        )
+        try:
+            aggregation = aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+                transaction_repository=self._transaction_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         transaction_ids = {observation.ledger_id for observation in aggregation.observations}
         transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
         return CalculationSourceResolution(
@@ -193,14 +204,22 @@ class LedgerRentaExpenseAggregationSourceResolver:
         if not _revision_has_binding_source(context.revision, "ledger_renta_expense_aggregation"):
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        aggregation = aggregate_renta_ledger_expenses_from_repositories(
-            bucket_id=context.bucket_id,
-            period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
-            transaction_repository=self._transaction_repository,
-            invoice_repository=self._invoice_repository,
-            profile_year=context.filing_year,
-            modelo=context.modelo,
-        )
+        try:
+            aggregation = aggregate_renta_ledger_expenses_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period),
+                transaction_repository=self._transaction_repository,
+                invoice_repository=self._invoice_repository,
+                profile_year=context.filing_year,
+                modelo=context.modelo,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -242,11 +261,19 @@ class LedgerRentaIncomeAggregationSourceResolver:
             return _empty_source_resolution(self.resolver_id, self.owned_sources)
 
         aggregation_period = aggregation_period_for_modelo(filing_year=context.filing_year, period=context.period)
-        aggregation = aggregate_renta_income_ledger_from_repositories(
-            bucket_id=context.bucket_id,
-            period=aggregation_period,
-            transaction_repository=self._transaction_repository,
-        )
+        try:
+            aggregation = aggregate_renta_income_ledger_from_repositories(
+                bucket_id=context.bucket_id,
+                period=aggregation_period,
+                transaction_repository=self._transaction_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

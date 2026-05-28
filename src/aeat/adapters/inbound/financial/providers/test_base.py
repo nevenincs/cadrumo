@@ -2,8 +2,9 @@
 
 Exercises the strict + frozen :class:`RawTransaction` and
 :class:`ProviderValidation` records, the
-:func:`detect_provider` extension/sniff dispatch, and the
-:func:`parse_amount_value` decimal-separator override.
+:func:`detect_provider` extension/sniff dispatch, the
+:func:`parse_amount_value` decimal-separator override, and the
+corpus-discipline class-variable contract on all registered providers.
 """
 
 from __future__ import annotations
@@ -16,8 +17,16 @@ import pytest
 from aeat.tests import FIXTURES_DIR
 
 from .....domain.transactions import RawTransaction, SourceFormat
-from .. import ProviderValidation, detect_provider
+from .. import (
+    BankStatementParseError,
+    ProviderValidation,
+    detect_provider,
+)
 from ._base import parse_amount_value
+from ._csv import CsvProvider
+from ._ofx import OfxProvider
+from ._pdf_n26 import PdfN26Provider
+from ._xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -81,3 +90,98 @@ def test_parse_amount_value_respects_explicit_decimal_separator() -> None:
     assert parse_amount_value("1,234", decimal_separator=".") == Decimal("1234")
     assert parse_amount_value("1.234,56", decimal_separator=",") == Decimal("1234.56")
     assert parse_amount_value("1,234.56", decimal_separator=".") == Decimal("1234.56")
+
+
+# ---------------------------------------------------------------------------
+# Corpus discipline: all registered providers must declare class-level attrs
+# ---------------------------------------------------------------------------
+
+_ALL_PROVIDERS = [CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider()]
+_VALID_VERIFICATION_SOURCES = frozenset(
+    {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
+)
+
+
+@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
+def test_provider_declares_verification_source(provider: object) -> None:
+    """Every provider must declare a valid verification_source class variable.
+
+    This is a structural gate: a newly enrolled provider that forgets to
+    declare the attribute fails loudly here rather than shipping with an
+    unverified corpus posture.
+    """
+    source = getattr(type(provider), "verification_source", None)
+    assert source is not None, f"{type(provider).__name__} is missing verification_source"
+    assert source in _VALID_VERIFICATION_SOURCES, (
+        f"{type(provider).__name__}.verification_source={source!r} is not one of "
+        f"{sorted(_VALID_VERIFICATION_SOURCES)}"
+    )
+
+
+@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
+def test_provider_declares_provisional_pending_specimen(provider: object) -> None:
+    """Every provider must declare provisional_pending_specimen as a bool.
+
+    A provider with no_corpus must set it True; a provider with a
+    confirmed corpus round-trip sets it False.
+    """
+    flag = getattr(type(provider), "provisional_pending_specimen", None)
+    assert flag is not None, (
+        f"{type(provider).__name__} is missing provisional_pending_specimen"
+    )
+    assert isinstance(flag, bool), (
+        f"{type(provider).__name__}.provisional_pending_specimen must be bool, got {type(flag)}"
+    )
+
+
+@pytest.mark.parametrize("provider", _ALL_PROVIDERS, ids=lambda p: p.name)
+def test_provider_no_corpus_implies_provisional(provider: object) -> None:
+    """A provider with verification_source='no_corpus' must be provisional.
+
+    This invariant prevents a no_corpus provider from shipping with
+    provisional_pending_specimen=False, which would falsely assert that
+    an absent corpus has been round-trip-verified.
+    """
+    cls = type(provider)
+    if getattr(cls, "verification_source", None) == "no_corpus":
+        assert getattr(cls, "provisional_pending_specimen", False) is True, (
+            f"{cls.__name__}: no_corpus provider must have provisional_pending_specimen=True"
+        )
+
+
+# ---------------------------------------------------------------------------
+# BankStatementParseError structured attributes
+# ---------------------------------------------------------------------------
+
+
+def test_bank_statement_parse_error_default_attributes() -> None:
+    """BankStatementParseError default-constructs with empty structured attrs."""
+    err = BankStatementParseError("page layout changed")
+    assert err.missing == ()
+    assert err.malformed == ()
+    assert err.ambiguous == ()
+    assert err.coverage is None
+    assert str(err) == "page layout changed"
+
+
+def test_bank_statement_parse_error_carries_structured_attributes() -> None:
+    """BankStatementParseError exposes typed attributes callers can assert on."""
+    err = BankStatementParseError(
+        "extraction incomplete",
+        missing=("booked_date",),
+        malformed=("amount",),
+        ambiguous=("currency",),
+        coverage=Decimal("0.5"),
+    )
+    assert err.missing == ("booked_date",)
+    assert err.malformed == ("amount",)
+    assert err.ambiguous == ("currency",)
+    assert err.coverage == Decimal("0.5")
+
+
+def test_bank_statement_parse_error_is_financial_provider_error() -> None:
+    """BankStatementParseError is catchable as FinancialProviderError."""
+    from .. import FinancialProviderError
+
+    err = BankStatementParseError("layout drift")
+    assert isinstance(err, FinancialProviderError)

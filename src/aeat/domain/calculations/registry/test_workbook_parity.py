@@ -16,11 +16,11 @@ from ._loader import load_registry_tree
 from ._schema import RegistrySnapshot
 from ._snapshot import build_snapshot
 from ._workbook_parity import (
-    _BinaryXlsConversionError,
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
     WorkbookScanOptions,
+    _BinaryXlsConversionError,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
     convert_binary_xls_with_libreoffice,

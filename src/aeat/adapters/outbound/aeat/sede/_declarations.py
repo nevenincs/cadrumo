@@ -44,6 +44,7 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from .....core.config import Settings
+from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import (
@@ -1697,7 +1698,7 @@ async def _capture_submitted_file_artefact(
         FiledDeclaracionArtefact(
             kind="submitted_file",
             source_url=AnyHttpUrl(source_url),
-            content_type="application/octet-stream",
+            content_type=_BINARY_MIME_TYPE,
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime.now(UTC),

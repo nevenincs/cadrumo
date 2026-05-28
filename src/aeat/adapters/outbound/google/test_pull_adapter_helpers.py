@@ -21,8 +21,9 @@ from decimal import Decimal
 import pytest
 
 from ....application.storage.calc_sheets._engine import _registry_sha
+from ....core.decimal import coerce_decimal as _coerce_decimal
 from ....core.resources import resources
-from ._calc_sheets_pull import _classify_metadata_match, _coerce_decimal, _coerce_value
+from ._calc_sheets_pull import _classify_metadata_match, _coerce_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 

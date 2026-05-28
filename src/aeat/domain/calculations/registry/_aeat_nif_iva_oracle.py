@@ -120,18 +120,7 @@ class AeatNifIvaReplayDriver:
     ) -> AeatNifIvaObservation:
         del expected
         document = decode_replay_json_payload(payload, surface_label="AEAT NIF-IVA replay")
-        observed = document.get("observed")
-        if not isinstance(observed, dict):
-            raise RegistryValidationError("AEAT NIF-IVA replay payload must contain an observed object")
-        values: dict[str, str] = {}
-        for nif, verdict in observed.items():
-            if not isinstance(nif, str) or not isinstance(verdict, str):
-                raise RegistryValidationError("AEAT NIF-IVA replay observed values must be string keyed strings")
-            values[nif] = verdict
-        locator = document.get("raw_evidence_locator")
-        if locator is not None and not isinstance(locator, str):
-            raise RegistryValidationError("AEAT NIF-IVA replay raw_evidence_locator must be a string")
-        return AeatNifIvaObservation(values=values, raw_evidence_locator=locator)
+        return AeatNifIvaObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
 
 
 class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):

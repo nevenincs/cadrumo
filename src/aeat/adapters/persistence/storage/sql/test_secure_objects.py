@@ -2,24 +2,41 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
+from sqlalchemy import event
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
-from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from ..errors import ClassificationError, EnvelopeVersionError, StorageValidationError
-from ._orm import Base
+from .._namespace_registry import (
+    STORAGE_NAMESPACE_REGISTRY,
+    WORKFLOW_STATE_NAMESPACE,
+    SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
+    StorageNamespaceScope,
+)
+from ..errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+    SecureObjectRevisionConflictError,
+    SecureObjectUnreadableError,
+    StorageValidationError,
+)
+from ._orm import Base, SecureObjectRow
 from .engine import create_engine_from_settings
 from .secure_objects import (
+    SecureObjectNamespaceIntegrity,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectUnreadable,
+    SecureObjectWrite,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -115,6 +132,98 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
             engine.dispose()
 
 
+def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: Path) -> None:
+    """Fresh SQL bootstrap creates nullable lineage and integrity columns.
+
+    The check goes through SQLite's real table metadata after
+    ``Base.metadata.create_all``. Nullability matters for this step
+    because existing rows are backfilled by the later migration slice.
+    """
+
+    db_path = tmp_path / "revision-schema.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        with sqlite3.connect(db_path) as con:
+            table_info = con.execute("PRAGMA table_info(secure_objects)").fetchall()
+
+        columns = {str(row[1]): row for row in table_info}
+        for column_name in (
+            "revision_id",
+            "previous_revision_id",
+            "previous_payload_hash",
+            "payload_hash",
+            "ciphertext_hash",
+            "revision_written_at",
+            "write_provenance",
+            "source_event_id",
+            "conflict_policy",
+        ):
+            assert column_name in columns
+            assert int(columns[column_name][3]) == 0, f"{column_name} must remain nullable until row backfill"
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path: Path) -> None:
+    """Repository construction upgrades an old-shape table before ORM reads.
+
+    The row is inserted through SQLAlchemy column types before the new
+    columns exist, matching a database created by the previous mapper.
+    Loading it through the current repository proves the bootstrap ran
+    before the mapper tried to select the added columns.
+    """
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "legacy-revision-bootstrap.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        payload = b"legacy-secure-object-payload"
+        try:
+            with engine.begin() as connection:
+                connection.exec_driver_sql(
+                    "CREATE TABLE secure_objects ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "namespace VARCHAR(128) NOT NULL, "
+                    "object_key BLOB NOT NULL, "
+                    "classification VARCHAR(32) NOT NULL, "
+                    "schema_version INTEGER NOT NULL, "
+                    "written_at DATETIME NOT NULL, "
+                    "payload BLOB NOT NULL, "
+                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
+                    ")"
+                )
+                connection.execute(
+                    SecureObjectRow.__table__.insert().values(
+                        namespace="aeat.legacy.revision",
+                        object_key="legacy-key",
+                        classification=SensitivityClass.FINANCIAL.value,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 12, 0, 0, tzinfo=UTC),
+                        payload=payload,
+                    )
+                )
+
+            repo = SecureObjectRepository(engine=engine)
+            loaded = repo.load(
+                "aeat.legacy.revision",
+                "legacy-key",
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            )
+
+            assert loaded is not None
+            assert loaded.payload == payload
+            with sqlite3.connect(db_path) as con:
+                columns = {str(row[1]) for row in con.execute("PRAGMA table_info(secure_objects)").fetchall()}
+                revision_values = con.execute(
+                    "SELECT revision_id, payload_hash, ciphertext_hash FROM secure_objects"
+                ).fetchone()
+            assert {"revision_id", "payload_hash", "ciphertext_hash"} <= columns
+            assert revision_values == (None, None, None)
+        finally:
+            engine.dispose()
+
+
 def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path: Path) -> None:
     """A database-side metadata mutation must not still load as the original record."""
 
@@ -184,18 +293,16 @@ def _seed_under_key(
             engine.dispose()
 
 
-def test_list_records_skips_rows_sealed_under_a_prior_master_key(
+def test_list_records_fails_closed_when_any_row_is_unreadable(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A row written under master key K1 must not crash a list_records call under K2.
+    """A row written under master key K1 must fail default listing under K2.
 
-    The architectural defect this guards against: ``list_records`` used to
-    materialise every row through the SQLAlchemy column processor in one
-    pass, so a single ``InvalidTag`` (caused by a row written under a
-    rotated master key) aborted the entire iteration. The fault-isolated
-    iterator must skip the unreadable row and let the readable subset
-    flow through, while emitting a structured warning.
+    The default listing surface is fail-closed: it must not yield the
+    readable subset if another row in the same namespace cannot be
+    decrypted. ``iter_records_with_failures`` remains the opt-in
+    diagnostic path for mixed readable/unreadable namespaces.
     """
     db_path = tmp_path / "rotated.db"
     key_old = EphemeralMasterKeyProvider()
@@ -226,8 +333,11 @@ def test_list_records_skips_rows_sealed_under_a_prior_master_key(
                 payload=b"plaintext-from-current-generation",
             )
 
-            with caplog.at_level(logging.WARNING, logger="aeat.adapters.persistence.storage.sql.secure_objects"):
-                yielded = list(
+            with (
+                caplog.at_level(logging.DEBUG, logger="aeat.adapters.persistence.storage.sql.secure_objects"),
+                pytest.raises(SecureObjectUnreadableError) as raised,
+            ):
+                list(
                     repo.list_records(
                         namespace,
                         expected_class=SensitivityClass.FINANCIAL,
@@ -235,11 +345,131 @@ def test_list_records_skips_rows_sealed_under_a_prior_master_key(
                     )
                 )
 
-            assert len(yielded) == 1
-            assert yielded[0].payload == b"plaintext-from-current-generation"
-            assert any("skipped 1 unreadable row" in rec.message for rec in caplog.records), (
-                f"expected one structured warning summarising the skip count; got {[r.message for r in caplog.records]}"
+            assert raised.value.namespace == namespace
+            assert raised.value.row_id >= 1
+            assert any("refusing default list" in rec.message for rec in caplog.records), (
+                f"expected debug diagnostics for fail-closed listing; got {[r.message for r in caplog.records]}"
             )
+            explicit = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+            assert len([item for item in explicit if isinstance(item, SecureObjectRecord)]) == 1
+            assert len([item for item in explicit if isinstance(item, SecureObjectUnreadable)]) == 1
+        finally:
+            engine.dispose()
+
+
+def test_list_records_does_not_yield_partial_subset_before_failure(tmp_path: Path) -> None:
+    """The fail-closed list path buffers all readable rows before yielding."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "metadata-order.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.metadata.order"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="readable-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"readable-early-row",
+            )
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET classification = ? WHERE namespace = ?",
+                    (SensitivityClass.AUDIT.value, namespace),
+                )
+            iterator = repo.list_records(
+                namespace,
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                next(iterator)
+        finally:
+            engine.dispose()
+
+
+def test_list_records_yields_records_when_every_row_is_readable(tmp_path: Path) -> None:
+    """Readable namespaces still yield records through the default list path."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "readable-list.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace="aeat.test.readable.list",
+                object_key="readable-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"readable-list-payload",
+            )
+
+            yielded = list(
+                repo.list_records(
+                    "aeat.test.readable.list",
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+
+            assert [record.payload for record in yielded] == [b"readable-list-payload"]
+        finally:
+            engine.dispose()
+
+
+def test_list_records_rejects_unreadable_row_before_readable_subset(
+    tmp_path: Path,
+) -> None:
+    """The exception surfaces even when a readable row was also stored."""
+
+    db_path = tmp_path / "rotated-readable.db"
+    key_old = EphemeralMasterKeyProvider()
+    key_new = EphemeralMasterKeyProvider()
+    namespace = "aeat.test.rotation.readable"
+
+    _seed_under_key(
+        db_path=db_path,
+        provider=key_old,
+        namespace=namespace,
+        natural_key="row-under-old-key",
+        payload=b"plaintext-from-old-generation",
+    )
+
+    with key_new:
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="row-under-new-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"plaintext-from-current-generation",
+            )
+
+            with pytest.raises(SecureObjectUnreadableError):
+                list(
+                    repo.list_records(
+                        namespace,
+                        expected_class=SensitivityClass.FINANCIAL,
+                        max_supported_version=1,
+                    )
+                )
+
         finally:
             engine.dispose()
 
@@ -306,6 +536,104 @@ def test_iter_records_with_failures_yields_typed_outcomes_for_each_row(
             engine.dispose()
 
 
+def test_iter_records_with_failures_yields_metadata_contract_failures(tmp_path: Path) -> None:
+    """Row-level metadata failures surface as typed unreadable outcomes."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "metadata-failures.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.metadata.failures"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="classification-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime.now(UTC),
+                payload=b"classification-row",
+            )
+            repo.save(
+                namespace=namespace,
+                object_key="schema-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=datetime.now(UTC),
+                payload=b"schema-row",
+            )
+            with sqlite3.connect(db_path) as con:
+                con.execute(
+                    "UPDATE secure_objects SET classification = ? WHERE namespace = ? AND schema_version = ?",
+                    (SensitivityClass.AUDIT.value, namespace, 1),
+                )
+
+            outcomes = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                )
+            )
+
+            assert len(outcomes) == 2
+            assert all(isinstance(item, SecureObjectUnreadable) for item in outcomes)
+            reasons = {item.reason for item in outcomes if isinstance(item, SecureObjectUnreadable)}
+            assert any("classification" in reason for reason in reasons)
+            assert any("schema version" in reason for reason in reasons)
+        finally:
+            engine.dispose()
+
+
+def test_iter_records_with_failures_yields_registry_schema_drift(tmp_path: Path) -> None:
+    """Registry-bound row schema drift surfaces as a typed unreadable outcome."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "registry-schema-drift.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.registry.schema"
+        registry = StorageHierarchyRegistry(
+            namespaces=(
+                SecureObjectNamespaceDefinition(
+                    key="test_registry_schema",
+                    namespace=namespace,
+                    owner="aeat.test",
+                    sensitivity=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    object_key_grammar="{id}",
+                    scope=StorageNamespaceScope.PROFILE_LOCAL,
+                ),
+            ),
+            paths=(),
+        )
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="schema-row",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=datetime.now(UTC),
+                payload=b"schema-row",
+            )
+
+            outcomes = list(
+                SecureObjectRepository(engine=engine, namespace_registry=registry).iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=2,
+                )
+            )
+
+            assert len(outcomes) == 1
+            assert isinstance(outcomes[0], SecureObjectUnreadable)
+            assert outcomes[0].schema_version == 2
+            assert "schema" in outcomes[0].reason
+        finally:
+            engine.dispose()
+
+
 def test_iter_records_with_failures_returns_empty_on_empty_namespace(
     tmp_path: Path,
 ) -> None:
@@ -324,6 +652,85 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
                 )
             )
             assert items == []
+        finally:
+            engine.dispose()
+
+
+def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
+    """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "bounded-batches.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.bounded.batches"
+        captured_options: list[dict[str, object]] = []
+
+        def capture_listing_execution(
+            _conn: object,
+            _cursor: object,
+            statement: str,
+            _parameters: object,
+            context: object,
+            _executemany: bool,
+        ) -> None:
+            if "FROM secure_objects WHERE namespace" in statement:
+                captured_options.append(dict(context.execution_options))
+
+        event.listen(engine, "before_cursor_execute", capture_listing_execution)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            for index in range(5):
+                repo.save(
+                    namespace=namespace,
+                    object_key=f"row-{index}",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=f"payload-{index}".encode(),
+                )
+
+            outcomes = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                    batch_size=2,
+                )
+            )
+
+            assert len(outcomes) == 5
+            assert all(isinstance(item, SecureObjectRecord) for item in outcomes)
+            assert any(
+                options.get("yield_per") == 2 and options.get("stream_results") is True
+                for options in captured_options
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", capture_listing_execution)
+            engine.dispose()
+
+
+def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -> None:
+    """Batch size must be positive before the diagnostic row scan starts."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "invalid-batch-size.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+
+            with pytest.raises(StorageValidationError, match="batch_size"):
+                list(
+                    repo.iter_records_with_failures(
+                        "aeat.test.invalid.batch",
+                        expected_class=SensitivityClass.FINANCIAL,
+                        max_supported_version=1,
+                        batch_size=0,
+                    )
+                )
         finally:
             engine.dispose()
 
@@ -464,6 +871,554 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
             assert len(rows) == 1
             # The ciphertext bytes are returned verbatim; no DecryptionError.
             assert rows[0].namespace == "aeat.rotated"
+        finally:
+            engine.dispose()
+
+
+def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) -> None:
+    """Quarantine copies lineage and integrity fields with unreadable ciphertext.
+
+    The source row is sealed under an old key, then annotated with
+    non-default revision metadata before reopening under a different key.
+    Quarantine must archive the opaque row without dropping the metadata
+    that later sync and repair flows rely on.
+    """
+
+    seed_provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "quarantine-metadata.db"
+    namespace = "aeat.quarantine.metadata"
+    _seed_under_key(
+        db_path=db_path,
+        provider=seed_provider,
+        namespace=namespace,
+        natural_key="quarantine-key",
+        payload=b"quarantine-metadata-payload",
+    )
+    metadata_values = {
+        "revision_id": "a" * 64,
+        "previous_revision_id": "b" * 64,
+        "previous_payload_hash": "c" * 64,
+        "payload_hash": "d" * 64,
+        "ciphertext_hash": "e" * 64,
+        "revision_written_at": "2026-05-22T12:30:00+00:00",
+        "write_provenance": "test:quarantine-metadata",
+        "source_event_id": "event-2026-05-22-001",
+        "conflict_policy": "last-write-wins",
+    }
+    with sqlite3.connect(db_path) as con:
+        con.execute(
+            "UPDATE secure_objects SET "
+            "revision_id = :revision_id, "
+            "previous_revision_id = :previous_revision_id, "
+            "previous_payload_hash = :previous_payload_hash, "
+            "payload_hash = :payload_hash, "
+            "ciphertext_hash = :ciphertext_hash, "
+            "revision_written_at = :revision_written_at, "
+            "write_provenance = :write_provenance, "
+            "source_event_id = :source_event_id, "
+            "conflict_policy = :conflict_policy "
+            "WHERE namespace = :namespace",
+            {**metadata_values, "namespace": namespace},
+        )
+
+    with EphemeralMasterKeyProvider():
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        try:
+            report = SecureObjectRepository(engine=engine).quarantine_unreadable_rows()
+
+            assert report == (
+                SecureObjectNamespaceIntegrity(
+                    namespace=namespace,
+                    readable=0,
+                    unreadable=1,
+                ),
+            )
+            with sqlite3.connect(db_path) as con:
+                archived = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                    "conflict_policy FROM secure_objects_quarantine"
+                ).fetchone()
+                (remaining,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert archived == tuple(metadata_values.values())
+            assert remaining == 0
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -> None:
+    """A save writes storage-level revision and integrity metadata to disk."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-write.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        payload = b"revision-integrity-payload"
+        written_at = datetime(2026, 5, 22, 13, 0, 0, tzinfo=UTC)
+        try:
+            SecureObjectRepository(engine=engine).save(
+                namespace="aeat.revision.write",
+                object_key="revision-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=written_at,
+                payload=payload,
+                write_provenance="test:revision-write",
+                source_event_id="event-write-001",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                    "conflict_policy, payload FROM secure_objects"
+                ).fetchone()
+
+            assert len(row[0]) == 64
+            assert row[1] is None
+            assert row[2] is None
+            assert row[3] == hashlib.sha256(payload).hexdigest()
+            assert row[4] == hashlib.sha256(row[9]).hexdigest()
+            assert row[5] is not None
+            assert row[6] == "test:revision-write"
+            assert row[7] == "event-write-001"
+            assert row[8] == "last-write-wins"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path) -> None:
+    """Overwrites preserve the previous storage revision reference and payload hash."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-overwrite.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.overwrite"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 14, 0, 0, tzinfo=UTC),
+                payload=b"first-revision-payload",
+                write_provenance="test:first-write",
+            )
+            with sqlite3.connect(db_path) as con:
+                first_revision_id, first_payload_hash = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save(
+                namespace=namespace,
+                object_key="overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 14, 5, 0, tzinfo=UTC),
+                payload=b"second-revision-payload",
+                write_provenance="test:second-write",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "write_provenance FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert row[0] != first_revision_id
+            assert row[1] == first_revision_id
+            assert row[2] == first_payload_hash
+            assert row[3] == hashlib.sha256(b"second-revision-payload").hexdigest()
+            assert row[4] == "test:second-write"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp_path: Path) -> None:
+    """A first overwrite after schema bootstrap links to the legacy plaintext hash."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-legacy-overwrite.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        legacy_payload = b"legacy-before-revision-metadata"
+        namespace = "aeat.revision.legacy"
+        try:
+            with engine.begin() as connection:
+                connection.exec_driver_sql(
+                    "CREATE TABLE secure_objects ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "namespace VARCHAR(128) NOT NULL, "
+                    "object_key BLOB NOT NULL, "
+                    "classification VARCHAR(32) NOT NULL, "
+                    "schema_version INTEGER NOT NULL, "
+                    "written_at DATETIME NOT NULL, "
+                    "payload BLOB NOT NULL, "
+                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
+                    ")"
+                )
+                connection.execute(
+                    SecureObjectRow.__table__.insert().values(
+                        namespace=namespace,
+                        object_key="legacy-overwrite-key",
+                        classification=SensitivityClass.FINANCIAL.value,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 15, 0, 0, tzinfo=UTC),
+                        payload=legacy_payload,
+                    )
+                )
+
+            SecureObjectRepository(engine=engine).save(
+                namespace=namespace,
+                object_key="legacy-overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 15, 10, 0, tzinfo=UTC),
+                payload=b"post-bootstrap-overwrite",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                previous_revision_id, previous_payload_hash = con.execute(
+                    "SELECT previous_revision_id, previous_payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert previous_revision_id is None
+            assert previous_payload_hash == hashlib.sha256(legacy_payload).hexdigest()
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> None:
+    """Batched writes carry revision metadata for each persisted row."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-save-many.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine).save_many(
+                (
+                    SecureObjectWrite(
+                        namespace="aeat.revision.batch",
+                        object_key="batch-a",
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 16, 0, 0, tzinfo=UTC),
+                        payload=b"batch-payload-a",
+                        write_provenance="test:batch",
+                        source_event_id="batch-event-a",
+                    ),
+                    SecureObjectWrite(
+                        namespace="aeat.revision.batch",
+                        object_key="batch-b",
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 16, 1, 0, tzinfo=UTC),
+                        payload=b"batch-payload-b",
+                        write_provenance="test:batch",
+                        source_event_id="batch-event-b",
+                    ),
+                )
+            )
+
+            with sqlite3.connect(db_path) as con:
+                rows = con.execute(
+                    "SELECT revision_id, payload_hash, write_provenance, source_event_id, conflict_policy "
+                    "FROM secure_objects WHERE namespace = ? ORDER BY source_event_id",
+                    ("aeat.revision.batch",),
+                ).fetchall()
+            assert len(rows) == 2
+            assert all(len(row[0]) == 64 for row in rows)
+            assert [row[1] for row in rows] == [
+                hashlib.sha256(b"batch-payload-a").hexdigest(),
+                hashlib.sha256(b"batch-payload-b").hexdigest(),
+            ]
+            assert [row[2] for row in rows] == ["test:batch", "test:batch"]
+            assert [row[3] for row in rows] == ["batch-event-a", "batch-event-b"]
+            assert [row[4] for row in rows] == ["last-write-wins", "last-write-wins"]
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path) -> None:
+    """Raw-key archive restore writes the same metadata as natural-key saves."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-raw-key.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        raw_key = bytes(range(32))
+        payload = b"raw-key-revision-payload"
+        try:
+            SecureObjectRepository(engine=engine).save_with_raw_key(
+                namespace="aeat.revision.raw",
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 17, 0, 0, tzinfo=UTC),
+                payload=payload,
+                write_provenance="test:raw-key",
+                source_event_id="raw-key-event",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT object_key, revision_id, payload_hash, write_provenance, source_event_id "
+                    "FROM secure_objects WHERE namespace = ?",
+                    ("aeat.revision.raw",),
+                ).fetchone()
+            assert row[0] == raw_key
+            assert len(row[1]) == 64
+            assert row[2] == hashlib.sha256(payload).hexdigest()
+            assert row[3] == "test:raw-key"
+            assert row[4] == "raw-key-event"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
+    """S29 records the actual LWW policy; S30 owns public CAS policy selection."""
+
+    with pytest.raises(ValidationError):
+        SecureObjectWrite(
+            namespace="aeat.revision.policy",
+            object_key="policy-key",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC),
+            payload=b"policy-payload",
+            conflict_policy="compare-and-swap",
+        )
+
+
+def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_path: Path) -> None:
+    """Expected-revision writes update when the stored revision still matches."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-success.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 19, 0, 0, tzinfo=UTC),
+                payload=b"cas-before",
+            )
+            with sqlite3.connect(db_path) as con:
+                (first_revision_id,) = con.execute(
+                    "SELECT revision_id FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 19, 5, 0, tzinfo=UTC),
+                payload=b"cas-after",
+                expected_revision_id=first_revision_id,
+            )
+
+            with sqlite3.connect(db_path) as con:
+                revision_id, previous_revision_id, payload_hash, conflict_policy = con.execute(
+                    "SELECT revision_id, previous_revision_id, payload_hash, conflict_policy "
+                    "FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert revision_id != first_revision_id
+            assert previous_revision_id == first_revision_id
+            assert payload_hash == hashlib.sha256(b"cas-after").hexdigest()
+            assert conflict_policy == "compare-and-swap"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_stale_expected_revision_refuses_without_overwrite(tmp_path: Path) -> None:
+    """A stale expected revision must not overwrite the current secure object."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-stale.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.stale"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 20, 0, 0, tzinfo=UTC),
+                payload=b"current-payload",
+            )
+            with sqlite3.connect(db_path) as con:
+                before = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            with pytest.raises(SecureObjectRevisionConflictError) as raised:
+                repo.save(
+                    namespace=namespace,
+                    object_key="cas-key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 22, 20, 5, 0, tzinfo=UTC),
+                    payload=b"stale-overwrite",
+                    expected_revision_id="f" * 64,
+                )
+
+            assert raised.value.context == {
+                "namespace": namespace,
+                "expected_revision_id": "f" * 64,
+                "current_revision_id": before[0],
+            }
+            assert raised.value.translated_message == "errors.fail.fail_storage_secure_object_revision_conflict"
+            with sqlite3.connect(db_path) as con:
+                after = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert after == before
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path: Path) -> None:
+    """A CAS write must not create a missing object for a stale expected revision."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-missing.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.missing"
+        try:
+            with pytest.raises(SecureObjectRevisionConflictError) as raised:
+                SecureObjectRepository(engine=engine).save(
+                    namespace=namespace,
+                    object_key="missing-key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 22, 20, 30, 0, tzinfo=UTC),
+                    payload=b"must-not-create",
+                    expected_revision_id="a" * 64,
+                )
+
+            assert raised.value.context == {
+                "namespace": namespace,
+                "expected_revision_id": "a" * 64,
+                "current_revision_id": "",
+            }
+            with sqlite3.connect(db_path) as con:
+                (row_count,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert row_count == 0
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Path) -> None:
+    """A CAS conflict in a batch rolls back sibling writes in the unit of work."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-batch.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.batch"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="existing-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 21, 0, 0, tzinfo=UTC),
+                payload=b"existing-payload",
+            )
+
+            with pytest.raises(SecureObjectRevisionConflictError):
+                repo.save_many(
+                    (
+                        SecureObjectWrite(
+                            namespace=namespace,
+                            object_key="new-key",
+                            classification=SensitivityClass.FINANCIAL,
+                            schema_version=1,
+                            written_at=datetime(2026, 5, 22, 21, 5, 0, tzinfo=UTC),
+                            payload=b"must-roll-back",
+                        ),
+                        SecureObjectWrite(
+                            namespace=namespace,
+                            object_key="existing-key",
+                            classification=SensitivityClass.FINANCIAL,
+                            schema_version=1,
+                            written_at=datetime(2026, 5, 22, 21, 6, 0, tzinfo=UTC),
+                            payload=b"stale-batch-overwrite",
+                            expected_revision_id="e" * 64,
+                        ),
+                    )
+                )
+
+            with sqlite3.connect(db_path) as con:
+                rows = con.execute(
+                    "SELECT COUNT(*), SUM(CASE WHEN payload_hash = ? THEN 1 ELSE 0 END) "
+                    "FROM secure_objects WHERE namespace = ?",
+                    (hashlib.sha256(b"existing-payload").hexdigest(), namespace),
+                ).fetchone()
+            assert rows == (1, 1)
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Path) -> None:
+    """Raw-key archive writes use the same expected-revision conflict contract."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-raw-key.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        raw_key = b"x" * 32
+        namespace = "aeat.revision.cas.raw"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 0, 0, tzinfo=UTC),
+                payload=b"raw-before",
+            )
+            with sqlite3.connect(db_path) as con:
+                (first_revision_id,) = con.execute(
+                    "SELECT revision_id FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 5, 0, tzinfo=UTC),
+                payload=b"raw-after",
+                expected_revision_id=first_revision_id,
+            )
+
+            with sqlite3.connect(db_path) as con:
+                previous_revision_id, conflict_policy = con.execute(
+                    "SELECT previous_revision_id, conflict_policy FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert previous_revision_id == first_revision_id
+            assert conflict_policy == "compare-and-swap"
         finally:
             engine.dispose()
 

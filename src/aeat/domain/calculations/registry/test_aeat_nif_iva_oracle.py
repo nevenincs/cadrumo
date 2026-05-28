@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
+from pydantic import ValidationError
 
 from aeat.core.config import Settings
 
@@ -181,3 +184,54 @@ def test_register_default_test_environment_classification_supported() -> None:
     assert catalogue.environment_of(ORACLE_ID) == "test_environment"
     with pytest.raises(RegistryValidationError, match=r"environment|production|test_environment|oracle"):
         catalogue.lookup(ORACLE_ID, environment="production")
+
+
+# ---------------------------------------------------------------------------
+# S122 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# ---------------------------------------------------------------------------
+
+
+def test_replay_payload_roundtrip_via_nif_iva_driver() -> None:
+    """ReplayPayload.model_validate accepts the canonical JSON shape and the
+    NIF-IVA replay driver round-trips the same envelope faithfully."""
+
+    from ._live_parity import ReplayPayload
+
+    raw = json.dumps(
+        {
+            "observed": {"DE111222333": "valid", "FR12345678901": "invalid"},
+            "raw_evidence_locator": "corpus/aeat_official/nif_iva/sample.json",
+        }
+    ).encode()
+
+    # Direct schema validation — strict, frozen, extra=forbid.
+    payload = ReplayPayload.model_validate(json.loads(raw))
+    assert payload.observed == {"DE111222333": "valid", "FR12345678901": "invalid"}
+    assert payload.raw_evidence_locator == "corpus/aeat_official/nif_iva/sample.json"
+
+    # Drive through the production reader path.
+    driver = AeatNifIvaReplayDriver()
+    observation = driver.collect_observation(raw, expected={})
+
+    # Driver normalises keys to upper-case and values to lower-case.
+    assert observation.values["DE111222333"] == "valid"
+    assert observation.values["FR12345678901"] == "invalid"
+    assert observation.raw_evidence_locator == payload.raw_evidence_locator
+
+
+def test_replay_payload_strict_rejects_extra_fields_nif_iva() -> None:
+    """extra=forbid on ReplayPayload raises ValidationError for unknown keys."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError, match="Extra"):
+        ReplayPayload.model_validate({"observed": {}, "unexpected_key": True})
+
+
+def test_replay_payload_strict_rejects_non_string_value_in_observed_nif_iva() -> None:
+    """Mapping[str, str] under strict mode rejects non-string values."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": {"DE111222333": 42}})
