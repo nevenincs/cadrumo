@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
@@ -22,7 +23,10 @@ from . import (
     LiveIvaAcquisitionFailureMode,
     LiveIvaReadStatus,
     LiveIvaReadSurface,
+    LiveIvaSurfaceTimeoutError,
+    _await_live_iva_surface,
     build_iva_remote_state_acquisition_report,
+    classify_live_iva_acquisition_failure,
     list_iva_remote_state_acquisition_manifests,
     load_iva_remote_state,
     load_iva_remote_state_acquisition_manifest,
@@ -188,6 +192,53 @@ def test_combined_acquisition_reports_missing_surface_as_typed_failure(tmp_path:
         "MissingSurfaceReport",
         "MissingSurfaceReport",
     )
+
+
+def test_live_surface_timeout_is_typed_and_classified() -> None:
+    async def slow_read() -> str:
+        await asyncio.sleep(0.05)
+        return "unreachable"
+
+    async def run() -> None:
+        with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
+            await _await_live_iva_surface(
+                slow_read(),
+                surface=LiveIvaReadSurface.FILED_HISTORY,
+                timeout_ms=1,
+            )
+
+        assert raised.value.surface == LiveIvaReadSurface.FILED_HISTORY.value
+        assert raised.value.timeout_ms == 1
+        assert (
+            classify_live_iva_acquisition_failure(raised.value)
+            is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+        )
+
+    asyncio.run(run())
+
+
+def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
+    timeout = LiveIvaSurfaceTimeoutError(
+        "filed-history read did not finish",
+        surface=LiveIvaReadSurface.FILED_HISTORY.value,
+        timeout_ms=1,
+    )
+
+    report = build_iva_remote_state_acquisition_report(
+        output_root=tmp_path,
+        year_from=2024,
+        year_to=2024,
+        target_year=2026,
+        target_period="1T",
+        filed_history_error=timeout,
+    )
+
+    filed_outcome, wallet_outcome = report.outcomes
+    assert filed_outcome.status is LiveIvaReadStatus.FAILED
+    assert filed_outcome.outcome_mode is LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
+    assert filed_outcome.failure_type == "LiveIvaSurfaceTimeoutError"
+    assert filed_outcome.captured_count is None
+    assert wallet_outcome.status is LiveIvaReadStatus.FAILED
 
 
 def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:

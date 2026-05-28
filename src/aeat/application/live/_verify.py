@@ -24,16 +24,19 @@ Structurally read-only:
 from __future__ import annotations
 
 import hashlib
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import LIVE_VERIFY_OBSERVATION_NAMESPACE, Envelope
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.time import _now
-from .._storage_paths import storage_path
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -71,6 +74,16 @@ class VerifyObservation(BaseModel):
     persisted_at: datetime
 
 
+def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:
+    trimmed_bucket = bucket_id.strip()
+    trimmed_observation = observation_id.strip()
+    if not trimmed_bucket:
+        raise AeatError("bucket_id must not be blank")
+    if not trimmed_observation:
+        raise AeatError("observation_id must not be blank")
+    return f"verify-observation:{trimmed_bucket}:{trimmed_observation}"
+
+
 def _derive_observation_id(
     *,
     surface: VerifySurface,
@@ -82,23 +95,95 @@ def _derive_observation_id(
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
-def _load(settings: Settings, bucket_id: str) -> list[VerifyObservation]:
-    path = storage_path(settings.aeat_audit_dir / "live" / "verify", bucket_id)
-    if not path.exists():
-        return []
-    return [
-        VerifyObservation.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
+class VerifyObservationRepository:
+    """Secure-object repository for bucket-scoped verify observations."""
 
+    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
+        trimmed = bucket_id.strip()
+        if not trimmed:
+            raise AeatError("bucket_id must not be blank")
+        self._bucket_id = trimmed
+        self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
 
-def _save(settings: Settings, bucket_id: str, observations: list[VerifyObservation]) -> None:
-    path = storage_path(settings.aeat_audit_dir / "live" / "verify", bucket_id)
-    payload = "\n".join(o.model_dump_json() for o in observations)
-    if payload:
-        payload += "\n"
-    path.write_text(payload, encoding="utf-8")
+    @property
+    def bucket_id(self) -> str:
+        return self._bucket_id
+
+    def load(self, observation_id: str) -> VerifyObservation | None:
+        record = self._objects.load(
+            LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+            verify_observation_object_key(self._bucket_id, observation_id),
+            expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+        )
+        if record is None:
+            return None
+        observation = self._observation_from_record(record, requested_observation_id=observation_id)
+        if observation.bucket_id != self._bucket_id:
+            raise AeatError(
+                f"verify observation bucket_id={observation.bucket_id!r} "
+                f"does not match repository bucket {self._bucket_id!r}"
+            )
+        if observation.observation_id != observation_id:
+            raise AeatError(
+                f"verify observation id={observation.observation_id!r} "
+                f"does not match requested observation {observation_id!r}"
+            )
+        return observation
+
+    def list_observations(self) -> tuple[VerifyObservation, ...]:
+        observations = [
+            observation
+            for record in self._objects.list_records(
+                LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+                expected_class=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+                max_supported_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            )
+            for observation in (self._observation_from_record(record),)
+            if observation.bucket_id == self._bucket_id
+        ]
+        return tuple(sorted(observations, key=lambda item: (item.checked_at, item.observation_id)))
+
+    def save(self, observation: VerifyObservation) -> None:
+        if observation.bucket_id != self._bucket_id:
+            raise AeatError(
+                f"verify observation bucket_id={observation.bucket_id!r} "
+                f"does not match repository bucket {self._bucket_id!r}"
+            )
+        envelope = Envelope[VerifyObservation](
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=datetime.now(UTC),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            payload=observation,
+        )
+        self._objects.save(
+            namespace=LIVE_VERIFY_OBSERVATION_NAMESPACE.namespace,
+            object_key=verify_observation_object_key(self._bucket_id, observation.observation_id),
+            classification=LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity,
+            schema_version=LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    @staticmethod
+    def _observation_from_record(
+        record: SecureObjectRecord,
+        requested_observation_id: str | None = None,
+    ) -> VerifyObservation:
+        envelope = Envelope[VerifyObservation].model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity:
+            observation_label = requested_observation_id or envelope.payload.observation_id
+            raise ClassificationError(
+                f"verify observation {observation_label!r} has classification {envelope.classification}; "
+                f"consumer expected {LIVE_VERIFY_OBSERVATION_NAMESPACE.sensitivity}",
+            )
+        if envelope.schema_version > LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version:
+            observation_label = requested_observation_id or envelope.payload.observation_id
+            raise EnvelopeVersionError(
+                f"verify observation {observation_label!r} is at version {envelope.schema_version}; "
+                f"consumer supports up to {LIVE_VERIFY_OBSERVATION_NAMESPACE.schema_version}",
+            )
+        return envelope.payload
 
 
 class VerifyService:
@@ -112,6 +197,12 @@ class VerifyService:
 
     def __init__(self, settings: Settings | None = None) -> None:
         self._settings = settings or load_settings()
+
+    def _repository_for(self, bucket_id: str) -> VerifyObservationRepository:
+        return VerifyObservationRepository(
+            bucket_id=bucket_id,
+            objects=secure_object_repository_for_bucket(bucket_id, self._settings),
+        )
 
     def record(
         self,
@@ -144,15 +235,11 @@ class VerifyService:
             raw_evidence_locator=raw_evidence_locator,
             persisted_at=_now(),
         )
-        observations = _load(self._settings, bucket_id)
-        existing = next(
-            (o for o in observations if o.observation_id == observation_id),
-            None,
-        )
+        repository = self._repository_for(bucket_id)
+        existing = repository.load(observation_id)
         if existing is not None:
             return existing
-        observations.append(observation)
-        _save(self._settings, bucket_id, observations)
+        repository.save(observation)
         return observation
 
     def list_observations(
@@ -163,7 +250,7 @@ class VerifyService:
         nif: str | None = None,
     ) -> tuple[VerifyObservation, ...]:
         """Return all observations in capture order. Optional filters."""
-        observations = _load(self._settings, bucket_id)
+        observations = list(self._repository_for(bucket_id).list_observations())
         if surface is not None:
             observations = [o for o in observations if o.surface is surface]
         if nif is not None:
@@ -179,7 +266,7 @@ class VerifyService:
         """Look up one observation by full id or unambiguous prefix."""
         matches = [
             o
-            for o in _load(self._settings, bucket_id)
+            for o in self._repository_for(bucket_id).list_observations()
             if o.observation_id == observation_id or o.observation_id.startswith(observation_id)
         ]
         if not matches:
@@ -203,7 +290,11 @@ class VerifyService:
         nif: str,
     ) -> VerifyObservation | None:
         """Return the most recent observation for (surface, nif), or None."""
-        matches = [o for o in _load(self._settings, bucket_id) if o.surface is surface and o.nif == nif]
+        matches = [
+            o
+            for o in self._repository_for(bucket_id).list_observations()
+            if o.surface is surface and o.nif == nif
+        ]
         if not matches:
             return None
         return max(matches, key=lambda o: o.checked_at)
@@ -212,7 +303,9 @@ class VerifyService:
 __all__ = [
     "VerifyObservation",
     "VerifyObservationNotFoundError",
+    "VerifyObservationRepository",
     "VerifyService",
     "VerifySurface",
     "VerifyVerdict",
+    "verify_observation_object_key",
 ]

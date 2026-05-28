@@ -59,6 +59,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._errors.LiveIvaSurfaceTimeoutError",
+        ErrorCode(
+            code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_application_live_iva_surface_timeout",
+            default_suggestion="aeat app live iva-wallet capture-remote-state --help",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._operator.AuthProviderReservedError",
         ErrorCode(
             code="REFUSED_AUTH_PROVIDER_RESERVED",

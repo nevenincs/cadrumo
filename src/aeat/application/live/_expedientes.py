@@ -30,12 +30,14 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.outbound.aeat.sede._declarations import Declaracion
+from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.time import _now
-from .._storage_paths import storage_path
+from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
-    JsonlSnapshotRepository,
+    SecureSnapshotRepository,
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
@@ -79,13 +81,24 @@ def _derive_snapshot_id(capture: ExpedientesCapture) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    trimmed_bucket = bucket_id.strip()
+    trimmed_snapshot = snapshot_id.strip()
+    if not trimmed_bucket:
+        raise LiveApplicationInputError("bucket_id must not be blank")
+    if not trimmed_snapshot:
+        raise LiveApplicationInputError("snapshot_id must not be blank")
+    return f"expedientes-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+
+
 def _expedientes_repository(
     settings: Settings, bucket_id: str
-) -> JsonlSnapshotRepository[PersistedExpedientesSnapshot]:
-    return JsonlSnapshotRepository(
+) -> SecureSnapshotRepository[PersistedExpedientesSnapshot]:
+    return SecureSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=PersistedExpedientesSnapshot,
-        storage_path=lambda bucket: storage_path(settings.aeat_audit_dir / "live" / "expedientes", bucket),
+        namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+        object_key=expedientes_snapshot_object_key,
         not_found_factory=lambda snapshot_id: ExpedientesSnapshotNotFoundError(
             f"no expedientes snapshot matches {snapshot_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app live expedientes list",
@@ -95,6 +108,7 @@ def _expedientes_repository(
             suggestion="provide a longer prefix",
         ),
         domain_label="expedientes",
+        objects=secure_object_repository_for_bucket(bucket_id, settings),
     )
 
 
@@ -103,8 +117,8 @@ class ExpedientesService(StatelessSnapshotService[PersistedExpedientesSnapshot])
 
     Structurally read-only per the live-AEAT charter. No submit, no
     acknowledge, no method that mutates AEAT state. Each public verb
-    accepts ``bucket_id`` per call; storage is one JSONL file per bucket
-    under ``aeat_audit_dir/live/expedientes``.
+    accepts ``bucket_id`` per call; storage is one encrypted secure-object
+    row per captured snapshot.
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
@@ -161,4 +175,5 @@ __all__ = [
     "ExpedientesService",
     "ExpedientesSnapshotNotFoundError",
     "PersistedExpedientesSnapshot",
+    "expedientes_snapshot_object_key",
 ]
