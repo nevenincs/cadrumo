@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import event
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
@@ -651,6 +652,85 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
                 )
             )
             assert items == []
+        finally:
+            engine.dispose()
+
+
+def test_iter_records_with_failures_applies_bounded_batch_execution(tmp_path: Path) -> None:
+    """The explicit diagnostic iterator executes its row scan with a bounded batch size."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "bounded-batches.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.test.bounded.batches"
+        captured_options: list[dict[str, object]] = []
+
+        def capture_listing_execution(
+            _conn: object,
+            _cursor: object,
+            statement: str,
+            _parameters: object,
+            context: object,
+            _executemany: bool,
+        ) -> None:
+            if "FROM secure_objects WHERE namespace" in statement:
+                captured_options.append(dict(context.execution_options))
+
+        event.listen(engine, "before_cursor_execute", capture_listing_execution)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            for index in range(5):
+                repo.save(
+                    namespace=namespace,
+                    object_key=f"row-{index}",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime.now(UTC),
+                    payload=f"payload-{index}".encode(),
+                )
+
+            outcomes = list(
+                repo.iter_records_with_failures(
+                    namespace,
+                    expected_class=SensitivityClass.FINANCIAL,
+                    max_supported_version=1,
+                    batch_size=2,
+                )
+            )
+
+            assert len(outcomes) == 5
+            assert all(isinstance(item, SecureObjectRecord) for item in outcomes)
+            assert any(
+                options.get("yield_per") == 2 and options.get("stream_results") is True
+                for options in captured_options
+            )
+        finally:
+            event.remove(engine, "before_cursor_execute", capture_listing_execution)
+            engine.dispose()
+
+
+def test_iter_records_with_failures_rejects_invalid_batch_size(tmp_path: Path) -> None:
+    """Batch size must be positive before the diagnostic row scan starts."""
+
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        db_path = tmp_path / "invalid-batch-size.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            repo = SecureObjectRepository(engine=engine)
+
+            with pytest.raises(StorageValidationError, match="batch_size"):
+                list(
+                    repo.iter_records_with_failures(
+                        "aeat.test.invalid.batch",
+                        expected_class=SensitivityClass.FINANCIAL,
+                        max_supported_version=1,
+                        batch_size=0,
+                    )
+                )
         finally:
             engine.dispose()
 
