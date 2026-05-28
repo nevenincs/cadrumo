@@ -1963,196 +1963,274 @@ entries:
     purpose: entries.portal_sede_root.purpose
 errors:
   auth:
-    auth_aeat_login_assertion: 'Az AEAT-tal való bejelentkezés utáni ellenőrzés nem sikerült.'
-    auth_aeat_session_expired: 'A hitelesített AEAT-munkamenet lejárt. A folytatáshoz hitelesítse magát újra.'
-    auth_auth: 'AEAT-hitelesítési hiba történt.'
-    auth_auth_authenticator_persisted_session_invalid: 'A tárolt AEAT böngésző-munkamenet nem megbízható. Hitelesítse magát újra.'
-    auth_auth_certificate: 'Tanúsítvány-hitelesítési hiba történt.'
-    auth_auth_certificate_expired: 'A digitális tanúsítvány lejárt. Hitelesítés előtt újítsa meg a tanúsítványt.'
-    auth_auth_certificate_handshake: 'A TLS-kézfogás bemenete érvénytelen. Ellenőrizze a megadott URL-t.'
-    auth_auth_certificate_load: 'A PKCS#12 tanúsítványadatok nem elemezhetők. Ellenőrizze, hogy a fájl nem sérült-e.'
-    auth_auth_certificate_nif_parse: 'Nem sikerült NIF-et vagy NIE-t kinyerni a tanúsítvány alanyából. Ellenőrizze, hogy a tanúsítvány természetes személyhez tartozik-e.'
-    auth_auth_certificate_password: 'A tanúsítvány jelszava hiányzik vagy helytelen. Állítsa be a környezeti változót a helyes jelszóra.'
-    auth_auth_certificate_pre_expiry: 'A digitális tanúsítvány hamarosan lejár. A megszakítások elkerülése érdekében újítsa meg, mielőtt lejárna.'
-    auth_auth_clave_movil_clave_movil_approval_timeout: 'A Cl@ve-hitelesítés nem fejeződött be időben. Hagyja jóvá a kérést az eszközén, és próbálja újra.'
-    auth_auth_clave_movil_clave_movil_configuration: 'A szükséges Cl@ve Móvil beállítások hiányoznak vagy hibásak. Tekintse át a Cl@ve konfigurációt.'
-    auth_auth_configuration: 'A szükséges hitelesítési beállítások hiányoznak vagy hibásak. Tekintse át a hitelesítési konfigurációt.'
-    auth_auth_validation: 'A hitelesítési paraméterek nem mentek át az érvényesítésen. Javítsa a megjelenített értékeket, és próbálja újra.'
-    auth_google: 'Google-hitelesítési hiba történt.'
-    auth_google_client_not_registered: 'Az aktív profilhoz nem regisztráltak Google Desktop OAuth-klienst. Regisztráljon egy klienst a Google-funkciók használatához.'
-    auth_google_client_revoked: 'A regisztrált Google Desktop OAuth-klienst visszavonták. Regisztráljon új klienst.'
-    auth_google_expired: 'A Google frissítési token lejárt a 7 napos tesztelési projekt korlátján belül. Engedélyezze újra a Google-hozzáférést.'
-    auth_google_revoked: 'A Google frissítési tokent visszavonták. Engedélyezze újra a Google-hozzáférést.'
-    auth_google_scope_insufficient: 'A megadott Google hatókörök nem tartalmazzák a művelethez szükséges összes hatókört. Engedélyezze újra, megadva az összes kért hatókört.'
-    auth_outbound_storage_permission: 'Az aktív hitelesítő adatok nem rendelkeznek az ehhez a tárolási művelethez szükséges jogosultsággal.'
-    auth_session_corrupt: 'A tárolt munkamenet metaadatai nem elemezhetők. Hitelesítse magát újra egy friss munkamenet létrehozásához.'
-    auth_session_unavailable: 'Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítse magát a folytatás előtt.'
-    auth_storage_bucket_recovery_verification: 'A megadott helyreállítási kód érvénytelen. Pontosan írja be a 24 szót, ahogy a biztonsági másolatban szerepel.'
-    auth_storage_keyring_unavailable: 'Az operációs rendszer kulcstára nem elérhető. Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.'
-    auth_storage_master_key_kdf_version: 'A főkulcsfájl egy kulcsszármaztatási verziót használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.'
-    auth_storage_master_key_keychain_locked: 'Az operációs rendszer kulcstára zárolt. Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja újra.'
-    auth_storage_master_key_material_missing: 'Nincs főkulcs-anyag. A biztonságos tároló még nincs kiosztva.'
-    auth_storage_master_key_passphrase_mismatch: 'A jelmondat nem oldja fel a főkulcsot. Adja meg újra; ha elfelejtette, állítsa helyre a helyreállítási kulccsal.'
-    auth_storage_master_key_unavailable: 'A főkulcsot egyetlen szolgáltatótól sem sikerült beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.'
+    auth_aeat_login_assertion: Az AEAT-tal való bejelentkezés utáni ellenőrzés nem
+      sikerült.
+    auth_aeat_session_expired: A hitelesített AEAT-munkamenet lejárt. A folytatáshoz
+      hitelesítse magát újra.
+    auth_auth: AEAT-hitelesítési hiba történt.
+    auth_auth_authenticator_persisted_session_invalid: A tárolt AEAT böngésző-munkamenet
+      nem megbízható. Hitelesítse magát újra.
+    auth_auth_certificate: Tanúsítvány-hitelesítési hiba történt.
+    auth_auth_certificate_expired: A digitális tanúsítvány lejárt. Hitelesítés előtt
+      újítsa meg a tanúsítványt.
+    auth_auth_certificate_handshake: A TLS-kézfogás bemenete érvénytelen. Ellenőrizze
+      a megadott URL-t.
+    auth_auth_certificate_load: A PKCS#12 tanúsítványadatok nem elemezhetők. Ellenőrizze,
+      hogy a fájl nem sérült-e.
+    auth_auth_certificate_nif_parse: Nem sikerült NIF-et vagy NIE-t kinyerni a tanúsítvány
+      alanyából. Ellenőrizze, hogy a tanúsítvány természetes személyhez tartozik-e.
+    auth_auth_certificate_password: A tanúsítvány jelszava hiányzik vagy helytelen.
+      Állítsa be a környezeti változót a helyes jelszóra.
+    auth_auth_certificate_pre_expiry: A digitális tanúsítvány hamarosan lejár. A megszakítások
+      elkerülése érdekében újítsa meg, mielőtt lejárna.
+    auth_auth_clave_movil_clave_movil_approval_timeout: A Cl@ve-hitelesítés nem fejeződött
+      be időben. Hagyja jóvá a kérést az eszközén, és próbálja újra.
+    auth_auth_clave_movil_clave_movil_configuration: A szükséges Cl@ve Móvil beállítások
+      hiányoznak vagy hibásak. Tekintse át a Cl@ve konfigurációt.
+    auth_auth_configuration: A szükséges hitelesítési beállítások hiányoznak vagy
+      hibásak. Tekintse át a hitelesítési konfigurációt.
+    auth_auth_validation: A hitelesítési paraméterek nem mentek át az érvényesítésen.
+      Javítsa a megjelenített értékeket, és próbálja újra.
+    auth_google: Google-hitelesítési hiba történt.
+    auth_google_client_not_registered: Az aktív profilhoz nem regisztráltak Google
+      Desktop OAuth-klienst. Regisztráljon egy klienst a Google-funkciók használatához.
+    auth_google_client_revoked: A regisztrált Google Desktop OAuth-klienst visszavonták.
+      Regisztráljon új klienst.
+    auth_google_expired: A Google frissítési token lejárt a 7 napos tesztelési projekt
+      korlátján belül. Engedélyezze újra a Google-hozzáférést.
+    auth_google_revoked: A Google frissítési tokent visszavonták. Engedélyezze újra
+      a Google-hozzáférést.
+    auth_google_scope_insufficient: A megadott Google hatókörök nem tartalmazzák a
+      művelethez szükséges összes hatókört. Engedélyezze újra, megadva az összes kért
+      hatókört.
+    auth_outbound_storage_permission: Az aktív hitelesítő adatok nem rendelkeznek
+      az ehhez a tárolási művelethez szükséges jogosultsággal.
+    auth_session_corrupt: A tárolt munkamenet metaadatai nem elemezhetők. Hitelesítse
+      magát újra egy friss munkamenet létrehozásához.
+    auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítse
+      magát a folytatás előtt.
+    auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
+      Pontosan írja be a 24 szót, ahogy a biztonsági másolatban szerepel.
+    auth_storage_keyring_unavailable: Az operációs rendszer kulcstára nem elérhető.
+      Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.
+    auth_storage_master_key_kdf_version: A főkulcsfájl egy kulcsszármaztatási verziót
+      használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
+    auth_storage_master_key_keychain_locked: Az operációs rendszer kulcstára zárolt.
+      Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja
+      újra.
+    auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
+      még nincs kiosztva.
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a főkulcsot.
+      Adja meg újra; ha elfelejtette, állítsa helyre a helyreállítási kulccsal.
+    auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
+      beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:
     age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
-    binding_value_missing: 'A(z) {binding_id} kötésnek nincs megadott értéke.'
-    bound_casilla_binding_value_missing: 'A(z) {binding_id} kötésnek nincs megadott értéke.'
+    binding_value_missing: A(z) {binding_id} kötésnek nincs megadott értéke.
+    bound_casilla_binding_value_missing: A(z) {binding_id} kötésnek nincs megadott
+      értéke.
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
-    bracket_negative_base: 'A(z) {parameter_id} sávparaméter nem fogadhat el negatív alapot: {base}.'
-    bracket_no_coverage: 'A(z) {parameter_id} sávparaméternek nincs bejegyzése a(z) {base} alaphoz.'
-    bracket_no_window: 'A(z) {parameter_id} sávparaméternek nincs {as_of} időpontra érvényes sávja.'
-    casilla_constraint_violation: 'A(z) {casilla_id} mező {value} értéke sérti a korlátozást: {violation}. Hivatkozások: {legal_refs}.'
-    casilla_referenced_before_evaluation: 'A(z) {casilla_id} mezőre a képlet értékelése előtt hivatkoztak.'
+    bracket_negative_base: 'A(z) {parameter_id} sávparaméter nem fogadhat el negatív
+      alapot: {base}.'
+    bracket_no_coverage: A(z) {parameter_id} sávparaméternek nincs bejegyzése a(z)
+      {base} alaphoz.
+    bracket_no_window: A(z) {parameter_id} sávparaméternek nincs {as_of} időpontra
+      érvényes sávja.
+    casilla_constraint_violation: 'A(z) {casilla_id} mező {value} értéke sérti a korlátozást:
+      {violation}. Hivatkozások: {legal_refs}.'
+    casilla_referenced_before_evaluation: A(z) {casilla_id} mezőre a képlet értékelése
+      előtt hivatkoztak.
     computed_supplied_as_input: 'Számított mezők nem adhatók meg bemenetként: {casilla_ids}.'
     date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
     date_binding_value_missing: Hianyzik a datumkotes erteke.
-    dispatch_key_unknown: 'A(z) {dispatch_key!r} diszpécserkulcs nem szerepel a(z) {op} műveletre és {binding_id} kötésre vonatkozó diszpécser-táblázatban (deklarált kulcsok: {available}).'
-    dispatch_parameter_kind: 'A(z) {parameter_id} paraméter típusa nem egyezik a(z) {op} műveletnél; skaláris paramétert várt (decimális / pénz / egész szám / arány).'
-    divide_by_zero: 'A(z) {op} képletoperátor nullával oszt.'
-    empty_expression: 'Üres képletkifejezés.'
-    enum_binding_value_missing: 'A(z) {binding_id} felsorolás-kötésnek nincs megadott értéke (a(z) {op} művelet igényli).'
-    lookup_dispatch_arg_count: 'A(z) {op} képletoperátor {expected} argumentumot vár.'
-    lookup_dispatch_arg_kind: 'A(z) {op} képletoperátornál a(z) {position}. pozíciónak {expected_kind} levélnek kell lennie.'
-    parameter_unknown: 'A(z) {parameter_id} paraméter nincs regisztrálva.'
-    relation_value_missing: 'A(z) {relation_id} relációnak nincs megadott értéke.'
+    dispatch_key_unknown: 'A(z) {dispatch_key!r} diszpécserkulcs nem szerepel a(z)
+      {op} műveletre és {binding_id} kötésre vonatkozó diszpécser-táblázatban (deklarált
+      kulcsok: {available}).'
+    dispatch_parameter_kind: A(z) {parameter_id} paraméter típusa nem egyezik a(z)
+      {op} műveletnél; skaláris paramétert várt (decimális / pénz / egész szám / arány).
+    divide_by_zero: A(z) {op} képletoperátor nullával oszt.
+    empty_expression: Üres képletkifejezés.
+    enum_binding_value_missing: A(z) {binding_id} felsorolás-kötésnek nincs megadott
+      értéke (a(z) {op} művelet igényli).
+    lookup_dispatch_arg_count: A(z) {op} képletoperátor {expected} argumentumot vár.
+    lookup_dispatch_arg_kind: A(z) {op} képletoperátornál a(z) {position}. pozíciónak
+      {expected_kind} levélnek kell lennie.
+    parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
+    relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
-    no_snapshot_captured: 'Nem sikerült census-pillanatképet rögzíteni a(z) {profile_id} profilhoz.'
-    profile_not_found: 'A(z) {profile_id} profil nem létezik; census alkalmazása előtt hozza létre.'
-    sede_g313_no_census: 'Az AEAT G313 szekcióból nem sikerült olvasható censust lekérni a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je regisztrálva van-e.'
-    sede_no_census: 'Az AEAT szekcióból nem sikerült olvasható censust lekérni a(z) {profile_id} profilhoz.'
+    no_snapshot_captured: Nem sikerült census-pillanatképet rögzíteni a(z) {profile_id}
+      profilhoz.
+    profile_not_found: A(z) {profile_id} profil nem létezik; census alkalmazása előtt
+      hozza létre.
+    sede_g313_no_census: Az AEAT G313 szekcióból nem sikerült olvasható censust lekérni
+      a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je
+      regisztrálva van-e.
+    sede_no_census: Az AEAT szekcióból nem sikerült olvasható censust lekérni a(z)
+      {profile_id} profilhoz.
   error:
-    error_access_gate_submission: errors.error.error_access_gate_submission
-    error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
-    error_aeat_core: errors.error.error_aeat_core
-    error_aeat_observability: errors.error.error_aeat_observability
-    error_application_live: errors.error.error_application_live
-    error_application_registry: errors.error.error_application_registry
-    error_borrador_artefact_not_recognised: errors.error.error_borrador_artefact_not_recognised
-    error_calculations_registry: errors.error.error_calculations_registry
-    error_calculations_registry_load: errors.error.error_calculations_registry_load
-    error_calculations_registry_snapshot: errors.error.error_calculations_registry_snapshot
-    error_calculations_registry_validation: errors.error.error_calculations_registry_validation
-    error_categories: errors.error.error_categories
-    error_categories_validation: errors.error.error_categories_validation
-    error_deadlines_deadline: errors.error.error_deadlines_deadline
+    error_access_gate_submission: A hozzáférési kapu szabályzata elutasított egy benyújtási
+      műveletet.
+    error_access_gate_submission_preflight: A hozzáférési kapu előzetes ellenőrzése
+      elutasított egy írási műveletet.
+    error_aeat_core: Belső alkalmazáshiba történt.
+    error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
+    error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
+    error_application_registry: A modelo-nyilvántartás vezénylése meghiúsult vagy
+      el lett utasítva.
+    error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
+      100 tervezet-sémával sem.
+    error_calculations_registry: Hiba történt a számítási nyilvántartás betöltése,
+      feloldása vagy érvényesítése során.
+    error_calculations_registry_load: A számítási nyilvántartás fájljai nem elemezhetők.
+    error_calculations_registry_snapshot: Nem sikerült benyújtási szintű nyilvántartás-pillanatképet
+      kiválasztani.
+    error_calculations_registry_validation: A számítási nyilvántartás definíciói hiányosak
+      vagy ellentmondásosak.
+    error_categories: Hiba történt a kiadáskategóriákban.
+    error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
+    error_deadlines_deadline: Hiba történt a határidő-számítás során.
     error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
-    error_deadlines_profile: errors.error.error_deadlines_profile
-    error_deadlines_schedule_computation: errors.error.error_deadlines_schedule_computation
-    error_deadlines_validation: errors.error.error_deadlines_validation
-    error_declaracion_template_not_detected: errors.error.error_declaracion_template_not_detected
-    error_domain: errors.error.error_domain
-    error_domain_submission: errors.error.error_domain_submission
-    error_domain_submission_preflight: errors.error.error_domain_submission_preflight
-    error_domain_validation: errors.error.error_domain_validation
-    error_filing_amendment: errors.error.error_filing_amendment
-    error_filing_application: errors.error.error_filing_application
-    error_filing_builder: errors.error.error_filing_builder
-    error_filing_computation: errors.error.error_filing_computation
-    error_filing_draft: errors.error.error_filing_draft
-    error_filing_export: errors.error.error_filing_export
-    error_filing_export_validation: errors.error.error_filing_export_validation
-    error_financial_aggregation: errors.error.error_financial_aggregation
-    error_financial_aggregation_period: errors.error.error_financial_aggregation_period
-    error_financial_aggregation_validation: errors.error.error_financial_aggregation_validation
-    error_financial_attachments_attachment: errors.error.error_financial_attachments_attachment
-    error_financial_attachments_attachment_not_found: errors.error.error_financial_attachments_attachment_not_found
-    error_financial_invoices_invoice: errors.error.error_financial_invoices_invoice
-    error_financial_invoices_invoice_catalogue: errors.error.error_financial_invoices_invoice_catalogue
-    error_financial_invoices_invoice_link: errors.error.error_financial_invoices_invoice_link
-    error_financial_invoices_invoice_not_found: errors.error.error_financial_invoices_invoice_not_found
-    error_financial_provider: errors.error.error_financial_provider
-    error_financial_transactions_transaction: errors.error.error_financial_transactions_transaction
-    error_financial_usage_ratios_usage_ratio: errors.error.error_financial_usage_ratios_usage_ratio
-    error_financial_vat: errors.error.error_financial_vat
-    error_financial_vat_catalogue: errors.error.error_financial_vat_catalogue
-    error_financial_vat_category_not_found: errors.error.error_financial_vat_category_not_found
-    error_financial_vat_classification: errors.error.error_financial_vat_classification
-    error_financial_vat_rate_not_found: errors.error.error_financial_vat_rate_not_found
-    error_financial_vat_rate_overlap: errors.error.error_financial_vat_rate_overlap
-    error_fixture_provisioning: errors.error.error_fixture_provisioning
-    error_invoice_link_inconsistency: errors.error.error_invoice_link_inconsistency
-    error_invoice_validation: errors.error.error_invoice_validation
-    error_justificante: errors.error.error_justificante
-    error_justificante_csv_not_found: errors.error.error_justificante_csv_not_found
-    error_llm: errors.error.error_llm
-    error_manuals_manual: errors.error.error_manuals_manual
-    error_manuals_manual_not_found: errors.error.error_manuals_manual_not_found
-    error_manuals_manual_review_required: errors.error.error_manuals_manual_review_required
-    error_manuals_rule_extraction: errors.error.error_manuals_rule_extraction
-    error_manuals_validation: errors.error.error_manuals_validation
-    error_modelo_aggregation_binding: errors.error.error_modelo_aggregation_binding
-    error_modelo_amendment_evidence_missing: errors.error.error_modelo_amendment_evidence_missing
-    error_modelo_amendment_target_state: errors.error.error_modelo_amendment_target_state
-    error_modelo_calculation_registry_unavailable: errors.error.error_modelo_calculation_registry_unavailable
-    error_modelo_calculation_revision_not_found: errors.error.error_modelo_calculation_revision_not_found
-    error_modelo_calculation_revision_state: errors.error.error_modelo_calculation_revision_state
-    error_modelo_casilla_provenance_missing: errors.error.error_modelo_casilla_provenance_missing
-    error_modelo_external_filing_import: errors.error.error_modelo_external_filing_import
-    error_modelo_filing_record_not_found: errors.error.error_modelo_filing_record_not_found
-    error_modelo_iva_wallet_reconciliation_blocked: errors.error.error_modelo_iva_wallet_reconciliation_blocked
-    error_modelo_verification_report_not_found: errors.error.error_modelo_verification_report_not_found
-    error_modelo_work_unit_already_discarded: errors.error.error_modelo_work_unit_already_discarded
-    error_modelo_work_unit_mutation_refused: errors.error.error_modelo_work_unit_mutation_refused
-    error_modelo_work_unit_not_found: errors.error.error_modelo_work_unit_not_found
-    error_modelos: errors.error.error_modelos
-    error_modelos_validation: errors.error.error_modelos_validation
-    error_normatives_normative: errors.error.error_normatives_normative
-    error_normatives_normative_not_found: errors.error.error_normatives_normative_not_found
-    error_normatives_validation: errors.error.error_normatives_validation
-    error_outbound_storage_not_found: errors.error.error_outbound_storage_not_found
-    error_pdf_import_pdf_modelo_import: errors.error.error_pdf_import_pdf_modelo_import
-    error_pdf_import_scrub: errors.error.error_pdf_import_scrub
-    error_period: errors.error.error_period
-    error_period_validation: errors.error.error_period_validation
-    error_portals_portal_registry: errors.error.error_portals_portal_registry
-    error_portals_unknown_portal: errors.error.error_portals_unknown_portal
-    error_portals_validation: errors.error.error_portals_validation
-    error_profile_amortization_ledger: errors.error.error_profile_amortization_ledger
-    error_profile_asset_record: errors.error.error_profile_asset_record
-    error_profile_cross_store_drift: errors.error.error_profile_cross_store_drift
-    error_profile_inventory_ledger: errors.error.error_profile_inventory_ledger
-    error_profile_tax_residence: errors.error.error_profile_tax_residence
-    error_profile_validation: errors.error.error_profile_validation
-    error_renta: errors.error.error_renta
-    error_renta_validation: errors.error.error_renta_validation
-    error_rental_amortization_cap_exceeded: errors.error.error_rental_amortization_cap_exceeded
-    error_rental_contract_not_found: errors.error.error_rental_contract_not_found
-    error_rental_finca_not_found: errors.error.error_rental_finca_not_found
-    error_rental_register: errors.error.error_rental_register
-    error_rental_tier_resolution: errors.error.error_rental_tier_resolution
-    error_rental_validation: errors.error.error_rental_validation
-    error_resources_backend: errors.error.error_resources_backend
-    error_resources_load: errors.error.error_resources_load
-    error_resources_not_found: errors.error.error_resources_not_found
-    error_resources_validation: errors.error.error_resources_validation
-    error_review: errors.error.error_review
-    error_sanitization: errors.error.error_sanitization
-    error_sede: errors.error.error_sede
-    error_sede_expediente_not_found: errors.error.error_sede_expediente_not_found
-    error_sede_navigation: errors.error.error_sede_navigation
-    error_storage_bucket: errors.error.error_storage_bucket
-    error_submission_validation: errors.error.error_submission_validation
-    error_transaction_catalogue: errors.error.error_transaction_catalogue
-    error_transaction_classification_rule: errors.error.error_transaction_classification_rule
-    error_transaction_llm_classifier: errors.error.error_transaction_llm_classifier
-    error_transaction_not_found: errors.error.error_transaction_not_found
-    error_transaction_persistence: errors.error.error_transaction_persistence
-    error_transaction_validation: errors.error.error_transaction_validation
-    error_usage_ratios_validation: errors.error.error_usage_ratios_validation
-    error_user_profile: errors.error.error_user_profile
-    error_vat_prorrata: errors.error.error_vat_prorrata
-    error_vat_prorrata_input: errors.error.error_vat_prorrata_input
-    error_vat_prorrata_sector: errors.error.error_vat_prorrata_sector
-    error_vat_validation: errors.error.error_vat_validation
-    error_wizard: errors.error.error_wizard
-    error_wizard_compile: errors.error.error_wizard_compile
-    error_workflow: errors.error.error_workflow
-    error_workflow_component: errors.error.error_workflow_component
+    error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
+      vagy érvényesíteni a határidő-számításhoz.
+    error_deadlines_schedule_computation: A motor nem tudott érvényes határidő-ütemtervet
+      létrehozni. Ellenőrizze a kért évet és a profil adatait.
+    error_deadlines_validation: Egy határidő-rekord nem ment át az érvényesítésen.
+    error_declaracion_template_not_detected: A bevallás PDF sablon-revíziója nem ismerhető
+      fel automatikusan.
+    error_domain: Domain logikai hiba történt.
+    error_domain_submission: Benyújtási domain hiba történt.
+    error_domain_submission_preflight: A tervezet nem ment át a helyi benyújtás előzetes
+      ellenőrzésén.
+    error_domain_validation: Egy domain azonosító vagy modell érvénytelen.
+    error_filing_amendment: Módosítással kapcsolatos benyújtási hiba történt.
+    error_filing_application: Hiba történt a benyújtási alkalmazási rétegben.
+    error_filing_builder: A benyújtási építő kiválasztása vagy végrehajtása meghiúsult.
+    error_filing_computation: Az építő nem tudta kiértékelni egy képlet-mezőt.
+    error_filing_draft: Hiba történt a benyújtási tervezetben.
+    error_filing_export: Az AEAT formátumba való exportálás meghiúsult.
+    error_filing_export_validation: Egy exportált mező értéke vagy elrendezése érvénytelen.
+    error_financial_aggregation: Hiba történt a pénzügyi tranzakciók összesítése során.
+    error_financial_aggregation_period: A kért bevallási időszakot nem sikerült egyértelműen
+      értelmezni.
+    error_financial_aggregation_validation: Az összesítési tartalom vagy állapot érvénytelen.
+    error_financial_attachments_attachment: Csatolmány-szolgáltatási hiba történt.
+    error_financial_attachments_attachment_not_found: A kért csatolmány nem található.
+    error_financial_invoices_invoice: Számla-katalógus hiba történt.
+    error_financial_invoices_invoice_catalogue: A számla-katalógus érvénytelen vagy
+      ellentmondásos.
+    error_financial_invoices_invoice_link: A számlát és a tranzakciót nem sikerült
+      összekapcsolni.
+    error_financial_invoices_invoice_not_found: A kért számla nem található.
+    error_financial_provider: Hiba történt a pénzügyi dokumentum importálása során.
+    error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
+    error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
+    error_financial_vat: IVA-számítási hiba történt.
+    error_financial_vat_catalogue: Az IVA-katalógust nem sikerült betölteni, feloldani
+      vagy érvényesíteni.
+    error_financial_vat_category_not_found: A kért IVA-kategória nem található a katalógusban.
+    error_financial_vat_classification: Az IVA nem sorolható be egyértelműen.
+    error_financial_vat_rate_not_found: Nem található IVA-kulcs a kért tagállam és
+      típus esetén.
+    error_financial_vat_rate_overlap: Két IVA-kulcs azonos hatályossági ablakot oszt.
+    error_fixture_provisioning: A tesztfixture-öket nem sikerült kiosztani.
+    error_invoice_link_inconsistency: A kapcsolás a számla- és tranzakció-katalógusokat
+      szinkronon kívülre hozta. Egyeztesse manuálisan mindkét katalógust.
+    error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
+    error_justificante: Igazolással kapcsolatos hiba történt.
+    error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
+      kódot.
+    error_llm: Nyelvi modell hiba történt.
+    error_manuals_manual: Kézikönyvekkel kapcsolatos hiba történt.
+    error_manuals_manual_not_found: A kért kézikönyv, év vagy rész nem található.
+    error_manuals_manual_review_required: Egy kézikönyv-rekordból hiányoznak a felülvizsgálói
+      metaadatok.
+    error_manuals_rule_extraction: Kézikönyvi szabályok kinyerése nem érhető el.
+    error_manuals_validation: Egy kézikönyv-rekord nem ment át az érvényesítésen.
+    error_modelo_aggregation_binding: A bucket-alapú összesítési kötések ellentmondanak
+      a megadott bemenetnek.
+    error_modelo_amendment_evidence_missing: Bevallás nem módosítható importált hivatalos
+      igazolás nélkül. Először importálja az eredeti bevallás bizonylatát.
+    error_modelo_amendment_target_state: Az aktuális állapotban nem lévő bevallás
+      nem módosítható; egy újabb már felváltotta.
+    error_modelo_calculation_registry_unavailable: A munkajegység modelójának, évének
+      és időszakának nyilvántartás-pillanatképe nem oldható fel.
+    error_modelo_calculation_revision_not_found: A kért számítás-revízió nem található.
+    error_modelo_calculation_revision_state: A kért állapotátmenet nem kompatibilis
+      a számítás-revízió jelenlegi állapotával.
+    error_modelo_casilla_provenance_missing: Egy motor-eredmény mezőnek nincs definíciója
+      a nyilvántartásban.
+    error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
+      Ellenőrizze a mező értékeit és az igazolás hivatkozást.
+    error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
+    error_modelo_iva_wallet_reconciliation_blocked: A Modelo 303 számítása az IVA-pénztárca-egyeztetés
+      miatt blokkolva van. Oldja meg a függőben lévő egyeztetést a folytatás előtt.
+    error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
+    error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
+    error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
+    error_modelo_work_unit_not_found: A kért munkajegység nem található.
+    error_modelos: Adómodelo hiba történt.
+    error_modelos_validation: Egy modelo-kód sérti az alaki invariánsait.
+    error_normatives_normative: Normatívával kapcsolatos hiba történt.
+    error_normatives_normative_not_found: A kért normatíva vagy cikkely nem található.
+    error_normatives_validation: Egy normatíva-mezőérték érvénytelen.
+    error_observation_key: errors.error.error_observation_key
+    error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
+    error_pdf_import_pdf_modelo_import: A bevallás PDF-ből való importálása meghiúsult.
+    error_pdf_import_scrub: Nem sikerült a PDF biztonságos verzióját előállítani.
+    error_period: Időszakkal kapcsolatos hiba történt.
+    error_period_validation: A megadott időszak-jelzés hibás formátumú.
+    error_portals_portal_registry: Hiba történt az AEAT portál-nyilvántartásban.
+    error_portals_unknown_portal: A megadott AEAT portál nem létezik.
+    error_portals_validation: Egy portál metaadatai nem mentek át az érvényesítésen.
+    error_profile_amortization_ledger: Egy profil amortizációs főkönyvi művelete érvénytelen.
+    error_profile_asset_record: Egy profil vagyonelem-rekordja szerkezetileg érvénytelen.
+    error_profile_cross_store_drift: A profil fizikai tárolói eltérnek az azonosságától.
+      A profil nem használható.
+    error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
+    error_profile_tax_residence: Adóügyi illetőségi profil hiba történt.
+    error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
+    error_renta: Hiba történt a RENTA-számítás során.
+    error_renta_validation: Egy RENTA-mezőérték érvénytelen.
+    error_rental_amortization_cap_exceeded: A halmozott amortizáció meghaladná a bérleti
+      vagyonelem jogszabályi felső határát.
+    error_rental_contract_not_found: A megadott bérleti szerződés nem található.
+    error_rental_finca_not_found: A megadott ingatlan nem található.
+    error_rental_register: Hiba történt a bérleti nyilvántartásban.
+    error_rental_tier_resolution: A bérleti szerződés adatai ellentmondásosak, és
+      az alkalmazandó csökkentési szint nem oldható fel.
+    error_rental_validation: Egy bérleti rekord nem ment át az érvényesítésen.
+    error_resources_backend: Hiba történt a csomagolt alkalmazásadatok olvasása során.
+    error_resources_load: Egy csomagolt alkalmazás-erőforrás nem tölthető be.
+    error_resources_not_found: A kért csomagolt erőforrás nem található.
+    error_resources_validation: Egy csomagolt alkalmazásfájl nem ment át a szigorú
+      érvényesítésen.
+    error_review: 'Felülvizsgálati hiba történt.'
+    error_sanitization: 'Hiba történt a dokumentum sanitizálása során.'
+    error_sede: 'Hiba történt az AEAT elektronikus Sede-n.'
+    error_sede_expediente_not_found: 'Egyetlen expediente sem felel meg a kért szűrőnek.'
+    error_sede_navigation: 'Az AEAT Sede navigációs lépése meghiúsult.'
+    error_storage_bucket: 'Hiba történt a tároló-bucket életciklusában.'
+    error_submission_validation: 'Egy benyújtási modell nem ment át az érvényesítésen.'
+    error_transaction_catalogue: 'A tranzakció-katalógus érvénytelen vagy ellentmondásos.'
+    error_transaction_classification_rule: 'Egy főkönyvi osztályozási szabály érvénytelen.'
+    error_transaction_llm_classifier: 'A tranzakció osztályozása a nyelvi modell által meghiúsult.'
+    error_transaction_not_found: 'A kért tranzakció nem található.'
+    error_transaction_persistence: 'A tranzakció-katalógus nem menthető.'
+    error_transaction_validation: 'Egy tranzakció-mezőérték érvénytelen.'
+    error_usage_ratios_validation: 'Egy használati arány profil sérti a domain invariánsait.'
+    error_user_profile: 'Felhasználói profil hiba történt.'
+    error_vat_prorrata: 'Hiba történt az IVA prorrata-számítás során.'
+    error_vat_prorrata_input: 'Az IVA prorrata bemeneti adatai sértik az invariánsokat.'
+    error_vat_prorrata_sector: 'Az IVA prorrata szektoriális-szétválasztási adatai ellentmondásosak.'
+    error_vat_validation: 'Egy IVA-mezőérték érvénytelen.'
+    error_wizard: 'Varázsló hiba történt.'
+    error_wizard_compile: 'A varázsló-katalógus hibás formátumú és nem fordítható le.'
+    error_workflow: 'Munkafolyamat hiba történt.'
+    error_workflow_component: 'Egy munkafolyamat-komponens váratlan kivételt dobott.'
   fail:
     census_sync: errors.fail.census_sync
     currency_error: errors.fail.currency_error
@@ -2798,13 +2876,16 @@ wizard:
       taxation-type:
         help: 'Jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
-        help: 'Az első adózó születési dátuma'
+        help: Az első adózó születési dátuma
       taxpayer-death-date:
-        help: 'Az első adózó elhalálozásának dátuma'
+        help: Az első adózó elhalálozásának dátuma
       taxpayer-disability-grade:
-        help: 'Az első adózó fogyatékossági fokozata: 1 = 33%-64%, 2 = 65% vagy magasabb, 3 = bírói cselekvőképesség-korlátozás, 4 = harmadik személy segítsége vagy korlátozott mozgásképesség.'
+        help: 'Az első adózó fogyatékossági fokozata: 1 = 33%-64%, 2 = 65% vagy magasabb,
+          3 = bírói cselekvőképesség-korlátozás, 4 = harmadik személy segítsége vagy
+          korlátozott mozgásképesség.'
       taxpayer-marital-status:
-        help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy, 4 = különváltan élő vagy elvált.'
+        help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy,
+          4 = különváltan élő vagy elvált.'
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
           = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
@@ -2812,15 +2893,17 @@ wizard:
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
-        help: 'Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét'
+        help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
       uses-objective-estimation-irpf:
-        help: 'IRPF objektív becslés szerint adózik'
+        help: IRPF objektív becslés szerint adózik
     intro: 'Irányított adóügyi profil-beállítás
 
-Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez használ.
-Várható %{section_total} szekció. Csak %{required_total} válasz kötelező a kezdéshez; a többi üresen hagyható, ha még nem ismeri.
-Legyen kéznél a NIF/NIE/CIF azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi lakóhely és családi adatok, ha relevánsak.
-Mentés után ellenőrizze az előrehaladást a következővel: .'
+      Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez
+      használ. Várható %{section_total} szekció. Csak %{required_total} válasz kötelező
+      a kezdéshez; a többi üresen hagyható, ha még nem ismeri. Legyen kéznél a NIF/NIE/CIF
+      azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi
+      lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
+      a következővel: .'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
@@ -2990,24 +3073,24 @@ Mentés után ellenőrizze az előrehaladást a következővel: .'
       title: Adóügyi illetőség
     spouse:
       spouse-birth-date:
-        prompt: 'Házastárs születési dátuma'
+        prompt: Házastárs születési dátuma
       spouse-disability-grade:
-        prompt: 'Házastárs fogyatékossági fokozata (ha alkalmazható)'
+        prompt: Házastárs fogyatékossági fokozata (ha alkalmazható)
       spouse-eu-eea-country:
-        prompt: 'Házastárs EU/EGT országa'
+        prompt: Házastárs EU/EGT országa
       spouse-eu-eea-resident:
-        prompt: 'Házastárs EU/EGT-ben él'
+        prompt: Házastárs EU/EGT-ben él
       spouse-name:
-        prompt: 'Házastárs keresztneve'
+        prompt: Házastárs keresztneve
       spouse-non-resident-irpf:
-        prompt: 'Házastárs nem rezidens IRPF szerint'
+        prompt: Házastárs nem rezidens IRPF szerint
       spouse-sex:
-        prompt: 'Házastárs neme'
+        prompt: Házastárs neme
       spouse-surnames:
-        prompt: 'Házastárs vezetéknevei'
+        prompt: Házastárs vezetéknevei
       spouse-tax-id:
-        prompt: 'Házastárs NIF/NIE száma'
-      title: 'Házastárs'
+        prompt: Házastárs NIF/NIE száma
+      title: Házastárs
     taxpayer:
       situacion-familiar:
         choices:
@@ -3071,61 +3154,80 @@ Mentés után ellenőrizze az előrehaladást a következővel: .'
       irpf-income-categories:
         choices:
           actividad-economica:
-            label: 'Gazdasági tevékenység'
+            label: Gazdasági tevékenység
           capital-inmobiliario:
-            label: 'Ingatlanvagyon-jövedelem (bérbeadás)'
+            label: Ingatlanvagyon-jövedelem (bérbeadás)
           capital-mobiliario:
-            label: 'Ingóvagyon-jövedelem'
+            label: Ingóvagyon-jövedelem
           ganancias-patrimoniales:
-            label: 'Tőkenyereség'
+            label: Tőkenyereség
           pension:
-            label: 'Nyugdíj'
+            label: Nyugdíj
           trabajo:
-            label: 'Munkaviszonyból származó jövedelem'
-        help: 'Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység vált ki Modelo 130/131 kötelezettséget'
-        prompt: 'IRPF jövedelemkategóriák'
+            label: Munkaviszonyból származó jövedelem
+        help: Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység
+          vált ki Modelo 130/131 kötelezettséget
+        prompt: IRPF jövedelemkategóriák
       legal-entity-form:
         choices:
           cooperativa:
-            label: 'Szövetkezet'
+            label: Szövetkezet
           other:
-            label: 'Egyéb jogi forma'
+            label: Egyéb jogi forma
           sa:
-            label: 'Részvénytársaság (S.A.)'
+            label: Részvénytársaság (S.A.)
           sin-fines-lucrativos:
-            label: 'Nonprofit szervezet'
+            label: Nonprofit szervezet
           sl:
-            label: 'Korlátolt felelősségű társaság (S.L.)'
+            label: Korlátolt felelősségű társaság (S.L.)
           sociedad-civil-mercantil:
-            label: 'Kereskedelmi célú polgári társaság'
-        prompt: 'Jogi forma'
+            label: Kereskedelmi célú polgári társaság
+        prompt: Jogi forma
       new-entity-first-two-profit-periods:
-        help: 'Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os kedvezményes adókulcs szerint adózik az adott két időszakban.'
-        prompt: 'Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében?'
-      title: 'Adózói típus'
-    title: 'Beállítási varázsló'
+        help: Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os
+          kedvezményes adókulcs szerint adózik az adott két időszakban.
+        prompt: Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának
+          egyikében?
+      title: Adózói típus
+    title: Beállítási varázsló
     verifier:
-      activity_present: 'Gazdasági tevékenység: ellenőrzi, hogy a profil tartalmaz-e tevékenységet.'
-      eu_eea_country_missing: 'Házastárs lakóhelye: EU vagy EGT lakóhelyet jelölt meg, de az ország hiányzik. Adja meg a lakóhely országát.'
-      eu_eea_country_ok: 'Házastárs lakóhelye: az EU vagy EGT szerinti lakóhely országa összhangban van.'
-      joint_taxation_situacion_familiar_ok: 'Családi helyzet: a közös adóbevallás összhangban van a bevallott családi helyzettel.'
-      joint_taxation_situacion_familiar_refused: 'Családi helyzet: a közös adóbevallás nem engedélyezett nem bejegyzett élettársi kapcsolat esetén (LIRPF 82.1.2° cikkely). Módosítsa a családi helyzetet, vagy válassza az egyéni adózást.'
-      monoparental_requires_hijos_ok: 'Egyszülős családi egység: a kiskorú gyermekekkel kapcsolatos követelmény teljesítve.'
-      monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem lehetséges ennél a családi helyzetnél. Engedélyezze az eltartott kiskorú gyermekek opciót, vagy váltson egyéni adózásra.'
-      obligations_consistency_ok: 'Forrásadó-kötelezettségek: a forrásadóra vonatkozó válaszok összhangban vannak.'
-      obligations_inconsistent: 'Forrásadó-kötelezettségek: szakmai forrásadót jelölt meg, de nem jelezte, hogy forrásadóval fizet szakembereknek. Ellenőrizze ezeket az adatokat.'
-      spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik. Adja meg a közös bevalláshoz.'
+      activity_present: 'Gazdasági tevékenység: ellenőrzi, hogy a profil tartalmaz-e
+        tevékenységet.'
+      eu_eea_country_missing: 'Házastárs lakóhelye: EU vagy EGT lakóhelyet jelölt
+        meg, de az ország hiányzik. Adja meg a lakóhely országát.'
+      eu_eea_country_ok: 'Házastárs lakóhelye: az EU vagy EGT szerinti lakóhely országa
+        összhangban van.'
+      joint_taxation_situacion_familiar_ok: 'Családi helyzet: a közös adóbevallás
+        összhangban van a bevallott családi helyzettel.'
+      joint_taxation_situacion_familiar_refused: 'Családi helyzet: a közös adóbevallás
+        nem engedélyezett nem bejegyzett élettársi kapcsolat esetén (LIRPF 82.1.2°
+        cikkely). Módosítsa a családi helyzetet, vagy válassza az egyéni adózást.'
+      monoparental_requires_hijos_ok: 'Egyszülős családi egység: a kiskorú gyermekekkel
+        kapcsolatos követelmény teljesítve.'
+      monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős
+        egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket
+        igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem
+        lehetséges ennél a családi helyzetnél. Engedélyezze az eltartott kiskorú gyermekek
+        opciót, vagy váltson egyéni adózásra.'
+      obligations_consistency_ok: 'Forrásadó-kötelezettségek: a forrásadóra vonatkozó
+        válaszok összhangban vannak.'
+      obligations_inconsistent: 'Forrásadó-kötelezettségek: szakmai forrásadót jelölt
+        meg, de nem jelezte, hogy forrásadóval fizet szakembereknek. Ellenőrizze ezeket
+        az adatokat.'
+      spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik.
+        Adja meg a közös bevalláshoz.'
       spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
-      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e NIF vagy NIE azonosítót.'
+      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e NIF vagy
+        NIE azonosítót.'
   test:
-    description: 'Tesztelje a konfigurációt és a csatlakozást'
+    description: Tesztelje a konfigurációt és a csatlakozást
     example:
       choices:
         'yes':
-          description: 'Válassza ezt a megerősítéshez'
-          label: 'Igaz'
-      help: 'Példa súgószöveg teszteléshez'
-      prompt: 'Példa tesztkérdés'
+          description: Válassza ezt a megerősítéshez
+          label: Igaz
+      help: Példa súgószöveg teszteléshez
+      prompt: Példa tesztkérdés
     main:
-      title: 'Fő teszt'
-    title: 'Teszt'
+      title: Fő teszt
+    title: Teszt
