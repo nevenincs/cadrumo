@@ -101,10 +101,12 @@ adapters:
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
   sede:
     errors:
-      empty_identity_nif: 'Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni az élő benyújtási megfigyelést.'
-      iva_wallet_empty_amount_cell: 'Az IVA kompenzációs tárca összeg cellája üres.'
-      iva_wallet_empty_period_cell: 'Az IVA kompenzációs tárca időszak cellája üres.'
-      no_auth_session: 'Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva; futtassa először az `aeat config auth status` parancsot.'
+      empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
+        az élő benyújtási megfigyelést.
+      iva_wallet_empty_amount_cell: Az IVA kompenzációs tárca összeg cellája üres.
+      iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
+      no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
+        futtassa először az `aeat config auth status` parancsot.
 aggregation:
   iva_ledger:
     errors:
@@ -704,7 +706,19 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
+        label_bindings: cli.app.modelo.describe.label_bindings
+        label_cadence: 'Gyakoriság'
+        label_casillas: cli.app.modelo.describe.label_casillas
+        label_formulas: cli.app.modelo.describe.label_formulas
+        label_modelo: 'Modelo'
+        label_official_name: 'Hivatalos név'
+        label_periods: cli.app.modelo.describe.label_periods
+        label_revision: 'Verzió'
+        label_revision_ids: 'Verzióazonosítók'
+        label_tax_domain: 'Adózási terület'
+        label_title: 'Cím'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
+        period_error: 'Nyilvántartási hiba: %{message}'
         period_help: 'A nyomtatvány-revíziót feloldó időszaktokent: 0A éves, 1T-4T
           negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta,
           modificacion vagy baja.'
@@ -944,6 +958,7 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         from_filing_record_help: A módosítandó alap-benyújtási rekord stabil azonosítója.
@@ -1095,6 +1110,7 @@ cli:
           (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla,
           amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
           --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_computation_error: 'SAL számítási hiba: %{message}'
         sal_reserva_casilla_not_found: A --sal-beneficio-neto nem támogatott ennél
           a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön
           tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.
@@ -1558,6 +1574,7 @@ cli:
       profile_help: Profile to use; defaults to the active profile.
       set_help: Write one profile key value, validated against the wizard descriptor.
       unset_help: Clear one profile key value.
+      unset_placeholder: <nincs beállítva>
       value_help: Value to store.
     repair:
       audience_internal: belső alkalmazáshiba
@@ -1740,6 +1757,7 @@ cli:
         karaktert tartalmaz (engedélyezett: 0-9, a-f).'
       id_prefix_too_long: A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64
         karakternél (teljes SHA-256 kivonat).
+      id_prefix_unknown: 'Váratlan tranzakcióazonosító-előtag hiba: %{message}'
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}'
       unknown_category: 'Ismeretlen --category-id {category!r}. Adjon meg egyszerű
         kategóriaazonosítót, pl. {example!r} – nem kategóriacsaládos vagy összetett
@@ -3432,6 +3450,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Egyszerűsített
+  commands:
+    status:
+      created: létrehozva
+      updated: frissítve
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:
