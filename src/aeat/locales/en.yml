@@ -2654,6 +2654,7 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    error_application_live_iva_surface_timeout: 'Live IVA read surface timed out before returning AEAT evidence.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.

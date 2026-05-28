@@ -2776,6 +2776,7 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
+    error_application_live_iva_surface_timeout: 'Az élő IVA-olvasási felület időtúllépett, mielőtt AEAT-bizonyítékot adott volna vissza.'
   fail:
     census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
