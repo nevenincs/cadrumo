@@ -57,7 +57,7 @@ unchanged for non-opted-in modelos and hard failures for opted-in surfaces.
 
 - [x] `P02.S04` - Extend cross-revision drift analysis with continuity and evolution metadata; `src/aeat/domain/calculations/registry/_validate_cross_revision.py`.
 - [x] `P02.S05` - Wire opt-in continuity validation into registry-scope validation; `src/aeat/domain/calculations/registry/_validate_registry_scope.py`.
-- [ ] `P02.S06` - Add real-behavior schema, loader, advisory, and opt-in hard-failure tests; `src/aeat/domain/calculations/registry`.
+- [x] `P02.S06` - Add real-behavior schema, loader, advisory, and opt-in hard-failure tests; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P03` - Evidence-grounded data rollout
 
