@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 from collections.abc import Awaitable
+from contextlib import nullcontext
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -96,6 +97,7 @@ from ...application.calculations import (
 from ...application.calculations import (
     reconcile_modelo_303_iva_compensation as _reconcile_modelo_303_iva_compensation,
 )
+from ...core._bucket_pointer_io import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
@@ -108,6 +110,7 @@ from ...domain.calculations.registry import (
     RegistryModeloObservation as _RegistryModeloObservation,
 )
 from ...domain.calculations.registry._authority import ValidatedRegistryAuthority as _ValidatedRegistryAuthority
+from ..user_profile._orchestration import profile_storage_session as _profile_storage_session
 from ._borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
@@ -1339,6 +1342,30 @@ async def capture_iva_remote_state(
     output_root: Path | None = None,
 ) -> IvaRemoteStateAcquisitionReport:
     """Acquire filed-history and wallet/cartera IVA state as one typed read-only operation."""
+
+    active_bucket_id = _resolve_active_bucket_id()
+    storage_span = _profile_storage_session(active_bucket_id) if active_bucket_id else nullcontext()
+    with storage_span:
+        return await _capture_iva_remote_state_for_active_storage(
+            year_from=year_from,
+            year_to=year_to,
+            target_year=target_year,
+            target_period=target_period,
+            taxpayer_nif=taxpayer_nif,
+            output_root=output_root,
+        )
+
+
+async def _capture_iva_remote_state_for_active_storage(
+    *,
+    year_from: int,
+    year_to: int,
+    target_year: int,
+    target_period: str,
+    taxpayer_nif: str | None = None,
+    output_root: Path | None = None,
+) -> IvaRemoteStateAcquisitionReport:
+    """Run the combined read while the profile bucket session is active."""
 
     if year_from > year_to:
         raise LiveApplicationInputError("from-year must be less than or equal to to-year")

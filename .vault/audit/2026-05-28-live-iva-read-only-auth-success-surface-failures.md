@@ -31,3 +31,16 @@ Follow-up remains open: the filed-history surface needs navigation diagnostics
 for the timeout path, and the wallet/cartera surface needs DOM-drift analysis
 against the authenticated AEAT page shape before live IVA grounding can be
 called functional.
+
+Follow-up execution on 2026-05-28 found and fixed one local storage/session
+regression before another read attempt: the combined backend capture now opens
+the selected active profile's secure-storage session around auth preflight,
+remote reads, and acquisition-manifest persistence. A full read-only retry then
+reused the persisted Cl@ve session and again failed closed with filed-history
+timeout plus wallet/cartera DOM-drift outcomes.
+
+A privacy regression was also corrected: live auth preflight output now renders
+the active profile as `<profile-id>` rather than the raw local bucket/profile
+identifier. The remaining diagnostic defect is Playwright cancellation logging:
+short surface-timeout smoke runs can still emit post-command `TargetClosedError`
+messages after the browser context closes.
