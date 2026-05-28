@@ -33,6 +33,10 @@ legal_refs = [
 ]
 source_refs = ["aeat-modelo-210-procedure"]
 
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]
+
 [[revisions."2025".parameters.keyed_brackets]]
 key = "general"
 value = "0.24"
