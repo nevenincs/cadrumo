@@ -512,6 +512,60 @@ def test_committed_corpus_non_overlapping_inventory_keeps_annual_m100_drift_visi
     assert all(summary.example_casilla_ids for summary in m100_summaries)
 
 
+def test_committed_m100_continuity_surface_for_0582_is_loaded() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    m100 = next(modelo for modelo in modelos if modelo.id == "100")
+
+    for revision_id in ("2022", "2023", "2024", "2025"):
+        revision = m100.revisions[revision_id]
+        casilla = next(item for item in revision.casillas if item.id == "0582")
+        assert revision.continuidad_validation == "strict"
+        assert casilla.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+
+    assert m100.revisions["2022"].casilla_continuidad_evolutions == ()
+    assert tuple(
+        evolution.evolution_kind
+        for revision_id in ("2023", "2024", "2025")
+        for evolution in m100.revisions[revision_id].casilla_continuidad_evolutions
+        if evolution.continuidad_id == "irpf.intereses-demora-regularizacion.estatal"
+    ) == ("unchanged", "unchanged", "unchanged")
+
+
+def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift() -> None:
+    modelos, _ = load_registry_tree(bundled_path("registry", "aeat"))
+    m100 = next(modelo for modelo in modelos if modelo.id == "100")
+    revision_2025 = m100.revisions["2025"]
+    mutated_casillas = tuple(
+        casilla.model_copy(update={"label": f"{casilla.label} drift"})
+        if casilla.id == "0582"
+        else casilla
+        for casilla in revision_2025.casillas
+    )
+    mutated_revision = revision_2025.model_copy(update={"casillas": mutated_casillas})
+    mutated_revisions = dict(m100.revisions)
+    mutated_revisions["2025"] = mutated_revision
+    mutated_m100 = m100.model_copy(update={"revisions": mutated_revisions})
+    mutated_modelos = tuple(mutated_m100 if modelo.id == "100" else modelo for modelo in modelos)
+
+    failures = validate_registry_scope(mutated_modelos)
+
+    assert len(failures) == 3
+    assert all("strict continuity drift" in failure for failure in failures)
+    assert all("0582" in failure for failure in failures)
+    assert all("label" in failure for failure in failures)
+    source_revisions = {
+        revision_id
+        for failure in failures
+        for revision_id in ("2022", "2023", "2024")
+        if revision_id in failure
+    }
+    assert source_revisions == {
+        "2022",
+        "2023",
+        "2024",
+    }
+
+
 def test_backend_registry_validation_accepts_committed_corpus_drift_gate() -> None:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 

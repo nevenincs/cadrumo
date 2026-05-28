@@ -73,7 +73,7 @@ M100 explicit and fragmented until continuity decisions are authored.
 Lock the new substrate against regression and record the implementation state
 for the next agent before any template ADR is considered.
 
-- [ ] `P04.S10` - Add committed-corpus regression gates for continuity advisory and opt-in enforcement behavior; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
+- [x] `P04.S10` - Add committed-corpus regression gates for continuity advisory and opt-in enforcement behavior; `src/aeat/domain/calculations/registry/test_cross_revision_drift.py`.
 - [ ] `P04.S11` - Record execution evidence, verification commands, and remaining template blockers; `.vault/exec`.
 
 ## Parallelization
