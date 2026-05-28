@@ -558,3 +558,72 @@ registry-profile-driven extraction), so the PROVISIONAL gate generalisation was
 not applicable. The transferable part — structured exception attributes — was
 applied cleanly. The sidecar corpus discipline (task #41) is the equivalent
 gate for this surface and was already in place.
+
+## 2026-05-28 amendment — borrador surface architectural exception (W10.P43.S200)
+
+### Audit findings
+
+The borrador surface (`src/aeat/adapters/inbound/borrador/`) was audited
+for alignment with the registry-profile-driven extraction architecture this ADR
+established for the declaración surface.
+
+**Extraction model.** `parse_borrador` dispatches to a per-año concrete extractor
+class from `_REGISTRY_BY_AÑO: dict[int, type]` in
+`src/aeat/adapters/inbound/borrador/_extractors/__init__.py`. The single registered
+class is `Modelo100ObservedV2025Extractor` (year 2025). There is no ABC, no
+`(modelo, año, revision)` tuple key, and no consultation of
+`RegistrySnapshot.extraction_profiles`. The per-año registry is a `dict[int, type]`
+used to version year-on-year Renta PDF layout changes.
+
+**Registry integration.** `BorradorExtractionProfile` in `_schema.py` is a
+structural `Protocol` (duck-typed interface). It is supplied by the caller as an
+optional parameter — not looked up from the registry snapshot inside the adapter.
+The registry schema enumerates `"borrador_pdf"` as a valid `surface` literal in
+`ExtractionProfileDefinition`; no `borrador_pdf` TOML extraction profiles exist in
+the registry data tree. The Protocol is the integration boundary between the
+application layer and the borrador parser.
+
+**W02 ADR scope.** This ADR scoped exclusively to `declaracion_pdf` profiles and
+the `parse_declaracion` surface. The borrador surface was not in scope for this ADR
+or its superseded predecessor (`2026-04-21-declaracion-extractor-adr`).
+
+### Accepted architectural exception
+
+The borrador surface is **formally accepted as an architecturally distinct variant**
+of the PDF extraction discipline. The rationale:
+
+- The borrador extractor's purpose is to extract _all observable casilla/value rows_
+  printed on a Renta PDF as an observed-value record, not to apply a registry-defined
+  target-casilla filter. Its primary contract is coverage of what is printed, not
+  what the registry declares as relevant.
+- Renta Web Open PDFs (borrador, predeclaración) change layout year-on-year
+  independently of registry revision logic. The `_REGISTRY_BY_AÑO` dispatch
+  provides a clean, low-overhead mechanism for year-revision transitions without
+  coupling extractor code to the registry fragment architecture.
+- The `BorradorExtractionProfile` Protocol as a caller-supplied optional is a
+  correct hexagonal boundary: the adapter remains registry-agnostic; callers
+  (CLI, application layer) supply a profile projection when they need filtered
+  extraction.
+
+### Partial discipline gap: structured exception attributes
+
+`BorradorParseError` does not carry the `missing/malformed/ambiguous/coverage`
+structured attributes that `DeclaracionParseError` and `JustificanteParseError`
+carry. This gap is the same class closed for justificante in `W10.P41.S198`.
+Closing it for the borrador surface is a follow-up task independent of this
+architectural acceptance.
+
+### Decision
+
+No migration of the borrador surface to registry-profile-driven extraction is
+required. The per-año class dispatch and the `BorradorExtractionProfile` Protocol
+are accepted as the canonical borrador extraction model. The follow-up obligation
+is:
+
+1. Add `missing`, `malformed`, `ambiguous`, and `coverage` structured attributes
+   to `BorradorParseError`, updating error-raising sites and tests to populate
+   them — aligning the borrador exception discipline with the declaracion and
+   justificante surfaces.
+2. No `borrador_pdf` TOML extraction profiles need to be authored unless a future
+   use-case requires registry-authority-driven casilla selection from the borrador
+   surface (at which point the Protocol boundary already accommodates it).
