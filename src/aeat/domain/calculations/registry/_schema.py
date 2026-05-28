@@ -1424,6 +1424,56 @@ class KeyedBracketEntry(RegistryModel):
         return self
 
 
+class ConvenioRateRow(RegistryModel):
+    """One row of an IRNR Convenio doble imposición rate-override table.
+
+    Sister shape to :class:`KeyedBracketEntry` for parameters that
+    dispatch on a ``(country_code, tipo_renta)`` pair returning the
+    treaty rate that REPLACES the TRLIRNR baseline when a profile
+    declares ``convenio_doble_imposicion_country``. The replacement
+    semantics (not stacking) is enforced at lookup time by the runtime
+    helper authored in S389b.
+
+    The ``rate`` field is a string carrying either a parseable Decimal
+    (e.g. ``"0.10"``) or the literal ``"NOT_YET_AUTHORED"`` sentinel
+    that triggers a BLOCKING finding at lookup time. The sentinel
+    allows the parameter to carry a placeholder row for a country +
+    tipo_renta combination whose Convenio article number is known
+    but whose rate has not been corpus-verified yet, without
+    deferring the entire row to a follow-up Step.
+
+    First consumer: M210 IRNR Phase 1 ``m210-convenio-rates`` per
+    the m210-irnr-full-engine ADR §D2.4.
+    """
+
+    country_code: str = Field(min_length=2, max_length=2, pattern=r"^[A-Z]{2}$")
+    tipo_renta: str = Field(min_length=1, max_length=64)
+    rate: str = Field(min_length=1, max_length=32)
+    legal_ref_anchor: str = Field(min_length=1, max_length=128)
+    notes: str | None = Field(default=None, max_length=512)
+    valid_from: date
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_convenio_rate_row(self) -> ConvenioRateRow:
+        if self.valid_to is not None and self.valid_to < self.valid_from:
+            raise RegistryValidationError(
+                "convenio_rate_row valid_to must be on or after valid_from"
+            )
+        # The rate field is either the NOT_YET_AUTHORED sentinel or a
+        # parseable Decimal string. Parsing here surfaces malformed
+        # values at construction time rather than at lookup time.
+        if self.rate != "NOT_YET_AUTHORED":
+            try:
+                Decimal(self.rate)
+            except (ArithmeticError, ValueError) as exc:
+                raise RegistryValidationError(
+                    f"convenio_rate_row rate must be a parseable Decimal or "
+                    f"'NOT_YET_AUTHORED'; got {self.rate!r}"
+                ) from exc
+        return self
+
+
 def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:
     """Return True when two adjacent brackets share a valid_from window and overlap.
 
@@ -1454,11 +1504,13 @@ class ParameterDefinition(RegistryModel):
         "boolean",
         "bracket_table",
         "keyed_bracket_table",
+        "convenio_rate_table",
     ]
     unit: str
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
     keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
+    convenio_rates: tuple[ConvenioRateRow, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxis | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -1470,6 +1522,8 @@ class ParameterDefinition(RegistryModel):
             self._validate_bracket_table_shape()
         elif self.data_type == "keyed_bracket_table":
             self._validate_keyed_bracket_table_shape()
+        elif self.data_type == "convenio_rate_table":
+            self._validate_convenio_rate_table_shape()
         else:
             self._validate_non_bracket_table_shape()
         return self
@@ -1492,6 +1546,10 @@ class ParameterDefinition(RegistryModel):
         if self.keyed_brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets"
+            )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix bracket_table and convenio_rates"
             )
         if self.bracket_axis is None:
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
@@ -1526,6 +1584,10 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets"
             )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and convenio_rates"
+            )
         seen: set[tuple[str, date]] = set()
         for row in self.keyed_brackets:
             pair = (row.key, row.valid_from)
@@ -1536,8 +1598,47 @@ class ParameterDefinition(RegistryModel):
                 )
             seen.add(pair)
 
+    def _validate_convenio_rate_table_shape(self) -> None:
+        """Verify a convenio_rate_table parameter carries convenio_rates with unique (country, tipo_renta, valid_from) triples.
+
+        Mirrors the keyed_bracket_table contract structure:
+        * non-empty ``convenio_rates`` tuple
+        * no ``values`` (dated scalar map is mutually exclusive)
+        * no ``brackets`` (numeric-interval table is mutually exclusive)
+        * no ``keyed_brackets`` (single-key shape is mutually exclusive)
+        * no two ``convenio_rates`` share the same
+          ``(country_code, tipo_renta, valid_from)`` triple — the
+          runtime lookup is exact-match on the pair within the active
+          window, so duplicates would make the result non-deterministic
+        """
+        if not self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares convenio_rate_table but has no convenio_rates"
+            )
+        if self.values:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and dated values"
+            )
+        if self.brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and numeric brackets"
+            )
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix convenio_rate_table and keyed_brackets"
+            )
+        seen: set[tuple[str, str, date]] = set()
+        for row in self.convenio_rates:
+            triple = (row.country_code, row.tipo_renta, row.valid_from)
+            if triple in seen:
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} convenio_rates contains duplicate "
+                    f"(country_code, tipo_renta, valid_from) triple {triple!r}"
+                )
+            seen.add(triple)
+
     def _validate_non_bracket_table_shape(self) -> None:
-        """Reject brackets / keyed_brackets / bracket_axis on a non-bracket-table parameter."""
+        """Reject brackets / keyed_brackets / convenio_rates / bracket_axis on a non-bracket-table parameter."""
         if self.brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
@@ -1546,6 +1647,11 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares keyed_brackets but data_type is {self.data_type!r}; "
                 "use 'keyed_bracket_table'"
+            )
+        if self.convenio_rates:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares convenio_rates but data_type is {self.data_type!r}; "
+                "use 'convenio_rate_table'"
             )
         if self.bracket_axis is not None:
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
