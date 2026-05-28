@@ -161,6 +161,8 @@ def _validate_strict_cross_revision_casilla_continuity(
                 and right_revision.continuidad_validation != "strict"
             ):
                 continue
+            if not _has_declared_continuity_surface(divergence):
+                continue
             if divergence.evolution_covers_field:
                 continue
             key = (
@@ -178,6 +180,14 @@ def _validate_strict_cross_revision_casilla_continuity(
             left_revision_id,
             right_revision_id,
         ), divergences in failures.items()
+    )
+
+
+def _has_declared_continuity_surface(divergence: CrossRevisionCasillaDivergence) -> bool:
+    return (
+        divergence.left_continuidad_id is not None
+        or divergence.right_continuidad_id is not None
+        or divergence.evolution_kind is not None
     )
 
 

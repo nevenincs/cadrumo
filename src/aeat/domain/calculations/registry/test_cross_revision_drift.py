@@ -405,8 +405,8 @@ class TestCrossRevisionConsistency:
         assert validate_registry_scope([m]) == ()
 
     def test_strict_continuity_validation_fails_uncovered_non_overlapping_drift(self) -> None:
-        a = _casilla(cid="0700", label="Old")
-        b = _casilla(cid="0700", label="New")
+        a = _casilla(cid="0700", label="Old", continuidad_id="base")
+        b = _casilla(cid="0700", label="New", continuidad_id="base")
         m = _modelo(
             "100",
             {"2024": [a], "2025": [b]},
@@ -423,6 +423,21 @@ class TestCrossRevisionConsistency:
         assert "strict continuity drift" in failures[0]
         assert "label" in failures[0]
         assert "0700" in failures[0]
+
+    def test_strict_continuity_validation_ignores_unannotated_advisory_surface(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
 
     def test_strict_continuity_validation_accepts_covered_non_overlapping_drift(self) -> None:
         a = _casilla(cid="0700", label="Old", continuidad_id="base")

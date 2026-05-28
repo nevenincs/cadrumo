@@ -66,7 +66,7 @@ M100 explicit and fragmented until continuity decisions are authored.
 
 - [x] `P03.S07` - Produce a committed M100 continuity inventory with sampled continuous, evolved, repurposed, and retired buckets; `.vault/research`.
 - [x] `P03.S08` - Author the first minimal continuity metadata slice for an evidence-grounded M100 annual chain; `src/aeat/_data/registry/aeat/modelos/100`.
-- [ ] `P03.S09` - Enable opt-in hard validation only for continuity-covered M100 surfaces; `src/aeat/_data/registry/aeat/modelos/100`.
+- [x] `P03.S09` - Enable opt-in hard validation only for continuity-covered M100 surfaces; `src/aeat/_data/registry/aeat/modelos/100`.
 
 ### Phase `P04` - Gates and closeout
 
