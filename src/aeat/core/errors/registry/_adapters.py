@@ -479,6 +479,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.SecureObjectRevisionConflictError",
+        ErrorCode(
+            code="FAIL_STORAGE_SECURE_OBJECT_REVISION_CONFLICT",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_repository",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.RetentionPolicyError",
         ErrorCode(
             code="INTEGRITY_STORAGE_RETENTION_POLICY",
@@ -1178,6 +1189,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_storage_bucket_recovery_verification",
             default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.errors.NamespaceRegistryError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_NAMESPACE_REGISTRY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_namespace_registry",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
