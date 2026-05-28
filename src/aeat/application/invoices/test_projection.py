@@ -17,11 +17,12 @@ from ...domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ..review import InvoiceReviewFilterSpec, update_invoice_review
+from ..review import InvoiceReviewFilterSpec, InvoiceReviewStatus, update_invoice_review
 from ..workflow import WorkflowState
 from . import (
     InvoiceMatchRow,
     apply_manual_invoice_match,
+    invoice_review_status,
     project_invoice_payment_matches,
     project_invoice_reviews,
 )
@@ -57,6 +58,41 @@ def _invoice() -> Invoice:
             ),
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# S166 — invoice_review_status returns are InvoiceReviewStatus enum members
+# ---------------------------------------------------------------------------
+
+
+def test_invoice_review_status_pending_is_enum_member() -> None:
+    """invoice_review_status with no review record returns InvoiceReviewStatus."""
+    invoice = _invoice()
+    result = invoice_review_status(invoice, None)
+    assert isinstance(result, InvoiceReviewStatus)
+    assert result is InvoiceReviewStatus.PENDING
+
+
+def test_invoice_review_status_reviewed_is_enum_member() -> None:
+    """invoice_review_status with non-empty review fields returns InvoiceReviewStatus.REVIEWED."""
+    from ..review import InvoiceReviewRecord
+
+    invoice = _invoice()
+    review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"base": "200"})
+    result = invoice_review_status(invoice, review)
+    assert isinstance(result, InvoiceReviewStatus)
+    assert result is InvoiceReviewStatus.REVIEWED
+
+
+def test_invoice_review_status_paid_is_enum_member() -> None:
+    """invoice_review_status with payment.id set returns InvoiceReviewStatus.PAID."""
+    from ..review import InvoiceReviewRecord
+
+    invoice = _invoice()
+    review = InvoiceReviewRecord(invoice_id=invoice.invoice_id, fields={"payment.id": "tx-001"})
+    result = invoice_review_status(invoice, review)
+    assert isinstance(result, InvoiceReviewStatus)
+    assert result is InvoiceReviewStatus.PAID
 
 
 def test_review_projection_applies_review_rate_and_status() -> None:
