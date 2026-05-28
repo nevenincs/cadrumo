@@ -30,11 +30,6 @@ adding M100-specific template semantics. The work adds additive schema support,
 opt-in hard validation, real-behavior tests, and a first evidence-grounded data
 rollout path. Template expansion remains out of scope.
 
-The `vault plan` CLI was unavailable in this worktree at planning time
-(`program not found` via `uv run --no-sync vault plan --help`), so this plan was
-created from the canonical template by hand. Future identifier-affecting edits
-should use the CLI once it is available.
-
 ## Proposed Changes
 
 The registry will gain explicit continuity metadata that identifies a casilla
