@@ -517,3 +517,9 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
 - [x] `W10.P49.S206` - Extend test_verification_chain coverage as M130/M390/M180/M111 gaps close (tasklist #75); `src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+
+### Phase `W10.P50` - M100 leaf-profile extension (W10.P49 follow-up)
+
+M100 verification chain currently EXTRACTION-ONLY because leaf inputs (017x family — base imponible general components) are absent from the declaracion_pdf profile target_casillas. M100 has full cuota-chain formulas in the registry but engine can't recompute without those leaves supplied as observations. Expand the M100 (2021/2022/2023) profiles target_casillas to include the leaf inputs via bbox_anchored where the printed form supports them. Transitions M100 ×3 revisions EXTRACTION-ONLY → VERIFIED across the 3 corpus PDFs.
+
+- [ ] `W10.P50.S207` - Expand M100 (2021/2022/2023) declaracion_pdf profiles target_casillas to include leaf inputs so engine recomputes cuota-chain closure (tasklist #79); `src/aeat/_data/registry/aeat/modelos/100/revisions/`.

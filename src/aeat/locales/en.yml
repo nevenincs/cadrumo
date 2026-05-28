@@ -306,6 +306,8 @@ application:
         period to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
+      m210_baseline_tipo_deferred:
+        next_action: application.modelo.findings.m210_baseline_tipo_deferred.next_action
       m210_convenio_rate_missing:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
@@ -3780,10 +3782,10 @@ wizard:
             label: Other legal form
           sa:
             label: Public limited company (S.A.)
-          sin-fines-lucrativos:
-            label: Non-profit entity
           sal:
             label: Worker-owned public limited company (S.A.L.)
+          sin-fines-lucrativos:
+            label: Non-profit entity
           sl:
             label: Limited liability company (S.L.)
           sll:
