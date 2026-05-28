@@ -69,16 +69,16 @@ envelope.
 - [x] `W01.P01.S08` - add real-behavior test asserting IVA compensation modelo error envelope; `src/aeat/application/calculations/test_iva_compensation_history.py`.
 - [ ] `W01.P01.S09` - introduce `WorkflowInputMismatchError(CoreError)` or reuse `CoreValidationError`; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P01.S10` - add real-behavior test asserting workflow-input-mismatch envelope and registry binding; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P01.S11` - introduce `AdapterTypeError(CoreError)` or reuse `McpLaunchError`; `replace the `TypeError`; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
-- [ ] `W01.P01.S12` - add real-behavior test asserting verify adapter type-error envelope; `src/aeat/adapters/outbound/aeat/verify/test_verify.py`.
+- [x] `W01.P01.S11` - introduce `AdapterTypeError(CoreError)` or reuse `McpLaunchError`; `replace the `TypeError`; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
+- [x] `W01.P01.S12` - add real-behavior test asserting verify adapter type-error envelope; `src/aeat/adapters/outbound/aeat/verify/test_verify.py`.
 - [x] `W01.P01.S13` - introduce `BrowserAdapterTypeError(CoreError)`; `replace the three `TypeError` raises across `_renta_web_open.py`, `_nif_iva_check.py`, `_groi_check.py`; `src/aeat/adapters/outbound/aeat/sede/_errors.py`.
 - [x] `W01.P01.S14` - add real-behavior test asserting browser-adapter-type-error envelope and registry binding; `src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py`.
 - [x] `W01.P01.S15` - introduce `StorageCorruptionError(CoreError)`; `replace the `TypeError`; `src/aeat/adapters/outbound/storage/_local.py`.
 - [x] `W01.P01.S16` - add real-behavior test asserting storage-corruption-error envelope round-trip; `src/aeat/adapters/outbound/storage/test_local.py`.
 - [x] `W01.P01.S17` - introduce `ObservationKeyError(CoreValidationError)`; `replace the five `ValueError` raises at observation-key validation; `src/aeat/application/calculations/_observations_repository.py`.
 - [x] `W01.P01.S18` - add real-behavior test asserting observation-key-error envelope for each replaced raise; `src/aeat/application/calculations/test_observations_repository.py`.
-- [ ] `W01.P01.S19` - introduce `AuthDiagnosticPhoneStateError(CoreValidationError)`; `replace the raw `ValueError(phone_state)`; `src/aeat/application/auth/_diagnostics.py`.
-- [ ] `W01.P01.S20` - add real-behavior test asserting auth-diagnostic phone-state envelope; `src/aeat/application/auth/test_diagnostics.py`.
+- [x] `W01.P01.S19` - introduce `AuthDiagnosticPhoneStateError(CoreValidationError)`; `replace the raw `ValueError(phone_state)`; `src/aeat/application/auth/_diagnostics.py`.
+- [x] `W01.P01.S20` - add real-behavior test asserting auth-diagnostic phone-state envelope; `src/aeat/application/auth/test_diagnostics.py`.
 - [x] `W01.P01.S21` - introduce `ProfileKeysRegistrationError(CoreError)`; `replace the `RuntimeError`; `src/aeat/domain/profile/_keys.py`.
 - [x] `W01.P01.S22` - add real-behavior test asserting profile-keys-registration envelope on double registration; `src/aeat/domain/profile/test_keys.py`.
 - [ ] `W01.P01.S23` - introduce `PensionReduccionError(CoreValidationError)`; `replace the six `ValueError` raises at pension reducción computation; `src/aeat/entrypoints/cli/_modelo.py`.
