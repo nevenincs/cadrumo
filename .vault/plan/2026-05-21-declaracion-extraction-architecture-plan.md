@@ -542,3 +542,4 @@ Following W10.P51 M303 formula reconciliation: engine recomputes resultado-regim
 Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classification
 
 - [x] `W10.P53.S211` - Rename fixture 2025-0A.pdf to 2025-alta.pdf and add EXTRACTION-ONLY chain test for M036 period=alta (tasklist #80); `src/aeat/tests/fixtures/justificantes/036/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
+- [x] `W10.P53.S212` - Regenerate 2 M390 corpus fixtures with formula-consistent values so resultado-regimen-general transitions FORMULA-MISMATCH to VERIFIED (tasklist #78); `src/aeat/tests/fixtures/justificantes/390/ src/aeat/tests/fixtures/justificantes/_generate.py src/aeat/_data/registry/aeat/modelos/390/revisions/ src/aeat/adapters/inbound/declaracion/test_parser_boundary.py`.
