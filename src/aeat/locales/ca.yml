@@ -2310,8 +2310,7 @@ cli:
     language_help: Llengua de la interfície (p. ex. ca, es, en).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar
-      a l''inici.'
+    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar a l''inici (%{dependency}). Executa aeat config repair.'
     unavailable_app_help: Aquesta ordre no està disponible en la configuració actual.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.

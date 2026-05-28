@@ -2339,8 +2339,7 @@ cli:
     language_help: A felület nyelve (pl. hu, en, es).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen az
-      indításkor.'
+    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor (%{dependency}). Futtasd: aeat config repair.'
     unavailable_app_help: Ez a parancs az aktuális konfigurációban nem érhető el.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.

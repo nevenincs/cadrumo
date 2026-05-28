@@ -2225,7 +2225,7 @@ cli:
     language_help: Interface language (e.g. en, es, ca).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    startup_import_error: 'Internal error: application module failed to load at startup.'
+    startup_import_error: 'Internal error: application module failed to load at startup (%{dependency}). Run aeat config repair.'
     unavailable_app_help: This command is not available in the current configuration.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.

@@ -2342,8 +2342,7 @@ cli:
     language_help: Idioma de la interfaz (p. ej. es, en, ca).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
-      al inicio.'
+    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar al inicio (%{dependency}). Ejecuta aeat config repair.'
     unavailable_app_help: Este comando no está disponible en la configuración actual.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
