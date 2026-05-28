@@ -45,6 +45,7 @@ from aeat.adapters.persistence.storage import (
     SecureObjectNamespaceDefinition,
     StorageHierarchyRegistry,
     StorageNamespaceScope,
+    StorageRemoteMirrorPolicy,
 )
 from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
 from aeat.adapters.persistence.storage.errors import NamespaceRegistryError
@@ -260,6 +261,37 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
     } <= registered_keys
 
 
+def test_w05_s41_secure_namespaces_default_to_ciphertext_remote_mirror_policy() -> None:
+    production_namespaces = tuple(
+        namespace
+        for namespace in STORAGE_NAMESPACE_REGISTRY.namespaces
+        if not namespace.key.startswith("test_")
+    )
+
+    assert production_namespaces
+    assert all(
+        namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
+        for namespace in production_namespaces
+    )
+    assert all(namespace.remote_mirror_requires_revision for namespace in production_namespaces)
+    assert all(namespace.remote_mirror_requires_integrity_manifest for namespace in production_namespaces)
+
+
+def test_w05_s41_test_only_namespaces_do_not_require_remote_mirror_metadata() -> None:
+    expected_namespaces = {
+        "test_snapshot_base_probe": TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        "test_session_lifecycle": TEST_SESSION_LIFECYCLE_NAMESPACE,
+    }
+
+    for key, expected_namespace in expected_namespaces.items():
+        namespace = STORAGE_NAMESPACE_REGISTRY.namespace_by_key(key)
+
+        assert namespace == expected_namespace
+        assert namespace.remote_mirror_policy is StorageRemoteMirrorPolicy.TEST_ONLY
+        assert namespace.remote_mirror_requires_revision is False
+        assert namespace.remote_mirror_requires_integrity_manifest is False
+
+
 def test_registry_path_definitions_name_persisted_hierarchy_segments() -> None:
     bucket_root = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_root")
     bucket_db = STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_db")
@@ -358,6 +390,27 @@ def test_default_object_key_with_path_separator_raises_namespace_registry_error(
         _make_namespace_definition(default_object_key="path/sep")
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
     assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_ciphertext_remote_mirror_policy_requires_revision_metadata() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(remote_mirror_requires_revision=False)
+    errors = exc_info.value.errors()
+    assert any("ciphertext remote mirror namespaces require revision and integrity metadata" in str(e) for e in errors)
+
+
+def test_ciphertext_remote_mirror_policy_requires_integrity_metadata() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(remote_mirror_requires_integrity_manifest=False)
+    errors = exc_info.value.errors()
+    assert any("ciphertext remote mirror namespaces require revision and integrity metadata" in str(e) for e in errors)
+
+
+def test_test_only_remote_mirror_policy_rejects_metadata_requirements() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY)
+    errors = exc_info.value.errors()
+    assert any("local-only and test-only namespaces must not require remote mirror metadata" in str(e) for e in errors)
 
 
 def _make_path_definition(**overrides: object) -> StoragePathDefinition:
