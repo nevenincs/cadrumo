@@ -341,6 +341,8 @@ application:
         mateix modelo, any i periode per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
     findings:
+      m210_baseline_tipo_deferred:
+        next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta} esta ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence per reclamar la tarifa Convenio aplicable, o espereu que el corpus baseline incorpori aquesta fila.'
       m210_convenio_rate_missing:
         next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
           per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
@@ -2308,8 +2310,7 @@ cli:
     language_help: Llengua de la interfície (p. ex. ca, es, en).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar
-      a l''inici.'
+    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar a l''inici (%{dependency}). Executa aeat config repair.'
     unavailable_app_help: Aquesta ordre no està disponible en la configuració actual.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
@@ -2771,6 +2772,7 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    error_application_live_iva_surface_timeout: 'La superfície de lectura d''IVA en viu ha esgotat el temps abans de retornar evidència de l''AEAT.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -3944,10 +3946,10 @@ wizard:
             label: Altra forma jurídica
           sa:
             label: Societat anònima (S.A.)
-          sin-fines-lucrativos:
-            label: Entitat sense fins lucratius
           sal:
             label: Societat Anònima Laboral (S.A.L.)
+          sin-fines-lucrativos:
+            label: Entitat sense fins lucratius
           sl:
             label: Societat de responsabilitat limitada (S.L.)
           sll:

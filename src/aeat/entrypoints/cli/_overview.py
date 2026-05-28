@@ -11,6 +11,7 @@ from ...application.overview import (
     build_overview_status_report,
 )
 from ...core.i18n import tr
+from ...core.logging import get_logger
 from ._common import (
     _bad,
     _canonical_period,
@@ -21,6 +22,8 @@ from ._common import (
     _state,
 )
 from ._overview_rendering import render_cli_overview_status_lines
+
+logger = get_logger(__name__)
 
 app = typer.Typer(
     name="overview",
@@ -220,15 +223,12 @@ def _overview_calendar_all_profiles(
     buckets are skipped with a warning line; they do not abort the scan.
     """
 
-    import logging
-
     from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
     from ...application.user_profile._orchestration import profile_storage_session
     from ...application.user_profile._profile_repository import ProfileRepository
     from ...application.user_profile._projections import projection_for_taxpayer, record_to_values
     from ...application.workflow._profile_bucket_scan import list_profile_buckets
 
-    _log = logging.getLogger(__name__)
     today = _date.today()
     buckets = list_profile_buckets()
     active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is BucketLifecycleStatus.ACTIVE}
@@ -246,7 +246,7 @@ def _overview_calendar_all_profiles(
             with profile_storage_session(bucket_id):
                 record = repository.load(bucket_id)
         except Exception:
-            _log.warning(
+            logger.warning(
                 "overview calendar: skipping unreadable profile %s (%s)",
                 bucket_id,
                 pointer.label,

@@ -26,6 +26,10 @@ from aeat.adapters.persistence.storage import (
     GOOGLE_OAUTH_METADATA_NAMESPACE,
     GOOGLE_OAUTH_TOKEN_NAMESPACE,
     LIVE_CENSUS_SNAPSHOT_NAMESPACE,
+    TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+    LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+    LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+    LIVE_VERIFY_OBSERVATION_NAMESPACE,
     LLM_CACHE_NAMESPACE,
     LLM_USAGE_NAMESPACE,
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
@@ -196,6 +200,30 @@ def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
             SensitivityClass.AUDIT,
             "{bundle_id}",
         ),
+        "live_expedientes_snapshot": (
+            LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
+            "aeat.application.live.expedientes_snapshot",
+            SensitivityClass.FINANCIAL,
+            "expedientes-snapshot:{bucket_id}:{snapshot_id}",
+        ),
+        "live_notifications_snapshot": (
+            LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+            "aeat.application.live.notifications_snapshot",
+            SensitivityClass.FINANCIAL,
+            "notifications-snapshot:{bucket_id}:{snapshot_id}",
+        ),
+        "live_verify_observations": (
+            LIVE_VERIFY_OBSERVATION_NAMESPACE,
+            "aeat.application.live.verify_observations",
+            SensitivityClass.IDENTITY,
+            "verify-observation:{bucket_id}:{observation_id}",
+        ),
+        "test_snapshot_base_probe": (
+            TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+            "aeat.application.live.test_snapshot_base_probe",
+            SensitivityClass.FINANCIAL,
+            "snapshot-base-probe:{bucket_id}:{snapshot_id}",
+        ),
     }
 
     for key, (expected, namespace, sensitivity, object_key_grammar) in expected_contracts.items():
@@ -224,6 +252,10 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
         "aeat_filed_declaration_observations",
         "aeat_iva_wallet_observations",
         "application_evidence_bundles",
+        "live_expedientes_snapshot",
+        "live_notifications_snapshot",
+        "live_verify_observations",
+        "test_snapshot_base_probe",
     } <= registered_keys
 
 

@@ -2,8 +2,7 @@
 
 This module factors the duplicated state-machine, supersession, and content-
 addressed-id derivation logic shared across the bucket-scoped live snapshot
-services (Borrador100, Census, and — in later phases — file-based legacy
-services).
+services (Borrador100, Census, Expedientes, and Notifications).
 
 Design notes:
 
@@ -34,13 +33,16 @@ import hashlib
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import StrEnum
-from pathlib import Path
-from typing import Any, Generic, Protocol, TypeVar, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
+from ...adapters.persistence.storage import Envelope, SecureObjectNamespaceDefinition
+from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ._errors import LiveApplicationInputError
 
 
@@ -74,11 +76,8 @@ class SnapshotLifecycleState(StrEnum):
     DISCARDED = "discarded"
 
 
-TPayload = TypeVar("TPayload", bound=BaseModel)
-
-
 @runtime_checkable
-class SnapshotRepository(Protocol, Generic[TPayload]):
+class SnapshotRepository[TPayload: BaseModel](Protocol):
     """Structural contract for bucket-scoped snapshot persistence backends.
 
     Implementations may be SecureObjectRepository-backed (Borrador100, Census)
@@ -173,7 +172,7 @@ def enforce_snapshot_state_invariants(
         )
 
 
-class SnapshotService(ABC, Generic[TPayload]):
+class SnapshotService[TPayload: BaseModel](ABC):
     """Abstract lifecycle service base for stateful bucket-scoped snapshots.
 
     Subclasses bind ``TPayload`` to their concrete Pydantic snapshot model and
@@ -304,7 +303,7 @@ class SnapshotService(ABC, Generic[TPayload]):
         )
 
 
-class StatelessSnapshotService(ABC, Generic[TPayload]):
+class StatelessSnapshotService[TPayload: BaseModel](ABC):
     """Append-only base for stateless snapshot services with per-call buckets.
 
     Subclasses inject a ``repository_factory`` that returns a fresh
@@ -362,20 +361,14 @@ class StatelessSnapshotService(ABC, Generic[TPayload]):
         return self._repository_for(bucket_id).resolve(snapshot_id)
 
 
-class JsonlSnapshotRepository(Generic[TPayload]):
-    """Generic file-backed JSONL snapshot repository for one bucket.
+class SecureSnapshotRepository[TPayload: BaseModel]:
+    """Generic secure-object snapshot repository for one runtime bucket.
 
-    Structurally satisfies :class:`SnapshotRepository` so any stateless
-    file-backed live service can adopt it without rewriting load/list/
-    resolve/save. Storage layout is one JSONL file per bucket; callers
-    inject the payload model class, the per-bucket storage-path resolver,
-    and the not-found error factory so per-service exception class
-    identities and CLI suggestion strings are preserved.
-
-    The payload model must expose ``snapshot_id`` and ``bucket_id``
-    attributes (every persisted live snapshot model in this codebase
-    does); the repository validates the payload's ``bucket_id`` against
-    the repository's bucket on save.
+    The repository preserves the :class:`SnapshotRepository` structural
+    contract used by stateless live services while replacing one-file-per-
+    bucket JSONL stores with encrypted secure-object rows. Each row is a
+    typed :class:`Envelope` whose object key carries the bucket id and
+    content-addressed snapshot id.
     """
 
     def __init__(
@@ -383,64 +376,84 @@ class JsonlSnapshotRepository(Generic[TPayload]):
         *,
         bucket_id: str,
         payload_model: type[TPayload],
-        storage_path: Callable[[str], Path],
+        namespace_definition: SecureObjectNamespaceDefinition,
+        object_key: Callable[[str, str], str],
         not_found_factory: Callable[[str], Exception],
         ambiguous_prefix_factory: Callable[[str, tuple[str, ...]], Exception],
         domain_label: str,
+        objects: SecureObjectRepository | None = None,
     ) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
             raise LiveApplicationInputError("bucket_id must not be blank")
         self._bucket_id = trimmed
         self._payload_model = payload_model
-        self._storage_path = storage_path
+        self._namespace_definition = namespace_definition
+        self._object_key = object_key
         self._not_found_factory = not_found_factory
         self._ambiguous_prefix_factory = ambiguous_prefix_factory
         self._domain_label = domain_label
+        self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
 
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
 
-    def _read_all(self) -> list[TPayload]:
-        path = self._storage_path(self._bucket_id)
-        if not path.exists():
-            return []
-        return [
-            self._payload_model.model_validate_json(line)
-            for line in path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-
-    def _write_all(self, snapshots: list[TPayload]) -> None:
-        path = self._storage_path(self._bucket_id)
-        payload = "\n".join(s.model_dump_json() for s in snapshots)
-        if payload:
-            payload += "\n"
-        path.write_text(payload, encoding="utf-8")
-
     def exists(self, snapshot_id: str) -> bool:
-        return any(_snapshot_id_of(s) == snapshot_id for s in self._read_all())
+        return self._objects.exists(
+            self._namespace_definition.namespace,
+            self._object_key(self._bucket_id, snapshot_id),
+        )
 
     def load(self, snapshot_id: str) -> TPayload:
-        for snapshot in self._read_all():
-            if _snapshot_id_of(snapshot) == snapshot_id:
-                return snapshot
-        raise self._not_found_factory(snapshot_id)
+        record = self._objects.load(
+            self._namespace_definition.namespace,
+            self._object_key(self._bucket_id, snapshot_id),
+            expected_class=self._namespace_definition.sensitivity,
+            max_supported_version=self._namespace_definition.schema_version,
+        )
+        if record is None:
+            raise self._not_found_factory(snapshot_id)
+        snapshot = self._snapshot_from_record(record, requested_snapshot_id=snapshot_id)
+        if _bucket_id_of(snapshot) != self._bucket_id:
+            raise LiveApplicationInputError(
+                f"{self._domain_label} snapshot bucket_id={_bucket_id_of(snapshot)!r} "
+                f"does not match repository bucket {self._bucket_id!r}"
+            )
+        if _snapshot_id_of(snapshot) != snapshot_id:
+            raise LiveApplicationInputError(
+                f"{self._domain_label} snapshot id={_snapshot_id_of(snapshot)!r} "
+                f"does not match requested snapshot {snapshot_id!r}"
+            )
+        return snapshot
 
     def list_snapshots(self) -> tuple[TPayload, ...]:
-        return tuple(self._read_all())
+        snapshots = [
+            snapshot
+            for record in self._objects.list_records(
+                self._namespace_definition.namespace,
+                expected_class=self._namespace_definition.sensitivity,
+                max_supported_version=self._namespace_definition.schema_version,
+            )
+            for snapshot in (self._snapshot_from_record(record),)
+            if _bucket_id_of(snapshot) == self._bucket_id
+        ]
+        return tuple(sorted(snapshots, key=lambda item: _snapshot_id_of(item)))
 
     def resolve(self, snapshot_id: str) -> TPayload:
+        trimmed_snapshot_id = snapshot_id.strip()
+        if not trimmed_snapshot_id:
+            raise LiveApplicationInputError("snapshot_id must not be blank")
         matches = [
-            s
-            for s in self._read_all()
-            if _snapshot_id_of(s) == snapshot_id or _snapshot_id_of(s).startswith(snapshot_id)
+            snapshot
+            for snapshot in self.list_snapshots()
+            if _snapshot_id_of(snapshot) == trimmed_snapshot_id
+            or _snapshot_id_of(snapshot).startswith(trimmed_snapshot_id)
         ]
         if not matches:
             raise self._not_found_factory(snapshot_id)
         if len(matches) > 1:
-            full_ids = tuple(sorted(_snapshot_id_of(s) for s in matches))
+            full_ids = tuple(sorted(_snapshot_id_of(snapshot) for snapshot in matches))
             raise self._ambiguous_prefix_factory(snapshot_id, full_ids)
         return matches[0]
 
@@ -451,15 +464,44 @@ class JsonlSnapshotRepository(Generic[TPayload]):
                 f"{self._domain_label} snapshot bucket_id={snapshot_bucket!r} "
                 f"does not match repository bucket {self._bucket_id!r}"
             )
-        snapshot_id = _snapshot_id_of(snapshot)
-        snapshots = self._read_all()
-        for index, existing in enumerate(snapshots):
-            if _snapshot_id_of(existing) == snapshot_id:
-                snapshots[index] = snapshot
-                self._write_all(snapshots)
-                return
-        snapshots.append(snapshot)
-        self._write_all(snapshots)
+        envelope = self._envelope_cls()(
+            schema_version=self._namespace_definition.schema_version,
+            written_at=datetime.now(UTC),
+            classification=self._namespace_definition.sensitivity,
+            payload=snapshot,
+        )
+        self._objects.save(
+            namespace=self._namespace_definition.namespace,
+            object_key=self._object_key(self._bucket_id, _snapshot_id_of(snapshot)),
+            classification=self._namespace_definition.sensitivity,
+            schema_version=self._namespace_definition.schema_version,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+    def _snapshot_from_record(
+        self,
+        record: SecureObjectRecord,
+        requested_snapshot_id: str | None = None,
+    ) -> TPayload:
+        envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
+        if envelope.classification is not self._namespace_definition.sensitivity:
+            snapshot_label = requested_snapshot_id or _snapshot_id_of(envelope.payload)
+            raise ClassificationError(
+                f"{self._domain_label} snapshot {snapshot_label!r} has classification "
+                f"{envelope.classification}; consumer expected {self._namespace_definition.sensitivity}",
+            )
+        if envelope.schema_version > self._namespace_definition.schema_version:
+            snapshot_label = requested_snapshot_id or _snapshot_id_of(envelope.payload)
+            raise EnvelopeVersionError(
+                f"{self._domain_label} snapshot {snapshot_label!r} is at version "
+                f"{envelope.schema_version}; consumer supports up to "
+                f"{self._namespace_definition.schema_version}",
+            )
+        return envelope.payload
+
+    def _envelope_cls(self) -> type[Envelope[TPayload]]:
+        return Envelope[self._payload_model]  # type: ignore[valid-type]
 
 
 def _snapshot_id_of(payload: BaseModel) -> str:
@@ -481,7 +523,7 @@ def _bucket_id_of(payload: BaseModel) -> str:
 
 
 __all__ = [
-    "JsonlSnapshotRepository",
+    "SecureSnapshotRepository",
     "SnapshotLifecycleState",
     "SnapshotNotFoundError",
     "SnapshotRepository",

@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -31,9 +31,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     calculate_registry_snapshot,
 )
-
-if TYPE_CHECKING:
-    pass
 
 # ---------------------------------------------------------------------------
 # Output types

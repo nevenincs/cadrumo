@@ -43,6 +43,7 @@ from ._id_resolution import (
 )
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
+    CLASSIFIED_BY_MANUAL,
     ApplyRulesAppliedRow,
     ApplyRulesResult,
     BulkClassifyFailure,
@@ -85,6 +86,7 @@ from ._preflight import (
 
 __all__ = [
     "BULK_CLASSIFY_ALLOWED_COLUMNS",
+    "CLASSIFIED_BY_MANUAL",
     "MINIMUM_DISPLAY_ID_WIDTH",
     "ApplyRulesAppliedRow",
     "ApplyRulesResult",

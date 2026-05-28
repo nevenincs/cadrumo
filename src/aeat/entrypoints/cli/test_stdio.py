@@ -28,6 +28,7 @@ import io
 import pytest
 
 from aeat.entrypoints.cli._stdio import (
+    _COLUMNS_ENV_VAR,
     _MIN_HELP_RENDER_COLUMNS,
     _ensure_help_render_width,
     configure_stdio_for_utf8,
@@ -239,3 +240,52 @@ def test_non_help_invocation_without_columns_set(monkeypatch: pytest.MonkeyPatch
     import os
 
     assert "COLUMNS" not in os.environ
+
+
+# --- _COLUMNS_ENV_VAR constant (S188) ----------------------------------------
+
+
+def test_columns_env_var_constant_value() -> None:
+    """_COLUMNS_ENV_VAR must equal the string literal 'COLUMNS'.
+
+    Rich derives console width from the COLUMNS environment variable.
+    The constant must match the key exactly so that os.environ reads
+    and writes reach the same slot that Rich consults.
+    """
+    assert _COLUMNS_ENV_VAR == "COLUMNS"
+
+
+def test_columns_env_var_used_for_env_write(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_ensure_help_render_width writes the floor to os.environ[_COLUMNS_ENV_VAR].
+
+    Confirms that the production code path uses the constant to mutate
+    the environment, not an independent literal.  After a help-surface
+    invocation with a narrow terminal os.environ[_COLUMNS_ENV_VAR] must
+    hold the floor value.
+    """
+    import os
+
+    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
+    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
+
+    _ensure_help_render_width()
+
+    assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+
+
+def test_columns_env_var_used_for_env_read(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_ensure_help_render_width reads from os.environ[_COLUMNS_ENV_VAR].
+
+    When the env slot named by _COLUMNS_ENV_VAR already exceeds the
+    floor the function must leave it untouched, proving the read path
+    uses the constant rather than an independent literal.
+    """
+    import os
+
+    wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
+    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
+    monkeypatch.setenv(_COLUMNS_ENV_VAR, wide)
+
+    _ensure_help_render_width()
+
+    assert os.environ[_COLUMNS_ENV_VAR] == wide

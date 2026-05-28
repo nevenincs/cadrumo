@@ -100,6 +100,7 @@ from ._errors import (
     OverviewError,
     OverviewExplainError,
 )
+from ._status import FilingStatus
 
 if TYPE_CHECKING:
     from ..state_projection import OperatorStateProjection
@@ -878,6 +879,7 @@ __all__ = [
     "ApplicabilityVerdict",
     "CalendarCompleteness",
     "CalendarWarning",
+    "FilingStatus",
     "ModeloApplicability",
     "OverviewAgendaError",
     "OverviewBacklogError",

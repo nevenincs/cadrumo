@@ -321,6 +321,8 @@ application:
       work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
     findings:
+      m210_baseline_tipo_deferred:
+        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben). Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti ezt a sort.'
       m210_convenio_rate_missing:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
@@ -2337,8 +2339,7 @@ cli:
     language_help: A felület nyelve (pl. hu, en, es).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen az
-      indításkor.'
+    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor (%{dependency}). Futtasd: aeat config repair.'
     unavailable_app_help: Ez a parancs az aktuális konfigurációban nem érhető el.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
@@ -2774,6 +2775,7 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
+    error_application_live_iva_surface_timeout: 'Az élő IVA-olvasási felület időtúllépett, mielőtt AEAT-bizonyítékot adott volna vissza.'
   fail:
     census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -3942,10 +3944,10 @@ wizard:
             label: Egyéb jogi forma
           sa:
             label: Részvénytársaság (S.A.)
-          sin-fines-lucrativos:
-            label: Nonprofit szervezet
           sal:
             label: Munkavállalói tulajdonú részvénytársaság (S.A.L.)
+          sin-fines-lucrativos:
+            label: Nonprofit szervezet
           sl:
             label: Korlátolt felelősségű társaság (S.L.)
           sll:

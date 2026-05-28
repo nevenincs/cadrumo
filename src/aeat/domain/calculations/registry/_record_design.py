@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import re
 import warnings
 from collections.abc import Iterator, Mapping
@@ -251,7 +250,7 @@ def _extract_record_design_pdf_stream(
         if "did not contain parseable field rows" not in str(text_fallback_error):
             raise text_fallback_error from pdfium_exc
         try:
-            with _suppress_pdfminer_debug_logging(), pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
                 pages = tuple(_snapshot_pdf_page(page) for page in pdf.pages)
         except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
             raise RegistryValidationError(
@@ -658,7 +657,7 @@ def _extract_pdf_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str
 
 def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tuple[str, ...]:
     try:
-        with _suppress_pdfminer_debug_logging(), pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             return tuple(line for page in pdf.pages for line in _extract_pdf_page_lines(page))
     except Exception as exc:  # pragma: no cover - defensive; pdfplumber surface
         raise RegistryValidationError(f"pdfplumber could not open record-design PDF {source_label}: {exc}") from exc
@@ -666,20 +665,6 @@ def _extract_pdfplumber_text_lines(pdf_bytes: bytes, *, source_label: str) -> tu
 
 def _uses_page_record_layout(lines: tuple[str, ...]) -> bool:
     return any(_pdf_page_name(_clean_pdf_line(line)) is not None for line in lines)
-
-
-@contextmanager
-def _suppress_pdfminer_debug_logging() -> Iterator[None]:
-    """Keep pdfminer parsing noise from dominating extraction runtime."""
-
-    logger = logging.getLogger("pdfminer")
-    previous_level = logger.level
-    if previous_level == logging.NOTSET or previous_level < logging.WARNING:
-        logger.setLevel(logging.WARNING)
-    try:
-        yield
-    finally:
-        logger.setLevel(previous_level)
 
 
 def _snapshot_pdf_page(page: Page) -> _PdfPageSnapshot:

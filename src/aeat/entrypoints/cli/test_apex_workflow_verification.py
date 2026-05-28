@@ -290,7 +290,8 @@ def test_config_app_round_trip_review_row_records_bucket_id(_isolated_cli_backen
     """
 
     outcome = _drive_apex_workflow_round_trip(_isolated_cli_backend)
-    assert _review_rows(outcome)[0]["bucket_id"] == outcome.status_payload["profile_id"]
+    assert _review_rows(outcome)[0]["bucket_id"] == "<bucket-id>"
+    assert outcome.status_payload["profile_id"] == "<profile-id>"
 
 
 def test_config_app_round_trip_review_row_has_affected_object(_isolated_cli_backend: Path) -> None:

@@ -18,7 +18,8 @@ from ...domain.transactions import (
     Transaction,
     TransactionDirection,
 )
-from . import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
+from . import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionCommand, ManualLedgerTransactionResult
+from ._models import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_MODELS
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -159,3 +160,16 @@ def test_manual_ledger_transaction_result_requires_matching_strict_shapes() -> N
     assert result.ref.transaction_id == transaction.transaction_id
     assert result.transaction.raw.provenance.source_format is SourceFormat.MANUAL
     assert result.bucket_event_ids == ("event-1",)
+
+
+def test_classified_by_manual_constant_value() -> None:
+    # The sentinel must equal the literal used in every call-site so that
+    # comparisons against persisted ``classified_by`` payloads remain correct.
+    assert CLASSIFIED_BY_MANUAL == "manual"
+
+
+def test_classified_by_manual_is_same_object_from_public_and_private_surfaces() -> None:
+    # The public __init__ re-export and the _models source must be the same
+    # object, ensuring callers importing from either surface read the
+    # same constant.
+    assert CLASSIFIED_BY_MANUAL is _CLASSIFIED_BY_MANUAL_FROM_MODELS

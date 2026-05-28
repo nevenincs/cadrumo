@@ -30,15 +30,23 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
 
-from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
+from ...core.i18n import tr
+from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
 from ._command_suggestions import (
     AeatTyperGroup as _AeatTyperGroup,
+)
+from ._command_suggestions import (
     LazySubcommand as _LazySubcommand,
+)
+from ._command_suggestions import (
     register_lazy_subcommand as _register_lazy_subcommand,
 )
 from ._common import _FORMAT_TEXT, _emit
-from ._errors import decorate_typer_app as _decorate_typer_app, write_stderr as _write_stderr
-from ._log_levels import apply_to_root_logger as _apply_to_root_logger, resolve_log_level as _resolve_log_level
+from ._errors import decorate_typer_app as _decorate_typer_app
+from ._errors import write_stderr as _write_stderr
+from ._log_levels import apply_to_root_logger as _apply_to_root_logger
+from ._log_levels import resolve_log_level as _resolve_log_level
 
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
@@ -320,7 +328,7 @@ def _emit_startup_import_error(error: ModuleNotFoundError) -> None:
 
 
 def _startup_import_error_text(error: ModuleNotFoundError) -> str:
-    dependency = _missing_dependency_name(error)
+    dependency = _redact_for_cli_output(_missing_dependency_name(error))
     return tr("cli.root.startup_import_error", dependency=dependency) + "\n"
 
 

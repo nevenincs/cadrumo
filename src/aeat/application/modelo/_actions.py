@@ -2429,14 +2429,31 @@ def _resolve_m210_rate(
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
-    Returns a (rate, findings) pair. The rate is the Decimal per TRLIRNR
-    Art 25 baseline OR the Convenio override when the profile declares a
-    treaty country. Returns ``(None, [finding])`` and emits a BLOCKING
-    ``ModeloVerificationFinding`` when the Convenio row is missing or
-    carries the ``NOT_YET_AUTHORED`` sentinel per m210-irnr-full-engine
-    ADR §D2.4. Returns ``(None, [])`` defensively when the baseline row
-    for ``tipo_renta`` is absent — that condition indicates a registry-
-    load coherence issue, not an operator-actionable filing gap.
+    Returns a (rate, findings) pair across three distinct branches:
+
+    1. **Baseline parameter absent** — the ``m210-tipo-gravamen-2025``
+       parameter is not loaded on the snapshot at all. This is a
+       registry-load coherence issue; the helper returns ``(None, [])``
+       defensively rather than emitting an operator-facing finding.
+
+    2. **Per-row absent, no treaty country** — the baseline parameter
+       is loaded but has no row for the requested ``tipo_renta`` (e.g.
+       pension, deferred under task #229 corpus-blocking) AND the
+       profile declares no ``country_of_fiscal_residence``. The helper
+       returns ``(None, [finding])`` with the
+       ``m210-baseline-tipo-deferred`` BLOCKING kind, citing the
+       deferral and pointing the operator at the treaty-claim
+       alternative.
+
+    3. **Treaty country declared** — the profile carries a
+       ``country_of_fiscal_residence``; the helper proceeds to Convenio
+       dispatch regardless of whether the baseline row is present.
+       If the (country, tipo_renta) Convenio row is missing the helper
+       emits ``m210-convenio-rate-missing``; if it carries the
+       ``NOT_YET_AUTHORED`` sentinel it emits
+       ``m210-convenio-rate-not-yet-authored``; otherwise it returns
+       the Convenio rate (which REPLACES the baseline per ADR §D2.4
+       self-execution doctrine).
 
     The treaty-country signal comes from
     ``profile.country_of_fiscal_residence``: a non-None value combined
@@ -2469,11 +2486,28 @@ def _resolve_m210_rate(
             except (ArithmeticError, ValueError):
                 return None, []
             break
-    if baseline_rate is None:
-        return None, []
 
     treaty_country = profile.country_of_fiscal_residence
     if treaty_country is None:
+        if baseline_rate is None:
+            baseline_legal_refs = tuple(str(r) for r in baseline_param.legal_refs)
+            baseline_source_refs = tuple(str(r) for r in baseline_param.source_refs)
+            finding = ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                severity=ModeloVerificationFindingSeverity.BLOCKING,
+                message=(
+                    f"M210 baseline tipo_renta={tipo_renta!r} year={year} is "
+                    "deferred to a future Phase per corpus-blocking; "
+                    "predicate 'm210-baseline-tipo-deferred' fires"
+                ),
+                next_action=tr(
+                    "application.modelo.findings.m210_baseline_tipo_deferred.next_action",
+                    tipo_renta=tipo_renta,
+                ),
+                legal_refs=baseline_legal_refs,
+                source_refs=baseline_source_refs,
+            )
+            return None, [finding]
         return baseline_rate, []
 
     cc = treaty_country.upper()

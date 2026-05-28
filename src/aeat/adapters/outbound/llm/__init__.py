@@ -7,19 +7,17 @@ on-disk content-addressed cache, :class:`PromptRegistry` for versioned
 prompt templates, and the :class:`LLMError` exception hierarchy.
 
 Examples:
-    Issue a completion via the high-level client::
+    Issue a completion via the high-level client:
 
-        import asyncio
-        from aeat.adapters.outbound.llm import LLMClient, LLMRequest
-
-        async def main() -> None:
-            client = LLMClient()
-            response = await client.complete(
-                LLMRequest(prompt="Summarize the requested modelo in one sentence.")
-            )
-            print(response.text)
-
-        asyncio.run(main())
+    >>> import asyncio
+    >>> from aeat.adapters.outbound.llm import LLMClient, LLMRequest
+    >>> async def main() -> None:
+    ...     client = LLMClient()
+    ...     response = await client.complete(
+    ...         LLMRequest(prompt="Summarize the requested modelo in one sentence.")
+    ...     )
+    ...     # response.text contains the completion; print in real usage
+    >>> # asyncio.run(main())  # requires a live LLM provider; omitted from doctest
 """
 
 from ._cache import LLMCache

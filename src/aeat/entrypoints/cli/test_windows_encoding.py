@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import io
 import os
-import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -64,6 +63,17 @@ def test_cp1252_stderr_path_does_not_raise_on_non_ascii_output(
 
     rendered = buffer.getvalue().decode("utf-8")
     assert expected_fragment in rendered
+
+
+def test_write_stderr_redacts_sensitive_canaries() -> None:
+    profile_id = "123e4567-e89b-12d3-a456-426614174000"
+    stream = io.StringIO()
+
+    write_stderr(f"profile={profile_id}", stream=stream)
+
+    rendered = stream.getvalue()
+    assert profile_id not in rendered
+    assert "profile=<profile-id>" in rendered
 
 
 def test_set_windows_console_utf8_does_not_raise() -> None:

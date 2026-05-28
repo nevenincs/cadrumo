@@ -137,7 +137,13 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
 
 
 def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: str) -> str:
-    """Pre-hardening cleartext key kept only as a read fallback."""
+    """Pre-hardening cleartext key kept only as a read fallback.
+
+    Wave 2 cleanup: this bridge can be removed once persisted records are
+    confirmed migrated (grep _data/ for cleartext iva-wallet-decision:<NIF>
+    keys; if count == 0 across all environments, delete this function and the
+    load_decision fallback call).
+    """
 
     safe_repository_id(taxpayer_nif, context="taxpayer_nif")
     safe_repository_id(target_period, context="target_period")

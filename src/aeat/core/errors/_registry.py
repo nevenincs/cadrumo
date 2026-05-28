@@ -19,6 +19,7 @@ shapes share the same rule vocabulary as logs and observability.
 from __future__ import annotations
 
 import json
+import logging as _logging_stdlib
 import re
 from collections.abc import Mapping
 from datetime import date, datetime
@@ -30,6 +31,11 @@ from types import MappingProxyType
 from pydantic import BaseModel, ConfigDict
 
 from ..redaction import redact_for_log
+
+# aeat.core.logging.get_logger triggers configure_logging() → config → aeat.core.errors,
+# creating a circular import at module load. Use the stdlib getter here; the root
+# SecretScrubbingFilter installed by configure_logging() propagates to this logger.
+logger = _logging_stdlib.getLogger(__name__)
 
 _SECRET_FIELD_PATTERN = re.compile(
     r"(credential|token|secret|pkcs12|passphrase|cert_password|cookie|bearer)",
@@ -247,9 +253,7 @@ def resolve_output_language() -> str:
 
         return output_language()
     except Exception as exc:
-        import logging as _logging
-
-        _logging.getLogger(__name__).debug(
+        logger.debug(
             "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
             exc,
             exc_info=True,

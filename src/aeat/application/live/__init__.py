@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
+from collections.abc import Awaitable
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -120,6 +122,7 @@ from ._errors import (
     LiveApplicationError,
     LiveApplicationInputError,
     LiveIvaAcquisitionFailureMode,
+    LiveIvaSurfaceTimeoutError,
     classify_live_iva_acquisition_failure,
 )
 from ._snapshot_base import SnapshotLifecycleState
@@ -1374,24 +1377,32 @@ async def capture_iva_remote_state(
     session = auth_result.session
 
     try:
-        filed_history = await _capture_iva_compensation_history_with_session(
-            session,
-            settings=settings,
-            year_from=year_from,
-            year_to=year_to,
-            output_root=store_root / "filed-history",
+        filed_history = await _await_live_iva_surface(
+            _capture_iva_compensation_history_with_session(
+                session,
+                settings=settings,
+                year_from=year_from,
+                year_to=year_to,
+                output_root=store_root / "filed-history",
+            ),
+            surface=LiveIvaReadSurface.FILED_HISTORY,
+            timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
         )
     except Exception as exc:
         filed_error = exc
 
     try:
-        wallet = await _capture_iva_compensation_wallet_with_session(
-            session,
-            settings=settings,
-            target_year=target_year,
-            target_period=target_period,
-            taxpayer_nif=taxpayer_nif,
-            output_root=store_root / "wallet",
+        wallet = await _await_live_iva_surface(
+            _capture_iva_compensation_wallet_with_session(
+                session,
+                settings=settings,
+                target_year=target_year,
+                target_period=target_period,
+                taxpayer_nif=taxpayer_nif,
+                output_root=store_root / "wallet",
+            ),
+            surface=LiveIvaReadSurface.WALLET_CARTERA,
+            timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
         )
     except Exception as exc:
         wallet_error = exc
@@ -1410,6 +1421,24 @@ async def capture_iva_remote_state(
     )
     manifest = persist_iva_remote_state_acquisition_report(report)
     return report.model_copy(update={"acquisition_manifest_id": manifest.acquisition_id})
+
+
+async def _await_live_iva_surface[T](
+    awaitable: Awaitable[T],
+    *,
+    surface: LiveIvaReadSurface,
+    timeout_ms: int,
+) -> T:
+    """Bound one combined live IVA read surface with a typed timeout."""
+
+    try:
+        return await asyncio.wait_for(awaitable, timeout=timeout_ms / 1000)
+    except TimeoutError as exc:
+        raise LiveIvaSurfaceTimeoutError(
+            f"live IVA {surface.value} read did not complete within {timeout_ms} ms",
+            surface=surface.value,
+            timeout_ms=timeout_ms,
+        ) from exc
 
 
 def build_iva_remote_state_acquisition_report(
@@ -1685,6 +1714,7 @@ __all__ = [
     "LiveIvaReadOutcome",
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
+    "LiveIvaSurfaceTimeoutError",
     "SnapshotLifecycleState",
     "SourceFiledDataCaptureReport",
     "StoredIvaRemoteStateAcquisitionRow",

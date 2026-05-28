@@ -24,6 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field, RootModel
 
 from .errors import AeatError
 from .logging import get_logger
+from .redaction import redact_structured_for_cli_output
 
 _log = get_logger(__name__)
 
@@ -190,13 +191,16 @@ def emit_json_success(
         stream: Target text stream; defaults to :data:`sys.stdout`.
     """
 
-    emit_json_document(
+    envelope_payload = redact_structured_for_cli_output(
         {
             "schema_version": "1",
             "command": command,
             "result": _jsonable_payload(result),
             "warnings": [] if warnings is None else list(warnings),
-        },
+        }
+    )
+    emit_json_document(
+        envelope_payload,
         indent=indent,
         sort_keys=sort_keys,
         stream=stream,

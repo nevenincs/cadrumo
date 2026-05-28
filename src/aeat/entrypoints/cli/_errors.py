@@ -45,13 +45,13 @@ from pydantic import ValidationError
 from ...core.click_context import json_output_requested
 from ...core.errors import (
     AeatError,
-    build_error_envelope,
     get_error_exit_code,
     get_registered_error_code,
     render_error_json,
     render_error_text,
 )
 from ...core.logging import get_logger
+from ...core.redaction import redact_for_cli_output
 from ...domain.user_profile._errors import StoredProfileDriftError
 
 _log = get_logger(__name__)
@@ -303,21 +303,22 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
     """
 
     target = sys.stderr if stream is None else stream
+    redacted_text = redact_for_cli_output(text)
     if _supports_reconfigure(target):
         with contextlib.suppress(Exception):
             target.reconfigure(encoding="utf-8", errors="replace")
     try:
-        target.write(text)
+        target.write(redacted_text)
         target.flush()
         return
     except UnicodeEncodeError:
         buffer = getattr(target, "buffer", None)
         if buffer is not None:
-            buffer.write(text.encode("utf-8", errors="replace"))
+            buffer.write(redacted_text.encode("utf-8", errors="replace"))
             with contextlib.suppress(Exception):
                 buffer.flush()
             return
-        target.write(text.encode("ascii", errors="replace").decode("ascii"))
+        target.write(redacted_text.encode("ascii", errors="replace").decode("ascii"))
         target.flush()
 
 

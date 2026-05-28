@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from pydantic import ValidationError
 from ..access_gate import LiveSubmitForbiddenError
 from ..i18n import tr
 from ..i18n._render import UnmatchedPlaceholderError
+from ..logging import SecretScrubbingFilter, configure_logging
 from ..observability._errors import RunContextMissingError, RunTracePersistenceError
 from . import (
     ERROR_REGISTRY,
@@ -20,7 +22,7 @@ from . import (
     render_error_json,
     render_error_text,
 )
-from ._registry import _DEFERRED_BIND, _flush_deferred_binds
+from ._registry import _DEFERRED_BIND, _flush_deferred_binds, logger as _registry_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -156,3 +158,83 @@ def test_core_error_prefixes_are_grep_stable() -> None:
         assert f'"category":"{expected_category}"' in rendered_json
         rendered_text = render_error_text(error)
         assert rendered_text.startswith(f"{expected_text_prefix} ")
+
+
+# ---------------------------------------------------------------------------
+# S54 — error-registry logger carries SecretScrubbingFilter
+# ---------------------------------------------------------------------------
+
+
+def test_error_registry_logger_is_module_level() -> None:
+    """_registry.logger is a module-level Logger, not created inline."""
+
+    assert isinstance(_registry_logger, logging.Logger), (
+        "Expected a logging.Logger instance; got %r" % type(_registry_logger)
+    )
+    assert _registry_logger.name == "aeat.core.errors._registry", (
+        "Logger name mismatch: %r" % _registry_logger.name
+    )
+
+
+def test_error_registry_debug_log_scrubs_sensitive_context(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """resolve_output_language debug record must not leak i18n exception detail with token shapes.
+
+    The registry logger uses logging.getLogger(__name__) to avoid the
+    circular import through aeat.core.logging.configure_logging → config →
+    aeat.core.errors.  SecretScrubbingFilter is attached to the root logger
+    by configure_logging(); we ensure it is present before capturing.
+    """
+
+    configure_logging()
+    root = logging.getLogger()
+    if not any(isinstance(f, SecretScrubbingFilter) for f in root.filters):
+        root.addFilter(SecretScrubbingFilter())  # ensure filter present in test isolation
+
+    sensitive_fragment = "oauth_refresh_token=abc-secret-xyz"
+    with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
+        _registry_logger.debug(
+            "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
+            sensitive_fragment,
+        )
+
+    assert caplog.records, "No debug records captured — logger propagation may be broken"
+
+    record = caplog.records[-1]
+    rendered = record.getMessage()
+    assert "abc-secret-xyz" not in rendered, (
+        f"Sensitive token fragment survived scrubbing in debug record; got: {rendered!r}"
+    )
+    assert "<redacted>" in rendered, (
+        f"Expected '<redacted>' marker in scrubbed record; got: {rendered!r}"
+    )
+
+
+def test_error_registry_debug_log_scrubs_nif_in_context(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """NIF-shaped values in the debug log arg position are scrubbed by the root filter."""
+
+    configure_logging()
+    root = logging.getLogger()
+    if not any(isinstance(f, SecretScrubbingFilter) for f in root.filters):
+        root.addFilter(SecretScrubbingFilter())
+
+    nif = "12345678Z"
+    with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
+        _registry_logger.debug(
+            "resolve_output_language: resolution failed for tax_id=%s",
+            nif,
+        )
+
+    assert caplog.records, "No debug records captured"
+
+    record = caplog.records[-1]
+    rendered = record.getMessage()
+    assert nif not in rendered, (
+        f"NIF {nif!r} was not scrubbed in debug record; got: {rendered!r}"
+    )
+    assert "<redacted>" in rendered, (
+        f"Expected '<redacted>' in scrubbed debug record; got: {rendered!r}"
+    )

@@ -85,9 +85,9 @@ def _emit_envelope(
     if _format_of(ctx) == "json":
         emit_json_success(command, result)
         return
-    rendered_lines = list(lines)
-    if rendered_lines:
-        typer.echo("\n".join(rendered_lines))
+    rendered = render_command_output(format_name=_FORMAT_TEXT, payload=result, lines=lines)
+    if rendered.text:
+        typer.echo(rendered.text)
 
 
 def _bad(message: str) -> typer.BadParameter:

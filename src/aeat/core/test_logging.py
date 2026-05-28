@@ -254,6 +254,70 @@ def test_secret_scrubbing_uses_context_hints_for_list_args_too() -> None:
     assert record.args == ("safe-item", "<redacted>")
 
 
+def test_pdfminer_logger_level_governed_by_dictconfig() -> None:
+    """dictConfig must set the pdfminer logger to WARNING via the loggers block.
+
+    Verifies S57: configure_logging() centralises pdfminer silencing so
+    neither _pdfplumber.py nor _record_design.py need to mutate it locally.
+    """
+    import logging
+
+    import aeat.core.logging as _logging_mod
+
+    # Force a fresh dictConfig run by temporarily resetting the guard.
+    original_configured = _logging_mod._CONFIGURED
+    _logging_mod._CONFIGURED = False
+    try:
+        _logging_mod.configure_logging()
+    finally:
+        # Restore so other tests are not affected.
+        _logging_mod._CONFIGURED = original_configured or True
+
+    pdfminer_logger = logging.getLogger("pdfminer")
+    assert pdfminer_logger.level == logging.WARNING, (
+        f"pdfminer logger level should be WARNING ({logging.WARNING}) "
+        f"after configure_logging(); got {pdfminer_logger.level}"
+    )
+
+
+def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
+    """Neither _pdfplumber nor _record_design should re-mutate the pdfminer logger.
+
+    Verifies S60: importing both modules and calling configure_logging()
+    leaves the pdfminer logger at WARNING — confirming the per-module
+    context-manager silencers have been removed and centralized config governs.
+    """
+    import logging
+
+    import aeat.core.logging as _logging_mod
+
+    original_configured = _logging_mod._CONFIGURED
+    _logging_mod._CONFIGURED = False
+    try:
+        _logging_mod.configure_logging()
+    finally:
+        _logging_mod._CONFIGURED = original_configured or True
+
+    # Trigger module imports — side-effects would show up as level mutations.
+    import aeat.adapters.inbound.pdf._pdfplumber  # noqa: F401
+    import aeat.domain.calculations.registry._record_design  # noqa: F401
+
+    pdfminer_logger = logging.getLogger("pdfminer")
+    assert pdfminer_logger.level == logging.WARNING, (
+        f"pdfminer logger level should remain WARNING after importing both "
+        f"pdf modules; got {pdfminer_logger.level}"
+    )
+
+    # Confirm the per-module silencer has been deleted from _pdfplumber's
+    # public surface.
+    from aeat.adapters.inbound.pdf._pdfplumber import __all__ as pdfplumber_all
+
+    assert "suppress_pdfminer_debug_logging" not in pdfplumber_all, (
+        "suppress_pdfminer_debug_logging still exported from _pdfplumber; "
+        "it should have been deleted (centralized in dictConfig)"
+    )
+
+
 def test_non_sensitive_fields_pass_through_unchanged() -> None:
     """Ordinary logging fields should remain visible after scrubbing runs."""
 

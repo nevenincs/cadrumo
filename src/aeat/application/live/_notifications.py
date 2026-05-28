@@ -43,12 +43,14 @@ from ...adapters.outbound.aeat.sede._notifications import (
     NotificationsSnapshot,
     RemoteNotification,
 )
+from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.time import _now
-from .._storage_paths import storage_path
+from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
-    JsonlSnapshotRepository,
+    SecureSnapshotRepository,
     SnapshotNotFoundError,
     StatelessSnapshotService,
 )
@@ -81,13 +83,24 @@ def _derive_snapshot_id(snapshot: NotificationsSnapshot) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
+    trimmed_bucket = bucket_id.strip()
+    trimmed_snapshot = snapshot_id.strip()
+    if not trimmed_bucket:
+        raise LiveApplicationInputError("bucket_id must not be blank")
+    if not trimmed_snapshot:
+        raise LiveApplicationInputError("snapshot_id must not be blank")
+    return f"notifications-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
+
+
 def _notifications_repository(
     settings: Settings, bucket_id: str
-) -> JsonlSnapshotRepository[PersistedNotificationsSnapshot]:
-    return JsonlSnapshotRepository(
+) -> SecureSnapshotRepository[PersistedNotificationsSnapshot]:
+    return SecureSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=PersistedNotificationsSnapshot,
-        storage_path=lambda bucket: storage_path(settings.aeat_audit_dir / "live" / "notifications", bucket),
+        namespace_definition=LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+        object_key=notifications_snapshot_object_key,
         not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
             f"no notifications snapshot matches {snapshot_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app live notifications list",
@@ -97,6 +110,7 @@ def _notifications_repository(
             suggestion="provide a longer prefix",
         ),
         domain_label="notifications",
+        objects=secure_object_repository_for_bucket(bucket_id, settings),
     )
 
 
@@ -110,7 +124,7 @@ class NotificationsService(StatelessSnapshotService[PersistedNotificationsSnapsh
     capture and emit a fresh bucket event.
 
     Each public verb accepts ``bucket_id`` per call; storage is one
-    JSONL file per bucket under ``aeat_audit_dir/live/notifications``.
+    encrypted secure-object row per captured snapshot.
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
@@ -175,4 +189,5 @@ __all__ = [
     "NotificationsService",
     "NotificationsSnapshotNotFoundError",
     "PersistedNotificationsSnapshot",
+    "notifications_snapshot_object_key",
 ]
