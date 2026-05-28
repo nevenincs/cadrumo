@@ -103,8 +103,8 @@ envelope.
 - [ ] `W01.P01.S42` - add real-behavior test asserting IVA-wallet-reconciliation envelope at every replaced raise; `src/aeat/application/calculations/test_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S43` - introduce `AggregationConfigError(CoreError)`; `replace the nine `ValueError` raises at aggregation-service composition; `src/aeat/application/aggregation/_service.py`.
 - [ ] `W01.P01.S44` - add real-behavior test asserting aggregation-config envelope at every replaced raise; `src/aeat/application/aggregation/test_service.py`.
-- [ ] `W01.P01.S45` - introduce `DiagnosticModelError(CoreValidationError)`; `replace the `ValueError` / `TypeError` raises in `DiagnosticCheck` invariants; `src/aeat/application/diagnostics.py`.
-- [ ] `W01.P01.S46` - add real-behavior test asserting diagnostic-model envelope at every replaced raise; `src/aeat/application/test_diagnostics.py`.
+- [x] `W01.P01.S45` - introduce `DiagnosticModelError(CoreValidationError)`; `replace the `ValueError` / `TypeError` raises in `DiagnosticCheck` invariants; `src/aeat/application/diagnostics.py`.
+- [x] `W01.P01.S46` - add real-behavior test asserting diagnostic-model envelope at every replaced raise; `src/aeat/application/test_diagnostics.py`.
 - [x] `W01.P01.S47` - introduce `ClassificationRuleError(CoreValidationError)`; `replace the regex-validation `ValueError`; `src/aeat/domain/transactions/_classification_rule.py`.
 - [x] `W01.P01.S48` - add real-behavior test asserting classification-rule envelope on invalid regex; `src/aeat/domain/transactions/test_classification_rule.py`.
 
@@ -245,8 +245,8 @@ asserts every caller now imports from the canonical home.
 - [x] `W01.P05.S142` - add real-behavior test asserting every former call-site reads the canonical clock; `src/aeat/core/time/test_clock.py`.
 - [ ] `W01.P05.S143` - parametrize `_storage_path` into one shared helper under `aeat.application._storage_paths`; `delete the seven local copies; `src/aeat/application/_storage_paths.py`.
 - [ ] `W01.P05.S144` - add real-behavior test asserting the helper produces the historical path layout for every former caller's root; `src/aeat/application/test_storage_paths.py`.
-- [ ] `W01.P05.S145` - move `_round_to_cents` to `aeat.domain.fincas._rounding`; `delete the two peer copies in `_amortization_ledger.py` and `_expense_rollup.py`; `src/aeat/domain/fincas/_rounding.py`.
-- [ ] `W01.P05.S146` - add real-behavior test asserting fincas rounding behaves under representative Decimal inputs; `src/aeat/domain/fincas/test_rounding.py`.
+- [x] `W01.P05.S145` - move `_round_to_cents` to `aeat.domain.fincas._rounding`; `delete the two peer copies in `_amortization_ledger.py` and `_expense_rollup.py`; `src/aeat/domain/fincas/_rounding.py`.
+- [x] `W01.P05.S146` - add real-behavior test asserting fincas rounding behaves under representative Decimal inputs; `src/aeat/domain/fincas/test_rounding.py`.
 - [ ] `W01.P05.S147` - reconcile `_parse_bool` signatures (`bool` vs `bool | None`); `move canonical version to `aeat.core.parsing._utils`; `src/aeat/core/parsing/_utils.py`.
 - [ ] `W01.P05.S148` - add real-behavior test asserting `_parse_bool` rejects unknown tokens and round-trips truthy / falsy inputs per call-site contract; `src/aeat/core/parsing/test_utils.py`.
 - [ ] `W01.P05.S149` - keep `_parse_date` variants distinct as `_parse_iso8601_date` and `_parse_ddmmyyyy_date`; `co-locate under `aeat.core.parsing._dates`; `src/aeat/core/parsing/_dates.py`.
