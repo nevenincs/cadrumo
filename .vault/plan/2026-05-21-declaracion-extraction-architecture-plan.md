@@ -481,6 +481,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
 - [x] `W10.P43.S200` - Audit borrador per-modelo class pattern vs registry-profile decision either supersede or document architectural difference (tasklist #69); `src/aeat/adapters/inbound/borrador/`.
+- [x] `W10.P43.S210` - Extend BorradorParseError with structured attributes (missing/malformed/ambiguous/coverage) matching DeclaracionParseError discipline; `update extractor raise sites; add typed-attribute tests; `src/aeat/adapters/inbound/borrador/_errors.py src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py src/aeat/adapters/inbound/borrador/test_modelo_100_summary.py`.
 
 ### Phase `W10.P44` - OCR/evidence invoice path future research (deferred)
 
