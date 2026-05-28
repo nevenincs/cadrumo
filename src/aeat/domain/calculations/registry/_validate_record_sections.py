@@ -18,6 +18,7 @@ from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, FormulaDefinition, LegalReference, ModeloRevision, SourceReference
 from ._validate_evidence import EvidenceValidator
 from ._validate_extraction_profiles import (
+    validate_bbox_anchor_consistency,
     validate_declaracion_pdf_round_trip_gate,
     validate_declaracion_pdf_specimen_gate,
     validate_dotted_callable,
@@ -224,6 +225,8 @@ def validate_extraction_profile_section(
                     f"export fields {missing_exported_casillas!r}"
                 )
         failures.extend(validate_extraction_profile_artefacts(prefix, profile))
+        for target in profile.target_casillas:
+            failures.extend(validate_bbox_anchor_consistency(prefix, target))
         if corpus_root is not None:
             failures.extend(validate_declaracion_pdf_specimen_gate(prefix, modelo_id, profile, corpus_root))
             failures.extend(validate_declaracion_pdf_round_trip_gate(prefix, modelo_id, profile, corpus_root))
