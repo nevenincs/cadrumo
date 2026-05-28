@@ -300,6 +300,10 @@ def configure_logging() -> None:
                     "level": "WARNING",
                     "propagate": True,
                 },
+                "pdfminer": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
             },
         }
     )

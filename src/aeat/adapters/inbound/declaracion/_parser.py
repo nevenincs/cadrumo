@@ -471,10 +471,8 @@ def _extract_pages_words(pdf_path: Path) -> tuple[list[_PdfWord], ...]:
 
     import pdfplumber
 
-    from ..pdf._pdfplumber import suppress_pdfminer_debug_logging
-
     try:
-        with suppress_pdfminer_debug_logging(), pdfplumber.open(pdf_path) as pdf:
+        with pdfplumber.open(pdf_path) as pdf:
             return tuple(page.extract_words() or [] for page in pdf.pages)
     except Exception:  # pragma: no cover — defensive; pdfplumber surface
         _logger.debug("pdfplumber word extraction failed for %s", pdf_path, exc_info=True)
