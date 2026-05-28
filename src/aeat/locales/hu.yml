@@ -2335,35 +2335,35 @@ errors:
     integrity_storage_corpus_manifest_drift: 'A lemezen lévő corpus eltér a manifeszttől: fájlok lettek hozzáadva, eltávolítva vagy módosítva.'
     integrity_storage_corpus_manifest_tamper: 'A corpus manifeszt önigazoló kivonata nem egyezik a testével. A manifeszt sérült vagy manipulált lehet.'
     integrity_storage_decryption: 'Egy tárolt objektum visszafejtése meghiúsult. Az adatok sérültek lehetnek, vagy helytelen a kulcs.'
-    integrity_storage_encryption: errors.integrity.integrity_storage_encryption
-    integrity_storage_envelope_version: errors.integrity.integrity_storage_envelope_version
-    integrity_storage_key_derivation: errors.integrity.integrity_storage_key_derivation
-    integrity_storage_nonce_collision: errors.integrity.integrity_storage_nonce_collision
-    integrity_storage_path_containment: errors.integrity.integrity_storage_path_containment
-    integrity_storage_retention_policy: errors.integrity.integrity_storage_retention_policy
-    integrity_storage_secure_object_unreadable: errors.integrity.integrity_storage_secure_object_unreadable
-    integrity_storage_validation: errors.integrity.integrity_storage_validation
-    integrity_verification: errors.integrity.integrity_verification
-    profile_import_signature: errors.integrity.profile_import_signature
+    integrity_storage_encryption: 'Titkosítási vagy visszafejtési hiba történt a biztonságos tárolóban.'
+    integrity_storage_envelope_version: 'Egy lemezen lévő objektum verziója nem egyezik az alkalmazás által várt verzióval.'
+    integrity_storage_key_derivation: 'Egy kulcsszármaztatási lépés meghiúsult a biztonságos tárolóban.'
+    integrity_storage_nonce_collision: 'Nonce-ütközés észlelve a biztonságos tárolóban.'
+    integrity_storage_path_containment: 'Egy számított útvonal kiszökik a konfigurált gyökérkönyvtárból.'
+    integrity_storage_retention_policy: 'Egy rekord megőrzési metaadatai sértik az osztályozási szabályzatot.'
+    integrity_storage_secure_object_unreadable: 'Egy tárolt biztonságos objektum nem fejthető vissza az aktuális főkulccsal.'
+    integrity_storage_validation: 'Egy tárolási paraméter nem ment át az érvényesítésen.'
+    integrity_verification: 'Az ellenőrzés helyrehozhatatlanul meghiúsult. A referencia-adatok vagy a számítási motor sérült lehet.'
+    profile_import_signature: 'A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen. Ne importáljon archívumot nem megbízható forrásból.'
   internal:
-    internal_cli_unexpected_boundary: errors.internal.internal_cli_unexpected_boundary
-    internal_observability_run_context_missing: errors.internal.internal_observability_run_context_missing
-    internal_output_rendering: errors.internal.internal_output_rendering
+    internal_cli_unexpected_boundary: 'A parancs váratlan belső hiba miatt meghiúsult.'
+    internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt rögzítettek aktív futási kontextuson kívül.'
+    internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan megjeleníteni.'
     internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
-    internal_wizard_script_overflow: errors.internal.internal_wizard_script_overflow
-    internal_wizard_script_underflow: errors.internal.internal_wizard_script_underflow
-    internal_workflow_abort_signal: errors.internal.internal_workflow_abort_signal
+    internal_wizard_script_overflow: 'Belső hiba: a varázsló feldolgozatlan szkriptelt válaszokkal zárult.'
+    internal_wizard_script_underflow: 'Belső hiba: a varázsló több választ kért, mint amennyit szkriptelt.'
+    internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási jelet adott ki.'
   locked:
-    locked_access_gate_live_submit_forbidden: errors.locked.locked_access_gate_live_submit_forbidden
-    locked_auth_acquisition: errors.locked.locked_auth_acquisition
-    locked_google_keychain: errors.locked.locked_google_keychain
-    locked_storage_bucket_busy: errors.locked.locked_storage_bucket_busy
-    locked_storage_bucket_session: errors.locked.locked_storage_bucket_session
-    locked_storage_lock_acquisition: errors.locked.locked_storage_lock_acquisition
+    locked_access_gate_live_submit_forbidden: 'Az élő benyújtás az AEAT-hoz véglegesen tiltott. Ez az alkalmazás bevallásokat épít, érvényesít és exportál; a benyújtást magát az alkalmazáson kívül kell elvégezni.'
+    locked_auth_acquisition: 'Egy másik folyamat éppen AEAT-hitelesítést szerez. Várja meg, amíg befejeződik, és próbálja újra.'
+    locked_google_keychain: 'A Google-hitelesítő adatokat tároló operációs rendszer kulcstára zárolt vagy elérhetetlen. Oldja fel a kulcstárat, és próbálja újra.'
+    locked_storage_bucket_busy: 'A tárolási bucket egy másik folyamat által van használatban. Várja meg, amíg az a folyamat befejeződik, és próbálja újra.'
+    locked_storage_bucket_session: 'Ehhez a művelethez egy feloldott tárolási bucketre van szükség. Futtassa az  parancsot, és próbálja újra.'
+    locked_storage_lock_acquisition: 'A kizárólagos fájlzárat nem sikerült beszerezni az időkorláton belül. Egy másik folyamat tartja; várjon, és próbálja újra.'
   refused:
-    auth_configure_no_active_bucket: errors.refused.auth_configure_no_active_bucket
-    auth_profile_identity_mismatch: errors.refused.auth_profile_identity_mismatch
-    bootstrap_already_complete: errors.refused.bootstrap_already_complete
+    auth_configure_no_active_bucket: 'Hitelesítés nem konfigurálható aktív profil nélkül. Hozzon létre profilt az  paranccsal, és próbálja újra.'
+    auth_profile_identity_mismatch: 'Az aktív profil azonossága nem rendelkezhet a kért hitelesítési munkamenettel.'
+    bootstrap_already_complete: 'Már létezik profil; az első futtatás beállítása csak egyszer fut le. Profil váltáshoz használja az  parancsot.'
     census_apply_conflict: errors.refused.census_apply_conflict
     census_field_validation: errors.refused.census_field_validation
     census_not_available: errors.refused.census_not_available
