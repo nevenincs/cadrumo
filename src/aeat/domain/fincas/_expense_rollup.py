@@ -18,12 +18,13 @@ en los cuatro años siguientes".
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from ._enums import ExpenseCategory
 from ._models import FincaGasto
+from ._rounding import _round_to_cents
 
 CARRY_FORWARD_MAX_YEARS: int = 4
 """LIRPF art. 23.1.a) párrafo segundo: ``en los cuatro años siguientes``."""
@@ -32,12 +33,6 @@ CAPPED_CATEGORIES: frozenset[ExpenseCategory] = frozenset(
     {ExpenseCategory.FINANCIACION_INTERESES, ExpenseCategory.CONSERVACION_REPARACION},
 )
 """The two categories subject to the joint art. 23.1.a) cap."""
-
-_CENT = Decimal("0.01")
-
-
-def _round_to_cents(value: Decimal) -> Decimal:
-    return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
 class CarryForwardEntry(BaseModel):
