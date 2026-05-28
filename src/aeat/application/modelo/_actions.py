@@ -1274,13 +1274,16 @@ def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
 ) -> None:
     decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is not None:
-        raise ModeloIvaWalletReconciliationBlocked(_iva_wallet_blocked_message(decision))
+        raise ModeloIvaWalletReconciliationBlocked(
+            _iva_wallet_blocked_message(decision),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
 
 
 def _iva_wallet_blocked_message(decision: Any) -> str:
     divergence = str(decision.divergence)
     reason = str(decision.reason)
-    return f"IVA wallet reconciliation is blocked for Modelo 303 ({divergence}): {reason}"
+    return tr("application.modelo.errors.iva_wallet_blocked", divergence=divergence, reason=reason)
 
 
 def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
@@ -2630,10 +2633,14 @@ def _evaluate_verification_predicates(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                         severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        message=(f"cross-casilla invariant {predicate.predicate_id!r} violated: {predicate.expression}"),
-                        next_action=(
-                            f"Ensure all casillas required by predicate "
-                            f"{predicate.predicate_id!r} are non-zero before verifying."
+                        message=tr(
+                            "application.modelo.findings.cross_casilla_invariant_violated",
+                            predicate_id=predicate.predicate_id,
+                            expression=predicate.expression,
+                        ),
+                        next_action=tr(
+                            "application.modelo.findings.cross_casilla_invariant_next_action",
+                            predicate_id=predicate.predicate_id,
                         ),
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     )
@@ -2869,10 +2876,11 @@ def _collect_revision_verification_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"registry snapshot for modelo={work_unit.modelo!r} "
-                    f"year={work_unit.filing_year} period={work_unit.period!r} "
-                    f"could not be resolved"
+                message=tr(
+                    "application.modelo.findings.registry_snapshot_unresolved",
+                    modelo=str(work_unit.modelo),
+                    filing_year=str(work_unit.filing_year),
+                    period=str(work_unit.period),
                 ),
                 next_action="aeat app registry verify",
             )
@@ -2954,11 +2962,11 @@ def _dt12_reduccion_advisory_finding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=(
-                f"DT_12A_REDUCCION_POSSIBLE: casilla {ingreso_id} = {ingreso_value} "
-                f"but casilla {reduccion_id} (reducción trabajo) is zero. "
-                f"If this income includes a plan-de-pensiones capital rescate with "
-                f"pre-31-Dec-2006 aportaciones, a 40%% DT 12ª LIRPF reducción may apply."
+            message=tr(
+                "application.modelo.findings.dt12a_reduccion_possible",
+                ingreso_id=ingreso_id,
+                ingreso_value=str(ingreso_value),
+                reduccion_id=reduccion_id,
             ),
             next_action=(
                 "Supply --rescate-plan-pensiones-capital IMPORTE "
@@ -2996,7 +3004,7 @@ def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerific
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_iva_wallet_blocked_message(decision),
-        next_action="Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.",
+        next_action=tr("application.modelo.findings.iva_wallet_next_action"),
     )
 
 
