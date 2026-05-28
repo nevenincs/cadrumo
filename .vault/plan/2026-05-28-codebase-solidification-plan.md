@@ -93,8 +93,8 @@ envelope.
 - [ ] `W01.P01.S32` - add real-behavior test asserting non-NoActiveProfileError exceptions propagate with their original envelope; `src/aeat/entrypoints/cli/test_ledger.py`.
 - [ ] `W01.P01.S33` - narrow the autocomplete `except Exception` to specific `AeatError` subtypes; `log others at DEBUG via observability sink; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P01.S34` - add real-behavior test asserting autocomplete propagates AeatError envelope and observability records non-AeatError; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W01.P01.S35` - wrap each of the seven `except Exception` clauses in `_record_unhandled` with `build_error_envelope`; `assign a synthetic `UNHANDLED_INTERNAL` `ErrorCode`; `src/aeat/application/workflow/_engine.py`.
-- [ ] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
+- [x] `W01.P01.S35` - wrap each of the seven `except Exception` clauses in `_record_unhandled` with `build_error_envelope`; `assign a synthetic `UNHANDLED_INTERNAL` `ErrorCode`; `src/aeat/application/workflow/_engine.py`.
+- [x] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
 - [ ] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
 - [x] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
