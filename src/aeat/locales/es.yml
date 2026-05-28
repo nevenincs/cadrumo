@@ -108,10 +108,14 @@ adapters:
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
   sede:
     errors:
-      empty_identity_nif: 'El NIF de identidad de la sesión AEAT está vacío; no se puede vincular la observación de presentación.'
-      iva_wallet_empty_amount_cell: 'La celda de importe de la cartera de compensación de IVA está vacía.'
-      iva_wallet_empty_period_cell: 'La celda de periodo de la cartera de compensación de IVA está vacía.'
-      no_auth_session: 'La sesión de autenticación de AEAT no existe o no está persistida; ejecute primero `aeat config auth status`.'
+      empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
+        puede vincular la observación de presentación.
+      iva_wallet_empty_amount_cell: La celda de importe de la cartera de compensación
+        de IVA está vacía.
+      iva_wallet_empty_period_cell: La celda de periodo de la cartera de compensación
+        de IVA está vacía.
+      no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
+        ejecute primero `aeat config auth status`.
 aggregation:
   iva_ledger:
     errors:
@@ -722,7 +726,19 @@ cli:
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        label_bindings: 'Vinculaciones'
+        label_cadence: 'Periodicidad'
+        label_casillas: 'Casillas'
+        label_formulas: 'Fórmulas'
+        label_modelo: 'Modelo'
+        label_official_name: 'Nombre oficial'
+        label_periods: 'Períodos'
+        label_revision: 'Revisión'
+        label_revision_ids: 'Ids de revisión'
+        label_tax_domain: 'Ámbito fiscal'
+        label_title: 'Título'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_error: 'Error de registro: %{message}'
         period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
           1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
@@ -965,6 +981,7 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
+        dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -1114,6 +1131,7 @@ cli:
           Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva
           acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
           y --sal-reserva-dotada.'
+        sal_computation_error: 'Error de cómputo SAL: %{message}'
         sal_reserva_casilla_not_found: --sal-beneficio-neto no está soportado para
           esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial
           de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.
@@ -1567,6 +1585,7 @@ cli:
       set_help: Escribe el valor de una clave de perfil, validado con el descriptor
         del asistente.
       unset_help: Borra el valor de una clave de perfil.
+      unset_placeholder: <no establecido>
       value_help: Valor que se va a guardar.
     repair:
       audience_internal: problema interno de la aplicación
@@ -1753,6 +1772,7 @@ cli:
         (permitidos: 0-9, a-f).'
       id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
         un SHA-256 completo.
+      id_prefix_unknown: 'Error inesperado en el prefijo de id de transacción: %{message}'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
       unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
         sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
@@ -3481,6 +3501,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Simplified
+  commands:
+    status:
+      created: creado
+      updated: actualizado
   demo:
     description: A demonstration section to test wizard functionality
     section:

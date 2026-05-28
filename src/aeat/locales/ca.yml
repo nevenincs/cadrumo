@@ -106,10 +106,14 @@ adapters:
         year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
   sede:
     errors:
-      empty_identity_nif: 'El NIF d''identitat de la sessió AEAT és buit; no es pot vincular l''observació de presentació.'
-      iva_wallet_empty_amount_cell: 'La cel·la d''import de la cartera de compensació d''IVA és buida.'
-      iva_wallet_empty_period_cell: 'La cel·la de període de la cartera de compensació d''IVA és buida.'
-      no_auth_session: 'La sessió d''autenticació d''AEAT no existeix o no està persistida; executeu primer `aeat config auth status`.'
+      empty_identity_nif: El NIF d'identitat de la sessió AEAT és buit; no es pot
+        vincular l'observació de presentació.
+      iva_wallet_empty_amount_cell: La cel·la d'import de la cartera de compensació
+        d'IVA és buida.
+      iva_wallet_empty_period_cell: La cel·la de període de la cartera de compensació
+        d'IVA és buida.
+      no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
+        executeu primer `aeat config auth status`.
 aggregation:
   iva_ledger:
     errors:
@@ -711,7 +715,19 @@ cli:
         model. Emet diferències per casella (any_b - any_a) agrupades per secció.
       describe:
         as_of_help: Resoldre la revisió del model vigent a la data ISO indicada (AAAA-MM-DD)
+        label_bindings: 'Vinculacions'
+        label_cadence: 'Periodicitat'
+        label_casillas: 'Caselles'
+        label_formulas: 'Fórmules'
+        label_modelo: 'Model'
+        label_official_name: 'Nom oficial'
+        label_periods: 'Períodes'
+        label_revision: 'Revisió'
+        label_revision_ids: 'Ids de revisió'
+        label_tax_domain: 'Àmbit fiscal'
+        label_title: 'Títol'
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
+        period_error: 'Error de registre: %{message}'
         period_help: 'Token de periode per resoldre la revisio del model: 0A anual,
           1T-4T trimestres, 01-12 mesos; per a models censals (036) usa alta, modificacion
           o baja.'
@@ -955,6 +971,7 @@ cli:
         discard_requires_yes: El descart és una transició d'estat auditable. Torneu
           a executar 'aeat app modelo work discard %{work_unit_id} --yes' per confirmar.
         discard_yes_help: Confirmar explícitament l'operació de descart
+        dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -1102,6 +1119,7 @@ cli:
           art. 14). Denominador del test del 50%: la dotació s''anul·la quan la reserva
           acumulada arriba al 50% del capital social. Necessari amb --sal-beneficio-neto
           i --sal-reserva-dotada.'
+        sal_computation_error: 'Error de càlcul SAL: %{message}'
         sal_reserva_casilla_not_found: --sal-beneficio-neto no està suportat per a
           aquesta revisió de model; no s'ha declarat cap casella de reserva especial
           de Societat Laboral. Fes servir --casilla per subministrar els valors directament.
@@ -1549,6 +1567,7 @@ cli:
       profile_help: Profile to use; defaults to the active profile.
       set_help: Write one profile key value, validated against the wizard descriptor.
       unset_help: Clear one profile key value.
+      unset_placeholder: <no definit>
       value_help: Value to store.
     repair:
       audience_internal: problema intern de l'aplicació
@@ -1728,6 +1747,7 @@ cli:
         no hex (permesos: 0-9, a-f).'
       id_prefix_too_long: El prefix d'id de transacció %{prefix!r} té més de 64 caràcters
         (un digest SHA-256 complet).
+      id_prefix_unknown: 'Error inesperat en el prefix d''id de transacció: %{message}'
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}'
       unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
         sense prefix com {example!r}, no una clau composta ni amb prefix de família.
@@ -3452,6 +3472,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Simplified
+  commands:
+    status:
+      created: creat
+      updated: actualitzat
   demo:
     description: A demonstration section to test wizard functionality
     section:
