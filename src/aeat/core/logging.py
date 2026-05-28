@@ -304,6 +304,10 @@ def configure_logging() -> None:
                     "level": "WARNING",
                     "propagate": True,
                 },
+                "pikepdf._core": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
             },
         }
     )

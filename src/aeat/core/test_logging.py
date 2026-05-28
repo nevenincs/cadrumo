@@ -318,6 +318,31 @@ def test_pdfplumber_and_record_design_do_not_mutate_pdfminer_logger() -> None:
     )
 
 
+def test_pikepdf_core_logger_level_governed_by_dictconfig() -> None:
+    """dictConfig must set pikepdf._core to WARNING via the loggers block.
+
+    Verifies S73: configure_logging() centralises pikepdf._core silencing so
+    src/aeat/__init__.py no longer needs a bootstrap-time setLevel mutation.
+    The level must survive a second configure_logging() call (the guard resets).
+    """
+    import logging
+
+    import aeat.core.logging as _logging_mod
+
+    original_configured = _logging_mod._CONFIGURED
+    _logging_mod._CONFIGURED = False
+    try:
+        _logging_mod.configure_logging()
+    finally:
+        _logging_mod._CONFIGURED = original_configured or True
+
+    pikepdf_logger = logging.getLogger("pikepdf._core")
+    assert pikepdf_logger.level == logging.WARNING, (
+        f"pikepdf._core logger level should be WARNING ({logging.WARNING}) "
+        f"after configure_logging(); got {pikepdf_logger.level}"
+    )
+
+
 def test_non_sensitive_fields_pass_through_unchanged() -> None:
     """Ordinary logging fields should remain visible after scrubbing runs."""
 
