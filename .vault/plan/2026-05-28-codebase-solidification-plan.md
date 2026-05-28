@@ -304,8 +304,8 @@ time and at runtime.
 - [ ] `W01.P07.S182` - add real-behavior test asserting financial-provider detection reads from the shared constants; `src/aeat/adapters/inbound/financial/providers/test_detection.py`.
 - [ ] `W01.P07.S183` - centralize the `latin-1` / `iso-8859-1` alias normalization dict in `aeat.domain.calculations.registry._record_spec`; `src/aeat/domain/calculations/registry/_record_spec.py`.
 - [ ] `W01.P07.S184` - add real-behavior test asserting the alias map is the single source of truth at every decode call-site; `src/aeat/domain/calculations/registry/test_record_spec.py`.
-- [ ] `W01.P07.S185` - introduce `FilingStatus.FILED` (or equivalent) and replace the bare `"filed"` literals across `_app_live.py` and `_contract.py`; `src/aeat/application/operator_surface/_contract.py`.
-- [ ] `W01.P07.S186` - add real-behavior test asserting the FilingStatus surface is the only source for `"filed"`; `src/aeat/application/operator_surface/test_contract.py`.
+- [x] `W01.P07.S185` - introduce `FilingStatus.FILED` (or equivalent) and replace the bare `"filed"` literals across `_app_live.py` and `_contract.py`; `src/aeat/application/operator_surface/_contract.py`.
+- [x] `W01.P07.S186` - add real-behavior test asserting the FilingStatus surface is the only source for `"filed"`; `src/aeat/application/operator_surface/test_contract.py`.
 - [x] `W01.P07.S187` - extract the `"COLUMNS"` env-key literal to a module-level `_COLUMNS_ENV_VAR: Final[str]`; `src/aeat/entrypoints/cli/_stdio.py`.
 - [x] `W01.P07.S188` - add real-behavior test asserting CLI stdio reads the env-var via the constant; `src/aeat/entrypoints/cli/test_stdio.py`.
 
