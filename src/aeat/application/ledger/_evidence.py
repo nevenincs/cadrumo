@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -26,6 +26,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.time import _now
 from ...domain.buckets import (
     BucketEvent,
     BucketEventHistoryRepository,
@@ -116,10 +117,6 @@ class PurchaseInvoiceEvidenceResult(BaseModel):
 
     record: PurchaseInvoiceEvidence
     bucket_event_ids: tuple[str, ...] = ()
-
-
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _storage_path(settings: Settings, bucket_id: str) -> Path:

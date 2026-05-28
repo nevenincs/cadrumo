@@ -24,7 +24,7 @@ Structurally read-only:
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
 from typing import Literal
@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.time import _now
 
 VerifyVerdict = Literal["valid", "invalid", "unknown"]
 
@@ -68,10 +69,6 @@ class VerifyObservation(BaseModel):
     checked_at: datetime
     raw_evidence_locator: str | None = Field(default=None, max_length=512)
     persisted_at: datetime
-
-
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _storage_path(settings: Settings, bucket_id: str) -> Path:
