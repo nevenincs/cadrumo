@@ -51,8 +51,8 @@ Define one canonical rule vocabulary for output, logging, errors, and diagnostic
 
 Make the success-output renderer the mandatory privacy boundary for text and JSON.
 
-- [ ] `W01.P02.S08` - apply central redaction to JSON payloads and text lines before rendering; `src/aeat/core/output_rendering.py`.
-- [ ] `W01.P02.S09` - update output-rendering tests for text and JSON redaction while preserving JSON shape; `src/aeat/core/test_output_rendering.py`.
+- [x] `W01.P02.S08` - apply central redaction to JSON payloads and text lines before rendering; `src/aeat/core/output_rendering.py`.
+- [x] `W01.P02.S09` - update output-rendering tests for text and JSON redaction while preserving JSON shape; `src/aeat/core/test_output_rendering.py`.
 - [ ] `W01.P02.S10` - route JSON-envelope success emission through the central output redaction path; `src/aeat/core/json_contract.py`.
 - [ ] `W01.P02.S11` - add JSON-envelope redaction roundtrip coverage for schema-preserving payloads; `src/aeat/core/test_json_envelope_roundtrip.py`.
 - [ ] `W01.P02.S12` - route `_emit` and `_emit_envelope` through the redacted renderer only; `src/aeat/entrypoints/cli/_common.py`.
