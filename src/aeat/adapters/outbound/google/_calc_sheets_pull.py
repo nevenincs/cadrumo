@@ -32,6 +32,20 @@ from datetime import UTC, date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any, Final, Literal
 
+# google-api-python-client-stubs ships ``googleapiclient.discovery.Resource``
+# as the typed surface for service objects returned by ``build()``.
+# We import it under TYPE_CHECKING so the runtime dependency stays optional
+# (the ImportError path in ``_drive_service`` / ``_sheets_service`` guards the
+# live path) while the type-checker can narrow the ``Any`` service returns.
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from googleapiclient.discovery import Resource as _GoogleResource
+
+# A single batch-get value-range entry from the Sheets API.
+# Shape: {"range": str, "values": list[list[object]]}
+_ValueRange = dict[str, Any]
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core.decimal import coerce_decimal
@@ -204,7 +218,7 @@ class PullResult(BaseModel):
     cells_read: int = Field(ge=0)
 
 
-def _drive_service(credentials: object) -> Any:
+def _drive_service(credentials: object) -> "_GoogleResource":
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -216,7 +230,7 @@ def _drive_service(credentials: object) -> Any:
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
 
-def _sheets_service(credentials: object) -> Any:
+def _sheets_service(credentials: object) -> "_GoogleResource":
     try:
         from googleapiclient.discovery import build
     except ImportError as exc:
@@ -228,7 +242,7 @@ def _sheets_service(credentials: object) -> Any:
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
+def _verify_ownership(drive_service: "_GoogleResource", spreadsheet_id: str) -> None:
     """Refuse to read from a spreadsheet that lacks the ownership marker."""
 
     file_meta = execute_request(
@@ -252,7 +266,7 @@ def _verify_ownership(drive_service: Any, spreadsheet_id: str) -> None:
 
 
 def _read_developer_metadata(
-    sheets_service: Any,
+    sheets_service: "_GoogleResource",
     spreadsheet_id: str,
 ) -> dict[str, str]:
     """Recover the engine-stamped developer metadata pairs."""
@@ -442,10 +456,10 @@ def _operator_input_addresses(
 
 
 def _batch_get_values(
-    sheets: Any,
+    sheets: "_GoogleResource",
     spreadsheet_id: str,
     ranges: list[str],
-) -> list[Any]:
+) -> list[_ValueRange]:
     """One Sheets ``values.batchGet`` covering every supplied A1 range.
 
     Returns the raw ``valueRanges`` list from the response (each entry
@@ -468,7 +482,7 @@ def _batch_get_values(
     return response.get("valueRanges", []) or []
 
 
-def _raw_cell_value(value_ranges: list[Any], cursor: int) -> object:
+def _raw_cell_value(value_ranges: list[_ValueRange], cursor: int) -> object:
     """Return the single-cell raw value at ``cursor`` in a batchGet response, or None."""
     vr = value_ranges[cursor] if cursor < len(value_ranges) else {}
     rows = vr.get("values", []) or []
@@ -476,7 +490,7 @@ def _raw_cell_value(value_ranges: list[Any], cursor: int) -> object:
 
 
 def _decode_operator_edits(
-    value_ranges: list[Any],
+    value_ranges: list[_ValueRange],
     cursor: int,
     operator_input_ids: list[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
@@ -503,7 +517,7 @@ def _decode_operator_edits(
 
 
 def _decode_binding_edits(
-    value_ranges: list[Any],
+    value_ranges: list[_ValueRange],
     cursor: int,
     binding_ids: list[BindingId],
 ) -> tuple[tuple[BindingEdit, ...], int, int]:
@@ -527,7 +541,7 @@ def _decode_binding_edits(
 
 
 def _decode_relation_edits(
-    value_ranges: list[Any],
+    value_ranges: list[_ValueRange],
     cursor: int,
     relation_ids: list[RelationId],
     metadata_pairs: Mapping[str, str],
@@ -616,7 +630,7 @@ def _parse_relation_metadata(
 
 def _read_row_set_edits(
     snapshot: RegistrySnapshot,
-    sheets: Any,
+    sheets: "_GoogleResource",
     spreadsheet_id: str,
 ) -> tuple[tuple[RowSetEdit, ...], int]:
     """Read each row-set's Detalle-tab data area into typed row edits.
@@ -653,10 +667,10 @@ def _row_set_block_range(row_set: Any) -> str:
 
 
 def _batch_get_values_for_row_sets(
-    sheets: Any,
+    sheets: "_GoogleResource",
     spreadsheet_id: str,
     block_ranges: list[str],
-) -> list[Any]:
+) -> list[_ValueRange]:
     """Sheets ``values.batchGet`` for row-set blocks; returns the raw valueRanges list."""
     response = execute_request(
         sheets.spreadsheets()
@@ -672,7 +686,7 @@ def _batch_get_values_for_row_sets(
 
 
 def _decode_row_set_block(
-    rows: list[Any],
+    rows: list[list[object]],
     row_set: Any,
 ) -> tuple[tuple[RowSetCellEdit, ...], int]:
     """Decode one row-set's block of (local_row, col_index) cells into typed edits.
