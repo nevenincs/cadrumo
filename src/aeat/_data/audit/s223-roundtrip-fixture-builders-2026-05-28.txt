@@ -1,0 +1,88 @@
+# S223 audit: roundtrip-fixture builder functions enumerated 2026-05-28
+#
+# Enumerates every private helper function (starting with _) in dedicated
+# roundtrip test files (test_*roundtrip*.py, test_*anti_tautology*.py) that
+# contains a return statement.  These are candidates for the defaultable-field
+# saturation rule per aeat-roundtrip-discipline.md.
+#
+# The structural gate in test_roundtrip_fixture_saturation.py asserts that
+# every function in this list exists in its declared file and line range,
+# confirming the snapshot stays current.
+#
+# Format: path:lineno function_name [saturation_note]
+# Saturation notes:
+#   OK   - docstring or comment documents that all defaultable fields are set
+#   UTIL - utility/non-model-builder (no pydantic construction)
+#   TBD  - saturation status not confirmed; candidates for Wave 2 follow-up Steps
+#
+src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py:87 _derive_expected_period UTIL
+src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py:99 _load_ground_truth UTIL
+src/aeat/adapters/inbound/justificante/test_corpus_sidecar_roundtrip.py:141 _collect_sidecar_pairs UTIL
+src/aeat/adapters/outbound/aeat/auth/test_session_store_roundtrip.py:32 _playwright_shaped_storage_state OK
+src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py:386 _money_bytes UTIL
+src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py:455 _page UTIL
+src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py:627 _hdr UTIL
+src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py:631 _p1 UTIL
+src/aeat/adapters/outbound/aeat/export/_formats/test_fichero_boe_roundtrip.py:636 _did UTIL
+src/aeat/adapters/outbound/aeat/sede/test_observation_store_roundtrip.py:42 _populated_observation OK
+src/aeat/adapters/outbound/google/test_pull_result_roundtrip.py:46 _populated_pull_result OK
+src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py:46 _modelo_130_snapshot UTIL
+src/aeat/adapters/outbound/google/test_worksheet_export_pull_roundtrip.py:52 _operator_edits_from_export_plan UTIL
+src/aeat/adapters/outbound/llm/test_cache_roundtrip.py:30 _populated_request OK
+src/aeat/adapters/outbound/llm/test_cache_roundtrip.py:43 _populated_response OK
+src/aeat/adapters/outbound/llm/test_usage_roundtrip.py:28 _record OK
+src/aeat/adapters/persistence/profile/test_assets_roundtrip.py:44 _populated_asset OK
+src/aeat/adapters/persistence/profile/test_inventory_roundtrip.py:39 _populated_ledger OK
+src/aeat/adapters/persistence/storage/bucket/test_manifest_roundtrip.py:30 _populated_manifest OK
+src/aeat/adapters/persistence/storage/sql/test_archive_bundle_roundtrip.py:146 _index_bundle_by_namespace UTIL
+src/aeat/adapters/persistence/storage/test_attachment_store_roundtrip.py:40 _make_attachment OK
+src/aeat/application/calculations/test_observations_repository_roundtrip.py:37 _populated_observation OK
+src/aeat/application/filing/test_history_repository_roundtrip.py:25 _populated_history OK
+src/aeat/application/ledger/test_manual_ledger_transaction_command_roundtrip.py:46 _populated_command OK
+src/aeat/application/ledger/test_manual_ledger_transaction_command_roundtrip.py:76 _populated_internal_transfer_command OK
+src/aeat/application/live/test_borrador_100_roundtrip.py:36 _populated_snapshot TBD
+src/aeat/application/setup/test_atomic_create_roundtrip.py:60 _invoke UTIL
+src/aeat/application/setup/test_atomic_create_roundtrip.py:67 _json UTIL
+src/aeat/application/user_profile/test_corporate_tax_facts_roundtrip.py:72 _populated_record OK
+src/aeat/application/user_profile/test_corporate_tax_facts_roundtrip.py:142 _fact_value UTIL
+src/aeat/application/user_profile/test_irpf_special_regime_persistence_roundtrip.py:66 _required_facts UTIL
+src/aeat/application/user_profile/test_irpf_special_regime_persistence_roundtrip.py:79 _fact_value UTIL
+src/aeat/application/user_profile/test_irpf_special_regime_persistence_roundtrip.py:184 _build_record OK
+src/aeat/application/user_profile/test_marriage_date_persistence_roundtrip.py:56 _required_facts UTIL
+src/aeat/application/user_profile/test_marriage_date_persistence_roundtrip.py:70 _fact_value UTIL
+src/aeat/application/user_profile/test_repository_anti_tautology.py:58 _populated_record OK
+src/aeat/application/user_profile/test_repository_roundtrip.py:70 _populated_record OK
+src/aeat/application/user_profile/test_taxpayer_axes_persistence_roundtrip.py:67 _required_facts UTIL
+src/aeat/application/user_profile/test_taxpayer_axes_persistence_roundtrip.py:108 _fact_value UTIL
+src/aeat/application/wizard/test_taxpayer_axes_roundtrip.py:31 _fully_populated_answers OK
+src/aeat/application/wizard/test_taxpayer_axes_roundtrip.py:196 _legal_entity_answers OK
+src/aeat/application/workflow/test_run_persistence_roundtrip.py:34 _populated_run OK
+src/aeat/application/workflow/test_state_persistence_roundtrip.py:29 _populated_workflow_state OK
+src/aeat/domain/buckets/test_event_history_roundtrip.py:33 _build_event OK
+src/aeat/domain/filing/test_amendment_roundtrip.py:44 _populated_amended_draft OK
+src/aeat/domain/filing/test_amendment_roundtrip.py:84 _populated_amendment OK
+src/aeat/domain/filing/test_roundtrip_anti_tautology.py:53 _populated_draft OK
+src/aeat/domain/filing/test_secure_storage_roundtrip.py:42 _populated_draft OK
+src/aeat/domain/fincas/test_roundtrip_anti_tautology.py:43 _populated_finca OK
+src/aeat/domain/invoices/test_secure_storage_roundtrip.py:25 _populated_invoice OK
+src/aeat/domain/justificante/test_secure_storage_roundtrip.py:31 _populated_justificante OK
+src/aeat/domain/modelos/test_calculation_repository_roundtrip.py:52 _hex UTIL
+src/aeat/domain/modelos/test_calculation_repository_roundtrip.py:59 _populated_catalogue OK
+src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py:43 _hex UTIL
+src/aeat/domain/modelos/test_filing_record_repository_roundtrip.py:50 _populated_catalogue OK
+src/aeat/domain/modelos/test_secure_storage_roundtrip.py:39 _populated_work_unit OK
+src/aeat/domain/modelos/test_verification_report_roundtrip.py:41 _populated_report OK
+src/aeat/domain/submission/test_secure_storage_roundtrip.py:35 _populated_filing OK
+src/aeat/domain/transactions/test_repository_roundtrip.py:40 _raw UTIL
+src/aeat/domain/transactions/test_repository_roundtrip.py:61 _transaction OK
+src/aeat/entrypoints/cli/test_profile_export_roundtrip.py:49 _invoke UTIL
+src/aeat/entrypoints/cli/test_profile_export_roundtrip.py:53 _seed_and_export UTIL
+src/aeat/entrypoints/cli/test_review_payloads_roundtrip.py:29 _populated_row OK
+src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py:64 _load UTIL
+src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py:84 _inactive_repository UTIL
+src/aeat/entrypoints/cli/test_session_lifecycle_roundtrip.py:93 _active_bucket_session UTIL
+
+# TBD items requiring Wave 2 follow-up:
+# - src/aeat/application/live/test_borrador_100_roundtrip.py:36 _populated_snapshot
+#   Needs verification that all optional fields on the snapshot model are assigned
+#   non-default values. Schedule as Wave 2 step.

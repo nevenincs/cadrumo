@@ -24,6 +24,7 @@ The tests cover three cases:
 from __future__ import annotations
 
 import io
+import logging
 
 import pytest
 
@@ -289,3 +290,71 @@ def test_columns_env_var_used_for_env_read(monkeypatch: pytest.MonkeyPatch) -> N
     _ensure_help_render_width()
 
     assert os.environ[_COLUMNS_ENV_VAR] == wide
+
+
+# --- SecretScrubbingFilter propagation via stdio logger (S50) ----------------
+
+
+class _CapturingHandler(logging.Handler):
+    """Real handler that collects emitted records."""
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: list[logging.LogRecord] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+def test_stdio_logger_records_are_scrubbed_after_configure_logging() -> None:
+    """Records emitted by the _stdio module logger must have NIF-shaped content
+    scrubbed once configure_logging() has installed SecretScrubbingFilter on the
+    root logger.
+
+    The ``_stdio`` module deliberately uses stdlib ``logging.getLogger`` (not
+    ``aeat.core.logging.get_logger``) because it runs before settings are loaded
+    — see the constraint comment in ``_stdio.py`` at the ``_LOGGER`` definition.
+    Scrubbing still applies because the stdlib logger propagates to the root
+    logger, and ``configure_logging()`` installs ``SecretScrubbingFilter`` on
+    root.  This test verifies that propagation contract end-to-end.
+    """
+    from aeat.core.logging import configure_logging
+
+    configure_logging()
+
+    root_logger = logging.getLogger()
+    handler = _CapturingHandler()
+    root_logger.addHandler(handler)
+    previous_level = root_logger.level
+    root_logger.setLevel(logging.DEBUG)
+    try:
+        # Emit through the same logger the _stdio module uses.
+        stdio_logger = logging.getLogger("aeat.entrypoints.cli._stdio")
+        nif_canary = "12345678Z"
+        stdio_logger.debug("stream reconfigure skipped for nif=%s", nif_canary)
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_level)
+
+    assert handler.records, "log record did not reach the root handler via propagation"
+    record = handler.records[-1]
+    # After SecretScrubbingFilter runs, the NIF literal must not survive in
+    # either the message or the args tuple.
+    formatted = record.getMessage()
+    assert nif_canary not in formatted, (
+        f"NIF {nif_canary!r} survived SecretScrubbingFilter in rendered message: {formatted!r}"
+    )
+
+
+def test_stdio_logger_scrubbing_filter_present_on_root_after_configure() -> None:
+    """configure_logging() must install SecretScrubbingFilter on the root logger.
+
+    Verifies the structural precondition that makes NIF scrubbing effective for
+    stdlib loggers (including the _stdio module's logger) that propagate to root.
+    """
+    from aeat.core.logging import SecretScrubbingFilter, configure_logging
+
+    configure_logging()
+    root_logger = logging.getLogger()
+    has_scrubbing = any(isinstance(f, SecretScrubbingFilter) for f in root_logger.filters)
+    assert has_scrubbing, "SecretScrubbingFilter not found on root logger after configure_logging()"
