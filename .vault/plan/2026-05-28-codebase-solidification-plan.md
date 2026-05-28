@@ -298,8 +298,8 @@ time and at runtime.
 - [ ] `W01.P07.S176` - add real-behavior test asserting every former currency literal now reads from the constant; `src/aeat/core/test_external_constants.py`.
 - [x] `W01.P07.S177` - introduce `BINARY_MIME_TYPE: Final[str] = "application/octet-stream"` in `aeat.core.external_constants`; `replace the three sites including the already-extracted `_BINARY_MIME`; `src/aeat/core/external_constants.py`.
 - [x] `W01.P07.S178` - add real-behavior test asserting every former MIME literal reads from the constant; `src/aeat/core/test_external_constants.py`.
-- [ ] `W01.P07.S179` - introduce `CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...]` in `aeat.core.external_constants`; `replace the inline tuple; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
-- [ ] `W01.P07.S180` - add real-behavior test asserting the CSV provider iterates the canonical fallback chain; `src/aeat/adapters/inbound/financial/providers/test_csv.py`.
+- [x] `W01.P07.S179` - introduce `CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...]` in `aeat.core.external_constants`; `replace the inline tuple; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
+- [x] `W01.P07.S180` - add real-behavior test asserting the CSV provider iterates the canonical fallback chain; `src/aeat/adapters/inbound/financial/providers/test_csv.py`.
 - [ ] `W01.P07.S181` - introduce shared file-extension sets (`CSV_EXTENSIONS`, `PDF_EXTENSION`, `XLSX_EXTENSION`) under `src/aeat/adapters/inbound/financial/providers/_constants.py`; `src/aeat/adapters/inbound/financial/providers/_constants.py`.
 - [ ] `W01.P07.S182` - add real-behavior test asserting financial-provider detection reads from the shared constants; `src/aeat/adapters/inbound/financial/providers/test_detection.py`.
 - [ ] `W01.P07.S183` - centralize the `latin-1` / `iso-8859-1` alias normalization dict in `aeat.domain.calculations.registry._record_spec`; `src/aeat/domain/calculations/registry/_record_spec.py`.
