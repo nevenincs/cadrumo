@@ -290,8 +290,8 @@ time and at runtime.
 - [ ] `W01.P07.S168` - add real-behavior test asserting IVA-regime branching uses the enum surface; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P07.S169` - promote the registry-schema `"draft" | "casilla" | "binding" | ...` Literal to `CasillaFieldKind(StrEnum)`; `src/aeat/domain/calculations/registry/_schema.py`.
 - [ ] `W01.P07.S170` - add real-behavior test asserting CasillaFieldKind rejects unknown tokens; `src/aeat/domain/calculations/registry/test_schema.py`.
-- [ ] `W01.P07.S171` - introduce `CLASSIFIED_BY_MANUAL: Final[str] = "manual"` in `aeat.application.ledger._models`; `replace the three bare-string sites; `src/aeat/application/ledger/_models.py`.
-- [ ] `W01.P07.S172` - add real-behavior test asserting ledger classification reads through the constant; `src/aeat/application/ledger/test_models.py`.
+- [x] `W01.P07.S171` - introduce `CLASSIFIED_BY_MANUAL: Final[str] = "manual"` in `aeat.application.ledger._models`; `replace the three bare-string sites; `src/aeat/application/ledger/_models.py`.
+- [x] `W01.P07.S172` - add real-behavior test asserting ledger classification reads through the constant; `src/aeat/application/ledger/test_models.py`.
 - [ ] `W01.P07.S173` - promote `OracleEnvironment` Literal to `StrEnum`; `replace the six default-value sites; `src/aeat/domain/calculations/registry/_live_parity.py`.
 - [ ] `W01.P07.S174` - add real-behavior test asserting OracleEnvironment members round-trip through every replaced default; `src/aeat/domain/calculations/registry/test_live_parity.py`.
 - [x] `W01.P07.S175` - introduce `DEFAULT_CURRENCY: Final[str] = "EUR"` in `aeat.core.external_constants`; `replace the 20 `"EUR"` sites across 8 files; `src/aeat/core/external_constants.py`.
@@ -306,8 +306,8 @@ time and at runtime.
 - [ ] `W01.P07.S184` - add real-behavior test asserting the alias map is the single source of truth at every decode call-site; `src/aeat/domain/calculations/registry/test_record_spec.py`.
 - [ ] `W01.P07.S185` - introduce `FilingStatus.FILED` (or equivalent) and replace the bare `"filed"` literals across `_app_live.py` and `_contract.py`; `src/aeat/application/operator_surface/_contract.py`.
 - [ ] `W01.P07.S186` - add real-behavior test asserting the FilingStatus surface is the only source for `"filed"`; `src/aeat/application/operator_surface/test_contract.py`.
-- [ ] `W01.P07.S187` - extract the `"COLUMNS"` env-key literal to a module-level `_COLUMNS_ENV_VAR: Final[str]`; `src/aeat/entrypoints/cli/_stdio.py`.
-- [ ] `W01.P07.S188` - add real-behavior test asserting CLI stdio reads the env-var via the constant; `src/aeat/entrypoints/cli/test_stdio.py`.
+- [x] `W01.P07.S187` - extract the `"COLUMNS"` env-key literal to a module-level `_COLUMNS_ENV_VAR: Final[str]`; `src/aeat/entrypoints/cli/_stdio.py`.
+- [x] `W01.P07.S188` - add real-behavior test asserting CLI stdio reads the env-var via the constant; `src/aeat/entrypoints/cli/test_stdio.py`.
 
 ### Phase `W01.P08` - tighten typecheck escape hatches
 
