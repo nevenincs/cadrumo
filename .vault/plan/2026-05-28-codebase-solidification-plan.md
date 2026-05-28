@@ -284,8 +284,8 @@ time and at runtime.
 - [ ] `W01.P07.S162` - add real-behavior test asserting every former bare-string comparison still produces its historical truth value under the enum surface; `src/aeat/application/filing/test_init.py`.
 - [x] `W01.P07.S163` - replace the 53 raw `"ledger_transaction"` / `"purchase_invoice_evidence"` / `"payable_invoice"` / `"collectible_invoice"` literals with `AggregationSourceKind` members across 8 files; `src/aeat/application/aggregation/_counterpart.py`.
 - [x] `W01.P07.S164` - add real-behavior test asserting every aggregation source-kind tuple matches the StrEnum surface; `src/aeat/application/aggregation/test_service.py`.
-- [ ] `W01.P07.S165` - replace the 4 raw `"pending"` / `"reviewed"` / `"skipped"` returns with `ReviewStatusFilter` members; `src/aeat/application/invoices/_projection.py`.
-- [ ] `W01.P07.S166` - add real-behavior test asserting review-status returns are the StrEnum members at every former bare-string site; `src/aeat/application/invoices/test_projection.py`.
+- [x] `W01.P07.S165` - replace the 4 raw `"pending"` / `"reviewed"` / `"skipped"` returns with `ReviewStatusFilter` members; `src/aeat/application/invoices/_projection.py`.
+- [x] `W01.P07.S166` - add real-behavior test asserting review-status returns are the StrEnum members at every former bare-string site; `src/aeat/application/invoices/test_projection.py`.
 - [ ] `W01.P07.S167` - replace the IVA-regime bare-string `frozenset({"SIMPLIFICADO"})` and `click.Choice(["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"])` with `IVARegime` enum members; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P07.S168` - add real-behavior test asserting IVA-regime branching uses the enum surface; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P07.S169` - promote the registry-schema `"draft" | "casilla" | "binding" | ...` Literal to `CasillaFieldKind(StrEnum)`; `src/aeat/domain/calculations/registry/_schema.py`.
