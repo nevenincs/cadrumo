@@ -1,0 +1,16 @@
+# M210 IRNR Phase 1 verification predicates.
+#
+# Representante-fiscal gate per TRLIRNR Art 10: non-EU (broader: non-
+# UE/EEE per m210-irnr-full-engine ADR §D2.5 escape hatch) IRNR filers
+# must designate a fiscal representative in Spain. EEA-resident IRNR
+# filers are exempt because of the bilateral mutual-assistance regime.
+# The applicability filter "non_resident_irnr_non_eea" encodes the
+# gate condition; the predicate fires a BLOCKING_RULE finding when
+# applicability is True but profile.representante_fiscal_nif is None
+# or empty.
+
+[[revisions."2025".verification_predicates]]
+predicate_id = "m210-representante-fiscal-required"
+expression = 'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
+finding_kind = "BLOCKING_RULE"
+legal_refs = ["trlirnr-rdleg-5-2004:art-10"]

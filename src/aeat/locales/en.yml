@@ -320,6 +320,10 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
+        --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
+        IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
+        into the reduccion casilla (ley-35-2006:dt-12).
       dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
         = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.
         If this income includes a plan-de-pensiones capital rescate with pre-31-Dec-2006
@@ -340,11 +344,17 @@ application:
           carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified
           BOE corpus rate before this filing can complete; file a corpus-blocked follow-up
           task referencing the Convenio article number.
+      missing_required_casilla: Required casilla %{casilla_id} is not present in the
+        calculation revision inputs.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
+          via the `aeat config profile set` command. TRLIRNR Art. 10 requires non-EEA
+          IRNR filers to declare a representative for AEAT communications.
   overview:
     explain:
       errors:
@@ -3069,7 +3079,8 @@ errors:
       the quota is exhausted.
     refused_outbound_storage_validation: The storage operation parameters failed validation.
     refused_output_format: The requested output format is not supported.
-    refused_pension_reduccion_computation: 'A pension reducción computation input violated a numeric pre-condition. Correct the supplied amounts.'
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: A profile with those details already exists.
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
@@ -3129,7 +3140,9 @@ errors:
     refused_wizard_validation: A wizard answer failed validation. Correct the value
       shown.
     refused_workflow_aborted: The workflow was aborted.
-    refused_workflow_input_mismatch: 'The workflow input request does not match the calculation revision. Run aeat app modelo work calculate to produce a fresh revision.'
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
   snapshot:
@@ -3184,6 +3197,18 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 %% prorrata (Art. 59 LIRPF) applied for

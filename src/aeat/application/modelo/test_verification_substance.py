@@ -479,6 +479,10 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "cap_le_when_positive": 'cap_le_when_positive(["11", "10"])',
         "advisory_when_ratio_ge": 'advisory_when_ratio_ge(["01", "02", "0.5"])',
         "implies_nonzero": 'implies_nonzero(["01", "07"])',
+        "profile_field_required": (
+            'profile_field_required("representante_fiscal_nif", '
+            '"non_resident_irnr_non_eea")'
+        ),
     }
     regex_attr_names: dict[str, str] = {
         "all_nonzero": "_PREDICATE_ALL_NONZERO",
@@ -486,6 +490,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         "cap_le_when_positive": "_PREDICATE_CAP_LE_WHEN_POSITIVE",
         "advisory_when_ratio_ge": "_PREDICATE_ADVISORY_WHEN_RATIO_GE",
         "implies_nonzero": "_PREDICATE_IMPLIES_NONZERO",
+        "profile_field_required": "_PREDICATE_PROFILE_FIELD_REQUIRED",
     }
 
     missing_probes = KNOWN_VERIFICATION_PREDICATE_OPERATORS.difference(probe_expressions)

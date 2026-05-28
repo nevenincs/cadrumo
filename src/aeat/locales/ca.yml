@@ -357,6 +357,10 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
+        --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
+        IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
+        (ley-35-2006:dt-12).
       dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
         = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
@@ -375,11 +379,18 @@ application:
           el marcador NOT_YET_AUTHORED segons ADR D2.4. Autoritzeu la tarifa verificada
           del corpus BOE abans que aquesta declaració pugui completar-se; obriu una
           tasca de seguiment bloquejada per corpus citant l'article del Convenio.
+      missing_required_casilla: La casella obligatòria %{casilla_id} no és present
+        a les dades d'entrada del càlcul.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Designeu un representant fiscal a Espanya establint profile.representante_fiscal_nif
+          mitjancant l'ordre `aeat config profile set`. El TRLIRNR Art. 10 exigeix
+          que els declarants IRNR no residents a la UE/EEE designin un representant
+          per a comunicacions amb l'AEAT.
   overview:
     explain:
       errors:
@@ -3220,7 +3231,8 @@ errors:
     refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
       no han superat la validació.
     refused_output_format: El format de sortida sol·licitat no és compatible.
-    refused_pension_reduccion_computation: 'A pension reducción computation input violated a numeric pre-condition. Correct the supplied amounts.'
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
     refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
       la validació.
@@ -3284,7 +3296,9 @@ errors:
     refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
       Corregeix el valor indicat.
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
-    refused_workflow_input_mismatch: 'The workflow input request does not match the calculation revision. Run aeat app modelo work calculate to produce a fresh revision.'
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
@@ -3342,6 +3356,18 @@ filing:
     out_of_range: Valor fora de rang permès
     required_missing: Falta camp obligatori
     schema_mismatch: Discrepància amb l'esquema esperat
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 59 LIRPF)

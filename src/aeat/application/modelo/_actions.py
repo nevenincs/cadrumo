@@ -2360,6 +2360,17 @@ _PREDICATE_IMPLIES_NONZERO = _re.compile(
 _PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(
     r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$'
 )
+
+# Per-predicate next_action dispatch. Predicates listed here emit their
+# dedicated next_action prose via a direct tr() call (so the locale
+# scaffold AST scanner can pick up the literal key); predicates absent
+# from this dispatch fall back to the generic cross-casilla template.
+
+
+def _resolve_predicate_next_action(predicate_id: str) -> str | None:
+    if predicate_id == "m210-representante-fiscal-required":
+        return tr("application.modelo.findings.representante_fiscal_required.next_action")
+    return None
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
@@ -2762,6 +2773,12 @@ def _evaluate_verification_predicates(
             if not _evaluate_predicate_expression(
                 predicate.expression, casilla_values, profile
             ):
+                next_action = _resolve_predicate_next_action(predicate.predicate_id)
+                if next_action is None:
+                    next_action = tr(
+                        "application.modelo.findings.cross_casilla_invariant_next_action",
+                        predicate_id=predicate.predicate_id,
+                    )
                 findings.append(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -2771,10 +2788,7 @@ def _evaluate_verification_predicates(
                             predicate_id=predicate.predicate_id,
                             expression=predicate.expression,
                         ),
-                        next_action=tr(
-                            "application.modelo.findings.cross_casilla_invariant_next_action",
-                            predicate_id=predicate.predicate_id,
-                        ),
+                        next_action=next_action,
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     )
                 )
@@ -3104,13 +3118,7 @@ def _dt12_reduccion_advisory_finding(
                 ingreso_value=str(ingreso_value),
                 reduccion_id=reduccion_id,
             ),
-            next_action=(
-                "Supply --rescate-plan-pensiones-capital IMPORTE "
-                "--rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE "
-                "--rescate-plan-pensiones-aportaciones-totales IMPORTE "
-                "to aeat app modelo work calculate to auto-inject the DT 12ª reducción "
-                "into casilla 0011 (ley-35-2006:dt-12)."
-            ),
+            next_action=tr("application.modelo.findings.dt12a_reduccion_next_action"),
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None
@@ -3128,7 +3136,7 @@ def _missing_required_casilla_finding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
-        message=(f"required casilla {casilla_id!r} is not present in the calculation revision's inputs_snapshot"),
+        message=tr("application.modelo.findings.missing_required_casilla", casilla_id=casilla_id),
         next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
         legal_refs=legal_refs,
         source_refs=source_refs,

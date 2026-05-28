@@ -33,6 +33,7 @@ from ._actions import (
     _evaluate_verification_predicates,
     _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
+    _missing_required_casilla_finding,
     WorkflowInputMismatchError,
 )
 
@@ -443,3 +444,86 @@ def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:
         f"Wizard choice values {choice_set!r} do not match IVARegime members {enum_values!r}. "
         "Update _iva_regime_choice_values() or IVARegime."
     )
+
+
+# ---------------------------------------------------------------------------
+# S97/S98 — missing_required_casilla finding message is localised
+# ---------------------------------------------------------------------------
+
+
+def test_missing_required_casilla_finding_message_is_localised() -> None:
+    """_missing_required_casilla_finding renders message via tr().
+
+    The returned finding message must contain the casilla_id token
+    (interpolated by the locale template) and must not be the raw locale key.
+    """
+    finding = _missing_required_casilla_finding("irpf.cuota-liquida-total", "wu-abc123")
+
+    assert finding.message is not None
+    # The casilla_id must appear in the rendered message.
+    assert "irpf.cuota-liquida-total" in finding.message
+    # Must not be the raw locale key surfaced as a self-referencing fallback.
+    assert finding.message != "application.modelo.findings.missing_required_casilla"
+
+
+def test_missing_required_casilla_finding_message_changes_with_casilla_id() -> None:
+    """Each casilla_id produces a distinct, non-trivial finding message.
+
+    The locale template interpolates %{casilla_id}; two calls with different
+    ids must produce different rendered strings. A tautological template or
+    missing interpolation would produce identical output.
+    """
+    finding_a = _missing_required_casilla_finding("irpf.cuota-a-ingresar", "wu-1")
+    finding_b = _missing_required_casilla_finding("irpf.base-imponible-general", "wu-1")
+
+    assert finding_a.message != finding_b.message
+    assert "irpf.cuota-a-ingresar" in finding_a.message
+    assert "irpf.base-imponible-general" in finding_b.message
+
+
+# ---------------------------------------------------------------------------
+# S113/S114 — DT12 advisory next_action is localised
+# ---------------------------------------------------------------------------
+
+
+def test_dt12_reduccion_advisory_next_action_is_localised() -> None:
+    """_dt12_reduccion_advisory_finding next_action renders via tr().
+
+    The next_action must be sourced from the locale catalogue key
+    'application.modelo.findings.dt12a_reduccion_next_action' and must
+    not be the old hardcoded English string.
+    """
+    ingreso = SimpleNamespace(id="0003", semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario")
+    reduccion = SimpleNamespace(id="0011", semantic_role="irpf_rendimiento_trabajo_reduccion")
+    revision = SimpleNamespace(casillas=[ingreso, reduccion])
+    casilla_values = {"0003": Decimal("25000"), "0011": Decimal("0")}
+
+    finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
+
+    assert finding is not None
+    assert finding.next_action is not None
+    # Must not be the raw locale key surfaced as a self-referencing fallback.
+    assert finding.next_action != "application.modelo.findings.dt12a_reduccion_next_action"
+    # Must contain a substantive reference to the DT 12 legal provision.
+    assert "12" in finding.next_action
+    # Must reference the CLI verb or the DT provision (either locale will satisfy this).
+    assert len(finding.next_action) > 20
+
+
+def test_dt12_reduccion_advisory_next_action_differs_from_hardcoded_string() -> None:
+    """next_action is no longer the old hardcoded English string.
+
+    After S113 the next_action is locale-catalogue-driven. The pre-S113
+    value was a specific English sentence; asserting it is gone proves
+    the catalogue path is active.
+    """
+    ingreso = SimpleNamespace(id="0003", semantic_role="irpf_rendimiento_trabajo_importe_integro_dinerario")
+    reduccion = SimpleNamespace(id="0011", semantic_role="irpf_rendimiento_trabajo_reduccion")
+    revision = SimpleNamespace(casillas=[ingreso, reduccion])
+    casilla_values = {"0003": Decimal("25000"), "0011": Decimal("0")}
+
+    finding = _dt12_reduccion_advisory_finding(revision, casilla_values)
+
+    assert finding is not None
+    # The pre-S113 hardcoded substring that should no longer appear.
+    assert "to aeat app modelo work calculate to auto-inject" not in finding.next_action

@@ -335,6 +335,10 @@ application:
         %{predicate_id} are non-zero before verifying.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
+      dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
+        --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
+        ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
+        (ley-35-2006:dt-12).
       dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
         = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
@@ -354,11 +358,18 @@ application:
           NOT_YET_AUTHORED jelölővel rendelkezik az ADR D2.4 szerint. Az ellenőrzött
           BOE-korpusz tarifa szerzői joga szükséges, mielőtt a bevallás befejeződhetne;
           nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.
+      missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
+        revízió bemeneti adataiból.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Jeloljon ki egy spanyolorszagi adougyi kepviselot a profile.representante_fiscal_nif
+          beallitasaval az `aeat config profile set` paranccsal. A TRLIRNR 10. cikke
+          megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
+          ki az AEAT kommunikaciohoz.
   overview:
     explain:
       errors:
@@ -3194,7 +3205,8 @@ errors:
     refused_outbound_storage_validation: A tárolási művelet paraméterei nem mentek
       át az érvényesítésen.
     refused_output_format: A kért kimeneti formátum nem támogatott.
-    refused_pension_reduccion_computation: 'A pension reducción computation input violated a numeric pre-condition. Correct the supplied amounts.'
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: Ilyen adatokkal rendelkező profil már létezik.
     refused_profile_asset_validation: Egy profil vagyonelem-rekordja nem ment át az
       érvényesítésen.
@@ -3255,7 +3267,9 @@ errors:
     refused_wizard_validation: Egy varázsló-válasz nem ment át az érvényesítésen.
       Javítsa a megjelenített értéket.
     refused_workflow_aborted: A munkafolyamatot megszakították.
-    refused_workflow_input_mismatch: 'The workflow input request does not match the calculation revision. Run aeat app modelo work calculate to produce a fresh revision.'
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
   snapshot:
@@ -3312,6 +3326,18 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 59.
