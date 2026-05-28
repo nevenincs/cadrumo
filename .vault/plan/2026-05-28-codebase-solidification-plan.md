@@ -97,12 +97,12 @@ envelope.
 - [ ] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
 - [ ] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
-- [ ] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
+- [x] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
 - [ ] `W01.P01.S41` - introduce `IvaWalletReconciliationError(CoreError)`; `replace the four `ValueError` raises; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S42` - add real-behavior test asserting IVA-wallet-reconciliation envelope at every replaced raise; `src/aeat/application/calculations/test_iva_wallet_reconciliation.py`.
-- [ ] `W01.P01.S43` - introduce `AggregationConfigError(CoreError)`; `replace the nine `ValueError` raises at aggregation-service composition; `src/aeat/application/aggregation/_service.py`.
-- [ ] `W01.P01.S44` - add real-behavior test asserting aggregation-config envelope at every replaced raise; `src/aeat/application/aggregation/test_service.py`.
+- [x] `W01.P01.S43` - introduce `AggregationConfigError(CoreError)`; `replace the nine `ValueError` raises at aggregation-service composition; `src/aeat/application/aggregation/_service.py`.
+- [x] `W01.P01.S44` - add real-behavior test asserting aggregation-config envelope at every replaced raise; `src/aeat/application/aggregation/test_service.py`.
 - [x] `W01.P01.S45` - introduce `DiagnosticModelError(CoreValidationError)`; `replace the `ValueError` / `TypeError` raises in `DiagnosticCheck` invariants; `src/aeat/application/diagnostics.py`.
 - [x] `W01.P01.S46` - add real-behavior test asserting diagnostic-model envelope at every replaced raise; `src/aeat/application/test_diagnostics.py`.
 - [x] `W01.P01.S47` - introduce `ClassificationRuleError(CoreValidationError)`; `replace the regex-validation `ValueError`; `src/aeat/domain/transactions/_classification_rule.py`.
