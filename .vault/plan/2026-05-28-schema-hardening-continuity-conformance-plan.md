@@ -87,13 +87,23 @@ Record execution evidence, residual risks, and explicit pass or fail signals for
 
 - [ ] `P04.S06` - Record verification evidence residual risks and next-step decision points; `.vault/exec`.
 
+### Phase `P05` - ADR language and governing comments
+
+Tighten accepted ADR language and mark the clean implementation files with governing ADR cross-reference comments before validator behavior changes.
+
+- [ ] `P05.S07` - Add governing ADR comments to clean continuity loader and validator modules; `src/aeat/domain/calculations/registry`.
+- [ ] `P05.S08` - Tighten continuity ADR language for staged surface-scoped strictness and corpus-strict blockers; `.vault/adr/2026-05-27-schema-hardening-casilla-continuity-contract-adr.md`.
+- [ ] `P05.S09` - Record rollout evidence for ADR language and governing-comment pass; `.vault/exec`.
+
 ## Parallelization
 
-`P01.S01` must land before any code or data change. `P02.S02` and `P02.S03`
-must land together or in validator-then-test order. `P03.S04` can start after
-the audit if it does not depend on validator changes. `P03.S05` must wait for
-P02 to pass because corpus rollout must use proven validator semantics. P04 is
-closeout only.
+`P01.S01` must land before any code or data change. `P05.S07`,
+`P05.S08`, and `P05.S09` are now the next required work despite appearing
+after P04 for append-only step ordering. `P02.S02` and `P02.S03` must not
+start until P05 resolves the governing ADR language and code comments. `P03.S04`
+can start after P05 if it does not depend on validator changes. `P03.S05` must
+wait for P02 to pass because corpus rollout must use proven validator
+semantics. P04 is closeout only.
 
 ## Verification
 
