@@ -91,7 +91,7 @@ Record execution evidence, residual risks, and explicit pass or fail signals for
 
 Tighten accepted ADR language and mark the clean implementation files with governing ADR cross-reference comments before validator behavior changes.
 
-- [ ] `P05.S07` - Add governing ADR comments to clean continuity loader and validator modules; `src/aeat/domain/calculations/registry`.
+- [x] `P05.S07` - Add governing ADR comments to clean continuity loader and validator modules; `src/aeat/domain/calculations/registry`.
 - [x] `P05.S08` - Tighten continuity ADR language for staged surface-scoped strictness and corpus-strict blockers; `.vault/adr/2026-05-27-schema-hardening-casilla-continuity-contract-adr.md`.
 - [ ] `P05.S09` - Record rollout evidence for ADR language and governing-comment pass; `.vault/exec`.
 
