@@ -948,284 +948,284 @@ cli:
       period_empty: Az adóidőszak nem lehet üres.
       period_unrecognised: Ismeretlen időszak.
   config:
-    app_help: Helyi konfiguráció és diagnosztika kezelése.
+    app_help: 'Helyi konfiguráció és diagnosztika kezelése.'
     auth:
       apoderado:
-        check_help: cli.config.auth.apoderado.check_help
-        clear_help: cli.config.auth.apoderado.clear_help
+        check_help: 'Csak olvasható élő ellenőrzés.'
+        clear_help: 'Az apoderado-konfiguráció megszüntetése.'
         configure:
-          represented_nif_help: cli.config.auth.apoderado.configure.represented_nif_help
-          scope_help: cli.config.auth.apoderado.configure.scope_help
-        configure_help: cli.config.auth.apoderado.configure_help
-        help: cli.config.auth.apoderado.help
+          represented_nif_help: 'A képviselt fél NIF-je.'
+          scope_help: 'Hatóköri tokenek (ismételhető).'
+        configure_help: 'Aktív apoderado-konfiguráció beállítása.'
+        help: 'Apoderado-konfiguráció kezelése.'
         scope:
-          censo: cli.config.auth.apoderado.scope.censo
-          exped: cli.config.auth.apoderado.scope.exped
-          generalnt: cli.config.auth.apoderado.scope.generalnt
-          inform: cli.config.auth.apoderado.scope.inform
-          iva: cli.config.auth.apoderado.scope.iva
-          notific: cli.config.auth.apoderado.scope.notific
-          pagosf: cli.config.auth.apoderado.scope.pagosf
-          rent: cli.config.auth.apoderado.scope.rent
-          reten: cli.config.auth.apoderado.scope.reten
+          censo: 'Nyilvántartási nyilatkozatok (bejegyzés, módosítás, törlés) (036-os nyomtatvány).'
+          exped: 'Akták és eljárások.'
+          generalnt: 'Általános adóügyi eljárások.'
+          inform: 'Tájékoztató jellegű nyilatkozatok (347-es, 349-es, 720-as nyomtatvány).'
+          iva: 'ÁFA időszakos és éves bevallások (303-as, 390-es nyomtatvány).'
+          notific: 'Értesítések és közlemények.'
+          pagosf: 'Negyedéves önálló vállalkozói részletek (130-as, 131-es nyomtatvány).'
+          rent: 'Jövedelemadó és vagyonbevallás (100-as, 714-es nyomtatvány).'
+          reten: 'Visszatartási adóbevallások (111-es, 115-ös, 123-as, 180-as, 190-es, 193-as nyomtatvány).'
         scopes:
-          help: cli.config.auth.apoderado.scopes.help
-          list_help: cli.config.auth.apoderado.scopes.list_help
-        status_help: cli.config.auth.apoderado.status_help
-      clear_all_help: cli.config.auth.clear_all_help
-      clear_help: cli.config.auth.clear_help
-      clear_locks_help: cli.config.auth.clear_locks_help
-      clear_sessions_help: cli.config.auth.clear_sessions_help
-      configure_help: cli.config.auth.configure_help
+          help: 'Apoderado hatóköri szójegyzék kezelése.'
+          list_help: 'Elfogadott apoderado hatókörök listázása.'
+        status_help: 'Aktív apoderado-konfiguráció megjelenítése.'
+      clear_all_help: 'Minden konfigurált hitelesítési szolgáltató törlése.'
+      clear_help: 'Helyi hitelesítési metaadatok törlése.'
+      clear_locks_help: 'Hitelesítésszerzési zárolások törlése.'
+      clear_sessions_help: 'Mentett AEAT-hitelesítési munkamenetek törlése.'
+      configure_help: 'Az aktív hitelesítési szolgáltató konfigurálása.'
       diagnostics:
-        help: cli.config.auth.diagnostics.help
-        id_help: cli.config.auth.diagnostics.id_help
-        invalid_phone_state: cli.config.auth.diagnostics.invalid_phone_state
-        list_help: cli.config.auth.diagnostics.list_help
-        not_found: cli.config.auth.diagnostics.not_found
-        phone_state_help: cli.config.auth.diagnostics.phone_state_help
-        report_help: cli.config.auth.diagnostics.report_help
-        show_help: cli.config.auth.diagnostics.show_help
-      file_help: cli.config.auth.file_help
-      help: cli.config.auth.help
-      login_fresh_help: cli.config.auth.login_fresh_help
-      login_help: cli.config.auth.login_help
-      login_reset_lock_help: cli.config.auth.login_reset_lock_help
-      no_active_bucket: cli.config.auth.no_active_bucket
+        help: 'Titkosított hitelesítési diagnosztika vizsgálata.'
+        id_help: 'Diagnosztikai azonosító.'
+        invalid_phone_state: 'Érvénytelen telefon-állapot: %{phone_state}. Várható értékek: %{choices}.'
+        list_help: 'Titkosított Cl@ve hitelesítési diagnosztikák listázása.'
+        not_found: 'Hitelesítési diagnosztika nem található: %{diagnostic_id}.'
+        phone_state_help: 'Egyik a következők közül: app_prompted_and_accepted, app_prompted_not_accepted, app_did_not_prompt, operator_did_not_check.'
+        report_help: 'Az üzemeltető által megfigyelt Cl@ve alkalmazás állapotának rögzítése egy hitelesítési diagnosztikához.'
+        show_help: 'Egyetlen redaktált titkosított hitelesítési diagnosztika megjelenítése.'
+      file_help: 'A hitelesítő fájl elérési útja (tanúsítvány vagy kulcs).'
+      help: 'Az aktív hitelesítési szolgáltató konfigurálása.'
+      login_fresh_help: 'Kényszerítsen új élő hitelesítést mentett AEAT-munkamenet újrafelhasználása helyett.'
+      login_help: 'Élő AEAT-munkamenet megszerzése vagy ellenőrzése.'
+      login_reset_lock_help: 'Elavult hitelesítésszerzési zárolás törlése indítás előtt.'
+      no_active_bucket: 'Nincs aktív profilmappa. Futtassa: `aeat config profile create NÉV` a hitelesítés konfigurálása előtt.'
       output_language_help: A válasz szövegének nyelve (es, en, ca, hu).
-      provider_help: cli.config.auth.provider_help
+      provider_help: 'Hitelesítési szolgáltató azonosítója (pl. certificado-electronico).'
       providers:
         status_implemented: elérhető
         status_reserved: fenntartva
         status_unavailable_gloss: még nem elérhető
-      providers_help: cli.config.auth.providers_help
-      reserved_provider: cli.config.auth.reserved_provider
-      status_help: cli.config.auth.status_help
-      test_help: cli.config.auth.test_help
-      unknown_provider: cli.config.auth.unknown_provider
+      providers_help: 'Támogatott hitelesítési szolgáltatók listázása.'
+      reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető: %{provider}.'
+      status_help: 'Beállított hitelesítési állapot megjelenítése.'
+      test_help: 'Helyi hitelesítési készség ellenőrzése.'
+      unknown_provider: 'Ismeretlen hitelesítési szolgáltató: %{provider}. Futtassa: `aeat config auth --help` az érvényes azonosítókhoz.'
     bucket:
-      actor_help: cli.config.bucket.actor_help
-      bucket_id_help: cli.config.bucket.bucket_id_help
-      event_type_help: cli.config.bucket.event_type_help
-      help: cli.config.bucket.help
+      actor_help: 'Az előzmények szűrése egy adott aktor által rögzített eseményekre (pontos egyezés).'
+      bucket_id_help: 'A vizsgálandó eseményelőzményű bucket azonosítója.'
+      event_type_help: 'Az előzmények szűrése egy vagy több eseménytípusra (ismételhető).'
+      help: 'Bucket-szintű tár és eseményelőzmények vizsgálata.'
       history:
-        invalid_event_type: cli.config.bucket.history.invalid_event_type
-        invalid_timestamp: cli.config.bucket.history.invalid_timestamp
-        since_after_until: cli.config.bucket.history.since_after_until
-      history_help: cli.config.bucket.history_help
-      object_id_help: cli.config.bucket.object_id_help
-      since_help: cli.config.bucket.since_help
-      until_help: cli.config.bucket.until_help
+        invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok: {valid}.'
+        invalid_timestamp: 'A(z) {flag} értékének ISO-8601 időbélyegnek kell lennie (pl. 2026-04-01T00:00:00+00:00); kapott: {raw}.'
+        since_after_until: 'A --since értékének korábbinak vagy egyenlőnek kell lennie az --until értékénél.'
+      history_help: 'Egy bucket hozzáfűzés-alapú eseményelőzményének megjelenítése.'
+      object_id_help: 'Az előzmények szűrése egy adott object_id-t célzó eseményekre (pontos egyezés).'
+      since_help: 'Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem korábbi eseményekre (pl. 2026-04-01T00:00:00+00:00).'
+      until_help: 'Az előzmények szűrése ennél az ISO-8601 időbélyegnél nem újabb eseményekre (pl. 2026-04-30T23:59:59+00:00).'
     errors:
-      invalid_value: cli.config.errors.invalid_value
-      no_active_profile: cli.config.errors.no_active_profile
-      unknown_key: cli.config.errors.unknown_key
+      invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
+      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create NÉV --tax-id <NIF>`.'
+      unknown_key: 'Ismeretlen konfigurációs kulcs: %{name}. Futtassa: `aeat config profile list` az elérhető kulcsok megjelenítéséhez.'
     get:
-      help: cli.config.get.help
-      key_help: cli.config.get.key_help
+      help: 'Egy konfigurációs kulcs aktuális értékének megjelenítése.'
+      key_help: 'A lekérendő kulcs (pl. tax.id, iva.regime).'
     google:
-      client_json_help: cli.config.google.client_json_help
+      client_json_help: 'Egy Cloud Console asztali OAuth ügyfél JSON-fájljának elérési útja.'
       detail:
-        client_json_bad_wrapper: cli.config.google.detail.client_json_bad_wrapper
-        client_json_invalid: cli.config.google.detail.client_json_invalid
-        client_json_not_desktop: cli.config.google.detail.client_json_not_desktop
-        client_json_schema_invalid: cli.config.google.detail.client_json_schema_invalid
-        client_json_unreadable: cli.config.google.detail.client_json_unreadable
-        client_unregistered: cli.config.google.detail.client_unregistered
-        no_metadata_for_refresh: cli.config.google.detail.no_metadata_for_refresh
+        client_json_bad_wrapper: 'A(z) {path} elérési útján lévő ügyfél JSON-ja nem rendelkezik megfelelő "installed" wrapper objektummal.'
+        client_json_invalid: 'A(z) {path} elérési útján lévő ügyfél JSON-ja érvénytelen JSON: {reason}'
+        client_json_not_desktop: 'A(z) {path} elérési útján lévő ügyfél JSON-ja nem Cloud Console asztali ügyfél; hiányzik az "installed" wrapper kulcs.'
+        client_json_schema_invalid: 'A(z) {path} elérési útján lévő ügyfél JSON-ja sémaervényesítés sikertelen: {reason}'
+        client_json_unreadable: 'A(z) {path} elérési útján lévő ügyfél JSON-ja nem olvasható: {reason}'
+        client_unregistered: 'Nincs regisztrált OAuth-ügyfél a(z) {profile} profilhoz.'
+        no_metadata_for_refresh: 'Nincs OAuth-munkamenet a(z) {profile} profilhoz; korábbi bejelentkezés nélkül nem lehet megújítani.'
       errors:
-        auth_failed: cli.config.google.errors.auth_failed
-        browser_open: cli.config.google.errors.browser_open
-        client_not_registered: cli.config.google.errors.client_not_registered
-        client_revoked: cli.config.google.errors.client_revoked
-        keychain_locked: cli.config.google.errors.keychain_locked
-        loopback_bind: cli.config.google.errors.loopback_bind
-        network: cli.config.google.errors.network
-        profile_unbound: cli.config.google.errors.profile_unbound
-        scope_insufficient: cli.config.google.errors.scope_insufficient
-        storage: cli.config.google.errors.storage
-        token_expired: cli.config.google.errors.token_expired
-        token_revoked: cli.config.google.errors.token_revoked
-        unsecured_mode: cli.config.google.errors.unsecured_mode
-        validation: cli.config.google.errors.validation
+        auth_failed: 'Google-hitelesítés sikertelen: {detail}'
+        browser_open: 'Nem sikerült megnyitni a böngészőt a Google-hozzáférés engedélyezéséhez: {detail}'
+        client_not_registered: 'Nincs regisztrált Google OAuth-ügyfél ehhez a profilhoz. Futtassa: `aeat config google register --client-json <elérési_út>`.'
+        client_revoked: 'A regisztrált Google OAuth-ügyfél visszavonásra került. Regisztrálja újra: `aeat config google register`.'
+        keychain_locked: 'A Google-hitelesítő adatokat tároló rendszerkulcstartó zárolt vagy nem elérhető.'
+        loopback_bind: 'Nem sikerült helyi portot megnyitni a Google-bejelentkezés befejezéséhez: {detail}'
+        network: 'Nem sikerült elérni a Google-t: {detail}'
+        profile_unbound: 'Nincs aktív profil. Futtassa: `aeat config profile switch <név>` vagy adja meg a `--profile` kapcsolót.'
+        scope_insufficient: 'A Google-hozzáféréshez megadott engedélyek nem elegendők. Futtassa: `aeat config google login` és fogadjon el minden engedélyt.'
+        storage: 'Nem sikerült elérni a Google Drive tárolót: {detail}'
+        token_expired: 'A Google-hozzáférés lejárt (tesztelési projekt tokenek 7 nap után járnak le). Futtassa: `aeat config google login`.'
+        token_revoked: 'A Google-hozzáférés visszavonásra került. Futtassa: `aeat config google login` az újraengedélyezéshez.'
+        unsecured_mode: 'A Google-hozzáférés le van tiltva, amíg a titkos tár nem biztonságos módban fut valódi NIF-el rendelkező profil esetén.'
+        validation: 'A Google-hoz megadott adatok nem feleltek meg az érvényesítésnek: {detail}'
       folder:
-        folder_id_help: cli.config.google.folder.folder_id_help
-        get_help: cli.config.google.folder.get_help
-        help: cli.config.google.folder.help
-        set_help: cli.config.google.folder.set_help
-      help: cli.config.google.help
-      login_help: cli.config.google.login_help
-      logout_help: cli.config.google.logout_help
-      profile_help: cli.config.google.profile_help
-      refresh_only_help: cli.config.google.refresh_only_help
-      register_help: cli.config.google.register_help
-      status_help: cli.config.google.status_help
+        folder_id_help: 'Google Drive mappa azonosítója.'
+        get_help: 'A beállított Google Drive gyökérmappa megjelenítése.'
+        help: 'A Google Drive gyökérmappa-kötés kezelése.'
+        set_help: 'Google Drive mappa azonosítójának kötése az aktív profilhoz.'
+      help: 'A Google OAuth asztali integráció kezelése a Drive és a Sheets számára.'
+      login_help: 'Az OAuth-hozzájárulási folyamat futtatása (vagy meglévő hitelesítő adat megújítása).'
+      logout_help: 'A megújítási token és metaadatok törlése; a regisztrált ügyfél megőrzése.'
+      profile_help: 'AEAT-profilnév felülbírálása (alapértelmezés: a munkafolyamat-állapoton aktív profil).'
+      refresh_only_help: 'A hozzájárulási képernyő kihagyása és csak a meglévő hitelesítő adat megújítása.'
+      register_help: 'Cloud Console asztali OAuth ügyfél JSON regisztrálása az aktív profilhoz.'
+      status_help: 'Az aktív profil aktuális Google OAuth-munkamenet állapotának megjelenítése.'
       sync:
         calc:
           export:
-            modelo_help: cli.config.google.sync.calc.export.modelo_help
-            period_help: cli.config.google.sync.calc.export.period_help
-            prefill_relations_help: cli.config.google.sync.calc.export.prefill_relations_help
-            root_folder_required: cli.config.google.sync.calc.export.root_folder_required
-            snapshot_failure: cli.config.google.sync.calc.export.snapshot_failure
-            unknown_modelo: cli.config.google.sync.calc.export.unknown_modelo
-            year_help: cli.config.google.sync.calc.export.year_help
-          export_help: cli.config.google.sync.calc.export_help
-          help: cli.config.google.sync.calc.help
+            modelo_help: 'Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).'
+            period_help: 'Benyújtási időszak kódja (pl. 1T, 2T, 0A).'
+            prefill_relations_help: 'Keresztrevízió-kapcsolati értékek előtöltése a helyi megfigyelési tárból exportálás előtt (éves összesítések, előző negyedévre átvitt értékek stb.).'
+            root_folder_required: 'Nincs beállított Drive gyökérmappa-azonosító; futtassa: `aeat config google folder set <azonosító>`.'
+            snapshot_failure: 'Nem sikerült nyilvántartási pillanatképet felépíteni a(z) {modelo} ({period} {year}) nyomtatványhoz: {detail}'
+            unknown_modelo: 'Ismeretlen nyomtatvány: {modelo!r}; elérhető nyomtatványok: {available}'
+            year_help: 'Benyújtási év (pl. 2025).'
+          export_help: 'A nyilvántartási számítási felület exportálása egy nyomtatvány+időszak kombinációhoz Google Sheets munkafüzetbe az üzemeltető `aeat-vault/` mappájában.'
+          help: 'Séma-tábla számítási felület (exportálás és visszatöltés).'
           pull:
-            assemble_observations_help: cli.config.google.sync.calc.pull.assemble_observations_help
-            compute_help: cli.config.google.sync.calc.pull.compute_help
-            compute_refused_stale: cli.config.google.sync.calc.pull.compute_refused_stale
-            spreadsheet_id_help: cli.config.google.sync.calc.pull.spreadsheet_id_help
-          pull_help: cli.config.google.sync.calc.pull_help
+            assemble_observations_help: 'Visszatöltés után a Detalle-lap sorcsoportjait típusos megfigyelésekké állítja össze (kedvezményezettek, külföldi eszközök, kapcsolt felek műveletei, attribúciós tagok, visszatérítési műveletek), és azokat a hasznos adatban a nyers sor-szerkesztések mellett közli.'
+            compute_help: 'Visszatöltés után a helyi Decimal futásidőt futtatja a visszatöltött bemenetek ellen, és kiadja a számított mezőértékeket.'
+            compute_refused_stale: 'Elutasítva: nem számít olyan munkafüzet ellen, amelynek metaadatbélyegei nem egyeznek a megadott pillanatképpel (metadata_match={metadata_match}); exportálja újra, majd töltse vissza újra.'
+            spreadsheet_id_help: 'Az üzemeltetői szerkesztéseket tartalmazó munkafüzet Drive-fájlazonosítója (az alkalmazásnak kell tulajdonolnia és a megadott pillanatképhez kell kötnie).'
+          pull_help: 'Az üzemeltető által szerkesztett cellák visszaolvasása egy számítási munkafüzetből típusos rekordokba (a munkafüzet nyilvántartás-SHA-bélyegének ellenőrzése után).'
           verify:
-            scenario_help: cli.config.google.sync.calc.verify.scenario_help
-          verify_help: cli.config.google.sync.calc.verify_help
-        help: cli.config.google.sync.help
-        probe_help: cli.config.google.sync.probe_help
-        probe_read_only_help: cli.config.google.sync.probe_read_only_help
-        push_dry_run_help: cli.config.google.sync.push_dry_run_help
-        push_help: cli.config.google.sync.push_help
-        push_limit_help: cli.config.google.sync.push_limit_help
-        push_namespace_help: cli.config.google.sync.push_namespace_help
-        root_folder_id_unset: cli.config.google.sync.root_folder_id_unset
+            scenario_help: 'Egy JSON-forgatókönyv-fájl elérési útja üzemeltetői bemenetekkel és opcionális AEAT-közzétett elvárt kimenettérképpel.'
+          verify_help: 'Háromirányú paritásellenőrzés egy nyomtatvány számítási felületéről (AEAT-orákulum vs helyi Decimal futásidő vs Sheets munkafüzet).'
+        help: 'Helyi adatok feltolása és vizsgálata a beállított Google Drive mappában.'
+        probe_help: 'A beállított Google Drive mappa olvasási/írási hozzáférésének vizsgálata.'
+        probe_read_only_help: 'Google Drive vizsgálata csak olvasási módban (nincs írási kísérlet).'
+        push_dry_run_help: 'Feltolási terv készítése fájlok feltöltése nélkül.'
+        push_help: 'Helyi adatnévterek feltolása a beállított Google Drive mappába.'
+        push_limit_help: 'Feltolható fájlok maximális száma (alapértelmezés: korlátlan).'
+        push_namespace_help: 'Feltolható névtér (ismételhető; alapértelmezés: minden névtér).'
+        root_folder_id_unset: 'Nincs beállított Google Drive gyökérmappa; futtassa: `aeat config google folder set <azonosító>`.'
     init:
-      activity_help: cli.config.init.activity_help
-      auth_provider_help: cli.config.init.auth_provider_help
-      certificate_password_env_help: cli.config.init.certificate_password_env_help
-      certificate_path_help: cli.config.init.certificate_path_help
-      drafts_dir_help: cli.config.init.drafts_dir_help
-      dry_run_help: cli.config.init.dry_run_help
-      from_help: cli.config.init.from_help
-      help: cli.config.init.help
-      iva_regime_help: cli.config.init.iva_regime_help
-      manuals_root_help: cli.config.init.manuals_root_help
-      non_interactive_help: cli.config.init.non_interactive_help
-      output_language_help: cli.config.init.output_language_help
-      profile_name_help: cli.config.init.profile_name_help
-      quiet_help: cli.config.init.quiet_help
-      submissions_dir_help: cli.config.init.submissions_dir_help
+      activity_help: 'Gazdasági tevékenység leírása (pl. 761.1, programozó).'
+      auth_provider_help: 'A profilhoz használandó hitelesítési szolgáltató azonosítója.'
+      certificate_password_env_help: 'A tanúsítvány jelszavát tartalmazó környezeti változó neve.'
+      certificate_path_help: 'A .p12 vagy .pfx tanúsítványfájl elérési útja.'
+      drafts_dir_help: 'A helyi benyújtási tervezetek tárolási könyvtára.'
+      dry_run_help: 'Változások jelentése a konfiguráció módosítása nélkül.'
+      from_help: 'A beállítások importálásának forrásprofilazonosítója.'
+      help: 'Új aktív profil és konfigurációs bucket inicializálása.'
+      iva_regime_help: 'ÁFA-rezsim (general, simplificado, exento stb.).'
+      manuals_root_help: 'Az AEAT műszaki kézikönyvek gyökérkönyvtára.'
+      non_interactive_help: 'Futtatás felhasználói bevitel kérése nélkül.'
+      output_language_help: 'A CLI kimenetének elsődleges nyelve (hu, en, es, ca).'
+      profile_name_help: 'Egyedi azonosító ehhez a konfigurációs profilhoz.'
+      quiet_help: 'Inicializálás utáni sikeres üzenet kihagyása.'
+      submissions_dir_help: 'A benyújtott adóbevallás-visszaigazolások tárolási könyvtára.'
       success:
-        next_step: cli.config.init.success.next_step
-      tax_id_help: cli.config.init.tax_id_help
-      tax_residence_ccaa_help: cli.config.init.tax_residence_ccaa_help
+        next_step: 'Következő lépés: futtassa: `aeat app overview status`'
+      tax_id_help: 'Spanyol adóazonosító (NIF/NIE/CIF).'
+      tax_residence_ccaa_help: 'Az adóilletékesség autonóm közössége.'
     list:
-      help: cli.config.list.help
+      help: 'Minden regisztrált profil listázása és az aktív megjelölése.'
     profile:
-      already_exists: cli.config.profile.already_exists
+      already_exists: 'A(z) %{name} profil már létezik. Válasszon másik célazonosítót.'
       census:
-        apply_help: cli.config.profile.census.apply_help
-        compare_help: cli.config.profile.census.compare_help
-        help: cli.config.profile.census.help
-        refresh_help: cli.config.profile.census.refresh_help
-        show_help: cli.config.profile.census.show_help
-        snapshot_id_help: cli.config.profile.census.snapshot_id_help
-      create_help: cli.config.profile.create_help
-      delete_active_cleared: cli.config.profile.delete_active_cleared
-      delete_help: cli.config.profile.delete_help
-      delete_name_help: cli.config.profile.delete_name_help
-      delete_requires_yes: cli.config.profile.delete_requires_yes
-      delete_yes_help: cli.config.profile.delete_yes_help
-      duplicate_display_name_help: cli.config.profile.duplicate_display_name_help
-      duplicate_help: cli.config.profile.duplicate_help
-      duplicate_source_help: cli.config.profile.duplicate_source_help
-      duplicate_target_help: cli.config.profile.duplicate_target_help
-      edit_help: cli.config.profile.edit_help
-      export_help: cli.config.profile.export_help
-      export_name_help: cli.config.profile.export_name_help
-      export_out_help: cli.config.profile.export_out_help
-      help: cli.config.profile.help
-      import_help: cli.config.profile.import_help
-      import_invalid_bundle: cli.config.profile.import_invalid_bundle
-      import_label_help: cli.config.profile.import_label_help
-      import_label_taken: cli.config.profile.import_label_taken
-      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
-      import_missing_bundle: cli.config.profile.import_missing_bundle
-      import_path_help: cli.config.profile.import_path_help
-      import_uuid_collision: cli.config.profile.import_uuid_collision
-      logout_help: cli.config.profile.logout_help
-      logout_session_warning: cli.config.profile.logout_session_warning
-      no_active_profile: cli.config.profile.no_active_profile
-      preflight_help: cli.config.profile.preflight_help
-      preflight_modelo_help: cli.config.profile.preflight_modelo_help
-      preflight_period_help: cli.config.profile.preflight_period_help
-      preflight_revision_help: cli.config.profile.preflight_revision_help
-      preflight_year_help: cli.config.profile.preflight_year_help
-      remove_help: cli.config.profile.remove_help
-      remove_name_help: cli.config.profile.remove_name_help
-      remove_requires_yes: cli.config.profile.remove_requires_yes
-      remove_yes_help: cli.config.profile.remove_yes_help
-      rename_display_name_help: cli.config.profile.rename_display_name_help
-      rename_help: cli.config.profile.rename_help
-      rename_source_help: cli.config.profile.rename_source_help
-      rename_target_help: cli.config.profile.rename_target_help
-      show_help: cli.config.profile.show_help
-      show_name_help: cli.config.profile.show_name_help
-      switch_help: cli.config.profile.switch_help
-      switch_name_help: cli.config.profile.switch_name_help
-      unknown_profile: cli.config.profile.unknown_profile
-      use_help: cli.config.profile.use_help
-      use_name_help: cli.config.profile.use_name_help
-      validate_help: cli.config.profile.validate_help
-      view_help: cli.config.profile.view_help
+        apply_help: 'Az AEAT által jelentett nyilvántartási értékekkel felülírja a profilt.'
+        compare_help: 'Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.'
+        help: 'Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.'
+        refresh_help: 'A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép mentése.'
+        show_help: 'Az AEAT által legutóbb jelentett nyilvántartás megjelenítése erre a profilra.'
+        snapshot_id_help: 'Konkrét pillanatkép-azonosító (előtagok elfogadva).'
+      create_help: 'Új aktív profil és konfigurációs bucket inicializálása.'
+      delete_active_cleared: 'A törölt profil volt az aktív; az aktív-profil-mutató törölve. Futtassa: `aeat config profile switch NÉV` vagy `aeat config profile create NÉV` a folytatáshoz.'
+      delete_help: 'Profil és lemezen lévő állapot törlése (--yes megerősíti).'
+      delete_name_help: 'A törölni kívánt profil neve.'
+      delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config profile delete %{name} --yes` a megerősítéshez.'
+      delete_yes_help: 'Törlési művelet explicit megerősítése.'
+      duplicate_display_name_help: 'Az új profil megjelenítési neve (alapértelmezés: a célazonosító).'
+      duplicate_help: 'Profil másolása új azonosítóra és megjelenítési névre.'
+      duplicate_source_help: 'A másolandó forrásprofilazonosító.'
+      duplicate_target_help: 'A másolat célazonosítója.'
+      edit_help: 'A varázsló újrafuttatása meglévő profil ellen, értékek frissítése helyben.'
+      export_help: 'Hordozható profilcsomag írása JSON-fájlba.'
+      export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
+      export_out_help: 'A JSON-csomag célútvonala.'
+      help: 'Aktív profilkonfigurációs értékek kezelése.'
+      import_help: 'Hordozható profilcsomag regisztrálása JSON-fájlból.'
+      import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
+      import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés: a csomagban tárolt név. Használja második példány importálásához új felirat alatt.'
+      import_label_taken: 'Már létezik %{name} nevű profil. Futtassa újra `--label ÚJ_NÉV` kapcsolóval más névvel való importáláshoz.'
+      import_label_taken_different_id: 'A megadott felirat egy másik azonosítójú profil által foglalt.'
+      import_missing_bundle: 'A profilcsomag nem található: %{path}'
+      import_path_help: 'A profilcsomag JSON-fájljának elérési útja.'
+      import_uuid_collision: 'A csomagban lévő UUID ütközik egy meglévő profillal.'
+      logout_help: 'Kijelentkezés az aktív profilból a helyi mutató törlésével.'
+      logout_session_warning: 'A kijelentkezés törölte az aktív-profil-mutatót. Ebben a terminálban a következő parancsok NoActiveBucketSessionError hibával utasítanak el, amíg nem futtatja: `aeat config profile switch NÉV` (vagy nyit egy új terminált és újra kiválaszt).'
+      no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create NÉV --tax-id <NIF>`.'
+      preflight_help: 'Ellenőrzi, hogy az aktív profil készen áll-e egy adott nyomtatványra / évre / időszakra.'
+      preflight_modelo_help: 'Nyomtatványkód (pl. 303).'
+      preflight_period_help: 'Időszaktokent (pl. N1, annual).'
+      preflight_revision_help: 'Nyilvántartási revízió azonosítója.'
+      preflight_year_help: 'Benyújtási év.'
+      remove_help: 'Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek megmaradnak).'
+      remove_name_help: 'A lezárandó profil azonosítója.'
+      remove_requires_yes: 'Az eltávolítás visszafordíthatatlan. Futtassa újra: `aeat config profile delete %{name} --yes` a megerősítéshez.'
+      remove_yes_help: 'A lezárási művelet explicit megerősítése.'
+      rename_display_name_help: 'Az üzemeltető által látható felirat; alapértelmezés: a meglévő megjelenítési név.'
+      rename_help: 'Profil helybeni átnevezése; az aktív-profil-mutató automatikusan követi.'
+      rename_source_help: 'A meglévő profilnév.'
+      rename_target_help: 'Az új profilnév.'
+      show_help: 'Egy profil élő értékeinek megjelenítése (alapértelmezés: az aktív profil).'
+      show_name_help: 'A megjelenítendő profil azonosítója (alapértelmezés: az aktív profil).'
+      switch_help: 'Az aktív profil váltása.'
+      switch_name_help: 'Az aktiválandó profilnév.'
+      unknown_profile: 'Ismeretlen profil: %{name}. Futtassa: `aeat config profile list` a regisztrált profilok megtekintéséhez.'
+      use_help: 'Meglévő profil kiválasztása aktív profilként.'
+      use_name_help: 'A kiválasztandó profil azonosítója.'
+      validate_help: 'Az aktív profil érvényesítése a sémával szemben.'
+      view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     repair:
-      connectivity_help: cli.config.repair.connectivity_help
-      connectivity_target_help: cli.config.repair.connectivity_target_help
-      help: cli.config.repair.help
-      integrity_attribution_details_help: cli.config.repair.integrity_attribution_details_help
-      integrity_attribution_help: cli.config.repair.integrity_attribution_help
-      integrity_help: cli.config.repair.integrity_help
-      integrity_namespace_help: cli.config.repair.integrity_namespace_help
-      integrity_objects_help: cli.config.repair.integrity_objects_help
-      integrity_registry_help: cli.config.repair.integrity_registry_help
-      logs_help: cli.config.repair.logs_help
-      logs_lines_help: cli.config.repair.logs_lines_help
-      plan_help: cli.config.repair.plan_help
-      profile_clear_active_help: cli.config.repair.profile_clear_active_help
-      profile_clear_active_mismatch: cli.config.repair.profile_clear_active_mismatch
-      profile_help: cli.config.repair.profile_help
-      profile_name_help: cli.config.repair.profile_name_help
-      profile_one_action: cli.config.repair.profile_one_action
-      profile_repair_manifest_status_help: cli.config.repair.profile_repair_manifest_status_help
-      profile_requires_yes: cli.config.repair.profile_requires_yes
-      quarantine_dry_run_help: cli.config.repair.quarantine_dry_run_help
-      quarantine_help: cli.config.repair.quarantine_help
-      quarantine_preserve_first_refused: cli.config.repair.quarantine_preserve_first_refused
-      quarantine_requires_yes: cli.config.repair.quarantine_requires_yes
-      quarantine_yes_help: cli.config.repair.quarantine_yes_help
-      reset_state_dry_run_help: cli.config.repair.reset_state_dry_run_help
-      reset_state_help: cli.config.repair.reset_state_help
-      reset_state_requires_yes: cli.config.repair.reset_state_requires_yes
-      reset_state_yes_help: cli.config.repair.reset_state_yes_help
-      yes_help: cli.config.repair.yes_help
+      connectivity_help: 'Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.'
+      connectivity_target_help: 'A vizsgálandó kapcsolódási cél.'
+      help: 'Helyi konfiguráció, nyilvántartás, profil, hitelesítés és naplók diagnosztikája és javítása.'
+      integrity_attribution_details_help: 'Soronkénti biztonságos metaadat-részletek bevonása.'
+      integrity_attribution_help: 'Visszafejthető biztonságos objektumsorok csoportosítása biztonságos metaadatok szerint.'
+      integrity_help: 'Biztonságos objektumok és nyilvántartás integritásának vizsgálata.'
+      integrity_namespace_help: 'Az integritásvizsgálat korlátozása egy névtérre.'
+      integrity_objects_help: 'AES-256-GCM-tag ellenőrzés egy névtéren (vagy mindenen).'
+      integrity_registry_help: 'Teljes nyilvántartás-érvényesítés futtatása (opcionális tartományközi integritásvizsgálat).'
+      logs_help: 'A naplófájl elérési útjának és a legújabb sorainak megjelenítése.'
+      logs_lines_help: 'A megjelenítendő legújabb naplósorok száma.'
+      plan_help: 'Száraz-futtatásos megőrzés-elsőbbségű helyreállítási terv az olvashatatlan biztonságos-objektum-sorokhoz.'
+      profile_clear_active_help: 'A mutató-fájl aktív profilmutatójának törlése csak akkor, ha olvashatatlan profilállapotra mutat.'
+      profile_clear_active_mismatch: 'A --clear-active csak az aktív profilmutatót törölheti; a(z) %{profile} nem aktív.'
+      profile_help: 'Az aktív-profil-mutató vizsgálata és javítása.'
+      profile_name_help: 'Konkrét regisztrált profilmappa vizsgálata.'
+      profile_one_action: 'Válasszon egyet: --clear-active vagy --repair-manifest-status, nem mindkettő.'
+      profile_repair_manifest_status_help: 'Örökölt aktív bucket-manifeszt állapotának visszatöltése a titkosított profilrekordból.'
+      profile_requires_yes: 'Adja meg a --yes kapcsolót az aktív-profil javítás alkalmazásához.'
+      quarantine_dry_run_help: 'A karanténba kerülő sorok előnézete mozgatás nélkül.'
+      quarantine_help: 'Visszafejthető sorok előnézete; az aktív karantén le van tiltva a megőrzés-elsőbbségű javítási szabályzat miatt.'
+      quarantine_preserve_first_refused: 'A megőrzés-elsőbbségű javítási szabályzat elutasítja az aktív karantént. Futtassa a száraz-futtatásos előnézetet és az integritásattribúciót.'
+      quarantine_requires_yes: 'Ez a művelet visszafordíthatatlan. Futtassa újra a --yes kapcsolóval a megerősítéshez.'
+      quarantine_yes_help: 'A karantén-művelet explicit megerősítése.'
+      reset_state_dry_run_help: 'A boríték ujjlenyomatának jelentése a sor törlése nélkül.'
+      reset_state_help: 'Az olvashatatlan munkafolyamat-állapot borítékának törlése (visszafordíthatatlan; --yes szükséges).'
+      reset_state_requires_yes: 'Ez a művelet visszafordíthatatlan. Futtassa újra a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval az ujjlenyomat vizsgálatához.'
+      reset_state_yes_help: 'A munkafolyamat-állapot visszaállítás explicit megerősítése.'
+      yes_help: 'Javítás megerősítése.'
     reset:
-      help: cli.config.reset.help
-      invalid_scope: cli.config.reset.invalid_scope
-      requires_yes: cli.config.reset.requires_yes
-      scope_help: cli.config.reset.scope_help
-      yes_help: cli.config.reset.yes_help
+      help: 'Üzemeltető által megadott konfigurációs hatókörök visszaállítása.'
+      invalid_scope: 'Érvénytelen hatókör: %{scope}. Érvényes hatókörök: %{valid}.'
+      requires_yes: 'A visszaállítás visszafordíthatatlan. Futtassa újra a --yes kapcsolóval a megerősítéshez.'
+      scope_help: 'Visszaállítandó hatókör. profile: minden profilmappa törlése (manifesztek, DEK-ek, bevallások, főkönyv és számlafelülvizsgálatok). auth: mentett AEAT/SEDE hitelesítési munkamenet törlése. data: olvashatatlan biztonságos-objektum-sorok karanténba helyezése minden névtérben. all: profile, auth és data együttes alkalmazása.'
+      yes_help: 'A visszaállítási művelet explicit megerősítése.'
     set:
-      help: cli.config.set.help
-      key_help: cli.config.set.key_help
-      value_help: cli.config.set.value_help
+      help: 'Érték hozzárendelése egy konfigurációs kulcshoz.'
+      key_help: 'A hozzárendelendő kulcs (pl. iva.regime).'
+      value_help: 'A hozzárendelendő érték (szöveg, igaz/hamis, összeg a kulcstól függően).'
     setup:
-      accept_defaults_help: cli.config.setup.accept_defaults_help
+      accept_defaults_help: 'Minden megadatlan kapcsolót az leíró alapértékeiből tölt ki kérdés nélkül. Kombinálja a --quiet kapcsolóval, vagy önállóan az összes-alapértékes létrehozáshoz.'
       errors:
-        missing_required_flags: cli.config.setup.errors.missing_required_flags
-      help: cli.config.setup.help
-      profile_name_help: cli.config.setup.profile_name_help
-      quiet_help: cli.config.setup.quiet_help
+        missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet varázslóhoz; adjon meg értéket minden kötelező kérdéshez.'
+      help: 'Az aktív adóprofil és tároló bucket inicializálása.'
+      profile_name_help: 'Az adat írásának profilneve.'
+      quiet_help: 'Csak a megadott kapcsolóértékek alapján fut interakció nélkül; a megadatlan kötelező kapcsolók hibát okoznak. Önmagában elegendő; kombinálja az --accept-defaults kapcsolóval a többi alapértékből való kitöltéséhez.'
       success:
-        next_step: cli.config.setup.success.next_step
-        saved: cli.config.setup.success.saved
+        next_step: 'Következő lépés: futtassa: `aeat app overview status` a munkaterület áttekintéséhez.'
+        saved: 'A(z) ''%{profile_name}'' profil mentve.'
     status:
-      empty_profile: cli.config.status.empty_profile
-      help: cli.config.status.help
-      next_step: cli.config.status.next_step
+      empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create NÉV` a kezdéshez.'
+      help: 'Az aktuális konfigurációs profil készenléti állapotának megjelenítése.'
+      next_step: 'Következő lépés: `aeat app overview status`'
     unset:
-      help: cli.config.unset.help
-      key_help: cli.config.unset.key_help
-    workflow_help: cli.config.workflow_help
+      help: 'Egy konfigurációs kulcs értékének törlése.'
+      key_help: 'A törlendő kulcs.'
+    workflow_help: 'Konfiguráció-munkafolyamat súgó megjelenítése.'
   diagnostics:
     app_help: Mérnöki diagnosztika az AEAT belső részeihez.
     browser:
