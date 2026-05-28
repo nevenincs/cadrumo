@@ -28,8 +28,11 @@ import threading
 from pathlib import Path
 from typing import TextIO
 
+from ..logging import get_logger
 from ._models import RunEvent
 from ._redaction_rules import diagnostic_rules
+
+logger = get_logger(__name__)
 
 
 class JsonlRunSink(logging.Handler):
@@ -114,7 +117,7 @@ class JsonlRunSink(logging.Handler):
             # must route through handleError(record) so the application is
             # never killed by a logging path. Broad catch is mandated by
             # the cpython logging module's documented protocol.
-            logging.getLogger(__name__).warning("jsonl run sink emit failed", exc_info=True)
+            logger.warning("jsonl run sink emit failed", exc_info=True)
             self.handleError(record)
 
     def _open(self) -> TextIO:
