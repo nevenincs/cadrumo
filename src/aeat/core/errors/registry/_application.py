@@ -169,6 +169,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.aggregation._errors.AggregationConfigError",
+        ErrorCode(
+            code="ERROR_AGGREGATION_CONFIG",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_aggregation_config",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.aggregation._errors.AggregationError",
         ErrorCode(
             code="ERROR_FINANCIAL_AGGREGATION",
@@ -576,6 +587,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.wizard._errors.WizardAnswerTypeError",
+        ErrorCode(
+            code="REFUSED_WIZARD_ANSWER_TYPE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_wizard_answer_type",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.wizard._prompter.WizardUnsupportedConsoleError",
         ErrorCode(
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
@@ -939,6 +961,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_diagnostic_model_invariant",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.export._errors.ExportFormatError",
+        ErrorCode(
+            code="REFUSED_EXPORT_FORMAT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_export_format",
+            default_suggestion="aeat app modelo calc export --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.export._errors.ExportFieldError",
+        ErrorCode(
+            code="REFUSED_EXPORT_FIELD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_export_field",
+            default_suggestion="aeat app modelo calc export --help",
             retryable=False,
             runbook_id=None,
         ),

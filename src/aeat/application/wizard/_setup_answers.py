@@ -27,6 +27,7 @@ from ...domain.profile import (
     SituacionFamiliar,
 )
 from ...domain.profile._ccaa import CCAA
+from ._errors import WizardAnswerTypeError
 
 
 class SetupAnswers(BaseModel):
@@ -182,7 +183,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return IVARegime(value)
-        raise TypeError("iva_regime must be an IVARegime member or string token")
+        raise WizardAnswerTypeError("iva_regime must be an IVARegime member or string token")
 
     @field_validator("entity_type", mode="before")
     @classmethod
@@ -193,7 +194,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return EntityType(value)
-        raise TypeError("entity_type must be an EntityType member, string token, or blank")
+        raise WizardAnswerTypeError("entity_type must be an EntityType member, string token, or blank")
 
     @field_validator("legal_entity_form", mode="before")
     @classmethod
@@ -204,7 +205,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return LegalEntityForm(value)
-        raise TypeError("legal_entity_form must be a LegalEntityForm member, string token, or blank")
+        raise WizardAnswerTypeError("legal_entity_form must be a LegalEntityForm member, string token, or blank")
 
     @field_validator("irpf_estimation_regime", mode="before")
     @classmethod
@@ -215,7 +216,9 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return IrpfEstimationRegime(value)
-        raise TypeError("irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank")
+        raise WizardAnswerTypeError(
+            "irpf_estimation_regime must be an IrpfEstimationRegime member, string token, or blank"
+        )
 
     @field_validator("situacion_familiar", mode="before")
     @classmethod
@@ -226,7 +229,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return SituacionFamiliar(value)
-        raise TypeError("situacion_familiar must be a SituacionFamiliar member, string token, or blank")
+        raise WizardAnswerTypeError("situacion_familiar must be a SituacionFamiliar member, string token, or blank")
 
     @field_validator("unidad_familiar_descendientes_exclusivos", mode="before")
     @classmethod
@@ -240,7 +243,9 @@ class SetupAnswers(BaseModel):
                 return True
             if value.lower() == "false":
                 return False
-        raise TypeError("unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank")
+        raise WizardAnswerTypeError(
+            "unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank"
+        )
 
     @field_validator("irpf_special_regime", mode="before")
     @classmethod
@@ -251,7 +256,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return IrpfSpecialRegime(value)
-        raise TypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
+        raise WizardAnswerTypeError("irpf_special_regime must be an IrpfSpecialRegime member, string token, or blank")
 
     @field_validator("fiscal_residency", mode="before")
     @classmethod
@@ -262,7 +267,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return FiscalResidency(value)
-        raise TypeError("fiscal_residency must be a FiscalResidency member, string token, or blank")
+        raise WizardAnswerTypeError("fiscal_residency must be a FiscalResidency member, string token, or blank")
 
     @field_validator("irpf_income_categories")
     @classmethod
@@ -289,7 +294,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return RentaDeclaracionType(value)
-        raise TypeError("taxation_type must be a RentaDeclaracionType member, string token, or blank")
+        raise WizardAnswerTypeError("taxation_type must be a RentaDeclaracionType member, string token, or blank")
 
     @field_validator("taxpayer_sex", "spouse_sex", mode="before")
     @classmethod
@@ -300,7 +305,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return RentaSexCode(value)
-        raise TypeError("sex code must be a RentaSexCode member, string token, or blank")
+        raise WizardAnswerTypeError("sex code must be a RentaSexCode member, string token, or blank")
 
     @field_validator("taxpayer_marital_status", mode="before")
     @classmethod
@@ -311,7 +316,9 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return RentaMaritalStatus(value)
-        raise TypeError("taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank")
+        raise WizardAnswerTypeError(
+            "taxpayer_marital_status must be a RentaMaritalStatus member, string token, or blank"
+        )
 
     @field_validator("taxpayer_marriage_date")
     @classmethod
@@ -344,7 +351,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return RentaDisabilityGrade(value)
-        raise TypeError("disability grade must be a RentaDisabilityGrade member, string token, or blank")
+        raise WizardAnswerTypeError("disability grade must be a RentaDisabilityGrade member, string token, or blank")
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod
@@ -353,7 +360,7 @@ class SetupAnswers(BaseModel):
             return value
         if isinstance(value, str):
             return CCAA(value)
-        raise TypeError("tax_residence_ccaa must be a CCAA member or string token")
+        raise WizardAnswerTypeError("tax_residence_ccaa must be a CCAA member or string token")
 
     @field_validator("incn_prior_12_months")
     @classmethod
