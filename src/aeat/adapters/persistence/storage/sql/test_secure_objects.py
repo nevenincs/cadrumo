@@ -14,9 +14,10 @@ from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
 from ..errors import ClassificationError, EnvelopeVersionError, StorageValidationError
-from ._orm import Base
+from ._orm import Base, SecureObjectRow
 from .engine import create_engine_from_settings
 from .secure_objects import (
+    SecureObjectNamespaceIntegrity,
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectUnreadable,
@@ -111,6 +112,98 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
                 written_at=written_at,
                 payload=payload,
             )
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_table_materializes_revision_integrity_columns(tmp_path: Path) -> None:
+    """Fresh SQL bootstrap creates nullable lineage and integrity columns.
+
+    The check goes through SQLite's real table metadata after
+    ``Base.metadata.create_all``. Nullability matters for this step
+    because existing rows are backfilled by the later migration slice.
+    """
+
+    db_path = tmp_path / "revision-schema.db"
+    engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+    Base.metadata.create_all(engine)
+    try:
+        with sqlite3.connect(db_path) as con:
+            table_info = con.execute("PRAGMA table_info(secure_objects)").fetchall()
+
+        columns = {str(row[1]): row for row in table_info}
+        for column_name in (
+            "revision_id",
+            "previous_revision_id",
+            "previous_payload_hash",
+            "payload_hash",
+            "ciphertext_hash",
+            "revision_written_at",
+            "write_provenance",
+            "source_event_id",
+            "conflict_policy",
+        ):
+            assert column_name in columns
+            assert int(columns[column_name][3]) == 0, f"{column_name} must remain nullable until row backfill"
+    finally:
+        engine.dispose()
+
+
+def test_secure_object_repository_bootstraps_old_table_revision_columns(tmp_path: Path) -> None:
+    """Repository construction upgrades an old-shape table before ORM reads.
+
+    The row is inserted through SQLAlchemy column types before the new
+    columns exist, matching a database created by the previous mapper.
+    Loading it through the current repository proves the bootstrap ran
+    before the mapper tried to select the added columns.
+    """
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "legacy-revision-bootstrap.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        payload = b"legacy-secure-object-payload"
+        try:
+            with engine.begin() as connection:
+                connection.exec_driver_sql(
+                    "CREATE TABLE secure_objects ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "namespace VARCHAR(128) NOT NULL, "
+                    "object_key BLOB NOT NULL, "
+                    "classification VARCHAR(32) NOT NULL, "
+                    "schema_version INTEGER NOT NULL, "
+                    "written_at DATETIME NOT NULL, "
+                    "payload BLOB NOT NULL, "
+                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
+                    ")"
+                )
+                connection.execute(
+                    SecureObjectRow.__table__.insert().values(
+                        namespace="aeat.legacy.revision",
+                        object_key="legacy-key",
+                        classification=SensitivityClass.FINANCIAL.value,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 12, 0, 0, tzinfo=UTC),
+                        payload=payload,
+                    )
+                )
+
+            repo = SecureObjectRepository(engine=engine)
+            loaded = repo.load(
+                "aeat.legacy.revision",
+                "legacy-key",
+                expected_class=SensitivityClass.FINANCIAL,
+                max_supported_version=1,
+            )
+
+            assert loaded is not None
+            assert loaded.payload == payload
+            with sqlite3.connect(db_path) as con:
+                columns = {str(row[1]) for row in con.execute("PRAGMA table_info(secure_objects)").fetchall()}
+                revision_values = con.execute(
+                    "SELECT revision_id, payload_hash, ciphertext_hash FROM secure_objects"
+                ).fetchone()
+            assert {"revision_id", "payload_hash", "ciphertext_hash"} <= columns
+            assert revision_values == (None, None, None)
         finally:
             engine.dispose()
 
@@ -464,6 +557,77 @@ def test_iter_all_records_raw_does_not_attempt_decryption_under_rotated_master_k
             assert len(rows) == 1
             # The ciphertext bytes are returned verbatim; no DecryptionError.
             assert rows[0].namespace == "aeat.rotated"
+        finally:
+            engine.dispose()
+
+
+def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) -> None:
+    """Quarantine copies lineage and integrity fields with unreadable ciphertext.
+
+    The source row is sealed under an old key, then annotated with
+    non-default revision metadata before reopening under a different key.
+    Quarantine must archive the opaque row without dropping the metadata
+    that later sync and repair flows rely on.
+    """
+
+    seed_provider = EphemeralMasterKeyProvider()
+    db_path = tmp_path / "quarantine-metadata.db"
+    namespace = "aeat.quarantine.metadata"
+    _seed_under_key(
+        db_path=db_path,
+        provider=seed_provider,
+        namespace=namespace,
+        natural_key="quarantine-key",
+        payload=b"quarantine-metadata-payload",
+    )
+    metadata_values = {
+        "revision_id": "a" * 64,
+        "previous_revision_id": "b" * 64,
+        "previous_payload_hash": "c" * 64,
+        "payload_hash": "d" * 64,
+        "ciphertext_hash": "e" * 64,
+        "revision_written_at": "2026-05-22T12:30:00+00:00",
+        "write_provenance": "test:quarantine-metadata",
+        "source_event_id": "event-2026-05-22-001",
+        "conflict_policy": "last-write-wins",
+    }
+    with sqlite3.connect(db_path) as con:
+        con.execute(
+            "UPDATE secure_objects SET "
+            "revision_id = :revision_id, "
+            "previous_revision_id = :previous_revision_id, "
+            "previous_payload_hash = :previous_payload_hash, "
+            "payload_hash = :payload_hash, "
+            "ciphertext_hash = :ciphertext_hash, "
+            "revision_written_at = :revision_written_at, "
+            "write_provenance = :write_provenance, "
+            "source_event_id = :source_event_id, "
+            "conflict_policy = :conflict_policy "
+            "WHERE namespace = :namespace",
+            {**metadata_values, "namespace": namespace},
+        )
+
+    with EphemeralMasterKeyProvider():
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        try:
+            report = SecureObjectRepository(engine=engine).quarantine_unreadable_rows()
+
+            assert report == (
+                SecureObjectNamespaceIntegrity(
+                    namespace=namespace,
+                    readable=0,
+                    unreadable=1,
+                ),
+            )
+            with sqlite3.connect(db_path) as con:
+                archived = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                    "conflict_policy FROM secure_objects_quarantine"
+                ).fetchone()
+                (remaining,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert archived == tuple(metadata_values.values())
+            assert remaining == 0
         finally:
             engine.dispose()
 

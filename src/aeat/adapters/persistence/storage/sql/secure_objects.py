@@ -9,7 +9,7 @@ from typing import cast
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.engine import CursorResult
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, OperationalError
 from sqlalchemy.orm import Session
 
 from .....core.classification import SensitivityClass
@@ -31,6 +31,17 @@ from .session import session_scope
 _log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
+_SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("revision_id", "VARCHAR(64)"),
+    ("previous_revision_id", "VARCHAR(64)"),
+    ("previous_payload_hash", "VARCHAR(64)"),
+    ("payload_hash", "VARCHAR(64)"),
+    ("ciphertext_hash", "VARCHAR(64)"),
+    ("revision_written_at", "DATETIME"),
+    ("write_provenance", "VARCHAR(255)"),
+    ("source_event_id", "VARCHAR(128)"),
+    ("conflict_policy", "VARCHAR(32)"),
+)
 
 
 class SecureObjectRecord(BaseModel):
@@ -179,6 +190,75 @@ class SecureObjectRepository:
         local_table = inspect(_orm.SecureObjectRow).local_table
         assert isinstance(local_table, _Table)
         local_table.create(self._engine, checkfirst=True)
+        self._ensure_table_revision_metadata_columns("secure_objects")
+
+    def _ensure_table_revision_metadata_columns(self, table_name: str) -> None:
+        """Add nullable revision metadata columns to a pre-existing table."""
+
+        existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
+        missing = tuple(
+            (name, column_type)
+            for name, column_type in _SECURE_OBJECT_REVISION_METADATA_COLUMNS
+            if name not in existing
+        )
+        if not missing:
+            return
+        for name, column_type in missing:
+            try:
+                with self._engine.begin() as connection:
+                    connection.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {name} {column_type}"))
+            except OperationalError as exc:
+                if self._is_duplicate_column_race(table_name, name, exc):
+                    _log.debug(
+                        "%s: revision metadata column %s was added by a concurrent bootstrap",
+                        table_name,
+                        name,
+                    )
+                    continue
+                raise
+        _log.debug(
+            "%s: added missing revision metadata columns: %s",
+            table_name,
+            ", ".join(name for name, _ in missing),
+        )
+
+    def _is_duplicate_column_race(self, table_name: str, column_name: str, exc: OperationalError) -> bool:
+        """Return whether an ``ALTER TABLE ADD COLUMN`` failed after a concurrent add."""
+
+        if "duplicate column" not in str(exc.orig).lower():
+            return False
+        existing = {column["name"] for column in inspect(self._engine).get_columns(table_name)}
+        return column_name in existing
+
+    def _ensure_quarantine_table(self) -> None:
+        """Create the quarantine archive table with the secure-object metadata shape."""
+
+        with self._engine.begin() as connection:
+            connection.execute(
+                text(
+                    "CREATE TABLE IF NOT EXISTS secure_objects_quarantine ("
+                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                    "  source_id INTEGER NOT NULL,"
+                    "  namespace VARCHAR(128) NOT NULL,"
+                    "  object_key BLOB NOT NULL,"
+                    "  classification VARCHAR(32) NOT NULL,"
+                    "  schema_version INTEGER NOT NULL,"
+                    "  written_at DATETIME NOT NULL,"
+                    "  revision_id VARCHAR(64),"
+                    "  previous_revision_id VARCHAR(64),"
+                    "  previous_payload_hash VARCHAR(64),"
+                    "  payload_hash VARCHAR(64),"
+                    "  ciphertext_hash VARCHAR(64),"
+                    "  revision_written_at DATETIME,"
+                    "  write_provenance VARCHAR(255),"
+                    "  source_event_id VARCHAR(128),"
+                    "  conflict_policy VARCHAR(32),"
+                    "  payload BLOB NOT NULL,"
+                    "  quarantined_at DATETIME NOT NULL"
+                    ")"
+                )
+            )
+        self._ensure_table_revision_metadata_columns("secure_objects_quarantine")
 
     @property
     def namespace_registry(self) -> StorageHierarchyRegistry | None:
@@ -463,22 +543,8 @@ class SecureObjectRepository:
         """
         from datetime import UTC
 
+        self._ensure_quarantine_table()
         with session_scope(self._engine) as session:
-            session.execute(
-                text(
-                    "CREATE TABLE IF NOT EXISTS secure_objects_quarantine ("
-                    "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                    "  source_id INTEGER NOT NULL,"
-                    "  namespace VARCHAR(128) NOT NULL,"
-                    "  object_key BLOB NOT NULL,"
-                    "  classification VARCHAR(32) NOT NULL,"
-                    "  schema_version INTEGER NOT NULL,"
-                    "  written_at DATETIME NOT NULL,"
-                    "  payload BLOB NOT NULL,"
-                    "  quarantined_at DATETIME NOT NULL"
-                    ")"
-                )
-            )
             quarantined_at = datetime.now(UTC).isoformat()
             namespaces = (
                 session.execute(text("SELECT DISTINCT namespace FROM secure_objects ORDER BY namespace"))
@@ -489,7 +555,10 @@ class SecureObjectRepository:
             for namespace in namespaces:
                 rows = session.execute(
                     text(
-                        "SELECT id, object_key, classification, schema_version, written_at, payload "
+                        "SELECT id, object_key, classification, schema_version, written_at, "
+                        "revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                        "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                        "conflict_policy, payload "
                         "FROM secure_objects WHERE namespace = :namespace"
                     ).bindparams(bindparam("namespace", value=namespace))
                 ).all()
@@ -516,9 +585,14 @@ class SecureObjectRepository:
                             text(
                                 "INSERT INTO secure_objects_quarantine "
                                 "(source_id, namespace, object_key, classification, schema_version, "
-                                " written_at, payload, quarantined_at) "
+                                " written_at, revision_id, previous_revision_id, previous_payload_hash, "
+                                " payload_hash, ciphertext_hash, revision_written_at, write_provenance, "
+                                " source_event_id, conflict_policy, payload, quarantined_at) "
                                 "VALUES (:source_id, :namespace, :object_key, :classification, "
-                                "        :schema_version, :written_at, :payload, :quarantined_at)"
+                                "        :schema_version, :written_at, :revision_id, "
+                                "        :previous_revision_id, :previous_payload_hash, :payload_hash, "
+                                "        :ciphertext_hash, :revision_written_at, :write_provenance, "
+                                "        :source_event_id, :conflict_policy, :payload, :quarantined_at)"
                             ),
                             {
                                 "source_id": int(raw.id),
@@ -527,6 +601,15 @@ class SecureObjectRepository:
                                 "classification": str(raw.classification),
                                 "schema_version": int(raw.schema_version),
                                 "written_at": raw.written_at,
+                                "revision_id": raw.revision_id,
+                                "previous_revision_id": raw.previous_revision_id,
+                                "previous_payload_hash": raw.previous_payload_hash,
+                                "payload_hash": raw.payload_hash,
+                                "ciphertext_hash": raw.ciphertext_hash,
+                                "revision_written_at": raw.revision_written_at,
+                                "write_provenance": raw.write_provenance,
+                                "source_event_id": raw.source_event_id,
+                                "conflict_policy": raw.conflict_policy,
                                 "payload": payload_bytes,
                                 "quarantined_at": quarantined_at,
                             },
