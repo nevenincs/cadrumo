@@ -11,6 +11,9 @@ consume; :func:`build_error_envelope` constructs the underlying
 
 Secret-looking context keys (matching :data:`_SECRET_FIELD_PATTERN`) are
 redacted before they ever reach stderr — see :func:`scrub_error_context`.
+Non-secret context values are also passed through
+:func:`aeat.core.redaction.redact_for_log` so NIF, URL, and bearer-token
+shapes share the same rule vocabulary as logs and observability.
 """
 
 from __future__ import annotations
@@ -25,6 +28,8 @@ from pathlib import PurePath
 from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict
+
+from ..redaction import redact_for_log
 
 _SECRET_FIELD_PATTERN = re.compile(
     r"(credential|token|secret|pkcs12|passphrase|cert_password|cookie|bearer)",
@@ -270,7 +275,7 @@ def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] 
         if _SECRET_FIELD_PATTERN.search(key):
             scrubbed[key] = "<redacted>"
         else:
-            scrubbed[key] = _stringify_context_value(value)
+            scrubbed[key] = redact_for_log(_stringify_context_value(value))
     return scrubbed or None
 
 
