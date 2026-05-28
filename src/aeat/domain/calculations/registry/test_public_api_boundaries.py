@@ -42,6 +42,17 @@ _LEDGER_BINDING_PUBLIC_NAMES = (
     "validate_ledger_iva_aggregation_binding_definition",
     "validate_ledger_oss_aggregation_binding_definition",
 )
+_CASILLA_CONTINUITY_PUBLIC_NAMES = (
+    "CasillaContinuidadEvolutionDefinition",
+    "CrossRevisionCasillaDivergence",
+    "CrossRevisionCasillaDriftSummary",
+    "summarize_non_overlapping_cross_revision_casilla_drift",
+)
+_CASILLA_CONTINUITY_PRIVATE_NAMES = (
+    "_iter_cross_revision_casilla_divergences",
+    "_validate_cross_revision_casilla_consistency",
+    "validate_cross_revision_casilla_consistency",
+)
 _MODELO_REGISTRY_PRIVATE_MODULES = ("_bindings", "_errors", "_record_design", "_schema")
 
 
@@ -50,6 +61,15 @@ def test_registry_ledger_binding_substrate_is_public_api() -> None:
 
     assert all(hasattr(registry, name) for name in _LEDGER_BINDING_PUBLIC_NAMES)
     assert set(_LEDGER_BINDING_PUBLIC_NAMES).issubset(exported)
+
+
+def test_registry_casilla_continuity_reports_are_public_api() -> None:
+    exported = set(registry.__all__)
+
+    assert all(hasattr(registry, name) for name in _CASILLA_CONTINUITY_PUBLIC_NAMES)
+    assert set(_CASILLA_CONTINUITY_PUBLIC_NAMES).issubset(exported)
+    assert not any(hasattr(registry, name) for name in _CASILLA_CONTINUITY_PRIVATE_NAMES)
+    assert exported.isdisjoint(_CASILLA_CONTINUITY_PRIVATE_NAMES)
 
 
 def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:

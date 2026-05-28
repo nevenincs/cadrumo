@@ -29,7 +29,7 @@ from aeat.application.modelo._actions import (
 )
 from aeat.core.resources import resources
 from aeat.domain.buckets import BucketEventHistoryRepository
-from aeat.domain.calculations.registry import VerificationPredicateDefinition
+from aeat.domain.calculations.registry import KNOWN_VERIFICATION_PREDICATE_OPERATORS, VerificationPredicateDefinition
 from aeat.domain.deadlines import IVARegime, TaxpayerProfile
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevisionCatalogue
@@ -457,7 +457,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     """P10.S68: the canonical predicate-operator set MUST be runtime-evaluable.
 
     The single source of truth lives at
-    aeat.domain.calculations.registry._schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
+    aeat.domain.calculations.registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS.
     The validator (in _validate_surfaces) uses it to reject unknown
     operators at registry-load time. The runtime evaluator
     (_evaluate_predicate_expression) has its own regex per operator.
@@ -473,10 +473,6 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
     test fires.
     """
     from aeat.application.modelo import _actions
-    from aeat.domain.calculations.registry._schema import (
-        KNOWN_VERIFICATION_PREDICATE_OPERATORS,
-    )
-
     probe_expressions: dict[str, str] = {
         "all_nonzero": 'all_nonzero(["01", "02"])',
         "any_nonzero": 'any_nonzero(["01", "02"])',
@@ -504,7 +500,7 @@ def test_runtime_evaluator_recognises_every_known_predicate_operator() -> None:
         assert regex is not None, (
             f"Runtime evaluator missing regex {regex_attr!r} for known operator "
             f"{operator_name!r}; the canonical set "
-            "(_schema.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
+            "(registry.KNOWN_VERIFICATION_PREDICATE_OPERATORS) and the runtime "
             "evaluator's regex set must stay in sync"
         )
         probe = probe_expressions[operator_name]
