@@ -474,7 +474,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P42.S199` - Author bank-PDF provider gate discipline N26-first extensible to BBVA Santander Caixabank etc (tasklist #68); `src/aeat/adapters/inbound/financial/providers/`.
+- [x] `W10.P42.S199` - Author bank-PDF provider gate discipline N26-first extensible to BBVA Santander Caixabank etc (tasklist #68); `src/aeat/adapters/inbound/financial/providers/`.
 
 ### Phase `W10.P43` - Borrador architectural audit — per-modelo class vs registry-profile
 
