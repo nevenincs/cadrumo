@@ -395,85 +395,85 @@ cli:
   app:
     ledger:
       collectible_invoice:
-        add_help: cli.app.ledger.collectible_invoice.add_help
-        country_code_help: cli.app.ledger.collectible_invoice.country_code_help
-        eu_vat_id_help: cli.app.ledger.collectible_invoice.eu_vat_id_help
-        group_help: cli.app.ledger.collectible_invoice.group_help
-        invoice_date_help: cli.app.ledger.collectible_invoice.invoice_date_help
-        invoice_id_help: cli.app.ledger.collectible_invoice.invoice_id_help
-        list_help: cli.app.ledger.collectible_invoice.list_help
-        operation_type_help: cli.app.ledger.collectible_invoice.operation_type_help
-        operation_type_invalid: cli.app.ledger.collectible_invoice.operation_type_invalid
-        remove_help: cli.app.ledger.collectible_invoice.remove_help
-        update_help: cli.app.ledger.collectible_invoice.update_help
-        view_help: cli.app.ledger.collectible_invoice.view_help
-        yes_help: cli.app.ledger.collectible_invoice.yes_help
-        yes_required: cli.app.ledger.collectible_invoice.yes_required
+        add_help: 'Új behajtatható számla regisztrálása.'
+        country_code_help: 'Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi műveletek).'
+        eu_vat_id_help: 'Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi műveletekhez.'
+        group_help: 'Vevők által tartozó számlák.'
+        invoice_date_help: 'Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).'
+        invoice_id_help: 'Számla azonosítója (vagy egyértelmű előtag).'
+        list_help: 'Regisztrált behajtatható számlák listázása.'
+        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M egyéb.'
+        operation_type_invalid: 'A --operation-type értéke csak a következők egyike lehet: {valid}'
+        remove_help: 'Regisztrált behajtatható számla törlése.'
+        update_help: 'Behajtatható számla adatainak frissítése.'
+        view_help: 'Behajtatható számla adatainak megjelenítése.'
+        yes_help: 'Behajtatható számla törlésének megerősítése.'
+        yes_required: 'Adja meg a --yes kapcsolót a behajtatható számla törléséhez.'
       evidence:
-        add_help: cli.app.ledger.evidence.add_help
-        evidence_id_help: cli.app.ledger.evidence.evidence_id_help
-        group_help: cli.app.ledger.evidence.group_help
-        invoice_date_help: cli.app.ledger.evidence.invoice_date_help
-        invoice_number_help: cli.app.ledger.evidence.invoice_number_help
-        iva_amount_help: cli.app.ledger.evidence.iva_amount_help
-        iva_rate_help: cli.app.ledger.evidence.iva_rate_help
-        list_help: cli.app.ledger.evidence.list_help
-        notes_help: cli.app.ledger.evidence.notes_help
-        remove_help: cli.app.ledger.evidence.remove_help
-        source_path_help: cli.app.ledger.evidence.source_path_help
-        supplier_help: cli.app.ledger.evidence.supplier_help
-        taxable_base_help: cli.app.ledger.evidence.taxable_base_help
-        update_help: cli.app.ledger.evidence.update_help
-        view_help: cli.app.ledger.evidence.view_help
-        yes_help: cli.app.ledger.evidence.yes_help
-        yes_required: cli.app.ledger.evidence.yes_required
+        add_help: 'Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.'
+        evidence_id_help: 'Bizonyíték azonosítója (vagy egyértelmű előtag).'
+        group_help: 'Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.'
+        invoice_date_help: 'Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).'
+        invoice_number_help: 'Szállítói számlaszám.'
+        iva_amount_help: 'Számla IVA-összege.'
+        iva_rate_help: 'Alkalmazott IVA-kulcs tizedes törtként.'
+        list_help: 'Regisztrált vásárlásiszámla-bizonyítékok listázása.'
+        notes_help: 'Belső megjegyzések a bizonyítékról.'
+        remove_help: 'Vásárlásiszámla-bizonyíték törlése.'
+        source_path_help: 'A számla PDF- vagy képfájljának elérési útja.'
+        supplier_help: 'Szállító neve.'
+        taxable_base_help: 'Számla adóköteles alapja.'
+        update_help: 'Vásárlásiszámla-bizonyíték adatainak frissítése.'
+        view_help: 'Vásárlásiszámla-bizonyíték megjelenítése.'
+        yes_help: 'Bizonyíték törlésének megerősítése.'
+        yes_required: 'Adja meg a --yes kapcsolót a bizonyíték törléséhez.'
       inventory:
-        actividad_id_help: cli.app.ledger.inventory.actividad_id_help
-        create_help: cli.app.ledger.inventory.create_help
-        group_help: cli.app.ledger.inventory.group_help
-        list_help: cli.app.ledger.inventory.list_help
-        movement_add_help: cli.app.ledger.inventory.movement_add_help
-        movement_date_help: cli.app.ledger.inventory.movement_date_help
-        movement_group_help: cli.app.ledger.inventory.movement_group_help
-        movement_id_help: cli.app.ledger.inventory.movement_id_help
-        movement_kind_help: cli.app.ledger.inventory.movement_kind_help
-        opening_stock_help: cli.app.ledger.inventory.opening_stock_help
-        quantity_help: cli.app.ledger.inventory.quantity_help
-        taxable_base_help: cli.app.ledger.inventory.taxable_base_help
-        unit_cost_help: cli.app.ledger.inventory.unit_cost_help
-        unknown_movement_kind: cli.app.ledger.inventory.unknown_movement_kind
-        valuation_group_help: cli.app.ledger.inventory.valuation_group_help
-        valuation_method_help: cli.app.ledger.inventory.valuation_method_help
-        valuation_preview_help: cli.app.ledger.inventory.valuation_preview_help
-        vat_rate_help: cli.app.ledger.inventory.vat_rate_help
-        year_help: cli.app.ledger.inventory.year_help
+        actividad_id_help: 'Gazdasági tevékenység azonosítója.'
+        create_help: 'Készlet-főkönyv létrehozása egy tevékenységhez és adóévhez.'
+        group_help: 'Készlet-főkönyvek tevékenységek, mozgások és értékelés szerint.'
+        list_help: 'Készlet-főkönyvek listázása az aktív bucketben.'
+        movement_add_help: 'Vásárlási, értékesítési vagy helyesbítési mozgás hozzáadása a főkönyvhöz.'
+        movement_date_help: 'Mozgás dátuma (ÉÉÉÉ-HH-NN).'
+        movement_group_help: 'Készlet-főkönyvi mozgások kezelése.'
+        movement_id_help: 'A mozgás azonosítója a főkönyvön belül.'
+        movement_kind_help: 'Mozgás típusa (purchase, sale, adjustment).'
+        opening_stock_help: 'Nyitókészlet értéke.'
+        quantity_help: 'Mozgás mennyisége, pozitív vagy negatív.'
+        taxable_base_help: 'A mozgáshoz kapcsolt adóköteles alap.'
+        unit_cost_help: 'Egységár vásárlási mozgásokhoz.'
+        unknown_movement_kind: 'Ismeretlen mozgástípus: {kind!r}'
+        valuation_group_help: 'Készletértékelés számítása és előnézete.'
+        valuation_method_help: 'Értékelési módszer (fifo vagy pmp).'
+        valuation_preview_help: 'Zárópreparát és értékesítési önköltség előnézete.'
+        vat_rate_help: 'IVA-kulcs százalékban.'
+        year_help: 'Adóév.'
       payable_invoice:
-        add_help: cli.app.ledger.payable_invoice.add_help
-        country_code_help: cli.app.ledger.payable_invoice.country_code_help
-        eu_vat_id_help: cli.app.ledger.payable_invoice.eu_vat_id_help
-        group_help: cli.app.ledger.payable_invoice.group_help
-        invoice_date_help: cli.app.ledger.payable_invoice.invoice_date_help
-        invoice_id_help: cli.app.ledger.payable_invoice.invoice_id_help
-        list_help: cli.app.ledger.payable_invoice.list_help
-        operation_type_help: cli.app.ledger.payable_invoice.operation_type_help
-        operation_type_invalid: cli.app.ledger.payable_invoice.operation_type_invalid
-        remove_help: cli.app.ledger.payable_invoice.remove_help
-        update_help: cli.app.ledger.payable_invoice.update_help
-        view_help: cli.app.ledger.payable_invoice.view_help
-        yes_help: cli.app.ledger.payable_invoice.yes_help
-        yes_required: cli.app.ledger.payable_invoice.yes_required
+        add_help: 'Új fizetendő számla regisztrálása.'
+        country_code_help: 'Szerződő fél ISO 3166-1 alpha-2 országkódja (EU intraközösségi műveletek).'
+        eu_vat_id_help: 'Szerződő fél EU ÁFA-azonosítója (pl. DE345678901) intraközösségi műveletekhez.'
+        group_help: 'Szállítóknak fizetendő számlák.'
+        invoice_date_help: 'Számla kiállítási dátuma (ÉÉÉÉ-HH-NN).'
+        invoice_id_help: 'Számla azonosítója (vagy egyértelmű előtag).'
+        list_help: 'Regisztrált fizetendő számlák listázása.'
+        operation_type_help: 'M349 művelettípus: E áruszállítás, S szolgáltatás, T háromszögügylet, R helyesbítés, A áruátvétel, I szolgáltatásvásárlás, M egyéb.'
+        operation_type_invalid: 'A --operation-type értéke csak a következők egyike lehet: {valid}'
+        remove_help: 'Regisztrált fizetendő számla törlése.'
+        update_help: 'Fizetendő számla adatainak frissítése.'
+        view_help: 'Fizetendő számla adatainak megjelenítése.'
+        yes_help: 'Fizetendő számla törlésének megerősítése.'
+        yes_required: 'Adja meg a --yes kapcsolót a fizetendő számla törléséhez.'
       ratios:
-        category_help: cli.app.ledger.ratios.category_help
-        eligible_help: cli.app.ledger.ratios.eligible_help
-        group_help: cli.app.ledger.ratios.group_help
-        list_help: cli.app.ledger.ratios.list_help
-        no_override_error: cli.app.ledger.ratios.no_override_error
-        ratio_help: cli.app.ledger.ratios.ratio_help
-        set_help: cli.app.ledger.ratios.set_help
-        unknown_category: cli.app.ledger.ratios.unknown_category
-        unset_category_help: cli.app.ledger.ratios.unset_category_help
-        unset_help: cli.app.ledger.ratios.unset_help
-        validate_help: cli.app.ledger.ratios.validate_help
+        category_help: 'Kiadási kategóriaazonosító (pl. USAGE_RATIO_VEHICLE).'
+        eligible_help: 'Egy adott arányhoz alkalmas kategóriák listázása.'
+        group_help: 'Üzleti célú arányok kiadási kategóriánként.'
+        list_help: 'Kategóriaarányok listázása az aktív bucketben.'
+        no_override_error: 'Nincs mentett arány a(z) {category!r} kategóriához a(z) {bucket_id!r} bucketben.'
+        ratio_help: 'Alkalmazandó arány 0 és 1 között.'
+        set_help: 'Arány beállítása vagy cseréje egy kategóriához.'
+        unknown_category: 'Ismeretlen kiadási kategória: {raw!r}'
+        unset_category_help: 'A törlendő arányú kategóriaazonosító.'
+        unset_help: 'Egy kategória konkrét arányának eltávolítása.'
+        validate_help: 'Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.'
       rule:
         actor_help: Operator identifier recorded in the rule provenance.
         add_help: Add a classification rule that auto-classifies matching transactions.
@@ -493,31 +493,31 @@ cli:
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
     live:
-      app_help: cli.app.live.app_help
+      app_help: 'Csak olvasható AEAT élő megfigyelési parancsok.'
       borrador:
-        app_help: cli.app.live.borrador.app_help
-        filing_year_help: cli.app.live.borrador.filing_year_help
-        invalid_state: cli.app.live.borrador.invalid_state
-        latest_help: cli.app.live.borrador.latest_help
-        list_help: cli.app.live.borrador.list_help
-        modelo_100_help: cli.app.live.borrador.modelo_100_help
-        snapshot_id_help: cli.app.live.borrador.snapshot_id_help
-        state_help: cli.app.live.borrador.state_help
-        view_help: cli.app.live.borrador.view_help
-      expediente_help: cli.app.live.expediente_help
+        app_help: 'Modelo 100 borrador pillanatképek.'
+        filing_year_help: 'Benyújtási év (pl. 2024).'
+        invalid_state: 'A --state értéke csak a következők egyike lehet: active, superseded, discarded, all.'
+        latest_help: 'A legfrissebb aktív pillanatkép megjelenítése egy benyújtási évre.'
+        list_help: 'Mentett Modelo 100 borrador pillanatképek listázása.'
+        modelo_100_help: 'Modelo 100 borrador pillanatkép-parancsok.'
+        snapshot_id_help: 'Pillanatkép-azonosító (vagy egyértelmű előtag).'
+        state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy all.'
+        view_help: 'Egyetlen Modelo 100 borrador pillanatkép megjelenítése.'
+      expediente_help: 'AEAT expediente azonosító.'
       expedientes:
-        app_help: cli.app.live.expedientes.app_help
-        capture_help: cli.app.live.expedientes.capture_help
-        latest_help: cli.app.live.expedientes.latest_help
-        list_help: cli.app.live.expedientes.list_help
-        snapshot_id_help: cli.app.live.expedientes.snapshot_id_help
-        view_help: cli.app.live.expedientes.view_help
+        app_help: 'Csak olvasható AEAT expediente pillanatképek.'
+        capture_help: 'AEAT bevallási nyilvántartási adatok rögzítése és pillanatkép mentése.'
+        latest_help: 'A legfrissebb expediente pillanatkép megjelenítése.'
+        list_help: 'Mentett expediente pillanatképek listázása.'
+        snapshot_id_help: 'Pillanatkép-azonosító (vagy egyértelmű előtag).'
+        view_help: 'Expediente pillanatkép megjelenítése.'
       filed:
-        capture_help: cli.app.live.filed.capture_help
-        capture_sources_help: cli.app.live.filed.capture_sources_help
-        list_help: cli.app.live.filed.list_help
-      filed_app_help: cli.app.live.filed_app_help
-      from_year_help: cli.app.live.from_year_help
+        capture_help: 'Benyújtott bevallási adatok rögzítése az AEAT-ból.'
+        capture_sources_help: 'Egy célbenyújtáshoz szükséges benyújtott megfigyelések rögzítése.'
+        list_help: 'Benyújtott bevallássorok listázása artefaktok letöltése nélkül.'
+      filed_app_help: 'Csak olvasható benyújtott bevallás-megfigyelések.'
+      from_year_help: 'Első benyújtási év.'
       iva_wallet:
         acquisition:
           outcome:
@@ -532,96 +532,96 @@ cli:
             qr_required: QR-jóváhagyás szükséges
             unknown: ismeretlen
             wrong_identity: hibás személyazonosság
-        app_help: cli.app.live.iva_wallet.app_help
-        as_of_year_help: cli.app.live.iva_wallet.as_of_year_help
-        capture_history_help: cli.app.live.iva_wallet.capture_history_help
+        app_help: 'AEAT IVA-kompenzációs pénztárca rögzítése (csak olvasható; kizárólag saját nevű képviseletet és a védett pénztárca-lekérdezést engedélyez).'
+        as_of_year_help: 'Az IVA-kompenzációs átviteli tételek korosításához használt év.'
+        capture_history_help: 'Benyújtott Modelo 303 előzmények élő rögzítése és biztonságos IVA-kompenzációs állapot megőrzése. Az AEAT-nak nem nyújt be bevallást és nem végez pénztárca-formanyomtatvány-műveletet.'
         capture_remote_state_help: Élőben rögzíti a benyújtott Modelo 303 előzményeket,
           és egy típusos, csak olvasható beszerzésként megkísérli az AEAT IVA cartera
           lekérdezését.
-        history_help: cli.app.live.iva_wallet.history_help
-        pull_help: cli.app.live.iva_wallet.pull_help
-        taxpayer_nif_help: cli.app.live.iva_wallet.taxpayer_nif_help
-      limit_help: cli.app.live.limit_help
-      modelo_help: cli.app.live.modelo_help
+        history_help: 'Helyi biztonságos IVA-kompenzációs előzmények, átviteli tételek és Modelo 303 rögzítésekből származó megőrzött pénztárca-döntések listázása.'
+        pull_help: 'Az AEAT IVA-kompenzációs pénztárcájának élő lekérése és megőrzése. Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés; képviseleti kapuk csak saját nevű módban folytatódnak.'
+        taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
+      limit_help: 'Rögzítendő sorok maximális száma.'
+      modelo_help: 'Nyomtatványkód.'
       notifications:
-        app_help: cli.app.live.notifications.app_help
-        capture_help: cli.app.live.notifications.capture_help
-        list_help: cli.app.live.notifications.list_help
-        snapshot_id_help: cli.app.live.notifications.snapshot_id_help
-        view_help: cli.app.live.notifications.view_help
-      output_root_help: cli.app.live.output_root_help
-      period_help: cli.app.live.period_help
+        app_help: 'Csak olvasható DEHú értesítés-pillanatképek.'
+        capture_help: 'DEHú értesítések rögzítése és pillanatkép mentése.'
+        list_help: 'Mentett DEHú értesítés-pillanatképek listázása.'
+        snapshot_id_help: 'Pillanatkép-azonosító (vagy egyértelmű előtag).'
+        view_help: 'DEHú értesítés-pillanatkép megjelenítése.'
+      output_root_help: 'Könyvtár a rögzített benyújtott bevallás-megfigyelésekhez.'
+      period_help: 'Benyújtási időszak.'
       portals:
-        app_help: cli.app.live.portals.app_help
-        category_help: cli.app.live.portals.category_help
-        category_modelo_exclusive: cli.app.live.portals.category_modelo_exclusive
-        list_help: cli.app.live.portals.list_help
-        modelo_help: cli.app.live.portals.modelo_help
-        portal_id_help: cli.app.live.portals.portal_id_help
-        unknown_category: cli.app.live.portals.unknown_category
-        view_help: cli.app.live.portals.view_help
-      registry_root_help: cli.app.live.registry_root_help
-      source_root_help: cli.app.live.source_root_help
-      to_year_help: cli.app.live.to_year_help
+        app_help: 'Csak olvasható helyi AEAT portálkatalógus.'
+        category_help: 'Szűrés portálkategória szerint.'
+        category_modelo_exclusive: 'A --category és a --modelo kölcsönösen kizárják egymást.'
+        list_help: 'Portálkatalógus-bejegyzések listázása.'
+        modelo_help: 'Szűrés egy nyomtatványhoz kapcsolt portálokra.'
+        portal_id_help: 'Portál azonosítója.'
+        unknown_category: 'Ismeretlen portálkategória: {category}.'
+        view_help: 'Portálkatalógus-bejegyzés megjelenítése.'
+      registry_root_help: 'Nyilvántartás gyökere.'
+      source_root_help: 'Projekt forráskódjának gyökere.'
+      to_year_help: 'Utolsó benyújtási év.'
       verify:
-        app_help: cli.app.live.verify.app_help
-        expected_help: cli.app.live.verify.expected_help
-        expected_values_error: cli.app.live.verify.expected_values_error
-        latest_help: cli.app.live.verify.latest_help
-        latest_nif_help: cli.app.live.verify.latest_nif_help
-        latest_surface_help: cli.app.live.verify.latest_surface_help
-        list_help: cli.app.live.verify.list_help
-        nif_help: cli.app.live.verify.nif_help
-        nif_iva_arg_help: cli.app.live.verify.nif_iva_arg_help
-        nif_iva_help: cli.app.live.verify.nif_iva_help
-        no_observation_for_nif: cli.app.live.verify.no_observation_for_nif
-        observation_id_help: cli.app.live.verify.observation_id_help
-        surface_help: cli.app.live.verify.surface_help
-        tgvi_arg_help: cli.app.live.verify.tgvi_arg_help
-        tgvi_help: cli.app.live.verify.tgvi_help
-        unknown_surface: cli.app.live.verify.unknown_surface
-        view_help: cli.app.live.verify.view_help
-      year_help: cli.app.live.year_help
+        app_help: 'Csak olvasható NIF-ellenőrzési auditnaplók.'
+        expected_help: 'Opcionális elvárt eredmény (valid, invalid vagy unknown).'
+        expected_values_error: 'Az --expected értéke csak a következők egyike lehet: valid, invalid, unknown.'
+        latest_help: 'A legfrissebb megfigyelés megjelenítése felületre és NIF-re.'
+        latest_nif_help: 'A keresett NIF.'
+        latest_surface_help: 'Ellenőrzési felület: nif_iva vagy tgvi.'
+        list_help: 'Mentett ellenőrzési megfigyelések listázása.'
+        nif_help: 'Szűrés egy NIF szerint.'
+        nif_iva_arg_help: 'NIF-IVA érték (pl. ESB12345678).'
+        nif_iva_help: 'Intraközösségi NIF-IVA ellenőrzése az AEAT IXVI rendszerében és a megfigyelés mentése.'
+        no_observation_for_nif: 'Nem érkezett megfigyelés a(z) {nif} NIF-hez.'
+        observation_id_help: 'Megfigyelés azonosítója (vagy egyértelmű előtag).'
+        surface_help: 'Szűrés felület szerint: nif_iva vagy tgvi.'
+        tgvi_arg_help: 'Ellenőrizendő spanyol NIF/NIE.'
+        tgvi_help: 'NIF ROI/VIES-regisztrációjának ellenőrzése a GROI-ban és a megfigyelés mentése.'
+        unknown_surface: 'Ismeretlen ellenőrzési felület: {surface} (nif_iva vagy tgvi elvárt).'
+        view_help: 'Mentett ellenőrzési megfigyelés megjelenítése.'
+      year_help: 'Benyújtási év.'
     modelo:
       aggregate:
-        counterpart_observation_help: cli.app.modelo.aggregate.counterpart_observation_help
-        foreign_asset_observation_help: cli.app.modelo.aggregate.foreign_asset_observation_help
-        json_not_object: cli.app.modelo.aggregate.json_not_object
-        json_parse_error: cli.app.modelo.aggregate.json_parse_error
-        json_validation_error: cli.app.modelo.aggregate.json_validation_error
-        modelo_help: cli.app.modelo.aggregate.modelo_help
-        period_help: cli.app.modelo.aggregate.period_help
-        retencion_observation_help: cli.app.modelo.aggregate.retencion_observation_help
-      aggregate_help: cli.app.modelo.aggregate_help
-      app_help: cli.app.modelo.app_help
+        counterpart_observation_help: 'JSON CounterpartObservation objektum. A source_kind értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice lehet. Több megfigyeléshez ismételje meg.'
+        foreign_asset_observation_help: 'JSON ForeignAssetObservation objektum. A source_kind értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice lehet. Több megfigyeléshez ismételje meg.'
+        json_not_object: 'A(z) {flag} értékének JSON-objektumnak kell lennie.'
+        json_parse_error: 'A(z) {flag} értékének JSON-objektumnak kell lennie; érvénytelen JSON a(z) {pos}. bájtnál.'
+        json_validation_error: 'A(z) {flag} értéke nem érvényes megfigyelési objektum: {details}.'
+        modelo_help: 'A háttéraggregálási szolgáltatás által támogatott nyomtatványkód (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).'
+        period_help: 'A háttérszolgáltatásnak átadott aggregálási időszak.'
+        retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice lehet. Több megfigyeléshez ismételje meg.'
+      aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása explicit kanonikus megfigyelésekből. Elfogadott source_kind értékek: ledger_transaction, purchase_invoice_evidence, payable_invoice és collectible_invoice.'
+      app_help: 'Az AEAT adónyomtatványok (modelók) nyilvántartási katalógusának vizsgálata.'
       audit:
-        bundle_id_help: cli.app.modelo.audit.bundle_id_help
-        check_help: cli.app.modelo.audit.check_help
-        export_help: cli.app.modelo.audit.export_help
-        force_incomplete_help: cli.app.modelo.audit.force_incomplete_help
-        group_help: cli.app.modelo.audit.group_help
-        output_help: cli.app.modelo.audit.output_help
-        replay_help: cli.app.modelo.audit.replay_help
-        show_help: cli.app.modelo.audit.show_help
+        bundle_id_help: 'Bizonyítékcsomag azonosítója (teljes SHA-256 vagy egyértelmű előtag).'
+        check_help: 'Bizonyítékcsomag újraellenőrzése a rekord-kivonatok újraszámításával.'
+        export_help: 'A bizonyítékcsomag determinisztikus ZIP-archívumba írása (manifest.json utolsóként kerül bele).'
+        force_incomplete_help: 'Az exportálás engedélyezése akkor is, ha az ellenőrzés hiányosként jelöli a csomagot.'
+        group_help: 'Bizonyítékcsomag-audit parancsok (show/check/export/replay).'
+        output_help: 'A csomag ZIP-archívumának kimeneti útvonala.'
+        replay_help: 'A bizonyítékeset-ellenőrzés újrafuttatása törvényszéki audit-átadáshoz; soha nem lép kapcsolatba az AEAT-tal és nem végez benyújtást.'
+        show_help: 'Bizonyítékcsomag manifesztjének és hivatkozott rekordjainak megjelenítése.'
       bindings:
-        app_help: cli.app.modelo.bindings.app_help
-        as_of_help: cli.app.modelo.bindings.as_of_help
-        list_help: cli.app.modelo.bindings.list_help
-        missing_help: cli.app.modelo.bindings.missing_help
-        missing_required_options: cli.app.modelo.bindings.missing_required_options
-        modelo_help: cli.app.modelo.bindings.modelo_help
-        override_help: cli.app.modelo.bindings.override_help
-        period_help: cli.app.modelo.bindings.period_help
-        preview_help: cli.app.modelo.bindings.preview_help
-        unknown_keys: cli.app.modelo.bindings.unknown_keys
-        year_help: cli.app.modelo.bindings.year_help
+        app_help: 'Egy AEAT adónyomtatvány kötéseinek vizsgálata és előnézete.'
+        as_of_help: 'A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).'
+        list_help: 'Az adott nyomtatvány/év/időszak szükséges és elérhető kötéseinek listázása.'
+        missing_help: 'Szűrés a feloldott értékkel nem rendelkező kötésekre (bucket / főkönyv / profil adatokat igényelnek).'
+        missing_required_options: 'Hiányzó kötelező beállítások: %{options}'
+        modelo_help: 'Adónyomtatvány kódja (pl. 303, 130, 100).'
+        override_help: 'Ideiglenes kötési felülbírálat KEY=VALUE szintaxissal (ismételhető).'
+        period_help: 'Időszaktokent: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036) használja: alta, modificacion vagy baja.'
+        preview_help: 'Kötések előnézete ideiglenes felülbírálással az állapot megváltoztatása nélkül.'
+        unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z) {code}@{revision} ({period}) számára: {suggestion}.'
+        year_help: 'A nyomtatvány adóéve (pl. 2026).'
       casillas:
-        as_of_help: cli.app.modelo.casillas.as_of_help
-        form_number_help: cli.app.modelo.casillas.form_number_help
-        input_kind_help: cli.app.modelo.casillas.input_kind_help
-        modelo_help: cli.app.modelo.casillas.modelo_help
-        period_help: cli.app.modelo.casillas.period_help
-        required_help: cli.app.modelo.casillas.required_help
+        as_of_help: 'A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).'
+        form_number_help: 'Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl. 46).'
+        input_kind_help: 'Mezők szűrése beviteli típus szerint (manual, bound, computed, informational).'
+        modelo_help: 'Adónyomtatvány kódja (pl. 303, 130, 100).'
+        period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja; időszaki példák: 2026N1, 2026-01.'
+        required_help: 'Csak a nyomtatvány által kötelezőként jelölt mezők megjelenítése.'
       compare:
         modelo_help: Az összehasonlítandó modell száma (pl. 100, 130).
         need_two_years: Pontosan két --year értéket kell megadni (pl. --year 2024
@@ -639,99 +639,99 @@ cli:
         revízióit. Casillánként emittál különbség-sorokat (év_b - év_a) szekciónként
         csoportosítva.
       describe:
-        as_of_help: cli.app.modelo.describe.as_of_help
-        modelo_help: cli.app.modelo.describe.modelo_help
-        period_help: cli.app.modelo.describe.period_help
-        period_token_invalid: cli.app.modelo.describe.period_token_invalid
+        as_of_help: 'A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).'
+        modelo_help: 'Adónyomtatvány kódja (pl. 303, 130, 100).'
+        period_help: 'A nyomtatvány-revíziót feloldó időszaktokent: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
+        period_token_invalid: 'A --period "%{period}" nem érvényes időszaktokent a(z) %{modelo} nyomtatványhoz. Érvényes tokenek: %{tokens}.'
       export:
-        actor_help: cli.app.modelo.export.actor_help
+        actor_help: 'A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.'
         errors:
-          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
-        help: cli.app.modelo.export.help
-        output_help: cli.app.modelo.export.output_help
-        revision_help: cli.app.modelo.export.revision_help
-        work_unit_id_help: cli.app.modelo.export.work_unit_id_help
+          no_exportable_revision: 'Nincs exportálható revízió: a munkaegységnek nincs hitelesített-teljes vagy benyújtott revíziója.'
+        help: 'Hitelesített-teljes vagy benyújtott nyomtatvány-revízió exportálása helyi AEAT-kompatibilis fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        output_help: 'A fichero-BOE artefakt írásának elérési útja.'
+        revision_help: 'Az exportálandó számítási revízió azonosítója; alapértelmezés: a munkaegység legújabb hitelesített-teljes vagy benyújtott revíziója.'
+        work_unit_id_help: 'Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).'
       filing_record:
-        app_help: cli.app.modelo.filing_record.app_help
-        bucket_id_help: cli.app.modelo.filing_record.bucket_id_help
-        evidence_kind_help: cli.app.modelo.filing_record.evidence_kind_help
-        evidence_reference_id_help: cli.app.modelo.filing_record.evidence_reference_id_help
-        filing_record_id_help: cli.app.modelo.filing_record.filing_record_id_help
-        import_casilla_help: cli.app.modelo.filing_record.import_casilla_help
-        import_help: cli.app.modelo.filing_record.import_help
-        import_set_required: cli.app.modelo.filing_record.import_set_required
-        include_superseded_help: cli.app.modelo.filing_record.include_superseded_help
-        invalid_evidence_kind: cli.app.modelo.filing_record.invalid_evidence_kind
-        list_help: cli.app.modelo.filing_record.list_help
-        view_help: cli.app.modelo.filing_record.view_help
+        app_help: 'Belső benyújtási rekordok vizsgálata.'
+        bucket_id_help: 'Szűrés bucket szerint.'
+        evidence_kind_help: 'Importált bizonyíték típusa (aeat_justificante_pdf, aeat_csv_register, aeat_live_capture).'
+        evidence_reference_id_help: 'Az importált bizonyíték stabil hivatkozási azonosítója (justificante-szám, CSV-nyilvántartás-azonosító, élő rögzítés azonosítója).'
+        filing_record_id_help: 'Stabil benyújtási rekord-azonosító.'
+        import_casilla_help: 'Importált mezőérték CASILLA=DECIMAL szintaxissal (ismételhető; legalább egy szükséges).'
+        import_help: 'Külsőleg benyújtott bevallás megőrzése alap-benyújtási rekordként, importált AEAT-igazolt bizonyítékkal.'
+        import_set_required: 'A --set legalább egyszer kötelező importáláshoz.'
+        include_superseded_help: 'Felváltott benyújtási rekordok bevonása (alapértelmezés szerint kizárva).'
+        invalid_evidence_kind: 'A --evidence-kind értéke csak {canonical} egyike lehet; kapott: {kind}.'
+        list_help: 'Regisztrált benyújtási rekordok listázása.'
+        view_help: 'Egy benyújtási rekord megjelenítése azonosító alapján.'
       formulas:
-        as_of_help: cli.app.modelo.formulas.as_of_help
-        explain_help: cli.app.modelo.formulas.explain_help
-        modelo_help: cli.app.modelo.formulas.modelo_help
-        period_help: cli.app.modelo.formulas.period_help
+        as_of_help: 'A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).'
+        explain_help: 'Az egyes képleteket megalapozó legal_refs és source_refs bevonása a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.'
+        modelo_help: 'Adónyomtatvány kódja (pl. 303, 130, 100).'
+        period_help: 'Időszaktokent; Modelo 036-hoz: alta, modificacion vagy baja; időszaki példák: 2026N1, 2026-01.'
       history:
-        modelo_help: cli.app.modelo.history.modelo_help
-        period_help: cli.app.modelo.history.period_help
-        year_help: cli.app.modelo.history.year_help
-      history_help: cli.app.modelo.history_help
+        modelo_help: 'Nyomtatványkód (pl. 100, 303).'
+        period_help: 'Opcionális időszakszűrő (pl. N1, annual).'
+        year_help: 'Opcionális benyújtási év szűrő.'
+      history_help: 'Egy nyomtatvány kronológiai életciklus-auditjának megjelenítése.'
       iva_wallet:
         as_of_year_help: Reference year for carry-forward age and expiry calculations.
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history.
         group_help: Local IVA compensation wallet balance commands.
-        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
-        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
-        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
-        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
-        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
-        seed_help: cli.app.modelo.iva_wallet.seed_help
-        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
-        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
-        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
-        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
+        seed_amount_help: 'Az IVA-kompenzáció kezdő összege decimálisban.'
+        seed_confirm_help: 'Erősítse meg a vetőösszeg műveletet.'
+        seed_confirm_required: 'Adja meg a --confirm kapcsolót a vetőösszeg-művelet megerősítéséhez.'
+        seed_conflict: 'Belső hiba: ütközés a meglévő IVA-kompenzációs vetőösszeg-rekorddal.'
+        seed_filing_year_help: 'A vetőösszeg benyújtási éve.'
+        seed_help: 'IVA-kompenzációs pénztárca vetőösszeg-rekord létrehozása a korábbi pénztárca-egyenleg inicializálásához.'
+        seed_invalid_amount: 'A vetőösszegnek érvényes, nem negatív decimálisnak kell lennie.'
+        seed_negative_amount: 'A vetőösszeg nem lehet negatív.'
+        seed_no_nif: 'Nincs NIF meghatározva a vetőösszeg-művelethez; kapcsolja az aktív profilhoz.'
+        seed_period_help: 'A vetőösszeg időszaka (pl. 2024N4).'
       list:
-        year_help: cli.app.modelo.list.year_help
+        year_help: 'A nyomtatványkatalógus szűrése egyetlen adóévre.'
       project:
-        binding_help: cli.app.modelo.project.binding_help
-        casilla_help: cli.app.modelo.project.casilla_help
-        ccaa_help: cli.app.modelo.project.ccaa_help
-        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
-        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
-        no_m130_units: cli.app.modelo.project.no_m130_units
-        year_help: cli.app.modelo.project.year_help
-      project_help: cli.app.modelo.project_help
+        binding_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető).'
+        casilla_help: 'Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető).'
+        ccaa_help: 'Autonóm közösség kódja a területi vetítéshez.'
+        m100_calculation_error: 'Belső hiba: Modelo 100 számítás sikertelen.'
+        no_m130_revisions: 'Nincs M130-revízió a megadott évre.'
+        no_m130_units: 'Nincs M130 munkaegység a megadott évre és időszakra.'
+        year_help: 'Adóév a vetítéshez.'
+      project_help: 'Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130 összesítés).'
       readiness:
-        modelo_help: cli.app.modelo.readiness.modelo_help
-        period_help: cli.app.modelo.readiness.period_help
-        revision_help: cli.app.modelo.readiness.revision_help
-        year_help: cli.app.modelo.readiness.year_help
-      readiness_help: cli.app.modelo.readiness_help
+        modelo_help: 'Nyomtatványkód (pl. 303).'
+        period_help: 'Időszaktokent (pl. N1, annual).'
+        revision_help: 'Nyilvántartási revízió azonosítója.'
+        year_help: 'Benyújtási év.'
+      readiness_help: 'Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak benyújtására.'
       reconcile:
         errors:
-          exclusive_source: cli.app.modelo.reconcile.errors.exclusive_source
-          missing_source: cli.app.modelo.reconcile.errors.missing_source
-        from_declaration_help: cli.app.modelo.reconcile.from_declaration_help
-        from_justificante_help: cli.app.modelo.reconcile.from_justificante_help
-        help: cli.app.modelo.reconcile.help
-        work_unit_id_help: cli.app.modelo.reconcile.work_unit_id_help
+          exclusive_source: 'A --from-justificante és a --from-declaration kölcsönösen kizárják egymást.'
+          missing_source: 'Adja meg: --from-justificante ÚTVONAL vagy --from-declaration ÚTVONAL.'
+        from_declaration_help: 'A benyújtott bevallás PDF-jének elérési útja az egyeztetéshez (fenntartott; elemző függőben).'
+        from_justificante_help: 'Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.'
+        help: 'Nyomtatvány-munkaegység egyeztetése külső bizonyítékkal (justificante PDF). Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        work_unit_id_help: 'Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).'
       reconcile_from_justificante:
-        help: cli.app.modelo.reconcile_from_justificante.help
-        justificante_path_help: cli.app.modelo.reconcile_from_justificante.justificante_path_help
-        work_unit_id_help: cli.app.modelo.reconcile_from_justificante.work_unit_id_help
+        help: 'Nyomtatvány-munkaegység egyeztetése justificante PDF-fel. Gyorskezelő azoknak, akik "egyeztess ezzel a justificante-val" alapon gondolkodnak. Ugyanazt az alkalmazásszolgáltatási belépési pontot osztja meg a jelzőalapú formával. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
+        justificante_path_help: 'Az AEAT justificante PDF-jének elérési útja az egyeztetéshez.'
+        work_unit_id_help: 'Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).'
       verification_report:
-        app_help: cli.app.modelo.verification_report.app_help
-        list_help: cli.app.modelo.verification_report.list_help
-        verification_report_id_help: cli.app.modelo.verification_report.verification_report_id_help
-        view_help: cli.app.modelo.verification_report.view_help
+        app_help: 'Rögzített ellenőrzési jelentések vizsgálata.'
+        list_help: 'Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra szűrve.'
+        verification_report_id_help: 'Stabil 64 karakteres SHA-256 azonosító az ellenőrzési jelentéshez.'
+        view_help: 'Egy ellenőrzési jelentés megjelenítése azonosító alapján.'
       work:
-        actor_help: cli.app.modelo.work.actor_help
-        allow_not_applicable_help: cli.app.modelo.work.allow_not_applicable_help
-        amend_help: cli.app.modelo.work.amend_help
-        amend_missing_options: cli.app.modelo.work.amend_missing_options
-        amend_set_required: cli.app.modelo.work.amend_set_required
-        amendment_kind_help: cli.app.modelo.work.amendment_kind_help
-        amendment_reason_help: cli.app.modelo.work.amendment_reason_help
-        app_help: cli.app.modelo.work.app_help
+        actor_help: 'A műveletért felelős személy (szabad szöveges felirat, max. 64 karakter).'
+        allow_not_applicable_help: 'Munkaegység létrehozása akkor is, ha a nyomtatvány nem vonatkozik az aktív profil adóalany-típusára.'
+        amend_help: 'Helyesbítő módosítás felépítése külsőleg benyújtott bevallás alapján. Importált AEAT-igazolt bizonyítékot tartalmazó benyújtási rekord szükséges.'
+        amend_missing_options: 'A módosításhoz minden alábbi beállítás szükséges: %{missing}.'
+        amend_set_required: 'A --set legalább egyszer kötelező módosításhoz.'
+        amendment_kind_help: 'A módosítás jogi típusa (complementaria vagy sustitutiva).'
+        amendment_reason_help: 'A módosítás szabad szöveges oka (üzemeltetői auditnaplóhoz).'
+        app_help: 'Nyomtatvány-munkaegységek életciklusának kezelése.'
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
@@ -739,21 +739,21 @@ cli:
           modellre alkalmazható.'
         autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek
           decimális összegnek kell lennie; kapott érték: {value}'
-        borrador_help: cli.app.modelo.work.borrador_help
-        bucket_id_help: cli.app.modelo.work.bucket_id_help
-        calculate_help: cli.app.modelo.work.calculate_help
-        calculate_saved: cli.app.modelo.work.calculate_saved
-        calculation_revision_id_help: cli.app.modelo.work.calculation_revision_id_help
+        borrador_help: 'Modelo 100 borrador pillanatkép-azonosítója (teljes vagy egyértelmű előtag). A pillanatkép-kötési értékeket csak az aeat_prefilled-ként jelölt nyilvántartási kötéseknél használják; a hívó --binding felülbírálatok mindig elsőbbséget élveznek.'
+        bucket_id_help: 'A munkaegységhez tartozó bucket azonosítója.'
+        calculate_help: 'Új tervezet számítási revízió megőrzése a munkaegységhez.'
+        calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot: %{state}). Megőrzött és később folytatható; revíziók listázása: `aeat app modelo work revisions %{work_unit_id}`, ezt az egyet újra megtekintheti: `aeat app modelo work revision %{revision_id}`.'
+        calculation_revision_id_help: 'Stabil 64 karakteres SHA-256 azonosító egy számítási revízióhoz.'
         casilla_bare_numeric_ambiguous: 'A --casilla {key} több casillára illeszkedik
           ebben a revízióban: {candidates}. Az egyértelműsítéshez használd a ELŐTAG:NNNNN
           minősített formát.'
         casilla_bare_numeric_unknown: A --casilla {key} nem illeszkedik egyetlen casilla-számra
           sem ebben a revízióban.{prefix_hint} Az érvényes casilla-azonosítók listájához
           használd az `aeat app modelo casillas <MODELO>` parancsot.
-        casilla_help: cli.app.modelo.work.casilla_help
-        casilla_non_numeric_data_type: cli.app.modelo.work.casilla_non_numeric_data_type
-        casilla_not_decimal: cli.app.modelo.work.casilla_not_decimal
-        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
+        casilla_help: 'Mezőérték CASILLA=DECIMAL szintaxissal (ismételhető). A CASILLA elfogadja a mező azonosítóját, a nyilvántartási számot vagy az `aeat app modelo casillas` által megjelenített BOE-n nyomtatott mezőszámot.'
+        casilla_non_numeric_data_type: 'A(z) {key} ("{label}") mező adattípusa {data_type}, és nem fogad el decimális felülbírálásokat. Használja a --binding kapcsolót ennél a beviteli típusnál, vagy futtassa: `aeat app modelo casillas` a megfelelő numerikus mező azonosításához.'
+        casilla_not_decimal: 'A(z) {key} mező --casilla értéke nem decimális: {value}.'
+        causante_ccaa_help: 'Az örökhagyó autonóm közöségének kódja (IRPF öröklési ügyek).'
         compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető
           el: {detail}'
         compare_taxation_help: 'Összehasonlítja az IRPF kvótát közös (conjunta, Art.
@@ -765,12 +765,12 @@ cli:
         compare_taxation_work_unit_not_found: A(z) {work_unit_id} munkaegység nem
           található; ellenőrizd az aktív egységeket az 'aeat app modelo work list'
           paranccsal.
-        create_created: cli.app.modelo.work.create_created
-        create_help: cli.app.modelo.work.create_help
-        create_not_applicable_refused: cli.app.modelo.work.create_not_applicable_refused
-        create_reused: cli.app.modelo.work.create_reused
-        create_reused_name_match: cli.app.modelo.work.create_reused_name_match
-        create_reused_renamed: cli.app.modelo.work.create_reused_renamed
+        create_created: 'Új munkaegység létrehozva.'
+        create_help: 'Munkaegység létrehozása vagy újrafelhasználása (nyomtatvány, év, időszak, revízió) kombinációhoz.'
+        create_not_applicable_refused: 'A(z) %{modelo} nyomtatvány nem vonatkozik az aktív profil adóalany-típusára: %{reason} Ha van oka mégis létrehozni a munkaegységet, futtassa újra a --allow-not-applicable kapcsolóval.'
+        create_reused: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió kombinációra); nem jött létre semmi új. Nevezze át: `aeat app modelo work rename`.'
+        create_reused_name_match: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió kombinációra); nem jött létre semmi új. A megadott --name egyezik a tárolt névvel.'
+        create_reused_renamed: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió kombinációra); nem jött létre semmi új. A megadott --name alkalmazva lett átnevezésként: %{name}.'
         create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvány (különleges külföldi
           lakóhelyű adózói rendszer, „Beckham-törvény") nem támogatott munkaterv-egység
           létrehozásához ebben a CLI-ban. Jogalap: 35/2006. sz. törvény 93. cikk LIRPF,
@@ -816,38 +816,38 @@ cli:
           meghaladja az 50 000 €-t (11/2021. sz. törvény 13. cikk, HFP/887/2023. rendelet,
           1065/2007. sz. KR 42/c cikk). Nyújtsd be a bevallást a sede.agenciatributaria.gob.es
           oldalon.'
-        deduccion_maternidad_casilla_not_found: cli.app.modelo.work.deduccion_maternidad_casilla_not_found
-        discard_help: cli.app.modelo.work.discard_help
-        discard_requires_yes: cli.app.modelo.work.discard_requires_yes
-        discard_yes_help: cli.app.modelo.work.discard_yes_help
-        file_help: cli.app.modelo.work.file_help
-        from_filing_record_help: cli.app.modelo.work.from_filing_record_help
-        history_help: cli.app.modelo.work.history_help
-        history_work_unit_id_help: cli.app.modelo.work.history_work_unit_id_help
-        include_discarded_help: cli.app.modelo.work.include_discarded_help
-        invalid_amendment_kind: cli.app.modelo.work.invalid_amendment_kind
-        invalid_binding_key: cli.app.modelo.work.invalid_binding_key
-        invalid_calculation_revision_id: cli.app.modelo.work.invalid_calculation_revision_id
-        invalid_casilla_key: cli.app.modelo.work.invalid_casilla_key
-        invalid_work_unit_id: cli.app.modelo.work.invalid_work_unit_id
-        kv_empty_key_error: cli.app.modelo.work.kv_empty_key_error
-        kv_format_error: cli.app.modelo.work.kv_format_error
-        list_help: cli.app.modelo.work.list_help
-        meses_trabajo_con_hijo_menor_3_help: cli.app.modelo.work.meses_trabajo_con_hijo_menor_3_help
-        meses_trabajo_hijo_bad_format: cli.app.modelo.work.meses_trabajo_hijo_bad_format
-        meses_trabajo_hijo_not_integer: cli.app.modelo.work.meses_trabajo_hijo_not_integer
-        meses_trabajo_hijo_out_of_range: cli.app.modelo.work.meses_trabajo_hijo_out_of_range
-        missing_binding_guidance: cli.app.modelo.work.missing_binding_guidance
-        modelo_help: cli.app.modelo.work.modelo_help
-        name_help: cli.app.modelo.work.name_help
-        notes_help: cli.app.modelo.work.notes_help
+        deduccion_maternidad_casilla_not_found: 'A --meses-trabajo-con-hijo-menor-3 nem támogatott ennél a nyomtatvány-revíziónál; nincs LIRPF 81. cikk szerinti anyasági levonási mező deklarálva. Használja a --casilla kapcsolót a közvetlen bevitelhez.'
+        discard_help: 'Munkaegység eldobottként megjelölése (auditálható állapotváltás).'
+        discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra: `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
+        discard_yes_help: 'Az eldobási művelet explicit megerősítése.'
+        file_help: 'Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt be az AEAT-hoz.'
+        from_filing_record_help: 'A módosítandó alap-benyújtási rekord stabil azonosítója. Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés) kell tartalmaznia.'
+        history_help: 'Egy munkaegység minden életciklus-eseményének megjelenítése.'
+        history_work_unit_id_help: 'Annak a munkaegységnek az azonosítója, amelynek életciklusát meg szeretné tekinteni.'
+        include_discarded_help: 'Eldobott munkaegységek bevonása a listába (alapértelmezés szerint kizárva).'
+        invalid_amendment_kind: 'A --kind értéke csak {choices} egyike lehet; kapott: {kind}.'
+        invalid_binding_key: 'A --binding kulcsa nem érvényes BindingId (kisbetűs alfanumerikus, plusz . _ : - elválasztók, max. 128 karakter).'
+        invalid_calculation_revision_id: 'A calculation_revision_id értékének 64 karakteres kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).'
+        invalid_casilla_key: 'A --casilla kulcsa nem érvényes CasillaId (alfanumerikus, plusz . _ : - elválasztók, max. 64 karakter).'
+        invalid_work_unit_id: 'A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).'
+        kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
+        kv_format_error: 'A(z) {flag} értékének {key_label}={value_label} formátumúnak kell lennie; kapott: {spec}.'
+        list_help: 'Regisztrált munkaegységek listázása, opcionálisan bucket szerint szűrve.'
+        meses_trabajo_con_hijo_menor_3_help: 'A 3 évesnél fiatalabb gyermekkel végzett munkahónapok száma a családi egységben (LIRPF 81. cikk anyasági levonás). Formátum: GYERMEK_AZONOSÍTÓ=HÓNAPOK. Gyermekenként ismételhető. A GYERMEK_AZONOSÍTÓ szabad felirat (pl. 0, 1, "laia"). Kiszámítja: összeg(min(HÓNAPOK × 100; 1200)) és befecskendezi a 0611-es mezőbe. Példa: --meses-trabajo-con-hijo-menor-3 0=12 --meses-trabajo-con-hijo-menor-3 1=6 → 0611 = 1800.'
+        meses_trabajo_hijo_bad_format: 'A --meses-trabajo-con-hijo-menor-3 GYERMEK_AZONOSÍTÓ=HÓNAPOK formátumot igényel; kapott: {spec}.'
+        meses_trabajo_hijo_not_integer: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3 esetén 0–12 közötti egésznek kell lennie; kapott: {spec}.'
+        meses_trabajo_hijo_out_of_range: 'A HÓNAPOK értékének --meses-trabajo-con-hijo-menor-3 esetén 0–12 közé kell esnie; kapott {meses} ebben: {spec}.'
+        missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó kötés listázásához.'
+        modelo_help: 'Adónyomtatvány kódja (pl. 303, 130, 100).'
+        name_help: 'Opcionális megjelenítési név a munkaegységhez.'
+        notes_help: 'Opcionális megjegyzések a benyújtási rekordhoz.'
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
-        override_help: cli.app.modelo.work.override_help
-        period_help: cli.app.modelo.work.period_help
-        period_token_invalid: cli.app.modelo.work.period_token_invalid
-        period_token_unrecognised: cli.app.modelo.work.period_token_unrecognised
-        plazo_days_remaining: cli.app.modelo.work.plazo_days_remaining
-        plazo_vencido_warning: cli.app.modelo.work.plazo_vencido_warning
+        override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa: `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
+        period_help: 'Munkaegység időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
+        period_token_invalid: 'A --period "%{token}" nem érvényes időszaktokent a(z) %{modelo} nyomtatványhoz. A --year és a --period külön kompozálódnak: adja meg a --year %{year} értéket a benyújtási évhez, és az egyik deklarált időszaktokent a --period értékeként. Érvényes tokenek: %{tokens}.'
+        period_token_unrecognised: 'A --period "%{token}" nem ismert időszaktokent. A --year és a --period külön kompozálódnak: adja meg a --year %{year} értéket és egy időszaktokent (0A éves, Qn negyedéves, MM havi) a --period értékeként.'
+        plazo_days_remaining: 'hátralévő_napok	{days_remaining}'
+        plazo_vencido_warning: 'FIGYELMEZTETÉS: Az önkéntes benyújtási határidő lejárt (LGT 27. cikk). Nyújtsa be pótdíjjal az AEAT-értesítés kézhezvétele előtt.'
         prestacion_inss_exenta_casilla_not_found: --prestacion-inss-exenta nem támogatott
           ehhez a modell-revízióhoz; nincs Art. 7.h alóli INSS-mentes mezőszám deklarálva.
           Használja a --casilla opciót az értékek közvetlen megadásához.
@@ -859,10 +859,10 @@ cli:
           dinerarias) opcióban.
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének decimálisnak
           kell lennie; a kapott érték: {value}.'
-        reason_help: cli.app.modelo.work.reason_help
-        relation_help: cli.app.modelo.work.relation_help
-        relation_not_decimal: cli.app.modelo.work.relation_not_decimal
-        rename_help: cli.app.modelo.work.rename_help
+        reason_help: 'Az eldobás opcionális szabad szöveges oka (max. 500 karakter).'
+        relation_help: 'Korábbi időszaki kapcsolati érték KEY=VALUE formátumban. A KEY egy nyilvántartási kapcsolat-azonosító; az VALUE egy decimális. Több kapcsolat megadásához ismételje meg.'
+        relation_not_decimal: 'A(z) {key} kapcsolat --relation értéke nem decimális: {value}.'
+        rename_help: 'Egy munkaegység megjelenítési nevének frissítése.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: A nyugdíjtervbe 2006. dec.
           31-ig befizetett hozzájárulások (a LIRPF 12. átmeneti rendelkezés szerinti
           arányosítás alapja). Szükséges a --rescate-plan-pensiones-capital és --rescate-plan-pensiones-aportaciones-totales
@@ -883,15 +883,15 @@ cli:
           és --rescate-plan-pensiones-aportaciones-totales opciókat együtt kell megadni.
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
-        result_summary_header: cli.app.modelo.work.result_summary_header
-        resume_help: cli.app.modelo.work.resume_help
-        resume_invalid_target: cli.app.modelo.work.resume_invalid_target
-        resume_target_help: cli.app.modelo.work.resume_target_help
-        revision_help: cli.app.modelo.work.revision_help
-        revision_show_help: cli.app.modelo.work.revision_show_help
-        revision_year_mismatch: cli.app.modelo.work.revision_year_mismatch
-        revision_year_mismatch_no_match: cli.app.modelo.work.revision_year_mismatch_no_match
-        revisions_help: cli.app.modelo.work.revisions_help
+        result_summary_header: 'eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}'
+        resume_help: 'Ellenőrzés, hogy megszakított munkafolyamat újraindítható-e az AEAT megkeresése nélkül. Munkafolyamat-futtatás azonosítóját vagy munkaegység-azonosítót fogad el.'
+        resume_invalid_target: 'Az újraindítási célnak 16 karakteres munkafolyamat-futtatás-azonosítónak vagy 64 karakteres munkaegység-azonosítónak kell lennie; kapott: {target}. Futtassa: `aeat app modelo work runs` a futtatásazonosítók listázásához.'
+        resume_target_help: '16 karakteres munkafolyamat-futtatás-azonosító, vagy a 64 karakteres munkaegység-azonosító (a legújabb futtatása automatikusan feloldódik). Futtassa: `aeat app modelo work runs` a futtatásazonosítók listázásához.'
+        revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója; futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók megtekintéséhez.'
+        revision_show_help: 'Egy tárolt számítási revízió megőrzött mezőértékeinek megjelenítése (újraszámítás nélkül).'
+        revision_year_mismatch: 'A(z) %{revision} revízió a(z) %{modelo} nyomtatványhoz nem fedi a(z) %{filing_year} benyújtási évet. Az arra az évre vonatkozó revíziók%{applicable}.'
+        revision_year_mismatch_no_match: 'Egyik revízió sem fedi azt a benyújtási évet.'
+        revisions_help: 'Számítási revíziók listázása, opcionálisan egy munkaegységre szűrve.'
         row_empty_key: Üres mezőkulcs a --row {token} mezőben; minden mezőnek KULCS=ÉRTÉK
           formátumúnak kell lennie.
         row_empty_spec: --row nem lehet üres; a várt formátum TÍPUS MEZŐ=érték [...]
@@ -913,7 +913,7 @@ cli:
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
           {supported}.'
         row_validation_error: 'A --row {row_type!r} sor validálása sikertelen: {error}'
-        runs_help: cli.app.modelo.work.runs_help
+        runs_help: 'Mentett munkafolyamat-futtatások listázása futtatásazonosítókkal, legújabb először. Futtatásazonosítót használjon: `aeat app modelo work resume`. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.'
         sal_beneficio_neto_help: A munkavállalói tulajdonú társaság (SAL/SLL, 44/2015.
           törvény 14. cikk) tárgyévi nettó nyeresége. Az asszisztens 10%-ot alkalmaz
           a kötelező külön tartalék kiszámításához, a jegyzett tőke 50%-os küszöbével
@@ -933,15 +933,15 @@ cli:
         sal_reserva_incomplete: A --sal-beneficio-neto, --sal-reserva-dotada és --sal-capital-social
           opciókat együtt kell megadni.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
-        set_not_decimal: cli.app.modelo.work.set_not_decimal
-        set_override_help: cli.app.modelo.work.set_override_help
-        status_help: cli.app.modelo.work.status_help
-        unknown_modelo: cli.app.modelo.work.unknown_modelo
-        unknown_revision: cli.app.modelo.work.unknown_revision
-        verify_help: cli.app.modelo.work.verify_help
-        work_unit_id_help: cli.app.modelo.work.work_unit_id_help
-        year_help: cli.app.modelo.work.year_help
-        year_out_of_range: cli.app.modelo.work.year_out_of_range
+        set_not_decimal: 'A --set értékének decimálisnak kell lennie; kapott: {value}.'
+        set_override_help: 'Javított mezőérték CASILLA=DECIMAL szintaxissal (ismételhető; legalább egy szükséges).'
+        status_help: 'Egy munkaegység metaadatainak megjelenítése.'
+        unknown_modelo: 'Ismeretlen nyomtatvány: %{modelo}; a számítási nyilvántartás ezeket a nyomtatványokat ismeri: %{known}.'
+        unknown_revision: 'Ismeretlen revízió: %{revision} a(z) %{modelo} nyomtatványhoz; deklarált revíziók: %{declared}.'
+        verify_help: 'Tervezet számítási revízió hitelesítése a hitelesített-teljes szerződéssel szemben.'
+        work_unit_id_help: 'A munkaegység stabil 64 karakteres SHA-256 azonosítója.'
+        year_help: 'A munkaegység adóéve (pl. 2026).'
+        year_out_of_range: 'A(z) %{year} benyújtási év kívül esik a tartományon; adjon meg évet %{minimum} és %{maximum} között.'
   common:
     errors:
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.
