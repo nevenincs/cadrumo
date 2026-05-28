@@ -144,6 +144,66 @@ def _validate_cross_revision_casilla_consistency(
     )
 
 
+def _validate_strict_cross_revision_casilla_continuity(
+    modelos: Iterable[ModeloDefinition],
+) -> tuple[str, ...]:
+    """Enforce explicit continuity decisions for opted-in revision pairs."""
+
+    failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
+    for modelo in modelos:
+        for divergence in _iter_cross_revision_casilla_divergences((modelo,)):
+            if divergence.revisions_overlap:
+                continue
+            left_revision = modelo.revisions[divergence.left_revision_id]
+            right_revision = modelo.revisions[divergence.right_revision_id]
+            if (
+                left_revision.continuidad_validation != "strict"
+                and right_revision.continuidad_validation != "strict"
+            ):
+                continue
+            if divergence.evolution_covers_field:
+                continue
+            key = (
+                divergence.modelo_id,
+                divergence.casilla_id,
+                divergence.left_revision_id,
+                divergence.right_revision_id,
+            )
+            failures[key].append(divergence)
+    return tuple(
+        _format_strict_continuity_failure(modelo_id, casilla_id, left_revision_id, right_revision_id, divergences)
+        for (
+            modelo_id,
+            casilla_id,
+            left_revision_id,
+            right_revision_id,
+        ), divergences in failures.items()
+    )
+
+
+def _format_strict_continuity_failure(
+    modelo_id: str,
+    casilla_id: str,
+    left_revision_id: str,
+    right_revision_id: str,
+    divergences: Iterable[CrossRevisionCasillaDivergence],
+) -> str:
+    divergence_tuples = tuple(
+        (
+            item.field,
+            (item.left_value, item.right_value),
+            (item.left_continuidad_id, item.right_continuidad_id),
+            item.evolution_kind,
+        )
+        for item in divergences
+    )
+    return (
+        f"strict continuity drift: modelo {modelo_id} casilla {casilla_id!r} "
+        f"revisions {left_revision_id!r}->{right_revision_id!r} "
+        f"uncovered divergences {divergence_tuples!r}"
+    )
+
+
 def _format_cross_revision_failure(
     modelo_id: str,
     casilla_id: str,
