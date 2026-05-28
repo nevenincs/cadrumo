@@ -10,7 +10,7 @@ from ...core.decimal import format_decimal
 from ...core.logging import get_logger
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
-from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, update_invoice_review
+from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, InvoiceReviewStatus, update_invoice_review
 from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
@@ -125,15 +125,15 @@ def invoice_display_amounts(
     return base, iva
 
 
-def invoice_review_status(invoice: Invoice, review: InvoiceReviewRecord | None) -> str:
+def invoice_review_status(invoice: Invoice, review: InvoiceReviewRecord | None) -> InvoiceReviewStatus:
     """Return the backend-owned invoice review status."""
 
     del invoice
     if review and review.fields.get("payment.id"):
-        return "paid"
+        return InvoiceReviewStatus.PAID
     if review and review.fields:
-        return "reviewed"
-    return "pending"
+        return InvoiceReviewStatus.REVIEWED
+    return InvoiceReviewStatus.PENDING
 
 
 def apply_manual_invoice_match(state: WorkflowState, invoice_id: str, ledger_id: str) -> WorkflowState:
