@@ -18,6 +18,7 @@ from ...application.live import (
     capture_source_filed_data,
     list_filed_data,
 )
+from ...application.overview import FilingStatus
 from ...core.errors import resolve_error_message
 from ...core.i18n import tr
 from ._common import _emit
@@ -47,12 +48,12 @@ app = typer.Typer(
     add_completion=False,
 )
 filed_app = typer.Typer(
-    name="filed",
+    name=FilingStatus.FILED,
     help=tr("cli.app.live.filed_app_help"),
     no_args_is_help=True,
     add_completion=False,
 )
-app.add_typer(filed_app, name="filed")
+app.add_typer(filed_app, name=FilingStatus.FILED)
 
 iva_wallet_app = typer.Typer(
     name="iva-wallet",
