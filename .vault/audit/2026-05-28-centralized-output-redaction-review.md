@@ -19,6 +19,8 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S10]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S11]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S12]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S13]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S14]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -149,3 +151,15 @@ No HIGH/CRITICAL findings in the scoped S12 implementation.
 ### Residual risks
 
 - The focused S12 test covers text-mode profile-id redaction only. JSON-mode coverage remains provided by the S10/S11 envelope tests rather than by a dedicated `_emit_envelope` JSON branch test in `test_common_output.py`.
+
+## W01.P02.S13/S14 Review
+
+No HIGH/CRITICAL findings in the scoped S13/S14 implementation.
+
+Startup import-failure text now redacts the missing dependency before locale interpolation (`src/aeat/entrypoints/cli/__init__.py:330`), and the failure surface still emits through `write_stderr` before exiting with code 1 (`src/aeat/entrypoints/cli/__init__.py:325`). The error boundary keeps the existing exception taxonomy and forwarding behavior (`src/aeat/entrypoints/cli/_errors.py:220`, `src/aeat/entrypoints/cli/_errors.py:238`), while `write_stderr` applies `redact_for_cli_output` once before the normal stream write and both UTF-8/ASCII fallback branches (`src/aeat/entrypoints/cli/_errors.py:305`). Redaction errors are not swallowed; only stream reconfigure/flush and Unicode encode fallback behavior are handled as before.
+
+The S13/S14 tests are non-tautological for the scoped surfaces: startup coverage invokes the actual fallback Typer app and asserts no raw sensitive dependency name leaks (`src/aeat/entrypoints/cli/test_workflow_surface.py:327`, `src/aeat/entrypoints/cli/test_workflow_surface.py:346`), and stderr coverage calls the production writer against real text streams while preserving cp1252/UTF-8 behavior (`src/aeat/entrypoints/cli/test_windows_encoding.py:53`, `src/aeat/entrypoints/cli/test_windows_encoding.py:68`). Locale keys are present in the canonical catalogues and `aeat.locales audit` passes for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml` (`src/aeat/locales/en.yml:2228`, `src/aeat/locales/es.yml:2345`, `src/aeat/locales/ca.yml:2313`, `src/aeat/locales/hu.yml:2342`).
+
+### Residual risks
+
+- The S14 canary test exercises the shared stderr writer directly rather than a full decorated command failure in JSON and text modes. That is acceptable for this narrow step because `_emit_error_and_exit` has a single stderr emission path through `write_stderr`, but broader end-to-end error-boundary canaries would still improve regression coverage.
