@@ -2559,6 +2559,7 @@ errors:
     error_normatives_normative_not_found: The requested normative or article was not
       found.
     error_normatives_validation: A normative field value is not valid.
+    error_observation_key: An observation key component failed its repository contract.
     error_outbound_storage_not_found: The requested storage object or namespace does
       not exist.
     error_pdf_import_pdf_modelo_import: Importing the filing from the PDF failed.
@@ -2751,7 +2752,8 @@ errors:
       validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
       size or etag).
-    integrity_outbound_storage_corruption: 'A sidecar metadata file contains a field with an unexpected type; the storage object is corrupted.'
+    integrity_outbound_storage_corruption: A sidecar metadata file contains a field
+      with an unexpected type; the storage object is corrupted.
     integrity_portals_portal_integrity: The AEAT portal registry violates a structural
       invariant.
     integrity_profile_snapshot_hash_mismatch: The profile snapshot hash does not match
@@ -3016,6 +3018,9 @@ errors:
     refused_wizard_status: The wizard could not resolve the active profile.
     refused_wizard_unsupported_console: The current terminal cannot host the interactive
       wizard. Run it in a supported terminal.
+    refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
+      violated; check that exactly one of next_action or dead_end is set for fail/warn
+      rows, and neither is set for ok rows.
     refused_wizard_validation: A wizard answer failed validation. Correct the value
       shown.
     refused_workflow_aborted: The workflow was aborted.

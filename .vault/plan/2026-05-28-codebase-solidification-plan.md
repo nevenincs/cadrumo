@@ -97,8 +97,8 @@ envelope.
 - [ ] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
 - [ ] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
-- [ ] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
+- [x] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [x] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
 - [ ] `W01.P01.S41` - introduce `IvaWalletReconciliationError(CoreError)`; `replace the four `ValueError` raises; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S42` - add real-behavior test asserting IVA-wallet-reconciliation envelope at every replaced raise; `src/aeat/application/calculations/test_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S43` - introduce `AggregationConfigError(CoreError)`; `replace the nine `ValueError` raises at aggregation-service composition; `src/aeat/application/aggregation/_service.py`.
@@ -241,8 +241,8 @@ asserts every caller now imports from the canonical home.
 - [x] `W01.P05.S138` - add real-behavior test asserting the coercion and the validation variants behave per their documented contracts on naive / aware / mixed inputs; `src/aeat/core/time/test_utc.py`.
 - [x] `W01.P05.S139` - migrate the four `_ensure_utc` call-sites (`auth/certificate.py`, `storage/bucket/_manifest.py`, `storage/master_key/_recovery_record.py`, `user_profile/_aggregate.py`) to the explicit variants; `delete the four local copies; `src/aeat/adapters/outbound/aeat/auth/certificate.py`.
 - [x] `W01.P05.S140` - extend the test surface to cover every migrated call-site under its real boundary; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
-- [ ] `W01.P05.S141` - move `_now` / `_utcnow` to `aeat.core.time._clock`; `delete the six local copies; `src/aeat/core/time/_clock.py`.
-- [ ] `W01.P05.S142` - add real-behavior test asserting every former call-site reads the canonical clock; `src/aeat/core/time/test_clock.py`.
+- [x] `W01.P05.S141` - move `_now` / `_utcnow` to `aeat.core.time._clock`; `delete the six local copies; `src/aeat/core/time/_clock.py`.
+- [x] `W01.P05.S142` - add real-behavior test asserting every former call-site reads the canonical clock; `src/aeat/core/time/test_clock.py`.
 - [ ] `W01.P05.S143` - parametrize `_storage_path` into one shared helper under `aeat.application._storage_paths`; `delete the seven local copies; `src/aeat/application/_storage_paths.py`.
 - [ ] `W01.P05.S144` - add real-behavior test asserting the helper produces the historical path layout for every former caller's root; `src/aeat/application/test_storage_paths.py`.
 - [ ] `W01.P05.S145` - move `_round_to_cents` to `aeat.domain.fincas._rounding`; `delete the two peer copies in `_amortization_ledger.py` and `_expense_rollup.py`; `src/aeat/domain/fincas/_rounding.py`.

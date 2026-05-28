@@ -23,3 +23,15 @@ class BindingPrefillTypeError(CoreValidationError):
     when a field value does not match the expected ``int | str`` or
     ``str | tuple[str, ...]`` shape.
     """
+
+
+class ObservationKeyError(CoreValidationError):
+    """Raised when an observation key component fails its repository contract.
+
+    The repository key for a ``(modelo, filing_year, period)`` triple must
+    satisfy the :func:`safe_repository_id` contract for string components and
+    fall within the supported year range ``[2000, 2099]`` for the integer
+    year component. Any violation of those constraints raises this error
+    instead of a bare :class:`ValueError` so the failure propagates through
+    the typed error registry and produces a structured envelope.
+    """

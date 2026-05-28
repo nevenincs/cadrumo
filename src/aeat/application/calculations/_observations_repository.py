@@ -38,6 +38,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...domain.calculations.registry._bindings import RegistryModeloObservation
+from ._errors import ObservationKeyError
 from ._iva_wallet_reconciliation import IvaCompensationReconciliationDecision
 
 
@@ -86,7 +87,9 @@ def observation_key(modelo: str, filing_year: int, period: str) -> str:
     safe_repository_id(modelo, context="modelo")
     safe_repository_id(period, context="period")
     if not 2000 <= filing_year <= 2099:
-        raise ValueError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
+        raise ObservationKeyError(
+            f"observation filing_year {filing_year} out of supported range [2000, 2099]"
+        )
     return f"{modelo}:{filing_year}:{period}"
 
 
@@ -100,10 +103,12 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_period: 
 
     taxpayer_token = taxpayer_nif.strip().upper()
     if not taxpayer_token:
-        raise ValueError("taxpayer_nif must be non-empty")
+        raise ObservationKeyError("taxpayer_nif must be non-empty")
     safe_repository_id(target_period, context="target_period")
     if not 2000 <= target_year <= 2099:
-        raise ValueError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
+        raise ObservationKeyError(
+            f"IVA wallet target_year {target_year} out of supported range [2000, 2099]"
+        )
     digest = hashlib.sha256(
         "\x1f".join((taxpayer_token, str(target_year), target_period.strip().upper())).encode("utf-8")
     ).hexdigest()
@@ -115,7 +120,7 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
 
     taxpayer_token = decision.taxpayer_nif.strip().upper()
     if not taxpayer_token:
-        raise ValueError("decision taxpayer_nif must be non-empty")
+        raise ObservationKeyError("decision taxpayer_nif must be non-empty")
     digest = hashlib.sha256(
         "\x1f".join(
             (
@@ -137,7 +142,9 @@ def _legacy_iva_wallet_decision_key(taxpayer_nif: str, target_year: int, target_
     safe_repository_id(taxpayer_nif, context="taxpayer_nif")
     safe_repository_id(target_period, context="target_period")
     if not 2000 <= target_year <= 2099:
-        raise ValueError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
+        raise ObservationKeyError(
+            f"IVA wallet target_year {target_year} out of supported range [2000, 2099]"
+        )
     return f"{taxpayer_nif}:{target_year}:{target_period}"
 
 

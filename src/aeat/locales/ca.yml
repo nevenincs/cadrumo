@@ -2670,6 +2670,7 @@ errors:
     error_normatives_normative: S'ha produït un error relacionat amb la normativa.
     error_normatives_normative_not_found: No s'ha trobat la norma o l'article sol·licitats.
     error_normatives_validation: Un valor de la normativa no és vàlid.
+    error_observation_key: Un component de la clau d'observació no compleix el contracte del repositori.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
@@ -3176,6 +3177,7 @@ errors:
     refused_wizard_status: L'assistent no ha pogut resoldre el perfil actiu.
     refused_wizard_unsupported_console: El terminal actual no admet l'assistent interactiu.
       Executa'l en una terminal compatible.
+    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
       Corregeix el valor indicat.
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
