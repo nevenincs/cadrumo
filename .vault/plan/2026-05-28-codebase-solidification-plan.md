@@ -223,10 +223,10 @@ payloads.
 - [ ] `W01.P04.S130` - add real-behavior test asserting Google Sheets / Drive boundary comments remain present per the third-party-rationale policy; `src/aeat/adapters/outbound/google/test_calc_sheets_apply.py`.
 - [ ] `W01.P04.S131` - confirm Playwright `_build_context_kwargs` / `storage_state` retain their boundary rationale; `src/aeat/adapters/outbound/aeat/browser/session.py`.
 - [ ] `W01.P04.S132` - add real-behavior test asserting Playwright kwargs boundary annotation remains present; `src/aeat/adapters/outbound/aeat/browser/test_session.py`.
-- [ ] `W01.P04.S133` - wrap the auth-diagnostics raw JSON payload return in `DiagnosticPayload(BaseModel)`; `src/aeat/application/auth/_diagnostics.py`.
-- [ ] `W01.P04.S134` - add roundtrip test asserting diagnostic payload validates and round-trips; `src/aeat/application/auth/test_diagnostics.py`.
-- [ ] `W01.P04.S135` - audit every `dict[str, Any]` return signature under `src/aeat/adapters/` for missing boundary rationale; `flag each unannotated case as a follow-up Step in Wave 2; `src/aeat/adapters`.
-- [ ] `W01.P04.S136` - add real-behavior test asserting the boundary rationale assertion runs across the adapter inventory; `src/aeat/adapters/test_boundary_rationale.py`.
+- [x] `W01.P04.S133` - wrap the auth-diagnostics raw JSON payload return in `DiagnosticPayload(BaseModel)`; `src/aeat/application/auth/_diagnostics.py`.
+- [x] `W01.P04.S134` - add roundtrip test asserting diagnostic payload validates and round-trips; `src/aeat/application/auth/test_diagnostics.py`.
+- [x] `W01.P04.S135` - audit every `dict[str, Any]` return signature under `src/aeat/adapters/` for missing boundary rationale; `flag each unannotated case as a follow-up Step in Wave 2; `src/aeat/adapters`.
+- [x] `W01.P04.S136` - add real-behavior test asserting the boundary rationale assertion runs across the adapter inventory; `src/aeat/adapters/test_boundary_rationale.py`.
 
 ### Phase `W01.P05` - consolidate duplicated helpers under canonical modules
 
@@ -249,8 +249,8 @@ asserts every caller now imports from the canonical home.
 - [x] `W01.P05.S146` - add real-behavior test asserting fincas rounding behaves under representative Decimal inputs; `src/aeat/domain/fincas/test_rounding.py`.
 - [x] `W01.P05.S147` - reconcile `_parse_bool` signatures (`bool` vs `bool | None`); `move canonical version to `aeat.core.parsing._utils`; `src/aeat/core/parsing/_utils.py`.
 - [x] `W01.P05.S148` - add real-behavior test asserting `_parse_bool` rejects unknown tokens and round-trips truthy / falsy inputs per call-site contract; `src/aeat/core/parsing/test_utils.py`.
-- [ ] `W01.P05.S149` - keep `_parse_date` variants distinct as `_parse_iso8601_date` and `_parse_ddmmyyyy_date`; `co-locate under `aeat.core.parsing._dates`; `src/aeat/core/parsing/_dates.py`.
-- [ ] `W01.P05.S150` - add real-behavior test asserting each date variant rejects the foreign format; `src/aeat/core/parsing/test_dates.py`.
+- [x] `W01.P05.S149` - keep `_parse_date` variants distinct as `_parse_iso8601_date` and `_parse_ddmmyyyy_date`; `co-locate under `aeat.core.parsing._dates`; `src/aeat/core/parsing/_dates.py`.
+- [x] `W01.P05.S150` - add real-behavior test asserting each date variant rejects the foreign format; `src/aeat/core/parsing/test_dates.py`.
 - [x] `W01.P05.S151` - consolidate `_format_decimal` into `aeat.core.decimal._format`; `delete the four peer copies; `src/aeat/core/decimal/_format.py`.
 - [x] `W01.P05.S152` - add real-behavior test asserting decimal-format produces stable output for representative values; `src/aeat/core/decimal/test_format.py`.
 - [x] `W01.P05.S153` - reconcile `_coerce_decimal` signatures; `canonicalize under `aeat.core.decimal._coerce`; delete the three peer copies; `src/aeat/core/decimal/_coerce.py`.
