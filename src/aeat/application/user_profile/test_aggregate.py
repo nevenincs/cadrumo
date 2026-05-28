@@ -10,7 +10,7 @@ defect class.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 from pydantic import ValidationError
@@ -206,3 +206,43 @@ def test_verify_integrity_raises_on_lifecycle_status_drift() -> None:
             manifest_status="active",
             record_status="tombstoned",
         )
+
+
+# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+
+
+def _aggregate(**overrides: object) -> "ProfileAggregate":
+    from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
+
+    defaults: dict[str, object] = {
+        "profile_id": _PROFILE_UUID,
+        "label": "Aggregate Operator",
+        "created_at": datetime(2026, 1, 4, 9, 0, 0, tzinfo=UTC),
+        "kdf_params": _kdf_params(),
+        "recovery_enrolled": False,
+        "manifest_schema_version": 1,
+        "record": _record(),
+        "status": UserProfileStatus.ACTIVE,
+    }
+    defaults.update(overrides)
+    return ProfileAggregate(**defaults)  # type: ignore[arg-type]
+
+
+def test_aggregate_rejects_naive_created_at() -> None:
+    """A naive created_at must be rejected at the aggregate boundary."""
+    with pytest.raises(ValidationError):
+        _aggregate(created_at=datetime(2026, 1, 4, 9, 0, 0))
+
+
+def test_aggregate_rejects_non_utc_created_at() -> None:
+    """A timezone-aware but non-UTC created_at must be rejected."""
+    plus_one = timezone(timedelta(hours=1))
+    with pytest.raises(ValidationError):
+        _aggregate(created_at=datetime(2026, 1, 4, 9, 0, 0, tzinfo=plus_one))
+
+
+def test_aggregate_accepts_utc_created_at() -> None:
+    """A UTC-aware created_at is accepted and preserved unchanged."""
+    ts = datetime(2026, 1, 4, 9, 0, 0, tzinfo=UTC)
+    agg = _aggregate(created_at=ts)
+    assert agg.created_at == ts

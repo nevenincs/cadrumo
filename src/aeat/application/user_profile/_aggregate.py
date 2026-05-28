@@ -17,28 +17,19 @@ writer of the physical stores it projects onto.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...adapters.persistence.storage.bucket._manifest import ManifestKdfParams
+from ...core.time._utc import _validate_utc_aware
 from ...domain.user_profile import UserProfileRecord, UserProfileStatus
 from ...domain.user_profile._errors import UserProfileValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _ProfileId = Annotated[str, Field(min_length=1, max_length=96)]
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    """Reject naive datetimes and datetimes whose offset is not UTC."""
-
-    if value.tzinfo is None:
-        raise ValueError("datetime must be timezone-aware UTC")
-    if value.utcoffset() != UTC.utcoffset(value):
-        raise ValueError("datetime must be in UTC")
-    return value
 
 
 class ProfileAggregate(BaseModel):
@@ -74,7 +65,7 @@ class ProfileAggregate(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _ensure_utc(value)
+        return _validate_utc_aware(value)
 
     @model_validator(mode="after")
     def _validate_cross_store_agreement(self) -> ProfileAggregate:

@@ -5,7 +5,7 @@ from __future__ import annotations
 from importlib import import_module
 from pathlib import Path
 
-from ._schema import ExtractionProfileDefinition
+from ._schema import ExtractionProfileDefinition, ExtractionTargetDefinition
 
 
 def validate_declaracion_pdf_specimen_gate(
@@ -90,6 +90,30 @@ def validate_declaracion_pdf_round_trip_gate(
         f"round-trip test exists, or set provisional_pending_specimen = true to acknowledge "
         f"unverified status"
     ]
+
+
+def validate_bbox_anchor_consistency(
+    scope: str,
+    target: ExtractionTargetDefinition,
+) -> list[str]:
+    """Registry-level defense-in-depth for bbox_anchor field/strategy consistency.
+
+    The :class:`ExtractionTargetDefinition` model_validator enforces this at
+    construction time; this function provides an additional snapshot-build check
+    so that targets loaded from TOML that somehow bypass the in-memory validator
+    (e.g. via future schema migration tools) are caught at registry validation.
+    """
+    if target.match_strategy == "bbox_anchored" and target.bbox_anchor is None:
+        return [
+            f"{scope}: target {target.casilla_id!r} uses match_strategy='bbox_anchored' "
+            f"but bbox_anchor is None; bbox_anchor is required for bbox_anchored targets"
+        ]
+    if target.match_strategy != "bbox_anchored" and target.bbox_anchor is not None:
+        return [
+            f"{scope}: target {target.casilla_id!r} uses match_strategy={target.match_strategy!r} "
+            f"but bbox_anchor is set; bbox_anchor must be None for non-bbox_anchored strategies"
+        ]
+    return []
 
 
 def validate_extraction_profile_artefacts(

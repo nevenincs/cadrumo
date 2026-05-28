@@ -36,6 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, SecretStr
 from .....core.access_gate import AeatLiveReadNotEnabledError
 from .....core.config import CertificateBackend
 from .....core.logging import get_logger
+from .....core.time._utc import _coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
 
 if TYPE_CHECKING:
@@ -293,13 +294,6 @@ class _BrowserContextLike(Protocol):
 # ── Loader ──────────────────────────────────────────────────────────────────
 
 
-def _ensure_utc(value: datetime) -> datetime:
-    """Coerce a naive datetime to UTC-aware (PKCS#12 datetimes vary)."""
-    if value.tzinfo is None:
-        return value.replace(tzinfo=UTC)
-    return value.astimezone(UTC)
-
-
 def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
     """Load and validate a PKCS#12 bundle from disk.
 
@@ -349,8 +343,8 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         raise CertificateLoadError(f"PKCS#12 bundle at {bundle.path} contains no end-entity certificate")
 
     x509_cert = parsed.cert.certificate
-    not_before = _ensure_utc(x509_cert.not_valid_before_utc)
-    not_after = _ensure_utc(x509_cert.not_valid_after_utc)
+    not_before = _coerce_utc_aware(x509_cert.not_valid_before_utc)
+    not_after = _coerce_utc_aware(x509_cert.not_valid_after_utc)
 
     friendly_name: str | None = bundle.friendly_name
     if friendly_name is None and parsed.cert.friendly_name is not None:
@@ -542,8 +536,8 @@ def health(
         if parsed.cert is None or parsed.cert.certificate is None:  # pragma: no cover - defended above
             raise
         x509_cert = parsed.cert.certificate
-        not_before = _ensure_utc(x509_cert.not_valid_before_utc)
-        not_after = _ensure_utc(x509_cert.not_valid_after_utc)
+        not_before = _coerce_utc_aware(x509_cert.not_valid_before_utc)
+        not_after = _coerce_utc_aware(x509_cert.not_valid_after_utc)
         evaluated_at = now if now is not None else datetime.now(UTC)
         if evaluated_at.tzinfo is None:
             evaluated_at = evaluated_at.replace(tzinfo=UTC)

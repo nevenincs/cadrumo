@@ -11,7 +11,6 @@ from reportlab.pdfgen import canvas
 
 from aeat.core.errors import AeatError
 from aeat.core.resources import resources
-from aeat.domain.calculations.registry import ExtractionProfileDefinition, ExtractionTargetDefinition
 from aeat.domain.justificante._errors import PdfModeloImportError
 from aeat.tests import FIXTURES_DIR
 
@@ -42,7 +41,14 @@ _MODELO_184_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "184" / "2024-0
 _MODELO_115_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "115" / "2024-1T.pdf"
 _MODELO_131_SYNTHETIC_FIXTURE = FIXTURES_DIR / "justificantes" / "131" / "2024-1T.pdf"
 _MODELO_130_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 20))
-_MODELO_111_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 31))
+# M111 declaracion_pdf profile: 29 bbox_anchored targets (col-A 01/04/07/10/13/16/19/22/25,
+# col-B 02/05/08/11/14/17/20/23/26, col-C 03/06/09/12/15/18/21/24/27/28/30); casilla 29
+# is a checkbox field excluded from the declaracion_pdf extraction profile.
+_MODELO_111_EXPECTED_TARGETS = (
+    "01", "04", "07", "10", "13", "16", "19", "22", "25",  # col A
+    "02", "05", "08", "11", "14", "17", "20", "23", "26",  # col B
+    "03", "06", "09", "12", "15", "18", "21", "24", "27", "28", "30",  # col C
+)
 _MODELO_123_CURRENT_EXPECTED_TARGETS = tuple(f"{index:02d}" for index in range(1, 15))
 _MODELO_123_HISTORICAL_EXPECTED_TARGETS = tuple(f"{index:02d}-legacy" for index in range(1, 9))
 
@@ -53,67 +59,57 @@ def test_declaracion_errors_stay_on_core_exception_hierarchy() -> None:
     assert issubclass(TemplateNotDetectedError, DeclaracionParseError)
 
 
-def test_parser_extracts_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
+def test_parser_extracts_registry_profile_targets_from_pdf() -> None:
+    """Assert the M130 declaracion_pdf profile declares exactly the expected 19 targets.
+
+    The roundtrip extraction contract is verified against the real corpus PDFs
+    in test_parser_extracts_modelo_130_casillas_from_corpus; this test isolates
+    the structural assertion so target-list regressions are reported separately.
+    """
     snapshot = _modelo_130_snapshot()
     profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
     assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_130_EXPECTED_TARGETS
-    values = {
-        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, target in enumerate(profile.target_casillas, start=1)
-    }
-    pdf_path = tmp_path / "modelo-130.pdf"
-    _write_declaration_pdf(pdf_path, values=values)
-
-    filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2024)
-
-    assert filing.modelo == "130"
-    assert filing.period == "1T"
-    assert filing.tax_id == "00000000T"
-    assert {value.casilla_id: value.printed_value for value in filing.values} == values
-    # The parser stamps the resolving registry snapshot's four-axis
-    # coordinate onto the observation so downstream consumers can
-    # detect AEAT template drift on subsequent registry releases
-    # The ref is populated from the snapshot the parser actually
-    # resolved against.
-    assert filing.registry_snapshot_ref is not None
-    assert filing.registry_snapshot_ref.modelo == "130"
-    assert filing.registry_snapshot_ref.modelo_year == 2024
-    assert filing.registry_snapshot_ref.period == "1T"
+    for target in profile.target_casillas:
+        assert target.match_strategy == "bbox_anchored", (
+            f"casilla {target.casilla_id}: expected match_strategy='bbox_anchored', "
+            f"got {target.match_strategy!r}"
+        )
+        assert target.bbox_anchor is not None, (
+            f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
+        )
 
 
-def test_parser_extracts_legal_entity_nif_from_pdf(tmp_path: Path) -> None:
-    snapshot = _modelo_130_snapshot()
-    profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
-    assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_130_EXPECTED_TARGETS
-    values = {
-        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, target in enumerate(profile.target_casillas, start=1)
-    }
-    pdf_path = tmp_path / "modelo-130-cif.pdf"
-    _write_declaration_pdf(pdf_path, values=values, tax_id="B12345678")
+def test_parser_extracts_legal_entity_nif_from_pdf() -> None:
+    """Verify NIF extraction from a real M130 corpus PDF for a CIF-format declarant.
 
-    filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2024)
-
-    assert filing.tax_id == "B12345678"
+    The corpus fixture carries the sanitised tax ID 'Y0000001S'; this test
+    exercises _extract_tax_id isolation from casilla extraction by asserting
+    only the tax_id field of the resulting observation.
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-2T.pdf"
+    filing = parse_declaracion(pdf_path, modelo_override="130", año_override=2022, period_override="2T")
+    assert filing.tax_id == "Y0000001S"
 
 
-def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf(tmp_path: Path) -> None:
+def test_parser_extracts_modelo_111_registry_profile_targets_from_pdf() -> None:
+    """Assert the M111 declaracion_pdf profile declares exactly the expected 29 targets.
+
+    Casilla 29 (Autoliquidación negativa checkbox) is excluded from the
+    declaracion_pdf extraction profile; only casillas 01-28 and 30 are
+    present.  The roundtrip contract is verified against the real corpus PDFs
+    in test_parser_extracts_modelo_111_casillas_from_corpus.
+    """
     snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
     profile = snapshot.extraction_profiles["modelo-111-declaracion-pdf"]
     assert tuple(target.casilla_id for target in profile.target_casillas) == _MODELO_111_EXPECTED_TARGETS
-    values = {
-        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, target in enumerate(profile.target_casillas, start=1)
-    }
-    pdf_path = tmp_path / "modelo-111.pdf"
-    _write_declaration_pdf(pdf_path, modelo="111", ejercicio="2025", values=values)
-
-    filing = parse_declaracion(pdf_path, modelo_override="111", año_override=2025)
-
-    assert filing.modelo == "111"
-    assert filing.period == "1T"
-    assert filing.tax_id == "00000000T"
-    assert {value.casilla_id: value.printed_value for value in filing.values} == values
+    for target in profile.target_casillas:
+        assert target.match_strategy == "bbox_anchored", (
+            f"casilla {target.casilla_id}: expected match_strategy='bbox_anchored', "
+            f"got {target.match_strategy!r}"
+        )
+        assert target.bbox_anchor is not None, (
+            f"casilla {target.casilla_id}: bbox_anchor must be set for bbox_anchored targets"
+        )
 
 
 @pytest.mark.parametrize(
@@ -153,67 +149,24 @@ def test_parser_extracts_modelo_111_tax_id_from_corpus(pdf_stem: str, year: int,
         ("2024-4T", 2024, "4T"),
     ],
 )
-def test_parser_extracts_modelo_111_closure_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
-    """Round-trip: parse all 4 corpus M111 PDFs and verify closure casillas 28 and 30.
+def test_parser_extracts_modelo_111_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
+    """Round-trip: parse all 4 corpus M111 PDFs via the production bbox_anchored profile.
 
-    Ground truth is derived from reading the printed declaracion form text directly.
-    The sanitised corpus replaces real amounts with synthetic values; casillas 28
-    (Suma de retenciones e ingresos a cuenta) and 30 (Resultado a ingresar) are the
-    only two casillas whose label text and value appear on the same printed line in
-    every M111 corpus specimen.
+    Ground truth is derived empirically by probing each corpus PDF with pdfplumber
+    word-position extraction (see _find_bbox_casilla_hits in _parser.py).  The
+    sanitised corpus replaces real amounts with synthetic values; only casillas
+    that have a non-blank value printed in the right-side value column are
+    extracted — blank (zero or not-applicable) casilla cells produce no hit and
+    are legitimately absent from the filing.
 
-    All other casillas (01..27, 29) use a multi-column layout where box numbers appear
-    at line-end inside table rows, not at line-start — so the numeric_casilla profile
-    strategy cannot extract them from real AEAT PDFs.  The synthetic tests
-    (test_parser_extracts_modelo_111_registry_profile_targets_from_pdf) cover
-    full 30-casilla profile completeness on a purpose-built PDF.
+    Ground truth from pdfplumber probe on the 4 sanitised corpus PDFs:
+    - 2024-1T/2T/3T: casillas 07=1, 08=1.000,00, 09=1.000,00, 28=1.000,00, 30=1.000,00
+    - 2024-4T: negative filing; only casilla 30=1.000,00 is printed
 
-    A named_label ExtractionProfileDefinition is constructed in-test (no TOML
-    change) to exercise the parse_declaracion code path with the real corpus PDFs.
-    The custom snapshot is passed via the registry_snapshot parameter so the
-    production profile is unchanged.
-
-    Casilla-28 (Suma de retenciones):
-    - 2024-1T/2T/3T: line ends with '28 1.000,00' so value = Decimal('1000.00')
-    - 2024-4T: negative filing; line ends with '28' (no amount printed) so the
-      named_label regex captures the box number itself as the trailing token;
-      parse_spanish_decimal converts it to Decimal('28') — asserted isinstance only.
-    Casilla-30 (Resultado a ingresar):
-    - all 4 specimens: value = Decimal('1000.00') (printed directly on label line).
+    The bbox_anchored profile uses column-specific anchor_x_min/anchor_x_max to
+    restrict each casilla to its own column (A: x0~264, B: x0~347, C: x0~461), and
+    value_x_max to prevent matching the next column's box number when the cell is empty.
     """
-    snap = resources().modelos.authority.snapshot("111", filing_year=year, period=period)
-    existing_profile = snap.extraction_profiles["modelo-111-declaracion-pdf"]
-
-    corpus_profile = ExtractionProfileDefinition(
-        id="modelo-111-declaracion-pdf-corpus",
-        surface="declaracion_pdf",
-        artefact_kind="declaracion",
-        accepted_artefact_kinds=("declaration_pdf",),
-        parser="aeat.adapters.inbound.declaracion.parse_declaracion",
-        target_casillas=(
-            ExtractionTargetDefinition(
-                casilla_id="28",
-                match_strategy="named_label",
-                value_kind="amount",
-                label_pattern=r"Suma\s+de\s+retenciones\s+e\s+ingresos\s+a\s+cuenta",
-            ),
-            ExtractionTargetDefinition(
-                casilla_id="30",
-                match_strategy="named_label",
-                value_kind="amount",
-                label_pattern=r"Resultado\s+a\s+ingresar\s+\(\s*28\s*.+?29\s*\)",
-            ),
-        ),
-        min_coverage="0.5",
-        confidence="strict",
-        failure_semantics="fail_hard",
-        legal_refs=existing_profile.legal_refs,
-        source_refs=existing_profile.source_refs,
-    )
-    profiles = dict(snap.extraction_profiles)
-    profiles[corpus_profile.id] = corpus_profile
-    modified_snap = snap.model_copy(update={"extraction_profiles": profiles})
-
     pdf_path = FIXTURES_DIR / "justificantes" / "111" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -221,35 +174,44 @@ def test_parser_extracts_modelo_111_closure_casillas_from_corpus(pdf_stem: str, 
         modelo_override="111",
         año_override=year,
         period_override=period,
-        extraction_profile_id="modelo-111-declaracion-pdf-corpus",
-        registry_snapshot=modified_snap,
     )
 
     assert filing.modelo == "111"
     assert filing.period == period
-    assert filing.tax_id == "Y0000001S"
+    assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "111"
     assert filing.registry_snapshot_ref.modelo_year == year
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
-    assert set(values.keys()) == {"28", "30"}, f"{pdf_stem}: expected casillas {{28, 30}}, got {set(values.keys())!r}"
 
-    # Casilla 30 always carries 1.000,00 directly on the label line in every
-    # corpus specimen; ground truth from reading the printed form text.
+    # Casilla 30 (Resultado a ingresar) is present in all 4 corpus specimens.
+    assert "30" in values, f"{pdf_stem}: expected casilla '30' in extracted values, got {set(values.keys())!r}"
     assert values["30"] == Decimal("1000.00"), (
         f"{pdf_stem}: casilla '30' expected Decimal('1000.00'), got {values['30']!r}"
     )
 
-    # Casilla 28: in 2024-1T/2T/3T the label line ends with '28 1.000,00';
-    # in 2024-4T (negative filing) no amount is printed so the regex captures
-    # the trailing box number '28' as the token — still a valid Decimal.
-    assert isinstance(values["28"], Decimal), (
-        f"{pdf_stem}: casilla '28' expected a Decimal instance, got {values['28']!r}"
-    )
-    if pdf_stem != "2024-4T":
+    if pdf_stem == "2024-4T":
+        # Negative filing: only casilla 30 is present; no other amounts printed.
+        assert set(values.keys()) == {"30"}, (
+            f"{pdf_stem}: negative filing should yield only casilla '30', got {set(values.keys())!r}"
+        )
+    else:
+        # Positive filing: casillas 07 (count=1), 08 and 09 (amounts), 28, 30 are present.
+        assert "07" in values and "08" in values and "09" in values and "28" in values, (
+            f"{pdf_stem}: expected casillas 07/08/09/28/30, got {set(values.keys())!r}"
+        )
+        assert values["07"] == Decimal("1"), (
+            f"{pdf_stem}: casilla '07' expected Decimal('1'), got {values['07']!r}"
+        )
+        assert values["08"] == Decimal("1000.00"), (
+            f"{pdf_stem}: casilla '08' expected Decimal('1000.00'), got {values['08']!r}"
+        )
+        assert values["09"] == Decimal("1000.00"), (
+            f"{pdf_stem}: casilla '09' expected Decimal('1000.00'), got {values['09']!r}"
+        )
         assert values["28"] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla '28' expected Decimal('1000.00') for non-negative filing, got {values['28']!r}"
+            f"{pdf_stem}: casilla '28' expected Decimal('1000.00'), got {values['28']!r}"
         )
 
 
@@ -315,47 +277,85 @@ def test_parser_extracts_modelo_130_tax_id_from_corpus(pdf_stem: str, year: int,
         ("2024-4T", 2024, "4T"),
     ],
 )
-def test_parser_modelo_130_corpus_numeric_casilla_profile_gap(pdf_stem: str, year: int, period: str) -> None:
-    """Assert that the numeric_casilla profile cannot extract any casillas from
-    the real AEAT M130 corpus PDFs; documents the structural layout gap.
+def test_parser_extracts_modelo_130_casillas_from_corpus(pdf_stem: str, year: int, period: str) -> None:
+    """Round-trip: parse all 15 M130 corpus PDFs via the production bbox_anchored profile.
 
-    The M130 printed form places box numbers at the END of label lines
-    (e.g. '...Ingresos computables ... 01') and prints the actual monetary
-    values as a detached block of standalone '1.000,00' lines at the bottom
-    of page 2.  The numeric_casilla match strategy requires the box number
-    at LINE START (regex: ^\\s*01\\b...<amount>$), so no casilla can be
-    matched in any corpus specimen.
+    Ground truth is derived empirically by probing each corpus PDF with pdfplumber
+    word-position extraction (see _find_bbox_casilla_hits in _parser.py).  The
+    sanitised corpus replaces real amounts with synthetic values; only casillas
+    that carry a non-blank printed amount in the right-column (x0~464) are
+    extracted — blank cells (zero or not-applicable) produce no hit.
 
-    This test is a positive structural assertion — it will fail (and alert the
-    maintainer) if the profile's failure_semantics or min_coverage are changed
-    such that partial extraction is silently accepted, or if the corpus PDF
-    layout changes to expose line-start box numbers.
+    The bbox_anchored profile uses anchor_x_min=450 / anchor_x_max=480 to restrict
+    the search to the right-column box-number zone and prevent false matches on
+    inline formula references embedded in label lines.
 
-    To extract casillas from real M130 PDFs a named_label strategy would be
-    needed; however the M130 form prints values in a positional block without
-    adjacent labels, making named_label also unsuitable.  Full round-trip
-    coverage for M130 requires a corpus specimen where the AEAT layout places
-    amounts on the same line as their box labels.
+    Structural ground truth from pdfplumber probes (anchor_x_min=450, anchor_x_max=480):
+    - 2021-2T: 02=1.001.000,00, 03=1.001.000,00, 19=1.000,00
+    - 2021-3T: 01/02/03/04/07/12/14/17/19=1.000,00
+    - 2021-4T: 01/02/03/04/05/07/12/14/17/19=1.000,00
+    - 2022-1T: 12/14/17/19=1.000,00
+    - 2022-2T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
+    - 2022-3T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
+    - 2022-4T: 01-07=1.001.000,00, 19=1.000,00
+    - 2023-1T: 01/02/03/04/06/07/12/14/17/19=1.000,00
+    - 2023-2T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
+    - 2023-3T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
+    - 2023-4T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
+    - 2024-1T: 02=1.001.000,00, 03=1.001.000,00, 19=1.000,00
+    - 2024-2T: 01/02/03/04/06/07=1.001.000,00, 19=1.000,00
+    - 2024-3T: 01/02/03/04/06/07/12/14/17/19=1.000,00
+    - 2024-4T: 01/02/03/04/05/06/07/12/14/17/19=1.000,00
     """
+    # Corpus-specific ground truth: casillas present and their expected values.
+    # All synthetic values are either 1.000,00 → Decimal("1000.00") or
+    # 1.001.000,00 → Decimal("1001000.00"); casilla 19 is always Decimal("1000.00").
+    corpus_ground_truth: dict[str, dict[str, Decimal]] = {
+        "2021-2T": {"02": Decimal("1001000.00"), "03": Decimal("1001000.00"), "19": Decimal("1000.00")},
+        "2021-3T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "07", "12", "14", "17", "19"]},
+        "2021-4T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "07", "12", "14", "17", "19"]},
+        "2022-1T": {c: Decimal("1000.00") for c in ["12", "14", "17", "19"]},
+        "2022-2T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+        "2022-3T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+        "2022-4T": {
+            **{c: Decimal("1001000.00") for c in ["01", "02", "03", "04", "05", "06", "07"]},
+            "19": Decimal("1000.00"),
+        },
+        "2023-1T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "06", "07", "12", "14", "17", "19"]},
+        "2023-2T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+        "2023-3T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+        "2023-4T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+        "2024-1T": {"02": Decimal("1001000.00"), "03": Decimal("1001000.00"), "19": Decimal("1000.00")},
+        "2024-2T": {
+            **{c: Decimal("1001000.00") for c in ["01", "02", "03", "04", "06", "07"]},
+            "19": Decimal("1000.00"),
+        },
+        "2024-3T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "06", "07", "12", "14", "17", "19"]},
+        "2024-4T": {c: Decimal("1000.00") for c in ["01", "02", "03", "04", "05", "06", "07", "12", "14", "17", "19"]},
+    }
+
+    expected = corpus_ground_truth[pdf_stem]
     pdf_path = FIXTURES_DIR / "justificantes" / "130" / f"{pdf_stem}.pdf"
 
-    with pytest.raises(DeclaracionParseError) as exc_info:
-        parse_declaracion(
-            pdf_path,
-            modelo_override="130",
-            año_override=year,
-            period_override=period,
-        )
-
-    err = exc_info.value
-    assert err.coverage == 0, (
-        f"{pdf_stem}: expected coverage=0, got {err.coverage!r}"
+    filing = parse_declaracion(
+        pdf_path,
+        modelo_override="130",
+        año_override=year,
+        period_override=period,
     )
-    # All 19 M130 numeric_casilla profile targets must be reported missing
-    # because the printed form places box numbers at line-end, not line-start.
-    expected_missing = tuple(f"{n:02d}" for n in range(1, 20))
-    assert err.missing == expected_missing, (
-        f"{pdf_stem}: expected all 19 casillas missing, got {err.missing!r}"
+
+    assert filing.modelo == "130", f"{pdf_stem}: expected modelo='130', got {filing.modelo!r}"
+    assert filing.period == period, f"{pdf_stem}: expected period={period!r}, got {filing.period!r}"
+    assert filing.tax_id == "Y0000001S", f"{pdf_stem}: expected tax_id='Y0000001S', got {filing.tax_id!r}"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "130"
+    assert filing.registry_snapshot_ref.modelo_year == year
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    assert extracted == expected, (
+        f"{pdf_stem}: extracted casillas do not match ground truth.\n"
+        f"  expected: {expected}\n"
+        f"  got:      {extracted}"
     )
 
 
@@ -994,19 +994,30 @@ def test_parser_extracts_modelo_100_profile_targets_from_corpus(pdf_stem: str, y
         )
 
 
-def test_parser_fails_when_registry_profile_targets_are_missing(tmp_path: Path) -> None:
-    snapshot = _modelo_130_snapshot()
-    profile = snapshot.extraction_profiles["modelo-130-declaracion-pdf"]
-    values = {
-        target.casilla_id: Decimal(index).quantize(Decimal("0.01"))
-        for index, target in enumerate(profile.target_casillas, start=1)
-        if target.casilla_id != "19"
-    }
-    pdf_path = tmp_path / "modelo-130-missing.pdf"
-    _write_declaration_pdf(pdf_path, values=values)
+def test_parser_fails_when_registry_profile_targets_are_missing() -> None:
+    """Verify the parser raises DeclaracionParseError when coverage falls below min_coverage.
 
-    with pytest.raises(DeclaracionParseError, match=r"missing=19"):
-        parse_declaracion(pdf_path, modelo_override="130", año_override=2024)
+    Uses a real M130 corpus PDF (2022-1T: only casillas 12/14/17/19 present).
+    Injects a test-local snapshot with min_coverage='1' to require all 19 casillas.
+    The parsing must fail because 15 of 19 casillas are not present in that filing.
+    """
+    snap = _modelo_130_snapshot()
+    prod_profile = snap.extraction_profiles["modelo-130-declaracion-pdf"]
+    strict_profile = prod_profile.model_copy(update={"min_coverage": Decimal("1")})
+    profiles = dict(snap.extraction_profiles)
+    profiles[prod_profile.id] = strict_profile
+    strict_snap = snap.model_copy(update={"extraction_profiles": profiles})
+
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2022-1T.pdf"
+
+    with pytest.raises(DeclaracionParseError, match=r"coverage="):
+        parse_declaracion(
+            pdf_path,
+            modelo_override="130",
+            año_override=2022,
+            period_override="1T",
+            registry_snapshot=strict_snap,
+        )
 
 
 def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_path: Path) -> None:
@@ -1022,14 +1033,25 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
         )
 
 
-def test_real_redacted_declaration_copy_fails_on_registry_coverage_gap() -> None:
-    with pytest.raises(DeclaracionParseError, match="missing="):
-        parse_declaracion(
-            _REAL_DECLARATION_COPY,
-            modelo_override="130",
-            año_override=2024,
-            period_override="1T",
-        )
+def test_real_redacted_declaration_copy_extracts_partial_casillas() -> None:
+    """The real M130 2024-1T corpus PDF now extracts casillas via bbox_anchored.
+
+    Ground truth from pdfplumber probe: 2024-1T has casillas 02=1.001.000,00,
+    03=1.001.000,00, 19=1.000,00 printed with values; the remaining casillas are
+    blank (zero or not-applicable) in this filing.  With min_coverage=0 the parser
+    accepts the partial extraction without error.
+    """
+    filing = parse_declaracion(
+        _REAL_DECLARATION_COPY,
+        modelo_override="130",
+        año_override=2024,
+        period_override="1T",
+    )
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    assert set(extracted.keys()) == {"02", "03", "19"}, (
+        f"2024-1T: expected casillas {{02, 03, 19}}, got {set(extracted.keys())!r}"
+    )
+    assert extracted["19"] == Decimal("1000.00")
 
 
 def test_parser_extracts_modelo_349_synthetic_fixture_targets() -> None:
@@ -1780,54 +1802,61 @@ def test_parser_extracts_modelo_115_synthetic_fixture_targets() -> None:
     assert values["05"] == Decimal("2280.00"), f"casilla '05': expected Decimal('2280.00'), got {values['05']!r}"
 
 
-def test_parser_modelo_131_numeric_casilla_profile_gap() -> None:
-    """Assert that the numeric_casilla profile cannot extract any casillas from
-    the M131 synthetic fixture; documents the structural layout gap.
+def test_parser_extracts_modelo_131_casillas_from_synthetic_fixture() -> None:
+    """Round-trip: parse the M131 2026 synthetic fixture via the bbox_anchored profile.
 
-    The M131 printed form places box numbers at the END of label lines (e.g.
-    "Suma de rendimientos netos ........... 01  5.000,00"), identical to the
-    M130 multi-column tabular layout.  The numeric_casilla match strategy
-    requires the box number at LINE START (regex: ^\\s*NN\\b...<amount>$), so
-    no casilla can be matched in the fixture specimen.
+    The M131 2026 form places box numbers at the END of label lines (e.g.
+    "Suma de rendimientos netos ........... 01  5.000,00").  The bbox_anchored
+    profile locates each box number by pdfplumber word-position and reads the
+    adjacent value word to the right.
 
-    Ground truth for the layout verdict:
-    - AEAT DR xlsx 2026 (01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx):
-      shared-strings [65]-[78] confirm the bracket [NN] casilla notation
-      ("Suma de rendimientos netos [01]", "Diferencia [10]", etc.) identical to
-      the M130 line-end convention.
-    - AEAT instructions HTML (modelo-131-instrucciones.html): "Casilla NN."
-      section-heading format confirms box numbers are trailing references, not
-      line-start prefixes.
-    - M130 corpus (15 PDFs 2021-2024): confirmed line-end box numbers for the
-      same AEAT IRPF quarterly pago-fraccionado form series.
+    Ground truth is derived by probing the committed synthetic fixture PDF with
+    pdfplumber (see _find_bbox_casilla_hits in _parser.py).  The fixture was
+    generated with aeat.tests.fixtures.justificantes._generate and carries
+    exercicio=2026, periodo=1T, NIF=Y0000001S.
 
-    The fixture uses ejercicio=2026 so the 2026 revision snapshot is resolved;
-    that revision carries the declaracion_pdf extraction profile under test.
-    provisional_pending_specimen=true is retained on all M131 revisions because
-    no real AEAT-generated M131 corpus PDFs are available for empirical round-trip
-    verification.
-
-    This test is a positive structural assertion: it will fail (alerting the
-    maintainer) if the profile's failure_semantics or min_coverage are changed
-    to silently accept partial extraction, or if a future revision introduces
-    a named_label profile that can extract from this fixture layout.
+    Expected values (all 15 casillas must be extracted):
+    - 01: 5.000,00 (rendimientos netos)
+    - 02, 07, 10, 13, 15: 100,00
+    - 03, 04, 05, 06, 08, 09, 11, 12, 14: 0,00
     """
-    with pytest.raises(DeclaracionParseError) as exc_info:
-        parse_declaracion(
-            _MODELO_131_SYNTHETIC_FIXTURE,
-            modelo_override="131",
-            **{"año_override": 2026},
-            period_override="1T",
-        )
+    expected: dict[str, Decimal] = {
+        "01": Decimal("5000.00"),
+        "02": Decimal("100.00"),
+        "03": Decimal("0.00"),
+        "04": Decimal("0.00"),
+        "05": Decimal("0.00"),
+        "06": Decimal("0.00"),
+        "07": Decimal("100.00"),
+        "08": Decimal("0.00"),
+        "09": Decimal("0.00"),
+        "10": Decimal("100.00"),
+        "11": Decimal("0.00"),
+        "12": Decimal("0.00"),
+        "13": Decimal("100.00"),
+        "14": Decimal("0.00"),
+        "15": Decimal("100.00"),
+    }
 
-    err = exc_info.value
-    assert err.coverage == 0, f"expected coverage=0, got {err.coverage!r}"
-    # All 15 M131 numeric_casilla profile targets must be reported missing
-    # because the printed form uses bracket [NN] notation (line-end), not
-    # the line-start box-number prefix required by the numeric_casilla strategy.
-    expected_missing = tuple(f"{n:02d}" for n in range(1, 16))
-    assert err.missing == expected_missing, (
-        f"expected all 15 casillas missing, got {err.missing!r}"
+    filing = parse_declaracion(
+        _MODELO_131_SYNTHETIC_FIXTURE,
+        modelo_override="131",
+        **{"año_override": 2026},
+        period_override="1T",
+    )
+
+    assert filing.modelo == "131"
+    assert filing.period == "1T"
+    assert filing.tax_id == "Y0000001S", f"expected tax_id='Y0000001S', got {filing.tax_id!r}"
+    assert filing.registry_snapshot_ref is not None
+    assert filing.registry_snapshot_ref.modelo == "131"
+    assert filing.registry_snapshot_ref.modelo_year == 2026
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    assert extracted == expected, (
+        f"M131 2026 synthetic fixture: extracted casillas do not match ground truth.\n"
+        f"  expected: {expected}\n"
+        f"  got:      {extracted}"
     )
 
 

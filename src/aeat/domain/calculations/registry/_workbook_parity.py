@@ -23,6 +23,7 @@ from openpyxl.worksheet.worksheet import Worksheet
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
+from ....core.errors import CoreError
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
@@ -60,7 +61,7 @@ _LIBREOFFICE_EXECUTABLE_ENV = "AEAT_LIBREOFFICE_EXECUTABLE"
 _BINARY_XLS_CONVERSION_BYTES_CACHE: dict[tuple[str, int, str], bytes] = {}
 
 
-class _BinaryXlsConversionError(Exception):
+class _BinaryXlsConversionError(CoreError):
     """Failure raised after a valid LibreOffice runner starts XLS conversion."""
 
 

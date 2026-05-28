@@ -9,12 +9,14 @@ from pathlib import Path
 import pytest
 from openpyxl import Workbook, load_workbook
 
+from aeat.core.errors import ERROR_REGISTRY, get_registered_error_code
 from aeat.core.resources import bundled_path
 
 from ._loader import load_registry_tree
 from ._schema import RegistrySnapshot
 from ._snapshot import build_snapshot
 from ._workbook_parity import (
+    _BinaryXlsConversionError,
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,
@@ -365,3 +367,11 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
             outputs={},
             executable=str(tmp_path / "missing-soffice"),
         )
+
+
+def test_binary_xls_conversion_error_is_registered_in_error_registry() -> None:
+    # Verify __init_subclass__ bound _BinaryXlsConversionError when CoreError
+    # was inherited, and that the declared code appears in ERROR_REGISTRY.
+    error_code = get_registered_error_code(_BinaryXlsConversionError)
+    assert error_code.code == "INTEGRITY_REGISTRY_BINARY_XLS_CONVERSION"
+    assert error_code.code in ERROR_REGISTRY

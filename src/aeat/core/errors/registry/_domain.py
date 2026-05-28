@@ -1362,6 +1362,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.profile._errors.ProfileKeysRegistrationError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_KEYS_REGISTRATION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_profile_keys_registration",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.filing._errors.FilingExportError",
         ErrorCode(
             code="ERROR_FILING_EXPORT",
@@ -1488,6 +1499,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LEDGER_PREFLIGHT",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.ledger_preflight",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.transactions._errors.ClassificationRuleError",
+        ErrorCode(
+            code="ERROR_TRANSACTION_CLASSIFICATION_RULE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_transaction_classification_rule",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

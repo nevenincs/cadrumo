@@ -43,6 +43,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "natural_person",  # entity-type
             # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
             "actividad_economica,capital_inmobiliario",  # irpf-income-categories
+            "",  # incn-prior-12-months (optional, blank — natural person doesn't gate Modelo 202)
+            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
             # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
@@ -55,6 +57,8 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
+            "",  # situacion-familiar (Art. 82 LIRPF axis, S176)
+            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
@@ -81,11 +85,15 @@ def _scripted_answers_for_individual_declaration() -> deque[str]:
             "false",  # pays-capital-income-with-retencion
             "false",  # uses-objective-estimation-irpf
             "directa_normal",  # irpf-estimation-regime
+            "",  # irpf-special-regime (visible: natural person; blank = no special regime)
+            # irpf-special-regime-start-date SKIPPED (conditional on irpf-special-regime == IMPATRIADO)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
-            # ── residence ──────────────────────────
-            "madrid",  # tax-residence-ccaa
+            # ── residence (non-resident axis #197) ────────────
+            "resident_irpf",  # fiscal-residency
+            # country-of-fiscal-residence + representante-fiscal-* SKIPPED (conditional on fiscal-residency == non_resident_irnr)
+            "madrid",  # tax-residence-ccaa (visible: resident)
             # ── notes ──────────────────────────────
             "",  # notes
         ]
@@ -164,6 +172,8 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "natural_person",  # entity-type
             # legal-entity-form SKIPPED (conditional on entity-type == legal_entity)
             "actividad_economica,trabajo",  # irpf-income-categories
+            "",  # incn-prior-12-months (optional)
+            # new-entity-first-two-profit-periods SKIPPED (conditional on entity-type == legal_entity)
             # ── profile ────────────────────────────
             "12345678Z",  # tax-id
             "Operator",  # name
@@ -176,6 +186,8 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             # ── taxpayer biographic (visible: natural person) ──
             "",  # taxpayer-sex
             "",  # taxpayer-marital-status
+            "",  # situacion-familiar (Art. 82 LIRPF axis, S176)
+            # taxpayer-marriage-date SKIPPED (conditional on marital-status == CASADO)
             "",  # taxpayer-birth-date
             "",  # taxpayer-disability-grade
             "",  # taxpayer-death-date
@@ -206,9 +218,13 @@ def test_run_flow_walks_joint_taxation_spouse_questions() -> None:
             "false",  # pays-capital-income-with-retencion
             "false",  # uses-objective-estimation-irpf
             "directa_normal",  # irpf-estimation-regime
+            "",  # irpf-special-regime (visible: natural person)
+            # irpf-special-regime-start-date SKIPPED (conditional on impatriado)
             "false",  # does-intracomunitario
             "false",  # third-party-transactions-above-347-threshold
             "false",  # bienes-extranjero-above-threshold
+            "resident_irpf",  # fiscal-residency (#197 non-resident axis)
+            # country-of-fiscal-residence + representante-fiscal-* SKIPPED (resident)
             "madrid",  # tax-residence-ccaa
             "",  # notes
         ]

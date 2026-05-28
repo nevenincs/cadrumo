@@ -21,9 +21,6 @@ _ALLOWLIST = {
     "aeat.application.live._snapshot_base.SnapshotNotFoundError": (
         "structural KeyError mixin; concrete snapshot errors also inherit AeatError"
     ),
-    "aeat.domain.calculations.registry._workbook_parity._BinaryXlsConversionError": (
-        "private conversion sentinel raised and caught inside the workbook-parity backend"
-    ),
 }
 
 

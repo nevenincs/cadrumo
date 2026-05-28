@@ -77,3 +77,11 @@ class LedgerCheckError(TransactionError):
 
 class LedgerPreflightError(TransactionError):
     """Raised when ledger preflight rejects a modelo run as un-fileable."""
+
+
+class ClassificationRuleError(TransactionError, ValueError):
+    """Raised when a ledger classification rule is invalid.
+
+    Inherits from :exc:`ValueError` so Pydantic field validators can
+    raise it directly from ``@field_validator`` without wrapping.
+    """

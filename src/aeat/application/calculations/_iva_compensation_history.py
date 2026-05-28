@@ -18,6 +18,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage.envelope._secure_repository import SecureBoundRepository
 from ...core.errors import AeatError
+from ._errors import IvaCompensationModeloError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _ZERO = Decimal("0")
@@ -288,7 +289,9 @@ def iva_compensation_state_from_filed_observation(
     """Build one IVA compensation history state from a filed Modelo 303 observation."""
 
     if observation.modelo != "303":
-        raise ValueError("IVA compensation history only accepts Modelo 303 observations")
+        raise IvaCompensationModeloError(
+            "IVA compensation history only accepts Modelo 303 observations"
+        )
     values = _decimal_casilla_values(observation)
     result = _casilla_value(values, "69", "iva.resultado")
     posterior = _casilla_value(values, "87", "iva.compensacion-pendiente-periodos-posteriores")

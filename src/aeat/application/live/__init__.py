@@ -274,6 +274,7 @@ class StoredIvaRemoteStateAcquisitionRow(BaseModel):
     auth_outcome_mode: str
     auth_failure_mode: str | None = None
     auth_failure_type: str | None = None
+    auth_diagnostic_ref: str | None = None
     auth_provider_kind: str | None = None
     auth_reused_persisted_session: bool | None = None
     year_from: int
@@ -352,6 +353,7 @@ class LiveIvaAuthOutcome(BaseModel):
     outcome_mode: LiveIvaAcquisitionFailureMode
     failure_mode: LiveIvaAcquisitionFailureMode | None = None
     failure_type: str | None = None
+    diagnostic_ref: str | None = None
     provider_kind: str | None = None
     reused_persisted_session: bool | None = None
     fresh: bool | None = None
@@ -949,6 +951,7 @@ def _stored_acquisition_manifest_row(
         auth_outcome_mode=manifest.auth.outcome_mode.value,
         auth_failure_mode=manifest.auth.failure_mode.value if manifest.auth.failure_mode is not None else None,
         auth_failure_type=manifest.auth.failure_type,
+        auth_diagnostic_ref=manifest.auth.diagnostic_ref,
         auth_provider_kind=manifest.auth.provider_kind,
         auth_reused_persisted_session=manifest.auth.reused_persisted_session,
         year_from=manifest.year_from,
@@ -1611,6 +1614,7 @@ def _auth_outcome(
             outcome_mode=failure_mode,
             failure_mode=failure_mode,
             failure_type=error.__class__.__name__,
+            diagnostic_ref=_auth_diagnostic_ref(error),
         )
     if auth_result is None:
         return LiveIvaAuthOutcome(
@@ -1626,6 +1630,16 @@ def _auth_outcome(
         reused_persisted_session=auth_result.reused_persisted_session,
         fresh=auth_result.fresh,
     )
+
+
+def _auth_diagnostic_ref(error: BaseException) -> str | None:
+    context = getattr(error, "context", None)
+    if not isinstance(context, dict):
+        return None
+    diagnostic_id = context.get("diagnostic_id")
+    if not isinstance(diagnostic_id, str) or not diagnostic_id.strip():
+        return None
+    return _evidence_ref(diagnostic_id)
 
 
 async def _active_verified_session(

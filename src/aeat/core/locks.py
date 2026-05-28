@@ -31,19 +31,41 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
-from .config import Settings as _Settings
+from .config import load_settings as _load_settings
 from .locks_errors import LockAcquisitionError
 from .logging import get_logger
 
 _log = get_logger(__name__)
 
-_LOCK_DEFAULTS = _Settings()
 
-DEFAULT_LOCK_TIMEOUT: Final[float] = _LOCK_DEFAULTS.aeat_file_lock_timeout_s
-"""Default timeout for :func:`exclusive_file_lock` in seconds."""
+def _default_lock_timeout() -> float:
+    """Return the currently effective lock-acquire timeout in seconds.
 
-_RETRY_BACKOFF: Final[float] = _LOCK_DEFAULTS.aeat_file_lock_retry_backoff_s
-"""Sleep interval between non-blocking lock-acquire attempts."""
+    Resolved each call via :func:`load_settings` so an
+    :func:`override_settings` block (test scope) is honoured. Replaces a
+    module-level constant that snapshotted ``Settings()`` at import time
+    and could not be overridden after the module had loaded.
+    """
+    return _load_settings().aeat_file_lock_timeout_s
+
+
+def _default_retry_backoff() -> float:
+    """Return the currently effective non-blocking retry backoff in seconds."""
+    return _load_settings().aeat_file_lock_retry_backoff_s
+
+
+class _DefaultLockTimeout:
+    """Sentinel marking ``timeout`` as "resolve from settings on call"."""
+
+    def __repr__(self) -> str:
+        return "DEFAULT_LOCK_TIMEOUT"
+
+
+DEFAULT_LOCK_TIMEOUT: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
+"""Sentinel for :func:`exclusive_file_lock` ``timeout``; resolves at call time."""
+
+_DEFAULT_RETRY_BACKOFF: Final[_DefaultLockTimeout] = _DefaultLockTimeout()
+"""Sentinel for :func:`exclusive_file_lock` ``retry_backoff``; resolves at call time."""
 
 
 def _lock_path_for(target: Path) -> Path:
@@ -132,8 +154,8 @@ else:  # POSIX
 def exclusive_file_lock(
     target: Path,
     *,
-    timeout: float = DEFAULT_LOCK_TIMEOUT,
-    retry_backoff: float = _RETRY_BACKOFF,
+    timeout: "float | _DefaultLockTimeout" = DEFAULT_LOCK_TIMEOUT,
+    retry_backoff: "float | _DefaultLockTimeout" = _DEFAULT_RETRY_BACKOFF,
 ) -> Iterator[Path]:
     """Acquire an OS-level exclusive lock on a sidecar lock file.
 
@@ -177,6 +199,13 @@ def exclusive_file_lock(
         the lock as advisory across the whole file regardless of the
         underlying primitive.
     """
+    # Resolve sentinel defaults via load_settings() so override_settings()
+    # blocks (test scope) propagate. A literal float passed by the caller
+    # bypasses settings entirely.
+    if isinstance(timeout, _DefaultLockTimeout):
+        timeout = _default_lock_timeout()
+    if isinstance(retry_backoff, _DefaultLockTimeout):
+        retry_backoff = _default_retry_backoff()
     if timeout < 0:
         raise LockAcquisitionError(f"timeout must be non-negative; got {timeout}")
     lock_path = _lock_path_for(target)

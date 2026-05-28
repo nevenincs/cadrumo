@@ -14,7 +14,7 @@ covers at-rest persistence and has a different parent chain.
 
 from __future__ import annotations
 
-from ....core.errors import AeatError
+from ....core.errors import AeatError, CoreError
 
 
 class OutboundStorageError(AeatError):
@@ -57,6 +57,18 @@ class OutboundStorageUnavailableError(OutboundStorageError):
     """Raised when the backend is reachable but signals temporary unavailability."""
 
 
+class StorageCorruptionError(CoreError):
+    """Raised when a sidecar file contains structurally invalid field types.
+
+    Indicates on-disk data corruption: the sidecar JSON parses successfully
+    but a required field (e.g. ``byte_length``) carries a type that the
+    runtime cannot coerce to the expected primitive. Unlike
+    :class:`OutboundStorageIntegrityError` (which covers hash mismatches on
+    payload bytes), this error surfaces schema-level violations in the sidecar
+    metadata file itself.
+    """
+
+
 __all__ = [
     "OutboundStorageConflictError",
     "OutboundStorageError",
@@ -67,4 +79,5 @@ __all__ = [
     "OutboundStorageQuotaError",
     "OutboundStorageUnavailableError",
     "OutboundStorageValidationError",
+    "StorageCorruptionError",
 ]

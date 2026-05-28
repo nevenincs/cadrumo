@@ -8,7 +8,7 @@ selects a foral regime that this profile shape does not model.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreError
 
 
 class TaxResidenceProfileError(AeatError):
@@ -62,8 +62,26 @@ class ProfileValidationError(TaxResidenceProfileError, ValueError):
     """
 
 
+class ProfileKeysRegistrationError(CoreError):
+    """Raised when profile keys are registered a second time with a conflicting tuple.
+
+    The profile-key registry is single-writer: the first registration wins.
+    A second call that supplies a different tuple is a programming error;
+    this typed exception replaces the bare ``RuntimeError`` so callers can
+    catch it precisely and the error surfaces in the central registry.
+    """
+
+    def __init__(self) -> None:
+        """Build the profile-keys-already-registered error."""
+        super().__init__(
+            "profile keys already registered with a different tuple",
+            context={"registry": "profile._keys"},
+        )
+
+
 __all__ = [
     "ForalRegimeError",
+    "ProfileKeysRegistrationError",
     "ProfileNotConfiguredError",
     "ProfileValidationError",
     "TaxResidenceProfileError",

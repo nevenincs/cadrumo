@@ -691,6 +691,51 @@ class SourceCitation(RegistryModel):
         return value
 
 
+class BboxAnchorSpec(RegistryModel):
+    """Spatial anchor configuration for the ``bbox_anchored`` extraction strategy.
+
+    The bbox_anchored strategy locates a printed box number in the PDF word
+    stream and resolves the associated monetary value by its positional
+    relationship to that anchor word.
+
+    Attributes:
+        box_number_pattern: Regex matched against each word's text to locate
+            the line-end box number (e.g. ``r"\\b01\\b"`` or a casilla id
+            string).  Only anchor words whose x-coordinate falls within
+            ``[anchor_x_min, anchor_x_max]`` (if set) are considered; when
+            both are ``None`` the full page is searched.  Zero resolved hits
+            produce a ``missing`` error; multiple resolved hits produce an
+            ``ambiguous`` error.
+        value_offset: Direction from the anchor word to the value word.
+            ``"right_of_number"`` selects the closest word to the right on
+            the same y-row (AEAT multi-column tables with values in a
+            right-hand column).  ``"left_of_number"`` and
+            ``"above_number"`` are reserved for future form layouts.
+        anchor_x_min: Optional minimum x0 coordinate (points) for the anchor
+            word search.  Used to restrict the box-number search to a specific
+            column when the same two-digit text appears in multiple columns
+            (e.g. in formula references embedded in label lines).
+        anchor_x_max: Optional maximum x0 coordinate (points) for the anchor
+            word search.  Paired with ``anchor_x_min`` to form an x-range gate.
+        value_x_max: Optional maximum x0 coordinate (points) for the resolved
+            value word.  Used in multi-column layouts to prevent the parser
+            from selecting a word from the next column (e.g. the next box
+            number) when the current cell is empty.  When ``None`` only the
+            general ``_BBOX_X_GAP_TOLERANCE`` limit applies.
+        column_anchor: Optional column-header text for multi-column tables
+            where the same box number may appear in multiple columns.
+            When set, the search is constrained to words whose x-coordinate
+            falls within the column identified by this text.
+    """
+
+    box_number_pattern: str
+    value_offset: Literal["left_of_number", "above_number", "right_of_number"]
+    anchor_x_min: float | None = None
+    anchor_x_max: float | None = None
+    value_x_max: float | None = None
+    column_anchor: str | None = None
+
+
 class ExtractionTargetDefinition(RegistryModel):
     """Per-target descriptor for a registry extraction profile.
 
@@ -705,6 +750,9 @@ class ExtractionTargetDefinition(RegistryModel):
             at line start (numeric forms, e.g. ``"01"``).
             ``"named_label"`` anchors on the human-readable printed label
             (for text-field modelos where a slug id is never printed).
+            ``"bbox_anchored"`` locates the box number in the PDF word stream
+            by position and reads the adjacent value word; requires
+            ``bbox_anchor`` to be populated.
         value_kind: The type of value the capture group returns.
             ``"amount"`` expects a Spanish-formatted decimal amount;
             ``"text"`` expects the last whitespace-delimited token on the line;
@@ -713,19 +761,27 @@ class ExtractionTargetDefinition(RegistryModel):
             strategy.  The parser inserts this pattern where the casilla-id
             literal would appear in the numeric path.  Must be ``None`` for
             the ``"numeric_casilla"`` strategy.
+        bbox_anchor: Required spatial anchor config for the ``bbox_anchored``
+            strategy.  Must be ``None`` for ``"numeric_casilla"`` and
+            ``"named_label"`` strategies.
     """
 
     casilla_id: CasillaId
-    match_strategy: Literal["numeric_casilla", "named_label"]
+    match_strategy: Literal["numeric_casilla", "named_label", "bbox_anchored"]
     value_kind: Literal["amount", "text", "enum"]
     label_pattern: str | None = None
+    bbox_anchor: BboxAnchorSpec | None = None
 
     @model_validator(mode="after")
-    def _label_pattern_matches_strategy(self) -> ExtractionTargetDefinition:
+    def _field_strategy_consistency(self) -> ExtractionTargetDefinition:
         if self.match_strategy == "named_label" and not self.label_pattern:
             raise RegistryValidationError("named_label extraction targets require label_pattern")
         if self.match_strategy == "numeric_casilla" and self.label_pattern is not None:
             raise RegistryValidationError("numeric_casilla extraction targets must not define label_pattern")
+        if self.match_strategy == "bbox_anchored" and self.bbox_anchor is None:
+            raise RegistryValidationError("bbox_anchored extraction targets require bbox_anchor")
+        if self.match_strategy != "bbox_anchored" and self.bbox_anchor is not None:
+            raise RegistryValidationError("bbox_anchor must be None for non-bbox_anchored strategies")
         return self
 
 

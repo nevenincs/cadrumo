@@ -19,10 +19,12 @@ from aeat.adapters.outbound.storage import (
     ProviderKind,
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
+    StorageCorruptionError,
     StorageProvider,
     OutboundStorageValidationError,
 )
 from aeat.adapters.outbound.storage._local import LocalFileSystemProvider
+from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_outbound]
 
@@ -216,3 +218,49 @@ def test_put_rejects_namespace_with_slash(provider: LocalFileSystemProvider) -> 
 def test_put_rejects_blank_content_hash(provider: LocalFileSystemProvider) -> None:
     with pytest.raises(OutboundStorageValidationError, match="content_hash"):
         provider.put("ledger_transaction", "abcdef0123456789", b"x", content_hash="", label="x")
+
+
+# ---------------------------------------------------------------------------
+# S16: StorageCorruptionError registry, envelope, and real read-path coverage
+# ---------------------------------------------------------------------------
+
+
+def test_storage_corruption_error_is_registered_in_error_registry() -> None:
+    """StorageCorruptionError must have a bound ErrorCode in ERROR_REGISTRY."""
+    assert "INTEGRITY_OUTBOUND_STORAGE_CORRUPTION" in ERROR_REGISTRY
+
+
+def test_storage_corruption_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a valid envelope for StorageCorruptionError."""
+    err = StorageCorruptionError(
+        "sidecar byte_length has unexpected type: <class 'list'>",
+        context={"actual_type": "list"},
+    )
+    envelope = build_error_envelope(err)
+    assert envelope.code == "INTEGRITY_OUTBOUND_STORAGE_CORRUPTION"
+    assert envelope.retryable is False
+    assert "actual_type" in (envelope.context or {})
+
+
+def test_get_raises_storage_corruption_error_when_sidecar_byte_length_is_wrong_type(
+    provider: LocalFileSystemProvider,
+    tmp_path: Path,
+) -> None:
+    """The real read path must raise StorageCorruptionError when byte_length is a list."""
+    payload = b"corruption-test-payload"
+    metadata = provider.put(
+        "ledger_transaction",
+        "aabbccdd00112233",
+        payload,
+        content_hash=_hash(payload),
+        label="corruption",
+    )
+    # Locate and corrupt the sidecar: replace byte_length int with a list.
+    obj_path = Path(metadata.provider_object_id)
+    sidecar_path = obj_path.with_name(obj_path.stem + ".meta.json")
+    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    sidecar["byte_length"] = [42]  # unexpected type: list
+    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+
+    with pytest.raises(StorageCorruptionError):
+        provider.get("ledger_transaction", "aabbccdd00112233")

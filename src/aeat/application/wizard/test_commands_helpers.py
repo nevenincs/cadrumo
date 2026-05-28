@@ -107,11 +107,18 @@ def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
 
 
 def test_tax_residence_ccaa_choices_match_the_ccaa_enum() -> None:
-    """The CCAA choice tokens are derived from the canonical CCAA enum."""
+    """The CCAA choice tokens are the canonical CCAA enum plus foral redirects.
+
+    The two foral tokens (``pais_vasco``, ``navarra``) are accepted by Click
+    so the operator receives a localised redirect-to-foral-Hacienda refusal
+    rather than a generic "not one of" error; the wizard persistence layer
+    rejects them via ``ForalRegimeError``. See ``_ccaa_choice_values``.
+    """
 
     from ...domain.profile._ccaa import CCAA
 
-    assert _CCAA_CHOICE_VALUES == [member.value for member in CCAA]
+    expected = [member.value for member in CCAA] + ["pais_vasco", "navarra"]
+    assert _CCAA_CHOICE_VALUES == expected
 
 
 def test_no_flag_name_inserts_no_prefix_for_confirm_questions() -> None:

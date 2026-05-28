@@ -17,7 +17,11 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.logging import get_logger
 from ._enums import BusinessClassification
+from ._errors import ClassificationRuleError
+
+_logger = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -59,7 +63,9 @@ class LedgerClassificationRule(BaseModel):
         try:
             re.compile(value)
         except re.error as exc:
-            raise ValueError(f"description_pattern is not a valid regex: {exc}") from exc
+            raise ClassificationRuleError(
+                f"description_pattern is not a valid regex: {exc}"
+            ) from exc
         return value
 
     @classmethod

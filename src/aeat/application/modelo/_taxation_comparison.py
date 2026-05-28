@@ -26,6 +26,7 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.errors import CoreError
 from ...domain.calculations.registry import (
     RegistrySnapshot,
     calculate_registry_snapshot,
@@ -217,7 +218,7 @@ def compare_taxation_modes(
 # ---------------------------------------------------------------------------
 
 
-class TaxationComparisonError(Exception):
+class TaxationComparisonError(CoreError):
     """Raised when a conjunta-vs-individual comparison cannot be performed."""
 
 
