@@ -71,8 +71,8 @@ envelope.
 - [ ] `W01.P01.S10` - add real-behavior test asserting workflow-input-mismatch envelope and registry binding; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P01.S11` - introduce `AdapterTypeError(CoreError)` or reuse `McpLaunchError`; `replace the `TypeError`; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
 - [ ] `W01.P01.S12` - add real-behavior test asserting verify adapter type-error envelope; `src/aeat/adapters/outbound/aeat/verify/test_verify.py`.
-- [ ] `W01.P01.S13` - introduce `BrowserAdapterTypeError(CoreError)`; `replace the three `TypeError` raises across `_renta_web_open.py`, `_nif_iva_check.py`, `_groi_check.py`; `src/aeat/adapters/outbound/aeat/sede/_errors.py`.
-- [ ] `W01.P01.S14` - add real-behavior test asserting browser-adapter-type-error envelope and registry binding; `src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py`.
+- [x] `W01.P01.S13` - introduce `BrowserAdapterTypeError(CoreError)`; `replace the three `TypeError` raises across `_renta_web_open.py`, `_nif_iva_check.py`, `_groi_check.py`; `src/aeat/adapters/outbound/aeat/sede/_errors.py`.
+- [x] `W01.P01.S14` - add real-behavior test asserting browser-adapter-type-error envelope and registry binding; `src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py`.
 - [x] `W01.P01.S15` - introduce `StorageCorruptionError(CoreError)`; `replace the `TypeError`; `src/aeat/adapters/outbound/storage/_local.py`.
 - [x] `W01.P01.S16` - add real-behavior test asserting storage-corruption-error envelope round-trip; `src/aeat/adapters/outbound/storage/test_local.py`.
 - [x] `W01.P01.S17` - introduce `ObservationKeyError(CoreValidationError)`; `replace the five `ValueError` raises at observation-key validation; `src/aeat/application/calculations/_observations_repository.py`.
