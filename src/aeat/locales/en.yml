@@ -307,7 +307,7 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
       m210_baseline_tipo_deferred:
-        next_action: application.modelo.findings.m210_baseline_tipo_deferred.next_action
+        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence to claim the applicable Convenio rate, or wait for the baseline corpus to incorporate this row.'
       m210_convenio_rate_missing:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country

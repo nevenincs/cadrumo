@@ -342,7 +342,7 @@ application:
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
       m210_baseline_tipo_deferred:
-        next_action: application.modelo.findings.m210_baseline_tipo_deferred.next_action
+        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable, o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_rate_missing:
         next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
           para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
