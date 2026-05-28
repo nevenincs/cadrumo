@@ -27,7 +27,7 @@ import logging
 import os
 import shutil
 import sys
-from typing import TextIO
+from typing import Final, TextIO
 
 # Minimum render width for the help surface. The wizard `profile
 # create` / `edit` verbs expose ~40 flags, including long negatable
@@ -45,6 +45,9 @@ from typing import TextIO
 # and help columns — a 200-column floor still ellipsised three pairs,
 # whereas 240 fits every flag name in full.
 _MIN_HELP_RENDER_COLUMNS = 240
+
+#: Environment variable key Rich uses to determine console column width.
+_COLUMNS_ENV_VAR: Final[str] = "COLUMNS"
 
 #: argv tokens that request the help surface.
 _HELP_TOKENS = frozenset({"--help", "-h"})
@@ -71,7 +74,7 @@ def _ensure_help_render_width() -> None:
 
     if not _help_surface_requested():
         return
-    resolved = os.environ.get("COLUMNS")
+    resolved = os.environ.get(_COLUMNS_ENV_VAR)
     if resolved is not None:
         try:
             current = int(resolved)
@@ -83,7 +86,7 @@ def _ensure_help_render_width() -> None:
         current = shutil.get_terminal_size(fallback=(80, 24)).columns
         if current >= _MIN_HELP_RENDER_COLUMNS:
             return
-    os.environ["COLUMNS"] = str(_MIN_HELP_RENDER_COLUMNS)
+    os.environ[_COLUMNS_ENV_VAR] = str(_MIN_HELP_RENDER_COLUMNS)
 
 
 def _set_windows_console_utf8() -> None:
