@@ -138,6 +138,17 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
 ) = _irpf_personal_choice_values()
 
 
+def _iva_regime_choice_values() -> list[str]:
+    """Return the IVARegime choice tokens accepted by ``--iva-regime``."""
+
+    from ...domain.deadlines._models import IVARegime
+
+    return [member.value for member in IVARegime]
+
+
+_IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
+
+
 def _flag_name(question: WizardQuestion) -> str:
     """Map a question id to its primary Typer flag name."""
 
@@ -242,7 +253,7 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     ),
     "iva-regime": typer.Option(
         "--iva-regime",
-        click_type=click.Choice(["GENERAL", "SIMPLIFICADO", "RECARGO_EQUIVALENCIA", "EXENTO"]),
+        click_type=click.Choice(_IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
     "iva-roi-enrolled": typer.Option(

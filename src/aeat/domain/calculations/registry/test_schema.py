@@ -10,7 +10,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ._schema import CasillaDefinition, InputKind
+from ._schema import CasillaDefinition, CasillaFieldKind, ExportFieldDefinition, InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -163,3 +163,77 @@ def test_casilla_default_input_kind_is_manual() -> None:
     )
     assert casilla.input_kind is InputKind.MANUAL
     assert casilla.input_kind == "manual"
+
+
+# ---------------------------------------------------------------------------
+# CasillaFieldKind enum surface — S170
+# ---------------------------------------------------------------------------
+
+_FIELD_BASE = dict(
+    id="f001",
+    data_type="text",
+    required=True,
+    padding="none",
+    justification="left",
+    signed=False,
+    legal_refs=(_DUMMY_LEGAL_ID,),
+    source_refs=(_DUMMY_SOURCE_ID,),
+)
+
+
+def test_casilla_field_kind_members_have_expected_values() -> None:
+    """Each CasillaFieldKind member carries the TOML-authoritative string value."""
+    assert CasillaFieldKind.LITERAL == "literal"
+    assert CasillaFieldKind.CASILLA == "casilla"
+    assert CasillaFieldKind.BINDING == "binding"
+    assert CasillaFieldKind.COMPUTED == "computed"
+    assert CasillaFieldKind.DRAFT == "draft"
+    assert CasillaFieldKind.FILLER == "filler"
+    assert CasillaFieldKind.HEADER == "header"
+    assert CasillaFieldKind.CHECKSUM == "checksum"
+
+
+def test_casilla_field_kind_is_str() -> None:
+    """StrEnum members are instances of str — serialisation-transparent."""
+    for member in CasillaFieldKind:
+        assert isinstance(member, str), f"{member!r} is not a str instance"
+
+
+@pytest.mark.parametrize(
+    "member, raw_string, extra",
+    [
+        (CasillaFieldKind.LITERAL, "literal", {"literal": "TEST"}),
+        (CasillaFieldKind.CASILLA, "casilla", {"casilla": "01"}),
+        (CasillaFieldKind.BINDING, "binding", {"binding": "some.binding"}),
+        (CasillaFieldKind.FILLER, "filler", {"length": 10}),
+    ],
+)
+def test_export_field_roundtrip_valid_casilla_field_kind(
+    member: CasillaFieldKind,
+    raw_string: str,
+    extra: dict,
+) -> None:
+    """ExportFieldDefinition accepts each member string and round-trips via model_dump."""
+    field = ExportFieldDefinition(**_FIELD_BASE, kind=raw_string, **extra)  # type: ignore[arg-type]
+    assert field.kind == member
+    assert isinstance(field.kind, CasillaFieldKind)
+    dumped = field.model_dump()
+    assert dumped["kind"] == raw_string
+
+
+def test_export_field_rejects_unknown_kind() -> None:
+    """ExportFieldDefinition raises ValidationError for an unrecognised kind token."""
+    with pytest.raises(ValidationError):
+        ExportFieldDefinition(**_FIELD_BASE, kind="bogus_kind")  # type: ignore[arg-type]
+
+
+def test_export_field_rejects_empty_string_kind() -> None:
+    """An empty string is not a valid CasillaFieldKind member."""
+    with pytest.raises(ValidationError):
+        ExportFieldDefinition(**_FIELD_BASE, kind="")  # type: ignore[arg-type]
+
+
+def test_export_field_rejects_numeric_kind() -> None:
+    """A numeric value is not a valid CasillaFieldKind member."""
+    with pytest.raises(ValidationError):
+        ExportFieldDefinition(**_FIELD_BASE, kind=99)  # type: ignore[arg-type]
