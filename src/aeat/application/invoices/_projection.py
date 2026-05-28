@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict
 
+from ...core.decimal import format_decimal
 from ...core.logging import get_logger
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
@@ -86,8 +87,8 @@ def project_invoice_review(invoice: Invoice, review: InvoiceReviewRecord | None)
         id=invoice.invoice_id,
         kind=invoice.kind.value,
         issued_at=invoice.issued_at.isoformat() if invoice.issued_at else None,
-        base=_format_decimal(base),
-        iva=_format_decimal(iva),
+        base=format_decimal(base, normalize=True, none_value="0"),
+        iva=format_decimal(iva, normalize=True, none_value="0"),
         status=invoice_review_status(invoice, review),
         payment=payment,
         payment_id=payment,
@@ -167,12 +168,6 @@ def project_invoice_payment_matches(
             unmatched.append(InvoiceMatchRow(invoice=invoice.invoice_id))
     return InvoiceMatchProjection(period=period, matched=tuple(matched), unmatched=tuple(unmatched))
 
-
-def _format_decimal(value: Decimal | None) -> str:
-    if value is None:
-        return "0"
-    normalized = value.normalize()
-    return format(normalized, "f")
 
 
 __all__ = [

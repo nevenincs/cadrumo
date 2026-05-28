@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Protocol
 
+from ....core.decimal import format_decimal
 from ....core.logging import get_logger
 from ....domain.filing import ModeloBuilderError
 from ._kind import ModeloDivergenceKind
@@ -187,8 +188,8 @@ def reconcile(
             FieldMismatch(
                 kind=ModeloDivergenceKind.TOTAL_INGRESAR_MISMATCH,
                 field_name="total_a_ingresar",
-                draft_value=_format_decimal(draft_totals.ingresar),
-                remote_value=_format_decimal(remote.total_a_ingresar),
+                draft_value=format_decimal(draft_totals.ingresar),
+                remote_value=format_decimal(remote.total_a_ingresar),
             )
         )
     if (
@@ -200,8 +201,8 @@ def reconcile(
             FieldMismatch(
                 kind=ModeloDivergenceKind.TOTAL_DEVOLVER_MISMATCH,
                 field_name="total_a_devolver",
-                draft_value=_format_decimal(draft_totals.devolver),
-                remote_value=_format_decimal(remote.total_a_devolver),
+                draft_value=format_decimal(draft_totals.devolver),
+                remote_value=format_decimal(remote.total_a_devolver),
             )
         )
 
@@ -386,10 +387,6 @@ def _canonical_tax_id(value: str) -> str:
     """Canonicalise a NIF / NIE for tolerant comparison (strip + upper)."""
     return value.strip().upper()
 
-
-def _format_decimal(value: Decimal) -> str:
-    """Render a :class:`Decimal` in fixed-point notation for mismatch records."""
-    return format(value, "f")
 
 
 def _narrative_not_yet_found(draft: ModeloDraft) -> str:
