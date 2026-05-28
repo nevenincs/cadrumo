@@ -23,6 +23,7 @@ from ..errors import (
     DecryptionError,
     EnvelopeVersionError,
     RepositoryError,
+    SecureObjectRevisionConflictError,
     StorageValidationError,
 )
 from . import _orm
@@ -97,6 +98,7 @@ class SecureObjectWrite(BaseModel):
     payload: bytes = Field(min_length=1)
     write_provenance: str = Field(default=_DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
     source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
+    expected_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
 
 
 class SecureObjectUnreadable(BaseModel):
@@ -925,6 +927,7 @@ class SecureObjectRepository:
         payload: bytes,
         write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
         source_event_id: str | None = None,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Encrypt and upsert one byte payload keyed by a natural string id.
 
@@ -943,6 +946,7 @@ class SecureObjectRepository:
             payload=payload,
             write_provenance=write_provenance,
             source_event_id=source_event_id,
+            expected_revision_id=expected_revision_id,
         )
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
@@ -969,6 +973,7 @@ class SecureObjectRepository:
                     payload=write.payload,
                     write_provenance=write.write_provenance,
                     source_event_id=write.source_event_id,
+                    expected_revision_id=write.expected_revision_id,
                 )
 
     def save_with_raw_key(
@@ -982,6 +987,7 @@ class SecureObjectRepository:
         payload: bytes,
         write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
         source_event_id: str | None = None,
+        expected_revision_id: str | None = None,
     ) -> None:
         """Encrypt and upsert one byte payload keyed by a pre-computed digest.
 
@@ -1019,6 +1025,7 @@ class SecureObjectRepository:
             payload=payload,
             write_provenance=write_provenance,
             source_event_id=source_event_id,
+            expected_revision_id=expected_revision_id,
         )
 
     def _save_internal(
@@ -1032,6 +1039,7 @@ class SecureObjectRepository:
         payload: bytes,
         write_provenance: str,
         source_event_id: str | None,
+        expected_revision_id: str | None,
     ) -> None:
         """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
         self._enforce_registered_write_policy(
@@ -1050,6 +1058,7 @@ class SecureObjectRepository:
                 payload=payload,
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
+                expected_revision_id=expected_revision_id,
             )
 
     def _save_internal_in_session(
@@ -1064,6 +1073,7 @@ class SecureObjectRepository:
         payload: bytes,
         write_provenance: str,
         source_event_id: str | None,
+        expected_revision_id: str | None,
     ) -> None:
         previous_revision_id: str | None = None
         previous_payload_hash: str | None = None
@@ -1085,6 +1095,12 @@ class SecureObjectRepository:
             previous_payload_hash = previous_metadata.payload_hash or hashlib.sha256(
                 previous_metadata.payload,
             ).hexdigest()
+        elif expected_revision_id is not None:
+            raise self._revision_conflict(
+                namespace=namespace,
+                expected_revision_id=expected_revision_id,
+                current_revision_id=None,
+            )
         try:
             if row_id is None:
                 row = _orm.SecureObjectRow(
@@ -1099,16 +1115,29 @@ class SecureObjectRepository:
                 session.flush()
                 row_id = row.id
             else:
-                session.execute(
-                    update(_orm.SecureObjectRow)
-                    .where(_orm.SecureObjectRow.id == row_id)
-                    .values(
-                        classification=classification.value,
-                        schema_version=schema_version,
-                        written_at=written_at,
-                        payload=payload,
-                    )
+                update_stmt = update(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id)
+                if expected_revision_id is not None:
+                    update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
+                result = cast(
+                    "CursorResult[object]",
+                    session.execute(
+                        update_stmt.values(
+                            classification=classification.value,
+                            schema_version=schema_version,
+                            written_at=written_at,
+                            payload=payload,
+                        )
+                    ),
                 )
+                if expected_revision_id is not None and result.rowcount != 1:
+                    current_revision_id = session.execute(
+                        select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id)
+                    ).scalar_one_or_none()
+                    raise self._revision_conflict(
+                        namespace=namespace,
+                        expected_revision_id=expected_revision_id,
+                        current_revision_id=current_revision_id,
+                    )
                 session.flush()
             self._write_revision_metadata(
                 session,
@@ -1121,6 +1150,9 @@ class SecureObjectRepository:
                 previous_payload_hash=previous_payload_hash,
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
+                conflict_policy=(
+                    "compare-and-swap" if expected_revision_id is not None else _DEFAULT_CONFLICT_POLICY
+                ),
             )
             session.flush()
         except IntegrityError as exc:
@@ -1141,6 +1173,7 @@ class SecureObjectRepository:
         previous_payload_hash: str | None,
         write_provenance: str,
         source_event_id: str | None,
+        conflict_policy: str,
     ) -> None:
         raw = session.execute(
             text("SELECT object_key, payload FROM secure_objects WHERE id = :row_id").bindparams(
@@ -1173,8 +1206,25 @@ class SecureObjectRepository:
                 revision_written_at=written_at,
                 write_provenance=write_provenance,
                 source_event_id=source_event_id,
-                conflict_policy=_DEFAULT_CONFLICT_POLICY,
+                conflict_policy=conflict_policy,
             )
+        )
+
+    def _revision_conflict(
+        self,
+        *,
+        namespace: str,
+        expected_revision_id: str,
+        current_revision_id: str | None,
+    ) -> SecureObjectRevisionConflictError:
+        return SecureObjectRevisionConflictError(
+            tr("errors.fail.fail_storage_secure_object_revision_conflict"),
+            context={
+                "namespace": namespace,
+                "expected_revision_id": expected_revision_id,
+                "current_revision_id": current_revision_id or "",
+            },
+            translated_message="errors.fail.fail_storage_secure_object_revision_conflict",
         )
 
     def _derive_revision_id(

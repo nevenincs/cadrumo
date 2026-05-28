@@ -15,7 +15,12 @@ from .....core.classification import SensitivityClass
 from .....core.config import Settings
 from .. import EphemeralMasterKeyProvider
 from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY, WORKFLOW_STATE_NAMESPACE
-from ..errors import ClassificationError, EnvelopeVersionError, StorageValidationError
+from ..errors import (
+    ClassificationError,
+    EnvelopeVersionError,
+    SecureObjectRevisionConflictError,
+    StorageValidationError,
+)
 from ._orm import Base, SecureObjectRow
 from .engine import create_engine_from_settings
 from .secure_objects import (
@@ -880,6 +885,236 @@ def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists()
             payload=b"policy-payload",
             conflict_policy="compare-and-swap",
         )
+
+
+def test_secure_object_save_with_expected_revision_updates_only_current_row(tmp_path: Path) -> None:
+    """Expected-revision writes update when the stored revision still matches."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-success.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 19, 0, 0, tzinfo=UTC),
+                payload=b"cas-before",
+            )
+            with sqlite3.connect(db_path) as con:
+                (first_revision_id,) = con.execute(
+                    "SELECT revision_id FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 19, 5, 0, tzinfo=UTC),
+                payload=b"cas-after",
+                expected_revision_id=first_revision_id,
+            )
+
+            with sqlite3.connect(db_path) as con:
+                revision_id, previous_revision_id, payload_hash, conflict_policy = con.execute(
+                    "SELECT revision_id, previous_revision_id, payload_hash, conflict_policy "
+                    "FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert revision_id != first_revision_id
+            assert previous_revision_id == first_revision_id
+            assert payload_hash == hashlib.sha256(b"cas-after").hexdigest()
+            assert conflict_policy == "compare-and-swap"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_stale_expected_revision_refuses_without_overwrite(tmp_path: Path) -> None:
+    """A stale expected revision must not overwrite the current secure object."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-stale.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.stale"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="cas-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 20, 0, 0, tzinfo=UTC),
+                payload=b"current-payload",
+            )
+            with sqlite3.connect(db_path) as con:
+                before = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            with pytest.raises(SecureObjectRevisionConflictError) as raised:
+                repo.save(
+                    namespace=namespace,
+                    object_key="cas-key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 22, 20, 5, 0, tzinfo=UTC),
+                    payload=b"stale-overwrite",
+                    expected_revision_id="f" * 64,
+                )
+
+            assert raised.value.context == {
+                "namespace": namespace,
+                "expected_revision_id": "f" * 64,
+                "current_revision_id": before[0],
+            }
+            assert raised.value.translated_message == "errors.fail.fail_storage_secure_object_revision_conflict"
+            with sqlite3.connect(db_path) as con:
+                after = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert after == before
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_expected_revision_refuses_missing_row(tmp_path: Path) -> None:
+    """A CAS write must not create a missing object for a stale expected revision."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-missing.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.missing"
+        try:
+            with pytest.raises(SecureObjectRevisionConflictError) as raised:
+                SecureObjectRepository(engine=engine).save(
+                    namespace=namespace,
+                    object_key="missing-key",
+                    classification=SensitivityClass.FINANCIAL,
+                    schema_version=1,
+                    written_at=datetime(2026, 5, 22, 20, 30, 0, tzinfo=UTC),
+                    payload=b"must-not-create",
+                    expected_revision_id="a" * 64,
+                )
+
+            assert raised.value.context == {
+                "namespace": namespace,
+                "expected_revision_id": "a" * 64,
+                "current_revision_id": "",
+            }
+            with sqlite3.connect(db_path) as con:
+                (row_count,) = con.execute("SELECT COUNT(*) FROM secure_objects").fetchone()
+            assert row_count == 0
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_many_revision_conflict_rolls_back_batch(tmp_path: Path) -> None:
+    """A CAS conflict in a batch rolls back sibling writes in the unit of work."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-batch.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.cas.batch"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="existing-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 21, 0, 0, tzinfo=UTC),
+                payload=b"existing-payload",
+            )
+
+            with pytest.raises(SecureObjectRevisionConflictError):
+                repo.save_many(
+                    (
+                        SecureObjectWrite(
+                            namespace=namespace,
+                            object_key="new-key",
+                            classification=SensitivityClass.FINANCIAL,
+                            schema_version=1,
+                            written_at=datetime(2026, 5, 22, 21, 5, 0, tzinfo=UTC),
+                            payload=b"must-roll-back",
+                        ),
+                        SecureObjectWrite(
+                            namespace=namespace,
+                            object_key="existing-key",
+                            classification=SensitivityClass.FINANCIAL,
+                            schema_version=1,
+                            written_at=datetime(2026, 5, 22, 21, 6, 0, tzinfo=UTC),
+                            payload=b"stale-batch-overwrite",
+                            expected_revision_id="e" * 64,
+                        ),
+                    )
+                )
+
+            with sqlite3.connect(db_path) as con:
+                rows = con.execute(
+                    "SELECT COUNT(*), SUM(CASE WHEN payload_hash = ? THEN 1 ELSE 0 END) "
+                    "FROM secure_objects WHERE namespace = ?",
+                    (hashlib.sha256(b"existing-payload").hexdigest(), namespace),
+                ).fetchone()
+            assert rows == (1, 1)
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_raw_key_supports_expected_revision(tmp_path: Path) -> None:
+    """Raw-key archive writes use the same expected-revision conflict contract."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-cas-raw-key.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        raw_key = b"x" * 32
+        namespace = "aeat.revision.cas.raw"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 0, 0, tzinfo=UTC),
+                payload=b"raw-before",
+            )
+            with sqlite3.connect(db_path) as con:
+                (first_revision_id,) = con.execute(
+                    "SELECT revision_id FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save_with_raw_key(
+                namespace=namespace,
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 22, 5, 0, tzinfo=UTC),
+                payload=b"raw-after",
+                expected_revision_id=first_revision_id,
+            )
+
+            with sqlite3.connect(db_path) as con:
+                previous_revision_id, conflict_policy = con.execute(
+                    "SELECT previous_revision_id, conflict_policy FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert previous_revision_id == first_revision_id
+            assert conflict_policy == "compare-and-swap"
+        finally:
+            engine.dispose()
 
 
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:

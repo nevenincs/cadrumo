@@ -119,7 +119,7 @@ Add lineage fields and write contracts so overwrites become traceable revisions 
 
 - [x] `W04.P07.S28` - extend the secure-object ORM with revision and integrity metadata fields; `src/aeat/adapters/persistence/storage/sql/_orm.py`.
 - [x] `W04.P07.S29` - write revision ids, previous revision references, hashes, timestamps, and provenance on secure-object saves; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `W04.P07.S30` - add compare-and-swap conflict handling for revision-aware writes; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `W04.P07.S30` - add compare-and-swap conflict handling for revision-aware writes; `src/aeat/adapters/persistence/storage/sql/secure_objects.py`.
 - [x] `W04.P07.S31` - add migration or bootstrap handling for existing rows without revision metadata; `src/aeat/adapters/persistence/storage/sql`.
 
 ### Phase `W04.P08` - fail-closed listing and source degradation
