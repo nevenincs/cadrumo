@@ -339,3 +339,94 @@ def test_site9_result_rejects_provider_payload_type_mismatch() -> None:
         )
     causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
     assert any(isinstance(c, AggregationConfigError) for c in causes)
+
+
+# ---------------------------------------------------------------------------
+# S164: StrEnum surface coverage — every source-kind constant uses AggregationSourceKind
+# ---------------------------------------------------------------------------
+
+
+def test_accepted_source_kinds_are_enum_members() -> None:
+    """ACCEPTED_SOURCE_KINDS must be a tuple of AggregationSourceKind, not raw strings."""
+    assert len(ACCEPTED_SOURCE_KINDS) == 4
+    for kind in ACCEPTED_SOURCE_KINDS:
+        assert isinstance(kind, AggregationSourceKind), (
+            f"ACCEPTED_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}, expected AggregationSourceKind"
+        )
+
+
+def test_accepted_source_kinds_covers_all_four_members() -> None:
+    """ACCEPTED_SOURCE_KINDS must contain exactly the four canonical members."""
+    expected = frozenset(AggregationSourceKind)
+    actual = frozenset(ACCEPTED_SOURCE_KINDS)
+    assert actual == expected, f"ACCEPTED_SOURCE_KINDS {actual} != all AggregationSourceKind members {expected}"
+
+
+def test_counterpart_canonical_source_kinds_are_enum_members() -> None:
+    """_counterpart._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
+    from aeat.application.aggregation._counterpart import _CANONICAL_SOURCE_KINDS as counterpart_kinds
+
+    assert len(counterpart_kinds) == 4
+    for kind in counterpart_kinds:
+        assert isinstance(kind, AggregationSourceKind), (
+            f"_counterpart._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+        )
+
+
+def test_retenciones_canonical_source_kinds_are_enum_members() -> None:
+    """_retenciones._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
+    from aeat.application.aggregation._retenciones import _CANONICAL_SOURCE_KINDS as retenciones_kinds
+
+    assert len(retenciones_kinds) == 4
+    for kind in retenciones_kinds:
+        assert isinstance(kind, AggregationSourceKind), (
+            f"_retenciones._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+        )
+
+
+def test_foreign_assets_canonical_source_kinds_are_enum_members() -> None:
+    """_foreign_assets._CANONICAL_SOURCE_KINDS must contain AggregationSourceKind members."""
+    from aeat.application.aggregation._foreign_assets import _CANONICAL_SOURCE_KINDS as foreign_kinds
+
+    assert len(foreign_kinds) == 4
+    for kind in foreign_kinds:
+        assert isinstance(kind, AggregationSourceKind), (
+            f"_foreign_assets._CANONICAL_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+        )
+
+
+def test_registry_provider_counterpart_binding_source_kinds_are_enum_members() -> None:
+    """_registry_provider._COUNTERPART_BINDING_SOURCE_KINDS must contain AggregationSourceKind members."""
+    from aeat.application.aggregation._registry_provider import _COUNTERPART_BINDING_SOURCE_KINDS
+
+    assert len(_COUNTERPART_BINDING_SOURCE_KINDS) == 4
+    for kind in _COUNTERPART_BINDING_SOURCE_KINDS:
+        assert isinstance(kind, AggregationSourceKind), (
+            f"_registry_provider._COUNTERPART_BINDING_SOURCE_KINDS entry {kind!r} is {type(kind).__name__}"
+        )
+
+
+def test_operator_accepted_kind_map_uses_enum_keys_for_aggregation_source_kinds() -> None:
+    """_operator._ACCEPTED_KIND_TO_INTERNAL must use AggregationSourceKind for the four aggregation kinds."""
+    from aeat.application.review._operator import _ACCEPTED_KIND_TO_INTERNAL
+
+    aggregation_keys = {
+        AggregationSourceKind.LEDGER_TRANSACTION,
+        AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE,
+        AggregationSourceKind.PAYABLE_INVOICE,
+        AggregationSourceKind.COLLECTIBLE_INVOICE,
+    }
+    for key in aggregation_keys:
+        assert key in _ACCEPTED_KIND_TO_INTERNAL, (
+            f"AggregationSourceKind.{key.name} ({key!r}) not found as key in _ACCEPTED_KIND_TO_INTERNAL"
+        )
+        # StrEnum members compare equal to their string values, but isinstance confirms the type
+        assert isinstance(key, AggregationSourceKind)
+
+
+def test_aggregation_source_kind_values_are_stable() -> None:
+    """AggregationSourceKind string values must remain backwards-compatible."""
+    assert AggregationSourceKind.LEDGER_TRANSACTION == "ledger_transaction"
+    assert AggregationSourceKind.PURCHASE_INVOICE_EVIDENCE == "purchase_invoice_evidence"
+    assert AggregationSourceKind.PAYABLE_INVOICE == "payable_invoice"
+    assert AggregationSourceKind.COLLECTIBLE_INVOICE == "collectible_invoice"
