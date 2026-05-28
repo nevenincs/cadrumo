@@ -67,8 +67,8 @@ envelope.
 - [x] `W01.P01.S06` - add real-behavior test asserting export error envelope and i18n for every fixed raise; `src/aeat/application/export/test_tabular.py`.
 - [x] `W01.P01.S07` - introduce `IvaCompensationModeloError(CoreError)`; `replace the `ValueError`; `src/aeat/application/calculations/_iva_compensation_history.py`.
 - [x] `W01.P01.S08` - add real-behavior test asserting IVA compensation modelo error envelope; `src/aeat/application/calculations/test_iva_compensation_history.py`.
-- [ ] `W01.P01.S09` - introduce `WorkflowInputMismatchError(CoreError)` or reuse `CoreValidationError`; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W01.P01.S10` - add real-behavior test asserting workflow-input-mismatch envelope and registry binding; `src/aeat/application/modelo/test_actions.py`.
+- [x] `W01.P01.S09` - introduce `WorkflowInputMismatchError(CoreError)` or reuse `CoreValidationError`; `src/aeat/application/modelo/_actions.py`.
+- [x] `W01.P01.S10` - add real-behavior test asserting workflow-input-mismatch envelope and registry binding; `src/aeat/application/modelo/test_actions.py`.
 - [x] `W01.P01.S11` - introduce `AdapterTypeError(CoreError)` or reuse `McpLaunchError`; `replace the `TypeError`; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
 - [x] `W01.P01.S12` - add real-behavior test asserting verify adapter type-error envelope; `src/aeat/adapters/outbound/aeat/verify/test_verify.py`.
 - [x] `W01.P01.S13` - introduce `BrowserAdapterTypeError(CoreError)`; `replace the three `TypeError` raises across `_renta_web_open.py`, `_nif_iva_check.py`, `_groi_check.py`; `src/aeat/adapters/outbound/aeat/sede/_errors.py`.
@@ -81,8 +81,8 @@ envelope.
 - [x] `W01.P01.S20` - add real-behavior test asserting auth-diagnostic phone-state envelope; `src/aeat/application/auth/test_diagnostics.py`.
 - [x] `W01.P01.S21` - introduce `ProfileKeysRegistrationError(CoreError)`; `replace the `RuntimeError`; `src/aeat/domain/profile/_keys.py`.
 - [x] `W01.P01.S22` - add real-behavior test asserting profile-keys-registration envelope on double registration; `src/aeat/domain/profile/test_keys.py`.
-- [ ] `W01.P01.S23` - introduce `PensionReduccionError(CoreValidationError)`; `replace the six `ValueError` raises at pension reducción computation; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W01.P01.S24` - add real-behavior test asserting pension-reducción error envelope at every replaced raise; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W01.P01.S23` - introduce `PensionReduccionError(CoreValidationError)`; `replace the six `ValueError` raises at pension reducción computation; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P01.S24` - add real-behavior test asserting pension-reducción error envelope at every replaced raise; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [x] `W01.P01.S25` - introduce `BindingPrefillTypeError(CoreValidationError)`; `replace the `TypeError`; `src/aeat/application/calculations/_binding_prefill.py`.
 - [x] `W01.P01.S26` - add real-behavior test asserting binding-prefill-type-error envelope; `src/aeat/application/calculations/test_binding_prefill.py`.
 - [x] `W01.P01.S27` - introduce `WizardAnswerTypeError(CoreValidationError)`; `replace every coercion `TypeError` / `ValueError` raise (15+ sites); `src/aeat/application/wizard/_setup_answers.py`.
@@ -91,8 +91,8 @@ envelope.
 - [x] `W01.P01.S30` - add real-behavior test asserting recovery-facade envelope under each upstream exception class; `src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py`.
 - [x] `W01.P01.S31` - narrow the `except Exception` to specific `AeatError` subtypes; `remove the no-active-profile reclassification; `src/aeat/entrypoints/cli/_ledger.py`.
 - [x] `W01.P01.S32` - add real-behavior test asserting non-NoActiveProfileError exceptions propagate with their original envelope; `src/aeat/entrypoints/cli/test_ledger.py`.
-- [ ] `W01.P01.S33` - narrow the autocomplete `except Exception` to specific `AeatError` subtypes; `log others at DEBUG via observability sink; `src/aeat/entrypoints/cli/_modelo.py`.
-- [ ] `W01.P01.S34` - add real-behavior test asserting autocomplete propagates AeatError envelope and observability records non-AeatError; `src/aeat/entrypoints/cli/test_modelo.py`.
+- [x] `W01.P01.S33` - narrow the autocomplete `except Exception` to specific `AeatError` subtypes; `log others at DEBUG via observability sink; `src/aeat/entrypoints/cli/_modelo.py`.
+- [x] `W01.P01.S34` - add real-behavior test asserting autocomplete propagates AeatError envelope and observability records non-AeatError; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [x] `W01.P01.S35` - wrap each of the seven `except Exception` clauses in `_record_unhandled` with `build_error_envelope`; `assign a synthetic `UNHANDLED_INTERNAL` `ErrorCode`; `src/aeat/application/workflow/_engine.py`.
 - [x] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
 - [x] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
