@@ -55,7 +55,7 @@ Make the success-output renderer the mandatory privacy boundary for text and JSO
 - [x] `W01.P02.S09` - update output-rendering tests for text and JSON redaction while preserving JSON shape; `src/aeat/core/test_output_rendering.py`.
 - [x] `W01.P02.S10` - route JSON-envelope success emission through the central output redaction path; `src/aeat/core/json_contract.py`.
 - [x] `W01.P02.S11` - add JSON-envelope redaction roundtrip coverage for schema-preserving payloads; `src/aeat/core/test_json_envelope_roundtrip.py`.
-- [ ] `W01.P02.S12` - route `_emit` and `_emit_envelope` through the redacted renderer only; `src/aeat/entrypoints/cli/_common.py`.
+- [x] `W01.P02.S12` - route `_emit` and `_emit_envelope` through the redacted renderer only; `src/aeat/entrypoints/cli/_common.py`.
 - [ ] `W01.P02.S13` - preserve startup and root callback stderr behavior while composing shared redaction; `src/aeat/entrypoints/cli/__init__.py`.
 - [ ] `W01.P02.S14` - preserve error-boundary stderr behavior while composing shared redaction; `src/aeat/entrypoints/cli/_errors.py`.
 
