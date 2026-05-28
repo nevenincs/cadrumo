@@ -318,14 +318,14 @@ typed structures. Each fix Step is paired with a verification Step
 that asserts the new typed contract holds under representative
 inputs.
 
-- [ ] `W01.P08.S189` - replace `cast(T, envelope.payload)` with envelope-generic refinement or add inline rationale; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W01.P08.S190` - add real-behavior test asserting envelope payload type is preserved across the generic boundary; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
-- [ ] `W01.P08.S191` - replace `cast(Any, Envelope).__class_getitem__(...)` with a typed factory method; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W01.P08.S192` - add real-behavior test asserting the typed factory yields the correct envelope subtype per payload; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
-- [ ] `W01.P08.S193` - replace `cast(Callable[P, R], existing)` with a `TypeGuard` or runtime-protocol check; `src/aeat/entrypoints/cli/_errors.py`.
-- [ ] `W01.P08.S194` - add real-behavior test asserting the type-guard narrows correctly for valid / invalid callables; `src/aeat/entrypoints/cli/test_errors.py`.
-- [ ] `W01.P08.S195` - add inline rationale to every remaining production `cast()` call or refactor to remove the cast; `track each remaining cast as a Wave 2 follow-up Step; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `W01.P08.S196` - add real-behavior test asserting the inline-rationale comment survives a refactor and the cast contract still holds; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
+- [x] `W01.P08.S189` - replace `cast(T, envelope.payload)` with envelope-generic refinement or add inline rationale; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `W01.P08.S190` - add real-behavior test asserting envelope payload type is preserved across the generic boundary; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
+- [x] `W01.P08.S191` - replace `cast(Any, Envelope).__class_getitem__(...)` with a typed factory method; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `W01.P08.S192` - add real-behavior test asserting the typed factory yields the correct envelope subtype per payload; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
+- [x] `W01.P08.S193` - replace `cast(Callable[P, R], existing)` with a `TypeGuard` or runtime-protocol check; `src/aeat/entrypoints/cli/_errors.py`.
+- [x] `W01.P08.S194` - add real-behavior test asserting the type-guard narrows correctly for valid / invalid callables; `src/aeat/entrypoints/cli/test_errors.py`.
+- [x] `W01.P08.S195` - add inline rationale to every remaining production `cast()` call or refactor to remove the cast; `track each remaining cast as a Wave 2 follow-up Step; `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `W01.P08.S196` - add real-behavior test asserting the inline-rationale comment survives a refactor and the cast contract still holds; `src/aeat/adapters/persistence/storage/envelope/test_secure_repository.py`.
 - [ ] `W01.P08.S197` - refine the Google adapter `-> Any` returns using `google-api-python-client-stubs` if present; `otherwise wrap the response in a `TypedDict`; `src/aeat/adapters/outbound/google/_api.py`.
 - [ ] `W01.P08.S198` - add real-behavior test asserting Google API responses validate against the typed shape; `src/aeat/adapters/outbound/google/test_api.py`.
 - [ ] `W01.P08.S199` - refine the calc-sheets-pull `-> Any` returns using TypedDict or pydantic; `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`.
