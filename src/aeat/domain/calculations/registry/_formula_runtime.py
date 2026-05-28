@@ -27,6 +27,25 @@ from ._schema import (
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
 
+# M210 IRNR Phase 1 sentinel rate values. Emitted by
+# ``m210_resolve_rate`` when a deterministic rate cannot be resolved
+# from the registry parameters at evaluation time. The verification
+# layer rewrites these sentinels into BLOCKING findings post-engine
+# (see ``_rewrite_m210_sentinels`` in the application layer); they
+# never leak past the verification boundary into a draft / export.
+# Negative magnitudes guarantee no collision with a real registry-
+# authored rate, which is always in ``[0, 1]`` per TRLIRNR Art 25.
+_M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
+_M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
+_M210_NOT_YET_AUTHORED_SENTINEL = Decimal("-3")
+_M210_RATE_SENTINELS = frozenset(
+    {
+        _M210_DEFERRED_TIPO_SENTINEL,
+        _M210_CONVENIO_MISSING_SENTINEL,
+        _M210_NOT_YET_AUTHORED_SENTINEL,
+    }
+)
+
 
 class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
@@ -548,6 +567,8 @@ def _evaluate_expression(
         return _evaluate_lookup_bracket(expression, ctx)
     if op == "lookup_bracket_by_ccaa":
         return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
+    if op == "m210_resolve_rate":
+        return _evaluate_m210_resolve_rate(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
         return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
     if op == "lookup_bracket_by_entity_type":
@@ -659,6 +680,107 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
+
+
+def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M210 IRNR tipo de gravamen rate from registry parameters.
+
+    Four leaf args: ``(tipo_renta_casilla, baseline_param,
+    convenio_param, country_binding)``. The handler reads the text
+    casilla via ``ctx.text_values``, the baseline / convenio
+    parameters via ``ctx.parameters``, and the country binding via
+    ``ctx.enum_binding_values``. Returns the resolved Decimal rate, or
+    one of the M210 rate-sentinel constants when a deterministic rate
+    cannot be produced (deferred baseline, missing Convenio row,
+    NOT_YET_AUTHORED placeholder). The verification layer rewrites
+    the sentinels into BLOCKING findings post-engine.
+    """
+    op = "m210_resolve_rate"
+    if len(expression.args) != 4:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 4 args, got {len(expression.args)}"
+        )
+    tipo_arg, baseline_arg, convenio_arg, country_arg = expression.args
+    if tipo_arg.casilla is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf"
+        )
+    if baseline_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a parameter leaf"
+        )
+    if convenio_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[2] to be a parameter leaf"
+        )
+    if country_arg.binding is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[3] to be a binding leaf"
+        )
+
+    tipo_renta = ctx.text_values.get(tipo_arg.casilla, "")
+    ctx.operand_refs.append(tipo_arg.casilla)
+    if not tipo_renta:
+        ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+        return _M210_DEFERRED_TIPO_SENTINEL
+
+    baseline_param = ctx.parameters.get(baseline_arg.parameter)
+    convenio_param = ctx.parameters.get(convenio_arg.parameter)
+    ctx.operand_refs.append(baseline_arg.parameter)
+    ctx.operand_refs.append(convenio_arg.parameter)
+    ctx.operand_refs.append(country_arg.binding)
+
+    year = ctx.filing_year
+
+    baseline_rate: Decimal | None = None
+    if baseline_param is not None:
+        for entry in baseline_param.keyed_brackets:
+            if (
+                entry.key == tipo_renta
+                and entry.valid_from.year <= year
+                and (entry.valid_to is None or entry.valid_to.year >= year)
+            ):
+                try:
+                    baseline_rate = Decimal(entry.value)
+                except (ArithmeticError, ValueError):
+                    baseline_rate = None
+                break
+
+    country = ctx.enum_binding_values.get(country_arg.binding) or ""
+
+    if not country:
+        if baseline_rate is None:
+            ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+            return _M210_DEFERRED_TIPO_SENTINEL
+        ctx.operand_values.append(baseline_rate)
+        return baseline_rate
+
+    cc = country.upper()
+    matched_row = None
+    if convenio_param is not None:
+        for row in convenio_param.convenio_rates:
+            if (
+                row.country_code == cc
+                and row.tipo_renta == tipo_renta
+                and row.valid_from.year <= year
+                and (row.valid_to is None or row.valid_to.year >= year)
+            ):
+                matched_row = row
+                break
+
+    if matched_row is None:
+        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
+        return _M210_CONVENIO_MISSING_SENTINEL
+    if matched_row.rate == "NOT_YET_AUTHORED":
+        ctx.operand_values.append(_M210_NOT_YET_AUTHORED_SENTINEL)
+        return _M210_NOT_YET_AUTHORED_SENTINEL
+    try:
+        rate = Decimal(matched_row.rate)
+    except (ArithmeticError, ValueError):
+        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
+        return _M210_CONVENIO_MISSING_SENTINEL
+    ctx.operand_values.append(rate)
+    return rate
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

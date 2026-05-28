@@ -332,18 +332,31 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filed_observation.period,
     )
-    input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != _InputKind.COMPUTED}
-    inputs: dict[str, Decimal] = {
-        casilla_id: value
-        for casilla_id, value in registry_observation.casilla_values.items()
-        if casilla_id in input_casillas
-    }
     binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,
         registry_source_observations,
         filing_year=filed_observation.ejercicio,
         period=filed_observation.period,
     )
+    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
+    input_casillas = set()
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind == _InputKind.COMPUTED:
+            continue
+        if (
+            casilla.input_kind == _InputKind.BOUND
+            and casilla.binding is not None
+            and (binding_def := bindings_by_id.get(casilla.binding)) is not None
+            and binding_def.source == "previous_filing"
+            and binding_def.id not in binding_values
+        ):
+            continue
+        input_casillas.add(casilla.id)
+    inputs: dict[str, Decimal] = {
+        casilla_id: value
+        for casilla_id, value in registry_observation.casilla_values.items()
+        if casilla_id in input_casillas
+    }
     relation_values = _resolve_relation_values_from_observations(
         snapshot.revision,
         registry_source_observations,

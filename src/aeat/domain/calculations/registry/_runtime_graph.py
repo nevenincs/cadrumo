@@ -101,10 +101,22 @@ _ENUM_DISPATCH_OPS: frozenset[str] = frozenset(
     }
 )
 
+#: Map of op name -> arg index that carries the string-valued enum binding
+#: leaf. The default ``_ENUM_DISPATCH_OPS`` ops carry the binding at
+#: args[1]; ``m210_resolve_rate`` carries it at args[3] (after the
+#: tipo_renta casilla + two parameter leaves).
+_ENUM_DISPATCH_BINDING_ARG_INDEX: dict[str, int] = {
+    "lookup_bracket_by_ccaa": 1,
+    "lookup_parameter_by_entity_type": 1,
+    "lookup_bracket_by_entity_type": 1,
+    "m210_resolve_rate": 3,
+}
+
 
 def _collect_enum_dispatch_binding_refs(expression: FormulaExpression, refs: list[str]) -> None:
-    if expression.op in _ENUM_DISPATCH_OPS and len(expression.args) >= 2:
-        dispatch_binding = expression.args[1].binding
+    arg_index = _ENUM_DISPATCH_BINDING_ARG_INDEX.get(expression.op or "")
+    if arg_index is not None and len(expression.args) > arg_index:
+        dispatch_binding = expression.args[arg_index].binding
         if dispatch_binding is not None:
             refs.append(dispatch_binding)
     for arg in expression.args:
