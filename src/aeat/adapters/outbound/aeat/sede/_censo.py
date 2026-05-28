@@ -33,7 +33,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from aeat.core.parsing import _parse_bool
+from aeat.core.parsing import _parse_bool, _parse_ddmmyyyy_date
 
 from ._errors import SedeError, SedeFailureMode
 
@@ -46,7 +46,6 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _WITHHOLDING_RE: Final = re.compile(r"^\s*(\d{1,2}(?:[.,]\d{1,2})?)\s*%?\s*$")
 _M2_RE: Final = re.compile(r"^\s*([0-9]+(?:[.,][0-9]+)?)\s*(?:m²|m2)?\s*$")
 _CADASTRAL_RE: Final = re.compile(r"^[0-9A-Z]{20}$")
-_DATE_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 
 
 class CensoFactSet(BaseModel):
@@ -248,27 +247,13 @@ def _parse_cadastral(raw: str | None) -> str | None:
 
 
 def _parse_date(raw: str | None, *, field: str) -> date | None:
-    if raw is None:
-        return None
-    cleaned = raw.strip()
-    if not cleaned:
-        return None
-    match = _DATE_RE.match(cleaned)
-    if match is None:
-        raise CensoParseError(
-            f"{field} value {cleaned!r} is not a dd-mm-yyyy or dd/mm/yyyy date",
-            field=field,
-            raw=raw,
-        )
-    parts = re.split(r"[-/]", match.group(1))
-    day, month, year = (int(part) for part in parts)
     try:
-        return date(year, month, day)
+        return _parse_ddmmyyyy_date(raw)
     except ValueError as exc:
         raise CensoParseError(
-            f"{field} value {cleaned!r} is not a valid calendar date",
+            f"{field} value {raw!r}: {exc}",
             field=field,
-            raw=raw,
+            raw=raw or "",
         ) from exc
 
 
