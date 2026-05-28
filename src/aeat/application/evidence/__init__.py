@@ -34,6 +34,7 @@ from ._models import (
     VerificationCheck,
 )
 from ._service import (
+    EvidenceBundleRepository,
     EvidenceBundleService,
     EvidenceBundleVerificationReport,
 )
@@ -43,6 +44,7 @@ __all__ = [
     "EvidenceBundle",
     "EvidenceBundleCheckResult",
     "EvidenceBundleNotFoundError",
+    "EvidenceBundleRepository",
     "EvidenceBundleService",
     "EvidenceBundleVerificationError",
     "EvidenceBundleVerificationReport",

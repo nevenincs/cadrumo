@@ -142,7 +142,7 @@ This Wave removes or records remaining alternate persistence classes after the c
 Migrate sensitive JSON and JSONL stores to secure objects or persist accepted exception ADRs before further expansion.
 
 - [x] `W05.P09.S36` - inventory evidence, ledger, inventory, live, and snapshot bucket-local JSON stores; `src/aeat/application`.
-- [ ] `W05.P09.S37` - migrate evidence bundle persistence behind runtime-created secure-object repositories; `src/aeat/application/evidence`.
+- [x] `W05.P09.S37` - migrate evidence bundle persistence behind runtime-created secure-object repositories; `src/aeat/application/evidence`.
 - [ ] `W05.P09.S38` - migrate inventory persistence behind runtime-created secure-object repositories; `src/aeat/application/inventory`.
 - [ ] `W05.P09.S39` - migrate live snapshot persistence behind runtime-created secure-object repositories; `src/aeat/application/live`.
 - [ ] `W05.P09.S40` - persist exception ADRs for any retained explicit export or operational side store; `.vault/adr`.
