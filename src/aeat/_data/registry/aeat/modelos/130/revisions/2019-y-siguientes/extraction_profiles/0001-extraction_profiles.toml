@@ -4,7 +4,7 @@ surface = "declaracion_pdf"
 artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 corpus_round_trip_verified = true
-verification_source = "real_aeat_corpus_pdf"
+verification_source = "synthetic_from_aeat_published_text"
 parser = "aeat.adapters.inbound.declaracion.parse_declaracion"
 # M130 layout: each row prints the label text, then the box number at x0~464 (right column),
 # then the monetary value at x0~533-545 on the same y-row.  Box numbers also appear inline
