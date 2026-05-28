@@ -59,8 +59,8 @@ a verification Step that asserts the new subclass is registered in
 `ERROR_REGISTRY` and that the raise round-trips through the
 envelope.
 
-- [ ] `W01.P01.S01` - subclass `TaxationComparisonError` from `CoreError` and register an `ErrorCode`; `src/aeat/application/modelo/_taxation_comparison.py`.
-- [ ] `W01.P01.S02` - add real-behavior test asserting `TaxationComparisonError` is in `ERROR_REGISTRY` and round-trips through `build_error_envelope`; `src/aeat/application/modelo/test_taxation_comparison.py`.
+- [x] `W01.P01.S01` - subclass `TaxationComparisonError` from `CoreError` and register an `ErrorCode`; `src/aeat/application/modelo/_taxation_comparison.py`.
+- [x] `W01.P01.S02` - add real-behavior test asserting `TaxationComparisonError` is in `ERROR_REGISTRY` and round-trips through `build_error_envelope`; `src/aeat/application/modelo/test_taxation_comparison.py`.
 - [x] `W01.P01.S03` - subclass `_BinaryXlsConversionError` from `CoreError`; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
 - [x] `W01.P01.S04` - add real-behavior test asserting `_BinaryXlsConversionError` registry binding; `src/aeat/domain/calculations/registry/test_workbook_parity.py`.
 - [ ] `W01.P01.S05` - introduce `ExportFormatError(CoreError)` and `ExportFieldError(CoreValidationError)`; `replace the seven `ValueError` / `raise` sites; `src/aeat/application/export/_tabular.py`.
