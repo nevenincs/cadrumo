@@ -209,8 +209,8 @@ Each fix Step is paired with a verification Step that asserts the
 envelope round-trips through `model_validate` and rejects partial
 payloads.
 
-- [ ] `W01.P04.S119` - introduce `ReplayPayload(BaseModel)` base + per-oracle subclasses; `replace `dict[str, Any]` return from `decode_replay_json_payload`; `src/aeat/domain/calculations/registry/_live_parity.py`.
-- [ ] `W01.P04.S120` - add roundtrip test asserting `ReplayPayload.model_validate` rejects partial / mistyped payloads; `src/aeat/domain/calculations/registry/test_live_parity.py`.
+- [x] `W01.P04.S119` - introduce `ReplayPayload(BaseModel)` base + per-oracle subclasses; `replace `dict[str, Any]` return from `decode_replay_json_payload`; `src/aeat/domain/calculations/registry/_live_parity.py`.
+- [x] `W01.P04.S120` - add roundtrip test asserting `ReplayPayload.model_validate` rejects partial / mistyped payloads; `src/aeat/domain/calculations/registry/test_live_parity.py`.
 - [ ] `W01.P04.S121` - replace manual dict unpacking with `AeatNifIvaReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`.
 - [ ] `W01.P04.S122` - add roundtrip test asserting NIF-IVA replay payload validates and round-trips strictly; `src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py`.
 - [ ] `W01.P04.S123` - replace manual dict unpacking with `GroiReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_groi_oracle.py`.
