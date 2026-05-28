@@ -8,7 +8,7 @@ holds the single canonical ``_execute`` they both route through.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Protocol
 
 from ...outbound.storage._errors import (
     OutboundStorageError,
@@ -18,7 +18,27 @@ from ...outbound.storage._errors import (
 )
 
 
-def execute_request(request: Any, *, action: str) -> Any:
+class _ExecutableRequest(Protocol):
+    """Structural type for google-api-python-client request objects.
+
+    ``google-api-python-client-stubs`` types the concrete
+    ``HttpRequest`` class; any object with an ``execute()`` callable
+    satisfies this protocol, which keeps the adapter decoupled from
+    the concrete stub type while still narrowing away bare ``Any``.
+    """
+
+    def execute(self, http: object = None, num_retries: int = 0) -> Any: ...  # noqa: D102
+
+
+# The google-api-python-client wire protocol returns JSON-decoded dicts whose
+# exact shape varies per endpoint. A TypedDict alias per endpoint would be
+# overly rigid here because the same helper routes dozens of distinct calls.
+# We name the return type explicitly so call-sites document what they expect,
+# even though the container is still a plain dict at runtime.
+GoogleApiResponseBody = dict[str, Any]
+
+
+def execute_request(request: _ExecutableRequest, *, action: str) -> GoogleApiResponseBody:
     """Execute a google-api-python-client request, translating failures.
 
     HTTP 401/403 become :class:`OutboundStoragePermissionError`, HTTP 404
@@ -37,7 +57,8 @@ def execute_request(request: Any, *, action: str) -> Any:
         The deserialised API response payload.
     """
     try:
-        return request.execute()
+        result: GoogleApiResponseBody = request.execute()
+        return result
     except OutboundStorageError:
         raise
     except Exception as exc:

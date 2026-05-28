@@ -368,3 +368,86 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
     assert "status" in rendered
     assert "ok" in rendered
     assert "region=es" in rendered
+
+
+# ---------------------------------------------------------------------------
+# S204 — _scrub_value overload contract: type preserved per input shape
+# ---------------------------------------------------------------------------
+
+
+from .logging import _scrub_value  # noqa: E402 — test-only import after module symbols
+
+
+def test_scrub_value_str_overload_returns_str() -> None:
+    """str input must produce a str result (non-sensitive value passes through)."""
+
+    result = _scrub_value("hello world")
+    assert isinstance(result, str)
+    assert result == "hello world"
+
+
+def test_scrub_value_str_overload_redacts_sensitive_key() -> None:
+    """str input with a sensitive key must return a redacted str."""
+
+    result = _scrub_value("super-secret", key="token")
+    assert isinstance(result, str)
+    assert result == "<redacted>"
+
+
+def test_scrub_value_mapping_overload_returns_dict() -> None:
+    """Mapping input must produce a dict result."""
+
+    result = _scrub_value({"account": "visible", "secret": "hidden"})
+    assert isinstance(result, dict)
+    assert result["account"] == "visible"
+    assert result["secret"] == "<redacted>"
+
+
+def test_scrub_value_tuple_overload_returns_tuple() -> None:
+    """tuple input must produce a tuple result with items recursively scrubbed."""
+
+    result = _scrub_value(("safe-value", "also-safe"))
+    assert isinstance(result, tuple)
+    assert result == ("safe-value", "also-safe")
+
+
+def test_scrub_value_list_overload_returns_list() -> None:
+    """list input must produce a list result with items recursively scrubbed."""
+
+    result = _scrub_value(["one", "two"])
+    assert isinstance(result, list)
+    assert result == ["one", "two"]
+
+
+def test_scrub_value_set_overload_returns_set() -> None:
+    """set input must produce a set result with items recursively scrubbed."""
+
+    result = _scrub_value({"alpha", "beta"})
+    assert isinstance(result, set)
+    assert result == {"alpha", "beta"}
+
+
+def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
+    """An arbitrary object with a non-sensitive key passes through unchanged."""
+
+    obj = object()
+    result = _scrub_value(obj, key="count")
+    assert result is obj
+
+
+def test_scrub_value_object_overload_redacts_sensitive_key() -> None:
+    """An arbitrary object with a sensitive key is redacted to a str marker."""
+
+    result = _scrub_value(12345, key="token")
+    assert isinstance(result, str)
+    assert result == "<redacted>"
+
+
+def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
+    """Nested dicts must have their sensitive leaves redacted at every depth."""
+
+    payload = {"outer": {"token": "s3cr3t", "count": 3}}
+    result = _scrub_value(payload)
+    assert isinstance(result, dict)
+    assert result["outer"]["token"] == "<redacted>"
+    assert result["outer"]["count"] == 3

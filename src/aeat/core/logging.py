@@ -22,7 +22,7 @@ import re
 from collections.abc import Mapping
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 if TYPE_CHECKING:
     from .observability._context import RunContextInfo
@@ -118,6 +118,30 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
     return scrubbed
+
+
+@overload
+def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
+
+
+@overload
+def _scrub_value(value: Mapping[str, Any], *, key: str | None = ...) -> dict[str, Any]: ...
+
+
+@overload
+def _scrub_value(value: tuple[Any, ...], *, key: str | None = ...) -> tuple[Any, ...]: ...
+
+
+@overload
+def _scrub_value(value: list[Any], *, key: str | None = ...) -> list[Any]: ...
+
+
+@overload
+def _scrub_value(value: set[Any], *, key: str | None = ...) -> set[Any]: ...
+
+
+@overload
+def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 
 def _scrub_value(value: object, *, key: str | None = None) -> Any:
