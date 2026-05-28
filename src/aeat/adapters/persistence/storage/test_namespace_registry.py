@@ -8,13 +8,12 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from aeat.adapters.persistence.storage.errors import NamespaceRegistryError
-from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
 from aeat.adapters.persistence.storage import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
     AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE,
+    APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
     ATTACHMENT_BLOB_NAMESPACE,
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
@@ -42,7 +41,10 @@ from aeat.adapters.persistence.storage import (
     StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
+from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
+from aeat.adapters.persistence.storage.errors import NamespaceRegistryError
 from aeat.core.classification import SensitivityClass
+from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
 from aeat.core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -188,6 +190,12 @@ def test_w03_s22_auth_session_cache_remote_namespaces_are_registered() -> None:
             SensitivityClass.FINANCIAL,
             "{sha256(taxpayer_nif,target_year,target_period,captured_at)}",
         ),
+        "application_evidence_bundles": (
+            APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+            "aeat.application.evidence.bundles",
+            SensitivityClass.AUDIT,
+            "{bundle_id}",
+        ),
     }
 
     for key, (expected, namespace, sensitivity, object_key_grammar) in expected_contracts.items():
@@ -215,6 +223,7 @@ def test_w03_s22_namespace_registration_coverage_is_present() -> None:
         "aeat_filed_declaration_artefacts",
         "aeat_filed_declaration_observations",
         "aeat_iva_wallet_observations",
+        "application_evidence_bundles",
     } <= registered_keys
 
 
@@ -319,8 +328,6 @@ def test_default_object_key_with_path_separator_raises_namespace_registry_error(
 
 
 def _make_path_definition(**overrides: object) -> StoragePathDefinition:
-    from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
-
     defaults: dict[str, object] = {
         "key": "test_path",
         "kind": StoragePathKind.DIRECTORY,
@@ -377,8 +384,6 @@ def test_duplicate_namespace_values_raise_namespace_registry_error() -> None:
 
 
 def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
-    from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
-
     path = StoragePathDefinition(
         key="dup_path",
         kind=StoragePathKind.DIRECTORY,

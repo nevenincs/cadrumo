@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from aeat.application.evidence import (
     BundleVerificationState,
     EvidenceBundleNotFoundError,
@@ -16,14 +17,15 @@ from aeat.application.evidence import (
     VerificationCheck,
 )
 from aeat.application.evidence._models import derive_bundle_id
-from aeat.core.config import Settings
+from aeat.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_settings(tmp_path: Path) -> Settings:
-    return Settings(aeat_audit_dir=tmp_path / "audit")
+def runtime_profile(tmp_path: Path) -> TestRuntimeProfile:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-001") as profile:
+        yield profile
 
 
 @pytest.fixture
@@ -37,12 +39,12 @@ def payloads() -> dict[tuple[str, str], bytes]:
 class TestBuild:
     def test_build_produces_content_addressed_bundle_id(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
         bundle = svc.build(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             work_unit_id="wu-100",
             record_payloads=payloads,
             calculation_revision_id="rev-1",
@@ -53,24 +55,26 @@ class TestBuild:
         assert bundle.work_unit_id == "wu-100"
         assert len(bundle.records) == 2
         assert bundle.verification_state is BundleVerificationState.PENDING
+        assert runtime_profile.repository.exists(
+            APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace,
+            bundle.bundle_id,
+        )
 
     def test_build_is_deterministic_for_same_inputs(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc1 = EvidenceBundleService(settings=isolated_settings)
+        svc1 = EvidenceBundleService(settings=runtime_profile.settings)
         bundle1 = svc1.build(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             work_unit_id="wu-100",
             record_payloads=payloads,
         )
-        # Fresh service, same payloads, same bucket — bundle_id should match.
-        svc2 = EvidenceBundleService(
-            settings=Settings(aeat_audit_dir=isolated_settings.aeat_audit_dir.parent / "isolated2")
-        )
+        # Fresh service, same payloads, same bucket: bundle_id should match.
+        svc2 = EvidenceBundleService(settings=runtime_profile.settings)
         bundle2 = svc2.build(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             work_unit_id="wu-100",
             record_payloads=payloads,
         )
@@ -80,32 +84,32 @@ class TestBuild:
 class TestShow:
     def test_show_resolves_by_full_or_prefix(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
-        full = svc.show(bucket_id="bucket-001", bundle_id=added.bundle_id)
-        prefix = svc.show(bucket_id="bucket-001", bundle_id=added.bundle_id[:12])
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        full = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id)
+        prefix = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id[:12])
         assert full == added
         assert prefix == added
 
-    def test_show_refuses_on_unknown_id(self, isolated_settings: Settings) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
+    def test_show_refuses_on_unknown_id(self, runtime_profile: TestRuntimeProfile) -> None:
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
         with pytest.raises(EvidenceBundleNotFoundError):
-            svc.show(bucket_id="bucket-001", bundle_id="no-such-bundle")
+            svc.show(bucket_id=runtime_profile.bucket_id, bundle_id="no-such-bundle")
 
 
 class TestVerify:
     def test_check_passes_on_unmodified_payloads(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         report = svc.check(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=payloads,
         )
@@ -115,15 +119,15 @@ class TestVerify:
 
     def test_check_fails_on_modified_payload(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         tampered = dict(payloads)
         tampered[("calculation_revision", "rev-1")] = b"casilla-01=9999.99\n"
         report = svc.check(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=tampered,
         )
@@ -133,14 +137,14 @@ class TestVerify:
 
     def test_check_reports_incomplete_when_records_missing(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         report = svc.check(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=partial,
         )
@@ -151,15 +155,15 @@ class TestVerify:
 class TestExport:
     def test_export_writes_manifest_last(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
         tmp_path: Path,
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         archive_path = tmp_path / "bundle.zip"
         svc.export(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=payloads,
             output_path=archive_path,
@@ -174,17 +178,17 @@ class TestExport:
 
     def test_export_refuses_on_failed_verification(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
         tmp_path: Path,
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         tampered = dict(payloads)
         tampered[("calculation_revision", "rev-1")] = b"tampered\n"
         with pytest.raises(EvidenceBundleVerificationError, match="verification failed"):
             svc.export(
-                bucket_id="bucket-001",
+                bucket_id=runtime_profile.bucket_id,
                 bundle_id=added.bundle_id,
                 record_payloads=tampered,
                 output_path=tmp_path / "bundle.zip",
@@ -192,16 +196,16 @@ class TestExport:
 
     def test_export_refuses_incomplete_without_force(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
         tmp_path: Path,
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         with pytest.raises(EvidenceBundleVerificationError, match="--force-incomplete"):
             svc.export(
-                bucket_id="bucket-001",
+                bucket_id=runtime_profile.bucket_id,
                 bundle_id=added.bundle_id,
                 record_payloads=partial,
                 output_path=tmp_path / "bundle.zip",
@@ -209,16 +213,16 @@ class TestExport:
 
     def test_export_accepts_incomplete_when_forced(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
         tmp_path: Path,
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         archive_path = tmp_path / "bundle.zip"
         result = svc.export(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=partial,
             output_path=archive_path,
@@ -231,47 +235,48 @@ class TestExport:
 class TestReplay:
     def test_replay_never_mutates_bundle_state(
         self,
-        isolated_settings: Settings,
+        runtime_profile: TestRuntimeProfile,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        added = svc.build(bucket_id="bucket-001", work_unit_id="wu-1", record_payloads=payloads)
+        svc = EvidenceBundleService(settings=runtime_profile.settings)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
         report = svc.replay(
-            bucket_id="bucket-001",
+            bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
             record_payloads=payloads,
         )
         assert isinstance(report, EvidenceBundleVerificationReport)
         assert report.verification_state is BundleVerificationState.VERIFIED
         # replay must not have mutated the persisted bundle
-        reloaded = svc.show(bucket_id="bucket-001", bundle_id=added.bundle_id)
+        reloaded = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id)
         assert reloaded == added
 
 
 class TestBucketIsolation:
     def test_bundles_are_bucket_scoped(
         self,
-        isolated_settings: Settings,
+        tmp_path: Path,
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
-        svc = EvidenceBundleService(settings=isolated_settings)
-        svc.build(bucket_id="bucket-A", work_unit_id="wu-A", record_payloads=payloads)
-        svc.build(bucket_id="bucket-B", work_unit_id="wu-B", record_payloads=payloads)
-        # show() filters by bucket: A's bundle must be invisible to B and vice versa
-        [b for b in [svc.show(bucket_id="bucket-A", bundle_id="")] if b]  # noop
-        # Direct attempt: lookup a bundle that exists in A while addressing bucket B
-        next(iter(svc.show(bucket_id="bucket-A", bundle_id="") for _ in [0]), None)
-        # Simpler: a bundle persisted to A is not reachable from B
-        a_added = EvidenceBundleService(settings=isolated_settings).build(
-            bucket_id="bucket-A",
-            work_unit_id="wu-A",
-            record_payloads=payloads,
-        )
-        with pytest.raises(EvidenceBundleNotFoundError):
-            EvidenceBundleService(settings=isolated_settings).show(
-                bucket_id="bucket-B",
-                bundle_id=a_added.bundle_id,
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-A") as profile_a:
+            service_a = EvidenceBundleService(settings=profile_a.settings)
+            a_added = service_a.build(
+                bucket_id=profile_a.bucket_id,
+                work_unit_id="wu-A",
+                record_payloads=payloads,
             )
+            assert service_a.show(bucket_id=profile_a.bucket_id, bundle_id=a_added.bundle_id) == a_added
+
+        with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bucket-B") as profile_b:
+            service_b = EvidenceBundleService(settings=profile_b.settings)
+            b_added = service_b.build(
+                bucket_id=profile_b.bucket_id,
+                work_unit_id="wu-B",
+                record_payloads=payloads,
+            )
+            assert service_b.show(bucket_id=profile_b.bucket_id, bundle_id=b_added.bundle_id) == b_added
+            with pytest.raises(EvidenceBundleNotFoundError):
+                service_b.show(bucket_id=profile_b.bucket_id, bundle_id=a_added.bundle_id)
 
 
 class TestDeriveBundleId:

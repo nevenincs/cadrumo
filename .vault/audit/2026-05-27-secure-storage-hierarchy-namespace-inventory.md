@@ -44,6 +44,7 @@ W15.P33 inventories the secure-storage hierarchy constants that still define per
 | `iva_wallet_reconciliation_decision_events` | `aeat.calculations.iva_wallet.reconciliation_decision_events` | AUDIT | 1 | `iva-wallet-decision-event:{sha256(...)}` |
 | `iva_compensation_history` | `aeat.calculations.iva_compensation.history` | AUDIT | 1 | `303:{filing_year}:{period}` |
 | `live_iva_remote_state_acquisitions` | `aeat.application.live.iva_remote_state_acquisitions` | AUDIT | 1 | `live-iva-acquisition:{target_year}:{target_period}:{timestamp}:{sha256(...)}` |
+| `application_evidence_bundles` | `aeat.application.evidence.bundles` | AUDIT | 1 | `{bundle_id}` |
 | `ledger_classification_rules` | `aeat.ledger.classification.rules` | AUDIT | 1 | `{rule_id}` |
 | `live_borrador_100_snapshot` | `aeat.application.live.borrador_100_snapshot` | FINANCIAL | 1 | `modelo-100-borrador-snapshot:{bucket_id}:{snapshot_id}` |
 | `live_census_snapshot` | `aeat.application.live.census_snapshot` | IDENTITY | 1 | `census-snapshot:{bucket_id}:{snapshot_id}` |

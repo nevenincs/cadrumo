@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import hashlib
 import zipfile
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage import (
+    APPLICATION_EVIDENCE_BUNDLE_NAMESPACE,
+)
+from ...adapters.persistence.storage.envelope import SecureBoundRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
-from .._storage_paths import storage_path
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -27,6 +32,18 @@ _MANIFEST_VERSION = 1
 _MANIFEST_FILENAME = "manifest.json"
 
 
+class EvidenceBundleRepository(SecureBoundRepository[EvidenceBundle]):
+    """Encrypted repository for bucket-local evidence bundle manifests."""
+
+    namespace: ClassVar[str] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.namespace
+    sensitivity: ClassVar = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = APPLICATION_EVIDENCE_BUNDLE_NAMESPACE.schema_version
+    payload_type: ClassVar[type[EvidenceBundle]] = EvidenceBundle
+
+    def extract_identifier(self, payload: EvidenceBundle) -> str:
+        return payload.bundle_id
+
+
 class EvidenceBundleVerificationReport(BaseModel):
     """Outcome of a verification pass over a bundle."""
 
@@ -36,25 +53,6 @@ class EvidenceBundleVerificationReport(BaseModel):
     verification_state: BundleVerificationState
     findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
     completeness_ratio: float = Field(ge=0.0, le=1.0)
-
-
-def _load(settings: Settings, bucket_id: str) -> list[EvidenceBundle]:
-    path = storage_path(settings.aeat_audit_dir / "evidence-bundles", bucket_id)
-    if not path.exists():
-        return []
-    return [
-        EvidenceBundle.model_validate_json(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
-
-
-def _save(settings: Settings, bucket_id: str, bundles: list[EvidenceBundle]) -> None:
-    path = storage_path(settings.aeat_audit_dir / "evidence-bundles", bucket_id)
-    payload = "\n".join(b.model_dump_json() for b in bundles)
-    if payload:
-        payload += "\n"
-    path.write_text(payload, encoding="utf-8")
 
 
 def _hash_payload(payload: bytes) -> str:
@@ -70,12 +68,25 @@ class EvidenceBundleService:
     ``check``, ``export``, ``replay`` are operator-facing.
     """
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        repository_factory: Callable[[str], EvidenceBundleRepository] | None = None,
+    ) -> None:
         # `load_settings()` honours `override_settings`; bare `Settings()`
-        # does not, so CLI tests overriding evidence-dir would otherwise
-        # write into the project default.
+        # does not. The repository factory uses the resolved settings so
+        # bucket routes are still runtime-created when a test or CLI flow
+        # scopes settings through the context variable.
         from ...core.config import load_settings as _load_settings
         self._settings = settings or _load_settings()
+        self._repository_factory = repository_factory or self._runtime_repository_for
+
+    def _runtime_repository_for(self, bucket_id: str) -> EvidenceBundleRepository:
+        objects = secure_object_repository_for_bucket(bucket_id, self._settings)
+        return EvidenceBundleRepository(objects=objects)
+
+    def _repository_for(self, bucket_id: str) -> EvidenceBundleRepository:
+        return self._repository_factory(bucket_id)
 
     def build(
         self,
@@ -120,13 +131,16 @@ class EvidenceBundleService:
             created_at=utcnow(),
             notes=notes,
         )
-        bundles = _load(self._settings, bucket_id)
-        bundles.append(bundle)
-        _save(self._settings, bucket_id, bundles)
+        self._repository_for(bucket_id).save(bundle)
         return bundle
 
     def show(self, *, bucket_id: str, bundle_id: str) -> EvidenceBundle:
-        for bundle in _load(self._settings, bucket_id):
+        repository = self._repository_for(bucket_id)
+        if bundle_id.strip():
+            exact = repository.load(bundle_id)
+            if exact is not None:
+                return exact
+        for bundle in repository.iter_records():
             if bundle.bundle_id == bundle_id or bundle.bundle_id.startswith(bundle_id):
                 return bundle
         raise EvidenceBundleNotFoundError(
@@ -306,6 +320,7 @@ class EvidenceBundleService:
 
 
 __all__ = [
+    "EvidenceBundleRepository",
     "EvidenceBundleService",
     "EvidenceBundleVerificationReport",
 ]
