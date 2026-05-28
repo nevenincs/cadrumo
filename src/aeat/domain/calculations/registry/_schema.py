@@ -1396,6 +1396,34 @@ class BracketEntry(RegistryModel):
         return self
 
 
+class KeyedBracketEntry(RegistryModel):
+    """One row of a string-keyed rate-lookup table.
+
+    Sister shape to :class:`BracketEntry` for parameters that dispatch on
+    a categorical enum value rather than a piecewise-linear numeric
+    interval. Each row binds a ``key`` (e.g. an IRNR ``tipo_renta`` code:
+    ``general`` / ``ue_residente`` / ``ganancia_patrimonial`` /
+    ``inmobiliaria``) to a ``value`` (typically a Decimal rate) within a
+    ``valid_from``/``valid_to`` window. Lookup is exact-match on
+    ``(key, year)`` — there is no notion of interval overlap because the
+    domain is enum-discrete, not numeric-continuous.
+
+    First consumer: M210 IRNR Phase 1 ``m210-tipo-gravamen-2025`` per
+    the m210-irnr-full-engine ADR.
+    """
+
+    key: str = Field(min_length=1, max_length=64)
+    value: DecimalValue
+    valid_from: date
+    valid_to: date | None = None
+
+    @model_validator(mode="after")
+    def _validate_keyed_bracket(self) -> KeyedBracketEntry:
+        if self.valid_to is not None and self.valid_to < self.valid_from:
+            raise RegistryValidationError("keyed_bracket valid_to must be on or after valid_from")
+        return self
+
+
 def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) -> bool:
     """Return True when two adjacent brackets share a valid_from window and overlap.
 
@@ -1417,10 +1445,20 @@ def _brackets_overlap_in_same_window(prev: BracketEntry, current: BracketEntry) 
 
 class ParameterDefinition(RegistryModel):
     id: ParameterId
-    data_type: Literal["decimal", "money", "integer", "ratio", "text", "boolean", "bracket_table"]
+    data_type: Literal[
+        "decimal",
+        "money",
+        "integer",
+        "ratio",
+        "text",
+        "boolean",
+        "bracket_table",
+        "keyed_bracket_table",
+    ]
     unit: str
     values: tuple[DatedValue, ...] = Field(default_factory=tuple)
     brackets: tuple[BracketEntry, ...] = Field(default_factory=tuple)
+    keyed_brackets: tuple[KeyedBracketEntry, ...] = Field(default_factory=tuple)
     bracket_axis: DateAxis | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
@@ -1430,6 +1468,8 @@ class ParameterDefinition(RegistryModel):
     def _validate_bracket_table(self) -> ParameterDefinition:
         if self.data_type == "bracket_table":
             self._validate_bracket_table_shape()
+        elif self.data_type == "keyed_bracket_table":
+            self._validate_keyed_bracket_table_shape()
         else:
             self._validate_non_bracket_table_shape()
         return self
@@ -1449,6 +1489,10 @@ class ParameterDefinition(RegistryModel):
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_table but has no brackets")
         if self.values:
             raise RegistryValidationError(f"parameter {self.id!r} cannot mix bracket_table and dated values")
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix bracket_table and keyed_brackets"
+            )
         if self.bracket_axis is None:
             raise RegistryValidationError(f"parameter {self.id!r} bracket_table requires a bracket_axis")
         sorted_brackets = sorted(self.brackets, key=lambda b: (b.valid_from, b.lower_bound))
@@ -1459,11 +1503,49 @@ class ParameterDefinition(RegistryModel):
                     f"and {current.lower_bound}-{current.upper_bound} overlap within the same window"
                 )
 
+    def _validate_keyed_bracket_table_shape(self) -> None:
+        """Verify a keyed_bracket_table parameter has keyed_brackets, no values, no numeric brackets, and no duplicate keys.
+
+        Four contracts mirror the numeric ``bracket_table`` shape:
+        * non-empty ``keyed_brackets`` tuple
+        * no ``values`` (dated scalar map is mutually exclusive)
+        * no ``brackets`` (numeric-interval table is mutually exclusive)
+        * no two ``keyed_brackets`` share the same ``(key, valid_from)``
+          pair (exact-match lookup requires a unique row per key per
+          window; duplicates would make the lookup non-deterministic)
+        """
+        if not self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares keyed_bracket_table but has no keyed_brackets"
+            )
+        if self.values:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and dated values"
+            )
+        if self.brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} cannot mix keyed_bracket_table and numeric brackets"
+            )
+        seen: set[tuple[str, date]] = set()
+        for row in self.keyed_brackets:
+            pair = (row.key, row.valid_from)
+            if pair in seen:
+                raise RegistryValidationError(
+                    f"parameter {self.id!r} keyed_brackets contains duplicate "
+                    f"(key, valid_from) pair {pair!r}"
+                )
+            seen.add(pair)
+
     def _validate_non_bracket_table_shape(self) -> None:
-        """Reject brackets / bracket_axis on a non-bracket_table parameter."""
+        """Reject brackets / keyed_brackets / bracket_axis on a non-bracket-table parameter."""
         if self.brackets:
             raise RegistryValidationError(
                 f"parameter {self.id!r} declares brackets but data_type is {self.data_type!r}; use 'bracket_table'"
+            )
+        if self.keyed_brackets:
+            raise RegistryValidationError(
+                f"parameter {self.id!r} declares keyed_brackets but data_type is {self.data_type!r}; "
+                "use 'keyed_bracket_table'"
             )
         if self.bracket_axis is not None:
             raise RegistryValidationError(f"parameter {self.id!r} declares bracket_axis but is not a bracket_table")
