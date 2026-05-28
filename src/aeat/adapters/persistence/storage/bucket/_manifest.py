@@ -19,25 +19,17 @@ together.
 from __future__ import annotations
 
 import base64
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import StrEnum
 from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from .....core.time._utc import _validate_utc_aware
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _SALT_BYTES = 16
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    """Reject naive datetimes and datetimes whose offset is not UTC."""
-
-    if value.tzinfo is None:
-        raise ValueError("datetime must be timezone-aware UTC")
-    if value.utcoffset() != UTC.utcoffset(value):
-        raise ValueError("datetime must be in UTC")
-    return value
 
 
 class ManifestKdfParams(BaseModel):
@@ -166,14 +158,14 @@ class BucketManifest(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _ensure_utc(value)
+        return _validate_utc_aware(value)
 
     @field_validator("last_unlocked_at")
     @classmethod
     def _check_last_unlocked_at(cls, value: datetime | None) -> datetime | None:
         if value is None:
             return None
-        return _ensure_utc(value)
+        return _validate_utc_aware(value)
 
 
 __all__ = ["BucketKeySchedule", "BucketLifecycleStatus", "BucketManifest", "ManifestKdfParams"]

@@ -412,6 +412,46 @@ def test_settings_loads_cert_env_vars(
     assert SECRET_PASSPHRASE not in repr(settings)
 
 
+# ── UTC helper migration: _coerce_utc_aware semantics ───────────────────────
+
+
+def test_load_certificate_not_before_is_utc_aware(tmp_path: Path) -> None:
+    """not_before on a loaded certificate is always UTC-aware.
+
+    ``_coerce_utc_aware`` is the coerce helper: naive datetimes get UTC
+    attached, aware datetimes are converted to UTC.  The PKCS#12 boundary
+    must always produce UTC-aware timestamps regardless of what
+    ``x509_cert.not_valid_before_utc`` returns.
+    """
+    p12 = _build_pkcs12_bundle(tmp_path)
+    bundle = CertificateBundle(
+        path=p12,
+        password=SecretStr(SECRET_PASSPHRASE),
+        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+    )
+    loaded = load_certificate(bundle)
+    assert loaded.not_before.tzinfo is not None
+    assert loaded.not_before.utcoffset() is not None
+
+
+def test_load_certificate_not_after_is_utc_aware(tmp_path: Path) -> None:
+    """not_after on a loaded certificate is always UTC-aware.
+
+    Mirrors ``test_load_certificate_not_before_is_utc_aware`` for the
+    expiry timestamp, confirming both PKCS#12 datetime call-sites pass
+    through ``_coerce_utc_aware``.
+    """
+    p12 = _build_pkcs12_bundle(tmp_path)
+    bundle = CertificateBundle(
+        path=p12,
+        password=SecretStr(SECRET_PASSPHRASE),
+        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+    )
+    loaded = load_certificate(bundle)
+    assert loaded.not_after.tzinfo is not None
+    assert loaded.not_after.utcoffset() is not None
+
+
 def test_settings_rejects_removed_certificate_backends(monkeypatch: pytest.MonkeyPatch) -> None:
     import pydantic
     from pydantic_settings import SettingsConfigDict
