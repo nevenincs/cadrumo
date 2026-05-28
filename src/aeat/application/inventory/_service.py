@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
+from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -24,7 +27,6 @@ from ...domain.profile.inventory import (
     compute_inventory_valuation,
     parse_valuation_method,
 )
-from .._storage_paths import storage_path
 from ._errors import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,
@@ -89,6 +91,7 @@ class InventoryValuationPreviewResult(BaseModel):
 
 
 _INVENTORY_EVENT_PAYLOAD_VERSION = 1
+InventoryRepositoryFactory = Callable[[str], InventoryLedgerRepository]
 
 
 def _now_utc() -> datetime:
@@ -132,16 +135,13 @@ def _emit_inventory_event(
     return event.event_id
 
 
-def _load_document(settings: Settings, bucket_id: str) -> InventoryLedgerDocument:
-    path = storage_path(settings.aeat_ledgers_dir / "inventory", bucket_id, extension=".json")
-    if not path.exists():
-        return InventoryLedgerDocument(ledgers=())
-    return InventoryLedgerDocument.model_validate_json(path.read_text(encoding="utf-8"))
+def _runtime_repository_factory(settings: Settings) -> InventoryRepositoryFactory:
+    def _factory(bucket_id: str) -> InventoryLedgerRepository:
+        return InventoryLedgerRepository(
+            objects=secure_object_repository_for_bucket(bucket_id, settings),
+        )
 
-
-def _save_document(settings: Settings, bucket_id: str, document: InventoryLedgerDocument) -> None:
-    path = storage_path(settings.aeat_ledgers_dir / "inventory", bucket_id, extension=".json")
-    path.write_text(document.model_dump_json(indent=2), encoding="utf-8")
+    return _factory
 
 
 def _find_ledger(document: InventoryLedgerDocument, actividad_id: str, year: int) -> InventoryLedger | None:
@@ -167,6 +167,7 @@ class InventoryService:
         self,
         settings: Settings | None = None,
         bucket_event_repository: BucketEventHistoryRepository | None = None,
+        repository_factory: InventoryRepositoryFactory | None = None,
     ) -> None:
         # `Settings()` bypasses `override_settings`; route through
         # `load_settings()` so CLI surface tests that override
@@ -174,6 +175,10 @@ class InventoryService:
         from ...core.config import load_settings as _load_settings
         self._settings = settings or _load_settings()
         self._event_repository = bucket_event_repository or BucketEventHistoryRepository()
+        self._repository_factory = repository_factory or _runtime_repository_factory(self._settings)
+
+    def _repository_for(self, bucket_id: str) -> InventoryLedgerRepository:
+        return self._repository_factory(bucket_id)
 
     def create(
         self,
@@ -193,7 +198,8 @@ class InventoryService:
                 f"invalid valuation_method {valuation_method!r}: {exc}",
                 suggestion="aeat app ledger inventory create --valuation-method fifo|pmp",
             ) from exc
-        document = _load_document(self._settings, bucket_id)
+        repository = self._repository_for(bucket_id)
+        document = repository.load()
         if _find_ledger(document, actividad_id, year) is not None:
             raise InventoryActividadConflictError(
                 f"inventory ledger already exists for actividad={actividad_id!r} year={year}",
@@ -206,7 +212,7 @@ class InventoryService:
             opening_stock=opening_stock,
         )
         document = InventoryLedgerDocument(ledgers=(*document.ledgers, ledger))
-        _save_document(self._settings, bucket_id, document)
+        repository.save(document)
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
@@ -221,7 +227,7 @@ class InventoryService:
         return InventoryLedgerResult(ledger=ledger, bucket_event_ids=(event_id,))
 
     def list_all(self, *, bucket_id: str) -> tuple[InventoryActividadSummary, ...]:
-        document = _load_document(self._settings, bucket_id)
+        document = self._repository_for(bucket_id).load()
         return tuple(
             InventoryActividadSummary(
                 actividad_id=ledger.actividad_id,
@@ -234,7 +240,7 @@ class InventoryService:
         )
 
     def show(self, *, bucket_id: str, actividad_id: str, year: int) -> InventoryLedger:
-        document = _load_document(self._settings, bucket_id)
+        document = self._repository_for(bucket_id).load()
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
             raise InventoryActividadNotFoundError(
@@ -271,9 +277,10 @@ class InventoryService:
         updated = ledger.model_copy(
             update={"period_movements": (*ledger.period_movements, record)},
         )
-        document = _load_document(self._settings, bucket_id)
+        repository = self._repository_for(bucket_id)
+        document = repository.load()
         document = _replace_ledger(document, updated)
-        _save_document(self._settings, bucket_id, document)
+        repository.save(document)
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
@@ -327,7 +334,8 @@ class InventoryService:
         actor: str = "cli",
     ) -> InventoryLedgerResult:
         """Drop the entire ledger for actividad/year. Idempotent on absence."""
-        document = _load_document(self._settings, bucket_id)
+        repository = self._repository_for(bucket_id)
+        document = repository.load()
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
             raise InventoryActividadNotFoundError(
@@ -341,7 +349,7 @@ class InventoryService:
                 if not (existing.actividad_id == actividad_id and existing.year == year)
             ),
         )
-        _save_document(self._settings, bucket_id, document)
+        repository.save(document)
         now = _now_utc()
         event_id = _emit_inventory_event(
             event_repository=self._event_repository,
