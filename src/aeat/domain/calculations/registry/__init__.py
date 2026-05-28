@@ -216,6 +216,8 @@ from ._schema import (
     ExtractionTargetDefinition,
     FormulaDefinition,
     FormulaExpression,
+    InputKind,
+    InputKindValue,
     KNOWN_VERIFICATION_PREDICATE_OPERATORS,
     KeyedBracketEntry,
     LegalParameter,
