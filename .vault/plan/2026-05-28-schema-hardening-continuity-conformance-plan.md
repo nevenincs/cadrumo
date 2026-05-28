@@ -65,7 +65,7 @@ authorised by this plan.
 
 Compare the landed continuity schema, loader, validator, tests, and M100 data slice against the accepted generic continuity ADR before any further data rollout.
 
-- [ ] `P01.S01` - Audit implemented continuity substrate against ADR D1-D5 and record mismatches; `.vault/research`.
+- [x] `P01.S01` - Audit implemented continuity substrate against ADR D1-D5 and record mismatches; `.vault/research`.
 
 ### Phase `P02` - generic validator conformance
 
