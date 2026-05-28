@@ -243,6 +243,24 @@ section = ["liquidacion"]
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-base-2025"
+continuidad_id = "base"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "unchanged"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-cuota-2025"
+continuidad_id = "cuota"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_evolved"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
 [[revisions."2025".export_layouts]]
 id = "modelo-999-layout"
 legal_refs = ["ley-58-2003:art-29"]
@@ -262,6 +280,7 @@ required = true
 
     target = tmp_path / "999"
     (target / "revisions" / "2025" / "casillas").mkdir(parents=True)
+    (target / "revisions" / "2025" / "continuidad").mkdir()
     (target / "revisions" / "2025" / "export").mkdir()
     (target / "manifest.toml").write_text(
         """
@@ -294,6 +313,32 @@ id = "0001"
 number = "1"
 label = "Base"
 section = ["liquidacion"]
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "continuidad" / "base.toml").write_text(
+        """
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-base-2025"
+continuidad_id = "base"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "unchanged"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (target / "revisions" / "2025" / "continuidad" / "cuota.toml").write_text(
+        """
+[[revisions."2025".casilla_continuidad_evolutions]]
+id = "continuidad-cuota-2025"
+continuidad_id = "cuota"
+from_revision = "2024"
+to_revision = "2025"
+evolution_kind = "label_evolved"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
 """.lstrip(),
