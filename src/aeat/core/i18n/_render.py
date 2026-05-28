@@ -244,7 +244,7 @@ def _lookup_translation(locale: str, translation_key: str, *, default: object | 
     fallback = str(default) if default is not None else _humanise_key(translation_key)
     try:
         rendered = _locale_map(locale).get(translation_key, fallback)
-    except (OSError, yaml.YAMLError) as exc:
+    except (OSError, yaml.YAMLError, IndexError) as exc:
         _log.debug("i18n: unable to load locale %s; falling back to python-i18n (%s)", locale, exc)
         _ensure_initialised()
         rendered = i18n.t(translation_key, locale=locale)

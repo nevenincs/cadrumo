@@ -2803,6 +2803,7 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    error_application_live_iva_surface_timeout: 'La superficie de lectura de IVA en vivo agotó el tiempo antes de devolver evidencia de la AEAT.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.

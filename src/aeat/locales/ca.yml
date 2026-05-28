@@ -2773,6 +2773,7 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    error_application_live_iva_surface_timeout: 'La superfície de lectura d''IVA en viu ha esgotat el temps abans de retornar evidència de l''AEAT.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
