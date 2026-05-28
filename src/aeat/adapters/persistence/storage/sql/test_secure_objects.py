@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings
@@ -21,6 +23,7 @@ from .secure_objects import (
     SecureObjectRecord,
     SecureObjectRepository,
     SecureObjectUnreadable,
+    SecureObjectWrite,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
@@ -630,6 +633,253 @@ def test_quarantine_unreadable_rows_preserves_revision_metadata(tmp_path: Path) 
             assert remaining == 0
         finally:
             engine.dispose()
+
+
+def test_secure_object_save_writes_revision_integrity_metadata(tmp_path: Path) -> None:
+    """A save writes storage-level revision and integrity metadata to disk."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-write.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        payload = b"revision-integrity-payload"
+        written_at = datetime(2026, 5, 22, 13, 0, 0, tzinfo=UTC)
+        try:
+            SecureObjectRepository(engine=engine).save(
+                namespace="aeat.revision.write",
+                object_key="revision-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=2,
+                written_at=written_at,
+                payload=payload,
+                write_provenance="test:revision-write",
+                source_event_id="event-write-001",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "ciphertext_hash, revision_written_at, write_provenance, source_event_id, "
+                    "conflict_policy, payload FROM secure_objects"
+                ).fetchone()
+
+            assert len(row[0]) == 64
+            assert row[1] is None
+            assert row[2] is None
+            assert row[3] == hashlib.sha256(payload).hexdigest()
+            assert row[4] == hashlib.sha256(row[9]).hexdigest()
+            assert row[5] is not None
+            assert row[6] == "test:revision-write"
+            assert row[7] == "event-write-001"
+            assert row[8] == "last-write-wins"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_overwrite_links_previous_revision_metadata(tmp_path: Path) -> None:
+    """Overwrites preserve the previous storage revision reference and payload hash."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-overwrite.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        namespace = "aeat.revision.overwrite"
+        try:
+            repo = SecureObjectRepository(engine=engine)
+            repo.save(
+                namespace=namespace,
+                object_key="overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 14, 0, 0, tzinfo=UTC),
+                payload=b"first-revision-payload",
+                write_provenance="test:first-write",
+            )
+            with sqlite3.connect(db_path) as con:
+                first_revision_id, first_payload_hash = con.execute(
+                    "SELECT revision_id, payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+
+            repo.save(
+                namespace=namespace,
+                object_key="overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 14, 5, 0, tzinfo=UTC),
+                payload=b"second-revision-payload",
+                write_provenance="test:second-write",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT revision_id, previous_revision_id, previous_payload_hash, payload_hash, "
+                    "write_provenance FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert row[0] != first_revision_id
+            assert row[1] == first_revision_id
+            assert row[2] == first_payload_hash
+            assert row[3] == hashlib.sha256(b"second-revision-payload").hexdigest()
+            assert row[4] == "test:second-write"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_overwrite_of_legacy_row_derives_previous_payload_hash(tmp_path: Path) -> None:
+    """A first overwrite after schema bootstrap links to the legacy plaintext hash."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-legacy-overwrite.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        legacy_payload = b"legacy-before-revision-metadata"
+        namespace = "aeat.revision.legacy"
+        try:
+            with engine.begin() as connection:
+                connection.exec_driver_sql(
+                    "CREATE TABLE secure_objects ("
+                    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                    "namespace VARCHAR(128) NOT NULL, "
+                    "object_key BLOB NOT NULL, "
+                    "classification VARCHAR(32) NOT NULL, "
+                    "schema_version INTEGER NOT NULL, "
+                    "written_at DATETIME NOT NULL, "
+                    "payload BLOB NOT NULL, "
+                    "CONSTRAINT uq_secure_objects_identity UNIQUE (namespace, object_key)"
+                    ")"
+                )
+                connection.execute(
+                    SecureObjectRow.__table__.insert().values(
+                        namespace=namespace,
+                        object_key="legacy-overwrite-key",
+                        classification=SensitivityClass.FINANCIAL.value,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 15, 0, 0, tzinfo=UTC),
+                        payload=legacy_payload,
+                    )
+                )
+
+            SecureObjectRepository(engine=engine).save(
+                namespace=namespace,
+                object_key="legacy-overwrite-key",
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 15, 10, 0, tzinfo=UTC),
+                payload=b"post-bootstrap-overwrite",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                previous_revision_id, previous_payload_hash = con.execute(
+                    "SELECT previous_revision_id, previous_payload_hash FROM secure_objects WHERE namespace = ?",
+                    (namespace,),
+                ).fetchone()
+            assert previous_revision_id is None
+            assert previous_payload_hash == hashlib.sha256(legacy_payload).hexdigest()
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_many_writes_revision_metadata(tmp_path: Path) -> None:
+    """Batched writes carry revision metadata for each persisted row."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-save-many.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        try:
+            SecureObjectRepository(engine=engine).save_many(
+                (
+                    SecureObjectWrite(
+                        namespace="aeat.revision.batch",
+                        object_key="batch-a",
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 16, 0, 0, tzinfo=UTC),
+                        payload=b"batch-payload-a",
+                        write_provenance="test:batch",
+                        source_event_id="batch-event-a",
+                    ),
+                    SecureObjectWrite(
+                        namespace="aeat.revision.batch",
+                        object_key="batch-b",
+                        classification=SensitivityClass.FINANCIAL,
+                        schema_version=1,
+                        written_at=datetime(2026, 5, 22, 16, 1, 0, tzinfo=UTC),
+                        payload=b"batch-payload-b",
+                        write_provenance="test:batch",
+                        source_event_id="batch-event-b",
+                    ),
+                )
+            )
+
+            with sqlite3.connect(db_path) as con:
+                rows = con.execute(
+                    "SELECT revision_id, payload_hash, write_provenance, source_event_id, conflict_policy "
+                    "FROM secure_objects WHERE namespace = ? ORDER BY source_event_id",
+                    ("aeat.revision.batch",),
+                ).fetchall()
+            assert len(rows) == 2
+            assert all(len(row[0]) == 64 for row in rows)
+            assert [row[1] for row in rows] == [
+                hashlib.sha256(b"batch-payload-a").hexdigest(),
+                hashlib.sha256(b"batch-payload-b").hexdigest(),
+            ]
+            assert [row[2] for row in rows] == ["test:batch", "test:batch"]
+            assert [row[3] for row in rows] == ["batch-event-a", "batch-event-b"]
+            assert [row[4] for row in rows] == ["last-write-wins", "last-write-wins"]
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_save_with_raw_key_writes_revision_metadata(tmp_path: Path) -> None:
+    """Raw-key archive restore writes the same metadata as natural-key saves."""
+
+    with EphemeralMasterKeyProvider():
+        db_path = tmp_path / "revision-raw-key.db"
+        engine = create_engine_from_settings(Settings(aeat_database_url=f"sqlite:///{db_path.as_posix()}"))
+        Base.metadata.create_all(engine)
+        raw_key = bytes(range(32))
+        payload = b"raw-key-revision-payload"
+        try:
+            SecureObjectRepository(engine=engine).save_with_raw_key(
+                namespace="aeat.revision.raw",
+                hashed_object_key=raw_key,
+                classification=SensitivityClass.FINANCIAL,
+                schema_version=1,
+                written_at=datetime(2026, 5, 22, 17, 0, 0, tzinfo=UTC),
+                payload=payload,
+                write_provenance="test:raw-key",
+                source_event_id="raw-key-event",
+            )
+
+            with sqlite3.connect(db_path) as con:
+                row = con.execute(
+                    "SELECT object_key, revision_id, payload_hash, write_provenance, source_event_id "
+                    "FROM secure_objects WHERE namespace = ?",
+                    ("aeat.revision.raw",),
+                ).fetchone()
+            assert row[0] == raw_key
+            assert len(row[1]) == 64
+            assert row[2] == hashlib.sha256(payload).hexdigest()
+            assert row[3] == "test:raw-key"
+            assert row[4] == "raw-key-event"
+        finally:
+            engine.dispose()
+
+
+def test_secure_object_write_rejects_conflict_policy_until_cas_contract_exists() -> None:
+    """S29 records the actual LWW policy; S30 owns public CAS policy selection."""
+
+    with pytest.raises(ValidationError):
+        SecureObjectWrite(
+            namespace="aeat.revision.policy",
+            object_key="policy-key",
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime(2026, 5, 22, 18, 0, 0, tzinfo=UTC),
+            payload=b"policy-payload",
+            conflict_policy="compare-and-swap",
+        )
 
 
 def test_peek_metadata_matches_the_saved_row(tmp_path: Path) -> None:
