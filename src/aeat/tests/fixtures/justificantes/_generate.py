@@ -1433,6 +1433,433 @@ def _fmt_spanish(d: Decimal) -> str:
 
 
 @dataclass(frozen=True)
+class _Modelo303CorpusFixture:
+    """Synthetic M303 corpus fixture with formula-consistent casilla values.
+
+    The closure casilla `iva.resultado-regimen-general` (form box 46) is
+    derived from the registry formula:
+      46 = 27 - 45   [modelo-303-iva-resultado-regimen-general, Orden EHA/3786/2008 art. 1]
+
+    Leaf inputs:
+      c27 = Total cuota devengada (manual, form box 27)
+      c29 = IVA deducible ops interiores corrientes (manual, form box 29)
+      c45 = Total a deducir (manual, form box 45)
+
+    With no prior-period compensation (pendiente-anteriores = 0):
+      resultado-regimen-general = c27 - c45        [box 46]
+      compensacion-aplicada     = 0                 [min(0, max(0, resultado)) = 0 when resultado > 0]
+      resultado                 = resultado_rg - 0  [box 69 / iva.resultado]
+      compensacion-generada     = 0                 [max(0, -resultado) = 0 when resultado > 0]
+      compensacion-disponible   = 0                 [pendiente-posteriores + generada = 0]
+
+    For the 2023+ revision the profile also extracts boxes 37 (intracomunitaria
+    cuota), 64 (suma de resultados), 66 (atribuible Estado), and 71 (resultado
+    a ingresar). These are manual casillas not part of the formula chain; they
+    are set to zero in the simple-case fixture (no intracomunitaria, no otros
+    regimenes, resultado = box 66 = box 71 for standard single-regime case).
+
+    ``new_template`` distinguishes the 2023-y-siguientes profile (True) from
+    the 2009-y-siguientes profile (False, legacy fixtures 2021–2022).
+
+    Registry source: both revisions share the same resultado-regimen-general
+    formula  src/aeat/_data/registry/aeat/modelos/303/revisions/*/revision.toml
+    """
+
+    filename: str
+    ejercicio: str
+    periodo: str
+    tax_id: str
+    new_template: bool  # True = 2023+ profile; False = 2009 (legacy) profile
+    c27: Decimal  # Total cuota devengada (leaf input, box 27)
+    c29: Decimal  # IVA deducible ops interiores cuota (leaf input, box 29)
+    c45: Decimal  # Total a deducir (leaf input, box 45)
+    # Derived via _compute_m303_closure:
+    c46: Decimal  # Resultado regimen general = c27 - c45
+    c69: Decimal  # Resultado de la autoliquidacion = c46 - 0
+
+
+def _compute_m303_closure(c27: Decimal, c45: Decimal) -> tuple[Decimal, Decimal]:
+    """Compute M303 closure casillas from leaf inputs c27 (devengada) and c45 (deducible).
+
+    Formula chain (no prior-period compensation, no prorrata, no other regimes):
+      c46 = c27 - c45                          [modelo-303-iva-resultado-regimen-general]
+      compensacion-pendiente-anteriores = 0     [no prior-period carry-forward]
+      compensacion-aplicada = min(0, max(0, c46)) = 0  [c46 > 0 → not applicable]
+      c69 = c46 - 0 = c46                      [modelo-303-iva-resultado]
+
+    Returns (c46, c69) both rounded to money-2 (2 decimal places).
+
+    Arithmetic grounded in Orden EHA/3786/2008 art. 1 and the registry
+    formula expressions in revision.toml for both revisions.
+    """
+    c46 = (c27 - c45).quantize(Decimal("0.01"))
+    # With c46 > 0 and no prior compensation:
+    #   compensacion-aplicada = min(0, max(0, c46)) = min(0, c46) = 0
+    #   c69 = c46 - 0 = c46
+    c69 = c46.quantize(Decimal("0.01"))
+    return c46, c69
+
+
+# Per-specimen leaf-input table for M303 corpus.
+# New-template specimens (2023-y-siguientes): ejercicio 2023-2024, 8 specimens.
+# Legacy specimens (2009-y-siguientes): ejercicio 2021-2022, 7 specimens.
+# Values: c27 varies 12000–18000 EUR; c29 set to 60–70% of c27 as deducible
+# interior cuota; c45 = c29 (only interior deducible, no intracomunitaria).
+# This gives c46 = c27 - c45 in range ~4000–6000 EUR, formula-consistent.
+#
+# Modest per-specimen variation ensures distinct PDF bytes and realistic quarterly
+# IVA amounts (consistent with a small autonomo with quarterly gross revenue
+# ~57000–86000 EUR at 21% IVA rate giving c27 ~12000–18000).
+
+_MODELO_303_CORPUS_FIXTURES: tuple[_Modelo303CorpusFixture, ...] = (
+    # --- 2009-y-siguientes (legacy) revision: 2021-2T through 2022-4T ---
+    _Modelo303CorpusFixture(
+        filename="303/2021-2T.pdf",
+        ejercicio="2021",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("12000.00"),
+        c29=Decimal("7800.00"),
+        c45=Decimal("7800.00"),
+        c46=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[0],
+        c69=_compute_m303_closure(Decimal("12000.00"), Decimal("7800.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2021-3T.pdf",
+        ejercicio="2021",
+        periodo="3T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("13200.00"),
+        c29=Decimal("8400.00"),
+        c45=Decimal("8400.00"),
+        c46=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[0],
+        c69=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2021-4T.pdf",
+        ejercicio="2021",
+        periodo="4T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("14400.00"),
+        c29=Decimal("9000.00"),
+        c45=Decimal("9000.00"),
+        c46=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[0],
+        c69=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2022-1T.pdf",
+        ejercicio="2022",
+        periodo="1T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("12600.00"),
+        c29=Decimal("8100.00"),
+        c45=Decimal("8100.00"),
+        c46=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[0],
+        c69=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2022-2T.pdf",
+        ejercicio="2022",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("15000.00"),
+        c29=Decimal("9600.00"),
+        c45=Decimal("9600.00"),
+        c46=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[0],
+        c69=_compute_m303_closure(Decimal("15000.00"), Decimal("9600.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2022-3T.pdf",
+        ejercicio="2022",
+        periodo="3T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("16200.00"),
+        c29=Decimal("10200.00"),
+        c45=Decimal("10200.00"),
+        c46=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[0],
+        c69=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2022-4T.pdf",
+        ejercicio="2022",
+        periodo="4T",
+        tax_id="Y0000001S",
+        new_template=False,
+        c27=Decimal("18000.00"),
+        c29=Decimal("11400.00"),
+        c45=Decimal("11400.00"),
+        c46=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[0],
+        c69=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[1],
+    ),
+    # --- 2023-y-siguientes (new template) revision: 2023-1T through 2024-4T ---
+    _Modelo303CorpusFixture(
+        filename="303/2023-1T.pdf",
+        ejercicio="2023",
+        periodo="1T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("12600.00"),
+        c29=Decimal("8100.00"),
+        c45=Decimal("8100.00"),
+        c46=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[0],
+        c69=_compute_m303_closure(Decimal("12600.00"), Decimal("8100.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2023-2T.pdf",
+        ejercicio="2023",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("13800.00"),
+        c29=Decimal("8700.00"),
+        c45=Decimal("8700.00"),
+        c46=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[0],
+        c69=_compute_m303_closure(Decimal("13800.00"), Decimal("8700.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2023-3T.pdf",
+        ejercicio="2023",
+        periodo="3T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("15000.00"),
+        c29=Decimal("9300.00"),
+        c45=Decimal("9300.00"),
+        c46=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[0],
+        c69=_compute_m303_closure(Decimal("15000.00"), Decimal("9300.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2023-4T.pdf",
+        ejercicio="2023",
+        periodo="4T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("16800.00"),
+        c29=Decimal("10500.00"),
+        c45=Decimal("10500.00"),
+        c46=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[0],
+        c69=_compute_m303_closure(Decimal("16800.00"), Decimal("10500.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2024-1T.pdf",
+        ejercicio="2024",
+        periodo="1T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("13200.00"),
+        c29=Decimal("8400.00"),
+        c45=Decimal("8400.00"),
+        c46=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[0],
+        c69=_compute_m303_closure(Decimal("13200.00"), Decimal("8400.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2024-2T.pdf",
+        ejercicio="2024",
+        periodo="2T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("14400.00"),
+        c29=Decimal("9000.00"),
+        c45=Decimal("9000.00"),
+        c46=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[0],
+        c69=_compute_m303_closure(Decimal("14400.00"), Decimal("9000.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2024-3T.pdf",
+        ejercicio="2024",
+        periodo="3T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("16200.00"),
+        c29=Decimal("10200.00"),
+        c45=Decimal("10200.00"),
+        c46=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[0],
+        c69=_compute_m303_closure(Decimal("16200.00"), Decimal("10200.00"))[1],
+    ),
+    _Modelo303CorpusFixture(
+        filename="303/2024-4T.pdf",
+        ejercicio="2024",
+        periodo="4T",
+        tax_id="Y0000001S",
+        new_template=True,
+        c27=Decimal("18000.00"),
+        c29=Decimal("11400.00"),
+        c45=Decimal("11400.00"),
+        c46=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[0],
+        c69=_compute_m303_closure(Decimal("18000.00"), Decimal("11400.00"))[1],
+    ),
+)
+
+
+def _draw_modelo_303_corpus(c: canvas.Canvas, fixture: _Modelo303CorpusFixture) -> None:
+    """Render a synthetic M303 corpus fixture page onto ``c``.
+
+    Layout uses named_label format compatible with the M303 declaracion_pdf
+    extraction profile.  Each casilla row prints:
+      "<label text> <spanish_formatted_amount>"
+    where the label text is verbatim from the named_label_pattern in the
+    extraction profile, so the named_label parser captures the trailing amount.
+
+    Two profile variants:
+    - new_template=True (2023-y-siguientes): 12-casilla profile including
+      boxes 27, 29, 37, 45, iva.resultado-regimen-general, 64, 66,
+      iva.compensacion-pendiente-periodos-anteriores,
+      iva.compensacion-aplicada-periodo,
+      iva.compensacion-pendiente-periodos-posteriores,
+      iva.resultado, and 71.
+    - new_template=False (2009-y-siguientes legacy): 4-casilla profile —
+      boxes 27, 29, 45, and iva.resultado-regimen-general only.
+
+    Formula consistency (both revisions):
+      c46 = c27 - c45   [modelo-303-iva-resultado-regimen-general, Orden EHA/3786/2008 art. 1]
+      c69 = c46          [no prior-period compensation]
+
+    Label text grounded in the extraction profile patterns:
+    - '27': 'Total\\s+cuota\\s+devengada'
+    - '29': 'Por\\s+cuotas\\s+soportadas\\s+en\\s+operaciones\\s+interiores\\s+corrientes'
+    - '37': 'En\\s+adquisiciones\\s+intracomunitarias\\s+de\\s+bienes\\s+y\\s+servicios\\s+corrientes'
+    - '45': 'Total\\s+a\\s+deducir'
+    - 'iva.resultado-regimen-general': 'Resultado\\s+r[eé]gimen\\s+general\\s+\\(27\\s*-\\s*45\\)'
+    - '64': 'Suma\\s+de\\s+resultados'
+    - '66': 'Atribuible\\s+a\\s+la\\s+Administraci[oó]n\\s+del\\s+Estado'
+    - 'iva.compensacion-pendiente-periodos-anteriores':
+        'Cuotas\\s+a\\s+compensar\\s+pendientes\\s+de\\s+periodos\\s+anteriores'
+    - 'iva.compensacion-aplicada-periodo':
+        'Cuotas\\s+a\\s+compensar\\s+de\\s+periodos\\s+anteriores\\s+aplicadas\\s+en\\s+este\\s+periodo'
+    - 'iva.compensacion-pendiente-periodos-posteriores':
+        'Cuotas\\s+a\\s+compensar\\s+de\\s+periodos\\s+previos\\s+pendientes\\s+para\\s+periodos\\s+posteriores\\s+\\(110\\s*-\\s*78\\)'
+    - 'iva.resultado': 'Resultado\\s+de\\s+la\\s+autoliquidaci[oó]n\\s+\\(66[^\\)]*\\)'
+    - '71': 'Resultado\\s+\\(69\\s*-\\s*70\\s*\\+\\s*109\\)'
+
+    Non-tautology: _compute_m303_closure replicates the arithmetic of the real
+    engine. If the registry formula changes and the fixtures are not regenerated,
+    test_verification_chain_m303 will fail. Engine and fixture are computed
+    independently (engine: runtime TOML evaluation; fixture: formula replicated
+    at generation time).
+    """
+    _, height = A4
+    y = height - 25 * mm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(
+        20 * mm,
+        y,
+        "Impuesto sobre el Valor Anadido  Modelo 303",
+    )
+    y -= 10 * mm
+    c.setFont("Helvetica", 10)
+    c.drawString(20 * mm, y, f"Ejercicio: {fixture.ejercicio}   Periodo: {fixture.periodo}")
+    y -= 8 * mm
+    c.drawString(20 * mm, y, f"NIF: {fixture.tax_id}")
+    y -= 10 * mm
+
+    # Named-label rows: label text verbatim from the extraction profile pattern.
+    # Accents stripped to stay within ASCII-safe pdfplumber extraction path.
+    # Value follows on the same line after a space; named_label parser captures it.
+    zero_fmt = _fmt_spanish(Decimal("0.00"))
+
+    # box 27 — Total cuota devengada (leaf input, profile pattern: 'Total\s+cuota\s+devengada')
+    c.drawString(20 * mm, y, f"Total cuota devengada {_fmt_spanish(fixture.c27)}")
+    y -= 6 * mm
+
+    # box 29 — cuotas soportadas interiores corrientes
+    c.drawString(
+        20 * mm,
+        y,
+        f"Por cuotas soportadas en operaciones interiores corrientes {_fmt_spanish(fixture.c29)}",
+    )
+    y -= 6 * mm
+
+    if fixture.new_template:
+        # box 37 — intracomunitaria (zero — simple case, no intracommunity)
+        c.drawString(
+            20 * mm,
+            y,
+            f"En adquisiciones intracomunitarias de bienes y servicios corrientes {zero_fmt}",
+        )
+        y -= 6 * mm
+
+    # box 45 — Total a deducir (leaf input, profile pattern: 'Total\s+a\s+deducir')
+    c.drawString(20 * mm, y, f"Total a deducir {_fmt_spanish(fixture.c45)}")
+    y -= 6 * mm
+
+    # iva.resultado-regimen-general (box 46) — computed: c27 - c45
+    # Profile pattern: 'Resultado\s+r[eé]gimen\s+general\s+\(27\s*-\s*45\)'
+    c.drawString(
+        20 * mm,
+        y,
+        f"Resultado regimen general (27 - 45) {_fmt_spanish(fixture.c46)}",
+    )
+    y -= 6 * mm
+
+    if fixture.new_template:
+        # box 64 — Suma de resultados (= box 46 for single-regime filers)
+        # Profile pattern: 'Suma\s+de\s+resultados'
+        c.drawString(20 * mm, y, f"Suma de resultados {_fmt_spanish(fixture.c46)}")
+        y -= 6 * mm
+
+        # box 66 — Atribuible a la Administracion del Estado (= box 64 for standard filers)
+        # Profile pattern: 'Atribuible\s+a\s+la\s+Administraci[oó]n\s+del\s+Estado'
+        c.drawString(
+            20 * mm, y, f"Atribuible a la Administracion del Estado {_fmt_spanish(fixture.c46)}"
+        )
+        y -= 6 * mm
+
+        # iva.compensacion-pendiente-periodos-anteriores (box 110) — zero (no carry-forward)
+        # Profile: 'Cuotas\s+a\s+compensar\s+pendientes\s+de\s+periodos\s+anteriores'
+        c.drawString(
+            20 * mm,
+            y,
+            f"Cuotas a compensar pendientes de periodos anteriores {zero_fmt}",
+        )
+        y -= 6 * mm
+
+        # iva.compensacion-aplicada-periodo (box 78) — zero (c46 > 0, no prior compensation)
+        # Profile: 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+anteriores\s+aplicadas\s+en\s+este\s+periodo'
+        c.drawString(
+            20 * mm,
+            y,
+            f"Cuotas a compensar de periodos anteriores aplicadas en este periodo {zero_fmt}",
+        )
+        y -= 6 * mm
+
+        # iva.compensacion-pendiente-periodos-posteriores (box 87) — zero
+        # Profile: 'Cuotas\s+a\s+compensar\s+de\s+periodos\s+previos\s+pendientes\s+para\s+periodos\s+posteriores\s+\(110\s*-\s*78\)'
+        c.drawString(
+            20 * mm,
+            y,
+            f"Cuotas a compensar de periodos previos pendientes para periodos posteriores (110 - 78) {zero_fmt}",
+        )
+        y -= 6 * mm
+
+        # iva.resultado (box 69) — = c46 - 0 = c46
+        # Profile: 'Resultado\s+de\s+la\s+autoliquidaci[oó]n\s+\(66[^\)]*\)'
+        c.drawString(
+            20 * mm,
+            y,
+            f"Resultado de la autoliquidacion (66 - 78) {_fmt_spanish(fixture.c69)}",
+        )
+        y -= 6 * mm
+
+        # box 71 — Resultado (69 - 70 + 109) — for simple case = c69 (no ajustes)
+        # Profile: 'Resultado\s+\(69\s*-\s*70\s*\+\s*109\)'
+        c.drawString(
+            20 * mm,
+            y,
+            f"Resultado (69 - 70 + 109) {_fmt_spanish(fixture.c69)}",
+        )
+        y -= 6 * mm
+
+    y -= 4 * mm
+    c.drawString(20 * mm, y, "Ejemplar para el obligado tributario")
+
+
+@dataclass(frozen=True)
 class _Modelo130CorpusFixture:
     """Synthetic M130 corpus fixture with formula-consistent casilla values.
 
@@ -1912,6 +2339,20 @@ def main() -> None:
         c.setCreator("aeat fixture generator")
         c.setProducer("aeat-test-fixture-generator")
         _draw_modelo_131(c, fixture)
+        c.showPage()
+        c.save()
+        print(f"wrote {target}")
+
+    for fixture in _MODELO_303_CORPUS_FIXTURES:
+        target = out_dir / fixture.filename
+        target.parent.mkdir(parents=True, exist_ok=True)
+        c = canvas.Canvas(str(target), pagesize=A4, invariant=True)
+        c.setTitle(f"Modelo 303 {fixture.ejercicio} {fixture.periodo}")
+        c.setAuthor("aeat test fixtures")
+        c.setSubject("synthetic declaracion fixture m303 corpus")
+        c.setCreator("aeat fixture generator")
+        c.setProducer("aeat-test-fixture-generator")
+        _draw_modelo_303_corpus(c, fixture)
         c.showPage()
         c.save()
         print(f"wrote {target}")
