@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
+from ...core.decimal import coerce_decimal
 from ...core.identity import validate_spanish_tax_id
 from .._identifiers import canonical_decimal_string
 from ..iva import EUMemberState, IvaCategory
@@ -90,16 +91,6 @@ def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
 
 
-def _coerce_decimal(value: object) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
-    if isinstance(value, int):
-        return Decimal(value)
-    if isinstance(value, str):
-        return Decimal(value)
-    raise TypeError("expected a Decimal, int, or str value")
-
-
 def _coerce_date(value: object) -> date:
     if isinstance(value, date):
         return value
@@ -165,10 +156,10 @@ def _normalise_invoice_currency(payload: dict[str, object]) -> dict[str, object]
 def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:
     for key in ("grand_total", "base_total", "iva_total"):
         if key in payload:
-            payload[key] = _coerce_decimal(payload[key])
+            payload[key] = coerce_decimal(payload[key])
     for key in ("retention_rate", "retention_amount"):
         if key in payload and payload[key] is not None:
-            payload[key] = _coerce_decimal(payload[key])
+            payload[key] = coerce_decimal(payload[key])
     return payload
 
 
@@ -265,7 +256,7 @@ class InvoiceLine(BaseModel):
         payload = dict(data)
         for key in ("quantity", "unit_price", "subtotal", "iva_amount"):
             if key in payload and not isinstance(payload[key], Decimal):
-                payload[key] = _coerce_decimal(payload[key])
+                payload[key] = coerce_decimal(payload[key])
         if "iva_rate" in payload and isinstance(payload["iva_rate"], str):
             payload["iva_rate"] = IvaRate(payload["iva_rate"])
         return payload
