@@ -25,11 +25,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from datetime import date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Protocol
 
 from pydantic import ValidationError
 
+from ...core.decimal import coerce_decimal
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.calculations.registry._bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -169,19 +171,6 @@ def _row_field_lookup(revision: ModeloRevision) -> Mapping[str, str]:
     return lookup
 
 
-def _coerce_decimal(value: Decimal | str | None, *, default: Decimal) -> Decimal:
-    if value is None:
-        return default
-    if isinstance(value, Decimal):
-        return value
-    if isinstance(value, str):
-        try:
-            return Decimal(value)
-        except (InvalidOperation, ValueError):
-            return default
-    return default
-
-
 def _coerce_text(value: Decimal | str | None, *, default: str = "") -> str:
     if value is None:
         return default
@@ -265,10 +254,10 @@ def assemble_withholding_observations(
                     transaction_date=default_date,
                     clave=_coerce_text(fields.get("clave"), default="A") or "A",
                     subclave=_coerce_text(fields.get("subclave")),
-                    percibido_dinerario=_coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
-                    percibido_especie=_coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
-                    retencion_practicada=_coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
-                    ingreso_a_cuenta=_coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
+                    percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
+                    percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
+                    retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
+                    ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
                 )
             )
         except ValidationError as exc:
@@ -307,7 +296,7 @@ def assemble_related_party_observations(
                     transaction_date=default_date,
                     operation_kind_code=_coerce_text(fields.get("operation_kind_code"), default="01") or "01",
                     transfer_pricing_method_code=_coerce_text(fields.get("transfer_pricing_method_code")),
-                    amount=_coerce_decimal(fields.get("amount"), default=Decimal("0")),
+                    amount=coerce_decimal(fields.get("amount"), default=Decimal("0")),
                 )
             )
         except ValidationError as exc:
@@ -342,10 +331,10 @@ def assemble_foreign_asset_observations(
                     source_id=f"detalle:per_foreign_asset:row-{row_index}",
                     asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
-                    currency_code=_coerce_text(fields.get("currency_code"), default="EUR") or "EUR",
+                    currency_code=_coerce_text(fields.get("currency_code"), default=DEFAULT_CURRENCY) or DEFAULT_CURRENCY,
                     asset_identifier=_coerce_text(fields.get("asset_identifier")),
                     acquisition_date=_coerce_iso_date(fields.get("acquisition_date"), default=default_acquisition_date),
-                    valuation_amount=_coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
+                    valuation_amount=coerce_decimal(fields.get("valuation_amount"), default=Decimal("0")),
                 )
             )
         except ValidationError as exc:
@@ -382,8 +371,8 @@ def assemble_atribucion_observations(
                     member_legal_name=_coerce_text(fields.get("member_legal_name")),
                     country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
                     transaction_date=default_date,
-                    share_percentage=_coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
-                    base_imponible_assigned=_coerce_decimal(
+                    share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
+                    base_imponible_assigned=coerce_decimal(
                         fields.get("base_imponible_assigned"), default=Decimal("0")
                     ),
                 )
@@ -422,7 +411,7 @@ def assemble_refund_observations(
                     **_optional_text_kwarg(fields, "operation_kind_code"),
                     operation_date=_coerce_iso_date(fields.get("operation_date"), default=default_operation_date),
                     supplier_tax_id=_coerce_text(fields.get("supplier_tax_id")),
-                    refund_amount=_coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
+                    refund_amount=coerce_decimal(fields.get("refund_amount"), default=Decimal("0")),
                 )
             )
         except ValidationError as exc:

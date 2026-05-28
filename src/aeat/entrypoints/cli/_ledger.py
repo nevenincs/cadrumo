@@ -51,6 +51,7 @@ from ...application.review import (
     LedgerReviewFilterSpec,
 )
 from ...application.workflow._models import resolve_active_bucket_id
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEventHistoryRepository,
@@ -324,7 +325,7 @@ def ledger_add(
     direction: TransactionDirection = typer.Option(..., "--direction", help=tr("cli.ledger.add.direction_help")),
     description: str = typer.Option(..., "--description", help=tr("cli.ledger.add.description_help")),
     value_date: str | None = typer.Option(None, "--value-date", help=tr("cli.ledger.add.value_date_help")),
-    currency: str = typer.Option("EUR", "--currency", help=tr("cli.ledger.add.currency_help")),
+    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency", help=tr("cli.ledger.add.currency_help")),
     counterparty: str | None = typer.Option(None, "--counterparty", help=tr("cli.ledger.add.counterparty_help")),
     business_classification: BusinessClassification = typer.Option(
         BusinessClassification.NOT_YET_PROCESSED,
@@ -2315,7 +2316,7 @@ def payable_invoice_add(
         help=tr("cli.app.ledger.payable_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
     ),
     counterparty_name: str = typer.Option("", "--counterparty-name"),
-    currency: str = typer.Option("EUR", "--currency"),
+    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
     taxable_base: str = typer.Option("0", "--taxable-base"),
     iva_rate: str | None = typer.Option(None, "--iva-rate"),
     iva_amount: str = typer.Option("0", "--iva-amount"),
@@ -2527,7 +2528,7 @@ def collectible_invoice_add(
         help=tr("cli.app.ledger.collectible_invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
     ),
     counterparty_name: str = typer.Option("", "--counterparty-name"),
-    currency: str = typer.Option("EUR", "--currency"),
+    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
     taxable_base: str = typer.Option("0", "--taxable-base"),
     iva_rate: str | None = typer.Option(None, "--iva-rate"),
     iva_amount: str = typer.Option("0", "--iva-amount"),

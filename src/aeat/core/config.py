@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, m
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .errors import CoreValidationError
+from .external_constants import DEFAULT_CURRENCY
 from .paths import normalize_project_relative_path
 from .resources import bundled_path
 
@@ -344,7 +345,7 @@ class Settings(BaseSettings):
     )
     # ── Financial ingest ───────────────────────────────────────────────────
     financial_base_currency: str = Field(
-        default="EUR",
+        default=DEFAULT_CURRENCY,
         description="Fallback ISO 4217 currency used when a financial source omits a per-row currency",
     )
     financial_default_csv_encoding: str = Field(

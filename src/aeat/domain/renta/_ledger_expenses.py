@@ -10,6 +10,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.external_constants import DEFAULT_CURRENCY
+
 from ..categories import (
     CategoryCitation,
     CategoryProfile,
@@ -109,7 +111,7 @@ class RentaDeductibleExpenseFact(_RentaStrictFrozenModel):
     gross_amount: Decimal = Field(gt=Decimal("0"))
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
-    currency: Literal["EUR"] = "EUR"
+    currency: Literal["EUR"] = DEFAULT_CURRENCY
     direction: RentaExpenseDirection = RentaExpenseDirection.OUTGOING_EXPENSE
     category: SpendingCategory
     activity_key: str = Field(default="default", min_length=1, max_length=128)
@@ -206,7 +208,7 @@ class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):
     iva_amount: Decimal | None = None
     deductible_amount: Decimal
     non_deductible_amount: Decimal
-    currency: Literal["EUR"] = "EUR"
+    currency: Literal["EUR"] = DEFAULT_CURRENCY
     direction: RentaExpenseDirection
     sign: Literal[-1, 1]
     category: SpendingCategory

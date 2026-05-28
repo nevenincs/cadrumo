@@ -498,6 +498,85 @@ def test_google_drive_reads_binary_mime_from_external_constants() -> None:
     assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
 
 
+# ---------------------------------------------------------------------------
+# S175 / S176 — DEFAULT_CURRENCY centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_default_currency_value() -> None:
+    """``DEFAULT_CURRENCY`` equals the ISO 4217 Euro code."""
+
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert DEFAULT_CURRENCY == "EUR"
+
+
+def test_default_currency_is_final_str() -> None:
+    """``DEFAULT_CURRENCY`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert isinstance(DEFAULT_CURRENCY, str)
+
+
+def test_ledger_transaction_command_reads_currency_from_external_constants() -> None:
+    """The manual ledger transaction command default currency comes from ``DEFAULT_CURRENCY``."""
+
+    import inspect
+
+    from aeat.application.ledger._models import ManualLedgerTransactionCommand
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    # Construct with no explicit currency — the field default must resolve to DEFAULT_CURRENCY.
+    # We verify by inspecting that the module imports DEFAULT_CURRENCY (not a local literal).
+    import aeat.application.ledger._models as _models_mod
+
+    assert hasattr(_models_mod, "DEFAULT_CURRENCY"), (
+        "_models module must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _models_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+    # Also verify the field default is not a hardcoded literal in the model schema.
+    schema = ManualLedgerTransactionCommand.model_json_schema()
+    props = schema.get("properties", {})
+    currency_prop = props.get("currency", {})
+    assert currency_prop.get("default") == DEFAULT_CURRENCY
+
+
+def test_currency_service_reads_native_eur_from_external_constants() -> None:
+    """The currency normalisation service uses ``DEFAULT_CURRENCY`` for native EUR check."""
+
+    import aeat.domain.currency._service as _service_mod
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert hasattr(_service_mod, "DEFAULT_CURRENCY"), (
+        "_service module must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _service_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+
+def test_aggregation_predicates_read_currency_from_external_constants() -> None:
+    """The aggregation currency predicate uses ``DEFAULT_CURRENCY``, not a local literal."""
+
+    import aeat.application.aggregation._currency_predicates as _pred_mod
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    assert hasattr(_pred_mod, "DEFAULT_CURRENCY"), (
+        "_currency_predicates must import DEFAULT_CURRENCY from external_constants"
+    )
+    assert _pred_mod.DEFAULT_CURRENCY is DEFAULT_CURRENCY
+
+
+def test_config_financial_base_currency_default_equals_default_currency() -> None:
+    """``Settings.financial_base_currency`` default equals ``DEFAULT_CURRENCY``."""
+
+    from aeat.core.config import Settings
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    settings = Settings()
+    assert settings.financial_base_currency == DEFAULT_CURRENCY
+
+
 def test_blob_store_put_default_content_type_reads_from_external_constants() -> None:
     """``EncryptedBlobStore.put`` default ``content_type`` is bound to ``BINARY_MIME_TYPE``."""
 
