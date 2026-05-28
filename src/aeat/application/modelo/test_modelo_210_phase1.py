@@ -33,9 +33,16 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo._actions import _resolve_m210_rate
+from aeat.application.modelo._actions import (
+    _resolve_m210_rate,
+    _rewrite_m210_sentinels,
+)
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
+    M210_CONVENIO_MISSING_SENTINEL,
+    M210_DEFERRED_TIPO_SENTINEL,
+    M210_NOT_YET_AUTHORED_SENTINEL,
+    CasillaObservation,
     ConvenioRateRow,
     RegistrySnapshot,
 )
@@ -251,3 +258,133 @@ def test_resident_pension_deferred_baseline_emits_blocking_finding(
     assert "m210-baseline-tipo-deferred" in finding.message
     message_lower = finding.message.lower()
     assert "pension" in message_lower
+
+
+def _observation(casilla_id: str, value: Decimal) -> CasillaObservation:
+    """Build a minimal CasillaObservation carrying just a casilla_id + value."""
+
+    return CasillaObservation(
+        casilla_id=casilla_id,
+        value=value,
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+
+def test_rewrite_m210_sentinels_passes_through_non_sentinel_observations(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """Observations carrying real rates / zero values pass through unchanged."""
+
+    observations = (
+        _observation("base_imponible", Decimal("12000")),
+        _observation("tipo_gravamen", Decimal("0.24")),
+        _observation("cuota_integra", Decimal("2880.00")),
+    )
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("GB"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="general",
+    )
+
+    assert rewritten == observations
+    assert findings == []
+
+
+def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_finding(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A NOT_YET_AUTHORED sentinel observation gets rewritten and emits a finding.
+
+    Felipe (AR / pension) is the canonical case where the Convenio row
+    carries the NOT_YET_AUTHORED placeholder. The helper rewrites the
+    sentinel value to ``Decimal(0)`` (the operator-facing safe default
+    when no authoritative rate exists) and emits the
+    ``m210-convenio-rate-not-yet-authored`` BLOCKING finding.
+    """
+
+    observations = (
+        _observation("base_imponible", Decimal("15000")),
+        _observation("tipo_gravamen", M210_NOT_YET_AUTHORED_SENTINEL),
+        _observation("cuota_integra", Decimal("-45000.00")),
+    )
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("AR"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="pension",
+    )
+
+    rewritten_by_id = {obs.casilla_id: obs for obs in rewritten}
+    assert rewritten_by_id["tipo_gravamen"].value == Decimal("0")
+    # Non-sentinel observations preserved as-is.
+    assert rewritten_by_id["base_imponible"].value == Decimal("15000")
+    assert rewritten_by_id["cuota_integra"].value == Decimal("-45000.00")
+    assert len(findings) == 1
+    assert "m210-convenio-rate-not-yet-authored" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A CONVENIO_MISSING sentinel is rewritten and the missing-row finding is emitted."""
+
+    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("ZW"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="general",
+    )
+
+    assert rewritten[0].value == Decimal("0")
+    assert len(findings) == 1
+    assert "m210-convenio-rate-missing" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_replaces_deferred_tipo_sentinel(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A DEFERRED_TIPO sentinel + resident profile rewrites to zero and emits a finding."""
+
+    observations = (_observation("tipo_gravamen", M210_DEFERRED_TIPO_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_resident_profile(),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="pension",
+    )
+
+    assert rewritten[0].value == Decimal("0")
+    assert len(findings) == 1
+    assert "m210-baseline-tipo-deferred" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A sentinel observation paired with a resolvable Convenio row rewrites to the real rate.
+
+    Khadija (MA / interest) has a real 0.10 Convenio row. If the
+    engine emitted a sentinel for any reason (e.g. text_inputs were
+    not yet threaded into the application calculation path), the
+    verification sweep would re-resolve and rewrite the observation
+    to the canonical rate without emitting a BLOCKING finding.
+    """
+
+    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("MA"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="interest",
+    )
+
+    assert rewritten[0].value == Decimal("0.10")
+    assert findings == []

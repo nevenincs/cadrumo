@@ -78,6 +78,10 @@ from ._export import (
 )
 from ._export_parse import ParsedExportFieldValue, ParsedExportPayload, parse_export_payload
 from ._formula_runtime import (
+    M210_CONVENIO_MISSING_SENTINEL,
+    M210_DEFERRED_TIPO_SENTINEL,
+    M210_NOT_YET_AUTHORED_SENTINEL,
+    M210_RATE_SENTINELS,
     RegistryCalculationEntry,
     RegistryCalculationResult,
     calculate_registry_snapshot,

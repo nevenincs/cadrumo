@@ -46,6 +46,15 @@ _M210_RATE_SENTINELS = frozenset(
     }
 )
 
+# Public-aliased re-exports for the application-layer verification
+# sweep. The private module-internal names stay primary so the engine
+# implementation can be reorganised without forcing every caller to
+# track the rename.
+M210_DEFERRED_TIPO_SENTINEL = _M210_DEFERRED_TIPO_SENTINEL
+M210_CONVENIO_MISSING_SENTINEL = _M210_CONVENIO_MISSING_SENTINEL
+M210_NOT_YET_AUTHORED_SENTINEL = _M210_NOT_YET_AUTHORED_SENTINEL
+M210_RATE_SENTINELS = _M210_RATE_SENTINELS
+
 
 class RegistryCalculationEntry(BaseModel):
     """One trace row emitted by the registry formula runtime.
