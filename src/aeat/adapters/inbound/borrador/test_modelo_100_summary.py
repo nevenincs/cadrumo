@@ -214,3 +214,58 @@ class TestOverrides:
         pdf = _generate_pdf(tmp_path, artefact_kind="BORRADOR")
         with pytest.raises(BorradorParseError, match=r"BORRADOR|DECLARACION|artefact|kind"):
             parse_borrador(pdf, artefact_kind_override=ArtefactKind.DECLARACION)
+
+
+class TestBorradorParseErrorAttributes:
+    """BorradorParseError carries structured attributes matching discipline parity.
+
+    These tests assert on typed attributes rather than message strings so that
+    callers can introspect failure details without fragile string parsing.
+    """
+
+    def test_coverage_failure_populates_missing_and_coverage(self, tmp_path: Path) -> None:
+        # PDF has only 0550; profile requires 0550 + 0700 with full coverage.
+        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "3500.00"})
+        profile = _profile(target_casilla_ids=("0550", "0700"), min_coverage=Decimal("1"))
+
+        with pytest.raises(BorradorParseError) as exc_info:
+            parse_borrador(pdf, extraction_profile=profile, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
+
+        err = exc_info.value
+        assert err.missing == ("0700",)
+        assert err.coverage == Decimal("1") / Decimal("2")
+        assert err.malformed == ()
+        assert err.ambiguous == ()
+
+    def test_coverage_failure_missing_sorted_tuple(self, tmp_path: Path) -> None:
+        # Profile requires three casillas; PDF only has 0550 — both absent IDs surface sorted.
+        pdf = _generate_pdf(tmp_path, casilla_values={"0550": "100.00"})
+        profile = _profile(target_casilla_ids=("0550", "0595", "0700"), min_coverage=Decimal("1"))
+
+        with pytest.raises(BorradorParseError) as exc_info:
+            parse_borrador(pdf, extraction_profile=profile, parse_mode=BorradorParseMode.REGISTRY_PROFILE)
+
+        err = exc_info.value
+        assert err.missing == ("0595", "0700")
+        assert err.coverage == Decimal("1") / Decimal("3")
+
+    def test_default_raise_has_empty_structured_attributes(self) -> None:
+        # A bare raise (e.g. from _require_match) leaves all attributes at defaults.
+        err = BorradorParseError("could not locate required field: NIF")
+        assert err.missing == ()
+        assert err.malformed == ()
+        assert err.ambiguous == ()
+        assert err.coverage is None
+
+    def test_explicit_population_of_all_attributes(self) -> None:
+        err = BorradorParseError(
+            "test",
+            missing=("0550",),
+            malformed=("0700",),
+            ambiguous=("0595",),
+            coverage=Decimal("0.5"),
+        )
+        assert err.missing == ("0550",)
+        assert err.malformed == ("0700",)
+        assert err.ambiguous == ("0595",)
+        assert err.coverage == Decimal("0.5")
