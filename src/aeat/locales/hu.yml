@@ -1963,68 +1963,68 @@ entries:
     purpose: entries.portal_sede_root.purpose
 errors:
   auth:
-    auth_aeat_login_assertion: errors.auth.auth_aeat_login_assertion
-    auth_aeat_session_expired: errors.auth.auth_aeat_session_expired
-    auth_auth: errors.auth.auth_auth
-    auth_auth_authenticator_persisted_session_invalid: errors.auth.auth_auth_authenticator_persisted_session_invalid
-    auth_auth_certificate: errors.auth.auth_auth_certificate
-    auth_auth_certificate_expired: errors.auth.auth_auth_certificate_expired
-    auth_auth_certificate_handshake: errors.auth.auth_auth_certificate_handshake
-    auth_auth_certificate_load: errors.auth.auth_auth_certificate_load
-    auth_auth_certificate_nif_parse: errors.auth.auth_auth_certificate_nif_parse
-    auth_auth_certificate_password: errors.auth.auth_auth_certificate_password
-    auth_auth_certificate_pre_expiry: errors.auth.auth_auth_certificate_pre_expiry
-    auth_auth_clave_movil_clave_movil_approval_timeout: errors.auth.auth_auth_clave_movil_clave_movil_approval_timeout
-    auth_auth_clave_movil_clave_movil_configuration: errors.auth.auth_auth_clave_movil_clave_movil_configuration
-    auth_auth_configuration: errors.auth.auth_auth_configuration
-    auth_auth_validation: errors.auth.auth_auth_validation
-    auth_google: errors.auth.auth_google
-    auth_google_client_not_registered: errors.auth.auth_google_client_not_registered
-    auth_google_client_revoked: errors.auth.auth_google_client_revoked
-    auth_google_expired: errors.auth.auth_google_expired
-    auth_google_revoked: errors.auth.auth_google_revoked
-    auth_google_scope_insufficient: errors.auth.auth_google_scope_insufficient
-    auth_outbound_storage_permission: errors.auth.auth_outbound_storage_permission
-    auth_session_corrupt: errors.auth.auth_session_corrupt
-    auth_session_unavailable: errors.auth.auth_session_unavailable
-    auth_storage_bucket_recovery_verification: errors.auth.auth_storage_bucket_recovery_verification
-    auth_storage_keyring_unavailable: errors.auth.auth_storage_keyring_unavailable
-    auth_storage_master_key_kdf_version: errors.auth.auth_storage_master_key_kdf_version
-    auth_storage_master_key_keychain_locked: errors.auth.auth_storage_master_key_keychain_locked
-    auth_storage_master_key_material_missing: errors.auth.auth_storage_master_key_material_missing
-    auth_storage_master_key_passphrase_mismatch: errors.auth.auth_storage_master_key_passphrase_mismatch
-    auth_storage_master_key_unavailable: errors.auth.auth_storage_master_key_unavailable
+    auth_aeat_login_assertion: 'Az AEAT-tal való bejelentkezés utáni ellenőrzés nem sikerült.'
+    auth_aeat_session_expired: 'A hitelesített AEAT-munkamenet lejárt. A folytatáshoz hitelesítse magát újra.'
+    auth_auth: 'AEAT-hitelesítési hiba történt.'
+    auth_auth_authenticator_persisted_session_invalid: 'A tárolt AEAT böngésző-munkamenet nem megbízható. Hitelesítse magát újra.'
+    auth_auth_certificate: 'Tanúsítvány-hitelesítési hiba történt.'
+    auth_auth_certificate_expired: 'A digitális tanúsítvány lejárt. Hitelesítés előtt újítsa meg a tanúsítványt.'
+    auth_auth_certificate_handshake: 'A TLS-kézfogás bemenete érvénytelen. Ellenőrizze a megadott URL-t.'
+    auth_auth_certificate_load: 'A PKCS#12 tanúsítványadatok nem elemezhetők. Ellenőrizze, hogy a fájl nem sérült-e.'
+    auth_auth_certificate_nif_parse: 'Nem sikerült NIF-et vagy NIE-t kinyerni a tanúsítvány alanyából. Ellenőrizze, hogy a tanúsítvány természetes személyhez tartozik-e.'
+    auth_auth_certificate_password: 'A tanúsítvány jelszava hiányzik vagy helytelen. Állítsa be a környezeti változót a helyes jelszóra.'
+    auth_auth_certificate_pre_expiry: 'A digitális tanúsítvány hamarosan lejár. A megszakítások elkerülése érdekében újítsa meg, mielőtt lejárna.'
+    auth_auth_clave_movil_clave_movil_approval_timeout: 'A Cl@ve-hitelesítés nem fejeződött be időben. Hagyja jóvá a kérést az eszközén, és próbálja újra.'
+    auth_auth_clave_movil_clave_movil_configuration: 'A szükséges Cl@ve Móvil beállítások hiányoznak vagy hibásak. Tekintse át a Cl@ve konfigurációt.'
+    auth_auth_configuration: 'A szükséges hitelesítési beállítások hiányoznak vagy hibásak. Tekintse át a hitelesítési konfigurációt.'
+    auth_auth_validation: 'A hitelesítési paraméterek nem mentek át az érvényesítésen. Javítsa a megjelenített értékeket, és próbálja újra.'
+    auth_google: 'Google-hitelesítési hiba történt.'
+    auth_google_client_not_registered: 'Az aktív profilhoz nem regisztráltak Google Desktop OAuth-klienst. Regisztráljon egy klienst a Google-funkciók használatához.'
+    auth_google_client_revoked: 'A regisztrált Google Desktop OAuth-klienst visszavonták. Regisztráljon új klienst.'
+    auth_google_expired: 'A Google frissítési token lejárt a 7 napos tesztelési projekt korlátján belül. Engedélyezze újra a Google-hozzáférést.'
+    auth_google_revoked: 'A Google frissítési tokent visszavonták. Engedélyezze újra a Google-hozzáférést.'
+    auth_google_scope_insufficient: 'A megadott Google hatókörök nem tartalmazzák a művelethez szükséges összes hatókört. Engedélyezze újra, megadva az összes kért hatókört.'
+    auth_outbound_storage_permission: 'Az aktív hitelesítő adatok nem rendelkeznek az ehhez a tárolási művelethez szükséges jogosultsággal.'
+    auth_session_corrupt: 'A tárolt munkamenet metaadatai nem elemezhetők. Hitelesítse magát újra egy friss munkamenet létrehozásához.'
+    auth_session_unavailable: 'Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítse magát a folytatás előtt.'
+    auth_storage_bucket_recovery_verification: 'A megadott helyreállítási kód érvénytelen. Pontosan írja be a 24 szót, ahogy a biztonsági másolatban szerepel.'
+    auth_storage_keyring_unavailable: 'Az operációs rendszer kulcstára nem elérhető. Ellenőrizze, hogy telepítve és aktív-e egy hitelesítő tároló.'
+    auth_storage_master_key_kdf_version: 'A főkulcsfájl egy kulcsszármaztatási verziót használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.'
+    auth_storage_master_key_keychain_locked: 'Az operációs rendszer kulcstára zárolt. Oldja fel a zárolást (Touch ID, Windows Hello vagy a hitelesítőkezelő), és próbálja újra.'
+    auth_storage_master_key_material_missing: 'Nincs főkulcs-anyag. A biztonságos tároló még nincs kiosztva.'
+    auth_storage_master_key_passphrase_mismatch: 'A jelmondat nem oldja fel a főkulcsot. Adja meg újra; ha elfelejtette, állítsa helyre a helyreállítási kulccsal.'
+    auth_storage_master_key_unavailable: 'A főkulcsot egyetlen szolgáltatótól sem sikerült beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.'
   calc:
     age_at_year_end_no_filing_year: errors.calc.age_at_year_end_no_filing_year
-    binding_value_missing: errors.calc.binding_value_missing
-    bound_casilla_binding_value_missing: A(z) {binding_id} kötés értéke nincs megadva.
+    binding_value_missing: 'A(z) {binding_id} kötésnek nincs megadott értéke.'
+    bound_casilla_binding_value_missing: 'A(z) {binding_id} kötésnek nincs megadott értéke.'
     bound_input_smuggled_without_binding_value: errors.calc.bound_input_smuggled_without_binding_value
     bound_projection_inconsistent: errors.calc.bound_projection_inconsistent
-    bracket_negative_base: errors.calc.bracket_negative_base
-    bracket_no_coverage: errors.calc.bracket_no_coverage
-    bracket_no_window: errors.calc.bracket_no_window
-    casilla_constraint_violation: errors.calc.casilla_constraint_violation
-    casilla_referenced_before_evaluation: errors.calc.casilla_referenced_before_evaluation
-    computed_supplied_as_input: errors.calc.computed_supplied_as_input
+    bracket_negative_base: 'A(z) {parameter_id} sávparaméter nem fogadhat el negatív alapot: {base}.'
+    bracket_no_coverage: 'A(z) {parameter_id} sávparaméternek nincs bejegyzése a(z) {base} alaphoz.'
+    bracket_no_window: 'A(z) {parameter_id} sávparaméternek nincs {as_of} időpontra érvényes sávja.'
+    casilla_constraint_violation: 'A(z) {casilla_id} mező {value} értéke sérti a korlátozást: {violation}. Hivatkozások: {legal_refs}.'
+    casilla_referenced_before_evaluation: 'A(z) {casilla_id} mezőre a képlet értékelése előtt hivatkoztak.'
+    computed_supplied_as_input: 'Számított mezők nem adhatók meg bemenetként: {casilla_ids}.'
     date_binding_used_as_decimal_leaf: errors.calc.date_binding_used_as_decimal_leaf
     date_binding_value_missing: Hianyzik a datumkotes erteke.
-    dispatch_key_unknown: errors.calc.dispatch_key_unknown
-    dispatch_parameter_kind: errors.calc.dispatch_parameter_kind
-    divide_by_zero: errors.calc.divide_by_zero
-    empty_expression: errors.calc.empty_expression
-    enum_binding_value_missing: errors.calc.enum_binding_value_missing
-    lookup_dispatch_arg_count: errors.calc.lookup_dispatch_arg_count
-    lookup_dispatch_arg_kind: errors.calc.lookup_dispatch_arg_kind
-    parameter_unknown: errors.calc.parameter_unknown
-    relation_value_missing: errors.calc.relation_value_missing
-    unknown_input_casillas: errors.calc.unknown_input_casillas
+    dispatch_key_unknown: 'A(z) {dispatch_key!r} diszpécserkulcs nem szerepel a(z) {op} műveletre és {binding_id} kötésre vonatkozó diszpécser-táblázatban (deklarált kulcsok: {available}).'
+    dispatch_parameter_kind: 'A(z) {parameter_id} paraméter típusa nem egyezik a(z) {op} műveletnél; skaláris paramétert várt (decimális / pénz / egész szám / arány).'
+    divide_by_zero: 'A(z) {op} képletoperátor nullával oszt.'
+    empty_expression: 'Üres képletkifejezés.'
+    enum_binding_value_missing: 'A(z) {binding_id} felsorolás-kötésnek nincs megadott értéke (a(z) {op} művelet igényli).'
+    lookup_dispatch_arg_count: 'A(z) {op} képletoperátor {expected} argumentumot vár.'
+    lookup_dispatch_arg_kind: 'A(z) {op} képletoperátornál a(z) {position}. pozíciónak {expected_kind} levélnek kell lennie.'
+    parameter_unknown: 'A(z) {parameter_id} paraméter nincs regisztrálva.'
+    relation_value_missing: 'A(z) {relation_id} relációnak nincs megadott értéke.'
+    unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
-    no_snapshot_captured: errors.censo.no_snapshot_captured
-    profile_not_found: errors.censo.profile_not_found
-    sede_g313_no_census: errors.censo.sede_g313_no_census
-    sede_no_census: errors.censo.sede_no_census
+    no_snapshot_captured: 'Nem sikerült census-pillanatképet rögzíteni a(z) {profile_id} profilhoz.'
+    profile_not_found: 'A(z) {profile_id} profil nem létezik; census alkalmazása előtt hozza létre.'
+    sede_g313_no_census: 'Az AEAT G313 szekcióból nem sikerült olvasható censust lekérni a(z) {profile_id} profilhoz; ellenőrizze, hogy a tanúsítványa vagy Cl@ve-je regisztrálva van-e.'
+    sede_no_census: 'Az AEAT szekcióból nem sikerült olvasható censust lekérni a(z) {profile_id} profilhoz.'
   error:
     error_access_gate_submission: errors.error.error_access_gate_submission
     error_access_gate_submission_preflight: errors.error.error_access_gate_submission_preflight
