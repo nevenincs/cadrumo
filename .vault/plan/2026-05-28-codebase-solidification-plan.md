@@ -139,10 +139,10 @@ through the affected logger.
 - [ ] `W01.P02.S66` - add real-behavior test asserting auth waiting messages never carry unmasked verification codes through stderr; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil.py`.
 - [ ] `W01.P02.S67` - replace `sys.stdout.write` with an injected render primitive; `src/aeat/application/wizard/_prompter.py`.
 - [ ] `W01.P02.S68` - add real-behavior test asserting wizard prompter routes through the structured render path; `src/aeat/application/wizard/test_prompter.py`.
-- [ ] `W01.P02.S69` - guard the module-level `print(...)` in the normatives docstring example behind `if __name__ == "__main__":` or convert to a proper doctest block; `src/aeat/domain/normatives/__init__.py`.
-- [ ] `W01.P02.S70` - add real-behavior test asserting importing `aeat.domain.normatives` produces no stdout output; `src/aeat/domain/normatives/test_init.py`.
-- [ ] `W01.P02.S71` - guard the LLM-adapter docstring example `print(response.text)` behind `if __name__ == "__main__":`; `src/aeat/adapters/outbound/llm/__init__.py`.
-- [ ] `W01.P02.S72` - add real-behavior test asserting importing `aeat.adapters.outbound.llm` produces no stdout output; `src/aeat/adapters/outbound/llm/test_init.py`.
+- [x] `W01.P02.S69` - guard the module-level `print(...)` in the normatives docstring example behind `if __name__ == "__main__":` or convert to a proper doctest block; `src/aeat/domain/normatives/__init__.py`.
+- [x] `W01.P02.S70` - add real-behavior test asserting importing `aeat.domain.normatives` produces no stdout output; `src/aeat/domain/normatives/test_init.py`.
+- [x] `W01.P02.S71` - guard the LLM-adapter docstring example `print(response.text)` behind `if __name__ == "__main__":`; `src/aeat/adapters/outbound/llm/__init__.py`.
+- [x] `W01.P02.S72` - add real-behavior test asserting importing `aeat.adapters.outbound.llm` produces no stdout output; `src/aeat/adapters/outbound/llm/test_init.py`.
 - [ ] `W01.P02.S73` - add `pikepdf._core` to `configure_logging()` `loggers` block; `remove the bootstrap-time mutation; `src/aeat/__init__.py`.
 - [ ] `W01.P02.S74` - add real-behavior test asserting `pikepdf._core` level survives a `configure_logging()` re-call; `src/aeat/core/test_logging.py`.
 - [ ] `W01.P02.S75` - attach `SecretScrubbingFilter` to the `root_logger.getLogger()` sink path; `src/aeat/core/observability/_context.py`.
