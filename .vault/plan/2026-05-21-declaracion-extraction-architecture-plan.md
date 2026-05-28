@@ -510,7 +510,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P48.S205` - Verify M111 2024-4T negative-filing scenario corpus-vs-formula resolution (tasklist #74); `src/aeat/_data/registry/aeat/modelos/111.toml src/aeat/tests/fixtures/justificantes/111/2024-4T.pdf`.
+- [x] `W10.P48.S205` - Verify M111 2024-4T negative-filing scenario corpus-vs-formula resolution (tasklist #74); `src/aeat/_data/registry/aeat/modelos/111.toml src/aeat/tests/fixtures/justificantes/111/2024-4T.pdf`.
 
 ### Phase `W10.P49` - Verification chain extension as gaps close
 
