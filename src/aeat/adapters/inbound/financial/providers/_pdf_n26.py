@@ -26,6 +26,7 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
 _BANK_MARKERS = ("N26 Bank AG", "N26 Bank SE")
@@ -94,7 +95,7 @@ class PdfN26Provider(FinancialProvider):
     """
 
     name = "n26-pdf"
-    supported_extensions = frozenset({".pdf"})
+    supported_extensions = frozenset({PDF_EXTENSION})
     source_format = SourceFormat.PDF
     # Corpus PDFs are synthetic fixtures generated from sanitised text dumps
     # from the portfolio-performance open-source test corpus (Kontoauszug01.txt,

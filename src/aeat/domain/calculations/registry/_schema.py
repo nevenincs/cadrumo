@@ -42,6 +42,7 @@ from ._ids import (
     WorkbookFixtureId,
     WorkbookParityRefId,
 )
+from ._record_spec import ENCODING_ALIAS_MAP
 
 
 def _coerce_decimal(value: object) -> object:
@@ -126,6 +127,64 @@ InputKindValue = Annotated[InputKind, BeforeValidator(_coerce_input_kind)]
 
 Use this as the field type on pydantic models that ingest TOML or JSON
 payloads where ``input_kind`` is stored as a plain string.
+"""
+
+
+class CasillaFieldKind(StrEnum):
+    """Registry-authoritative classification of how an export field is populated.
+
+    Each member's string value matches the TOML literal used in registry
+    source files (``modelo/<n>/exports/*.toml``), so serialisation is
+    transparent across every persistence boundary.
+
+    Attributes:
+        LITERAL: Field emits a constant string declared in ``literal``.
+        CASILLA: Field derives its value from a named casilla.
+        BINDING: Field derives its value from a named binding.
+        COMPUTED: Field is synthesised at export time via ``computed_key``.
+        DRAFT: Field is drawn from a draft attribute via ``draft_attribute``.
+        FILLER: Field is a fixed-width pad with no semantic value.
+        HEADER: Field emits a record-type header value via ``header_key``.
+        CHECKSUM: Field carries a record-level checksum.
+    """
+
+    LITERAL = "literal"
+    CASILLA = "casilla"
+    BINDING = "binding"
+    COMPUTED = "computed"
+    DRAFT = "draft"
+    FILLER = "filler"
+    HEADER = "header"
+    CHECKSUM = "checksum"
+
+
+def _coerce_casilla_field_kind(value: object) -> object:
+    """Coerce a TOML string literal to the canonical CasillaFieldKind member.
+
+    Accepts a ``CasillaFieldKind`` instance directly (no-op) or a plain
+    string matching one of the declared member values.  Rejects non-string
+    and non-member inputs at the schema boundary.
+    """
+    if isinstance(value, CasillaFieldKind):
+        return value
+    if isinstance(value, str):
+        try:
+            return CasillaFieldKind(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"kind {value!r} is not a recognised CasillaFieldKind member; "
+                f"expected one of {[m.value for m in CasillaFieldKind]}"
+            ) from None
+    raise RegistryValidationError(
+        f"kind must be a string, got {type(value).__name__!r}"
+    )
+
+
+CasillaFieldKindValue = Annotated[CasillaFieldKind, BeforeValidator(_coerce_casilla_field_kind)]
+"""Annotated CasillaFieldKind that coerces TOML string literals to enum members.
+
+Use this as the field type on pydantic models that ingest TOML or JSON
+payloads where ``kind`` is stored as a plain string.
 """
 
 
@@ -1963,13 +2022,13 @@ class CasillaDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_input_kind(self) -> CasillaDefinition:
-        if self.input_kind == "computed" and self.formula is None:
+        if self.input_kind == InputKind.COMPUTED and self.formula is None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
-        if self.input_kind == "computed" and self.binding is not None:
+        if self.input_kind == InputKind.COMPUTED and self.binding is not None:
             raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
-        if self.input_kind == "bound" and self.binding is None:
+        if self.input_kind == InputKind.BOUND and self.binding is None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
-        if self.input_kind == "bound" and self.formula is not None:
+        if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
         if self.semantic_role_cardinality == "intentional_singleton":
             if self.semantic_role is None:
@@ -2174,7 +2233,7 @@ class ExportFieldDefinition(RegistryModel):
     id: ExportFieldId
     offset: int | None = Field(default=None, ge=0)
     length: int | None = Field(default=None, gt=0)
-    kind: Literal["literal", "casilla", "binding", "computed", "draft", "filler", "header", "checksum"]
+    kind: CasillaFieldKindValue
     casilla: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
@@ -2192,19 +2251,19 @@ class ExportFieldDefinition(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
-        if self.kind == "casilla" and self.casilla is None:
+        if self.kind == CasillaFieldKind.CASILLA and self.casilla is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare casilla")
-        if self.kind == "binding" and self.binding is None:
+        if self.kind == CasillaFieldKind.BINDING and self.binding is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare binding")
-        if self.kind == "literal" and self.literal is None:
+        if self.kind == CasillaFieldKind.LITERAL and self.literal is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare literal")
-        if self.kind == "header" and self.header_key is None:
+        if self.kind == CasillaFieldKind.HEADER and self.header_key is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare header_key")
-        if self.kind == "draft" and self.draft_attribute is None:
+        if self.kind == CasillaFieldKind.DRAFT and self.draft_attribute is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare draft_attribute")
-        if self.kind == "computed" and self.computed_key is None:
+        if self.kind == CasillaFieldKind.COMPUTED and self.computed_key is None:
             raise RegistryValidationError(f"export field {self.id!r} must declare computed_key")
-        if self.kind == "filler" and self.length is None:
+        if self.kind == CasillaFieldKind.FILLER and self.length is None:
             raise RegistryValidationError(f"export field {self.id!r} filler must declare length")
         return self
 
@@ -2301,33 +2360,10 @@ class ExportLayoutDefinition(RegistryModel):
         return self
 
 
-_FICHERO_BOE_ENCODING_ALIASES: Mapping[str, str] = {
-    "latin-1": "iso-8859-1",
-    "latin_1": "iso-8859-1",
-    "iso-8859-1": "iso-8859-1",
-    "iso_8859_1": "iso-8859-1",
-    "cp1252": "cp1252",
-    "windows-1252": "cp1252",
-    "iso-8859-15": "iso-8859-15",
-    "iso_8859_15": "iso-8859-15",
-    "latin-9": "iso-8859-15",
-}
-"""Canonical-encoding map for fichero-BOE registry encoding declarations.
-
-AEAT treats Windows-1252 and ISO-8859-1 as equivalent for fichero-BOE
-purposes; Python codec aliases (``latin-1`` ↔ ``iso-8859-1``,
-``windows-1252`` ↔ ``cp1252``, ``latin-9`` ↔ ``iso-8859-15``) resolve
-to the same wire encoding. The encoding-consistency validator
-compares declared encodings through this map so a layout that mixes
-``latin-1`` and ``iso-8859-1`` is treated as consistent rather than
-flagged as a layout error.
-"""
-
-
 def _normalise_fichero_boe_encoding(declared: str) -> str:
     """Return the canonical form of a fichero-BOE encoding declaration."""
 
-    return _FICHERO_BOE_ENCODING_ALIASES.get(declared.strip().lower(), declared.strip().lower())
+    return ENCODING_ALIAS_MAP.get(declared.strip().lower(), declared.strip().lower())
 
 
 # P10.S68: single source of truth for the predicate-DSL operator

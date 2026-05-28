@@ -34,6 +34,7 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from ._constants import XLSX_EXTENSION
 from ._csv import (
     CSV_LAYOUTS,
     CsvBankLayout,
@@ -68,7 +69,7 @@ class XlsxProvider(FinancialProvider):
     """
 
     name = "XLSX provider"
-    supported_extensions = frozenset({".xlsx"})
+    supported_extensions = frozenset({XLSX_EXTENSION})
     source_format = SourceFormat.XLSX
     # Corpus fixture is a synthetic XLSX generated from the standard bank
     # export column schema; layout fidelity confirmed against the spec.
