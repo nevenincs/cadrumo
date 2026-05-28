@@ -586,7 +586,8 @@ cli:
           or collectible_invoice. Repeat for multiple observations.
         json_not_object: '{flag} must be a JSON object.'
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
-        json_validation_error: 'The value of {flag} is not a valid observation object: {details}.'
+        json_validation_error: 'The value of {flag} is not a valid observation object:
+          {details}.'
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: Aggregation period passed to the backend service.
@@ -658,7 +659,8 @@ cli:
       export:
         actor_help: Operator label recorded into the MODELO_EXPORTED event.
         errors:
-          no_exportable_revision: 'No exportable revision: the work unit has no verified-complete or submitted revision.'
+          no_exportable_revision: 'No exportable revision: the work unit has no verified-complete
+            or submitted revision.'
         help: Export a verified-complete or filed modelo revision to a local AEAT-compatible
           fichero-BOE file. Local-only; never contacts AEAT.
         output_help: Path to write the fichero-BOE artefact to.
@@ -699,27 +701,39 @@ cli:
         balance_help: Show aggregated IVA compensation carry-forward balance computed
           from local Modelo 303 history. Reports total_balance, lot_count, and next_expiry_year.
         group_help: Local IVA compensation wallet balance commands.
-        seed_amount_help: 'Carry-forward balance amount in EUR (decimal, e.g. 1200.50). This is the compensación pendiente de periodos anteriores for the NEXT period after the seeded one.'
-        seed_confirm_help: 'Required confirmation flag. Acknowledge that seeding declares a carry-forward balance and filing accuracy depends on the value supplied.'
-        seed_confirm_required: 'Pass --confirm to acknowledge: this declares the M303 carry-forward balance for the specified period. Filing accuracy depends on correct seeding.'
-        seed_conflict: 'Internal error: conflict with existing IVA compensation seed record.'
-        seed_filing_year_help: 'Filing year of the Modelo 303 period to seed.'
-        seed_help: 'Declare a Modelo 303 carry-forward balance for a period that pre-dates local history. Use this once to seed the first period so subsequent M303 prefill resolves modelo-303-compensacion-pendiente-anteriores correctly.'
-        seed_invalid_amount: 'The seed amount must be a valid, non-negative decimal.'
-        seed_negative_amount: 'The seed amount cannot be negative.'
-        seed_no_nif: 'No NIF defined for the seed operation; associate one with the active profile.'
-        seed_period_help: 'Period of the seed amount (e.g. 2024N4).'
+        seed_amount_help: Carry-forward balance amount in EUR (decimal, e.g. 1200.50).
+          This is the compensación pendiente de periodos anteriores for the NEXT period
+          after the seeded one.
+        seed_confirm_help: Required confirmation flag. Acknowledge that seeding declares
+          a carry-forward balance and filing accuracy depends on the value supplied.
+        seed_confirm_required: 'Pass --confirm to acknowledge: this declares the M303
+          carry-forward balance for the specified period. Filing accuracy depends
+          on correct seeding.'
+        seed_conflict: 'Internal error: conflict with existing IVA compensation seed
+          record.'
+        seed_filing_year_help: Filing year of the Modelo 303 period to seed.
+        seed_help: Declare a Modelo 303 carry-forward balance for a period that pre-dates
+          local history. Use this once to seed the first period so subsequent M303
+          prefill resolves modelo-303-compensacion-pendiente-anteriores correctly.
+        seed_invalid_amount: The seed amount must be a valid, non-negative decimal.
+        seed_negative_amount: The seed amount cannot be negative.
+        seed_no_nif: No NIF defined for the seed operation; associate one with the
+          active profile.
+        seed_period_help: Period of the seed amount (e.g. 2024N4).
       list:
         year_help: Filter the modelo catalogue to a single fiscal year
       project:
-        binding_help: 'Additional M100 binding override as KEY=VALUE. Repeat for multiple. Retenciones bindings default to zero when not supplied.'
-        casilla_help: 'Additional M100 casilla override as CASILLA=DECIMAL (e.g. 0513=1150 for age supplement). Repeat for multiple overrides.'
-        ccaa_help: 'Autonomous community tax residence key for the M100 autonomic scale (e.g. cataluna, comunidad-valenciana). Must match the registry enum.'
+        binding_help: Additional M100 binding override as KEY=VALUE. Repeat for multiple.
+          Retenciones bindings default to zero when not supplied.
+        casilla_help: Additional M100 casilla override as CASILLA=DECIMAL (e.g. 0513=1150
+          for age supplement). Repeat for multiple overrides.
+        ccaa_help: Autonomous community tax residence key for the M100 autonomic scale
+          (e.g. cataluna, comunidad-valenciana). Must match the registry enum.
         m100_calculation_error: 'Internal error: Modelo 100 calculation failed.'
-        no_m130_revisions: 'No M130 revisions for the specified year.'
-        no_m130_units: 'No M130 work units for the specified year and period.'
-        year_help: 'Filing year (e.g. 2024).'
-      project_help: 'Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).'
+        no_m130_revisions: No M130 revisions for the specified year.
+        no_m130_units: No M130 work units for the specified year and period.
+        year_help: Filing year (e.g. 2024).
+      project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:
         modelo_help: Modelo code (e.g. 303).
         period_help: Period token (e.g. Q1, annual).
@@ -795,7 +809,11 @@ cli:
           and does not accept decimal overrides. Use --binding for this input type
           or run `aeat app modelo casillas` to identify the correct numeric casilla.
         casilla_not_decimal: 'The --casilla value for {key} is not a decimal: {value}.'
-        causante_ccaa_help: 'CCAA of habitual residence of the deceased (ISD Modelo 650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo 600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). País Vasco and Navarra are foral regimes; consult the corresponding regional Hacienda.'
+        causante_ccaa_help: CCAA of habitual residence of the deceased (ISD Modelo
+          650/660) or CCAA where the transferred asset is located (ITPyAJD Modelo
+          600/620). Determines the competent Hacienda (Ley 22/2009 Art. 32). País
+          Vasco and Navarra are foral regimes; consult the corresponding regional
+          Hacienda.
         compare_taxation_error: 'Conjunta vs. individual comparison not available:
           {detail}'
         compare_taxation_help: 'Compare IRPF cuota under joint (conjunta, Art. 82-84
@@ -1271,15 +1289,17 @@ cli:
       export_out_help: Destination path for the JSON bundle
       help: Manage active profile configuration values
       import_help: Register a portable profile bundle from a JSON file
-      import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to the profile bundle schema.'
+      import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
+        the profile bundle schema.'
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it to import a second copy under a fresh label.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
         NEW_NAME` to import it under a different name.
-      import_label_taken_different_id: 'The specified label belongs to a profile with a different identifier. Pass --label NEW_NAME to import under a distinct name.'
+      import_label_taken_different_id: The specified label belongs to a profile with
+        a different identifier. Pass --label NEW_NAME to import under a distinct name.
       import_missing_bundle: Profile bundle not found at %{path}
       import_path_help: Path to the profile bundle JSON file
-      import_uuid_collision: 'The UUID in the bundle conflicts with an existing profile.'
+      import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Sign out of the active profile by clearing the local pointer
       logout_session_warning: Logout cleared the active-profile pointer. Subsequent
         verbs in this terminal will refuse with NoActiveBucketSessionError until you
@@ -1589,8 +1609,8 @@ cli:
       mixed_requires_business_pct: Refused. --classification MIXED needs a business
         share. Pass --business-pct with a value from 0 to 1, or classify the row as
         BUSINESS or PERSONAL instead.
-      reaffirm_help: 'Reaffirm the classification of an already-classified transaction.'
-      reaffirmed: 'Classification reaffirmed.'
+      reaffirm_help: Reaffirm the classification of an already-classified transaction.
+      reaffirmed: Classification reaffirmed.
       taxable_base_help: Taxable base amount
     errors:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
@@ -1962,7 +1982,8 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
-      show_suppressed_help: 'Include filtered (non-applicable) obligations in the output with their applicability verdict and reason.'
+      show_suppressed_help: Include filtered (non-applicable) obligations in the output
+        with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'Profile does not declare keys: %{keys}. Run ''aeat
       config profile edit NAME'' or pass --allow-incomplete to see the calendar computed
@@ -2140,33 +2161,35 @@ cli:
       bucket: Bucket
       id: ID
       kind: Kind
-      legal_refs: 'Legal references'
+      legal_refs: Legal references
       next: Next
       period: Period
       severity: Severity
       source_kind: Source kind
     queue:
       empty: No items pending review.
-      explain_help: 'Include the legal_refs that ground each finding in the text output. The JSON payload always carries them.'
+      explain_help: Include the legal_refs that ground each finding in the text output.
+        The JSON payload always carries them.
       help: List items waiting for operator review
       kind_help: Restrict the queue to one item kind
       modelo_help: Restrict the queue to one modelo
       source_kind_help: Restrict the queue to one source kind
       state_help: Restrict the queue to one review state
     show:
-      explain_help: 'Include the legal_refs that ground this finding in the text output. The JSON payload always carries them.'
+      explain_help: Include the legal_refs that ground this finding in the text output.
+        The JSON payload always carries them.
       help: Show review details for a single item
       id_help: Item id from the review queue
   root:
-    app_app_help: 'Tax application commands (ledger, modelo, overview, registry).'
-    app_help: 'Access application-level commands.'
-    app_help_help: 'Show help for application commands.'
-    debug_help: 'Enable detailed debug output.'
-    detail_help: 'Enable detailed output.'
+    app_app_help: Tax application commands (ledger, modelo, overview, registry).
+    app_help: Access application-level commands.
+    app_help_help: Show help for application commands.
+    debug_help: Enable detailed debug output.
+    detail_help: Enable detailed output.
     errors:
       did_you_mean_command: Did you mean '%{command}'?
     format_help: 'Output format: text, json, table, csv.'
-    help_help: 'Show help.'
+    help_help: Show help.
     landing:
       headline: AEAT Tax Assistant
       help_line: 'More help: run `aeat --help`, `aeat config --help`, or `aeat app
@@ -2197,13 +2220,13 @@ cli:
       welcome_no_profile: Welcome. No active profile is configured yet, so start with
         setup.
       welcome_profile: Welcome back. Active profile is `%{profile}`.
-    language_help: 'Interface language (e.g. en, es, ca).'
-    profile_help: 'Name of the active profile.'
-    quiet_help: 'Show errors only.'
+    language_help: Interface language (e.g. en, es, ca).
+    profile_help: Name of the active profile.
+    quiet_help: Show errors only.
     startup_import_error: 'Internal error: application module failed to load at startup.'
-    unavailable_app_help: 'This command is not available in the current configuration.'
-    verbose_help: 'Enable detailed output.'
-    version_help: 'Show the version number and exit.'
+    unavailable_app_help: This command is not available in the current configuration.
+    verbose_help: Enable detailed output.
+    version_help: Show the version number and exit.
   topic:
     app_help: Show conceptual help about regimes, modelos, and AEAT processes
     errors:
@@ -3641,9 +3664,9 @@ wizard:
           FR)
       fiscal-residency:
         choices:
-          non_resident_irnr:
+          non-resident-irnr:
             label: Non-resident — IRNR (RDLeg 5/2004)
-          resident_irpf:
+          resident-irpf:
             label: Habitual resident in Spain — IRPF
         prompt: Fiscal residency category
       representante-fiscal-nif:
@@ -3759,8 +3782,12 @@ wizard:
             label: Public limited company (S.A.)
           sin-fines-lucrativos:
             label: Non-profit entity
+          sal:
+            label: Worker-owned public limited company (S.A.L.)
           sl:
             label: Limited liability company (S.L.)
+          sll:
+            label: Worker-owned limited liability company (S.L.L.)
           sociedad-civil-mercantil:
             label: Civil partnership with commercial object
         prompt: Legal form
