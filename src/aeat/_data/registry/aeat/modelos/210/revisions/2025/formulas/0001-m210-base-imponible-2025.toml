@@ -1,0 +1,19 @@
+# M210 IRNR Phase 1 base-imponible formula.
+#
+# Per TRLIRNR Art 24.1: for Art 25.1.a (general 24% rate) no
+# deducibles are permitted; the base equals gross rendimientos.
+# Phase 1 wires this identity branch only; the deduction-routed
+# branches (Art 24.5/24.6 for ue_residente, inmobiliaria) are
+# deferred to Phase 2 per m210-irnr-full-engine ADR §D2.2.
+
+[[revisions."2025".formulas]]
+id = "m210-base-imponible-2025"
+target = "base_imponible"
+expression = { op = "copy", args = [{ casilla = "rendimientos_integros" }] }
+rounding = "money-2"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["rendimientos", "no residentes"]
