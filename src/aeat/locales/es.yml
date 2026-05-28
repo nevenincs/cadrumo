@@ -3226,6 +3226,7 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_iva_wallet_reconciliation_invariant: 'Las entradas de conciliación de la cartera IVA incumplen un invariante obligatorio. Compruebe la configuración de antigüedad de la cartera y vuelva a intentarlo.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

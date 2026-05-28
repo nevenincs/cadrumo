@@ -400,6 +400,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.workflow._errors.UnhandledWorkflowError",
+        ErrorCode(
+            code="INTERNAL_WORKFLOW_UNHANDLED",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_workflow_unhandled",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._sessions.CorruptAuthSessionError",
         ErrorCode(
             code="AUTH_SESSION_CORRUPT",
@@ -873,6 +884,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_observation_key",
             default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._errors.IvaWalletReconciliationError",
+        ErrorCode(
+            code="REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_wallet_reconciliation_invariant",
+            default_suggestion="aeat app live iva-wallet pull",
             retryable=False,
             runbook_id=None,
         ),

@@ -2724,6 +2724,7 @@ errors:
     refused_workflow_aborted: A munkafolyamatot megszakították.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_iva_wallet_reconciliation_invariant: 'Az IVA tárca egyeztetési bemenetek egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja újra.'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:
