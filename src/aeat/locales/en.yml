@@ -306,6 +306,10 @@ application:
         period to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
+      m210_convenio_rate_missing:
+        next_action: 'Author Convenio España-{cc} rate row in m210-convenio-rates for tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country to fall back to the TRLIRNR Art 25 baseline.'
+      m210_convenio_rate_not_yet_authored:
+        next_action: 'The Convenio España-{cc} rate row for tipo_renta={tipo_renta} carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified BOE corpus rate before this filing can complete; file a corpus-blocked follow-up task referencing the Convenio article number.'
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
@@ -2596,7 +2600,8 @@ errors:
     error_review: A review error occurred.
     error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
-    error_sede_browser_adapter_type: 'The browser page object returned an unexpected type at the Sede adapter boundary.'
+    error_sede_browser_adapter_type: The browser page object returned an unexpected
+      type at the Sede adapter boundary.
     error_sede_expediente_not_found: No expediente matched the requested filter.
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
@@ -2809,7 +2814,8 @@ errors:
       than it had scripted.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
-    internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled exception.'
+    internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
+      exception.'
   locked:
     locked_access_gate_live_submit_forbidden: Live submission to the AEAT is permanently
       forbidden. This application builds, validates and exports filings; the filing
@@ -2938,6 +2944,8 @@ errors:
       year provided.
     refused_inventory_service_input: An input provided violates the inventory contract.
       Correct the input and try again.
+    refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
+      violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_business_operation_invoice_input: An input provided violates the
       business-operation invoice contract. Correct the input and try again.
     refused_ledger_business_operation_invoice_not_found: No business-operation invoice
@@ -3038,7 +3046,6 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
-    refused_iva_wallet_reconciliation_invariant: 'The IVA wallet reconciliation inputs violate a required invariant. Check the wallet age configuration and retry.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

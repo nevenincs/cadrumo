@@ -36,6 +36,7 @@ from ...domain.buckets import (
 from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaObservation,
+    ConvenioRateRow,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -2418,6 +2419,121 @@ def _evaluate_predicate_expression(
         return consequent != Decimal(0)
 
     return True
+
+
+def _resolve_m210_rate(
+    profile: TaxpayerProfile,
+    tipo_renta: str,
+    year: int,
+    snapshot: RegistrySnapshot,
+) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
+    """Resolve the M210 rate for (profile, tipo_renta, year).
+
+    Returns a (rate, findings) pair. The rate is the Decimal per TRLIRNR
+    Art 25 baseline OR the Convenio override when the profile declares a
+    treaty country. Returns ``(None, [finding])`` and emits a BLOCKING
+    ``ModeloVerificationFinding`` when the Convenio row is missing or
+    carries the ``NOT_YET_AUTHORED`` sentinel per m210-irnr-full-engine
+    ADR §D2.4. Returns ``(None, [])`` defensively when the baseline row
+    for ``tipo_renta`` is absent — that condition indicates a registry-
+    load coherence issue, not an operator-actionable filing gap.
+
+    The treaty-country signal comes from
+    ``profile.country_of_fiscal_residence``: a non-None value combined
+    with ``profile.fiscal_residency == NON_RESIDENT_IRNR`` is the IRNR
+    treaty-overlay activation surface; the ``convenio_aplicable``
+    property already derives the BOE treaty reference from that field.
+    """
+    # Build the (cc, tipo_renta) -> ConvenioRateRow lookup dict from
+    # the snapshot's parameter rows at function entry. O(N) per call
+    # is acceptable for Phase 1 with three rows; the cache-at-load-time
+    # optimization is a Phase 2 deferral.
+    baseline_param = None
+    convenio_param = None
+    for parameter in snapshot.revision.parameters:
+        if parameter.id == "m210-tipo-gravamen-2025":
+            baseline_param = parameter
+        elif parameter.id == "m210-convenio-rates":
+            convenio_param = parameter
+
+    if baseline_param is None:
+        return None, []
+
+    baseline_rate: Decimal | None = None
+    for entry in baseline_param.keyed_brackets:
+        if entry.key == tipo_renta and entry.valid_from.year <= year and (
+            entry.valid_to is None or entry.valid_to.year >= year
+        ):
+            try:
+                baseline_rate = Decimal(entry.value)
+            except (ArithmeticError, ValueError):
+                return None, []
+            break
+    if baseline_rate is None:
+        return None, []
+
+    treaty_country = profile.country_of_fiscal_residence
+    if treaty_country is None:
+        return baseline_rate, []
+
+    cc = treaty_country.upper()
+
+    convenio_lookup: dict[tuple[str, str], ConvenioRateRow] = {}
+    if convenio_param is not None:
+        for row in convenio_param.convenio_rates:
+            if row.valid_from.year <= year and (
+                row.valid_to is None or row.valid_to.year >= year
+            ):
+                convenio_lookup[(row.country_code, row.tipo_renta)] = row
+
+    matched_row = convenio_lookup.get((cc, tipo_renta))
+    legal_refs: tuple[str, ...] = (
+        tuple(str(r) for r in convenio_param.legal_refs) if convenio_param is not None else ()
+    )
+    source_refs: tuple[str, ...] = (
+        tuple(str(r) for r in convenio_param.source_refs) if convenio_param is not None else ()
+    )
+
+    if matched_row is None:
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message=(
+                f"M210 Convenio rate row missing for country={cc!r} "
+                f"tipo_renta={tipo_renta!r} year={year}; "
+                "predicate 'm210-convenio-rate-missing' fires"
+            ),
+            next_action=tr(
+                "application.modelo.findings.m210_convenio_rate_missing.next_action",
+                cc=cc,
+                tipo_renta=tipo_renta,
+            ),
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
+        return None, [finding]
+
+    if matched_row.rate == "NOT_YET_AUTHORED":
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message=(
+                f"M210 Convenio rate row for country={cc!r} "
+                f"tipo_renta={tipo_renta!r} year={year} carries the "
+                "NOT_YET_AUTHORED placeholder; predicate "
+                "'m210-convenio-rate-not-yet-authored' fires"
+            ),
+            next_action=tr(
+                "application.modelo.findings.m210_convenio_rate_not_yet_authored.next_action",
+                cc=cc,
+                tipo_renta=tipo_renta,
+            ),
+            legal_refs=legal_refs,
+            source_refs=source_refs,
+        )
+        return None, [finding]
+
+    return Decimal(matched_row.rate), []
 
 
 def _evaluate_advisory_predicate_fires(

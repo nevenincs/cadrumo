@@ -341,6 +341,10 @@ application:
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
+      m210_convenio_rate_missing:
+        next_action: 'Autorice la fila Convenio España-{cc} en m210-convenio-rates para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country para usar el baseline TRLIRNR Art 25.'
+      m210_convenio_rate_not_yet_authored:
+        next_action: 'La fila Convenio España-{cc} para tipo_renta={tipo_renta} contiene el marcador NOT_YET_AUTHORED según ADR D2.4. Autorice la tarifa verificada del corpus BOE antes de poder completar la declaración; abra una tarea de seguimiento bloqueada por corpus citando el artículo del Convenio.'
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
@@ -2747,7 +2751,8 @@ errors:
     error_review: Se produjo un error en la revisión.
     error_sanitization: Se produjo un error al sanear el documento.
     error_sede: Se produjo un error en la Sede electrónica de la AEAT.
-    error_sede_browser_adapter_type: 'El objeto de página del navegador devolvió un tipo inesperado en el límite del adaptador Sede.'
+    error_sede_browser_adapter_type: El objeto de página del navegador devolvió un
+      tipo inesperado en el límite del adaptador Sede.
     error_sede_expediente_not_found: No se encontró ningún expediente que coincida
       con el filtro solicitado.
     error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
@@ -2982,7 +2987,8 @@ errors:
       de las que tenía guionizadas.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
-    internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó una excepción no controlada.'
+    internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
+      una excepción no controlada.'
   locked:
     locked_access_gate_live_submit_forbidden: El envío en vivo a la AEAT está permanentemente
       prohibido. Esta aplicación construye, valida y exporta declaraciones; la presentación
@@ -3118,6 +3124,9 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
+    refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
+      cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
+      de antigüedad de la cartera y vuelva a intentarlo.
     refused_ledger_business_operation_invoice_input: Un dato indicado infringe el
       contrato de la factura de operación. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_business_operation_invoice_not_found: No existe ninguna factura
@@ -3226,7 +3235,6 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_iva_wallet_reconciliation_invariant: 'Las entradas de conciliación de la cartera IVA incumplen un invariante obligatorio. Compruebe la configuración de antigüedad de la cartera y vuelva a intentarlo.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
