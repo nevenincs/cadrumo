@@ -12,8 +12,10 @@ uses so a calculation engine can drive both oracles uniformly.
 
 from __future__ import annotations
 
+import json
+
 import pytest
-from pydantic import AnyUrl
+from pydantic import AnyUrl, ValidationError
 
 from aeat.core.config import Settings
 
@@ -185,15 +187,70 @@ def test_verify_payload_unverifiable_when_replay_payload_is_malformed() -> None:
 
 
 def test_replay_driver_rejects_payload_without_observed_object() -> None:
+    # ReplayPayload.model_validate enforces the required ``observed`` field;
+    # missing it raises pydantic ValidationError (strict schema).
     driver = GroiReplayDriver()
-    with pytest.raises(RegistryValidationError, match="observed object"):
+    with pytest.raises(ValidationError, match="observed"):
         driver.collect_observation(b'{"raw_evidence_locator": "x"}', expected={})
 
 
 def test_replay_driver_rejects_non_string_observed_values() -> None:
+    # ReplayPayload enforces Mapping[str, str]; a non-string value raises
+    # pydantic ValidationError under strict mode.
     driver = GroiReplayDriver()
-    with pytest.raises(RegistryValidationError, match="string-keyed strings"):
+    with pytest.raises(ValidationError):
         driver.collect_observation(b'{"observed": {"A28015865": 1}}', expected={})
+
+
+# ---------------------------------------------------------------------------
+# S124 — ReplayPayload roundtrip: validate strictly + round-trip through driver
+# ---------------------------------------------------------------------------
+
+
+def test_replay_payload_roundtrip_via_groi_driver() -> None:
+    """ReplayPayload.model_validate accepts the canonical JSON shape and the
+    driver's collect_observation round-trips the same envelope faithfully."""
+
+    from ._live_parity import ReplayPayload
+
+    raw = json.dumps(
+        {
+            "observed": {"A28015865": "valid", "B12345678": "invalid"},
+            "raw_evidence_locator": "corpus/aeat_official/groi/sample.txt",
+        }
+    ).encode()
+
+    # Direct schema validation — strict, frozen, extra=forbid.
+    payload = ReplayPayload.model_validate(json.loads(raw))
+    assert payload.observed == {"A28015865": "valid", "B12345678": "invalid"}
+    assert payload.raw_evidence_locator == "corpus/aeat_official/groi/sample.txt"
+
+    # Drive through the production reader path.
+    driver = GroiReplayDriver()
+    observation = driver.collect_observation(raw, expected={})
+
+    # The driver normalises keys to upper-case.
+    assert observation.values["A28015865"] == "valid"
+    assert observation.values["B12345678"] == "invalid"
+    assert observation.raw_evidence_locator == payload.raw_evidence_locator
+
+
+def test_replay_payload_strict_rejects_extra_fields() -> None:
+    """extra=forbid means unknown top-level keys raise ValidationError."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError, match="Extra"):
+        ReplayPayload.model_validate({"observed": {}, "unknown_field": "x"})
+
+
+def test_replay_payload_strict_rejects_non_string_value_in_observed() -> None:
+    """Mapping[str, str] under strict mode rejects integer values."""
+
+    from ._live_parity import ReplayPayload
+
+    with pytest.raises(ValidationError):
+        ReplayPayload.model_validate({"observed": {"A28015865": 999}})
 
 
 def test_observation_model_normalises_nif_uppercase_and_verdict_lowercase() -> None:
