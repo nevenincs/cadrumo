@@ -95,8 +95,8 @@ envelope.
 - [ ] `W01.P01.S34` - add real-behavior test asserting autocomplete propagates AeatError envelope and observability records non-AeatError; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [x] `W01.P01.S35` - wrap each of the seven `except Exception` clauses in `_record_unhandled` with `build_error_envelope`; `assign a synthetic `UNHANDLED_INTERNAL` `ErrorCode`; `src/aeat/application/workflow/_engine.py`.
 - [x] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
-- [ ] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
+- [x] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
 - [x] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
 - [x] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
 - [x] `W01.P01.S41` - introduce `IvaWalletReconciliationError(CoreError)`; `replace the four `ValueError` raises; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
@@ -179,10 +179,10 @@ and the operator surface emits the localized payload.
 - [ ] `W01.P03.S96` - add real-behavior test asserting the IVA-wallet-blocked envelope carries the localized message in `translated_message`; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P03.S97` - route the missing-required-casilla finding `message=` through `tr("application.modelo.findings.missing_required_casilla", casilla_id=...)`; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P03.S98` - add real-behavior test asserting missing-required-casilla output is localized; `src/aeat/application/modelo/test_actions.py`.
-- [ ] `W01.P03.S99` - thread `translated_message="adapters.sede.errors.no_auth_session"` on every `SedeNavigationError` raise across `_auth_state.py`, `_walker.py`, `_iva_compensation_wallet.py`, `_notifications.py`, `_declarations.py`; `src/aeat/adapters/outbound/aeat/sede/_auth_state.py`.
-- [ ] `W01.P03.S100` - add real-behavior test asserting every SedeNavigationError raise surfaces the localized translated_message at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_auth_state.py`.
-- [ ] `W01.P03.S101` - thread `translated_message="adapters.sede.errors.empty_identity_nif"` on the empty-NIF raise; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W01.P03.S102` - add real-behavior test asserting empty-NIF localized envelope at the live-filing observation boundary; `src/aeat/adapters/outbound/aeat/sede/test_declarations.py`.
+- [x] `W01.P03.S99` - thread `translated_message="adapters.sede.errors.no_auth_session"` on every `SedeNavigationError` raise across `_auth_state.py`, `_walker.py`, `_iva_compensation_wallet.py`, `_notifications.py`, `_declarations.py`; `src/aeat/adapters/outbound/aeat/sede/_auth_state.py`.
+- [x] `W01.P03.S100` - add real-behavior test asserting every SedeNavigationError raise surfaces the localized translated_message at the CLI boundary; `src/aeat/adapters/outbound/aeat/sede/test_auth_state.py`.
+- [x] `W01.P03.S101` - thread `translated_message="adapters.sede.errors.empty_identity_nif"` on the empty-NIF raise; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W01.P03.S102` - add real-behavior test asserting empty-NIF localized envelope at the live-filing observation boundary; `src/aeat/adapters/outbound/aeat/sede/test_declarations.py`.
 - [ ] `W01.P03.S103` - wrap the wizard `typer.echo("status\t...")` English verbs in `tr("wizard.commands.status.created")` / `tr("wizard.commands.status.updated")`; `src/aeat/application/wizard/_commands.py`.
 - [ ] `W01.P03.S104` - add real-behavior test asserting wizard status verbs are localized; `src/aeat/application/wizard/test_commands.py`.
 - [ ] `W01.P03.S105` - replace `<unset>` literal in profile diagnostics emit with `tr("cli.diagnostics.profile.unset_placeholder")`; `src/aeat/diagnostics/profile.py`.
