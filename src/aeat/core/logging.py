@@ -5,10 +5,13 @@ The root logger carries the run-trace context filter from
 :mod:`aeat.core.observability._sink` so every record automatically picks up
 the active ``run_id`` / ``step_id`` while a run context is bound.
 
-This module is also the single source of truth for log-record secret
-scrubbing. Every handler attached through :func:`configure_logging`
-receives a :class:`SecretScrubbingFilter` so sensitive fields are
-redacted before formatting.
+This module attaches the log-record secret scrubber. Every handler
+attached through :func:`configure_logging` receives a
+:class:`SecretScrubbingFilter` so sensitive fields are redacted before
+formatting. Shape-based NIF, URL, and bearer-token matching is delegated
+to :mod:`aeat.core.redaction`; this module keeps only logging-specific
+key-paired placeholders such as cookies, passphrases, and certificate
+serial suffixes.
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .observability._context import RunContextInfo
+from .redaction import redact_for_log
 
 _CONFIGURED = False
 _FACTORY_INSTALLED = False
@@ -110,6 +114,7 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
         ),
         value,
     )
+    scrubbed = redact_for_log(scrubbed)
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
     return scrubbed

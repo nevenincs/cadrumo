@@ -10,6 +10,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S01]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S02]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S03]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P01-S04]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -48,3 +49,12 @@ No HIGH/CRITICAL findings in the scoped S03 implementation.
 
 - Canaries cover many canonical sensitive forms, but they do not yet test a mixed payload path where a sensitive UUID appears under non-canonical keys (e.g., `active_profile`/`active_bucket_id`), so potential normalization omissions for legacy/noncanonical key names are not covered at this stage.
 - The new tests are narrowly focused on helper-level behavior and do not assert downstream CLI command output behavior (`_emit`/`_emit_envelope` surfaces), so plan-step sequencing still depends on subsequent W01.P02/W01.P03 integration tests to catch renderer-path regressions.
+
+## W01.P01.S04 Review
+
+No HIGH/CRITICAL findings in the scoped S04 implementation.
+
+### Residual risks
+
+- Logging still maintains a local sensitive-key list in `SCRUB_FIELD_PATTERNS`; only those keys drive key-aware assignment redaction. If central redaction policy grows keys without corresponding logging taxonomy updates, key-form leaks (e.g., `..._secret=...`, `..._token=...`) can bypass shape-only matching.
+- `W01.P01.S05` (logging scrubber regression coverage) remains pending, so this step leaves a temporary verification gap for shared-rule migration effects despite `S04` being marked complete.
