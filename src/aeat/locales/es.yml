@@ -637,7 +637,8 @@ cli:
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
-        json_validation_error: 'El valor de {flag} no es un objeto de observación válido: {details}.'
+        json_validation_error: 'El valor de {flag} no es un objeto de observación
+          válido: {details}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -719,7 +720,8 @@ cli:
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision: 'No hay revisión exportable: la unidad de trabajo no tiene ninguna revisión verificada-completa o presentada.'
+          no_exportable_revision: 'No hay revisión exportable: la unidad de trabajo
+            no tiene ninguna revisión verificada-completa o presentada.'
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -765,28 +767,33 @@ cli:
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
           calculado a partir del historial local del Modelo 303.
         group_help: Comandos de saldo local de la cartera de compensación IVA.
-        seed_amount_help: 'Importe inicial de la compensación de IVA en decimal.'
-        seed_confirm_help: 'Confirme la operación de importe inicial.'
-        seed_confirm_required: 'Proporcione el modificador --confirm para confirmar la operación de importe inicial.'
+        seed_amount_help: Importe inicial de la compensación de IVA en decimal.
+        seed_confirm_help: Confirme la operación de importe inicial.
+        seed_confirm_required: Proporcione el modificador --confirm para confirmar
+          la operación de importe inicial.
         seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
           no se puede sembrar otro.
-        seed_filing_year_help: 'Ejercicio fiscal del importe inicial.'
-        seed_help: 'Creación de un registro de importe inicial del monedero de compensación de IVA para inicializar el saldo anterior del monedero.'
+        seed_filing_year_help: Ejercicio fiscal del importe inicial.
+        seed_help: Creación de un registro de importe inicial del monedero de compensación
+          de IVA para inicializar el saldo anterior del monedero.
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
-        seed_negative_amount: 'El importe inicial no puede ser negativo.'
-        seed_no_nif: 'No hay NIF definido para la operación de importe inicial; asócielo al perfil activo.'
-        seed_period_help: 'Período del importe inicial (p. ej. 2024N4).'
+        seed_negative_amount: El importe inicial no puede ser negativo.
+        seed_no_nif: No hay NIF definido para la operación de importe inicial; asócielo
+          al perfil activo.
+        seed_period_help: Período del importe inicial (p. ej. 2024N4).
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       project:
-        binding_help: 'Valor de enlace con la sintaxis KEY=VALUE (repetible).'
-        casilla_help: 'Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).'
-        ccaa_help: 'Código de comunidad autónoma para la proyección territorial.'
+        binding_help: Valor de enlace con la sintaxis KEY=VALUE (repetible).
+        casilla_help: Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).
+        ccaa_help: Código de comunidad autónoma para la proyección territorial.
         m100_calculation_error: 'Error interno: el cálculo del Modelo 100 ha fallado.'
-        no_m130_revisions: 'No hay revisiones M130 para el ejercicio indicado.'
-        no_m130_units: 'No hay unidades de trabajo M130 para el ejercicio y período indicados.'
-        year_help: 'Ejercicio fiscal para la proyección.'
-      project_help: 'Ejecutar proyecciones agregadas de modelos (p. ej. agregación anual del Modelo 130).'
+        no_m130_revisions: No hay revisiones M130 para el ejercicio indicado.
+        no_m130_units: No hay unidades de trabajo M130 para el ejercicio y período
+          indicados.
+        year_help: Ejercicio fiscal para la proyección.
+      project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
+        anual del Modelo 130).
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
         period_help: Token de periodo (p. ej. Q1, annual).
@@ -1377,15 +1384,19 @@ cli:
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
       import_help: Registra un paquete portátil de perfil desde un JSON
-      import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al esquema del paquete de perfil.'
+      import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
+        esquema del paquete de perfil.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
         con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
-      import_label_taken_different_id: 'La etiqueta especificada pertenece a un perfil con un identificador diferente. Use --label NUEVO_NOMBRE para importar con un nombre distinto.'
+      import_label_taken_different_id: La etiqueta especificada pertenece a un perfil
+        con un identificador diferente. Use --label NUEVO_NOMBRE para importar con
+        un nombre distinto.
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
-      import_uuid_collision: 'El UUID del paquete entra en conflicto con un perfil existente.'
+      import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
+        existente.
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       logout_session_warning: El cierre de sesión limpió el puntero del perfil activo.
         Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
@@ -1708,8 +1719,8 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
-      reaffirm_help: 'Reafirmar la clasificación de una transacción ya clasificada.'
-      reaffirmed: 'Clasificación reafirmada.'
+      reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
+      reaffirmed: Clasificación reafirmada.
       taxable_base_help: Importe de base imponible
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -2080,7 +2091,8 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
-      show_suppressed_help: 'Mostrar también las entradas suprimidas (no aplicables) en el calendario.'
+      show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
+        en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
       ''aeat config profile edit NAME'' o usa --allow-incomplete para ver el calendario
@@ -2265,33 +2277,35 @@ cli:
       bucket: Bucket
       id: ID
       kind: Tipo
-      legal_refs: 'Referencias legales'
+      legal_refs: Referencias legales
       next: Siguiente
       period: Periodo
       severity: Severidad
       source_kind: Tipo origen
     queue:
       empty: No hay elementos pendientes de revisión.
-      explain_help: 'Incluir las referencias legales que fundamentan cada hallazgo en la salida de texto. La carga JSON siempre las incluye.'
+      explain_help: Incluir las referencias legales que fundamentan cada hallazgo
+        en la salida de texto. La carga JSON siempre las incluye.
       help: Listar elementos pendientes de revisión
       kind_help: Restringir la cola a un tipo de elemento
       modelo_help: Restringir la cola a un modelo
       source_kind_help: Restringir la cola a un tipo de origen
       state_help: Restringir la cola a un estado de revisión
     show:
-      explain_help: 'Incluir las referencias legales que fundamentan este hallazgo en la salida de texto. La carga JSON siempre las incluye.'
+      explain_help: Incluir las referencias legales que fundamentan este hallazgo
+        en la salida de texto. La carga JSON siempre las incluye.
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: 'Comandos de la aplicación fiscal (ledger, modelo, overview, registry).'
-    app_help: 'Acceder a los comandos de nivel de aplicación.'
-    app_help_help: 'Mostrar la ayuda de los comandos de la aplicación.'
-    debug_help: 'Habilitar salida detallada de depuración.'
-    detail_help: 'Habilitar salida detallada.'
+    app_app_help: Comandos de la aplicación fiscal (ledger, modelo, overview, registry).
+    app_help: Acceder a los comandos de nivel de aplicación.
+    app_help_help: Mostrar la ayuda de los comandos de la aplicación.
+    debug_help: Habilitar salida detallada de depuración.
+    detail_help: Habilitar salida detallada.
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
     format_help: 'Formato de salida: text, json, table, csv.'
-    help_help: 'Mostrar la ayuda.'
+    help_help: Mostrar la ayuda.
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
@@ -2323,13 +2337,14 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
-    language_help: 'Idioma de la interfaz (p. ej. es, en, ca).'
-    profile_help: 'Nombre del perfil activo.'
-    quiet_help: 'Mostrar solo los errores.'
-    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar al inicio.'
-    unavailable_app_help: 'Este comando no está disponible en la configuración actual.'
-    verbose_help: 'Habilitar salida detallada.'
-    version_help: 'Mostrar el número de versión y salir.'
+    language_help: Idioma de la interfaz (p. ej. es, en, ca).
+    profile_help: Nombre del perfil activo.
+    quiet_help: Mostrar solo los errores.
+    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
+      al inicio.'
+    unavailable_app_help: Este comando no está disponible en la configuración actual.
+    verbose_help: Habilitar salida detallada.
+    version_help: Mostrar el número de versión y salir.
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -3846,9 +3861,9 @@ wizard:
           FR)
       fiscal-residency:
         choices:
-          non_resident_irnr:
+          non-resident-irnr:
             label: No residente — IRNR (RDLeg 5/2004)
-          resident_irpf:
+          resident-irpf:
             label: Residente habitual en España — IRPF
         prompt: Categoría de residencia fiscal
       representante-fiscal-nif:
@@ -3967,8 +3982,12 @@ wizard:
             label: Sociedad anónima (S.A.)
           sin-fines-lucrativos:
             label: Entidad sin fines lucrativos
+          sal:
+            label: Sociedad Anónima Laboral (S.A.L.)
           sl:
             label: Sociedad de responsabilidad limitada (S.L.)
+          sll:
+            label: Sociedad Limitada Laboral (S.L.L.)
           sociedad-civil-mercantil:
             label: Sociedad civil con objeto mercantil
         prompt: Forma jurídica
