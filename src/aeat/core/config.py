@@ -215,6 +215,15 @@ class Settings(BaseSettings):
         gt=0,
         description="Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages",
     )
+    aeat_live_iva_surface_timeout_ms: int = Field(
+        default=180_000,
+        gt=0,
+        description=(
+            "Outer timeout (ms) for each live IVA read surface inside a combined remote-state "
+            "acquisition. Individual browser stages have their own shorter timeouts; this bounds "
+            "the whole filed-history or wallet/cartera surface."
+        ),
+    )
     # ── LLM provider endpoints ────────────────────────────────────────────
     aeat_llm_openai_chat_completions_url: str = Field(
         default="https://api.openai.com/v1/chat/completions",

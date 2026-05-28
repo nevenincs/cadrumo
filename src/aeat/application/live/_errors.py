@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 
 from ...adapters.outbound.aeat.auth import (
@@ -37,9 +38,21 @@ class LiveApplicationInputError(LiveApplicationError):
     """Raised when a live AEAT read request is not executable."""
 
 
+class LiveIvaSurfaceTimeoutError(LiveApplicationError):
+    """Raised when one live IVA read surface exceeds its orchestration timeout."""
+
+    def __init__(self, message: str, *, surface: str, timeout_ms: int) -> None:
+        super().__init__(message)
+        self.surface = surface
+        self.timeout_ms = timeout_ms
+        self.context: Mapping[str, object] = {"surface": surface, "timeout_ms": timeout_ms}
+
+
 def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisitionFailureMode:
     """Map adapter exceptions to the live IVA acquisition result vocabulary."""
 
+    if isinstance(exc, LiveIvaSurfaceTimeoutError):
+        return LiveIvaAcquisitionFailureMode.LIVE_NAVIGATION_FAILED
     if isinstance(exc, ClaveMovilApprovalTimeoutError):
         context = exc.context if isinstance(exc.context, dict) else {}
         phone_state = str(context.get("phone_state") or "")
@@ -78,5 +91,6 @@ __all__ = [
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
+    "LiveIvaSurfaceTimeoutError",
     "classify_live_iva_acquisition_failure",
 ]
