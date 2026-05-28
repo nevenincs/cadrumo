@@ -19,6 +19,7 @@ from datetime import UTC, datetime
 import pytest
 
 from aeat.adapters.persistence.storage.bucket._errors import RecoveryVerificationError
+from aeat.adapters.persistence.storage.master_key import _recovery_facade as _facade_module
 from aeat.adapters.persistence.storage.master_key._recovery import (
     decode_mnemonic,
     encode_mnemonic,
@@ -31,6 +32,7 @@ from aeat.adapters.persistence.storage.master_key._recovery_facade import (
     verify_recovery_mnemonic,
 )
 from aeat.adapters.persistence.storage.master_key._recovery_record import RecoveryRecord
+from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -136,3 +138,72 @@ def test_open_session_from_recovery_returns_unlocked_session_bound_to_bucket() -
     assert session.kek == new_kek
     assert session.dek == dek
     session.close()
+
+
+# ---------------------------------------------------------------------------
+# S30: ErrorCode registry binding + narrowed-except contract tests
+# ---------------------------------------------------------------------------
+
+
+def test_recovery_verification_error_is_in_error_registry() -> None:
+    """RecoveryVerificationError is bound to AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION."""
+
+    assert "AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION" in ERROR_REGISTRY
+    code = ERROR_REGISTRY["AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"]
+    assert code.category.value == "AUTH"
+    assert code.message_key == "errors.auth.auth_storage_bucket_recovery_verification"
+
+
+def test_recovery_verification_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope produces a typed envelope for RecoveryVerificationError."""
+
+    exc = RecoveryVerificationError("mnemonic decode failed")
+    envelope = build_error_envelope(exc)
+
+    assert envelope.code == "AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION"
+    assert envelope.category == "AUTH"
+    assert not envelope.retryable
+
+
+def test_storage_validation_error_from_decode_mnemonic_is_reclassified() -> None:
+    """StorageValidationError raised by decode_mnemonic re-raises as RecoveryVerificationError."""
+
+    minted = mint_recovery_envelope(dek=bytes(range(32)), created_at=_NOW)
+
+    # Wrong-word-count path (triggers StorageValidationError inside decode_mnemonic).
+    with pytest.raises(RecoveryVerificationError):
+        unwrap_recovery_envelope(envelope=minted.envelope, mnemonic="abandon")
+
+    # Unknown-word path.
+    bad_word_mnemonic = "notaword " + " ".join(["abandon"] * 23)
+    with pytest.raises(RecoveryVerificationError):
+        unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=bad_word_mnemonic)
+
+    # Checksum-failure path: tamper one word in a valid 24-word mnemonic.
+    # "zoo zoo ... zoo vote" → replace the last word with a different valid word
+    # that produces a checksum mismatch.
+    tampered = _BIP39_ALL_ONES_MNEMONIC.rsplit(" ", 1)[0] + " abandon"
+    with pytest.raises(RecoveryVerificationError):
+        unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=tampered)
+
+
+def test_unexpected_exception_from_decode_mnemonic_propagates_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An exception NOT in the documented set propagates as-is, not as RecoveryVerificationError.
+
+    This guards the narrowed ``except StorageValidationError`` clause: a
+    ``KeyError`` injected into ``decode_mnemonic`` via monkeypatch must surface
+    unchanged so the top-level CLI error handler sees a real unexpected
+    exception rather than a silently reclassified recovery-verification failure.
+    """
+
+    minted = mint_recovery_envelope(dek=bytes(range(32)), created_at=_NOW)
+
+    def _raise_key_error(_mnemonic: str) -> bytes:
+        raise KeyError("unexpected internal error")
+
+    monkeypatch.setattr(_facade_module, "decode_mnemonic", _raise_key_error)
+
+    with pytest.raises(KeyError):
+        unwrap_recovery_envelope(envelope=minted.envelope, mnemonic=minted.mnemonic)
