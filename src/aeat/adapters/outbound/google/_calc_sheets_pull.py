@@ -44,7 +44,7 @@ from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
 from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId
-from ....domain.calculations.registry._schema import CasillaDefinition, RegistrySnapshot
+from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
@@ -431,7 +431,7 @@ def _operator_input_addresses(
     operator_input_ids: list[CasillaId] = []
     operator_input_ranges: list[str] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind not in ("manual", "bound"):
+        if casilla.input_kind not in (InputKind.MANUAL, InputKind.BOUND):
             continue
         address = layout.entradas_cells.get(casilla.id)
         if address is None:
@@ -913,7 +913,7 @@ def _collect_input_casilla_values(
     edits_by_casilla = {edit.casilla: edit for edit in edits}
     inputs: dict[CasillaId, Decimal] = {}
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind in {"computed", "informational"}:
+        if casilla.input_kind in {InputKind.COMPUTED, InputKind.INFORMATIONAL}:
             continue
         edit = edits_by_casilla.get(casilla.id)
         inputs[casilla.id] = _coerce_edit_value_to_decimal(edit.value if edit is not None else None)

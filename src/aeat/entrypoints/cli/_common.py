@@ -314,10 +314,12 @@ def _bound_inputs_from_available_bindings(
     revision: ModeloRevision,
     binding_values: dict[str, Decimal],
 ) -> dict[str, object]:
+    from ...domain.calculations.registry import InputKind
+
     return {
         casilla.id: binding_values[casilla.binding]
         for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding is not None and casilla.binding in binding_values
+        if casilla.input_kind == InputKind.BOUND and casilla.binding is not None and casilla.binding in binding_values
     }
 
 

@@ -54,7 +54,7 @@ from aeat.core.resources import bundled_path
 
 from . import build_snapshot, load_registry_tree
 from ._formula_runtime import calculate_registry_snapshot
-from ._schema import ParameterDefinition
+from ._schema import InputKind, ParameterDefinition
 from ._validate_revision_rules import _bracket_coverage_gaps
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
@@ -258,7 +258,7 @@ def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
     parameters_by_id = {c.id: c for c in _snapshot_2024().revision.casillas}
     casilla = parameters_by_id.get("DP200014:00562")
     assert casilla is not None, "DP200014:00562 must be declared in the 2024-y-siguientes revision"
-    assert casilla.input_kind == "computed", (
+    assert casilla.input_kind == InputKind.COMPUTED, (
         "DP200014:00562 must be input_kind='computed'; formula modelo-200-cuota-integra owns the value"
     )
     assert casilla.required is False, (
@@ -335,7 +335,7 @@ def test_cuota_integra_antitautology_manual_casilla_still_required() -> None:
         "00501 must be declared in the 2024-y-siguientes revision; "
         "if absent the snapshot failed to load the casilla TOML cluster"
     )
-    assert casilla.input_kind == "manual", (
+    assert casilla.input_kind == InputKind.MANUAL, (
         "00501 (resultado cuenta pérdidas y ganancias) must remain input_kind='manual'; "
         "this is an operator-supplied figure from the company's accounts"
     )

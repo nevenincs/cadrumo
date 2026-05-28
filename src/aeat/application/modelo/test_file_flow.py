@@ -77,6 +77,7 @@ from aeat.domain.buckets import (
     BucketEventType,
 )
 from aeat.domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
+from aeat.domain.calculations.registry import InputKind
 from aeat.domain.modelos._calculation_repository import CalculationRevisionCatalogueRepository
 from aeat.domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
 from aeat.domain.modelos._filing_record import ModeloRecordStatus
@@ -118,12 +119,12 @@ def _registry_required_manual_casillas() -> tuple[str, ...]:
     registry — no duplication of revision data in the test."""
 
     snapshot = resources().modelos.authority.snapshot(_VERIFY_MODELO, filing_year=_VERIFY_YEAR, period=_VERIFY_PERIOD)
-    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
+    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
 def _registry_required_manual_casillas_for(*, modelo: str, filing_year: int, period: str) -> tuple[str, ...]:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
-    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == "manual")
+    return tuple(str(c.id) for c in snapshot.revision.casillas if c.required and c.input_kind == InputKind.MANUAL)
 
 
 _DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {

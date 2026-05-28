@@ -12,6 +12,7 @@ from ...adapters.inbound.declaracion import DeclaracionObservation
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import (
+    InputKind,
     RegistrySnapshot,
     RegistrySnapshotError,
     ValidatedRegistryAuthority,
@@ -90,7 +91,7 @@ def verify_declaracion(
     inputs = {
         casilla.id: extracted[casilla.id]
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind != "computed" and casilla.id in extracted
+        if casilla.input_kind != InputKind.COMPUTED and casilla.id in extracted
     }
     # Bindings that feed a `bound` casilla are resolved by the calculation
     # engine from the casilla input itself, so they are not required as
@@ -99,7 +100,7 @@ def verify_declaracion(
     bound_casilla_binding_ids = {
         casilla.binding
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding is not None
+        if casilla.input_kind == InputKind.BOUND and casilla.binding is not None
     }
     supplied_bindings = binding_values or {}
     missing_bindings = sorted(

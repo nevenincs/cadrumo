@@ -19,6 +19,7 @@ from ...adapters.outbound.aeat.sede import (
 from ...adapters.persistence.storage import MasterKeyProvider as _MasterKeyProvider
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import (
+    InputKind as _InputKind,
     ValidatedRegistryAuthority as _ValidatedRegistryAuthority,
     calculate_registry_snapshot as _calculate_registry_snapshot,
     generate_parity_tape_path as _generate_parity_tape_path,
@@ -331,7 +332,7 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filed_observation.period,
     )
-    input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != "computed"}
+    input_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind != _InputKind.COMPUTED}
     inputs: dict[str, Decimal] = {
         casilla_id: value
         for casilla_id, value in registry_observation.casilla_values.items()
@@ -362,7 +363,7 @@ def verify_filed_state(
         relation_values=relation_values,
     )
     casillas = required_casillas or tuple(
-        casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"
+        casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED
     )
     comparison = _compare_calculation_to_filed_observation(
         calculation,

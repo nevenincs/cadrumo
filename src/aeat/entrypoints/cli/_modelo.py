@@ -50,7 +50,7 @@ from ...application.modelo import (
 )
 from ...core.errors import resolve_error_message
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ...domain.calculations.registry import RegistryQueryService
+from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
@@ -80,8 +80,6 @@ if TYPE_CHECKING:
         VerificationReportPayload,
         WorkUnitPayload,
     )
-
-InputKind = Literal["manual", "bound", "computed", "informational"]
 
 _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 """SHA-256 hex digest expected as the canonical work-unit identifier."""

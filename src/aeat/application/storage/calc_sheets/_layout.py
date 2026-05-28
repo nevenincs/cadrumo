@@ -46,6 +46,7 @@ from ....domain.calculations.registry._schema import (
     BracketEntry,
     CasillaDefinition,
     FormulaExpression,
+    InputKind,
     ModeloRevision,
     ParameterDefinition,
 )
@@ -207,11 +208,11 @@ def _referenced_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
 
 
 def _is_operator_input(casilla: CasillaDefinition) -> bool:
-    return casilla.input_kind in ("manual", "bound")
+    return casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND)
 
 
 def _is_computed(casilla: CasillaDefinition) -> bool:
-    return casilla.input_kind == "computed"
+    return casilla.input_kind == InputKind.COMPUTED
 
 
 def _select_active_brackets(

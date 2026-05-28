@@ -11,6 +11,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import (
+    InputKind,
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
@@ -80,7 +81,7 @@ def test_committed_modelo_720_is_informative_only() -> None:
             f"revision {revision.id!r} declares cross-model relations; Modelo 720 is informative-only"
         )
         for casilla in revision.casillas:
-            assert casilla.input_kind in {"informational", "manual"}, casilla.id
+            assert casilla.input_kind in {InputKind.INFORMATIONAL, InputKind.MANUAL}, casilla.id
 
 
 def test_committed_modelo_720_workbook_parity_resolves_to_corpus_artefact() -> None:

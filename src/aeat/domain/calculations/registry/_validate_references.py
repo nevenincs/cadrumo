@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ._errors import RegistryValidationError
-from ._schema import ModeloRevision
+from ._schema import InputKind, ModeloRevision
 from ._validate_cross_domain_snapshot import (
     _CROSS_DOMAIN_SNAPSHOT_CHECKS as _CROSS_DOMAIN_SNAPSHOT_CHECKS,
 )
@@ -81,7 +81,7 @@ def _check_casilla_refs(checker: _IdReferenceChecker, revision: ModeloRevision) 
     for casilla in revision.casillas:
         cp = f"casilla {casilla.id}"
         checker.chk_opt(f"{cp}.formula", casilla.formula, checker.formula_ids)
-        if casilla.input_kind == "bound":
+        if casilla.input_kind == InputKind.BOUND:
             _check_bound_casilla_binding_coverage(checker, cp, casilla.binding)
         else:
             checker.chk_opt(f"{cp}.binding", casilla.binding, checker.binding_ids)
