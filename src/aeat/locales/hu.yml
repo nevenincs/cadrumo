@@ -2796,26 +2796,31 @@ wizard:
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
-        help: wizard.setup.flags.taxation-type.help
+        help: 'Jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
-        help: wizard.setup.flags.taxpayer-birth-date.help
+        help: 'Az első adózó születési dátuma'
       taxpayer-death-date:
-        help: wizard.setup.flags.taxpayer-death-date.help
+        help: 'Az első adózó elhalálozásának dátuma'
       taxpayer-disability-grade:
-        help: wizard.setup.flags.taxpayer-disability-grade.help
+        help: 'Az első adózó fogyatékossági fokozata: 1 = 33%-64%, 2 = 65% vagy magasabb, 3 = bírói cselekvőképesség-korlátozás, 4 = harmadik személy segítsége vagy korlátozott mozgásképesség.'
       taxpayer-marital-status:
-        help: wizard.setup.flags.taxpayer-marital-status.help
+        help: 'Az első adózó családi állapota: 1 = egyedülálló, 2 = házas, 3 = özvegy, 4 = különváltan élő vagy elvált.'
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
           = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
           82. cikk LIRPF).
       taxpayer-sex:
-        help: wizard.setup.flags.taxpayer-sex.help
+        help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
-        help: wizard.setup.flags.third-party-transactions-above-347-threshold.help
+        help: 'Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét'
       uses-objective-estimation-irpf:
-        help: wizard.setup.flags.uses-objective-estimation-irpf.help
-    intro: wizard.setup.intro
+        help: 'IRPF objektív becslés szerint adózik'
+    intro: 'Irányított adóügyi profil-beállítás
+
+Ez előkészíti a helyi profilt, amelyet az alkalmazás a könyveléshez és az adóűrlap-ellenőrzésekhez használ.
+Várható %{section_total} szekció. Csak %{required_total} válasz kötelező a kezdéshez; a többi üresen hagyható, ha még nem ismeri.
+Legyen kéznél a NIF/NIE/CIF azonosítója, egy rövid tevékenységleírás, IVA/IRPF adózási rend adatai, adóügyi lakóhely és családi adatok, ha relevánsak.
+Mentés után ellenőrizze az előrehaladást a következővel: .'
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
@@ -2985,24 +2990,24 @@ wizard:
       title: Adóügyi illetőség
     spouse:
       spouse-birth-date:
-        prompt: wizard.setup.spouse.spouse-birth-date.prompt
+        prompt: 'Házastárs születési dátuma'
       spouse-disability-grade:
-        prompt: wizard.setup.spouse.spouse-disability-grade.prompt
+        prompt: 'Házastárs fogyatékossági fokozata (ha alkalmazható)'
       spouse-eu-eea-country:
-        prompt: wizard.setup.spouse.spouse-eu-eea-country.prompt
+        prompt: 'Házastárs EU/EGT országa'
       spouse-eu-eea-resident:
-        prompt: wizard.setup.spouse.spouse-eu-eea-resident.prompt
+        prompt: 'Házastárs EU/EGT-ben él'
       spouse-name:
-        prompt: wizard.setup.spouse.spouse-name.prompt
+        prompt: 'Házastárs keresztneve'
       spouse-non-resident-irpf:
-        prompt: wizard.setup.spouse.spouse-non-resident-irpf.prompt
+        prompt: 'Házastárs nem rezidens IRPF szerint'
       spouse-sex:
-        prompt: wizard.setup.spouse.spouse-sex.prompt
+        prompt: 'Házastárs neme'
       spouse-surnames:
-        prompt: wizard.setup.spouse.spouse-surnames.prompt
+        prompt: 'Házastárs vezetéknevei'
       spouse-tax-id:
-        prompt: wizard.setup.spouse.spouse-tax-id.prompt
-      title: wizard.setup.spouse.title
+        prompt: 'Házastárs NIF/NIE száma'
+      title: 'Házastárs'
     taxpayer:
       situacion-familiar:
         choices:
@@ -3098,29 +3103,29 @@ wizard:
         help: 'Csak jogi személyekre vonatkozik. Ha be van jelölve, az entitás 15%-os kedvezményes adókulcs szerint adózik az adott két időszakban.'
         prompt: 'Ez egy újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében?'
       title: 'Adózói típus'
-    title: 'Beallitasi varazslо'
+    title: 'Beállítási varázsló'
     verifier:
-      activity_present: 'Gazdasagi tevekenyseg: ellenorzi, hogy a profil tartalmaz-e tevekenysеget.'
-      eu_eea_country_missing: 'Hazastars lakohelye: EU vagy EGT lakohelyet jelolt meg, de az orszag hianzik. Adja meg a lakohely orszagat.'
-      eu_eea_country_ok: 'Hazastars lakohelye: az EU vagy EGT szerinti lakohely orszaga osszehangban van.'
-      joint_taxation_situacion_familiar_ok: 'Csaladi helyzet: a kozos adobevallas osszehangban van a bevallott csaladi helyzettel.'
-      joint_taxation_situacion_familiar_refused: 'Csaladi helyzet: a kozos adobevallas nem engedelyezett nem bejegyzett elettarsi kapcsolat eseten (LIRPF 82.1.2 cikkely). Modositsa a csaladi helyzetet, vagy valassza az egyeni adozast.'
-      monoparental_requires_hijos_ok: 'Egyszulos csaladi egyseg: a kiskoru gyermekekkel kapcsolatos kovetelmenye teljesitve.'
-      monoparental_requires_hijos_warning: 'Egyszulos csaladi egyseg: az egyszulos egysegkent valo kozos adobevallas (LIRPF 82.1.2 cikkely) kiskoru gyermekeket igenyel a csaladi egysegben. Eltartott gyermekek nelkul a kozos bevallas nem lehetseges ennel a csaladi helyzetnél. Engedelyezze az eltartott kiskoru gyermekek opciót, vagy valtson egyeni adozasra.'
-      obligations_consistency_ok: 'Forrasado-kotelezettsegek: a forrasadora vonatkozo valaszok osszehangban vannak.'
-      obligations_inconsistent: 'Forrasado-kotelezettsegek: szakmai forrasadot jelolt meg, de nem jelezte, hogy forrasadoval fizet szakembereknek. Ellenorizze ezeket az adatokat.'
-      spouse_consistency_missing: 'Kozos adobevallas: a hazastars adoazonositoja hianzik. Adja meg a kozos bevallashoz.'
-      spouse_consistency_ok: 'Kozos adobevallas: a hazastars adatai osszehangban vannak.'
-      tax_id_present: 'Adoazonositоs: ellenorzi, hogy a profil tartalmaz-e NIF vagy NIE azonositot.'
+      activity_present: 'Gazdasági tevékenység: ellenőrzi, hogy a profil tartalmaz-e tevékenységet.'
+      eu_eea_country_missing: 'Házastárs lakóhelye: EU vagy EGT lakóhelyet jelölt meg, de az ország hiányzik. Adja meg a lakóhely országát.'
+      eu_eea_country_ok: 'Házastárs lakóhelye: az EU vagy EGT szerinti lakóhely országa összhangban van.'
+      joint_taxation_situacion_familiar_ok: 'Családi helyzet: a közös adóbevallás összhangban van a bevallott családi helyzettel.'
+      joint_taxation_situacion_familiar_refused: 'Családi helyzet: a közös adóbevallás nem engedélyezett nem bejegyzett élettársi kapcsolat esetén (LIRPF 82.1.2° cikkely). Módosítsa a családi helyzetet, vagy válassza az egyéni adózást.'
+      monoparental_requires_hijos_ok: 'Egyszülős családi egység: a kiskorú gyermekekkel kapcsolatos követelmény teljesítve.'
+      monoparental_requires_hijos_warning: 'Egyszülős családi egység: az egyszülős egységként való közös adóbevallás (LIRPF 82.1.2° cikkely) kiskorú gyermekeket igényel a családi egységben. Eltartott gyermekek nélkül a közös bevallás nem lehetséges ennél a családi helyzetnél. Engedélyezze az eltartott kiskorú gyermekek opciót, vagy váltson egyéni adózásra.'
+      obligations_consistency_ok: 'Forrásadó-kötelezettségek: a forrásadóra vonatkozó válaszok összhangban vannak.'
+      obligations_inconsistent: 'Forrásadó-kötelezettségek: szakmai forrásadót jelölt meg, de nem jelezte, hogy forrásadóval fizet szakembereknek. Ellenőrizze ezeket az adatokat.'
+      spouse_consistency_missing: 'Közös adóbevallás: a házastárs adóazonosítója hiányzik. Adja meg a közös bevalláshoz.'
+      spouse_consistency_ok: 'Közös adóbevallás: a házastárs adatai összhangban vannak.'
+      tax_id_present: 'Adóazonosítás: ellenőrzi, hogy a profil tartalmaz-e NIF vagy NIE azonosítót.'
   test:
-    description: 'Tesztelje a konfiguraciot es a csatlakozast'
+    description: 'Tesztelje a konfigurációt és a csatlakozást'
     example:
       choices:
         'yes':
-          description: wizard.test.example.choices.yes.description
-          label: wizard.test.example.choices.yes.label
-      help: 'Pelda sugoszoveg tesztelheshez'
-      prompt: 'Pelda teszt kerdes'
+          description: 'Válassza ezt a megerősítéshez'
+          label: 'Igaz'
+      help: 'Példa súgószöveg teszteléshez'
+      prompt: 'Példa tesztkérdés'
     main:
-      title: 'Fo teszt'
+      title: 'Fő teszt'
     title: 'Teszt'
