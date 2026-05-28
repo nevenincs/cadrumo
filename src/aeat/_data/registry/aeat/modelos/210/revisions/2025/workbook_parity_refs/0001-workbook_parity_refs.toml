@@ -1,0 +1,22 @@
+# Modelo 210 Phase 1 workbook-parity declaration (W04.P19.S387.patch).
+#
+# Phase 1 ships a single static_layout parity ref pointing at the AEAT
+# M210 procedure document (the only source authored to date). The
+# AEAT diseño-de-registro workbook is out of Phase 1 scope and lands
+# in Phase 2 under a separate L3 sub-plan per the
+# m210-irnr-full-engine ADR §D5; that work registers a
+# record_design_layout parity ref with the canonical
+# aeat-dr-210-2025 source-ref alongside the full ~80-casilla schema.
+#
+# runner_required = false because there is no XLSX fixture to run
+# against yet; the formula-coverage runner kicks in with Phase 2.
+
+[[revisions."2025".workbook_parity_refs]]
+id = "modelo-210-procedure-2025"
+workbook_source = "aeat-modelo-210-procedure"
+fixture_id = "modelo-210-2025-procedure-skeleton"
+formula_coverage = "static_layout"
+runner_required = false
+tolerance = "0.01"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
