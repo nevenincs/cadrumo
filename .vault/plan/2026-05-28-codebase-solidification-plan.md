@@ -87,8 +87,8 @@ envelope.
 - [x] `W01.P01.S26` - add real-behavior test asserting binding-prefill-type-error envelope; `src/aeat/application/calculations/test_binding_prefill.py`.
 - [x] `W01.P01.S27` - introduce `WizardAnswerTypeError(CoreValidationError)`; `replace every coercion `TypeError` / `ValueError` raise (15+ sites); `src/aeat/application/wizard/_setup_answers.py`.
 - [x] `W01.P01.S28` - add real-behavior test asserting wizard-answer-type-error envelope at every replaced raise; `src/aeat/application/wizard/test_setup_answers.py`.
-- [ ] `W01.P01.S29` - confirm `RecoveryVerificationError` subclasses `AeatError`; `narrow the `except Exception` and reraise typed; `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `W01.P01.S30` - add real-behavior test asserting recovery-facade envelope under each upstream exception class; `src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py`.
+- [x] `W01.P01.S29` - confirm `RecoveryVerificationError` subclasses `AeatError`; `narrow the `except Exception` and reraise typed; `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `W01.P01.S30` - add real-behavior test asserting recovery-facade envelope under each upstream exception class; `src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py`.
 - [ ] `W01.P01.S31` - narrow the `except Exception` to specific `AeatError` subtypes; `remove the no-active-profile reclassification; `src/aeat/entrypoints/cli/_ledger.py`.
 - [ ] `W01.P01.S32` - add real-behavior test asserting non-NoActiveProfileError exceptions propagate with their original envelope; `src/aeat/entrypoints/cli/test_ledger.py`.
 - [ ] `W01.P01.S33` - narrow the autocomplete `except Exception` to specific `AeatError` subtypes; `log others at DEBUG via observability sink; `src/aeat/entrypoints/cli/_modelo.py`.
@@ -294,8 +294,8 @@ time and at runtime.
 - [ ] `W01.P07.S172` - add real-behavior test asserting ledger classification reads through the constant; `src/aeat/application/ledger/test_models.py`.
 - [ ] `W01.P07.S173` - promote `OracleEnvironment` Literal to `StrEnum`; `replace the six default-value sites; `src/aeat/domain/calculations/registry/_live_parity.py`.
 - [ ] `W01.P07.S174` - add real-behavior test asserting OracleEnvironment members round-trip through every replaced default; `src/aeat/domain/calculations/registry/test_live_parity.py`.
-- [ ] `W01.P07.S175` - introduce `DEFAULT_CURRENCY: Final[str] = "EUR"` in `aeat.core.external_constants`; `replace the 20 `"EUR"` sites across 8 files; `src/aeat/core/external_constants.py`.
-- [ ] `W01.P07.S176` - add real-behavior test asserting every former currency literal now reads from the constant; `src/aeat/core/test_external_constants.py`.
+- [x] `W01.P07.S175` - introduce `DEFAULT_CURRENCY: Final[str] = "EUR"` in `aeat.core.external_constants`; `replace the 20 `"EUR"` sites across 8 files; `src/aeat/core/external_constants.py`.
+- [x] `W01.P07.S176` - add real-behavior test asserting every former currency literal now reads from the constant; `src/aeat/core/test_external_constants.py`.
 - [x] `W01.P07.S177` - introduce `BINARY_MIME_TYPE: Final[str] = "application/octet-stream"` in `aeat.core.external_constants`; `replace the three sites including the already-extracted `_BINARY_MIME`; `src/aeat/core/external_constants.py`.
 - [x] `W01.P07.S178` - add real-behavior test asserting every former MIME literal reads from the constant; `src/aeat/core/test_external_constants.py`.
 - [x] `W01.P07.S179` - introduce `CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...]` in `aeat.core.external_constants`; `replace the inline tuple; `src/aeat/adapters/inbound/financial/providers/_csv.py`.
