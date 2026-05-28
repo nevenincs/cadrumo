@@ -9,25 +9,27 @@ related:
   - '[[2026-05-27-centralized-module-drift-audit]]'
 ---
 
-# codebase-solidification W01.P01.S39 — ObservationKeyError introduction
+# codebase-solidification W01.P01.S39 — NamespaceRegistryError introduction
 
 ## Outcome
 
-Added `ObservationKeyError(CoreValidationError)` to
-`src/aeat/application/calculations/_errors.py`. Replaced all five bare
-`raise ValueError(...)` guards in `_observations_repository.py` (in
-`observation_key`, `iva_wallet_decision_key`, `iva_wallet_decision_event_key`,
-and `_legacy_iva_wallet_decision_key`) with `raise ObservationKeyError(...)`.
-Registered `ERROR_OBSERVATION_KEY` (`ErrorCategory.ERROR`) in
-`src/aeat/core/errors/registry/_application.py` with
-`message_key="errors.error.error_observation_key"`. Ran locale scaffold and
-filled real messages in en, es, ca, and hu.
+Added `NamespaceRegistryError(StorageError, ValueError)` to
+`src/aeat/adapters/persistence/storage/errors.py`. Replaced all 13 bare
+`raise ValueError(...)` guards in `_namespace_registry.py` — covering
+`SecureObjectNamespaceDefinition._key_is_registry_safe` (2 raises),
+`_namespace_is_sql_safe` (2), `_default_key_is_repository_safe` (2),
+`StoragePathDefinition._key_is_registry_safe` (2),
+`_segment_is_single_path_component` (2), and
+`StorageHierarchyRegistry._reject_duplicate_keys_and_namespaces` (3).
+Registered `INTEGRITY_STORAGE_NAMESPACE_REGISTRY` (`ErrorCategory.INTEGRITY`) in
+`src/aeat/core/errors/registry/_adapters.py`. Added
+`integrity_storage_namespace_registry` locale messages in en, es, ca, and hu.
 
 ## Files touched
 
-- `src/aeat/application/calculations/_errors.py`
-- `src/aeat/application/calculations/_observations_repository.py`
-- `src/aeat/core/errors/registry/_application.py`
+- `src/aeat/adapters/persistence/storage/errors.py`
+- `src/aeat/adapters/persistence/storage/_namespace_registry.py`
+- `src/aeat/core/errors/registry/_adapters.py`
 - `src/aeat/locales/en.yml`
 - `src/aeat/locales/es.yml`
 - `src/aeat/locales/ca.yml`
@@ -35,4 +37,6 @@ filled real messages in en, es, ca, and hu.
 
 ## Verification
 
-No bare `ValueError` raises remain in `_observations_repository.py`. Lint clean.
+No bare `ValueError` raises remain in the validator/model_validator hooks of
+`_namespace_registry.py`. `NamespaceRegistryError` inherits from `ValueError`
+so Pydantic wraps field-validator raises in `ValidationError` as before.

@@ -34,6 +34,10 @@ class RepositoryError(StorageError):
     """Raised when a repository operation fails (not-found, integrity, etc.)."""
 
 
+class SecureObjectRevisionConflictError(RepositoryError):
+    """Raised when a revision-aware secure-object write sees a stale revision."""
+
+
 class PersistenceError(StorageError):
     """Base class for governed-persistence error subtypes.
 
@@ -230,3 +234,23 @@ class SecretAlreadyExistsError(SecretStoreError):
 
 class RetentionPolicyError(PersistenceError):
     """Raised when a record's retention metadata violates its classification policy."""
+
+
+class NamespaceRegistryError(StorageError, ValueError):
+    """Raised when a namespace-registry key or definition violates a boot-time invariant.
+
+    Fires from Pydantic field and model validators on
+    :class:`~aeat.adapters.persistence.storage.SecureObjectNamespaceDefinition`,
+    :class:`~aeat.adapters.persistence.storage.StoragePathDefinition`, and
+    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry` when a
+    registry key, namespace slug, path segment, or uniqueness constraint is
+    violated at construction time.  Inherits from :class:`StorageError` and
+    ultimately from :class:`~aeat.core.errors.AeatError` so callers can catch
+    it without importing Pydantic internals.
+
+    Because these validators are called by Pydantic during model construction
+    the exception propagates wrapped inside a :class:`pydantic.ValidationError`
+    when raised from a field validator; direct callers of
+    :class:`~aeat.adapters.persistence.storage.StorageHierarchyRegistry`
+    model validators receive the raw :class:`NamespaceRegistryError`.
+    """

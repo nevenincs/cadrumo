@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from aeat.adapters.persistence.storage.errors import NamespaceRegistryError
+from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
 from aeat.adapters.persistence.storage import (
     AEAT_BROWSER_SESSION_NAMESPACE,
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -37,6 +39,7 @@ from aeat.adapters.persistence.storage import (
     STORAGE_NAMESPACE_REGISTRY,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
+    StorageHierarchyRegistry,
     StorageNamespaceScope,
 )
 from aeat.core.classification import SensitivityClass
@@ -240,6 +243,152 @@ def test_namespace_definition_rejects_pathlike_namespaces() -> None:
             object_key_grammar="{id}",
             scope=StorageNamespaceScope.PROFILE_LOCAL,
         )
+
+
+# ---------------------------------------------------------------------------
+# S40: NamespaceRegistryError error-registry and real-behavior invariant tests
+# ---------------------------------------------------------------------------
+
+
+def test_namespace_registry_error_is_in_error_registry() -> None:
+    assert "INTEGRITY_STORAGE_NAMESPACE_REGISTRY" in ERROR_REGISTRY
+
+
+def test_namespace_registry_error_round_trips_through_build_error_envelope() -> None:
+    err = NamespaceRegistryError("test invariant violation")
+    envelope = build_error_envelope(err)
+    assert envelope.code == "INTEGRITY_STORAGE_NAMESPACE_REGISTRY"
+    assert envelope.category == "INTEGRITY"
+    assert envelope.message
+
+
+def _make_namespace_definition(**overrides: object) -> SecureObjectNamespaceDefinition:
+    defaults: dict[str, object] = {
+        "key": "test_key",
+        "namespace": "aeat.test",
+        "owner": "aeat.test",
+        "sensitivity": SensitivityClass.AUDIT,
+        "schema_version": 1,
+        "object_key_grammar": "{id}",
+        "scope": StorageNamespaceScope.PROFILE_LOCAL,
+    }
+    defaults.update(overrides)
+    return SecureObjectNamespaceDefinition(**defaults)  # type: ignore[arg-type]
+
+
+def test_namespace_key_with_surrounding_whitespace_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(key=" whitespace_key ")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_namespace_key_with_path_separator_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(key="path/sep")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_namespace_slug_with_path_separator_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(namespace="aeat/bad")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_namespace_slug_with_whitespace_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(namespace=" aeat.bad ")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_default_object_key_with_whitespace_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(default_object_key=" bad ")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_default_object_key_with_path_separator_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_namespace_definition(default_object_key="path/sep")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def _make_path_definition(**overrides: object) -> StoragePathDefinition:
+    from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
+
+    defaults: dict[str, object] = {
+        "key": "test_path",
+        "kind": StoragePathKind.DIRECTORY,
+        "grammar": "<root>/test/",
+        "owner": "aeat.test",
+    }
+    defaults.update(overrides)
+    return StoragePathDefinition(**defaults)  # type: ignore[arg-type]
+
+
+def test_path_key_with_whitespace_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_path_definition(key=" bad_key ")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_path_key_with_path_separator_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_path_definition(key="path/sep")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_path_segment_with_whitespace_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_path_definition(segment=" bad_segment ")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_path_segment_with_path_separator_raises_namespace_registry_error() -> None:
+    with pytest.raises(ValidationError) as exc_info:
+        _make_path_definition(segment="path/sep")
+    causes = [e.get("ctx", {}).get("error") for e in exc_info.value.errors()]
+    assert any(isinstance(c, NamespaceRegistryError) for c in causes)
+
+
+def test_duplicate_namespace_keys_raise_namespace_registry_error() -> None:
+    ns = _make_namespace_definition()
+    with pytest.raises(ValidationError) as exc_info:
+        StorageHierarchyRegistry(namespaces=(ns, ns), paths=())
+    errors = exc_info.value.errors()
+    assert any("duplicate secure-object namespace registry key" in str(e) for e in errors)
+
+
+def test_duplicate_namespace_values_raise_namespace_registry_error() -> None:
+    ns1 = _make_namespace_definition(key="key_a")
+    ns2 = _make_namespace_definition(key="key_b")
+    with pytest.raises(ValidationError) as exc_info:
+        StorageHierarchyRegistry(namespaces=(ns1, ns2), paths=())
+    errors = exc_info.value.errors()
+    assert any("duplicate secure-object namespace value" in str(e) for e in errors)
+
+
+def test_duplicate_path_keys_raise_namespace_registry_error() -> None:
+    from aeat.adapters.persistence.storage._namespace_registry import StoragePathDefinition, StoragePathKind
+
+    path = StoragePathDefinition(
+        key="dup_path",
+        kind=StoragePathKind.DIRECTORY,
+        grammar="<root>/dup/",
+        owner="aeat.test",
+    )
+    with pytest.raises(ValidationError) as exc_info:
+        StorageHierarchyRegistry(namespaces=(), paths=(path, path))
+    errors = exc_info.value.errors()
+    assert any("duplicate storage path registry key" in str(e) for e in errors)
 
 
 def test_every_discovered_production_secure_object_namespace_is_registered() -> None:

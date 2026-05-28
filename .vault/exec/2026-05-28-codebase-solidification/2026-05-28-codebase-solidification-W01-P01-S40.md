@@ -9,22 +9,24 @@ related:
   - '[[2026-05-27-centralized-module-drift-audit]]'
 ---
 
-# codebase-solidification W01.P01.S40 — ObservationKeyError test coverage
+# codebase-solidification W01.P01.S40 — NamespaceRegistryError test coverage
 
 ## Outcome
 
-Created `src/aeat/application/calculations/test_observations_repository.py`
-with 15 real-behavior tests. Tests assert: `ERROR_OBSERVATION_KEY` is present
-in `ERROR_REGISTRY`; `build_error_envelope` succeeds; each of the five
-validation sites raises `ObservationKeyError` on invalid input; `observation_key`
-succeeds on boundary years; `iva_wallet_decision_key` succeeds with valid NIF;
-`iva_wallet_decision_event_key` succeeds; legacy key guard raises for out-of-range
-years; `ObservationKeyError` is a subtype of `ValueError`.
+Extended `src/aeat/adapters/persistence/storage/test_namespace_registry.py`
+with 16 new real-behavior tests. Tests assert: `INTEGRITY_STORAGE_NAMESPACE_REGISTRY`
+is present in `ERROR_REGISTRY`; `build_error_envelope` round-trips with
+correct code and category; each of the 13 replaced invariant paths raises
+`NamespaceRegistryError` via the production validator with real invalid input
+(namespace key whitespace, key path separators, namespace slug separators and
+whitespace, default_object_key path separators and whitespace, path key
+whitespace and separators, path segment whitespace and separators, duplicate
+namespace keys, duplicate namespace values, duplicate path keys).
 
 ## Files touched
 
-- `src/aeat/application/calculations/test_observations_repository.py`
+- `src/aeat/adapters/persistence/storage/test_namespace_registry.py`
 
 ## Verification
 
-`uv run --no-sync pytest src/aeat/application/calculations/test_observations_repository.py -xvs` — 15 passed.
+`uv run --no-sync pytest src/aeat/adapters/persistence/storage/test_namespace_registry.py -xvs` — 25 passed (16 new, 9 pre-existing).

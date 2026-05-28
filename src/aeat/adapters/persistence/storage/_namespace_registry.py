@@ -7,6 +7,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ....core.classification import SensitivityClass
+from .errors import NamespaceRegistryError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -62,18 +63,18 @@ class SecureObjectNamespaceDefinition(BaseModel):
     @classmethod
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
-            raise ValueError("registry key must not carry surrounding whitespace")
+            raise NamespaceRegistryError("registry key must not carry surrounding whitespace")
         if any(separator in value for separator in ("/", "\\", ":", ".")):
-            raise ValueError("registry key must be a storage-safe slug")
+            raise NamespaceRegistryError("registry key must be a storage-safe slug")
         return value
 
     @field_validator("namespace")
     @classmethod
     def _namespace_is_sql_safe(cls, value: str) -> str:
         if value != value.strip():
-            raise ValueError("namespace must not carry surrounding whitespace")
+            raise NamespaceRegistryError("namespace must not carry surrounding whitespace")
         if "/" in value or "\\" in value:
-            raise ValueError("namespace must not contain path separators")
+            raise NamespaceRegistryError("namespace must not contain path separators")
         return value
 
     @field_validator("default_object_key")
@@ -82,9 +83,9 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if value is None:
             return None
         if value != value.strip():
-            raise ValueError("default object key must not carry surrounding whitespace")
+            raise NamespaceRegistryError("default object key must not carry surrounding whitespace")
         if "/" in value or "\\" in value:
-            raise ValueError("default object key must not contain path separators")
+            raise NamespaceRegistryError("default object key must not contain path separators")
         return value
 
     def require_default_object_key(self) -> str:
@@ -111,9 +112,9 @@ class StoragePathDefinition(BaseModel):
     @classmethod
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
-            raise ValueError("path key must not carry surrounding whitespace")
+            raise NamespaceRegistryError("path key must not carry surrounding whitespace")
         if any(separator in value for separator in ("/", "\\")):
-            raise ValueError("path key must not contain path separators")
+            raise NamespaceRegistryError("path key must not contain path separators")
         return value
 
     @field_validator("segment")
@@ -122,9 +123,9 @@ class StoragePathDefinition(BaseModel):
         if value is None:
             return None
         if value != value.strip():
-            raise ValueError("path segment must not carry surrounding whitespace")
+            raise NamespaceRegistryError("path segment must not carry surrounding whitespace")
         if "/" in value or "\\" in value:
-            raise ValueError("path segment must be a single component")
+            raise NamespaceRegistryError("path segment must be a single component")
         return value
 
 
@@ -142,11 +143,11 @@ class StorageHierarchyRegistry(BaseModel):
         namespace_values = [item.namespace for item in self.namespaces]
         path_keys = [item.key for item in self.paths]
         if len(namespace_keys) != len(set(namespace_keys)):
-            raise ValueError("duplicate secure-object namespace registry key")
+            raise NamespaceRegistryError("duplicate secure-object namespace registry key")
         if len(namespace_values) != len(set(namespace_values)):
-            raise ValueError("duplicate secure-object namespace value")
+            raise NamespaceRegistryError("duplicate secure-object namespace value")
         if len(path_keys) != len(set(path_keys)):
-            raise ValueError("duplicate storage path registry key")
+            raise NamespaceRegistryError("duplicate storage path registry key")
         return self
 
     def namespace_by_key(self, key: str) -> SecureObjectNamespaceDefinition:
