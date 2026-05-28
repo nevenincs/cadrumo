@@ -17,7 +17,7 @@ from types import SimpleNamespace
 import pytest
 
 from ...domain.calculations.registry._schema import VerificationPredicateDefinition
-from ...domain.deadlines import IVARegime
+from ...domain.deadlines import IVARegime, TaxpayerProfile
 from ...domain.modelos._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -27,11 +27,13 @@ from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ._actions import (
     _IVA_LEDGER_EXEMPT_REGIMES,
+    _RevisionInputsProvider,
     _collect_revision_verification_findings,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
     _iva_wallet_blocked_message,
     _iva_wallet_blocking_verification_finding,
+    WorkflowInputMismatchError,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -42,6 +44,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # ---------------------------------------------------------------------------
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
+
+
+def _resident_profile() -> TaxpayerProfile:
+    """Minimal RESIDENT_IRPF profile for predicate-evaluator call sites.
+
+    Casilla-only predicates ignore the profile; this stub is for tests
+    that exercise the casilla DSL operators (all_nonzero, any_nonzero,
+    cap_le_when_positive, implies_nonzero) without exercising the
+    profile_field_required branch.
+    """
+    return TaxpayerProfile(tax_id="X1234567L", iva_regime=IVARegime.GENERAL)
 
 
 def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
@@ -129,7 +142,9 @@ def test_cross_casilla_invariant_violated_message_is_localised() -> None:
         finding_kind="BLOCKING_RULE",
     )
     # Both casillas are zero — predicate is violated.
-    findings = _evaluate_verification_predicates((predicate,), {"0001": Decimal(0), "0002": Decimal(0)})
+    findings = _evaluate_verification_predicates(
+        (predicate,), {"0001": Decimal(0), "0002": Decimal(0)}, _resident_profile()
+    )
 
     assert len(findings) == 1
     finding = findings[0]
@@ -148,7 +163,9 @@ def test_cross_casilla_invariant_next_action_is_localised() -> None:
         expression='any_nonzero(["0003","0004"])',
         finding_kind="BLOCKING_RULE",
     )
-    findings = _evaluate_verification_predicates((predicate,), {"0003": Decimal(0), "0004": Decimal(0)})
+    findings = _evaluate_verification_predicates(
+        (predicate,), {"0003": Decimal(0), "0004": Decimal(0)}, _resident_profile()
+    )
 
     assert len(findings) == 1
     finding = findings[0]
@@ -178,6 +195,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     findings, _resolved, _missing = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
+        profile=_resident_profile(),
     )
 
     assert len(findings) == 1
@@ -302,6 +320,113 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
 # ---------------------------------------------------------------------------
 # Original S168 tests — IVA-regime enum surface
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# S10 -- WorkflowInputMismatchError raised and registered
+# ---------------------------------------------------------------------------
+
+
+class TestWorkflowInputMismatchError:
+    """Real-behavior tests for WorkflowInputMismatchError.
+
+    _RevisionInputsProvider.load_inputs raises WorkflowInputMismatchError when
+    the requested (modelo, period) pair does not match the revision's stored
+    work-unit axes. The error must be a CoreValidationError (ValueError) subclass
+    and must carry structured context.
+    """
+
+    def _make_provider(self, modelo: str = "100", period: str = "0A") -> "_RevisionInputsProvider":
+        work_unit = _minimal_work_unit(modelo=modelo, period=period)
+        revision = _minimal_calculation_revision(work_unit)
+        return _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+
+    def _stub_profile(self) -> object:
+        """Return a minimal stub satisfying the TaxpayerProfile structural need."""
+        from types import SimpleNamespace
+        return SimpleNamespace()
+
+    def test_matching_request_does_not_raise(self) -> None:
+        """load_inputs with the correct modelo and workflow period returns inputs."""
+        from ._actions import workflow_period_for_work_unit
+
+        work_unit = _minimal_work_unit(modelo="100", period="0A")
+        revision = _minimal_calculation_revision(work_unit)
+        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        expected_period = workflow_period_for_work_unit(work_unit)
+        result = provider.load_inputs(
+            modelo="100",
+            period=expected_period,
+            profile=self._stub_profile(),  # type: ignore[arg-type]
+        )
+        assert isinstance(result, dict)
+
+    def test_mismatched_modelo_raises_workflow_input_mismatch_error(self) -> None:
+        """load_inputs with a wrong modelo raises WorkflowInputMismatchError."""
+        from ._actions import workflow_period_for_work_unit
+
+        work_unit = _minimal_work_unit(modelo="100", period="0A")
+        revision = _minimal_calculation_revision(work_unit)
+        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+        correct_period = workflow_period_for_work_unit(work_unit)
+
+        with pytest.raises(WorkflowInputMismatchError) as exc_info:
+            provider.load_inputs(
+                modelo="303",
+                period=correct_period,
+                profile=self._stub_profile(),  # type: ignore[arg-type]
+            )
+
+        exc = exc_info.value
+        assert "workflow input request does not match calculation revision" in str(exc)
+        assert exc.context is not None
+        assert exc.context["expected_modelo"] == "100"
+        assert exc.context["requested_modelo"] == "303"
+
+    def test_mismatched_period_raises_workflow_input_mismatch_error(self) -> None:
+        """load_inputs with a wrong period raises WorkflowInputMismatchError."""
+        work_unit = _minimal_work_unit(modelo="303", period="1T")
+        revision = _minimal_calculation_revision(work_unit)
+        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+
+        with pytest.raises(WorkflowInputMismatchError) as exc_info:
+            provider.load_inputs(
+                modelo="303",
+                period="2026Q2",  # wrong quarter
+                profile=self._stub_profile(),  # type: ignore[arg-type]
+            )
+
+        exc = exc_info.value
+        assert exc.context is not None
+        assert exc.context["expected_period"] == "2026Q1"
+        assert exc.context["requested_period"] == "2026Q2"
+
+    def test_error_is_core_validation_error_and_value_error(self) -> None:
+        """WorkflowInputMismatchError is a CoreValidationError and ValueError subclass."""
+        from ...core.errors import CoreValidationError
+
+        assert issubclass(WorkflowInputMismatchError, CoreValidationError)
+        assert issubclass(WorkflowInputMismatchError, ValueError)
+
+    def test_error_code_is_registered(self) -> None:
+        """WorkflowInputMismatchError maps to a stable error code in the registry."""
+        from ...core.errors import get_registered_error_code
+
+        work_unit = _minimal_work_unit(modelo="100", period="0A")
+        revision = _minimal_calculation_revision(work_unit)
+        provider = _RevisionInputsProvider(revision=revision, work_unit=work_unit)
+
+        try:
+            provider.load_inputs(
+                modelo="999",
+                period="2026",
+                profile=self._stub_profile(),  # type: ignore[arg-type]
+            )
+        except WorkflowInputMismatchError as exc:
+            code = get_registered_error_code(exc)
+            assert code.code == "REFUSED_WORKFLOW_INPUT_MISMATCH"
+        else:
+            pytest.fail("WorkflowInputMismatchError was not raised")
 
 
 def test_iva_regime_enum_covers_all_wizard_choice_values() -> None:

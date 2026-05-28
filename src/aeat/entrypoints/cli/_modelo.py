@@ -48,7 +48,9 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.errors import resolve_error_message
+from ...application.calculations._errors import PensionReduccionError
+from ...core.errors import AeatError, resolve_error_message
+from ...core.logging import get_logger
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
@@ -69,6 +71,8 @@ from ...domain.modelos._verification_report import VerificationReport
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
+
+_log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
@@ -559,7 +563,14 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
         authority = resources().modelos.authority
         definition = authority.validate_modelo(modelo.strip())
+    except AeatError:
+        return ()
     except Exception:
+        _log.debug(
+            "_declared_period_tokens: unexpected non-AeatError suppressed for modelo=%r",
+            modelo,
+            exc_info=True,
+        )
         return ()
     return tuple(
         sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods})
@@ -2496,13 +2507,20 @@ def _compute_dt12_reduccion_plan_pensiones(
     """
 
     if aportaciones_totales <= Decimal(0):
-        raise ValueError(
-            f"aportaciones_totales must be positive; got {aportaciones_totales}"
+        raise PensionReduccionError(
+            f"aportaciones_totales must be positive; got {aportaciones_totales}",
+            context={"field": "aportaciones_totales", "value": str(aportaciones_totales)},
         )
     if gross_rescate < Decimal(0):
-        raise ValueError(f"gross_rescate must be non-negative; got {gross_rescate}")
+        raise PensionReduccionError(
+            f"gross_rescate must be non-negative; got {gross_rescate}",
+            context={"field": "gross_rescate", "value": str(gross_rescate)},
+        )
     if aportaciones_pre_2007 < Decimal(0):
-        raise ValueError(f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}")
+        raise PensionReduccionError(
+            f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}",
+            context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
+        )
 
     reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
     # money-2 rounding matches the registry convention for all M100 casillas.
@@ -2562,16 +2580,19 @@ def _compute_sal_reserva_especial_dotacion(
     """
 
     if capital_social <= Decimal(0):
-        raise ValueError(
-            f"capital_social must be positive; got {capital_social}"
+        raise PensionReduccionError(
+            f"capital_social must be positive; got {capital_social}",
+            context={"field": "capital_social", "value": str(capital_social)},
         )
     if beneficio_neto < Decimal(0):
-        raise ValueError(
-            f"beneficio_neto must be non-negative; got {beneficio_neto}"
+        raise PensionReduccionError(
+            f"beneficio_neto must be non-negative; got {beneficio_neto}",
+            context={"field": "beneficio_neto", "value": str(beneficio_neto)},
         )
     if reserva_dotada < Decimal(0):
-        raise ValueError(
-            f"reserva_dotada must be non-negative; got {reserva_dotada}"
+        raise PensionReduccionError(
+            f"reserva_dotada must be non-negative; got {reserva_dotada}",
+            context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 
     cap = (capital_social * Decimal("0.50")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
