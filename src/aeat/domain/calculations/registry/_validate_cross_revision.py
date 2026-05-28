@@ -23,6 +23,12 @@ _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "legal_refs",
 )
 
+# Governing ADR: 2026-05-27-schema-hardening-casilla-continuity-contract-adr.
+# D3 defines revision-level continuidad_validation = "strict" as
+# surface-scoped strictness: declared continuity surfaces hard-fail drift, while
+# unannotated repeated-id drift remains advisory until a separate corpus-wide
+# completeness gate proves every repeated id has been reviewed.
+
 __all__ = (
     "CrossRevisionCasillaDivergence",
     "CrossRevisionCasillaDriftSummary",
@@ -147,7 +153,7 @@ def _validate_cross_revision_casilla_consistency(
 def _validate_strict_cross_revision_casilla_continuity(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[str, ...]:
-    """Enforce explicit continuity decisions for opted-in revision pairs."""
+    """Enforce explicit continuity decisions for opted-in declared surfaces."""
 
     failures: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for modelo in modelos:
@@ -184,6 +190,8 @@ def _validate_strict_cross_revision_casilla_continuity(
 
 
 def _has_declared_continuity_surface(divergence: CrossRevisionCasillaDivergence) -> bool:
+    # ADR D3: strict continuity is intentionally scoped to authored surfaces.
+    # Do not infer continuity from repeated numeric casilla ids alone.
     return (
         divergence.left_continuidad_id is not None
         or divergence.right_continuidad_id is not None
