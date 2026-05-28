@@ -2453,6 +2453,7 @@ errors:
       operation.
     error_aeat_core: An internal application error occurred.
     error_aeat_observability: An error occurred in the application telemetry.
+    error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
@@ -2595,6 +2596,7 @@ errors:
     error_review: A review error occurred.
     error_sanitization: An error occurred while sanitizing the document.
     error_sede: An error occurred in the AEAT electronic Sede.
+    error_sede_browser_adapter_type: 'The browser page object returned an unexpected type at the Sede adapter boundary.'
     error_sede_expediente_not_found: No expediente matched the requested filter.
     error_sede_navigation: A navigation step in the AEAT Sede failed.
     error_storage_bucket: An error occurred in the storage bucket lifecycle.
@@ -2617,7 +2619,6 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
-    error_aggregation_config: 'An aggregation service composition invariant was violated.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.
@@ -2689,6 +2690,8 @@ errors:
     fail_storage_repository: A repository operation failed.
     fail_storage_secret_not_found: No secret was found for the requested key.
     fail_storage_secret_store: An input/output error occurred in the secret store.
+    fail_storage_secure_object_revision_conflict: The secure object was changed by
+      another writer; reload it and retry with the current revision.
     fail_user_profile_not_found: The requested user profile section or field was not
       found.
     fail_user_profile_schema_load: The user-profile schema could not be loaded.
@@ -2777,6 +2780,8 @@ errors:
     integrity_storage_envelope_version: An on-disk object's version does not match
       what the application expects.
     integrity_storage_key_derivation: A key-derivation step failed in the secure store.
+    integrity_storage_namespace_registry: A namespace-registry key or definition violated
+      a boot-time invariant.
     integrity_storage_nonce_collision: A nonce collision was detected in the secure
       store.
     integrity_storage_path_containment: A computed path escapes the configured root
@@ -2786,7 +2791,6 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
-    integrity_storage_namespace_registry: A namespace-registry key or definition violated a boot-time invariant.
     integrity_verification: Verification failed unrecoverably. The reference data
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
@@ -2805,6 +2809,7 @@ errors:
       than it had scripted.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
+    internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled exception.'
   locked:
     locked_access_gate_live_submit_forbidden: Live submission to the AEAT is permanently
       forbidden. This application builds, validates and exports filings; the filing
@@ -2892,10 +2897,16 @@ errors:
       config repair` or reset the profile state.
     refused_config_reset_unconfirmed: The configuration reset was not confirmed. Re-run
       the command confirming the operation.
+    refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
+      violated; check that exactly one of next_action or dead_end is set for fail/warn
+      rows, and neither is set for ok rows.
     refused_evidence_bundle_not_found: No evidence bundle exists with the identifier
       provided.
     refused_evidence_bundle_verification: Evidence-bundle verification failed and
       the operation was not forced.
+    refused_export_field: A field validation invariant was violated during tabular
+      export.
+    refused_export_format: The requested export serialization format is not supported.
     refused_filing_calculate: The filing calculation or summary failed its invariants.
     refused_financial_aggregation_category_coverage: A transaction lacks category
       or profile coverage. Classify the transaction before aggregating.
@@ -3015,22 +3026,18 @@ errors:
     refused_topic_not_found: The requested topic was not found.
     refused_user_profile_validation: A user profile value is not valid. Correct the
       field shown.
+    refused_wizard_answer_type: A wizard answer field received an unexpected type
+      at the typed boundary.
     refused_wizard_missing_flag: The --quiet invocation omitted a required question.
       Provide the missing value or run the wizard interactively.
     refused_wizard_status: The wizard could not resolve the active profile.
     refused_wizard_unsupported_console: The current terminal cannot host the interactive
       wizard. Run it in a supported terminal.
-    refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
-      violated; check that exactly one of next_action or dead_end is set for fail/warn
-      rows, and neither is set for ok rows.
     refused_wizard_validation: A wizard answer failed validation. Correct the value
       shown.
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
-    refused_export_format: 'The requested export serialization format is not supported.'
-    refused_export_field: 'A field validation invariant was violated during tabular export.'
-    refused_wizard_answer_type: 'A wizard answer field received an unexpected type at the typed boundary.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

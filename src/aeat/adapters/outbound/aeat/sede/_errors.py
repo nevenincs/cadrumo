@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....core.errors import AeatError
+from .....core.errors import AeatError, CoreError
 
 
 class SedeError(AeatError):
@@ -85,7 +85,19 @@ class SedeValidationError(SedeError, ValueError):
     """
 
 
+class BrowserAdapterTypeError(CoreError):
+    """Raised when ``BrowserContext.new_page()`` returns an unexpected type.
+
+    All three sede live-adapter entry points (Renta WEB Open, NIF-IVA check,
+    GROI check) guard the ``BrowserContext.new_page()`` return value against
+    Playwright version skew or mock-adapter misuse. This shared error class
+    replaces the three bare ``TypeError`` raises so callers can catch a typed,
+    registered envelope instead of the built-in exception.
+    """
+
+
 __all__ = [
+    "BrowserAdapterTypeError",
     "ExpedienteNotFoundError",
     "JustificanteFetchError",
     "SedeError",

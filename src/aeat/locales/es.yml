@@ -2591,6 +2591,8 @@ errors:
       acceso rechazó una operación de escritura.
     error_aeat_core: Se produjo un error interno en la aplicación.
     error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
+    error_aggregation_config: Se ha violado un invariante de composición del servicio
+      de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
     error_application_registry: La orquestación del registro de modelos falló o fue
       rechazada.
@@ -2703,7 +2705,8 @@ errors:
     error_normatives_normative: Se produjo un error relacionado con la normativa.
     error_normatives_normative_not_found: No se encontró la norma o el artículo solicitados.
     error_normatives_validation: Un valor de la normativa no es válido.
-    error_observation_key: Un componente de la clave de observación no cumple el contrato del repositorio.
+    error_observation_key: Un componente de la clave de observación no cumple el contrato
+      del repositorio.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
       solicitado.
     error_pdf_import_pdf_modelo_import: Falló la importación de la declaración desde
@@ -2744,6 +2747,7 @@ errors:
     error_review: Se produjo un error en la revisión.
     error_sanitization: Se produjo un error al sanear el documento.
     error_sede: Se produjo un error en la Sede electrónica de la AEAT.
+    error_sede_browser_adapter_type: 'El objeto de página del navegador devolvió un tipo inesperado en el límite del adaptador Sede.'
     error_sede_expediente_not_found: No se encontró ningún expediente que coincida
       con el filtro solicitado.
     error_sede_navigation: Falló un paso de navegación en la Sede de la AEAT.
@@ -2772,7 +2776,6 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    error_aggregation_config: 'Se ha violado un invariante de composición del servicio de agregación.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -2851,6 +2854,8 @@ errors:
     fail_storage_secret_not_found: No se encontró ningún secreto para la clave solicitada.
     fail_storage_secret_store: Se produjo un error de entrada o salida en el almacén
       de secretos.
+    fail_storage_secure_object_revision_conflict: El objeto seguro cambió por otra
+      escritura; vuelve a cargarlo e inténtalo de nuevo con la revisión actual.
     fail_user_profile_not_found: No se encontró la sección o el campo solicitado del
       perfil de usuario.
     fail_user_profile_schema_load: No se pudo cargar el esquema del perfil de usuario.
@@ -2949,6 +2954,8 @@ errors:
       con la que espera la aplicación.
     integrity_storage_key_derivation: Falló un paso de derivación de clave en el almacenamiento
       seguro.
+    integrity_storage_namespace_registry: Una clave o definición del registro de espacios
+      de nombres violó un invariante de inicialización.
     integrity_storage_nonce_collision: Se detectó una colisión de nonce en el almacenamiento
       seguro.
     integrity_storage_path_containment: Una ruta calculada se sale del directorio
@@ -2958,7 +2965,6 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
-    integrity_storage_namespace_registry: Una clave o definición del registro de espacios de nombres violó un invariante de inicialización.
     integrity_verification: La verificación falló de forma irrecuperable. Los datos
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
@@ -2976,6 +2982,7 @@ errors:
       de las que tenía guionizadas.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
+    internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó una excepción no controlada.'
   locked:
     locked_access_gate_live_submit_forbidden: El envío en vivo a la AEAT está permanentemente
       prohibido. Esta aplicación construye, valida y exporta declaraciones; la presentación
@@ -3068,10 +3075,15 @@ errors:
       Ejecuta `aeat config repair` o restablece el estado del perfil.
     refused_config_reset_unconfirmed: El restablecimiento de la configuración no se
       confirmó. Vuelve a ejecutar el comando confirmando la operación.
+    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
       el identificador indicado.
     refused_evidence_bundle_verification: La verificación del paquete de evidencias
       falló y la operación no se forzó.
+    refused_export_field: Se ha violado un invariante de validación de campo durante
+      la exportación tabular.
+    refused_export_format: El formato de serialización de exportación solicitado no
+      está soportado.
     refused_filing_calculate: El cálculo o resumen de la declaración no superó sus
       invariantes.
     refused_financial_aggregation_category_coverage: Una transacción no tiene cobertura
@@ -3201,21 +3213,19 @@ errors:
     refused_topic_not_found: No se encontró el tema solicitado.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.
+    refused_wizard_answer_type: Un campo de respuesta del asistente recibio un tipo
+      inesperado en el limite tipado.
     refused_wizard_missing_flag: La ejecución con --quiet omitió una pregunta obligatoria.
       Aporta el valor que falta o ejecuta el asistente de forma interactiva.
     refused_wizard_status: El asistente no pudo resolver el perfil activo.
     refused_wizard_unsupported_console: El terminal actual no admite el asistente
       interactivo. Ejecútalo en una terminal compatible.
-    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_wizard_validation: Una respuesta del asistente no superó la validación.
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
-    refused_export_format: 'El formato de serialización de exportación solicitado no está soportado.'
-    refused_export_field: 'Se ha violado un invariante de validación de campo durante la exportación tabular.'
-    refused_wizard_answer_type: 'Un campo de respuesta del asistente recibio un tipo inesperado en el limite tipado.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

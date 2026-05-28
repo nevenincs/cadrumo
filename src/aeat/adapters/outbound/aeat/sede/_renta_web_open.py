@@ -27,7 +27,7 @@ from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ..browser import BrowserError, default_browser_session_factory
 from ._adapter_utils import registry_failure_message
 from ._browser_stage import build_playwright_stage_runner
-from ._errors import SedeError, SedeFailureMode, SedeNavigationError
+from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 from ._renta_web_open_safety import assert_click_target_safe, install_page_safety_net
 
 _VIEWPORT_DEFAULTS = Settings()
@@ -122,7 +122,7 @@ async def collect_renta_web_open_observation(
             await _navigate_to_resumen(page, timeout_ms=live_payload.timeout_ms)
         values = await _scrape_renta_web_open_values(page, live_payload=live_payload, expected=expected)
         return RentaWebOpenObservation(values=values, raw_evidence_locator=page.url)
-    except (SedeError, SiteHealthError, BrowserError):
+    except (BrowserAdapterTypeError, SedeError, SiteHealthError, BrowserError):
         raise
     except Exception as exc:
         logger.error(
@@ -155,7 +155,10 @@ async def _open_renta_web_open_session(browser_session, *, live_payload):  # typ
 
     _raw_page = await context.new_page()
     if not isinstance(_raw_page, _Page):
-        raise TypeError(f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}")
+        raise BrowserAdapterTypeError(
+            f"BrowserContext.new_page() did not return a Playwright Page; got {type(_raw_page)}",
+            context={"actual_type": type(_raw_page).__name__},
+        )
     page: _Page = _raw_page
     await install_page_safety_net(page)
     await _playwright_stage(

@@ -2555,6 +2555,7 @@ errors:
       ha rebutjat una operació d'escriptura.
     error_aeat_core: S'ha produït un error intern en l'aplicació.
     error_aeat_observability: S'ha produït un error en la telemetria de l'aplicació.
+    error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_registry: L'orquestració del registre de models ha fallat o
       ha estat rebutjada.
@@ -2670,7 +2671,8 @@ errors:
     error_normatives_normative: S'ha produït un error relacionat amb la normativa.
     error_normatives_normative_not_found: No s'ha trobat la norma o l'article sol·licitats.
     error_normatives_validation: Un valor de la normativa no és vàlid.
-    error_observation_key: Un component de la clau d'observació no compleix el contracte del repositori.
+    error_observation_key: Un component de la clau d'observació no compleix el contracte
+      del repositori.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_pdf_import_pdf_modelo_import: Ha fallat la importació de la declaració des
@@ -2712,6 +2714,7 @@ errors:
     error_review: S'ha produït un error en la revisió.
     error_sanitization: S'ha produït un error en sanejar el document.
     error_sede: S'ha produït un error en la Seu electrònica de l'AEAT.
+    error_sede_browser_adapter_type: 'L''objecte de pàgina del navegador ha retornat un tipus inesperat al límit de l''adaptador Sede.'
     error_sede_expediente_not_found: No s'ha trobat cap expedient que coincideixi
       amb el filtre sol·licitat.
     error_sede_navigation: Ha fallat un pas de navegació en la Seu de l'AEAT.
@@ -2740,7 +2743,6 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
-    error_aggregation_config: 'S''ha violat un invariant de composició del servei d''agregació.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -2820,6 +2822,8 @@ errors:
     fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
     fail_storage_secret_store: S'ha produït un error d'entrada o sortida en el magatzem
       de secrets.
+    fail_storage_secure_object_revision_conflict: L'objecte segur ha canviat per una
+      altra escriptura; torna'l a carregar i reintenta-ho amb la revisió actual.
     fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
       perfil d'usuari.
     fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
@@ -2920,6 +2924,8 @@ errors:
       amb la que espera l'aplicació.
     integrity_storage_key_derivation: Ha fallat un pas de derivació de clau en l'emmagatzematge
       segur.
+    integrity_storage_namespace_registry: Una clau o definició del registre d'espais
+      de noms ha violat un invariant d'inicialització.
     integrity_storage_nonce_collision: S'ha detectat una col·lisió de nonce en l'emmagatzematge
       segur.
     integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
@@ -2929,7 +2935,6 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
-    integrity_storage_namespace_registry: Una clau o definició del registre d'espais de noms ha violat un invariant d'inicialització.
     integrity_verification: La verificació ha fallat de manera irrecuperable. Les
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
@@ -2947,6 +2952,7 @@ errors:
       de les que tenia guionades.'
     internal_workflow_abort_signal: 'Error intern: una etapa del flux de treball ha
       emès un senyal de cancel·lació.'
+    internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat una excepció no controlada.'
   locked:
     locked_access_gate_live_submit_forbidden: L'enviament en viu a l'AEAT està permanentment
       prohibit. Aquesta aplicació construeix, valida i exporta declaracions; la presentació
@@ -3040,10 +3046,15 @@ errors:
       Executa `aeat config repair` o restableix l'estat del perfil.
     refused_config_reset_unconfirmed: El restabliment de la configuració no s'ha confirmat.
       Torna a executar l'ordre confirmant l'operació.
+    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_evidence_bundle_not_found: No existeix cap paquet d'evidències amb l'identificador
       indicat.
     refused_evidence_bundle_verification: La verificació del paquet d'evidències ha
       fallat i l'operació no s'ha forçat.
+    refused_export_field: S'ha violat un invariant de validació de camp durant l'exportació
+      tabular.
+    refused_export_format: El format de serialització d'exportació sol·licitat no
+      és compatible.
     refused_filing_calculate: El càlcul o resum de la declaració no ha superat les
       seves invariants.
     refused_financial_aggregation_category_coverage: Una transacció no té cobertura
@@ -3174,20 +3185,18 @@ errors:
     refused_topic_not_found: No s'ha trobat el tema sol·licitat.
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.
+    refused_wizard_answer_type: Un camp de resposta de l'assistent ha rebut un tipus
+      inesperat al limit tipat.
     refused_wizard_missing_flag: L'execució amb --quiet ha omès una pregunta obligatòria.
       Aporta el valor que falta o executa l'assistent de manera interactiva.
     refused_wizard_status: L'assistent no ha pogut resoldre el perfil actiu.
     refused_wizard_unsupported_console: El terminal actual no admet l'assistent interactiu.
       Executa'l en una terminal compatible.
-    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
       Corregeix el valor indicat.
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_export_format: 'El format de serialització d''exportació sol·licitat no és compatible.'
-    refused_export_field: 'S''ha violat un invariant de validació de camp durant l''exportació tabular.'
-    refused_wizard_answer_type: 'Un camp de resposta de l''assistent ha rebut un tipus inesperat al limit tipat.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

@@ -483,7 +483,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="FAIL_STORAGE_SECURE_OBJECT_REVISION_CONFLICT",
             category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_storage_repository",
+            message_key="errors.fail.fail_storage_secure_object_revision_conflict",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
@@ -616,6 +616,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_SEDE_VALIDATION",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_sede_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.outbound.aeat.sede._errors.BrowserAdapterTypeError",
+        ErrorCode(
+            code="ERROR_SEDE_BROWSER_ADAPTER_TYPE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_sede_browser_adapter_type",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,
