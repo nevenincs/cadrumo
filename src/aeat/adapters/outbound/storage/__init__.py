@@ -22,10 +22,25 @@ from ._errors import (
     StorageCorruptionError,
 )
 from ._factory import get_storage_provider
+from ._mirror_manifest import (
+    REMOTE_MIRROR_MANIFEST_NAMESPACE,
+    REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION,
+    build_remote_mirror_namespace_manifest,
+    put_remote_mirror_namespace_manifest,
+    remote_mirror_object_key_hmac,
+)
 from ._protocol import StorageProvider
-from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
+from ._records import (
+    ProviderKind,
+    ProviderObjectMetadata,
+    ProviderProbeReport,
+    RemoteMirrorNamespaceManifest,
+    RemoteMirrorObjectManifest,
+)
 
 __all__ = [
+    "REMOTE_MIRROR_MANIFEST_NAMESPACE",
+    "REMOTE_MIRROR_MANIFEST_SCHEMA_VERSION",
     "OutboundStorageConflictError",
     "OutboundStorageError",
     "OutboundStorageIntegrityError",
@@ -38,7 +53,12 @@ __all__ = [
     "ProviderKind",
     "ProviderObjectMetadata",
     "ProviderProbeReport",
+    "RemoteMirrorNamespaceManifest",
+    "RemoteMirrorObjectManifest",
     "StorageCorruptionError",
     "StorageProvider",
+    "build_remote_mirror_namespace_manifest",
     "get_storage_provider",
+    "put_remote_mirror_namespace_manifest",
+    "remote_mirror_object_key_hmac",
 ]

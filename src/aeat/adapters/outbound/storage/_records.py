@@ -68,8 +68,40 @@ class ProviderProbeReport(BaseModel):
     detail: str = ""
 
 
+class RemoteMirrorObjectManifest(BaseModel):
+    """One ciphertext object entry recorded in a remote mirror manifest."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace: str = Field(min_length=1)
+    object_key_hmac: str = Field(min_length=64, max_length=64)
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    byte_length: int = Field(ge=0)
+    ciphertext_hash: str = Field(min_length=64, max_length=64)
+    storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    previous_storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    row_written_at: datetime
+    revision_written_at: datetime | None = None
+
+
+class RemoteMirrorNamespaceManifest(BaseModel):
+    """Manifest persisted beside remote ciphertext objects for one namespace."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    manifest_schema_version: int = Field(default=1, ge=1)
+    namespace: str = Field(min_length=1)
+    object_count: int = Field(ge=0)
+    latest_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    latest_revision_written_at: datetime | None = None
+    objects: tuple[RemoteMirrorObjectManifest, ...]
+
+
 __all__ = [
     "ProviderKind",
     "ProviderObjectMetadata",
     "ProviderProbeReport",
+    "RemoteMirrorNamespaceManifest",
+    "RemoteMirrorObjectManifest",
 ]
