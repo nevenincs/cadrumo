@@ -7,7 +7,13 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 
 from ._errors import RegistryValidationError
-from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
+from ._schema import (
+    CasillaContinuidadEvolutionDefinition,
+    CasillaDefinition,
+    ModeloDefinition,
+    ModeloRevision,
+    PeriodSelector,
+)
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",
@@ -37,6 +43,11 @@ class CrossRevisionCasillaDivergence:
     left_value: object
     right_value: object
     revisions_overlap: bool
+    left_continuidad_id: str | None = None
+    right_continuidad_id: str | None = None
+    evolution_id: str | None = None
+    evolution_kind: str | None = None
+    evolution_covers_field: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +60,10 @@ class CrossRevisionCasillaDriftSummary:
     field: str
     drift_count: int
     example_casilla_ids: tuple[str, ...]
+    continuidad_ids: tuple[str, ...] = ()
+    evolution_kinds: tuple[str, ...] = ()
+    covered_by_evolution_count: int = 0
+    uncovered_count: int = 0
 
 
 def _cross_revision_signature(casilla: CasillaDefinition) -> tuple[object, ...]:
@@ -164,7 +179,7 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
     if example_limit < 1:
         raise ValueError("example_limit must be at least 1")
 
-    grouped: dict[tuple[str, str, str, str], list[str]] = defaultdict(list)
+    grouped: dict[tuple[str, str, str, str], list[CrossRevisionCasillaDivergence]] = defaultdict(list)
     for divergence in _iter_cross_revision_casilla_divergences(modelos):
         if divergence.revisions_overlap:
             continue
@@ -174,11 +189,32 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
             divergence.right_revision_id,
             divergence.field,
         )
-        grouped[key].append(divergence.casilla_id)
+        grouped[key].append(divergence)
 
     summaries: list[CrossRevisionCasillaDriftSummary] = []
-    for (modelo_id, left_revision_id, right_revision_id, field), casilla_ids in sorted(grouped.items()):
+    for (modelo_id, left_revision_id, right_revision_id, field), divergences in sorted(grouped.items()):
+        casilla_ids = [divergence.casilla_id for divergence in divergences]
         examples = tuple(dict.fromkeys(casilla_ids[:example_limit]))
+        continuidad_ids = tuple(
+            sorted(
+                {
+                    continuidad_id
+                    for divergence in divergences
+                    for continuidad_id in (divergence.left_continuidad_id, divergence.right_continuidad_id)
+                    if continuidad_id is not None
+                }
+            )
+        )
+        evolution_kinds = tuple(
+            sorted(
+                {
+                    divergence.evolution_kind
+                    for divergence in divergences
+                    if divergence.evolution_kind is not None
+                }
+            )
+        )
+        covered_by_evolution_count = sum(1 for divergence in divergences if divergence.evolution_covers_field)
         summaries.append(
             CrossRevisionCasillaDriftSummary(
                 modelo_id=modelo_id,
@@ -187,6 +223,10 @@ def summarize_non_overlapping_cross_revision_casilla_drift(
                 field=field,
                 drift_count=len(casilla_ids),
                 example_casilla_ids=examples,
+                continuidad_ids=continuidad_ids,
+                evolution_kinds=evolution_kinds,
+                covered_by_evolution_count=covered_by_evolution_count,
+                uncovered_count=len(divergences) - covered_by_evolution_count,
             )
         )
     return tuple(summaries)
@@ -211,6 +251,7 @@ def _iter_cross_revision_casilla_divergences(
                     right_sig = _cross_revision_signature(right_casilla)
                     if right_sig == left_sig:
                         continue
+                    evolution = _matching_evolution(left_revision, right_revision, left_casilla, right_casilla)
                     for field, left_value, right_value in zip(
                         _CROSS_REVISION_CASILLA_FIELDS,
                         left_sig,
@@ -229,6 +270,42 @@ def _iter_cross_revision_casilla_divergences(
                                 left_value=left_value,
                                 right_value=right_value,
                                 revisions_overlap=revisions_overlap,
+                                left_continuidad_id=left_casilla.continuidad_id,
+                                right_continuidad_id=right_casilla.continuidad_id,
+                                evolution_id=evolution.id if evolution is not None else None,
+                                evolution_kind=evolution.evolution_kind if evolution is not None else None,
+                                evolution_covers_field=_evolution_covers_field(evolution, field),
                             )
                         )
     return tuple(divergences)
+
+
+def _matching_evolution(
+    left_revision: ModeloRevision,
+    right_revision: ModeloRevision,
+    left_casilla: CasillaDefinition,
+    right_casilla: CasillaDefinition,
+) -> CasillaContinuidadEvolutionDefinition | None:
+    continuidad_ids = {left_casilla.continuidad_id, right_casilla.continuidad_id} - {None}
+    if len(continuidad_ids) != 1:
+        return None
+    continuidad_id = next(iter(continuidad_ids))
+    for revision in (left_revision, right_revision):
+        for evolution in revision.casilla_continuidad_evolutions:
+            if evolution.continuidad_id != continuidad_id:
+                continue
+            if {evolution.from_revision, evolution.to_revision} == {left_revision.id, right_revision.id}:
+                return evolution
+    return None
+
+
+def _evolution_covers_field(evolution: CasillaContinuidadEvolutionDefinition | None, field: str) -> bool:
+    if evolution is None:
+        return False
+    if evolution.evolution_kind == "label_evolved":
+        return field == "label"
+    if evolution.evolution_kind == "legal_refs_evolved":
+        return field == "legal_refs"
+    if evolution.evolution_kind == "label_and_legal_refs_evolved":
+        return field in {"label", "legal_refs"}
+    return evolution.evolution_kind == "repurposed"

@@ -13,14 +13,14 @@ year-to-year drift can be treated as a load-time error.
 from __future__ import annotations
 
 import warnings
-from typing import Any
+from datetime import date
 
 import pytest
 
 from aeat.core.resources import bundled_path
 
 from . import load_registry_tree
-from ._schema import CasillaDefinition, PeriodSelector
+from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, PeriodSelector
 from ._validate import (
     RegistryValidator,
 )
@@ -41,8 +41,9 @@ def _casilla(
     data_type: str = "money",
     semantic_role: str | None = None,
     legal_refs: tuple[str, ...] = ("ley-58-2003:art-29",),
+    continuidad_id: str | None = None,
 ) -> CasillaDefinition:
-    return CasillaDefinition.model_validate({
+    payload = {
         "id": cid,
         "number": cid,
         "label": label,
@@ -51,27 +52,42 @@ def _casilla(
         "semantic_role": semantic_role,
         "legal_refs": legal_refs,
         "source_refs": ("aeat-manual",),
-    })
+    }
+    if continuidad_id is not None:
+        payload["continuidad_id"] = continuidad_id
+    return CasillaDefinition.model_validate(payload)
 
 
 def _modelo(
     modelo_id: str,
     revs: dict[str, list[CasillaDefinition]],
     selectors: dict[str, PeriodSelector] | None = None,
-) -> Any:
-    class _Rev:
-        def __init__(self, rid: str, cas: list[CasillaDefinition]) -> None:
-            self.id = rid
-            self.casillas = tuple(cas)
-            if selectors is not None:
-                self.period_selector = selectors[rid]
-
-    class _Mod:
-        def __init__(self) -> None:
-            self.id = modelo_id
-            self.revisions = {rid: _Rev(rid, c) for rid, c in revs.items()}
-
-    return _Mod()
+    evolutions: dict[str, tuple[dict[str, object], ...]] | None = None,
+) -> ModeloDefinition:
+    revision_payloads: dict[str, ModeloRevision] = {}
+    default_selector = PeriodSelector(year_from=2024, periods=("0A",))
+    for revision_id, casillas in revs.items():
+        revision_year = int(revision_id[:4]) if revision_id[:4].isdigit() else 2024
+        revision_payloads[revision_id] = ModeloRevision.model_validate({
+            "id": revision_id,
+            "valid_from": date(revision_year, 1, 1),
+            "period_selector": selectors[revision_id] if selectors is not None else default_selector,
+            "legal_refs": ("ley-58-2003:art-29",),
+            "source_refs": ("aeat-manual",),
+            "casillas": tuple(casillas),
+            "casilla_continuidad_evolutions": () if evolutions is None else evolutions.get(revision_id, ()),
+        })
+    return ModeloDefinition.model_validate({
+        "id": modelo_id,
+        "title": f"Modelo {modelo_id}",
+        "official_name": f"Modelo {modelo_id}",
+        "tax_domain": "test",
+        "cadence": "annual",
+        "jurisdiction": "ES-AEAT",
+        "legal_refs": ("ley-58-2003:art-29",),
+        "source_refs": ("aeat-manual",),
+        "revisions": revision_payloads,
+    })
 
 
 class TestCrossRevisionConsistency:
@@ -200,6 +216,76 @@ class TestCrossRevisionConsistency:
         }
         assert all(summary.drift_count == 1 for summary in summaries)
         assert all(summary.example_casilla_ids == ("0700",) for summary in summaries)
+
+    def test_non_overlapping_inventory_reports_covering_continuity_evolution(self) -> None:
+        a = _casilla(cid="0700", label="Old", continuidad_id="base")
+        b = _casilla(cid="0700", label="New", continuidad_id="base")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-label-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "label_evolved",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+        )
+
+        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
+
+        assert len(summaries) == 1
+        summary = summaries[0]
+        assert summary.field == "label"
+        assert summary.continuidad_ids == ("base",)
+        assert summary.evolution_kinds == ("label_evolved",)
+        assert summary.covered_by_evolution_count == 1
+        assert summary.uncovered_count == 0
+
+    def test_non_overlapping_inventory_reports_uncovered_continuity_drift(self) -> None:
+        a = _casilla(cid="0700", legal_refs=("ley-58-2003:art-29",), continuidad_id="base")
+        b = _casilla(cid="0700", legal_refs=("ley-58-2003:art-30",), continuidad_id="base")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-label-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "label_evolved",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+        )
+
+        summaries = summarize_non_overlapping_cross_revision_casilla_drift([m])
+
+        assert len(summaries) == 1
+        summary = summaries[0]
+        assert summary.field == "legal_refs"
+        assert summary.continuidad_ids == ("base",)
+        assert summary.evolution_kinds == ("label_evolved",)
+        assert summary.covered_by_evolution_count == 0
+        assert summary.uncovered_count == 1
 
     def test_non_overlapping_inventory_does_not_duplicate_hard_validator_scope(self) -> None:
         selector = PeriodSelector(year_from=2024, periods=("0A",))
