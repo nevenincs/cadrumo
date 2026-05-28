@@ -472,3 +472,89 @@ be generated with formula-consistent synthetic values.
 2. M111 2024-4T negative-filing fixture: leaf inputs must be printed or casilla 30 must be 0.
 3. M390 extraction profile expansion: add leaf sub-total casillas to enable engine verification.
 4. M180 relation supply: requires M115 quarterly data as `relation_values`.
+
+---
+
+## 2026-05-28 amendment — discipline extended to justificante surface (W10.P41.S198)
+
+### Audit findings (UNIT 1 + 2)
+
+**Extraction model:** The justificante surface uses **hardcoded regex-driven extraction** in
+`src/aeat/adapters/inbound/justificante/_extract.py` — NOT registry-profile-driven extraction.
+The `ExtractionProfileDefinition` schema supports `surface = "justificante_pdf"` but the
+`validate_extraction_profile_artefacts` gate explicitly rejects any `justificante_pdf` profile
+that has `target_casillas`, blocking the registry-profile path at schema level. No
+`justificante_pdf` registry extraction profiles exist in the TOML tree.
+
+**Exception hierarchy pre-amendment:** `JustificanteParseError` in
+`src/aeat/domain/justificante/_errors.py` was a bare string-message exception.
+It had none of the `missing/malformed/ambiguous/coverage` structured attributes
+that `DeclaracionParseError` carries, which forced test code and callers to
+parse message strings to identify the failure kind — the exact brittleness class
+closed by task #51.
+
+**PROVISIONAL gates:** Both `validate_declaracion_pdf_specimen_gate` and
+`validate_declaracion_pdf_round_trip_gate` guard on
+`if profile.surface != "declaracion_pdf": return []` and are correctly dormant
+for the justificante surface. Because no casilla-level corpus extraction exists
+for justificante PDFs (AEAT receipts carry CSV/NIF/period/timestamp metadata, not
+casilla values), the registry-profile gate discipline does not transfer. The
+existing sidecar roundtrip tests (`test_corpus_sidecar_roundtrip.py`, landed in
+task #41) are the discipline equivalent for the justificante surface.
+
+**Silent-failure classes per surface:**
+
+- *AEAT receipt format change* (new header layout, different CSV encoding): the
+  five-tier CSV regex in `_extract_csv` is the primary exposure. The sidecar corpus
+  covers 40+ fixture combinations; a format change surfaces as a
+  `JustificanteCsvNotFoundError` across the corpus parametrize run.
+
+- *Parser regex generalises poorly across years*: the `_PERIOD_POSITIONAL_RE` and
+  `_EJERCICIO_LOOSE_RE` tiers were developed against known layouts; new layouts can
+  silently extract the wrong value without raising. The 15 pre-existing
+  `JustificanteCsvNotFoundError` failures on the `test_corpus_pdf_parses` parametrize
+  (modelos 036, 115, 123, 131, 180, 184, 193, 232, 347, 349, 369, 720, 840) are this
+  exact class — newly added corpus PDFs using a sanitiser layout whose CSV token is
+  not matched by any current regex tier.
+
+- *Sidecar and parser drift*: `test_corpus_sidecar_roundtrip.py` pins 40+ PDF+sidecar
+  pairs. If the sanitiser injects a CSV token using the `SANITIZED{modelo}{year}`
+  convention and the parser extracts a different token, the test fails loudly.
+
+### Alignment applied (UNIT 3)
+
+**UNIT 3(c) — Structured exception attributes (applied):**
+`JustificanteParseError` in `src/aeat/domain/justificante/_errors.py` now carries
+`missing`, `malformed`, `ambiguous`, and `coverage` structured attributes with the
+same type signature as `DeclaracionParseError`. All error-raising sites in
+`src/aeat/adapters/inbound/justificante/_extract.py` populate the appropriate
+attribute: `_require()` sets `missing=(field,)`, `_parse_decimal()` accepts an
+optional `field` argument and sets `malformed=(field,)` on parse failure,
+`_parse_datetime()` sets `malformed=("presented_at",)`, and the URL extractor sets
+`missing` or `malformed` as appropriate. Ten new tests in
+`test_extract_helpers.py` and `test_parser.py` assert on the typed attributes.
+
+**UNIT 3(a/d) — PROVISIONAL gates (not generalised; dormant by design):**
+The existing gates are correctly scoped to `declaracion_pdf`. Generalising them to
+also fire for `justificante_pdf` would be incorrect because: (a) no justificante_pdf
+registry profile with `target_casillas` can pass schema validation; (b) the
+justificante surface has no equivalent concept of "label_pattern accuracy" tracked
+by the gate. The gate discipline for justificante is the sidecar corpus test, which
+already exists.
+
+**UNIT 3(b) — Sidecar coverage (documented, not extended this step):**
+The 15 pre-existing corpus parse failures represent coverage gaps in the extractor,
+not in the sidecar discipline. These fixture PDFs exist in the corpus (added by a
+prior campaign) but use a receipt format not matched by the current regex tiers.
+Closing those 15 failures requires adding new regex tiers or updating the sanitiser
+to use an already-matched layout — that work is a separate extractor-expansion task,
+not part of this discipline-alignment step.
+
+### Honest verdict
+
+The discipline transferred **with structural adaptation**. The justificante surface
+is architecturally distinct from the declaracion surface (hardcoded regex vs
+registry-profile-driven extraction), so the PROVISIONAL gate generalisation was
+not applicable. The transferable part — structured exception attributes — was
+applied cleanly. The sidecar corpus discipline (task #41) is the equivalent
+gate for this surface and was already in place.
