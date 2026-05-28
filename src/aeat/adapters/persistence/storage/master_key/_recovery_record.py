@@ -9,10 +9,12 @@ from the mnemonic-bound KEK travels in this envelope.
 from __future__ import annotations
 
 import base64
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .....core.time._utc import _validate_utc_aware
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -30,16 +32,6 @@ def _validate_b64(value: str) -> str:
     re_encoded = base64.b64encode(decoded).decode("ascii")
     if re_encoded != value:
         raise ValueError("base64 field is not in canonical form")
-    return value
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    """Reject naive datetimes and datetimes whose offset is not UTC."""
-
-    if value.tzinfo is None:
-        raise ValueError("datetime must be timezone-aware UTC")
-    if value.utcoffset() != UTC.utcoffset(value):
-        raise ValueError("datetime must be in UTC")
     return value
 
 
@@ -63,7 +55,7 @@ class RecoveryRecord(BaseModel):
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _ensure_utc(value)
+        return _validate_utc_aware(value)
 
 
 __all__ = ["RecoveryRecord"]

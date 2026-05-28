@@ -145,3 +145,26 @@ def test_rejects_unknown_kdf_algorithm_length_zero() -> None:
 def test_last_unlocked_at_naive_rejected() -> None:
     with pytest.raises(ValidationError):
         _manifest(last_unlocked_at=datetime(2026, 1, 1, 0, 0, 0))
+
+
+# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+
+
+def test_created_at_naive_raises_validation_error() -> None:
+    """Naive created_at must be rejected — validate semantic, not coerce."""
+    with pytest.raises(ValidationError):
+        _manifest(created_at=datetime(2026, 1, 1, 12, 0, 0))
+
+
+def test_created_at_utc_aware_accepted() -> None:
+    """A UTC-aware created_at passes the boundary intact."""
+    ts = datetime(2026, 3, 15, 10, 30, 0, tzinfo=UTC)
+    m = _manifest(created_at=ts)
+    assert m.created_at == ts
+
+
+def test_last_unlocked_at_utc_aware_accepted() -> None:
+    """A UTC-aware last_unlocked_at passes through unchanged."""
+    ts = datetime(2026, 3, 15, 11, 0, 0, tzinfo=UTC)
+    m = _manifest(last_unlocked_at=ts)
+    assert m.last_unlocked_at == ts

@@ -83,8 +83,8 @@ envelope.
 - [x] `W01.P01.S22` - add real-behavior test asserting profile-keys-registration envelope on double registration; `src/aeat/domain/profile/test_keys.py`.
 - [ ] `W01.P01.S23` - introduce `PensionReduccionError(CoreValidationError)`; `replace the six `ValueError` raises at pension reducción computation; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P01.S24` - add real-behavior test asserting pension-reducción error envelope at every replaced raise; `src/aeat/entrypoints/cli/test_modelo.py`.
-- [ ] `W01.P01.S25` - introduce `BindingPrefillTypeError(CoreValidationError)`; `replace the `TypeError`; `src/aeat/application/calculations/_binding_prefill.py`.
-- [ ] `W01.P01.S26` - add real-behavior test asserting binding-prefill-type-error envelope; `src/aeat/application/calculations/test_binding_prefill.py`.
+- [x] `W01.P01.S25` - introduce `BindingPrefillTypeError(CoreValidationError)`; `replace the `TypeError`; `src/aeat/application/calculations/_binding_prefill.py`.
+- [x] `W01.P01.S26` - add real-behavior test asserting binding-prefill-type-error envelope; `src/aeat/application/calculations/test_binding_prefill.py`.
 - [ ] `W01.P01.S27` - introduce `WizardAnswerTypeError(CoreValidationError)`; `replace every coercion `TypeError` / `ValueError` raise (15+ sites); `src/aeat/application/wizard/_setup_answers.py`.
 - [ ] `W01.P01.S28` - add real-behavior test asserting wizard-answer-type-error envelope at every replaced raise; `src/aeat/application/wizard/test_setup_answers.py`.
 - [ ] `W01.P01.S29` - confirm `RecoveryVerificationError` subclasses `AeatError`; `narrow the `except Exception` and reraise typed; `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py`.

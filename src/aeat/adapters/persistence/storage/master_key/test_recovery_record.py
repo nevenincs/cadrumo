@@ -125,3 +125,28 @@ def test_rejects_unknown_keys() -> None:
                 "unexpected": "nope",
             }
         )
+
+
+# ── UTC helper migration: _validate_utc_aware semantics ─────────────────────
+
+
+def test_created_at_naive_raises_validation_error() -> None:
+    """Naive created_at must be rejected — validate semantic, not coerce."""
+    with pytest.raises(ValidationError):
+        _record(created_at=datetime(2026, 6, 1, 8, 0, 0))
+
+
+def test_created_at_utc_aware_accepted_and_preserved() -> None:
+    """A UTC-aware created_at is accepted and preserved as-is."""
+    ts = datetime(2026, 6, 1, 8, 0, 0, tzinfo=UTC)
+    record = _record(created_at=ts)
+    assert record.created_at == ts
+
+
+def test_created_at_non_utc_offset_raises_validation_error() -> None:
+    """A timezone-aware datetime whose offset is not UTC must be rejected."""
+    from datetime import timedelta, timezone
+
+    plus_two = timezone(timedelta(hours=2))
+    with pytest.raises(ValidationError):
+        _record(created_at=datetime(2026, 6, 1, 8, 0, 0, tzinfo=plus_two))
