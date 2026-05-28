@@ -2703,60 +2703,58 @@ Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamen
       output-language:
         help: 'CLI kimeneti nyelv ehhez a profilhoz'
       pays-capital-income-with-retencion:
-        help: wizard.setup.flags.pays-capital-income-with-retencion.help
+        help: 'Forrásadóval terhelt tőkejövedelmet fizet'
       pays-professionals-with-retencion:
-        help: wizard.setup.flags.pays-professionals-with-retencion.help
+        help: 'Forrásadóval terhelt díjazást fizet szakembereknek'
       pays-rent-with-retencion:
-        help: wizard.setup.flags.pays-rent-with-retencion.help
+        help: 'Forrásadóval terhelt helyi bérleti díjat fizet'
       professional-income-withholding-ge-70pct:
-        help: wizard.setup.flags.professional-income-withholding-ge-70pct.help
+        help: 'A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt'
       representante-fiscal-nif:
-        help: wizard.setup.flags.representante-fiscal-nif.help
+        help: 'A spanyolországi adóügyi képviselő NIF/NIE száma. Kötelező az EU-n/EGT-n kívüli nem rezidensek számára (LGT 47. cikkely + TRLIRNR 10. cikkely, RDLeg 5/2004).'
       representante-fiscal-nombre:
-        help: wizard.setup.flags.representante-fiscal-nombre.help
+        help: 'A spanyolországi adóügyi képviselő teljes neve.'
       situacion-familiar:
         choices:
           casado:
-            description: Hazas szemely
-            label: Hazas
+            description: 'Érvényes házasság – közös adóbevallás elérhető (82.1.1° cikkely)'
+            label: 'Házas'
           pareja-hecho-no-registrada:
-            description: Nem regisztralt elettarsi kapcsolat
-            label: Nem regisztralt elettars
+            description: 'Bejegyzés nélküli élettársi kapcsolat – közös adóbevallás NEM elérhető'
+            label: 'Nem bejegyzett élettársi kapcsolat'
           pareja-hecho-registrada:
-            description: Regisztralt elettarsi kapcsolat
-            label: Regisztralt elettars
+            description: 'Autonóm közösségi nyilvántartásban bejegyzett – közös adóbevallás elérhető (82.1.2° cikkely)'
+            label: 'Bejegyzett élettársi kapcsolat'
           separado-divorciado:
-            label: Kulon elo vagy elvalt
+            label: 'Különváltan élő vagy elvált'
           soltero:
-            label: Egyedulallo
-        help: 'Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e
-          az együttes adózás, és melyik családi egység típus alkalmazandó.'
-        prompt: Adja meg a csaladi allapotot
+            label: 'Egyedülálló'
+        help: 'Családi helyzet az LIRPF 82. cikkelye szerint: meghatározza, hogy elérhető-e a közös adóbevallás és melyik családi egység változat alkalmazandó.'
+        prompt: 'Családi helyzet (LIRPF 82. cikkely)'
       spouse-birth-date:
-        help: wizard.setup.flags.spouse-birth-date.help
+        help: 'Házastárs születési dátuma'
       spouse-disability-grade:
-        help: wizard.setup.flags.spouse-disability-grade.help
+        help: 'Házastárs fogyatékossági fokozata (ha alkalmazható): 1 = 33%-64%, 2 = 65% vagy magasabb, 3 = bírói cselekvőképesség-korlátozás, 4 = harmadik személy segítsége vagy korlátozott mozgásképesség.'
       spouse-eu-eea-country:
-        help: wizard.setup.flags.spouse-eu-eea-country.help
+        help: 'Házastárs EU/EGT országa'
       spouse-eu-eea-resident:
-        help: wizard.setup.flags.spouse-eu-eea-resident.help
+        help: 'Házastárs EU/EGT-ben él'
       spouse-name:
-        help: wizard.setup.flags.spouse-name.help
+        help: 'Házastárs keresztneve'
       spouse-non-resident-irpf:
-        help: wizard.setup.flags.spouse-non-resident-irpf.help
+        help: 'Házastárs nem rezidens IRPF szerint'
       spouse-sex:
-        help: wizard.setup.flags.spouse-sex.help
+        help: 'Házastárs neme: H = férfi, M = nő.'
       spouse-surnames:
-        help: wizard.setup.flags.spouse-surnames.help
+        help: 'Házastárs vezetéknevei'
       spouse-tax-id:
-        help: wizard.setup.flags.spouse-tax-id.help
+        help: 'Házastárs NIF/NIE száma'
       surnames:
-        help: wizard.setup.flags.surnames.help
+        help: 'Vezetéknevei vagy cégneve az exportfejlécekhez'
       tax-id:
-        help: wizard.setup.flags.tax-id.help
+        help: 'Adóazonosító (NIF/NIE) az aktív profilhoz'
       tax-residence-ccaa:
-        help: 'Tartózkodási helye szerinti autonóm közösség. Egy a következők közül:
-          %{choices}.'
+        help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       taxation-type:
         help: wizard.setup.flags.taxation-type.help
       taxpayer-birth-date:
@@ -2780,25 +2778,25 @@ Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamen
     intro: wizard.setup.intro
     iva:
       iva-intracommunity-operations-exceed-50000-eur:
-        prompt: wizard.setup.iva.iva-intracommunity-operations-exceed-50000-eur.prompt
+        prompt: 'Intraközösségi ügyletek meghaladják az 50 000 EUR-t'
       iva-oss-enrolled:
-        prompt: wizard.setup.iva.iva-oss-enrolled.prompt
+        prompt: 'OSS-be bejelentkezett'
       iva-redeme-enrolled:
-        prompt: wizard.setup.iva.iva-redeme-enrolled.prompt
+        prompt: 'REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)'
       iva-regime:
-        prompt: wizard.setup.iva.iva-regime.prompt
+        prompt: 'IVA adózási rend'
       iva-roi-enrolled:
-        prompt: wizard.setup.iva.iva-roi-enrolled.prompt
+        prompt: 'ROI-ba bejelentkezett'
       iva-sii-enrolled:
-        prompt: wizard.setup.iva.iva-sii-enrolled.prompt
-      title: wizard.setup.iva.title
+        prompt: 'SII-be bejelentkezett (azonnali információszolgáltatás)'
+      title: 'IVA'
     notes:
       notes:
-        prompt: wizard.setup.notes.notes.prompt
-      title: wizard.setup.notes.title
+        prompt: 'Megjegyzések saját nyilvántartáshoz (opcionális)'
+      title: 'Megjegyzések saját nyilvántartáshoz'
     obligations:
       bienes-extranjero-above-threshold:
-        prompt: wizard.setup.obligations.bienes-extranjero-above-threshold.prompt
+        prompt: 'Külföldi vagyon meghaladja a jogszabályi küszöbértéket'
       does-intracomunitario:
         prompt: wizard.setup.obligations.does-intracomunitario.prompt
       has-employees:

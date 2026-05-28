@@ -3157,6 +3157,8 @@ errors:
       Torna a activar-la amb `aeat config profile switch NOM`.
     refused_storage_unsecured_mode: L'emmagatzematge sense xifrar s'ha sol·licitat
       sense l'habilitació necessària. No és segur per a dades reals.
+    refused_taxation_comparison: La comparació tributària conjunta/individual no es
+      pot realitzar per a aquest model o instantània.
     refused_topic_not_found: No s'ha trobat el tema sol·licitat.
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.

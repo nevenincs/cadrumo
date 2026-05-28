@@ -3181,6 +3181,8 @@ errors:
       Vuelve a activarla con `aeat config profile switch NOMBRE`.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
+    refused_taxation_comparison: La comparación tributaria conjunta/individual no puede
+      realizarse para este modelo o instantánea.
     refused_topic_not_found: No se encontró el tema solicitado.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.

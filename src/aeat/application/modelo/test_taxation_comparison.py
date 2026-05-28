@@ -226,6 +226,44 @@ def test_comparison_result_structure_is_typed(snapshot_2025) -> None:
     assert len(result.recommendation_reason) > 10
 
 
+def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
+    """TaxationComparisonError is bound in ERROR_REGISTRY and envelopes cleanly.
+
+    Registry membership: confirms the class received an ErrorCode via
+    AeatError.__init_subclass__ and that the code appears in ERROR_REGISTRY.
+
+    Envelope round-trip: instantiates the exception, builds an ErrorEnvelope
+    via build_error_envelope, and asserts the envelope fields carry the
+    expected stable values. The expected code string is derived from the
+    registry declaration in aeat.core.errors.registry._application, not
+    hand-computed.
+    """
+    from aeat.core.errors import ERROR_REGISTRY, build_error_envelope
+    from aeat.core.errors._registry import get_registered_error_code
+
+    from ._taxation_comparison import TaxationComparisonError
+
+    # Registry membership: the declared code must be present in ERROR_REGISTRY.
+    code_obj = get_registered_error_code(TaxationComparisonError)
+    assert code_obj.code in ERROR_REGISTRY, (
+        f"ErrorCode {code_obj.code!r} returned by get_registered_error_code "
+        f"is absent from ERROR_REGISTRY"
+    )
+    assert ERROR_REGISTRY[code_obj.code] is code_obj
+
+    # The stable code string declared in registry/_application.py.
+    assert code_obj.code == "REFUSED_TAXATION_COMPARISON"
+
+    # Envelope round-trip: build_error_envelope must produce a valid ErrorEnvelope.
+    exc = TaxationComparisonError("comparison not supported for this modelo")
+    envelope = build_error_envelope(exc)
+
+    assert envelope.code == "REFUSED_TAXATION_COMPARISON"
+    assert envelope.category == "REFUSED"
+    assert envelope.retryable is False
+    assert envelope.schema_version == "1"
+
+
 def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     """compare_taxation_modes raises TaxationComparisonError for non-M100 snapshots.
 
