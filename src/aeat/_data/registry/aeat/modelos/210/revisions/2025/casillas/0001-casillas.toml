@@ -1,0 +1,90 @@
+# Modelo 210 Phase 1 casilla skeleton (W04.P19.S387).
+#
+# Six casillas implementing the base / rate / cuota chain for the
+# general (Art 25.1.a, 24%) and ue_residente (Art 25.1.f, 19%) tipos
+# de renta. The remaining tipos (pension, inmobiliaria,
+# ganancia_patrimonial) are declared on the tipo_renta enum so the
+# engine can refuse them with NOT_YET_AUTHORED Path-B messaging until
+# Phase 2 wires the rest of the bracket table.
+#
+# Engine wiring lands in S389; formula bindings in S388. Until those
+# Steps ship, this revision is a registry skeleton — the casillas
+# resolve against the loader but the engine produces no computed
+# values yet. The Path-B refusal stub on the M210 work-create surface
+# remains active per the m210-irnr-full-engine ADR §D5.
+
+[[revisions."2025".casillas]]
+id = "tipo_renta"
+number = "tipo_renta"
+label = "Tipo de renta"
+section = ["identificacion_renta"]
+data_type = "text"
+semantic_role = "irnr_tipo_renta"
+required = true
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "rendimientos_integros"
+number = "rendimientos_integros"
+label = "Rendimientos íntegros"
+section = ["rendimientos"]
+data_type = "money"
+semantic_role = "irnr_rendimientos_integros"
+required = true
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "base_imponible"
+number = "base_imponible"
+label = "Base imponible"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_base_imponible"
+required = true
+input_kind = "computed"
+formula = "modelo-210-2025-base-imponible"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "tipo_gravamen"
+number = "tipo_gravamen"
+label = "Tipo de gravamen"
+section = ["liquidacion"]
+data_type = "ratio"
+semantic_role = "irnr_tipo_gravamen"
+required = true
+input_kind = "computed"
+formula = "modelo-210-2025-tipo-gravamen"
+legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "cuota_integra"
+number = "cuota_integra"
+label = "Cuota íntegra"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_cuota_integra"
+required = true
+input_kind = "computed"
+formula = "modelo-210-2025-cuota-integra"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "cuota_diferencial"
+number = "cuota_diferencial"
+label = "Cuota diferencial"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_cuota_diferencial"
+required = true
+input_kind = "computed"
+formula = "modelo-210-2025-cuota-diferencial"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]

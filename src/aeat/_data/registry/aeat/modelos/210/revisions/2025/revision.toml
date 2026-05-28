@@ -1,0 +1,14 @@
+[revisions."2025"]
+id = "2025"
+label = "Ejercicio 2025"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+period_selector = { years = [2025], periods = ["evento"] }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = [
+    "aeat-modelo-210-procedure",
+]

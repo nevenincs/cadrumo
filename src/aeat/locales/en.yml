@@ -2998,6 +2998,8 @@ errors:
       Re-activate it with `aeat config profile switch NAME`.
     refused_storage_unsecured_mode: The unsecured storage backend was requested without
       the required opt-in. It is not safe for real data.
+    refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
+      be performed for this modelo or snapshot.
     refused_topic_not_found: The requested topic was not found.
     refused_user_profile_validation: A user profile value is not valid. Correct the
       field shown.
