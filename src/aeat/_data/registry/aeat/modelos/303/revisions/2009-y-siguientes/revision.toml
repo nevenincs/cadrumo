@@ -192,8 +192,16 @@ casilla = "iva.autorepercutido.intracomunitaria"
 id = "modelo-303-iva-resultado-regimen-general"
 target = "iva.resultado-regimen-general"
 rounding = "money-2"
+# Orden EHA/3786/2008 art. 1: box [46] = [27] - [45].  The M303 printed form labels this cell
+# "Resultado régimen general (27 - 45)".  Casilla 27 = Total cuota devengada (LIVA art. 88);
+# casilla 45 = Total a deducir (LIVA arts. 92-94).  Source: boe-modelo-303-2008-form (Orden
+# EHA/3786/2008 form spec) and aeat-modelo-303-procedure (AEAT instrucciones de cumplimentación).
 legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-92", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form"]
+source_refs = ["aeat-dr-303-2025", "boe-modelo-303-2008-form", "aeat-modelo-303-procedure"]
+
+[[revisions.2009-y-siguientes.formulas.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
 
 [[revisions.2009-y-siguientes.formulas.source_citations]]
 source_ref = "boe-modelo-303-2008-form"
@@ -203,10 +211,10 @@ required_text = ["modelo 303"]
 op = "subtract"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-devengada-total"
+casilla = "27"
 
 [[revisions.2009-y-siguientes.formulas.expression.args]]
-casilla = "iva.cuota-deducible-total"
+casilla = "45"
 
 [[revisions.2009-y-siguientes.formulas]]
 id = "modelo-303-iva-prorrata-porcentaje"
