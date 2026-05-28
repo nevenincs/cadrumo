@@ -41,7 +41,7 @@ Define one canonical rule vocabulary for output, logging, errors, and diagnostic
 
 - [x] `W01.P01.S01` - add CLI-output redaction profiles and profile/bucket/object-key rules; `src/aeat/core/redaction/__init__.py`.
 - [x] `W01.P01.S02` - extend sensitivity policy names for CLI public output without weakening diagnostic persistence rules; `src/aeat/core/classification/__init__.py`.
-- [ ] `W01.P01.S03` - add structured output-redaction tests for UUID, NIF, token, URL, and object-key canaries; `src/aeat/core/test_redaction.py`.
+- [x] `W01.P01.S03` - add structured output-redaction tests for UUID, NIF, token, URL, and object-key canaries; `src/aeat/core/test_redaction.py`.
 - [ ] `W01.P01.S04` - migrate logging sensitive-key matching to shared redaction rule helpers; `src/aeat/core/logging.py`.
 - [ ] `W01.P01.S05` - update log scrubber regression coverage after shared rule migration; `src/aeat/core/test_logging.py`.
 - [ ] `W01.P01.S06` - migrate error-context scrubbing to shared redaction rule helpers; `src/aeat/core/errors/_registry.py`.

@@ -9,6 +9,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-research]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S01]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S02]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P01-S03]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -38,3 +39,12 @@ No HIGH/CRITICAL findings in the scoped S02 implementation.
 
 - This step introduces output-policy enums/tables but does not yet wire enforcement call sites, so effective privacy behavior remains unchanged until downstream output rendering/log/error migration steps execute.
 - `persisted_as` mappings (`LOG`/`ERROR`→`SensitivityClass.AUDIT`, `DIAGNOSTIC`→`SensitivityClass.DIAGNOSTIC`, `CLI_PUBLIC`→`None`) are coherent, but current policy reuse means call sites that only consume `redaction_rules` without the CLI key-aware placeholder helper can still miss profile/bucket/object-field normalization.
+
+## W01.P01.S03 Review
+
+No HIGH/CRITICAL findings in the scoped S03 implementation.
+
+### Residual risks
+
+- Canaries cover many canonical sensitive forms, but they do not yet test a mixed payload path where a sensitive UUID appears under non-canonical keys (e.g., `active_profile`/`active_bucket_id`), so potential normalization omissions for legacy/noncanonical key names are not covered at this stage.
+- The new tests are narrowly focused on helper-level behavior and do not assert downstream CLI command output behavior (`_emit`/`_emit_envelope` surfaces), so plan-step sequencing still depends on subsequent W01.P02/W01.P03 integration tests to catch renderer-path regressions.
