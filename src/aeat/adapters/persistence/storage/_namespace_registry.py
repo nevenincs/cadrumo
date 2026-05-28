@@ -36,6 +36,14 @@ class StorageNamespaceScope(StrEnum):
     PROCESS_LOCAL = "process_local"
 
 
+class StorageRemoteMirrorPolicy(StrEnum):
+    """Remote-provider mirroring policy for one secure-object namespace."""
+
+    CIPHERTEXT_WITH_METADATA = "ciphertext_with_metadata"
+    LOCAL_ONLY = "local_only"
+    TEST_ONLY = "test_only"
+
+
 class StoragePathKind(StrEnum):
     """Persistent storage hierarchy node kind."""
 
@@ -58,6 +66,9 @@ class SecureObjectNamespaceDefinition(BaseModel):
     object_key_grammar: str = Field(min_length=1)
     scope: StorageNamespaceScope
     default_object_key: str | None = Field(default=None, min_length=1)
+    remote_mirror_policy: StorageRemoteMirrorPolicy = StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA
+    remote_mirror_requires_revision: bool = True
+    remote_mirror_requires_integrity_manifest: bool = True
 
     @field_validator("key")
     @classmethod
@@ -87,6 +98,19 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if "/" in value or "\\" in value:
             raise NamespaceRegistryError("default object key must not contain path separators")
         return value
+
+    @model_validator(mode="after")
+    def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
+        if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
+            if not self.remote_mirror_requires_revision or not self.remote_mirror_requires_integrity_manifest:
+                raise NamespaceRegistryError(
+                    "ciphertext remote mirror namespaces require revision and integrity metadata"
+                )
+        elif self.remote_mirror_requires_revision or self.remote_mirror_requires_integrity_manifest:
+            raise NamespaceRegistryError(
+                "local-only and test-only namespaces must not require remote mirror metadata"
+            )
+        return self
 
     def require_default_object_key(self) -> str:
         """Return the singleton object key or raise when the namespace is multi-key."""
@@ -360,6 +384,21 @@ TEST_SNAPSHOT_BASE_PROBE_NAMESPACE = SecureObjectNamespaceDefinition(
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="snapshot-base-probe:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
+TEST_SESSION_LIFECYCLE_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="test_session_lifecycle",
+    namespace="aeat.test.session.lifecycle",
+    owner="aeat.entrypoints.cli.test_session_lifecycle_roundtrip",
+    sensitivity=SensitivityClass.OPERATIONAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="roundtrip-row",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.TEST_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
 )
 LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_expedientes_snapshot",
@@ -717,6 +756,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE,
         LIVE_CENSUS_SNAPSHOT_NAMESPACE,
         TEST_SNAPSHOT_BASE_PROBE_NAMESPACE,
+        TEST_SESSION_LIFECYCLE_NAMESPACE,
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
@@ -787,6 +827,7 @@ __all__ = [
     "SECURE_OBJECT_WORKFLOW_STATE_KEY",
     "STORAGE_NAMESPACE_REGISTRY",
     "STORAGE_PATH_DEFINITIONS",
+    "TEST_SESSION_LIFECYCLE_NAMESPACE",
     "TEST_SNAPSHOT_BASE_PROBE_NAMESPACE",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
@@ -797,4 +838,5 @@ __all__ = [
     "StorageNamespaceScope",
     "StoragePathDefinition",
     "StoragePathKind",
+    "StorageRemoteMirrorPolicy",
 ]

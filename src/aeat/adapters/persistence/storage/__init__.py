@@ -124,6 +124,7 @@ from ._namespace_registry import (
     StorageNamespaceScope,
     StoragePathDefinition,
     StoragePathKind,
+    StorageRemoteMirrorPolicy,
 )
 from ._path_safety import safe_record_path, safe_repository_id, safe_subpath
 from ._rotation import (
@@ -374,6 +375,7 @@ __all__ = [
     "StorageNamespaceScope",
     "StoragePathDefinition",
     "StoragePathKind",
+    "StorageRemoteMirrorPolicy",
     "StorageRuntime",
     "StorageRuntimeReadiness",
     "StorageRuntimeReadinessCode",
