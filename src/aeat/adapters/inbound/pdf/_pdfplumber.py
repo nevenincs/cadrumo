@@ -23,40 +23,17 @@ Three return-shape families are supported:
   the pypdfium2 path used by declaracion). The fast-path runs first; if
   it returns ``None`` the function falls back to pdfplumber.
 
-The :func:`suppress_pdfminer_debug_logging` context manager raises the
-``pdfminer`` logger to ``WARNING`` for the duration of the with-block.
-The path-based and bytes-based primitives apply it automatically; the
-concatenated helper applies it as well.
+The ``pdfminer`` logger level is governed centrally by
+``aeat.core.logging.configure_logging()`` dictConfig (``WARNING``).
 """
 
 from __future__ import annotations
 
-import logging
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
 
 import pdfplumber
-
-
-@contextmanager
-def suppress_pdfminer_debug_logging() -> Iterator[None]:
-    """Temporarily raise the ``pdfminer`` logger to ``WARNING``.
-
-    pdfplumber delegates to pdfminer.six, which logs at DEBUG by
-    default. Per-format backends use this manager to keep extraction
-    quiet without permanently mutating root logger state.
-    """
-
-    logger = logging.getLogger("pdfminer")
-    previous_level = logger.level
-    if previous_level == logging.NOTSET or previous_level < logging.WARNING:
-        logger.setLevel(logging.WARNING)
-    try:
-        yield
-    finally:
-        logger.setLevel(previous_level)
 
 
 def extract_pages_text_from_path(
@@ -94,7 +71,7 @@ def extract_pages_text_from_path(
     if not pdf_path.is_file():
         raise error_class(f"{not_found_label}: {pdf_path}")
     try:
-        with suppress_pdfminer_debug_logging(), pdfplumber.open(pdf_path) as pdf:
+        with pdfplumber.open(pdf_path) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:  # pragma: no cover — defensive; pdfplumber surface
         raise error_class(f"pdfplumber could not open {pdf_path}: {exc}") from exc
@@ -114,7 +91,7 @@ def extract_pages_text_from_bytes(
     """Extract text from PDF bytes without materialising a plaintext file."""
 
     try:
-        with suppress_pdfminer_debug_logging(), pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
             pages = tuple((page.extract_text() or "").strip() for page in pdf.pages)
     except Exception as exc:  # pragma: no cover — defensive; pdfplumber surface
         raise error_class(f"pdfplumber could not open {source_label}: {exc}") from exc
@@ -151,7 +128,7 @@ def extract_pages_text_concatenated(
     """
 
     try:
-        with suppress_pdfminer_debug_logging(), pdfplumber.open(str(pdf_path)) as pdf:
+        with pdfplumber.open(str(pdf_path)) as pdf:
             chunks: list[str] = []
             for page in pdf.pages:
                 text = page.extract_text()
@@ -202,5 +179,4 @@ __all__ = [
     "extract_pages_text_from_bytes",
     "extract_pages_text_from_path",
     "extract_pages_text_with_fast_path",
-    "suppress_pdfminer_debug_logging",
 ]
