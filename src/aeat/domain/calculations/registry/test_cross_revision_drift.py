@@ -29,6 +29,7 @@ from ._validate_cross_revision import (
     summarize_non_overlapping_cross_revision_casilla_drift,
     validate_cross_revision_casilla_consistency,
 )
+from ._validate_registry_scope import validate_registry_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -63,6 +64,7 @@ def _modelo(
     revs: dict[str, list[CasillaDefinition]],
     selectors: dict[str, PeriodSelector] | None = None,
     evolutions: dict[str, tuple[dict[str, object], ...]] | None = None,
+    continuidad_validation: dict[str, str] | None = None,
 ) -> ModeloDefinition:
     revision_payloads: dict[str, ModeloRevision] = {}
     default_selector = PeriodSelector(year_from=2024, periods=("0A",))
@@ -75,6 +77,9 @@ def _modelo(
             "legal_refs": ("ley-58-2003:art-29",),
             "source_refs": ("aeat-manual",),
             "casillas": tuple(casillas),
+            "continuidad_validation": (
+                "advisory" if continuidad_validation is None else continuidad_validation.get(revision_id, "advisory")
+            ),
             "casilla_continuidad_evolutions": () if evolutions is None else evolutions.get(revision_id, ()),
         })
     return ModeloDefinition.model_validate({
@@ -300,6 +305,68 @@ class TestCrossRevisionConsistency:
     def test_non_overlapping_inventory_requires_positive_example_limit(self) -> None:
         with pytest.raises(ValueError, match="example_limit"):
             summarize_non_overlapping_cross_revision_casilla_drift([], example_limit=0)
+
+    def test_advisory_continuity_validation_does_not_fail_non_overlapping_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+        )
+
+        assert validate_registry_scope([m]) == ()
+
+    def test_strict_continuity_validation_fails_uncovered_non_overlapping_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old")
+        b = _casilla(cid="0700", label="New")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        failures = validate_registry_scope([m])
+
+        assert len(failures) == 1
+        assert "strict continuity drift" in failures[0]
+        assert "label" in failures[0]
+        assert "0700" in failures[0]
+
+    def test_strict_continuity_validation_accepts_covered_non_overlapping_drift(self) -> None:
+        a = _casilla(cid="0700", label="Old", continuidad_id="base")
+        b = _casilla(cid="0700", label="New", continuidad_id="base")
+        m = _modelo(
+            "100",
+            {"2024": [a], "2025": [b]},
+            selectors={
+                "2024": PeriodSelector(years=(2024,), periods=("0A",)),
+                "2025": PeriodSelector(years=(2025,), periods=("0A",)),
+            },
+            evolutions={
+                "2025": (
+                    {
+                        "id": "base-label-2025",
+                        "continuidad_id": "base",
+                        "from_revision": "2024",
+                        "to_revision": "2025",
+                        "evolution_kind": "label_evolved",
+                        "legal_refs": ("ley-58-2003:art-29",),
+                        "source_refs": ("aeat-manual",),
+                    },
+                )
+            },
+            continuidad_validation={"2025": "strict"},
+        )
+
+        assert validate_registry_scope([m]) == ()
 
 
 def test_cross_revision_validator_accepts_committed_corpus() -> None:
