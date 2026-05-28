@@ -6,6 +6,7 @@ import re
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Literal
 
@@ -80,6 +81,51 @@ Used as the value type for casillas declaring `data_type = "nif"`,
 and by any cross-domain consumer (filing draft assembly, oracle
 replay, export layouts) that needs to validate a NIF, NIE, or CIF
 identifier independently of a casilla declaration.
+"""
+
+
+class InputKind(StrEnum):
+    """Registry-authoritative classification of how a casilla value is supplied.
+
+    Each member's string value matches the TOML literal used in registry
+    source files so serialisation is transparent across every persistence
+    boundary (TOML, JSON, SQL, CLI).
+    """
+
+    MANUAL = "manual"
+    BOUND = "bound"
+    COMPUTED = "computed"
+    INFORMATIONAL = "informational"
+
+
+def _coerce_input_kind(value: object) -> object:
+    """Coerce a TOML string literal to the canonical InputKind member.
+
+    Accepts an ``InputKind`` instance directly (no-op) or a plain string
+    matching one of the declared member values.  Rejects non-string and
+    non-member inputs at the schema boundary so every persisted and
+    deserialised casilla carries a typed enum value.
+    """
+    if isinstance(value, InputKind):
+        return value
+    if isinstance(value, str):
+        try:
+            return InputKind(value)
+        except ValueError:
+            raise RegistryValidationError(
+                f"input_kind {value!r} is not a recognised InputKind member; "
+                f"expected one of {[m.value for m in InputKind]}"
+            ) from None
+    raise RegistryValidationError(
+        f"input_kind must be a string, got {type(value).__name__!r}"
+    )
+
+
+InputKindValue = Annotated[InputKind, BeforeValidator(_coerce_input_kind)]
+"""Annotated InputKind that coerces TOML string literals to enum members.
+
+Use this as the field type on pydantic models that ingest TOML or JSON
+payloads where ``input_kind`` is stored as a plain string.
 """
 
 
@@ -1894,7 +1940,7 @@ class CasillaDefinition(RegistryModel):
         "date",
     ] = "money"
     required: bool = False
-    input_kind: Literal["manual", "bound", "computed", "informational"] = "manual"
+    input_kind: InputKindValue = InputKind.MANUAL
     formula: FormulaId | None = None
     binding: BindingId | None = None
     export_refs: tuple[ExportFieldId, ...] = ()
