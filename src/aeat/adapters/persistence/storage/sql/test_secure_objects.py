@@ -823,6 +823,9 @@ def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path
                 assert row.payload not in (b"payload-a-1", b"payload-a-2", b"payload-b-1"), (
                     "iter_all_records_raw must return on-wire ciphertext, not plaintext"
                 )
+                assert row.ciphertext_hash == hashlib.sha256(row.payload).hexdigest()
+                assert row.revision_id is not None
+                assert row.revision_written_at is not None
                 assert row.classification in {"financial", "session"}
                 assert row.schema_version == 1
         finally:

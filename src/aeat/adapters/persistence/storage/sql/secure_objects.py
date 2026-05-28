@@ -145,6 +145,12 @@ class SecureObjectRawRow(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes
+    revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    previous_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    previous_payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
+    payload_hash: str | None = Field(default=None, min_length=64, max_length=64)
+    ciphertext_hash: str | None = Field(default=None, min_length=64, max_length=64)
+    revision_written_at: datetime | None = None
 
 
 class SecureObjectNamespaceIntegrity(BaseModel):
@@ -473,7 +479,8 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             stmt = text(
                 "SELECT id, namespace, object_key, classification, schema_version, "
-                "written_at, payload "
+                "written_at, payload, revision_id, previous_revision_id, previous_payload_hash, "
+                "payload_hash, ciphertext_hash, revision_written_at "
                 "FROM secure_objects "
                 "ORDER BY namespace, object_key"
             ).execution_options(yield_per=batch_size)
@@ -501,6 +508,11 @@ class SecureObjectRepository:
                     payload_value = payload_raw.encode("utf-8")
                 else:
                     payload_value = bytes(payload_raw)
+                revision_written_at_raw = raw.revision_written_at
+                if isinstance(revision_written_at_raw, str):
+                    revision_written_at_value = datetime.fromisoformat(revision_written_at_raw)
+                else:
+                    revision_written_at_value = revision_written_at_raw
                 yield SecureObjectRawRow(
                     row_id=int(raw.id),
                     namespace=str(raw.namespace),
@@ -509,6 +521,12 @@ class SecureObjectRepository:
                     schema_version=int(raw.schema_version),
                     written_at=written_at_value,
                     payload=payload_value,
+                    revision_id=raw.revision_id,
+                    previous_revision_id=raw.previous_revision_id,
+                    previous_payload_hash=raw.previous_payload_hash,
+                    payload_hash=raw.payload_hash,
+                    ciphertext_hash=raw.ciphertext_hash,
+                    revision_written_at=revision_written_at_value,
                 )
 
     def list_namespaces(self) -> tuple[str, ...]:
