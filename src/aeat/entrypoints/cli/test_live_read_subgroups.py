@@ -11,6 +11,7 @@ import pytest
 from typer.testing import CliRunner
 
 from aeat.adapters.persistence.storage.sql.engine import dispose_engine
+from aeat.application.auth import LiveAuthPreflightReport
 from aeat.application.live import (
     Borrador100SnapshotService,
     IvaRemoteStateAcquisitionReport,
@@ -27,6 +28,7 @@ from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import override_settings
 from aeat.entrypoints.cli._app_live import (
     _iva_remote_state_capture_lines,
+    _live_auth_preflight_lines,
     _live_iva_outcome_label,
     borrador_100_app,
     expedientes_app,
@@ -58,6 +60,21 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 @pytest.fixture
 def cli_runner() -> CliRunner:
     return CliRunner()
+
+
+def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
+    report = LiveAuthPreflightReport(
+        provider="clave_movil",
+        configured=True,
+        available=True,
+        active_profile="operator-private-profile-id",
+        active_profile_status="ready",
+    )
+
+    lines = _live_auth_preflight_lines(report)
+
+    assert "auth_active_profile=<profile-id>" in lines
+    assert all("operator-private-profile-id" not in line for line in lines)
 
 
 class TestExpedientesSubgroup:

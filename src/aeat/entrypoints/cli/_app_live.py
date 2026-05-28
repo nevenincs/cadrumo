@@ -126,7 +126,7 @@ def _live_auth_preflight_lines(report: LiveAuthPreflightReport) -> tuple[str, ..
         _metric_line("auth_provider", report.provider),
         _metric_line("auth_configured", report.configured),
         _metric_line("auth_available", report.available),
-        _metric_line("auth_active_profile", report.active_profile),
+        _metric_line("auth_active_profile", "<profile-id>" if report.active_profile else ""),
         _metric_line("auth_active_profile_status", report.active_profile_status),
         _metric_line("auth_active_profile_registered", report.active_profile_registered),
         _metric_line("auth_active_profile_record_present", report.active_profile_record_present),
