@@ -14,6 +14,8 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S05]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S06]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S07]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S08]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S09]]'
 ---
 
 # `centralized-output-redaction` Code Review

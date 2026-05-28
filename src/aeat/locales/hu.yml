@@ -322,7 +322,7 @@ application:
         %{work_unit_id}.'
     findings:
       m210_baseline_tipo_deferred:
-        next_action: application.modelo.findings.m210_baseline_tipo_deferred.next_action
+        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben). Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti ezt a sort.'
       m210_convenio_rate_missing:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
