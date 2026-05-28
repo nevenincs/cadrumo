@@ -53,7 +53,7 @@ from ...domain.calculations.registry import (
     input_casilla_alias_map,
     materialize_relation_binding_values,
 )
-from ...domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
+from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -67,6 +67,7 @@ from ...domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ...domain.modelos._codes import ModeloCode
+from ...core.errors import CoreValidationError
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
@@ -189,6 +190,17 @@ def _emit_bucket_event(
     catalogue = repository.load()
     repository.save(append_bucket_event(catalogue, event))
     return event
+
+
+class WorkflowInputMismatchError(CoreValidationError):
+    """Raised when a workflow input request does not match the calculation revision.
+
+    The :class:`_RevisionInputsProvider` gate enforces that the modelo code
+    and period supplied by the workflow engine at runtime equal the values
+    baked into the revision when it was created.  Any deviation signals a
+    programming error or a stale work-unit reference and must be rejected
+    before the inputs are handed to the engine.
+    """
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -398,7 +410,15 @@ class _RevisionInputsProvider:
     ) -> ModeloInputs:
         del profile
         if modelo != self._modelo or period != self._period:
-            raise ValueError("workflow input request does not match calculation revision")
+            raise WorkflowInputMismatchError(
+                "workflow input request does not match calculation revision",
+                context={
+                    "expected_modelo": self._modelo,
+                    "expected_period": self._period,
+                    "requested_modelo": modelo,
+                    "requested_period": period,
+                },
+            )
         return {
             **dict(self._revision.inputs_snapshot),
             **dict(self._revision.binding_overrides),
@@ -2330,6 +2350,16 @@ _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
 _PREDICATE_IMPLIES_NONZERO = _re.compile(
     r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$"
 )
+# profile_field_required("field_name", "applicability_filter") —
+# profile-state-aware conditional non-zero requirement; sibling of
+# implies_nonzero per the dsl-conditional-predicate ADR. The
+# applicability filter is dispatched via _evaluate_applicability_filter
+# against the TaxpayerProfile threaded through the verification pipeline.
+# First use site: M210 representante-fiscal gate per
+# m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
+_PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(
+    r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$'
+)
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
@@ -2348,9 +2378,34 @@ def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
     return ids
 
 
+def _evaluate_applicability_filter(
+    filter_name: str, profile: TaxpayerProfile
+) -> bool:
+    """Return True iff the profile state matches the named applicability filter.
+
+    Used by ``profile_field_required`` predicates to gate whether the
+    field-presence requirement applies to a given profile. Adding a
+    new filter is a deliberate authoring decision: the dispatch table
+    here is the single source of truth, and an unknown filter name
+    raises ``ValueError`` rather than silently passing (mirrors the
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS gate).
+    """
+    if filter_name == "non_resident_irnr_non_eea":
+        # TRLIRNR Art 10 letter applies only to non-EU residents.
+        # Phase 1 uses the broader ue_eee_status per m210-irnr-full-engine
+        # ADR §D2.5 escape hatch: EEA residents are exempt because of the
+        # bilateral mutual-assistance regime.
+        return (
+            profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and not profile.ue_eee_status
+        )
+    raise ValueError(f"Unknown applicability filter: {filter_name!r}")
+
+
 def _evaluate_predicate_expression(
     expression: str,
     casilla_values: Mapping[str, Decimal],
+    profile: TaxpayerProfile,
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
 
@@ -2364,6 +2419,9 @@ def _evaluate_predicate_expression(
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with strictly-positive antecedent: predicate holds iff
       antecedent <= 0 OR consequent != 0.
+    - ``profile_field_required("field_name", "applicability_filter")`` —
+      profile-state-aware conditional non-zero requirement; sibling of
+      ``implies_nonzero`` per the dsl-conditional-predicate ADR.
 
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The
@@ -2425,6 +2483,22 @@ def _evaluate_predicate_expression(
             return True
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent != Decimal(0)
+
+    m = _PREDICATE_PROFILE_FIELD_REQUIRED.match(expr)
+    if m:
+        field_name = m.group("field")
+        filter_name = m.group("filter")
+        # Applicability dispatch: filter_name -> profile-predicate function.
+        # An unknown filter raises ValueError (single source of truth in the
+        # dispatch table) rather than silently passing the predicate.
+        if not _evaluate_applicability_filter(filter_name, profile):
+            return True  # rule doesn't apply; predicate trivially holds
+        field_value = getattr(profile, field_name, None)
+        if field_value is None or (
+            isinstance(field_value, str) and not field_value.strip()
+        ):
+            return False  # rule applies but field is empty / missing
+        return True
 
     return True
 
@@ -2657,8 +2731,15 @@ def _evaluate_advisory_predicate_fires(
 def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
     casilla_values: Mapping[str, Decimal],
+    profile: TaxpayerProfile,
 ) -> list[ModeloVerificationFinding]:
-    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories."""
+    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories.
+
+    ``profile`` is threaded through to support profile-state-aware
+    predicate operators such as ``profile_field_required`` (m210
+    representante-fiscal gate per ADR §D2.5). Casilla-only operators
+    ignore the parameter.
+    """
     if not predicates:
         return []
 
@@ -2678,7 +2759,9 @@ def _evaluate_verification_predicates(
                     )
                 )
         else:
-            if not _evaluate_predicate_expression(predicate.expression, casilla_values):
+            if not _evaluate_predicate_expression(
+                predicate.expression, casilla_values, profile
+            ):
                 findings.append(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -2799,6 +2882,7 @@ def verify_modelo_revision(
     findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
+        profile=workflow_profile,
     )
     blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -2892,6 +2976,7 @@ def _collect_revision_verification_findings(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
+    profile: TaxpayerProfile,
 ) -> tuple[list[ModeloVerificationFinding], list[str], list[str]]:
     """Build the verification finding list for one calculation revision.
 
@@ -2958,6 +3043,7 @@ def _collect_revision_verification_findings(
         _evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
             target.casilla_values,
+            profile,
         )
     )
 

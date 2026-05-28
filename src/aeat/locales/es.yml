@@ -332,7 +332,8 @@ application:
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
-      iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo 303 (%{divergence}): %{reason}'
+      iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo
+        303 (%{divergence}): %{reason}'
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
@@ -352,10 +353,16 @@ application:
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
-      cross_casilla_invariant_next_action: 'Ensure all casillas required by predicate %{predicate_id} are non-zero before verifying.'
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated: %{expression}'
-      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id} = %{ingreso_value} pero casilla %{reduccion_id} (reduccion trabajo) es cero. Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones anteriores al 31-dic-2006, puede aplicar la reduccion del 40%% DT 12a LIRPF.'
-      iva_wallet_next_action: 'Revise la decision de conciliacion del saldo IVA antes de verificar o exportar este Modelo 303.'
+      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
+        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
+        = %{ingreso_value} pero casilla %{reduccion_id} (reduccion trabajo) es cero.
+        Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones
+        anteriores al 31-dic-2006, puede aplicar la reduccion del 40%% DT 12a LIRPF.'
+      iva_wallet_next_action: Revise la decision de conciliacion del saldo IVA antes
+        de verificar o exportar este Modelo 303.
       m210_baseline_tipo_deferred:
         next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
           aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
@@ -373,7 +380,8 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
-      registry_snapshot_unresolved: 'registry snapshot for modelo=%{modelo} filing_year=%{filing_year} period=%{period} could not be resolved'
+      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
+        period=%{period} could not be resolved
   overview:
     explain:
       errors:
@@ -3241,6 +3249,7 @@ errors:
     refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
       no superaron la validación.
     refused_output_format: El formato de salida solicitado no es compatible.
+    refused_pension_reduccion_computation: 'A pension reducción computation input violated a numeric pre-condition. Correct the supplied amounts.'
     refused_profile_already_exists: Ya existe un perfil con esos datos.
     refused_profile_asset_validation: Un registro de activo del perfil no superó la
       validación.
@@ -3303,6 +3312,7 @@ errors:
     refused_wizard_validation: Una respuesta del asistente no superó la validación.
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.
+    refused_workflow_input_mismatch: 'The workflow input request does not match the calculation revision. Run aeat app modelo work calculate to produce a fresh revision.'
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.

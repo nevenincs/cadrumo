@@ -332,7 +332,8 @@ application:
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
-      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}): %{reason}'
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
+        %{reason}'
       iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
         IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
         el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
@@ -352,10 +353,14 @@ application:
         mateix modelo, any i periode per continuar.
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
     findings:
-      cross_casilla_invariant_next_action: 'Ensure all casillas required by predicate %{predicate_id} are non-zero before verifying.'
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated: %{expression}'
-      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id} = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
-      iva_wallet_next_action: 'Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.'
+      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
+        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
+        = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
+      iva_wallet_next_action: Review the IVA wallet reconciliation decision before
+        verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
         next_action: 'El tipus de gravamen baseline per a tipo_renta={tipo_renta}
           esta ajornat a una Fase futura sota la task #229 (corpus BOE pendent). Establiu
@@ -373,7 +378,8 @@ application:
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
-      registry_snapshot_unresolved: 'registry snapshot for modelo=%{modelo} filing_year=%{filing_year} period=%{period} could not be resolved'
+      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
+        period=%{period} could not be resolved
   overview:
     explain:
       errors:
@@ -3214,6 +3220,7 @@ errors:
     refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
       no han superat la validació.
     refused_output_format: El format de sortida sol·licitat no és compatible.
+    refused_pension_reduccion_computation: 'A pension reducción computation input violated a numeric pre-condition. Correct the supplied amounts.'
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
     refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
       la validació.
@@ -3277,6 +3284,7 @@ errors:
     refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
       Corregeix el valor indicat.
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
+    refused_workflow_input_mismatch: 'The workflow input request does not match the calculation revision. Run aeat app modelo work calculate to produce a fresh revision.'
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
   snapshot:
