@@ -19,6 +19,7 @@ from decimal import Decimal, InvalidOperation
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core.i18n import tr
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
@@ -26,6 +27,7 @@ from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 from ..live import (
     Borrador100Snapshot,
@@ -36,6 +38,7 @@ from ..live import (
 )
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 class Modelo100BorradorBindingError(ModeloError):
@@ -199,19 +202,27 @@ class Modelo100BorradorSourceResolver:
                 filing_year=context.filing_year,
                 period=context.period,
             )
-        result = resolve_modelo_100_borrador_bindings(
-            Modelo100BorradorBindingCommand(
-                bucket_id=context.bucket_id,
-                modelo=context.modelo,
-                filing_year=context.filing_year,
-                period=context.period,
-                borrador_snapshot_id=self._borrador_snapshot_id,
-                caller_binding_values=self._caller_binding_values,
-                caller_enum_binding_values=self._caller_enum_binding_values,
-            ),
-            registry_snapshot=snapshot,
-            snapshot_repository=self._snapshot_repository,
-        )
+        try:
+            result = resolve_modelo_100_borrador_bindings(
+                Modelo100BorradorBindingCommand(
+                    bucket_id=context.bucket_id,
+                    modelo=context.modelo,
+                    filing_year=context.filing_year,
+                    period=context.period,
+                    borrador_snapshot_id=self._borrador_snapshot_id,
+                    caller_binding_values=self._caller_binding_values,
+                    caller_enum_binding_values=self._caller_enum_binding_values,
+                ),
+                registry_snapshot=snapshot,
+                snapshot_repository=self._snapshot_repository,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         fingerprint = (
             f"sha256:{hashlib.sha256(result.borrador_snapshot_id.encode('utf-8')).hexdigest()}"
             if result.borrador_snapshot_id is not None

@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from datetime import date
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry import InvoiceObservation, resolve_invoice_binding_values
 from ...domain.invoices import Invoice, InvoiceCatalogueRepository, InvoiceKind
 from ...domain.iva import IvaCategory
@@ -12,9 +13,11 @@ from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 
 _OWNED_SOURCES = ("collectible_invoice", "payable_invoice")
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 class InvoiceCatalogueSourceResolver:
@@ -32,9 +35,18 @@ class InvoiceCatalogueSourceResolver:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
         repository = self._invoice_repository or InvoiceCatalogueRepository()
+        try:
+            catalogue = repository.load()
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=tuple(active_sources),
+                error=exc,
+            )
         source_invoices = tuple(
             invoice
-            for invoice in repository.load().values()
+            for invoice in catalogue.values()
             if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
         )
         observed = tuple(

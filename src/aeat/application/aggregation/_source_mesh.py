@@ -10,16 +10,20 @@ from typing import Literal, Protocol, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...core.i18n import tr
+from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+_log = get_logger(__name__)
 
 CalculationSourceDiagnosticReason = Literal[
     "duplicate_binding_owner",
     "duplicate_bound_casilla_owner",
     "duplicate_relation_owner",
     "source_issue",
+    "storage_degraded",
     "unhandled_binding_source",
 ]
 
@@ -227,6 +231,38 @@ def collect_unhandled_source_diagnostics(
     return tuple(diagnostics)
 
 
+def storage_degradation_resolution(
+    *,
+    resolver_id: str,
+    owned_sources: tuple[str, ...],
+    source_kinds: Sequence[str],
+    error: BaseException,
+) -> CalculationSourceResolution:
+    """Return an empty source resolution carrying secure-storage degradation diagnostics."""
+
+    normalized_sources = tuple(sorted({source.strip() for source in source_kinds if source.strip()}))
+    _log.debug(
+        "source mesh resolver storage degradation resolver_id=%s source_kinds=%s error_type=%s",
+        resolver_id,
+        ",".join(normalized_sources),
+        type(error).__name__,
+        exc_info=(type(error), error, error.__traceback__),
+    )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        diagnostics=tuple(
+            CalculationSourceDiagnostic(
+                reason="storage_degraded",
+                source_kind=source_kind,
+                resolver_id=resolver_id,
+                message=tr("errors.integrity.integrity_storage_secure_object_unreadable"),
+            )
+            for source_kind in normalized_sources
+        ),
+    )
+
+
 def _claim_binding(owners: dict[str, str], binding_id: str, resolver_id: str) -> None:
     existing = owners.get(binding_id)
     if existing is None:
@@ -269,4 +305,5 @@ __all__ = [
     "ModeloSourceResolver",
     "collect_unhandled_source_diagnostics",
     "merge_source_resolutions",
+    "storage_degradation_resolution",
 ]
