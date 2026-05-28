@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.config import Settings
+from .._storage_paths import storage_path
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -37,14 +38,8 @@ class EvidenceBundleVerificationReport(BaseModel):
     completeness_ratio: float = Field(ge=0.0, le=1.0)
 
 
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    root = settings.aeat_audit_dir / "evidence-bundles"
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.jsonl"
-
-
 def _load(settings: Settings, bucket_id: str) -> list[EvidenceBundle]:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_audit_dir / "evidence-bundles", bucket_id)
     if not path.exists():
         return []
     return [
@@ -55,7 +50,7 @@ def _load(settings: Settings, bucket_id: str) -> list[EvidenceBundle]:
 
 
 def _save(settings: Settings, bucket_id: str, bundles: list[EvidenceBundle]) -> None:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_audit_dir / "evidence-bundles", bucket_id)
     payload = "\n".join(b.model_dump_json() for b in bundles)
     if payload:
         payload += "\n"

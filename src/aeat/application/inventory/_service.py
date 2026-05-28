@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -25,6 +24,7 @@ from ...domain.profile.inventory import (
     compute_inventory_valuation,
     parse_valuation_method,
 )
+from .._storage_paths import storage_path
 from ._errors import (
     InventoryActividadConflictError,
     InventoryActividadNotFoundError,
@@ -132,21 +132,15 @@ def _emit_inventory_event(
     return event.event_id
 
 
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    root = settings.aeat_ledgers_dir / "inventory"
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.json"
-
-
 def _load_document(settings: Settings, bucket_id: str) -> InventoryLedgerDocument:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_ledgers_dir / "inventory", bucket_id, extension=".json")
     if not path.exists():
         return InventoryLedgerDocument(ledgers=())
     return InventoryLedgerDocument.model_validate_json(path.read_text(encoding="utf-8"))
 
 
 def _save_document(settings: Settings, bucket_id: str, document: InventoryLedgerDocument) -> None:
-    path = _storage_path(settings, bucket_id)
+    path = storage_path(settings.aeat_ledgers_dir / "inventory", bucket_id, extension=".json")
     path.write_text(document.model_dump_json(indent=2), encoding="utf-8")
 
 

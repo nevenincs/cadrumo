@@ -243,16 +243,16 @@ asserts every caller now imports from the canonical home.
 - [x] `W01.P05.S140` - extend the test surface to cover every migrated call-site under its real boundary; `src/aeat/adapters/persistence/storage/bucket/test_manifest.py`.
 - [x] `W01.P05.S141` - move `_now` / `_utcnow` to `aeat.core.time._clock`; `delete the six local copies; `src/aeat/core/time/_clock.py`.
 - [x] `W01.P05.S142` - add real-behavior test asserting every former call-site reads the canonical clock; `src/aeat/core/time/test_clock.py`.
-- [ ] `W01.P05.S143` - parametrize `_storage_path` into one shared helper under `aeat.application._storage_paths`; `delete the seven local copies; `src/aeat/application/_storage_paths.py`.
-- [ ] `W01.P05.S144` - add real-behavior test asserting the helper produces the historical path layout for every former caller's root; `src/aeat/application/test_storage_paths.py`.
+- [x] `W01.P05.S143` - parametrize `_storage_path` into one shared helper under `aeat.application._storage_paths`; `delete the seven local copies; `src/aeat/application/_storage_paths.py`.
+- [x] `W01.P05.S144` - add real-behavior test asserting the helper produces the historical path layout for every former caller's root; `src/aeat/application/test_storage_paths.py`.
 - [x] `W01.P05.S145` - move `_round_to_cents` to `aeat.domain.fincas._rounding`; `delete the two peer copies in `_amortization_ledger.py` and `_expense_rollup.py`; `src/aeat/domain/fincas/_rounding.py`.
 - [x] `W01.P05.S146` - add real-behavior test asserting fincas rounding behaves under representative Decimal inputs; `src/aeat/domain/fincas/test_rounding.py`.
 - [x] `W01.P05.S147` - reconcile `_parse_bool` signatures (`bool` vs `bool | None`); `move canonical version to `aeat.core.parsing._utils`; `src/aeat/core/parsing/_utils.py`.
 - [x] `W01.P05.S148` - add real-behavior test asserting `_parse_bool` rejects unknown tokens and round-trips truthy / falsy inputs per call-site contract; `src/aeat/core/parsing/test_utils.py`.
 - [ ] `W01.P05.S149` - keep `_parse_date` variants distinct as `_parse_iso8601_date` and `_parse_ddmmyyyy_date`; `co-locate under `aeat.core.parsing._dates`; `src/aeat/core/parsing/_dates.py`.
 - [ ] `W01.P05.S150` - add real-behavior test asserting each date variant rejects the foreign format; `src/aeat/core/parsing/test_dates.py`.
-- [ ] `W01.P05.S151` - consolidate `_format_decimal` into `aeat.core.decimal._format`; `delete the four peer copies; `src/aeat/core/decimal/_format.py`.
-- [ ] `W01.P05.S152` - add real-behavior test asserting decimal-format produces stable output for representative values; `src/aeat/core/decimal/test_format.py`.
+- [x] `W01.P05.S151` - consolidate `_format_decimal` into `aeat.core.decimal._format`; `delete the four peer copies; `src/aeat/core/decimal/_format.py`.
+- [x] `W01.P05.S152` - add real-behavior test asserting decimal-format produces stable output for representative values; `src/aeat/core/decimal/test_format.py`.
 - [ ] `W01.P05.S153` - reconcile `_coerce_decimal` signatures; `canonicalize under `aeat.core.decimal._coerce`; delete the three peer copies; `src/aeat/core/decimal/_coerce.py`.
 - [ ] `W01.P05.S154` - add real-behavior test asserting coerce-decimal handles None / int / str / Decimal / malformed inputs per the canonical signature; `src/aeat/core/decimal/test_coerce.py`.
 

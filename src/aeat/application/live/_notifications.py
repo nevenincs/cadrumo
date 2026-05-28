@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -47,6 +46,7 @@ from ...adapters.outbound.aeat.sede._notifications import (
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
 from ...core.time import _now
+from .._storage_paths import storage_path
 from ._snapshot_base import (
     JsonlSnapshotRepository,
     SnapshotNotFoundError,
@@ -76,12 +76,6 @@ class PersistedNotificationsSnapshot(BaseModel):
     persisted_at: datetime
 
 
-def _storage_path(settings: Settings, bucket_id: str) -> Path:
-    root = settings.aeat_audit_dir / "live" / "notifications"
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.jsonl"
-
-
 def _derive_snapshot_id(snapshot: NotificationsSnapshot) -> str:
     canonical = snapshot.model_dump_json()
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
@@ -93,7 +87,7 @@ def _notifications_repository(
     return JsonlSnapshotRepository(
         bucket_id=bucket_id,
         payload_model=PersistedNotificationsSnapshot,
-        storage_path=lambda bucket: _storage_path(settings, bucket),
+        storage_path=lambda bucket: storage_path(settings.aeat_audit_dir / "live" / "notifications", bucket),
         not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
             f"no notifications snapshot matches {snapshot_id!r} in bucket {bucket_id!r}",
             suggestion="aeat app live notifications list",

@@ -28,7 +28,6 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -41,6 +40,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
+from .._storage_paths import storage_path
 
 
 class BusinessOperationInvoiceSourceKind(StrEnum):
@@ -283,16 +283,10 @@ def _emit_invoice_event(
     return event.event_id
 
 
-def _storage_path(settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str) -> Path:
-    root = settings.aeat_invoices_dir / kind.value
-    root.mkdir(parents=True, exist_ok=True)
-    return root / f"{bucket_id}.jsonl"
-
-
 def _load(
     settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str
 ) -> list[BusinessOperationInvoice]:
-    path = _storage_path(settings, kind, bucket_id)
+    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
     if not path.exists():
         return []
     records: list[BusinessOperationInvoice] = []
@@ -309,7 +303,7 @@ def _save(
     bucket_id: str,
     records: list[BusinessOperationInvoice],
 ) -> None:
-    path = _storage_path(settings, kind, bucket_id)
+    path = storage_path(settings.aeat_invoices_dir / kind.value, bucket_id)
     payload = "\n".join(record.model_dump_json() for record in records)
     if payload:
         payload += "\n"
