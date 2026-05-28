@@ -11,6 +11,11 @@
 # - ganancia_patrimonial    → 19% (TRLIRNR Art 25.1.f, savings-base rate)
 # - inmobiliaria            → 24% (TRLIRNR Art 25.1.a; deduction routing
 #                                  via Art 24.5 deferred to Phase 2)
+# - interest                → 24% (TRLIRNR Art 25.1.a non-EU third-country
+#                                  fallback; UE/EEE residents already
+#                                  match the 19% ue_residente row. Added
+#                                  per architect-2 task #65 coherence
+#                                  verdict on 2026-05-28.)
 #
 # Phase 2 tipos deferred (pension via Art 25.1.b — corpus-blocked under
 # task #229 — and any further branches) are intentionally absent from
@@ -57,6 +62,12 @@ valid_to = 2025-12-31
 
 [[revisions."2025".parameters.keyed_brackets]]
 key = "inmobiliaria"
+value = "0.24"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+
+[[revisions."2025".parameters.keyed_brackets]]
+key = "interest"
 value = "0.24"
 valid_from = 2025-01-01
 valid_to = 2025-12-31

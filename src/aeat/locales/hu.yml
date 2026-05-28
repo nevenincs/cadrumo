@@ -321,6 +321,8 @@ application:
       work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
     findings:
+      m210_baseline_tipo_deferred:
+        next_action: application.modelo.findings.m210_baseline_tipo_deferred.next_action
       m210_convenio_rate_missing:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
@@ -3942,10 +3944,10 @@ wizard:
             label: Egyéb jogi forma
           sa:
             label: Részvénytársaság (S.A.)
-          sin-fines-lucrativos:
-            label: Nonprofit szervezet
           sal:
             label: Munkavállalói tulajdonú részvénytársaság (S.A.L.)
+          sin-fines-lucrativos:
+            label: Nonprofit szervezet
           sl:
             label: Korlátolt felelősségű társaság (S.L.)
           sll:
