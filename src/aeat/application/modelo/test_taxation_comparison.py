@@ -264,6 +264,20 @@ def test_taxation_comparison_error_is_registered_and_envelopes() -> None:
     assert envelope.schema_version == "1"
 
 
+def test_taxation_comparison_module_imports_cleanly() -> None:
+    """aeat.application.modelo._taxation_comparison must import without error.
+
+    Exercises that the module's top-level imports and TYPE_CHECKING block
+    clean-up (S155) did not break the production import path.
+    """
+    import importlib
+
+    mod = importlib.import_module("aeat.application.modelo._taxation_comparison")
+    assert hasattr(mod, "compare_taxation_modes")
+    assert hasattr(mod, "TaxationComparisonResult")
+    assert hasattr(mod, "TaxationComparisonError")
+
+
 def test_comparison_error_raised_for_non_m100_snapshot() -> None:
     """compare_taxation_modes raises TaxationComparisonError for non-M100 snapshots.
 
