@@ -11,6 +11,8 @@ from io import StringIO
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ._errors import ExportFieldError, ExportFormatError
+
 
 class ExportSerializationFormat(StrEnum):
     """Supported backend export serialization formats."""
@@ -38,9 +40,9 @@ class TabularExportResult(BaseModel):
     def _validate_fieldnames(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         normalized = tuple(field.strip() for field in value)
         if any(not field for field in normalized):
-            raise ValueError("fieldnames must not contain blank values")
+            raise ExportFieldError("fieldnames must not contain blank values")
         if len(set(normalized)) != len(normalized):
-            raise ValueError("fieldnames must not contain duplicates")
+            raise ExportFieldError("fieldnames must not contain duplicates")
         return normalized
 
     @field_validator("sha256")
@@ -71,7 +73,7 @@ def serialize_tabular_rows(
         media_type = "application/x-ndjson"
         extension = "jsonl"
     else:  # pragma: no cover - closed enum defensive guard
-        raise ValueError(f"unsupported export format: {export_format!r}")
+        raise ExportFormatError(f"unsupported export format: {export_format!r}")
     return TabularExportResult(
         format=export_format,
         media_type=media_type,
@@ -87,18 +89,18 @@ def serialize_tabular_rows(
 def _normalize_fieldnames(fieldnames: Sequence[str]) -> tuple[str, ...]:
     normalized = tuple(field.strip() for field in fieldnames)
     if not normalized:
-        raise ValueError("fieldnames must not be empty")
+        raise ExportFieldError("fieldnames must not be empty")
     if any(not field for field in normalized):
-        raise ValueError("fieldnames must not contain blank values")
+        raise ExportFieldError("fieldnames must not contain blank values")
     if len(set(normalized)) != len(normalized):
-        raise ValueError("fieldnames must not contain duplicates")
+        raise ExportFieldError("fieldnames must not contain duplicates")
     return normalized
 
 
 def _normalize_row(row: Mapping[str, str], *, fieldnames: tuple[str, ...]) -> dict[str, str]:
     unknown = sorted(set(row).difference(fieldnames))
     if unknown:
-        raise ValueError(f"row contains unknown fields: {unknown!r}")
+        raise ExportFieldError(f"row contains unknown fields: {unknown!r}")
     return {field: str(row.get(field, "")) for field in fieldnames}
 
 
