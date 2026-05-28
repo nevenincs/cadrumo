@@ -27,6 +27,7 @@ from aeat.application.workflow._persistence import workflow_state_repository
 from aeat.core.config import override_settings
 from aeat.entrypoints.cli._app_live import (
     _iva_remote_state_capture_lines,
+    _live_iva_outcome_label,
     borrador_100_app,
     expedientes_app,
     iva_wallet_app,
@@ -186,6 +187,15 @@ class TestReadOnlyStructuralInvariants:
 
 
 class TestIvaRemoteStateCliSurface:
+    def test_every_live_iva_outcome_has_operator_label(self) -> None:
+        for mode in LiveIvaAcquisitionFailureMode:
+            label = _live_iva_outcome_label(mode)
+
+            assert label
+            assert "cli.app.live.iva_wallet.acquisition.outcome" not in label
+            if mode is not LiveIvaAcquisitionFailureMode.UNKNOWN:
+                assert label != _live_iva_outcome_label(LiveIvaAcquisitionFailureMode.UNKNOWN)
+
     def test_iva_wallet_remote_state_command_is_registered_as_read_capture(self) -> None:
         registered = {info.name for info in iva_wallet_app.registered_commands}
 
