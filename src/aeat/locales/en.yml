@@ -3046,6 +3046,7 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+    refused_auth_diagnostic_phone_state: 'The phone state value provided is not recognised. Use one of the valid operator phone-state values.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
