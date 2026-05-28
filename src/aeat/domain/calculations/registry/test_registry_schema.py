@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
@@ -26,8 +27,10 @@ from ._schema import (
     ExportFieldDefinition,
     ExtractionTargetDefinition,
     FormulaExpression,
+    KeyedBracketEntry,
     ModeloDefinition,
     ModeloRevision,
+    ParameterDefinition,
     SupportRemovalDecisionDefinition,
     VerificationPredicateDefinition,
 )
@@ -1273,3 +1276,100 @@ def test_deadline_window_any_mode_requires_conditions() -> None:
 
     with pytest.raises(ValueError, match="any-mode requires applicability conditions"):
         type(window).model_validate(payload)
+
+
+# ---------------------------------------------------------------------------
+# keyed_bracket_table parameter shape (W09.P41.S388)
+#
+# Sister shape to bracket_table for parameters that dispatch on a
+# categorical enum key rather than a numeric interval. First consumer:
+# M210 IRNR m210-tipo-gravamen-2025 (tipo_renta → rate).
+# ---------------------------------------------------------------------------
+
+
+def _keyed_bracket(key: str, value: str = "0.24") -> KeyedBracketEntry:
+    return KeyedBracketEntry(
+        key=key,
+        value=Decimal(value),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+
+
+def test_keyed_bracket_table_parses_with_distinct_keys() -> None:
+    """A keyed_bracket_table with two distinct keys parses cleanly."""
+    parameter = ParameterDefinition(
+        id="test-keyed-rate-table",
+        data_type="keyed_bracket_table",
+        unit="percent",
+        keyed_brackets=(
+            _keyed_bracket("general", "0.24"),
+            _keyed_bracket("ue_residente", "0.19"),
+        ),
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+    assert parameter.data_type == "keyed_bracket_table"
+    assert len(parameter.keyed_brackets) == 2
+    assert parameter.keyed_brackets[0].key == "general"
+    assert parameter.keyed_brackets[0].value == Decimal("0.24")
+    assert parameter.keyed_brackets[1].key == "ue_residente"
+    assert parameter.keyed_brackets[1].value == Decimal("0.19")
+
+
+def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
+    """A keyed_bracket_table with two rows sharing (key, valid_from) is rejected.
+
+    Anti-tautology: the duplicate fixture deliberately reuses the
+    SAME ``key`` AND the SAME ``valid_from`` across two rows with
+    different values. If the validator silently dedup'd or kept the
+    first row, the test would pass without surfacing the contract
+    violation. The expected outcome is RegistryValidationError —
+    the (key, valid_from) pair must be unique because the runtime
+    lookup is exact-match and a duplicate would make the result
+    non-deterministic.
+    """
+    with pytest.raises(RegistryValidationError, match="duplicate"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-duplicate",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            keyed_brackets=(
+                _keyed_bracket("general", "0.24"),
+                _keyed_bracket("general", "0.30"),
+            ),
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
+
+
+def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None:
+    """A keyed_bracket_table parameter cannot also carry numeric brackets.
+
+    The two shapes are mutually exclusive by design — a parameter
+    is either numeric-interval (``bracket_table``) or enum-keyed
+    (``keyed_bracket_table``), never both. Mixing produces an
+    ambiguous lookup contract; the validator rejects it at
+    construction time.
+    """
+    from ._schema import BracketEntry as _BracketEntry
+
+    numeric_bracket = _BracketEntry(
+        lower_bound=Decimal("0"),
+        upper_bound=Decimal("12450"),
+        fixed_addition=Decimal("0"),
+        marginal_rate=Decimal("0.19"),
+        valid_from=date(2025, 1, 1),
+        valid_to=date(2025, 12, 31),
+    )
+    with pytest.raises(RegistryValidationError, match="cannot mix"):
+        ParameterDefinition(
+            id="test-keyed-rate-table-mixed",
+            data_type="keyed_bracket_table",
+            unit="percent",
+            brackets=(numeric_bracket,),
+            keyed_brackets=(_keyed_bracket("general", "0.24"),),
+            legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+            source_refs=("aeat-modelo-210-procedure",),
+        )
