@@ -177,6 +177,10 @@ class CsvProvider(FinancialProvider):
     name = "CSV provider"
     supported_extensions = frozenset({".csv", ".txt"})
     source_format = SourceFormat.CSV
+    # Corpus fixtures are synthetic CSVs modelled on real bank export schemas;
+    # column-mapping fidelity is confirmed against published specifications.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate CSV structure, encoding, and layout support."""

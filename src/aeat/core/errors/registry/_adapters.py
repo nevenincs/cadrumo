@@ -743,6 +743,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.inbound.financial.providers._base.BankStatementParseError",
+        ErrorCode(
+            code="REFUSED_FINANCIAL_BANK_STATEMENT_PARSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_financial_bank_statement_parse",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.inbound.sanitizer._errors.SanitizerValidationError",
         ErrorCode(
             code="REFUSED_SANITIZATION_VALIDATION",

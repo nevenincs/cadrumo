@@ -96,6 +96,14 @@ class PdfN26Provider(FinancialProvider):
     name = "n26-pdf"
     supported_extensions = frozenset({".pdf"})
     source_format = SourceFormat.PDF
+    # Corpus PDFs are synthetic fixtures generated from sanitised text dumps
+    # from the portfolio-performance open-source test corpus (Kontoauszug01.txt,
+    # Kontoauszug06.txt, Kontoauszug07.txt). The line-structure family matches
+    # real N26 PDF layouts; no raw operator statement PDFs are held.
+    # Set provisional_pending_specimen = True when real operator PDFs are
+    # acquired to trigger the corpus upgrade gate.
+    verification_source = "synthetic_from_bank_published_text"
+    provisional_pending_specimen = False
 
     def validate_source(self, path: Path) -> ProviderValidation:
         """Validate that ``path`` is an N26 PDF statement with at least one row."""

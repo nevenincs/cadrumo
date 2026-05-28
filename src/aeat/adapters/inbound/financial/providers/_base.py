@@ -3,10 +3,37 @@
 Defines the :class:`FinancialProvider` ABC together with the validation
 record :class:`ProviderValidation`, the provider error hierarchy
 (:class:`FinancialProviderError`, :class:`InvalidFinancialSourceError`,
-:class:`UnsupportedFinancialSourceError`), and the parsing /
-provenance helpers concrete providers reuse to emit
+:class:`UnsupportedFinancialSourceError`, :class:`BankStatementParseError`),
+and the parsing / provenance helpers concrete providers reuse to emit
 :class:`aeat.domain.transactions.RawTransaction`
 records with consistent provenance.
+
+Provider corpus discipline
+--------------------------
+Every concrete :class:`FinancialProvider` subclass must declare two
+class-level corpus attributes:
+
+``verification_source``
+    A string literal describing how the corpus fixtures were obtained:
+
+    - ``"real_bank_corpus_pdf"`` — sanitised PDFs from real bank
+      statements held by the operator.
+    - ``"synthetic_from_bank_published_text"`` — PDFs generated from
+      sanitised text dumps published in third-party open-source corpora
+      (e.g., portfolio-performance); structure matches real layouts but
+      origin is reconstructed.
+    - ``"no_corpus"`` — no corpus is currently held.  The provider
+      **must** also set ``provisional_pending_specimen = True``.
+
+``provisional_pending_specimen``
+    ``True`` when no real-corpus PDF has been parsed to confirm the
+    provider produces correct output.  Providers with ``no_corpus`` must
+    set this ``True``; providers with a confirmed corpus round-trip set
+    it ``False``.
+
+The test suite in ``test_pdf_n26.py`` and the detection-invariant test
+enforce these attributes at collection time so a newly enrolled provider
+cannot silently ship without the declaration.
 """
 
 from __future__ import annotations
@@ -30,6 +57,13 @@ from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+#: Allowed values for :attr:`FinancialProvider.verification_source`.
+CorpusVerificationSource = Literal[
+    "real_bank_corpus_pdf",
+    "synthetic_from_bank_published_text",
+    "no_corpus",
+]
 
 
 class FinancialProviderError(AeatError):
@@ -59,6 +93,48 @@ class FinancialValidationError(FinancialProviderError, ValueError):
     pass
 
 
+class BankStatementParseError(FinancialProviderError):
+    """Raised when a bank statement PDF cannot be fully parsed.
+
+    Carries structured attributes that allow callers to assert on the
+    failure kind without parsing the message string — the same pattern
+    as :class:`aeat.adapters.inbound.declaracion._errors.DeclaracionParseError`
+    and :class:`aeat.domain.justificante._errors.JustificanteParseError`.
+
+    This error is appropriate for PDF-specific parse failures where the
+    document was accepted by format detection but extraction produced
+    incomplete or malformed results.  Low-level structural failures
+    (file unreadable, wrong bank marker) continue to raise
+    :class:`InvalidFinancialSourceError`.
+
+    Attributes:
+        missing: Tuple of field or row identifiers that produced no
+            match in the PDF text (e.g. a required header field absent).
+        malformed: Tuple of field identifiers whose captured value could
+            not be coerced to the target type (date, amount, currency).
+        ambiguous: Tuple of field identifiers that matched more than one
+            region in the PDF.
+        coverage: Fraction of expected transaction rows successfully
+            extracted (``Decimal``).  ``None`` when the error is not a
+            coverage failure.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        missing: tuple[str, ...] = (),
+        malformed: tuple[str, ...] = (),
+        ambiguous: tuple[str, ...] = (),
+        coverage: Decimal | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.missing: tuple[str, ...] = missing
+        self.malformed: tuple[str, ...] = malformed
+        self.ambiguous: tuple[str, ...] = ambiguous
+        self.coverage: Decimal | None = coverage
+
+
 class ProviderValidation(BaseModel):
     """Typed validation result returned before ingest.
 
@@ -84,13 +160,18 @@ class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
 
     Concrete subclasses must declare :attr:`name`,
-    :attr:`supported_extensions`, and :attr:`source_format` and
-    implement :meth:`ingest` plus :meth:`validate_source`. The shared
+    :attr:`supported_extensions`, :attr:`source_format`,
+    :attr:`verification_source`, and :attr:`provisional_pending_specimen`
+    and implement :meth:`ingest` plus :meth:`validate_source`. The shared
     :meth:`_build_provenance` helper centralises
     :class:`aeat.domain.transactions.RawProvenance`
     construction so every emitted
     :class:`aeat.domain.transactions.RawTransaction`
     carries consistent provenance metadata.
+
+    See the module docstring for the corpus discipline contract that
+    :attr:`verification_source` and :attr:`provisional_pending_specimen`
+    jointly enforce.
 
     Attributes:
         name: Stable provider identifier embedded in synthetic
@@ -98,11 +179,21 @@ class FinancialProvider(ABC):
         supported_extensions: Lowercase file extensions
             (including the leading dot) the provider accepts.
         source_format: Source-format enum used for provenance.
+        verification_source: Corpus provenance declaration; one of
+            ``"real_bank_corpus_pdf"``,
+            ``"synthetic_from_bank_published_text"``, or
+            ``"no_corpus"``.
+        provisional_pending_specimen: ``True`` when no confirmed corpus
+            round-trip has been performed for this provider.  Providers
+            with ``verification_source = "no_corpus"`` must set this
+            ``True``.
     """
 
     name: ClassVar[str]
     supported_extensions: ClassVar[frozenset[str]]
     source_format: ClassVar[SourceFormat]
+    verification_source: ClassVar[CorpusVerificationSource]
+    provisional_pending_specimen: ClassVar[bool]
 
     def can_handle(self, path: Path) -> bool:
         """Return whether the provider is a plausible match for ``path``.
