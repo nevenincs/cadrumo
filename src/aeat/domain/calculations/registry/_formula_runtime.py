@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
@@ -136,6 +136,7 @@ def calculate_registry_snapshot(
     enum_binding_values: Mapping[str, str] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     date_binding_values: Mapping[str, date] | None = None,
+    text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas in a validated registry snapshot.
 
@@ -161,6 +162,8 @@ def calculate_registry_snapshot(
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
     resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
+    resolved_text_inputs: Mapping[str, str] = text_inputs or {}
+    _reject_non_string(resolved_text_inputs, "text_input")
 
     revision = snapshot.revision
     _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
@@ -182,6 +185,30 @@ def calculate_registry_snapshot(
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    # Text-input casillas (e.g. an IRNR ``tipo_renta`` enum string) flow
+    # through a dedicated string-keyed channel into the eval context;
+    # the Decimal ``values`` map carries a Decimal(0) placeholder for
+    # the same casilla via ``_initial_values`` so existing
+    # value-coverage invariants stay intact. Reject unknown casilla ids
+    # and ids that point at non-text casillas so a caller's typo cannot
+    # silently strand the input.
+    text_casilla_ids = {
+        casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"
+    }
+    unknown_text_inputs = sorted(set(resolved_text_inputs).difference(casillas_by_id))
+    if unknown_text_inputs:
+        raise RegistryValidationError(
+            f"unknown text_input casilla ids: {unknown_text_inputs!r}",
+            translated_message="errors.calc.unknown_text_input_casillas",
+            context={"casilla_ids": ",".join(unknown_text_inputs)},
+        )
+    mistyped_text_inputs = sorted(set(resolved_text_inputs).difference(text_casilla_ids))
+    if mistyped_text_inputs:
+        raise RegistryValidationError(
+            f"text_input supplied for non-text casilla ids: {mistyped_text_inputs!r}",
+            translated_message="errors.calc.text_input_non_text_casillas",
+            context={"casilla_ids": ",".join(mistyped_text_inputs)},
+        )
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
@@ -205,6 +232,7 @@ def calculate_registry_snapshot(
                 enum_binding_values=resolved_enum_bindings,
                 date_binding_values=resolved_date_bindings,
                 filing_year=snapshot.filing_year,
+                text_values=resolved_text_inputs,
             )
             value = _apply_rounding(value, formula.rounding)
             target_casilla = casillas_by_id.get(target)
@@ -484,9 +512,11 @@ def _evaluate_expression(
     enum_binding_values: Mapping[str, str] | None = None,
     date_binding_values: Mapping[str, date] | None = None,
     filing_year: int = 0,
+    text_values: Mapping[str, str] | None = None,
 ) -> Decimal:
     resolved_enum_bindings: Mapping[str, str] = enum_binding_values or {}
     resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
+    resolved_text_values: Mapping[str, str] = text_values or {}
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -511,6 +541,7 @@ def _evaluate_expression(
         enum_binding_values=resolved_enum_bindings,
         date_binding_values=resolved_date_bindings,
         filing_year=filing_year,
+        text_values=resolved_text_values,
     )
     op = expression.op
     if op == "lookup_bracket":
@@ -549,6 +580,7 @@ class _EvalContext:
     enum_binding_values: Mapping[str, str]
     date_binding_values: Mapping[str, date]
     filing_year: int
+    text_values: Mapping[str, str] = field(default_factory=dict)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -565,6 +597,7 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         enum_binding_values=ctx.enum_binding_values,
         date_binding_values=ctx.date_binding_values,
         filing_year=ctx.filing_year,
+        text_values=ctx.text_values,
     )
 
 
