@@ -99,6 +99,12 @@ adapters:
         template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
           felülbíráláshoz adja meg a --modelo és --año értékeket.
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
+  sede:
+    errors:
+      empty_identity_nif: 'Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni az élő benyújtási megfigyelést.'
+      iva_wallet_empty_amount_cell: 'Az IVA kompenzációs tárca összeg cellája üres.'
+      iva_wallet_empty_period_cell: 'Az IVA kompenzációs tárca időszak cellája üres.'
+      no_auth_session: 'Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva; futtassa először az `aeat config auth status` parancsot.'
 aggregation:
   iva_ledger:
     errors:
@@ -322,7 +328,11 @@ application:
         %{work_unit_id}.'
     findings:
       m210_baseline_tipo_deferred:
-        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben). Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti ezt a sort.'
+        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs
+          egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben).
+          Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato
+          Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti
+          ezt a sort.'
       m210_convenio_rate_missing:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
@@ -1111,9 +1121,13 @@ cli:
           meg évet %{minimum} és %{maximum} között.
   common:
     errors:
+      draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.
+      no_active_profile_error_value: nincs-aktiv-profil
       period_empty: Az adóidőszak nem lehet üres.
       period_unrecognised: Ismeretlen időszak.
+    next:
+      create_profile_command: aeat config profile create NEV
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
@@ -2339,7 +2353,8 @@ cli:
     language_help: A felület nyelve (pl. hu, en, es).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor (%{dependency}). Futtasd: aeat config repair.'
+    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor
+      (%{dependency}). Futtasd: aeat config repair.'
     unavailable_app_help: Ez a parancs az aktuális konfigurációban nem érhető el.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
@@ -2596,7 +2611,9 @@ errors:
       {expected_kind} levélnek kell lennie.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
@@ -2618,6 +2635,8 @@ errors:
     error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
+    error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
+      mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modelo-nyilvántartás vezénylése meghiúsult vagy
       el lett utasítva.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
@@ -2631,6 +2650,7 @@ errors:
       vagy ellentmondásosak.
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
+    error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
     error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
     error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
@@ -2775,7 +2795,6 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    error_application_live_iva_surface_timeout: 'Az élő IVA-olvasási felület időtúllépett, mielőtt AEAT-bizonyítékot adott volna vissza.'
   fail:
     census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.

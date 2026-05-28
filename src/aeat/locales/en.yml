@@ -94,6 +94,12 @@ adapters:
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
           and --año to override.
         year_conflict: --año {year} conflicts with detected {detected}.
+  sede:
+    errors:
+      empty_identity_nif: 'AEAT session identity NIF is empty; cannot bind live filing observation.'
+      iva_wallet_empty_amount_cell: 'IVA compensation wallet amount cell is empty.'
+      iva_wallet_empty_period_cell: 'IVA compensation wallet period cell is empty.'
+      no_auth_session: 'AEAT auth session is missing or not persisted; run `aeat config auth status` first.'
 aggregation:
   iva_ledger:
     errors:
@@ -307,7 +313,10 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
       m210_baseline_tipo_deferred:
-        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence to claim the applicable Convenio rate, or wait for the baseline corpus to incorporate this row.'
+        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to
+          a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence
+          to claim the applicable Convenio rate, or wait for the baseline corpus to
+          incorporate this row.'
       m210_convenio_rate_missing:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
@@ -1049,9 +1058,13 @@ cli:
           %{minimum} and %{maximum}.
   common:
     errors:
+      draft_id_not_found: Draft ID %{draft_id} not found
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
+      no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
+    next:
+      create_profile_command: aeat config profile create NAME
   config:
     app_help: Manage local configuration and diagnostics
     auth:
@@ -2225,7 +2238,8 @@ cli:
     language_help: Interface language (e.g. en, es, ca).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    startup_import_error: 'Internal error: application module failed to load at startup (%{dependency}). Run aeat config repair.'
+    startup_import_error: 'Internal error: application module failed to load at startup
+      (%{dependency}). Run aeat config repair.'
     unavailable_app_help: This command is not available in the current configuration.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
@@ -2471,7 +2485,9 @@ errors:
       leaf.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: errors.calc.unsupported_comparison_op
     unsupported_op: errors.calc.unsupported_op
   censo:
@@ -2489,6 +2505,8 @@ errors:
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
+    error_application_live_iva_surface_timeout: Live IVA read surface timed out before
+      returning AEAT evidence.
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
@@ -2502,6 +2520,7 @@ errors:
       incomplete or contradictory.
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
+    error_config_boundary: The config command encountered an unexpected internal error.
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -2654,7 +2673,6 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
-    error_application_live_iva_surface_timeout: 'Live IVA read surface timed out before returning AEAT evidence.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.
