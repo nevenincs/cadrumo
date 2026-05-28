@@ -22,8 +22,16 @@ import json
 import pytest
 
 from .json_contract import OutputSchema, SchemaEnvelope, emit_json_success
+from .redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_OBJECT_KEY_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
+
+_PROFILE_ID = "123e4567-e89b-12d3-a456-426614174000"
+_NIF = "12345678Z"
+_JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+_URL = "https://example.test/private/path?token=secret"
+_OBJECT_KEY = "wallet:2026-secret"
+_OTHER_OBJECT_KEY = "wallet:2026-other"
 
 
 class _ProvenancePayload(OutputSchema):
@@ -40,6 +48,16 @@ class _ProvenancePayload(OutputSchema):
     formula_id: str | None = None
     operand_refs: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
+
+
+class _SensitivePayload(OutputSchema):
+    profile_id: str
+    bucket_id: str
+    object_key: str
+    tax_id: str
+    callback: str
+    authorization: str
+    keyed_lookup: dict[str, str]
 
 
 def test_schema_envelope_full_roundtrip_via_json_dump_and_load() -> None:
@@ -117,6 +135,58 @@ def test_emit_json_success_emits_parseable_envelope_to_stream() -> None:
     roundtripped = SchemaEnvelope[_ProvenancePayload].model_validate_json(raw)
     assert roundtripped.result == result
     assert roundtripped.result.operand_refs == ("ingresos", "gastos_deducibles")
+
+
+def test_emit_json_success_redacts_sensitive_values_without_breaking_envelope_shape() -> None:
+    result = _SensitivePayload(
+        profile_id=_PROFILE_ID,
+        bucket_id="bucket-alpha",
+        object_key=_OBJECT_KEY,
+        tax_id=_NIF,
+        callback=_URL,
+        authorization=f"bearer {_JWT}",
+        keyed_lookup={
+            _OBJECT_KEY: "first object",
+            _OTHER_OBJECT_KEY: "second object",
+        },
+    )
+    buffer = io.StringIO()
+    emit_json_success(
+        "app secure audit",
+        result,
+        warnings=[f"callback {_URL}", f"bearer {_JWT}"],
+        stream=buffer,
+    )
+
+    raw = buffer.getvalue()
+    decoded = json.loads(raw)
+
+    assert set(decoded) == {"schema_version", "command", "result", "warnings"}
+    assert decoded["schema_version"] == "1"
+    assert decoded["command"] == "app secure audit"
+    assert decoded["result"] == {
+        "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
+        "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
+        "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
+        "tax_id": "sha256:1c9f9632",
+        "callback": "https://example.test",
+        "authorization": "token:sha256:0a2c77ea",
+        "keyed_lookup": {
+            CLI_OBJECT_KEY_PLACEHOLDER: "first object",
+            f"{CLI_OBJECT_KEY_PLACEHOLDER}#2": "second object",
+        },
+    }
+    assert decoded["warnings"] == ["callback https://example.test", "token:sha256:0a2c77ea"]
+    assert _PROFILE_ID not in raw
+    assert _NIF not in raw
+    assert _JWT not in raw
+    assert _URL not in raw
+    assert _OBJECT_KEY not in raw
+    assert _OTHER_OBJECT_KEY not in raw
+
+    roundtripped = SchemaEnvelope[_SensitivePayload].model_validate_json(raw)
+    assert roundtripped.result.profile_id == CLI_PROFILE_ID_PLACEHOLDER
+    assert roundtripped.result.keyed_lookup[f"{CLI_OBJECT_KEY_PLACEHOLDER}#2"] == "second object"
 
 
 def test_schema_envelope_rejects_unknown_outer_keys() -> None:
