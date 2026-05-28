@@ -637,7 +637,7 @@ cli:
         json_not_object: '{flag} debe ser un objeto JSON.'
         json_parse_error: '{flag} debe ser un objeto JSON; JSON no válido en el byte
           {pos}.'
-        json_validation_error: '%{flag} no es un objeto de observación válido: %{details}.'
+        json_validation_error: 'El valor de {flag} no es un objeto de observación válido: {details}.'
         modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: Periodo de agregacion enviado al servicio backend.
@@ -719,7 +719,7 @@ cli:
       export:
         actor_help: Etiqueta del operador registrada en el evento MODELO_EXPORTED.
         errors:
-          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
+          no_exportable_revision: 'No hay revisión exportable: la unidad de trabajo no tiene ninguna revisión verificada-completa o presentada.'
         help: Exporta una revisión de modelo verificada o presentada a un fichero
           local compatible con AEAT (fichero-BOE). Local; nunca contacta con AEAT.
         output_help: Ruta donde escribir el artefacto fichero-BOE.
@@ -765,28 +765,28 @@ cli:
         balance_help: Muestra el saldo acumulado del crédito IVA por compensación
           calculado a partir del historial local del Modelo 303.
         group_help: Comandos de saldo local de la cartera de compensación IVA.
-        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
-        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
-        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
+        seed_amount_help: 'Importe inicial de la compensación de IVA en decimal.'
+        seed_confirm_help: 'Confirme la operación de importe inicial.'
+        seed_confirm_required: 'Proporcione el modificador --confirm para confirmar la operación de importe inicial.'
         seed_conflict: Ya existe un estado de compensación IVA para %{filing_year}/%{period};
           no se puede sembrar otro.
-        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
-        seed_help: cli.app.modelo.iva_wallet.seed_help
+        seed_filing_year_help: 'Ejercicio fiscal del importe inicial.'
+        seed_help: 'Creación de un registro de importe inicial del monedero de compensación de IVA para inicializar el saldo anterior del monedero.'
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
-        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
-        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
-        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
+        seed_negative_amount: 'El importe inicial no puede ser negativo.'
+        seed_no_nif: 'No hay NIF definido para la operación de importe inicial; asócielo al perfil activo.'
+        seed_period_help: 'Período del importe inicial (p. ej. 2024N4).'
       list:
         year_help: Filtrar el catálogo de modelos por un único ejercicio fiscal
       project:
-        binding_help: cli.app.modelo.project.binding_help
-        casilla_help: cli.app.modelo.project.casilla_help
-        ccaa_help: cli.app.modelo.project.ccaa_help
-        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
-        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
-        no_m130_units: cli.app.modelo.project.no_m130_units
-        year_help: cli.app.modelo.project.year_help
-      project_help: cli.app.modelo.project_help
+        binding_help: 'Valor de enlace con la sintaxis KEY=VALUE (repetible).'
+        casilla_help: 'Valor de casilla con la sintaxis CASILLA=DECIMAL (repetible).'
+        ccaa_help: 'Código de comunidad autónoma para la proyección territorial.'
+        m100_calculation_error: 'Error interno: el cálculo del Modelo 100 ha fallado.'
+        no_m130_revisions: 'No hay revisiones M130 para el ejercicio indicado.'
+        no_m130_units: 'No hay unidades de trabajo M130 para el ejercicio y período indicados.'
+        year_help: 'Ejercicio fiscal para la proyección.'
+      project_help: 'Ejecutar proyecciones agregadas de modelos (p. ej. agregación anual del Modelo 130).'
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
         period_help: Token de periodo (p. ej. Q1, annual).
@@ -1377,15 +1377,15 @@ cli:
       export_out_help: Ruta de destino para el paquete JSON
       help: Gestionar valores de configuración del perfil activo
       import_help: Registra un paquete portátil de perfil desde un JSON
-      import_invalid_bundle: cli.config.profile.import_invalid_bundle
+      import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al esquema del paquete de perfil.'
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo para importar una segunda copia con otro nombre.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
         con `--label NUEVO_NOMBRE` para importarlo con un nombre distinto.
-      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
+      import_label_taken_different_id: 'La etiqueta especificada pertenece a un perfil con un identificador diferente. Use --label NUEVO_NOMBRE para importar con un nombre distinto.'
       import_missing_bundle: No se encontró el paquete de perfil en %{path}
       import_path_help: Ruta al paquete JSON del perfil
-      import_uuid_collision: cli.config.profile.import_uuid_collision
+      import_uuid_collision: 'El UUID del paquete entra en conflicto con un perfil existente.'
       logout_help: Cierra la sesión del perfil activo limpiando el puntero local
       logout_session_warning: El cierre de sesión limpió el puntero del perfil activo.
         Los verbos posteriores en este terminal serán rechazados con NoActiveBucketSessionError
@@ -1708,8 +1708,8 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
-      reaffirm_help: cli.ledger.classify.reaffirm_help
-      reaffirmed: cli.ledger.classify.reaffirmed
+      reaffirm_help: 'Reafirmar la clasificación de una transacción ya clasificada.'
+      reaffirmed: 'Clasificación reafirmada.'
       taxable_base_help: Importe de base imponible
     errors:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
@@ -2080,7 +2080,7 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
-      show_suppressed_help: cli.overview.calendar.show_suppressed_help
+      show_suppressed_help: 'Mostrar también las entradas suprimidas (no aplicables) en el calendario.'
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara las claves: %{keys}. Ejecuta
       ''aeat config profile edit NAME'' o usa --allow-incomplete para ver el calendario
@@ -2265,33 +2265,33 @@ cli:
       bucket: Bucket
       id: ID
       kind: Tipo
-      legal_refs: cli.review.labels.legal_refs
+      legal_refs: 'Referencias legales'
       next: Siguiente
       period: Periodo
       severity: Severidad
       source_kind: Tipo origen
     queue:
       empty: No hay elementos pendientes de revisión.
-      explain_help: cli.review.queue.explain_help
+      explain_help: 'Incluir las referencias legales que fundamentan cada hallazgo en la salida de texto. La carga JSON siempre las incluye.'
       help: Listar elementos pendientes de revisión
       kind_help: Restringir la cola a un tipo de elemento
       modelo_help: Restringir la cola a un modelo
       source_kind_help: Restringir la cola a un tipo de origen
       state_help: Restringir la cola a un estado de revisión
     show:
-      explain_help: cli.review.show.explain_help
+      explain_help: 'Incluir las referencias legales que fundamentan este hallazgo en la salida de texto. La carga JSON siempre las incluye.'
       help: Mostrar detalles de revisión de un elemento
       id_help: Identificador del elemento en la cola
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    app_help_help: cli.root.app_help_help
-    debug_help: cli.root.debug_help
-    detail_help: cli.root.detail_help
+    app_app_help: 'Comandos de la aplicación fiscal (ledger, modelo, overview, registry).'
+    app_help: 'Acceder a los comandos de nivel de aplicación.'
+    app_help_help: 'Mostrar la ayuda de los comandos de la aplicación.'
+    debug_help: 'Habilitar salida detallada de depuración.'
+    detail_help: 'Habilitar salida detallada.'
     errors:
       did_you_mean_command: ¿Quería decir '%{command}'?
-    format_help: cli.root.format_help
-    help_help: cli.root.help_help
+    format_help: 'Formato de salida: text, json, table, csv.'
+    help_help: 'Mostrar la ayuda.'
     landing:
       headline: Asistente fiscal AEAT
       help_line: 'Más ayuda: ejecuta `aeat --help`, `aeat config --help` o `aeat app
@@ -2323,13 +2323,13 @@ cli:
       welcome_no_profile: Bienvenido. Todavía no hay un perfil activo configurado;
         empieza por la configuración.
       welcome_profile: Bienvenido de nuevo. El perfil activo es `%{profile}`.
-    language_help: cli.root.language_help
-    profile_help: cli.root.profile_help
-    quiet_help: cli.root.quiet_help
-    startup_import_error: cli.root.startup_import_error
-    unavailable_app_help: cli.root.unavailable_app_help
-    verbose_help: cli.root.verbose_help
-    version_help: cli.root.version_help
+    language_help: 'Idioma de la interfaz (p. ej. es, en, ca).'
+    profile_help: 'Nombre del perfil activo.'
+    quiet_help: 'Mostrar solo los errores.'
+    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar al inicio.'
+    unavailable_app_help: 'Este comando no está disponible en la configuración actual.'
+    verbose_help: 'Habilitar salida detallada.'
+    version_help: 'Mostrar el número de versión y salir.'
   topic:
     app_help: Mostrar ayuda conceptual sobre regímenes, modelos y procesos AEAT
     errors:
@@ -3106,7 +3106,8 @@ errors:
       periodo sin clasificar. Clasifícalas todas antes de agregar.
     refused_financial_aggregation_unsupported_modelo: No hay un contrato de agregación
       disponible para el modelo solicitado.
-    refused_financial_bank_statement_parse: 'El análisis del extracto bancario financiero ha fallado.'
+    refused_financial_bank_statement_parse: El análisis del extracto bancario financiero
+      ha fallado.
     refused_financial_ledger_no_active_bucket: La operación del libro necesita un
       perfil activo. Crea o selecciona un perfil y vuelve a intentarlo.
     refused_financial_ledger_transaction_id_prefix: El prefijo de identificador de
