@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy import text
 
-from ...adapters.persistence.storage.sql import SecureObjectRepository
+from ...adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ...core.resources import resources
 from ...domain.calculations.registry import ModeloRevision
 from ...domain.categories import SpendingCategory
@@ -34,6 +36,7 @@ from ...domain.iva import (
     InvoiceKind as IvaInvoiceKind,
 )
 from ...domain.transactions import (
+    TX_BUCKET_NAMESPACE,
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -51,6 +54,7 @@ from . import (
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
     aggregate_oss_ioss_bindings,
+    merge_source_resolutions,
     resolve_modelo_ledger_binding_values_from_repositories,
 )
 
@@ -216,6 +220,48 @@ def test_iva_source_mesh_resolver_matches_existing_bucket_ledger_bridge(secure_o
         f"transaction:{incoming.transaction_id}",
         f"transaction:{outgoing.transaction_id}",
     }
+
+
+def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
+    secure_objects: SecureObjectRepository,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    revision = _revision("303", "2009-y-siguientes")
+    tx_repo = TransactionCatalogueRepository(
+        bucket_id="bucket-a",
+        objects=secure_objects,
+    )
+    incoming = _iva_transaction(
+        "sale-general",
+        direction=TransactionDirection.INCOMING,
+        amount=Decimal("121.00"),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((incoming,)))
+    with session_scope(secure_objects._engine) as session:
+        session.execute(
+            text("UPDATE secure_objects SET payload = X'00' WHERE namespace = :namespace"),
+            {"namespace": TX_BUCKET_NAMESPACE},
+        )
+
+    with caplog.at_level(logging.DEBUG, logger="aeat.application.aggregation._source_mesh"):
+        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
+            CalculationSourceContext(
+                bucket_id="bucket-a",
+                modelo="303",
+                filing_year=2026,
+                period="1T",
+                revision=revision,
+            )
+        )
+    merged = merge_source_resolutions((resolution,))
+
+    assert resolution.binding_values == {}
+    assert resolution.source_transaction_ids == ()
+    assert [diagnostic.reason for diagnostic in merged.diagnostics] == ["storage_degraded"]
+    assert merged.diagnostics[0].source_kind == "ledger_iva_aggregation"
+    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
 
 
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance(

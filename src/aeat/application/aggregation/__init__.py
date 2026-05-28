@@ -111,6 +111,7 @@ from ._source_mesh import (
     ModeloSourceResolver,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
+    storage_degradation_resolution,
 )
 from ._source_profile import ProfileSourceResolver
 
@@ -202,6 +203,7 @@ __all__ = [
     "merge_source_resolutions",
     "resolve_modelo_ledger_binding_values_from_repositories",
     "resolve_per_modelo_registry_binding_values",
+    "storage_degradation_resolution",
     "validate_iva_ledger_observation",
     "validate_iva_ledger_observations",
     "validate_oss_ioss_observation",

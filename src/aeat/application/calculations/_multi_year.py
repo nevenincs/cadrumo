@@ -34,16 +34,19 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...domain.calculations.registry._bindings import RegistryModeloObservation
 from ...domain.calculations.registry._schema import RegistrySnapshot
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 from ._observations_repository import CalculationObservationRepository
 
 _STRICT_FROZEN: Final = ConfigDict(strict=True, frozen=True, extra="forbid")
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 
 
 class MultiYearResolutionRequest(BaseModel):
@@ -142,7 +145,15 @@ class PreviousFilingSourceResolver:
             )
         from ._binding_prefill import resolve_bindings_from_local_store
 
-        report = resolve_bindings_from_local_store(snapshot, repository=self._repository)
+        try:
+            report = resolve_bindings_from_local_store(snapshot, repository=self._repository)
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

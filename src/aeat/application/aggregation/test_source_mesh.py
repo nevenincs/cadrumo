@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from aeat.adapters.persistence.storage.errors import DecryptionError
 from aeat.core.resources import bundled_path
 from aeat.domain.calculations.registry import load_registry_tree
 
@@ -16,6 +17,7 @@ from . import (
     CalculationSourceResolution,
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
+    storage_degradation_resolution,
 )
 from ._errors import AggregationValidationError
 
@@ -185,3 +187,23 @@ def test_unhandled_source_diagnostics_name_modelo_binding_and_source_kind() -> N
     assert all(diagnostic.reason == "unhandled_binding_source" for diagnostic in ledger_diagnostics)
     assert all(diagnostic.binding_id for diagnostic in ledger_diagnostics)
     assert all("ledger_iva_aggregation" in diagnostic.message for diagnostic in ledger_diagnostics)
+
+
+def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    error = DecryptionError("ciphertext authentication failed")
+
+    with caplog.at_level("DEBUG", logger="aeat.application.aggregation._source_mesh"):
+        resolution = storage_degradation_resolution(
+            resolver_id="ledger-iva",
+            owned_sources=("ledger_iva_aggregation",),
+            source_kinds=("ledger_iva_aggregation",),
+            error=error,
+        )
+
+    assert resolution.binding_values == {}
+    assert resolution.diagnostics[0].reason == "storage_degraded"
+    assert resolution.diagnostics[0].source_kind == "ledger_iva_aggregation"
+    assert resolution.diagnostics[0].message
+    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)

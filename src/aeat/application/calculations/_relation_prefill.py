@@ -31,6 +31,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Final
 
+from ...adapters.persistence.storage.errors import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...application.storage.calc_sheets._records import RelationValue, RelationValues
 from ...core.logging import get_logger
 from ...domain.calculations.registry._bindings import RegistryModeloObservation
@@ -44,10 +45,12 @@ from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    storage_degradation_resolution,
 )
 from ._observations_repository import CalculationObservationRepository
 
 _LOCAL_FILING_PROVENANCE: Final = "local_filing"
+_STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _log = get_logger(__name__)
 
 
@@ -213,11 +216,19 @@ class RelationPrefillSourceResolver:
                 filing_year=context.filing_year,
                 period=context.period,
             )
-        relation_values = resolve_relations_from_local_store(
-            snapshot,
-            repository=self._repository,
-            captured_at=self._captured_at or context.calculated_at,
-        )
+        try:
+            relation_values = resolve_relations_from_local_store(
+                snapshot,
+                repository=self._repository,
+                captured_at=self._captured_at or context.calculated_at,
+            )
+        except _STORAGE_DEGRADATION_ERRORS as exc:
+            return storage_degradation_resolution(
+                resolver_id=self.resolver_id,
+                owned_sources=self.owned_sources,
+                source_kinds=self.owned_sources,
+                error=exc,
+            )
         resolved = tuple(item for item in relation_values.values if item.value is not None)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
