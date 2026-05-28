@@ -88,3 +88,21 @@ No HIGH/CRITICAL findings in the scoped S07 implementation.
 
 - The new canary set is focused on a single error class and a small set of sensitive shapes; it does not exercise mixed-context surfaces (e.g., `vars(error)` attributes merged with explicit `context`) where ordering or shape-specific redaction regressions could still occur.
 - Assertions now pin specific hash tokens (`sha256:...`, `token:sha256:...`), which are brittle against rule-strategy or encoding changes and may hide broader operator-facing contract expectations (message readability vs redaction form) if redaction behavior evolves.
+
+## W01.P02.S08 Review
+
+No HIGH/CRITICAL findings in the scoped S08 implementation.
+
+### Residual risks
+
+- JSON redaction is now applied before serialization in `render_command_output`, which preserves current shape for tested project types but does not cover all typed payload shapes (e.g., mixed custom container types) in tests; regressions could still slip through where `json.dumps(..., default=_json_default)` interacts with redacted values.
+- Text redaction runs only on the provided `lines` iterable; if callers provide non-string line objects, redaction will surface an unexpected `TypeError` from the renderer boundary rather than producing structured operator guidance at render time.
+
+## W01.P02.S09 Review
+
+No HIGH/CRITICAL findings in the scoped S09 implementation.
+
+### Residual risks
+
+- The new tests are stronger than previous API-level assertions, but they still validate a narrow fixture set (single payload shape, canonical key names, and one line-based path), so mixed-key or non-canonical sensitive key leakage remains possible outside covered scenarios.
+- Tests do not explicitly exercise error-path preservation when JSON serialization fails after redaction, so that contract still relies on existing `OutputRenderingError` behavior from previous steps rather than new renderer-level redaction coverage.
