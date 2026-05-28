@@ -2382,6 +2382,7 @@ errors:
     refused_storage_secret_already_exists: errors.refused.refused_storage_secret_already_exists
     refused_storage_session_expired: errors.refused.refused_storage_session_expired
     refused_storage_unsecured_mode: errors.refused.refused_storage_unsecured_mode
+    refused_taxation_comparison: errors.refused.refused_taxation_comparison
     refused_topic_not_found: errors.refused.refused_topic_not_found
     refused_user_profile_validation: errors.refused.refused_user_profile_validation
     refused_wizard_missing_flag: errors.refused.refused_wizard_missing_flag
@@ -2555,146 +2556,152 @@ transactions:
     message: transactions.test_diagnostics.message
 wizard:
   choices:
-    general: wizard.choices.general
-    irpf: wizard.choices.irpf
-    iva: wizard.choices.iva
-    simplificado: wizard.choices.simplificado
+    general: 'Általános'
+    irpf: 'IRPF'
+    iva: 'IVA'
+    simplificado: 'Egyszerűsített'
   demo:
-    description: wizard.demo.description
+    description: 'Bemutató szekció a varázslófunkció teszteléséhez'
     section:
-      title: wizard.demo.section.title
-    title: wizard.demo.title
+      title: 'Bemutató szekció'
+    title: 'Bemutató'
   errors:
-    blank_integer: wizard.errors.blank_integer
-    blank_path: wizard.errors.blank_path
-    blank_secret: wizard.errors.blank_secret
-    blank_text: wizard.errors.blank_text
-    checkbox_required: wizard.errors.checkbox_required
-    checkbox_unknown: wizard.errors.checkbox_unknown
-    checkbox_without_choices: wizard.errors.checkbox_without_choices
-    invalid_confirm: wizard.errors.invalid_confirm
-    invalid_integer: wizard.errors.invalid_integer
-    invalid_postcode: wizard.errors.invalid_postcode
-    invalid_tax_id: wizard.errors.invalid_tax_id
-    select_unknown: wizard.errors.select_unknown
-    select_without_choices: wizard.errors.select_without_choices
-    unsupported_console: wizard.errors.unsupported_console
-    unsupported_console_edit: wizard.errors.unsupported_console_edit
+    blank_integer: 'Egész szám megadása kötelező a következőhöz: %{prompt_key}.'
+    blank_path: 'Útvonal megadása kötelező a következőhöz: %{prompt_key}.'
+    blank_secret: 'Titkos érték megadása kötelező a következőhöz: %{prompt_key}.'
+    blank_text: 'Érték megadása kötelező a következőhöz: %{prompt_key}.'
+    checkbox_required: 'Válasszon legalább egy lehetőséget a következőhöz: %{prompt_key}.'
+    checkbox_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes lehetőségek: %{choices}.'
+    checkbox_without_choices: 'A(z) %{prompt_key} kérdésnél nincsenek jelölőnégyzet-lehetőségek megadva.'
+    invalid_confirm: 'Érvénytelen logikai válasz a következőhöz: %{prompt_key}: %{raw}.'
+    invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
+    invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}. A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
+    invalid_tax_id: 'Érvénytelen NIF/NIE/CIF a következőhöz: %{prompt_key}: %{raw}. %{detail}'
+    select_unknown: 'Ismeretlen érték a következőhöz: %{prompt_key}: %{raw}. Érvényes lehetőségek: %{choices}.'
+    select_without_choices: 'A(z) %{prompt_key} kérdésnél nincsenek legördülő-lehetőségek megadva.'
+    unsupported_console: 'Az irányított beállítás interaktív terminált igényel, ez a futtatás azonban nem rendelkezik ilyennel.
+Még semmi nem lett mentve.
+
+Ezt a profilt kétféleképpen hozhatja létre:
+
+1. Futtassa újra a parancsot interaktív terminálból az irányított beállítás használatához:
+     aeat config profile create NAME
+
+2. Vagy hozza létre egyetlen lépéssel, a szükséges adatokat kapcsolókként megadva:
+     aeat config profile create NAME --quiet --tax-id NIF'
+    unsupported_console_edit: 'Az irányított beállítás nem tudott interaktív promptot megnyitni ebben a futtatásban.
+Még semmi nem lett mentve.
+
+Szerkessze a profilt nem interaktívan, megadva a módosítandó mezőt:
+  aeat config profile edit %{profile_name} --quiet --<mező> ÉRTÉK
+
+Vagy futtassa újra az irányított szerkesztést interaktív terminál-munkamenetből:
+  aeat config profile edit %{profile_name}'
   other:
-    description: wizard.other.description
+    description: 'Egyéb konfigurációs lehetőségek'
     section:
-      title: wizard.other.section.title
-    title: wizard.other.title
+      title: 'Egyéb beállítások'
+    title: 'Egyéb'
   progress:
-    question_prefix: wizard.progress.question_prefix
-    section_header: wizard.progress.section_header
+    question_prefix: '%{q_n}. kérdés / %{q_total}'
+    section_header: '%{section_n}. lépés / %{section_total}: %{title}'
   setup:
     certificate:
       path:
-        prompt: wizard.setup.certificate.path.prompt
+        prompt: 'Adja meg a digitális tanúsítvány elérési útját (.p12, .pfx)'
     codes:
       disability-grade:
         choices:
           33-64:
-            label: wizard.setup.codes.disability-grade.choices.33-64.label
+            label: 'Fogyatékossági fokozat 33%-tól 64%-ig'
           65-plus:
-            label: wizard.setup.codes.disability-grade.choices.65-plus.label
+            label: 'Fogyatékossági fokozat 65% vagy magasabb'
           assistance-or-mobility:
-            label: wizard.setup.codes.disability-grade.choices.assistance-or-mobility.label
+            label: 'Harmadik személy segítsége vagy korlátozott mozgásképesség'
           judicial-incapacity:
-            label: wizard.setup.codes.disability-grade.choices.judicial-incapacity.label
+            label: 'Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű'
       sex:
         choices:
           h:
-            label: wizard.setup.codes.sex.choices.h.label
+            label: 'H - férfi'
           m:
-            label: wizard.setup.codes.sex.choices.m.label
-    description: wizard.setup.description
+            label: 'M - nő'
+    description: 'Adóbevallási felkészültséget szolgáló beállítási varázsló az operátor számára'
     enrollment:
       enrollment-large-company:
-        prompt: wizard.setup.enrollment.enrollment-large-company.prompt
+        prompt: 'Nagyvállalati bejegyzés'
       enrollment-public-administration-budget-gt-6000000:
-        prompt: wizard.setup.enrollment.enrollment-public-administration-budget-gt-6000000.prompt
-      title: wizard.setup.enrollment.title
+        prompt: 'Közigazgatási költségvetés meghaladja a 6 000 000-t'
+      title: 'Bejegyzés'
     errors:
-      missing_required_flags: wizard.setup.errors.missing_required_flags
+      missing_required_flags: 'Hiányzó kötelező kapcsolók a --quiet módú futtatáshoz: %{missing}'
     family:
       family-descendants-eu-eea-deduction:
-        prompt: wizard.setup.family.family-descendants-eu-eea-deduction.prompt
+        prompt: 'EU/EEE leszármazottak a családi egység levonásban'
       family-minor-children-in-unit:
-        prompt: wizard.setup.family.family-minor-children-in-unit.prompt
-      title: wizard.setup.family.title
+        prompt: 'Kiskorú gyermekek a családi egységben'
+      title: 'Családi egység'
     flags:
       activity:
-        help: wizard.setup.flags.activity.help
+        help: 'Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri'
       activity-start-date:
-        help: wizard.setup.flags.activity-start-date.help
+        help: 'Adóhatósághoz bejelentkezés / tevékenység kezdési dátuma (ÉÉÉÉ-HH-NN). Opcionális; ha meg van adva, az előtte lévő időszakok kötelezettségei nem jelennek meg.'
       address-postcode:
-        help: wizard.setup.flags.address-postcode.help
+        help: 'Adóügyi lakcím irányítószáma'
       bienes-extranjero-above-threshold:
-        help: wizard.setup.flags.bienes-extranjero-above-threshold.help
+        help: 'Külföldi vagyon meghaladja a jogszabályi küszöbértéket'
       country-of-fiscal-residence:
-        help: wizard.setup.flags.country-of-fiscal-residence.help
+        help: 'Az adóügyi lakóhely szerinti ország ISO 3166-1 alfa-2 kódja (pl. GB, DE, FR). Kötelező, ha a fiscal-residency értéke non_resident_irnr.'
       descendiente:
-        help: 'Leszármazott adatai az Art. 58 LIRPF személyi adóalap-minimum számításhoz
-          (ismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
+        help: 'Leszármazotti adatok az LIRPF 58. cikk szerinti minimumhoz (megismételhető). Formátum: NACIMIENTO=ÉÉÉÉ-HH-NN[,ADOPCION=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,NIF=XXXXXXXXX]'
       does-intracomunitario:
-        help: wizard.setup.flags.does-intracomunitario.help
+        help: 'Végez intraközösségi ügyleteket'
       enrollment-large-company:
-        help: wizard.setup.flags.enrollment-large-company.help
+        help: 'Nagyvállalati bejegyzés'
       enrollment-public-administration-budget-gt-6000000:
-        help: wizard.setup.flags.enrollment-public-administration-budget-gt-6000000.help
+        help: 'Közigazgatási költségvetés meghaladja a 6 000 000-t'
       entity-type:
-        help: wizard.setup.flags.entity-type.help
+        help: 'Természetes személy, jogi személy vagy jövedelemattribúciós szervezet'
       family-descendants-eu-eea-deduction:
-        help: wizard.setup.flags.family-descendants-eu-eea-deduction.help
+        help: 'EU/EEE leszármazottak a családi egység levonásban'
       family-minor-children-in-unit:
-        help: wizard.setup.flags.family-minor-children-in-unit.help
+        help: 'Kiskorú gyermekek a családi egységben'
       fiscal-residency:
-        help: wizard.setup.flags.fiscal-residency.help
+        help: 'Adóügyi illetőségi kategória: resident_irpf (Spanyolországban szokásos lakóhellyel rendelkező) vagy non_resident_irnr (nem rezidens, IRNR szerinti adózás, RDLeg 5/2004).'
       has-employees:
-        help: wizard.setup.flags.has-employees.help
+        help: 'Alkalmazottai vannak és forrásadóval terhelt béreket fizet'
       incn-prior-12-months:
-        help: Az elmúlt 12 hónap nettó árbevétele euróban. A 6 000 000 EUR küszöb
-          felett a 202-es modell a LIS 40.3 cikk szerinti módozatot írja elő; alatta
-          mindkét módozat választható. Opcionális.
+        help: 'Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban, euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti módozatot írja elő; alatta mindkét módozat választható. Opcionális.'
       irpf-estimation-regime:
-        help: wizard.setup.flags.irpf-estimation-regime.help
+        help: 'A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza, hogy Modelo 130 vagy 131 alkalmazandó-e'
       irpf-income-categories:
-        help: wizard.setup.flags.irpf-income-categories.help
+        help: 'IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót kategóriánként egyszer'
       irpf-special-regime:
-        help: IRPF különleges adórendszer. "general" a legtöbb adózó esetén. "impatriado"
-          a Beckham-törvény (LIRPF 93. cikk) alapján Spanyolországba költözött munkavállalóknak,
-          a beköltözést követő első 6 adóévben.
+        help: 'IRPF különleges adózási rend. "general" a legtöbb adózó számára. "impatriado" Spanyolországba áthelyezett és a Beckham-törvény szerinti adózást (LIRPF 93. cikkely) választó munkavállalók számára, az áthelyezés utáni első 6 évre.'
       irpf-special-regime-start-date:
-        help: Az a dátum, amikor a munkavállaló a kiküldöttek rendszerébe optált (ÉÉÉÉ-HH-NN).
-          Csak akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikk.
-          A rendszer a 6. naptári év végén jár le.
+        help: 'A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely. Az adózási rend a 6. naptári év végén jár le.'
       iva-intracommunity-operations-exceed-50000-eur:
-        help: wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help
+        help: 'Intraközösségi ügyletek meghaladják az 50 000 EUR-t'
       iva-oss-enrolled:
-        help: wizard.setup.flags.iva-oss-enrolled.help
+        help: 'OSS-be bejelentkezett'
       iva-redeme-enrolled:
-        help: wizard.setup.flags.iva-redeme-enrolled.help
+        help: 'Az adózó be van-e jegyezve a REDEME-be'
       iva-regime:
-        help: wizard.setup.flags.iva-regime.help
+        help: 'IVA adózási rend'
       iva-roi-enrolled:
-        help: wizard.setup.flags.iva-roi-enrolled.help
+        help: 'ROI-ba bejelentkezett'
       iva-sii-enrolled:
-        help: wizard.setup.flags.iva-sii-enrolled.help
+        help: 'Az adózó be van-e jegyezve az SII-be'
       legal-entity-form:
-        help: wizard.setup.flags.legal-entity-form.help
+        help: 'Elismert jogi forma, ha az entitástípus jogi személy'
       name:
-        help: wizard.setup.flags.name.help
+        help: 'A helyi áttekintésekben megjelenő megjelenítési név'
       new-entity-first-two-profit-periods:
-        help: Jelölje be, ha az újonnan alapított jogi személy a nyereséges első két
-          adóévének valamelyikében van (LIS 29. cikk), a 15 százalékos kedvezményes
-          adókulcs alkalmazásához. Opcionális; jelölés hiányában a kedvezményes kulcs
-          nem érvényesül.
+        help: 'Jelölje be, ha az újonnan létrehozott jogi személy az első két nyereséges adóidőszakának egyikében van (LIS 29. cikkely), a 15%-os kedvezményes adókulcs igénybevételéhez. Opcionális; jelöletlenül az egyéb alkalmazandó adókulcs érvényes.'
       notes:
-        help: wizard.setup.flags.notes.help
+        help: 'Megjegyzések saját nyilvántartáshoz (opcionális)'
       output-language:
-        help: wizard.setup.flags.output-language.help
+        help: 'CLI kimeneti nyelv ehhez a profilhoz'
       pays-capital-income-with-retencion:
         help: wizard.setup.flags.pays-capital-income-with-retencion.help
       pays-professionals-with-retencion:
