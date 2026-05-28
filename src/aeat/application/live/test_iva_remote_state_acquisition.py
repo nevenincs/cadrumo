@@ -98,7 +98,11 @@ def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) ->
     )
 
     assert report.auth.status is LiveIvaReadStatus.FAILED
+    assert report.filed_history_succeeded is False
+    assert report.wallet_succeeded is False
     assert report.auth.failure_mode is LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
+    assert report.auth.outcome_mode is not LiveIvaAcquisitionFailureMode.AUTHENTICATED
+    assert report.auth.outcome_mode is not LiveIvaAcquisitionFailureMode.UNKNOWN
     assert report.auth.diagnostic_ref is not None
     assert report.auth.diagnostic_ref.startswith("sha256:")
     assert diagnostic_id not in report.model_dump_json()
@@ -110,6 +114,8 @@ def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) ->
         "ClaveMovilApprovalTimeoutError",
         "ClaveMovilApprovalTimeoutError",
     )
+    assert all(outcome.status is LiveIvaReadStatus.FAILED for outcome in report.outcomes)
+    assert all(outcome.outcome_mode is LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT for outcome in report.outcomes)
 
 
 def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fails(tmp_path: Path) -> None:
@@ -154,7 +160,11 @@ def test_combined_acquisition_preserves_filed_history_when_wallet_auth_gate_fail
     assert filed_outcome.calculation_observation_count == 12
     assert wallet_outcome.surface is LiveIvaReadSurface.WALLET_CARTERA
     assert wallet_outcome.status is LiveIvaReadStatus.FAILED
+    assert wallet_outcome.status is not LiveIvaReadStatus.SUCCEEDED
     assert wallet_outcome.failure_mode is LiveIvaAcquisitionFailureMode.AEAT_403
+    assert wallet_outcome.outcome_mode is LiveIvaAcquisitionFailureMode.AEAT_403
+    assert wallet_outcome.outcome_mode is not LiveIvaAcquisitionFailureMode.AUTHENTICATED
+    assert wallet_outcome.captured_count is None
     assert wallet_outcome.failure_type == "SedeNavigationError"
     assert "AEAT wallet auth gate" not in report.model_dump_json()
 
