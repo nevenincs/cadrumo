@@ -14,11 +14,17 @@ import tomllib
 from functools import cached_property, lru_cache
 from importlib.resources import files
 from pathlib import Path
-from typing import Any
+from typing import Any, Final
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from .errors import CoreValidationError
+
+#: ISO 4217 currency code for the Euro, used as the functional currency throughout AEAT.
+DEFAULT_CURRENCY: Final[str] = "EUR"
+
+#: Standard binary MIME type for opaque byte-stream payloads (Drive uploads, blob store, fichero).
+BINARY_MIME_TYPE: Final[str] = "application/octet-stream"
 
 
 class _Frozen(BaseModel):
@@ -263,6 +269,14 @@ class ExternalConstants(_Frozen):
 
     aeat: AeatSection
     online_services: OnlineServicesSection
+
+
+CSV_ENCODING_FALLBACK_CHAIN: tuple[str, ...] = ("utf-8-sig", "utf-8", "cp1252", "iso-8859-1")
+"""Canonical encoding probe order for CSV financial sources.
+
+The preferred encoding from :attr:`~aeat.core.config.Settings.financial_default_csv_encoding`
+is prepended at runtime; this tuple defines the fallback candidates that follow it.
+"""
 
 
 @lru_cache(maxsize=1)
