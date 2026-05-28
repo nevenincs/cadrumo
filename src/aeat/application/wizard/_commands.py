@@ -900,6 +900,11 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
         from ...core.click_context import json_output_requested
 
         verb = "created" if mode == "create" else "updated"
+        verb_label = (
+            tr("wizard.commands.status.created")
+            if mode == "create"
+            else tr("wizard.commands.status.updated")
+        )
         payload: dict[str, object] = {
             "profile_name": profile_name,
             "status": verb,
@@ -915,7 +920,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             _typer.echo(_json.dumps(payload, ensure_ascii=False))
         else:
             _typer.echo(f"profile\t{profile_name}")
-            _typer.echo(f"status\t{verb}")
+            _typer.echo(f"status\t{verb_label}")
             if mode == "create":
                 _typer.echo(f"active_profile\t{profile_name}")
             _typer.echo("next\taeat app modelo work create")
