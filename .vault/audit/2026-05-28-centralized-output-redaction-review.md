@@ -106,3 +106,17 @@ No HIGH/CRITICAL findings in the scoped S09 implementation.
 
 - The new tests are stronger than previous API-level assertions, but they still validate a narrow fixture set (single payload shape, canonical key names, and one line-based path), so mixed-key or non-canonical sensitive key leakage remains possible outside covered scenarios.
 - Tests do not explicitly exercise error-path preservation when JSON serialization fails after redaction, so that contract still relies on existing `OutputRenderingError` behavior from previous steps rather than new renderer-level redaction coverage.
+
+## W01.P02.S08/S09 Focused Re-Review
+
+HIGH findings present: yes. CRITICAL findings present: no.
+
+CRO-001 | HIGH | JSON object member names bypass renderer redaction
+`src/aeat/core/output_rendering.py` applies `redact_structured_for_cli_output(jsonable_output_payload(payload))` before serialization, but `jsonable_output_payload` preserves dictionary keys unchanged while only normalizing values. A JSON payload keyed by a profile UUID, NIF, URL, bearer token, or secure-object key therefore renders that raw sensitive string as the JSON object member name. This violates the W01.P02.S08 renderer-boundary goal to apply central redaction to JSON payloads before rendering and the ADR requirement that CLI output protect profile/bucket ids, object-key hints, tax identifiers, URLs, and tokens. The S09 tests cover sensitive values under ordinary schema keys, but they do not cover sensitive data carried as map keys, so the leak path remains unguarded.
+
+## W01.P02.S08/S09 Follow-up Re-Review
+
+CRO-001 status: resolved. String JSON member names carrying profile UUID, NIF, URL, bearer token, and secure-object key canaries are now redacted through `redact_structured_for_cli_output`, and focused renderer/helper tests cover that path. HIGH findings present: yes. CRITICAL findings present: no.
+
+CRO-002 | HIGH | Redacted JSON member-name collisions silently drop entries
+The CRO-001 fix redacts dict member names in `src/aeat/core/redaction/__init__.py`, but the dict comprehension collapses distinct sensitive keys to shared placeholders or shared host-only tokens. For example, two object-key members such as `wallet:a` and `wallet:b` both become `<object-key>`, so JSON rendering keeps only the last value. This preserves secrecy but violates the S08/S09 JSON shape/data-preservation contract by silently losing payload entries. Current tests include one sensitive key per redaction class, so they do not prove collision-safe behavior or detect data loss.

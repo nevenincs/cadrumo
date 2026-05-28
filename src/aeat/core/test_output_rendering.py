@@ -22,6 +22,7 @@ _NIF = "12345678Z"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
 _OBJECT_KEY = "wallet:2026-secret"
+_OTHER_OBJECT_KEY = "wallet:2026-other"
 
 
 class _Payload(BaseModel):
@@ -63,6 +64,12 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
             "profile_id": _PROFILE_ID,
             "bucket_id": "bucket-alpha",
             "object_key": _OBJECT_KEY,
+            _PROFILE_ID: "profile keyed",
+            _NIF: "tax keyed",
+            _URL: "url keyed",
+            f"bearer {_JWT}": "token keyed",
+            _OBJECT_KEY: "object keyed",
+            _OTHER_OBJECT_KEY: "second object keyed",
             "report": _Payload(path=Path("var/report.json"), amount=Decimal("12.30"), day=date(2026, 5, 13)),
             "nested": {
                 "tax_id": _NIF,
@@ -79,6 +86,12 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
         "profile_id": CLI_PROFILE_ID_PLACEHOLDER,
         "bucket_id": CLI_BUCKET_ID_PLACEHOLDER,
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
+        CLI_PROFILE_ID_PLACEHOLDER: "profile keyed",
+        "sha256:1c9f9632": "tax keyed",
+        "https://example.test": "url keyed",
+        "token:sha256:0a2c77ea": "token keyed",
+        CLI_OBJECT_KEY_PLACEHOLDER: "object keyed",
+        f"{CLI_OBJECT_KEY_PLACEHOLDER}#2": "second object keyed",
         "report": {"path": "var/report.json", "amount": "12.30", "day": "2026-05-13"},
         "nested": {
             "tax_id": "sha256:1c9f9632",
@@ -92,6 +105,7 @@ def test_render_command_output_renders_json_payload_with_project_types() -> None
     assert _JWT not in rendered.text
     assert _URL not in rendered.text
     assert _OBJECT_KEY not in rendered.text
+    assert _OTHER_OBJECT_KEY not in rendered.text
 
 
 def test_render_command_output_uses_registered_error_for_unencodable_payload() -> None:
