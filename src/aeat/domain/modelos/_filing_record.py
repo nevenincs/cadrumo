@@ -36,18 +36,10 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-_FilingRecordId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-_WorkUnitId = _FilingRecordId
-_CalculationRevisionId = _FilingRecordId
-_BucketId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=1, max_length=128),
-]
+from ._ids import BucketId as _BucketId
+from ._ids import CalculationRevisionId as _CalculationRevisionId
+from ._ids import FilingRecordId as _FilingRecordId
+from ._ids import WorkUnitId as _WorkUnitId
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),

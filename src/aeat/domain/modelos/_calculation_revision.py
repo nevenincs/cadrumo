@@ -78,16 +78,8 @@ class CalculationRevisionAmendmentKind(StrEnum):
     SUSTITUTIVA = "sustitutiva"
 
 
-_HEX_64_PATTERN = r"^[0-9a-f]{64}$"
-
-_CalculationRevisionId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
-_WorkUnitId = Annotated[
-    str,
-    StringConstraints(strip_whitespace=True, min_length=64, max_length=64, pattern=_HEX_64_PATTERN),
-]
+from ._ids import CalculationRevisionId as _CalculationRevisionId
+from ._ids import WorkUnitId as _WorkUnitId
 _ActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),

@@ -2,10 +2,23 @@
 
 from __future__ import annotations
 
+import hashlib
 import zipfile
 from pathlib import Path
 
 import pytest
+
+
+def _hex64(label: str) -> str:
+    return hashlib.sha256(label.encode("utf-8")).hexdigest()
+
+
+WU_100 = _hex64("wu-100")
+WU_1 = _hex64("wu-1")
+WU_A = _hex64("wu-A")
+WU_B = _hex64("wu-B")
+REV_1_ID = _hex64("rev-1")
+FILING_1_ID = _hex64("filing-1")
 
 from aeat.adapters.persistence.storage import APPLICATION_EVIDENCE_BUNDLE_NAMESPACE
 from aeat.application.evidence import (
@@ -45,14 +58,14 @@ class TestBuild:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
         bundle = svc.build(
             bucket_id=runtime_profile.bucket_id,
-            work_unit_id="wu-100",
+            work_unit_id=WU_100,
             record_payloads=payloads,
-            calculation_revision_id="rev-1",
-            filing_record_id="filing-1",
+            calculation_revision_id=REV_1_ID,
+            filing_record_id=FILING_1_ID,
         )
         assert len(bundle.bundle_id) == 64  # sha256 hex
         assert bundle.bucket_id == "bucket-001"
-        assert bundle.work_unit_id == "wu-100"
+        assert bundle.work_unit_id == WU_100
         assert len(bundle.records) == 2
         assert bundle.verification_state is BundleVerificationState.PENDING
         assert runtime_profile.repository.exists(
@@ -68,14 +81,14 @@ class TestBuild:
         svc1 = EvidenceBundleService(settings=runtime_profile.settings)
         bundle1 = svc1.build(
             bucket_id=runtime_profile.bucket_id,
-            work_unit_id="wu-100",
+            work_unit_id=WU_100,
             record_payloads=payloads,
         )
         # Fresh service, same payloads, same bucket: bundle_id should match.
         svc2 = EvidenceBundleService(settings=runtime_profile.settings)
         bundle2 = svc2.build(
             bucket_id=runtime_profile.bucket_id,
-            work_unit_id="wu-100",
+            work_unit_id=WU_100,
             record_payloads=payloads,
         )
         assert bundle1.bundle_id == bundle2.bundle_id
@@ -88,7 +101,7 @@ class TestShow:
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         full = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id)
         prefix = svc.show(bucket_id=runtime_profile.bucket_id, bundle_id=added.bundle_id[:12])
         assert full == added
@@ -107,7 +120,7 @@ class TestVerify:
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         report = svc.check(
             bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
@@ -123,7 +136,7 @@ class TestVerify:
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         tampered = dict(payloads)
         tampered[("calculation_revision", "rev-1")] = b"casilla-01=9999.99\n"
         report = svc.check(
@@ -141,7 +154,7 @@ class TestVerify:
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         report = svc.check(
             bucket_id=runtime_profile.bucket_id,
@@ -160,7 +173,7 @@ class TestExport:
         tmp_path: Path,
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         archive_path = tmp_path / "bundle.zip"
         svc.export(
             bucket_id=runtime_profile.bucket_id,
@@ -183,7 +196,7 @@ class TestExport:
         tmp_path: Path,
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         tampered = dict(payloads)
         tampered[("calculation_revision", "rev-1")] = b"tampered\n"
         with pytest.raises(EvidenceBundleVerificationError, match="verification failed"):
@@ -201,7 +214,7 @@ class TestExport:
         tmp_path: Path,
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         with pytest.raises(EvidenceBundleVerificationError, match="--force-incomplete"):
             svc.export(
@@ -218,7 +231,7 @@ class TestExport:
         tmp_path: Path,
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         partial = {("calculation_revision", "rev-1"): payloads[("calculation_revision", "rev-1")]}
         archive_path = tmp_path / "bundle.zip"
         result = svc.export(
@@ -239,7 +252,7 @@ class TestReplay:
         payloads: dict[tuple[str, str], bytes],
     ) -> None:
         svc = EvidenceBundleService(settings=runtime_profile.settings)
-        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id="wu-1", record_payloads=payloads)
+        added = svc.build(bucket_id=runtime_profile.bucket_id, work_unit_id=WU_1, record_payloads=payloads)
         report = svc.replay(
             bucket_id=runtime_profile.bucket_id,
             bundle_id=added.bundle_id,
@@ -262,7 +275,7 @@ class TestBucketIsolation:
             service_a = EvidenceBundleService(settings=profile_a.settings)
             a_added = service_a.build(
                 bucket_id=profile_a.bucket_id,
-                work_unit_id="wu-A",
+                work_unit_id=WU_A,
                 record_payloads=payloads,
             )
             assert service_a.show(bucket_id=profile_a.bucket_id, bundle_id=a_added.bundle_id) == a_added
@@ -271,7 +284,7 @@ class TestBucketIsolation:
             service_b = EvidenceBundleService(settings=profile_b.settings)
             b_added = service_b.build(
                 bucket_id=profile_b.bucket_id,
-                work_unit_id="wu-B",
+                work_unit_id=WU_B,
                 record_payloads=payloads,
             )
             assert service_b.show(bucket_id=profile_b.bucket_id, bundle_id=b_added.bundle_id) == b_added
@@ -298,13 +311,13 @@ class TestDeriveBundleId:
         )
         id_a = derive_bundle_id(
             bucket_id="bucket-001",
-            work_unit_id="wu-1",
+            work_unit_id=WU_1,
             manifest_version=1,
             records=(rec_a,),
         )
         id_b = derive_bundle_id(
             bucket_id="bucket-001",
-            work_unit_id="wu-1",
+            work_unit_id=WU_1,
             manifest_version=1,
             records=(rec_b,),
         )
