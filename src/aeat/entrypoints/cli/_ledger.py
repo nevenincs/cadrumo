@@ -11,6 +11,7 @@ from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
+    CLASSIFIED_BY_MANUAL,
     LedgerExportCommand,
     LedgerReviewQuery,
     LedgerSourceImportCommand,
@@ -3321,7 +3322,7 @@ def rule_apply(
             if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
                 continue
             if tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED and not (
-                reaffirm and tx.classified_by == "manual"
+                reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
             ):
                 continue
             for rule in rules:
