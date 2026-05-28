@@ -24,7 +24,7 @@ exception class names, file-storage layout, and per-call
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.outbound.aeat.sede._declarations import Declaracion
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.time import _now
 from ._snapshot_base import (
     JsonlSnapshotRepository,
     SnapshotNotFoundError,
@@ -71,10 +72,6 @@ class PersistedExpedientesSnapshot(BaseModel):
     source_url: str = Field(min_length=1)
     declarations: tuple[Declaracion, ...]
     persisted_at: datetime
-
-
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _storage_path(settings: Settings, bucket_id: str) -> Path:

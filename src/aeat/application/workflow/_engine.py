@@ -13,13 +13,14 @@ Safety invariants enforced by this module:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Literal, NoReturn, cast
 
 from ...application.auth import describe_provider_operator_impact
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
 from ...core.logging import get_logger
+from ...core.time import _now as _utcnow
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,
@@ -94,11 +95,6 @@ def _registry_period_token(period: str) -> tuple[int, str]:
 
 
 _logger = get_logger(__name__)
-
-
-def _utcnow() -> datetime:
-    """Return current UTC time. Factored for test determinism hooks."""
-    return datetime.now(tz=UTC)
 
 
 def _classify_cert_expiry(

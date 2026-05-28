@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import re
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
@@ -34,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.config import Settings
 from ...core.errors import AeatError
+from ...core.time import _now
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -280,10 +281,6 @@ def _emit_invoice_event(
     )
     event_repository.save(append_bucket_event(event_repository.load(), event))
     return event.event_id
-
-
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _storage_path(settings: Settings, kind: BusinessOperationInvoiceSourceKind, bucket_id: str) -> Path:

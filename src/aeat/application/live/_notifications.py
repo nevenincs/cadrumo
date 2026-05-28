@@ -34,7 +34,7 @@ exception class names, file-storage layout, and per-call
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -46,6 +46,7 @@ from ...adapters.outbound.aeat.sede._notifications import (
 )
 from ...core.config import Settings, load_settings
 from ...core.errors import AeatError
+from ...core.time import _now
 from ._snapshot_base import (
     JsonlSnapshotRepository,
     SnapshotNotFoundError,
@@ -73,10 +74,6 @@ class PersistedNotificationsSnapshot(BaseModel):
     source_url: str = Field(min_length=1)
     rows: tuple[RemoteNotification, ...]
     persisted_at: datetime
-
-
-def _now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _storage_path(settings: Settings, bucket_id: str) -> Path:
