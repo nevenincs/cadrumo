@@ -2703,6 +2703,7 @@ errors:
     error_normatives_normative: Se produjo un error relacionado con la normativa.
     error_normatives_normative_not_found: No se encontró la norma o el artículo solicitados.
     error_normatives_validation: Un valor de la normativa no es válido.
+    error_observation_key: Un componente de la clave de observación no cumple el contrato del repositorio.
     error_outbound_storage_not_found: No existe el objeto o el espacio de almacenamiento
       solicitado.
     error_pdf_import_pdf_modelo_import: Falló la importación de la declaración desde
@@ -2920,7 +2921,8 @@ errors:
       superó la validación estricta.
     integrity_outbound_storage: El contenido descargado no superó las comprobaciones
       de integridad (hash, tamaño o etiqueta).
-    integrity_outbound_storage_corruption: 'Un fichero de metadatos sidecar contiene un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.'
+    integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
+      un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.
     integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
       una invariante estructural.
     integrity_profile_snapshot_hash_mismatch: El hash del snapshot del perfil no coincide
@@ -3202,6 +3204,7 @@ errors:
     refused_wizard_status: El asistente no pudo resolver el perfil activo.
     refused_wizard_unsupported_console: El terminal actual no admite el asistente
       interactivo. Ejecútalo en una terminal compatible.
+    refused_diagnostic_model_invariant: errors.refused.refused_diagnostic_model_invariant
     refused_wizard_validation: Una respuesta del asistente no superó la validación.
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.

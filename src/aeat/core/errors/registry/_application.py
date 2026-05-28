@@ -845,6 +845,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._errors.ObservationKeyError",
+        ErrorCode(
+            code="ERROR_OBSERVATION_KEY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_observation_key",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.calculations._iva_compensation_history.IvaCompensationCarryForwardPolicyError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_CARRY_FORWARD_POLICY",
@@ -917,6 +928,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTEGRITY,
             message_key="errors.storage.stored_data_validation_boundary",
             default_suggestion="aeat app modelo work calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application._errors.DiagnosticModelError",
+        ErrorCode(
+            code="REFUSED_DIAGNOSTIC_MODEL_INVARIANT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_diagnostic_model_invariant",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
