@@ -28,4 +28,4 @@ Registered the new error under code `REFUSED_BINDING_PREFILL_TYPE` (category `RE
 
 ## Commit
 
-pending S26 co-commit
+`62529675a`

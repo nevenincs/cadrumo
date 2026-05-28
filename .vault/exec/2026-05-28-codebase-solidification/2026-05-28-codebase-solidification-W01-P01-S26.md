@@ -29,4 +29,4 @@ All four tests pass. No mocks, no skips, no xfail.
 
 ## Commit
 
-pending
+`62529675a`
