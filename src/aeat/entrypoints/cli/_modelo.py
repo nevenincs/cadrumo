@@ -359,22 +359,22 @@ def describe_modelo(
         message = str(exc)
         if period is not None and "period" in message.lower():
             raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
-        raise typer.BadParameter(message) from exc
+        raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
     _emit(
         ctx,
         report,
         [
-            f"Modelo\t{report.code}",
-            f"Title\t{report.title}",
-            f"Official name\t{report.official_name}",
-            f"Tax domain\t{report.tax_domain}",
-            f"Cadence\t{report.cadence}",
-            f"Revision\t{report.revision}",
-            f"Revision ids\t{', '.join(report.revision_ids)}",
-            f"Periods\t{', '.join(report.periods)}",
-            f"Casillas\t{report.casilla_count}",
-            f"Bindings\t{report.binding_count}",
-            f"Formulas\t{report.formula_count}",
+            f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
+            f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
+            f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
+            f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
+            f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
+            f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
+            f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
+            f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
+            f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
+            f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
+            f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
         ],
     )
 
@@ -3015,7 +3015,7 @@ def work_calculate(
                 aportaciones_totales=dt12_totales,
             )
         except ValueError as exc:
-            raise typer.BadParameter(str(exc)) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.dt12_computation_error", message=str(exc))) from exc
         reduccion_casilla_id = _resolve_reduccion_trabajo_casilla_id(work_unit_id)
         casilla_inputs[reduccion_casilla_id] = dt12_reduccion
 
@@ -3053,7 +3053,7 @@ def work_calculate(
                 capital_social=sal_cs,
             )
         except ValueError as exc:
-            raise typer.BadParameter(str(exc)) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.sal_computation_error", message=str(exc))) from exc
         sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
         casilla_inputs[sal_casilla_id] = sal_dotacion
 
