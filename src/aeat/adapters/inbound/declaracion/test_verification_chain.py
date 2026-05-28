@@ -40,7 +40,8 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | 06-legacy=03+05, 08-legacy=06-07;   |
 |        |                            |                   |                  | 2024-1T: casillas 03=01+02,         |
 |        |                            |                   |                  | 06=04+05, 09=07+08, 12=..., 14=...) |
-| M130   | 2021-y-siguientes          | 15 synthetic PDFs | yes              | VERIFIED (casilla 19, 2021–2024)    |
+| M130   | 2021-y-siguientes          | 15 synthetic PDFs | yes              | VERIFIED (casillas 03=01-02,        |
+|        |                            |                   |                  | 19=f(01..18); full DAG exercised)   |
 | M131   | 2026 (fixture mislabeled)  | 1 synthetic PDF   | yes              | VERIFIED (casillas 07=02+04+06,     |
 |        |                            |                   |                  | 10=07-08-09, 13=10-11-12, 15=13-14) |
 | M180   | 2023-y-siguientes          | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M115→M180 relations    |
@@ -114,9 +115,13 @@ pytestmark = [
 ]
 
 _COMPUTED_CASILLAS_M130 = frozenset(
-    {"04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"}
+    {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"}
 )
-"""M130 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
+"""M130 casillas whose input_kind is 'computed' — must NOT appear in engine inputs.
+
+Box 03 (rendimiento neto = 01 - 02) is computed; the engine derives it from
+the leaf inputs 01 (bound, ingresos) and 02 (manual, gastos).
+"""
 
 _COMPUTED_CASILLAS_M111 = frozenset({"28", "30"})
 """M111 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
@@ -161,18 +166,26 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     (rendimiento neto) and casilla 19 (resultado final, engine-derived closure).
     Values satisfy the M130 formula chain (see _MODELO_130_CORPUS_FIXTURES).
 
+    The fixtures pre-date the rendimiento-neto formula landing (box 03 = 01 - 02).
+    They print c03 directly as the leaf rendimiento neto with all other casillas
+    absent.  The test reconstructs the canonical leaf decomposition as:
+      c01 (ingresos) = extracted c03   (all income, zero expenses)
+      c02 (gastos)   = 0
+    so the engine computes c03 = c01 - c02 = extracted c03.  The art-110.3.b
+    high-retention branch fires only when c06/c01 >= 0.70; with c06=0 both the
+    c01=0 and c01>0 paths of the c17 formula reduce to (c14 - c15) - c16,
+    giving identical c19 output.
+
     Chain:
-      1. parse_declaracion → DeclaracionObservation with extracted casillas
-      2. Filter to non-computed casillas → inputs dict for the engine
+      1. parse_declaracion → DeclaracionObservation (extracts c03 and c19 only)
+      2. Reconstruct leaf inputs: c01 = extracted_c03, c02 = 0
       3. Supply previous-filing binding values:
          - modelo-130-resultados-negativos-anteriores = 0 (no prior negative)
          - irpf.previous_year_economic_activity_net_income = 0
            (unknown from corpus → conservative 0 → casilla 13 = 0)
-         - modelo-130-actividad-economica-rendimiento-neto-cumulative = extracted["03"]
-           (03 is a bound casilla; must be in binding_values to avoid
-            the smuggling check when it also appears in inputs)
       4. calculate_registry_snapshot with inputs + binding_values
-      5. Assert engine.values["19"] == extracted["19"]
+      5. Assert engine.values["03"] == c01 - c02 == extracted["03"] (formula check)
+      6. Assert engine.values["19"] == extracted["19"]
 
     Verdict: VERIFIED when engine == extracted; PARSER-GAP when parse fails;
     BINDING-GAP when engine raises RegistryValidationError; FORMULA-MISMATCH
@@ -210,45 +223,34 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         )
         closure_extracted = extracted["19"]
 
-    # Step 3: build inputs — exclude computed casillas
+    # Step 3: build leaf inputs.
+    # The fixture prints only c03 (rendimiento neto) and c19 (closure).  Box 03 is
+    # now computed (03 = 01 - 02) so it cannot go into engine inputs.  Reconstruct
+    # the canonical leaf decomposition: c01 = extracted_c03 (all income, no expenses),
+    # c02 = 0 (gastos absent from fixture).  The art-110.3.b branch of c17 is safe:
+    # with c06=0 both paths yield (c14 - c15) - c16, so c19 is unaffected.
+    # Other extracted non-computed casillas (absent in these fixtures) pass through.
+    extracted_c03 = extracted.get("03")
     inputs: dict[str, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M130:
             continue
         if not isinstance(value, Decimal):
             continue
-        # Casilla 01 and 03 are bound (ledger_renta_income_aggregation) — NOT
-        # previous_filing. They are legitimate inputs. See _initial_values: bound
-        # non-previous_filing casillas default to inputs.get(casilla_id, ZERO).
         inputs[casilla_id] = value
+    # Inject the reconstructed leaf decomposition for box 03.
+    if isinstance(extracted_c03, Decimal):
+        inputs["01"] = extracted_c03  # c01 = rendimiento neto (c03), no gastos
+        # c02 defaults to 0 (absent from fixture — not injected here)
 
-    # Casilla 03 is bound to modelo-130-actividad-economica-rendimiento-neto-cumulative.
-    # The smuggling check blocks previous_filing bound casillas supplied via inputs
-    # without binding_values, but ledger_renta_income_aggregation is NOT previous_filing.
-    # However, casilla 01 is also bound to a ledger binding; supply via inputs.
-    #
-    # For the previous_filing bindings (casilla 15 comes from 0002-bindings.toml and
-    # 0001-bindings.toml), we supply explicit values to satisfy the runtime:
-    extracted_c03 = extracted.get("03", Decimal("0"))
-    if not isinstance(extracted_c03, Decimal):
-        extracted_c03 = Decimal("0")
-
+    # Only previous_filing bindings must be supplied via binding_values:
     binding_values: dict[str, Decimal] = {
         # Prior-quarter carry-forward; 0 = no prior negative result (safe default
         # for corpus specimens where we don't know prior-quarter saldo).
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         # Prior-year net income; 0 → casilla 13 = 0 (minoración rendimientos netos).
-        # This is conservative but honest: corpus PDFs don't print casilla 13
-        # (computed) so we can't verify it independently.
+        # Conservative but honest: corpus PDFs don't print casilla 13 (computed).
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-        # Rendimiento neto cumulative — extracted casilla 03 as the binding source.
-        # This resolves the ledger_renta_income_aggregation bound casilla 03.
-        "modelo-130-actividad-economica-rendimiento-neto-cumulative": extracted_c03,
-        # Ingresos cumulative — extracted casilla 01 as the binding source.
-        "modelo-130-actividad-economica-ingresos-cumulative": extracted.get("01", Decimal("0"))
-        if isinstance(extracted.get("01"), Decimal)
-        else Decimal("0"),
-        "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
     }
 
     # Step 4: resolve snapshot and run engine
@@ -274,9 +276,22 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"  binding_values supplied: {sorted(binding_values)}"
         )
 
-    # Step 5: compare engine result against extracted value
+    # Step 5: verify engine computes casilla 03 = 01 - 02
     engine_values = dict(result.values)
 
+    input_01 = inputs.get("01", Decimal("0"))
+    input_02 = inputs.get("02", Decimal("0"))
+    engine_03 = engine_values.get("03")
+    assert engine_03 is not None, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: casilla '03' absent from engine result "
+        f"— formula modelo-130-rendimiento-neto evaluation failed."
+    )
+    assert engine_03 == input_01 - input_02, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '03' = {engine_03!r}, "
+        f"expected 01({input_01!r}) - 02({input_02!r}) = {input_01 - input_02!r}"
+    )
+
+    # Step 6: compare engine casilla 19 against extracted value
     if closure_extracted is not None:
         engine_19 = engine_values.get("19")
         assert engine_19 is not None, (
