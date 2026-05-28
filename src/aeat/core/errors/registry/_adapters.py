@@ -1084,6 +1084,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.outbound.storage._errors.StorageCorruptionError",
+        ErrorCode(
+            code="INTEGRITY_OUTBOUND_STORAGE_CORRUPTION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_outbound_storage_corruption",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.master_key._active_session.NoActiveBucketSessionError",
         ErrorCode(
             code="REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",

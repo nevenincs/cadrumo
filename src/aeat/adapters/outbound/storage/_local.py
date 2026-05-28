@@ -21,14 +21,18 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
+from ....core.logging import get_logger
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
     OutboundStorageNotFoundError,
     OutboundStoragePermissionError,
     OutboundStorageValidationError,
+    StorageCorruptionError,
 )
 from ._records import ProviderKind, ProviderObjectMetadata, ProviderProbeReport
+
+_logger = get_logger(__name__)
 
 _HMAC_PREFIX_LEN = 8
 _FILE_EXTENSION = ".bin"
@@ -268,7 +272,14 @@ class LocalFileSystemProvider:
 
         _byte_length_raw = sidecar.get("byte_length", len(payload))
         if not isinstance(_byte_length_raw, (int, str)):
-            raise TypeError(f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}")
+            _logger.error(
+                "sidecar byte_length has unexpected type",
+                extra={"type": repr(type(_byte_length_raw))},
+            )
+            raise StorageCorruptionError(
+                f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
+                context={"actual_type": repr(type(_byte_length_raw))},
+            )
         metadata = ProviderObjectMetadata(
             namespace=namespace_clean,
             object_key_hmac=hmac_clean,
@@ -328,7 +339,14 @@ class LocalFileSystemProvider:
                 written_at = datetime.now(UTC)
             _byte_length_raw = sidecar.get("byte_length", 0)
             if not isinstance(_byte_length_raw, (int, str)):
-                raise TypeError(f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}")
+                _logger.error(
+                    "sidecar byte_length has unexpected type",
+                    extra={"type": repr(type(_byte_length_raw))},
+                )
+                raise StorageCorruptionError(
+                    f"sidecar byte_length has unexpected type: {type(_byte_length_raw)!r}",
+                    context={"actual_type": repr(type(_byte_length_raw))},
+                )
             yield ProviderObjectMetadata(
                 namespace=namespace_clean,
                 object_key_hmac=str(sidecar.get("object_key_hmac", "")),
