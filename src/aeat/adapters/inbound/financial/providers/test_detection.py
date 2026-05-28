@@ -21,9 +21,11 @@ from pathlib import Path
 
 import pytest
 
+from ._constants import CSV_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
 from ._csv import CsvProvider
 from ._detection import provider_for_extension
 from ._ofx import OfxProvider
+from ._pdf_n26 import PdfN26Provider
 from ._xlsx import XlsxProvider
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -91,3 +93,53 @@ def test_provider_for_extension_returns_none_for_no_extension() -> None:
     """A path without a suffix has ``.suffix == ''``, which does not
     match any allow-listed entry."""
     assert provider_for_extension(Path("statement")) is None
+
+
+# ---------------------------------------------------------------------------
+# S182: assert detection routes through the shared _constants module
+# ---------------------------------------------------------------------------
+
+
+def test_csv_extensions_constant_drives_csv_provider_routing() -> None:
+    """Every extension in CSV_EXTENSIONS routes to CsvProvider via the
+    shared constant — if the constant and the dispatch branch diverge,
+    at least one of these assertions will fail."""
+    for ext in CSV_EXTENSIONS:
+        provider = provider_for_extension(Path(f"statement{ext}"))
+        assert isinstance(provider, CsvProvider), (
+            f"Expected CsvProvider for extension {ext!r} from CSV_EXTENSIONS "
+            f"but got {type(provider).__name__}"
+        )
+
+
+def test_xlsx_extension_constant_drives_xlsx_provider_routing() -> None:
+    """XLSX_EXTENSION constant is the single source used by provider_for_extension."""
+    provider = provider_for_extension(Path(f"statement{XLSX_EXTENSION}"))
+    assert isinstance(provider, XlsxProvider)
+
+
+def test_pdf_extension_constant_returns_none_for_extension_routing() -> None:
+    """PDF_EXTENSION via provider_for_extension returns None per the documented
+    carve-out: PDF requires content-aware detection."""
+    provider = provider_for_extension(Path(f"statement{PDF_EXTENSION}"))
+    assert provider is None
+
+
+def test_csv_extensions_constant_matches_csv_provider_supported_extensions() -> None:
+    """CsvProvider.supported_extensions must equal CSV_EXTENSIONS exactly.
+
+    This is the structural invariant: both the detection router and the
+    provider instance use the same constant so a future alias addition
+    requires only one edit.
+    """
+    assert CsvProvider.supported_extensions == CSV_EXTENSIONS
+
+
+def test_xlsx_extension_constant_matches_xlsx_provider_supported_extensions() -> None:
+    """XlsxProvider.supported_extensions is built from XLSX_EXTENSION."""
+    assert XLSX_EXTENSION in XlsxProvider.supported_extensions
+
+
+def test_pdf_extension_constant_matches_pdf_provider_supported_extensions() -> None:
+    """PdfN26Provider.supported_extensions is built from PDF_EXTENSION."""
+    assert PDF_EXTENSION in PdfN26Provider.supported_extensions

@@ -15,6 +15,7 @@ from pathlib import Path
 
 from .....core.logging import get_logger
 from ._base import FinancialProvider
+from ._constants import CSV_EXTENSIONS, PDF_EXTENSION, XLSX_EXTENSION
 from ._csv import CsvProvider
 from ._ofx import OfxProvider
 from ._pdf_n26 import PdfN26Provider
@@ -38,9 +39,9 @@ def provider_for_extension(path: Path) -> FinancialProvider | None:
     """
 
     suffix = path.suffix.lower()
-    if suffix in {".csv", ".txt"}:
+    if suffix in CSV_EXTENSIONS:
         return CsvProvider()
-    if suffix == ".xlsx":
+    if suffix == XLSX_EXTENSION:
         return XlsxProvider()
     if suffix in {".ofx", ".qfx"}:
         return OfxProvider()
@@ -74,13 +75,13 @@ def detect_provider(path: Path) -> FinancialProvider | None:
 def _ordered_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     """Order providers by extension hint, then fall back to content sniffing."""
     suffix = path.suffix.lower()
-    if suffix == ".pdf":
+    if suffix == PDF_EXTENSION:
         return (PdfN26Provider(), CsvProvider(), XlsxProvider(), OfxProvider())
-    if suffix == ".xlsx":
+    if suffix == XLSX_EXTENSION:
         return (XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
     if suffix in {".ofx", ".qfx"}:
         return (OfxProvider(), CsvProvider(), XlsxProvider(), PdfN26Provider())
-    if suffix in {".csv", ".txt"}:
+    if suffix in CSV_EXTENSIONS:
         return (CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider())
     try:
         head = path.read_bytes()[:256]
