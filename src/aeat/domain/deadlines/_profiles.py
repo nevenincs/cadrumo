@@ -14,6 +14,8 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+from aeat.core.parsing import _parse_bool
+
 from ._errors import ProfileError
 from ._models import (
     FiscalResidency,
@@ -131,7 +133,7 @@ def taxpayer_profile_from_mapping(
             public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
         ),
         fiscal_address_cadastral_reference=canonical.get("address.cadastral_reference", ""),
-        fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")),
+        fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
         activity_start_date=_parse_date(canonical.get("census.activity_start_date")),
         activity_end_date=_parse_date(canonical.get("census.activity_end_date")),
         incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
@@ -168,12 +170,6 @@ def taxpayer_profile_from_mapping(
         ),
         days_in_spain=_parse_days_in_spain(canonical),
     )
-
-
-def _parse_bool(raw: str | None) -> bool:
-    if not raw:
-        return False
-    return raw.strip().lower() in {"true", "1", "yes", "y", "si", "sí"}
 
 
 def _parse_optional_bool(raw: str | None) -> bool | None:
