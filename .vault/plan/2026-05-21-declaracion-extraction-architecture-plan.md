@@ -536,3 +536,9 @@ M303 verification chain currently EXTRACTION-ONLY because no closure formulas de
 Following W10.P51 M303 formula reconciliation: engine recomputes resultado-regimen-general correctly via box 27 - box 45, but corpus uniform-1000.00 sanitisation makes FORMULA-MISMATCH (engine output 0 vs printed 1000). Apply M130 task #71 fix pattern: extend _generate.py with _draw_modelo_303_corpus + _compute_m303_closure deriving intermediate + closure values from leaf inputs via the M303 formula DAG. Regenerate 15 M303 corpus PDFs (8 new-template 2023-1T..2024-4T + 7 legacy 2021-2T..2022-4T) with formula-consistent values. M303 ×2 revisions × 15 corpus PDFs transition FORMULA-MISMATCH → VERIFIED. Headline IVA mission proof.
 
 - [x] `W10.P52.S209` - Regenerate 15 M303 corpus PDFs with formula-consistent values per the M130 task 71 pattern (tasklist #82); `src/aeat/tests/fixtures/justificantes/303/ src/aeat/tests/fixtures/justificantes/_generate.py`.
+
+### Phase `W10.P53` - M036 NOT-CHAIN-READY resolution
+
+Resolve M036 fixture period mismatch surfaced by W10.P49 NOT-CHAIN-READY classification
+
+- [x] `W10.P53.S211` - Rename fixture 2025-0A.pdf to 2025-alta.pdf and add EXTRACTION-ONLY chain test for M036 period=alta (tasklist #80); `src/aeat/tests/fixtures/justificantes/036/ src/aeat/adapters/inbound/declaracion/test_verification_chain.py`.
