@@ -5,7 +5,9 @@ entry, audit-log entry) declares a :class:`SensitivityClass`. Each class
 maps to a default :class:`ClassificationPolicy` that pins the at-rest
 treatment (plaintext or ciphertext-required), retention behaviour, and
 the redaction rule references that the audit sink and run-trace path
-honour.
+honour. Operator-facing output uses :class:`OutputSensitivityClass` so
+CLI public output can be classified without pretending it is a persisted
+record.
 
 The default policy table is the single point of truth. Per-domain
 repositories MAY override the default for an individual record (e.g.
@@ -73,6 +75,25 @@ class SensitivityClass(StrEnum):
     CACHE = "cache"
     CORPUS = "corpus"
     OPERATIONAL = "operational"
+    DIAGNOSTIC = "diagnostic"
+
+
+class OutputSensitivityClass(StrEnum):
+    """Closed catalogue of output redaction surfaces.
+
+    Attributes:
+        CLI_PUBLIC: Operator-facing CLI success output. It is not a
+            persisted sensitivity class; the renderer redacts before
+            emitting text or JSON.
+        LOG: Log-line and log-context output.
+        ERROR: Error-envelope and exception-message output.
+        DIAGNOSTIC: Diagnostic output that may also be persisted under
+            :attr:`SensitivityClass.DIAGNOSTIC`.
+    """
+
+    CLI_PUBLIC = "cli_public"
+    LOG = "log"
+    ERROR = "error"
     DIAGNOSTIC = "diagnostic"
 
 
@@ -195,6 +216,29 @@ class ClassificationPolicy(BaseModel):
     redaction_rules: tuple[str, ...] = Field(default=())
 
 
+class OutputClassificationPolicy(BaseModel):
+    """Default redaction policy attached to an output surface.
+
+    Output classification is intentionally separate from
+    :class:`SensitivityClass`: CLI success output is a rendering-time
+    boundary, while diagnostics may also be persisted and therefore keep
+    their existing at-rest sensitivity.
+
+    Attributes:
+        output: Output surface this policy governs.
+        redaction_rules: Tuple of redaction-rule names to apply before
+            output leaves the process.
+        persisted_as: Persisted sensitivity class when this output is
+            also stored. ``None`` means the surface is emit-only.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    output: OutputSensitivityClass
+    redaction_rules: tuple[str, ...] = Field(default=())
+    persisted_as: SensitivityClass | None = Field(default=None)
+
+
 _FISCAL_YEAR_RETENTION = timedelta(days=365 * 5)
 """Five fiscal years — Spanish autónomo statute-of-limitations envelope."""
 
@@ -205,6 +249,15 @@ _SHORT_SESSION_RETENTION = timedelta(hours=24)
 
 _DIAGNOSTIC_RETENTION = timedelta(days=7)
 """Default retention for opt-in diagnostic capture."""
+
+
+_AUDIT_REDACTION_RULES = (
+    "nif-hash",
+    "url-host-only",
+    "token-fingerprint",
+    "bearer-token-fingerprint",
+)
+"""Default rule set for audit-shaped output strings and payloads."""
 
 
 _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = MappingProxyType(
@@ -240,12 +293,7 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.AUDIT,
             at_rest=AtRestTreatment.CIPHERTEXT_REQUIRED,
             retention=RetentionPolicy(max_age=_FISCAL_YEAR_RETENTION),
-            redaction_rules=(
-                "nif-hash",
-                "url-host-only",
-                "token-fingerprint",
-                "bearer-token-fingerprint",
-            ),
+            redaction_rules=_AUDIT_REDACTION_RULES,
         ),
         SensitivityClass.CACHE: ClassificationPolicy(
             sensitivity=SensitivityClass.CACHE,
@@ -269,12 +317,33 @@ _DEFAULT_POLICY_TABLE: Mapping[SensitivityClass, ClassificationPolicy] = Mapping
             sensitivity=SensitivityClass.DIAGNOSTIC,
             at_rest=AtRestTreatment.PLAINTEXT,
             retention=RetentionPolicy(max_age=_DIAGNOSTIC_RETENTION),
-            redaction_rules=(
-                "nif-hash",
-                "url-host-only",
-                "token-fingerprint",
-                "bearer-token-fingerprint",
-            ),
+            redaction_rules=_AUDIT_REDACTION_RULES,
+        ),
+    }
+)
+
+
+_DEFAULT_OUTPUT_POLICY_TABLE: Mapping[OutputSensitivityClass, OutputClassificationPolicy] = MappingProxyType(
+    {
+        OutputSensitivityClass.CLI_PUBLIC: OutputClassificationPolicy(
+            output=OutputSensitivityClass.CLI_PUBLIC,
+            redaction_rules=_AUDIT_REDACTION_RULES,
+            persisted_as=None,
+        ),
+        OutputSensitivityClass.LOG: OutputClassificationPolicy(
+            output=OutputSensitivityClass.LOG,
+            redaction_rules=_AUDIT_REDACTION_RULES,
+            persisted_as=SensitivityClass.AUDIT,
+        ),
+        OutputSensitivityClass.ERROR: OutputClassificationPolicy(
+            output=OutputSensitivityClass.ERROR,
+            redaction_rules=_AUDIT_REDACTION_RULES,
+            persisted_as=SensitivityClass.AUDIT,
+        ),
+        OutputSensitivityClass.DIAGNOSTIC: OutputClassificationPolicy(
+            output=OutputSensitivityClass.DIAGNOSTIC,
+            redaction_rules=_AUDIT_REDACTION_RULES,
+            persisted_as=SensitivityClass.DIAGNOSTIC,
         ),
     }
 )
@@ -300,6 +369,22 @@ def default_policy_for(sensitivity: SensitivityClass) -> ClassificationPolicy:
     return _DEFAULT_POLICY_TABLE[sensitivity]
 
 
+def default_output_policy_for(output: OutputSensitivityClass) -> OutputClassificationPolicy:
+    """Return the default output redaction policy for ``output``.
+
+    Args:
+        output: The output surface to look up.
+
+    Returns:
+        The default output policy. The returned record is frozen and
+        shared.
+
+    Raises:
+        KeyError: If ``output`` is not a known output class.
+    """
+    return _DEFAULT_OUTPUT_POLICY_TABLE[output]
+
+
 def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
     """Return the immutable default-policy mapping for every class.
 
@@ -309,3 +394,14 @@ def default_policy_table() -> Mapping[SensitivityClass, ClassificationPolicy]:
         cannot mutate either.
     """
     return _DEFAULT_POLICY_TABLE
+
+
+def default_output_policy_table() -> Mapping[OutputSensitivityClass, OutputClassificationPolicy]:
+    """Return the immutable default-output-policy mapping.
+
+    Returns:
+        The shared :class:`MappingProxyType` view of output redaction
+        policies. CLI public output is represented here rather than in
+        the persisted sensitivity table.
+    """
+    return _DEFAULT_OUTPUT_POLICY_TABLE
