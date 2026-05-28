@@ -2617,6 +2617,7 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
+    error_aggregation_config: 'An aggregation service composition invariant was violated.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.
@@ -2785,6 +2786,7 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
+    integrity_storage_namespace_registry: A namespace-registry key or definition violated a boot-time invariant.
     integrity_verification: Verification failed unrecoverably. The reference data
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
@@ -3026,6 +3028,9 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+    refused_export_format: 'The requested export serialization format is not supported.'
+    refused_export_field: 'A field validation invariant was violated during tabular export.'
+    refused_wizard_answer_type: 'A wizard answer field received an unexpected type at the typed boundary.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

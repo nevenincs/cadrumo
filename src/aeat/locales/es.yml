@@ -2772,6 +2772,7 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
+    error_aggregation_config: 'Se ha violado un invariante de composición del servicio de agregación.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -2957,6 +2958,7 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
+    integrity_storage_namespace_registry: Una clave o definición del registro de espacios de nombres violó un invariante de inicialización.
     integrity_verification: La verificación falló de forma irrecuperable. Los datos
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
@@ -3211,6 +3213,9 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_export_format: 'El formato de serialización de exportación solicitado no está soportado.'
+    refused_export_field: 'Se ha violado un invariante de validación de campo durante la exportación tabular.'
+    refused_wizard_answer_type: 'Un campo de respuesta del asistente recibio un tipo inesperado en el limite tipado.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

@@ -2740,6 +2740,7 @@ errors:
     error_workflow: S'ha produït un error en el flux de treball.
     error_workflow_component: Un component del flux de treball ha llançat una excepció
       inesperada.
+    error_aggregation_config: 'S''ha violat un invariant de composició del servei d''agregació.'
   fail:
     census_sync: La sincronització del cens del Model 036 ha fallat.
     currency_error: Ha fallat la normalització de la moneda.
@@ -2928,6 +2929,7 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
+    integrity_storage_namespace_registry: Una clau o definició del registre d'espais de noms ha violat un invariant d'inicialització.
     integrity_verification: La verificació ha fallat de manera irrecuperable. Les
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
@@ -3183,6 +3185,9 @@ errors:
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_export_format: 'El format de serialització d''exportació sol·licitat no és compatible.'
+    refused_export_field: 'S''ha violat un invariant de validació de camp durant l''exportació tabular.'
+    refused_wizard_answer_type: 'Un camp de resposta de l''assistent ha rebut un tipus inesperat al limit tipat.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
