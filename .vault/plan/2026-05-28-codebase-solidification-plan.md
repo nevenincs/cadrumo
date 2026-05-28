@@ -264,10 +264,10 @@ removal. Each fix Step is paired with a verification Step that
 either deletes the dead path or asserts it survives only because
 real callers still rely on it.
 
-- [ ] `W01.P06.S155` - delete the empty `if TYPE_CHECKING: pass` block; `src/aeat/application/modelo/_taxation_comparison.py`.
-- [ ] `W01.P06.S156` - add real-behavior test asserting the module still type-checks and imports cleanly under the production interpreter; `src/aeat/application/modelo/test_taxation_comparison.py`.
-- [ ] `W01.P06.S157` - audit the `_legacy_iva_wallet_decision_key` migration bridge for callable references in persisted records; `if zero hits, delete; otherwise schedule the migration close-out as a Wave 2 Step; `src/aeat/application/calculations/_observations_repository.py`.
-- [ ] `W01.P06.S158` - add real-behavior test asserting the legacy decision-key fallback path is reached only by pre-hardening records and is a no-op for hashed records; `src/aeat/application/calculations/test_observations_repository.py`.
+- [x] `W01.P06.S155` - delete the empty `if TYPE_CHECKING: pass` block; `src/aeat/application/modelo/_taxation_comparison.py`.
+- [x] `W01.P06.S156` - add real-behavior test asserting the module still type-checks and imports cleanly under the production interpreter; `src/aeat/application/modelo/test_taxation_comparison.py`.
+- [x] `W01.P06.S157` - audit the `_legacy_iva_wallet_decision_key` migration bridge for callable references in persisted records; `if zero hits, delete; otherwise schedule the migration close-out as a Wave 2 Step; `src/aeat/application/calculations/_observations_repository.py`.
+- [x] `W01.P06.S158` - add real-behavior test asserting the legacy decision-key fallback path is reached only by pre-hardening records and is a no-op for hashed records; `src/aeat/application/calculations/test_observations_repository.py`.
 
 ### Phase `W01.P07` - eliminate hardcoded values and enum bypass
 
