@@ -16,6 +16,8 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S07]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S08]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S09]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S10]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S11]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -126,3 +128,13 @@ The CRO-001 fix redacts dict member names in `src/aeat/core/redaction/__init__.p
 ## W01.P02.S08/S09 Second Follow-up Re-Review
 
 CRO-002 status: resolved. Redacted mapping-key collisions now receive deterministic suffixes (`#2`, `#3`, ...), preserving all entries while keeping raw sensitive member names out of rendered JSON. Focused helper and renderer tests cover the two-object-key collision path, and a direct three-key probe retained all values. HIGH findings present: no. CRITICAL findings present: no.
+
+## W01.P02.S10/S11 Review
+
+No HIGH/CRITICAL findings in the scoped S10/S11 implementation.
+
+`emit_json_success` now enrolls success envelopes in `redact_structured_for_cli_output` before delegating to `emit_json_document`; result payloads, warnings, sensitive member names, and collision-suffixed object-key placeholders are covered by API-level roundtrip tests. `emit_json_document` remains a lower-level generic JSON writer and was not implicitly converted into a redaction boundary. The S11 test exercises the public stream-emission API rather than duplicating helper logic, parses the emitted JSON, checks envelope shape, verifies warning redaction, validates through `SchemaEnvelope`, and covers keyed-lookup collision preservation.
+
+### Residual risks
+
+- `emit_json_success` still inherits `emit_json_document`'s `default=str` fallback for unsupported non-schema objects. That appears unchanged for the generic JSON contract, but future hardening may want a stricter success-envelope serialization gate if this path is expected to match `render_command_output`'s fail-fast behavior.
