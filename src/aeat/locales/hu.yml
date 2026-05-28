@@ -1585,127 +1585,127 @@ cli:
         %{allowed}; kapott: %{value}.'
   operator_surface:
     errors:
-      accepted_roots_only: cli.operator_surface.errors.accepted_roots_only
-      contract_not_accepted: cli.operator_surface.errors.contract_not_accepted
-      source_kind_options: cli.operator_surface.errors.source_kind_options
-      unknown_source_kind: cli.operator_surface.errors.unknown_source_kind
+      accepted_roots_only: 'A CLI csak a config és az app gyökérparancsokat fogadja el.'
+      contract_not_accepted: 'A kért parancs kívül esik az elfogadott üzemeltetői felületen.'
+      source_kind_options: 'A forrástípus csak a következők egyike lehet: ledger_transaction, purchase_invoice_evidence, payable_invoice vagy collectible_invoice.'
+      unknown_source_kind: 'Ismeretlen forrástípus: %{value}.'
     help:
       app:
-        footer: cli.operator_surface.help.app.footer
-        heading: cli.operator_surface.help.app.heading
-        ledger_allocate: cli.operator_surface.help.app.ledger_allocate
-        ledger_archive: cli.operator_surface.help.app.ledger_archive
-        ledger_attach: cli.operator_surface.help.app.ledger_attach
-        ledger_classify: cli.operator_surface.help.app.ledger_classify
-        ledger_export: cli.operator_surface.help.app.ledger_export
-        ledger_import: cli.operator_surface.help.app.ledger_import
-        ledger_list: cli.operator_surface.help.app.ledger_list
-        ledger_remove: cli.operator_surface.help.app.ledger_remove
-        ledger_reset: cli.operator_surface.help.app.ledger_reset
-        ledger_review: cli.operator_surface.help.app.ledger_review
-        ledger_stash: cli.operator_surface.help.app.ledger_stash
-        ledger_status: cli.operator_surface.help.app.ledger_status
-        ledger_update: cli.operator_surface.help.app.ledger_update
-        ledger_view: cli.operator_surface.help.app.ledger_view
-        live_filed_capture: cli.operator_surface.help.app.live_filed_capture
-        live_filed_capture_sources: cli.operator_surface.help.app.live_filed_capture_sources
-        live_filed_list: cli.operator_surface.help.app.live_filed_list
-        modelo_bindings: cli.operator_surface.help.app.modelo_bindings
-        modelo_describe: cli.operator_surface.help.app.modelo_describe
-        modelo_list: cli.operator_surface.help.app.modelo_list
-        modelo_work: cli.operator_surface.help.app.modelo_work
-        overview_status: cli.operator_surface.help.app.overview_status
-        paragraph_operational_workflow: cli.operator_surface.help.app.paragraph_operational_workflow
-        registry_inspect: cli.operator_surface.help.app.registry_inspect
-        registry_verify: cli.operator_surface.help.app.registry_verify
-        review_queue: cli.operator_surface.help.app.review_queue
-        review_view: cli.operator_surface.help.app.review_view
-        section_ledger: cli.operator_surface.help.app.section_ledger
-        section_live_reads: cli.operator_surface.help.app.section_live_reads
-        section_modelo: cli.operator_surface.help.app.section_modelo
-        section_overview: cli.operator_surface.help.app.section_overview
-        section_review_and_registry: cli.operator_surface.help.app.section_review_and_registry
+        footer: 'Teljes áttekintésért futtassa: aeat --help.'
+        heading: 'aeat app - operatív adóügyi munka'
+        ledger_allocate: 'Üzleti célú vagy adóelosztási metaadatok hozzárendelése.'
+        ledger_archive: 'Főkönyvi tranzakció archiválása az előzmények törlése nélkül.'
+        ledger_attach: 'Bizonyíték csatolása egy főkönyvi tranzakcióhoz.'
+        ledger_classify: 'Importált sorok adókezelési besorolása.'
+        ledger_export: 'Főkönyvi adatok exportálása felülvizsgálatra.'
+        ledger_import: 'Banki vagy könyvelési tranzakciók importálása.'
+        ledger_list: 'Importált tranzakciók listázása.'
+        ledger_remove: 'Tranzakció eltávolítása explicit megerősítéssel.'
+        ledger_reset: 'Főkönyvi adatok törlése explicit megerősítéssel.'
+        ledger_review: 'Figyelmet igénylő importált sorok felülvizsgálata.'
+        ledger_stash: 'Egy sor kiemelése az aktív felülvizsgálati sorból.'
+        ledger_status: 'A főkönyv állapotának és számláinak megjelenítése.'
+        ledger_update: 'Főkönyvi tranzakció frissítése.'
+        ledger_view: 'Egyetlen tranzakció megtekintése.'
+        live_filed_capture: 'Csak olvasható megfigyelés rögzítése az AEAT-ból.'
+        live_filed_capture_sources: 'Rögzítési forráslehetőségek listázása.'
+        live_filed_list: 'Helyileg rögzített benyújtott bevallás-megfigyelések listázása.'
+        modelo_bindings: 'Nyilvántartási kötésfedettség vizsgálata.'
+        modelo_describe: 'Egy nyomtatvány-revízió leírása.'
+        modelo_list: 'Támogatott nyomtatványok listázása.'
+        modelo_work: 'Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.'
+        overview_status: 'Az aktuális profil és munkállapot összefoglalása.'
+        paragraph_operational_workflow: 'Az app-parancsok az aktív profilmappán működnek.'
+        registry_inspect: 'Nyilvántartási metaadatok vizsgálata.'
+        registry_verify: 'Helyi nyilvántartás integritásának ellenőrzése.'
+        review_queue: 'Üzemeltetői felülvizsgálatra váró elemek listázása.'
+        review_view: 'Egyetlen felülvizsgálati elem megtekintése.'
+        section_ledger: 'Főkönyv'
+        section_live_reads: 'Élő, csak olvasható megfigyelések'
+        section_modelo: 'Nyomtatvány'
+        section_overview: 'Áttekintés'
+        section_review_and_registry: 'Felülvizsgálat és nyilvántartás'
       config:
-        auth_clear: cli.operator_surface.help.config.auth_clear
-        auth_configure: cli.operator_surface.help.config.auth_configure
-        auth_providers: cli.operator_surface.help.config.auth_providers
-        auth_status: cli.operator_surface.help.config.auth_status
-        auth_test: cli.operator_surface.help.config.auth_test
-        diagnostics_logs: cli.operator_surface.help.config.diagnostics_logs
-        diagnostics_quarantine: cli.operator_surface.help.config.diagnostics_quarantine
-        diagnostics_repair: cli.operator_surface.help.config.diagnostics_repair
-        diagnostics_reset_state: cli.operator_surface.help.config.diagnostics_reset_state
-        first_run_bootstrap: cli.operator_surface.help.config.first_run_bootstrap
-        first_run_edit: cli.operator_surface.help.config.first_run_edit
-        footer: cli.operator_surface.help.config.footer
-        heading: cli.operator_surface.help.config.heading
-        paragraph_durable_state: cli.operator_surface.help.config.paragraph_durable_state
-        profile_census: cli.operator_surface.help.config.profile_census
-        profile_delete: cli.operator_surface.help.config.profile_delete
-        profile_duplicate: cli.operator_surface.help.config.profile_duplicate
-        profile_list: cli.operator_surface.help.config.profile_list
-        profile_rename: cli.operator_surface.help.config.profile_rename
-        profile_show: cli.operator_surface.help.config.profile_show
-        profile_status: cli.operator_surface.help.config.profile_status
-        profile_switch: cli.operator_surface.help.config.profile_switch
-        section_authentication: cli.operator_surface.help.config.section_authentication
-        section_diagnostics: cli.operator_surface.help.config.section_diagnostics
-        section_first_run: cli.operator_surface.help.config.section_first_run
-        section_profile_inspection: cli.operator_surface.help.config.section_profile_inspection
-        section_profile_lifecycle: cli.operator_surface.help.config.section_profile_lifecycle
+        auth_clear: 'Helyi hitelesítési metaadatok törlése.'
+        auth_configure: 'Hitelesítési szolgáltató konfigurálása.'
+        auth_providers: 'Támogatott hitelesítési szolgáltatók listázása.'
+        auth_status: 'Beállított hitelesítési állapot megjelenítése.'
+        auth_test: 'Helyi hitelesítési készség ellenőrzése.'
+        diagnostics_logs: 'A beállított naplóútvonal és a legújabb sorok megjelenítése.'
+        diagnostics_quarantine: 'Olvashatatlan biztonságos objektumok karanténba helyezése.'
+        diagnostics_repair: 'Helyi konfiguráció és tár állapotának diagnosztikája.'
+        diagnostics_reset_state: 'Olvashatatlan munkafolyamat-állapot alaphelyzetbe állítása.'
+        first_run_bootstrap: 'Helyi adóprofilmappa létrehozása.'
+        first_run_edit: 'A profilvarázsló újrafuttatása meglévő profilhoz.'
+        footer: 'Teljes áttekintésért futtassa: aeat --help.'
+        heading: 'aeat config - profil, hitelesítés, diagnosztika'
+        paragraph_durable_state: 'A config-parancsok a helyi tartós állapotot kezelik.'
+        profile_census: 'AEAT nyilvántartási adatok szinkronizálása az aktív profilhoz.'
+        profile_delete: 'Profil törlése explicit megerősítés után.'
+        profile_duplicate: 'Profil másolása új azonosítóra.'
+        profile_list: 'Profiladatok listázása.'
+        profile_rename: 'Profil átnevezése és mappájának áthelyezése.'
+        profile_show: 'Egy profil adatainak megjelenítése.'
+        profile_status: 'Az aktív profil készültségének megjelenítése.'
+        profile_switch: 'Az aktív profil váltása.'
+        section_authentication: 'Hitelesítés'
+        section_diagnostics: 'Diagnosztika'
+        section_first_run: 'Első futtatás'
+        section_profile_inspection: 'Profiladatok vizsgálata'
+        section_profile_lifecycle: 'Profil életciklusa'
       root:
-        diagnostics_live_filed: cli.operator_surface.help.root.diagnostics_live_filed
-        diagnostics_overview: cli.operator_surface.help.root.diagnostics_overview
-        diagnostics_registry_inspect: cli.operator_surface.help.root.diagnostics_registry_inspect
-        diagnostics_repair: cli.operator_surface.help.root.diagnostics_repair
-        diagnostics_review_queue: cli.operator_surface.help.root.diagnostics_review_queue
-        footer: cli.operator_surface.help.root.footer
-        heading: cli.operator_surface.help.root.heading
-        ledger_allocate: cli.operator_surface.help.root.ledger_allocate
-        ledger_archive: cli.operator_surface.help.root.ledger_archive
-        ledger_attach: cli.operator_surface.help.root.ledger_attach
-        ledger_classify: cli.operator_surface.help.root.ledger_classify
-        ledger_export: cli.operator_surface.help.root.ledger_export
-        ledger_import: cli.operator_surface.help.root.ledger_import
-        ledger_list: cli.operator_surface.help.root.ledger_list
-        ledger_remove: cli.operator_surface.help.root.ledger_remove
-        ledger_reset: cli.operator_surface.help.root.ledger_reset
-        ledger_review: cli.operator_surface.help.root.ledger_review
-        ledger_stash: cli.operator_surface.help.root.ledger_stash
-        ledger_status: cli.operator_surface.help.root.ledger_status
-        ledger_update: cli.operator_surface.help.root.ledger_update
-        ledger_view: cli.operator_surface.help.root.ledger_view
-        modelo_bindings_list: cli.operator_surface.help.root.modelo_bindings_list
-        modelo_list: cli.operator_surface.help.root.modelo_list
-        modelo_work: cli.operator_surface.help.root.modelo_work
-        paragraph_two_roots: cli.operator_surface.help.root.paragraph_two_roots
-        paragraph_type_help: cli.operator_surface.help.root.paragraph_type_help
-        section_daily_ledger: cli.operator_surface.help.root.section_daily_ledger
-        section_diagnostics: cli.operator_surface.help.root.section_diagnostics
-        section_modelo_lifecycle: cli.operator_surface.help.root.section_modelo_lifecycle
-        section_setup: cli.operator_surface.help.root.section_setup
-        setup_configure_auth: cli.operator_surface.help.root.setup_configure_auth
-        setup_create_profile: cli.operator_surface.help.root.setup_create_profile
-        setup_inspect_profile: cli.operator_surface.help.root.setup_inspect_profile
+        diagnostics_live_filed: 'Rögzített benyújtott bevallás-megfigyelések listázása.'
+        diagnostics_overview: 'Az aktív munkaterület készültségének összefoglalása.'
+        diagnostics_registry_inspect: 'Nyilvántartási metaadatok vizsgálata.'
+        diagnostics_repair: 'Helyi konfiguráció és tár állapotának diagnosztikája.'
+        diagnostics_review_queue: 'Függőben lévő felülvizsgálati munka listázása.'
+        footer: 'Az alparancsokért futtassa: aeat config --help vagy aeat app --help.'
+        heading: 'aeat - helyi-alapú spanyol adózási munkafolyamat'
+        ledger_allocate: 'Üzleti célú vagy adóelosztási metaadatok hozzárendelése.'
+        ledger_archive: 'Főkönyvi tranzakció archiválása az előzmények törlése nélkül.'
+        ledger_attach: 'Bizonyíték csatolása egy főkönyvi tranzakcióhoz.'
+        ledger_classify: 'Importált sorok besorolása.'
+        ledger_export: 'Főkönyvi adatok exportálása.'
+        ledger_import: 'Banki vagy könyvelési tranzakciók importálása.'
+        ledger_list: 'Importált tranzakciók listázása.'
+        ledger_remove: 'Tranzakció eltávolítása megerősítéssel.'
+        ledger_reset: 'Főkönyvi adatok törlése megerősítéssel.'
+        ledger_review: 'Importált sorok felülvizsgálata.'
+        ledger_stash: 'Egy sor kiemelése az aktív felülvizsgálatból.'
+        ledger_status: 'A főkönyv állapotának és számláinak megjelenítése.'
+        ledger_update: 'Főkönyvi tranzakció frissítése.'
+        ledger_view: 'Egyetlen tranzakció megtekintése.'
+        modelo_bindings_list: 'Nyilvántartási kötésfedettség listázása.'
+        modelo_list: 'Támogatott nyomtatványok listázása.'
+        modelo_work: 'Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.'
+        paragraph_two_roots: 'A CLI-nek pontosan két gyökere van: config és app.'
+        paragraph_type_help: 'A config parancsot helyi állapothoz, az app parancsot adóügyi munkához használja.'
+        section_daily_ledger: 'Napi főkönyvi munka'
+        section_diagnostics: 'Diagnosztika'
+        section_modelo_lifecycle: 'Nyomtatvány életciklusa'
+        section_setup: 'Beállítás'
+        setup_configure_auth: 'AEAT-hitelesítés konfigurálása.'
+        setup_create_profile: 'Profilmappa létrehozása.'
+        setup_inspect_profile: 'Profilparancsok vizsgálata.'
     landing:
-      active_profile_message: cli.operator_surface.landing.active_profile_message
-      no_active_profile_message: cli.operator_surface.landing.no_active_profile_message
-      text_template: cli.operator_surface.landing.text_template
+      active_profile_message: 'Az aktív profil: %{profile}.'
+      no_active_profile_message: 'Nincs aktív profil beállítva.'
+      text_template: '%{message} Következő: %{command}'
     retired:
-      archive_reason: cli.operator_surface.retired.archive_reason
-      data_reason: cli.operator_surface.retired.data_reason
-      declaration_reason: cli.operator_surface.retired.declaration_reason
-      filing_reason: cli.operator_surface.retired.filing_reason
-      financial_reason: cli.operator_surface.retired.financial_reason
-      invoice_reason: cli.operator_surface.retired.invoice_reason
-      llm_reason: cli.operator_surface.retired.llm_reason
-      preflight_reason: cli.operator_surface.retired.preflight_reason
-      presentation_reason: cli.operator_surface.retired.presentation_reason
-      sanitize_reason: cli.operator_surface.retired.sanitize_reason
-      setup_reason: cli.operator_surface.retired.setup_reason
-      submit_reason: cli.operator_surface.retired.submit_reason
-      topic_reason: cli.operator_surface.retired.topic_reason
-      workflow_reason: cli.operator_surface.retired.workflow_reason
+      archive_reason: 'Az archiválás a config bucket alá van összevonva.'
+      data_reason: 'Az adatmunka az app ledger alá van összevonva.'
+      declaration_reason: 'A bevallási munka az app modelo alá van összevonva.'
+      filing_reason: 'A benyújtási munka az app modelo alá van összevonva.'
+      financial_reason: 'A pénzügyi munka az app ledger alá van összevonva.'
+      invoice_reason: 'A számlakezelés az app ledger alá van összevonva.'
+      llm_reason: 'A besorolás az app ledger classify parancs alatt érhető el.'
+      preflight_reason: 'A preflight-ellenőrzés a nyomtatvány-ellenőrzéshez tartozik.'
+      presentation_reason: 'Az exportok az app modelo export alá tartoznak.'
+      sanitize_reason: 'A főkönyv-ellenőrzések az app ledger check parancs alatt érhetők el.'
+      setup_reason: 'A beállítás és a konfiguráció a config gyökér alá van összevonva.'
+      submit_reason: 'Az élő benyújtás véglegesen le van tiltva.'
+      topic_reason: 'A témakeresés az app registry citations alá van összevonva.'
+      workflow_reason: 'A munkafolyamat-műveletek az app modelo alá vannak összevonva.'
   overview:
     agenda:
       allow_incomplete_help: A napirend megjelenítése akkor is, ha a profiladatok
