@@ -42,6 +42,8 @@ def test_verify_emits_one_finding_per_registered_check() -> None:
         "spouse_consistency",
         "eu_eea_country_consistency",
         "obligations_consistency",
+        "joint_taxation_situacion_familiar",
+        "monoparental_requires_hijos",
     ]
 
 
