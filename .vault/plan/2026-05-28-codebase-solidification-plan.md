@@ -89,8 +89,8 @@ envelope.
 - [x] `W01.P01.S28` - add real-behavior test asserting wizard-answer-type-error envelope at every replaced raise; `src/aeat/application/wizard/test_setup_answers.py`.
 - [x] `W01.P01.S29` - confirm `RecoveryVerificationError` subclasses `AeatError`; `narrow the `except Exception` and reraise typed; `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py`.
 - [x] `W01.P01.S30` - add real-behavior test asserting recovery-facade envelope under each upstream exception class; `src/aeat/adapters/persistence/storage/master_key/test_recovery_facade.py`.
-- [ ] `W01.P01.S31` - narrow the `except Exception` to specific `AeatError` subtypes; `remove the no-active-profile reclassification; `src/aeat/entrypoints/cli/_ledger.py`.
-- [ ] `W01.P01.S32` - add real-behavior test asserting non-NoActiveProfileError exceptions propagate with their original envelope; `src/aeat/entrypoints/cli/test_ledger.py`.
+- [x] `W01.P01.S31` - narrow the `except Exception` to specific `AeatError` subtypes; `remove the no-active-profile reclassification; `src/aeat/entrypoints/cli/_ledger.py`.
+- [x] `W01.P01.S32` - add real-behavior test asserting non-NoActiveProfileError exceptions propagate with their original envelope; `src/aeat/entrypoints/cli/test_ledger.py`.
 - [ ] `W01.P01.S33` - narrow the autocomplete `except Exception` to specific `AeatError` subtypes; `log others at DEBUG via observability sink; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P01.S34` - add real-behavior test asserting autocomplete propagates AeatError envelope and observability records non-AeatError; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [x] `W01.P01.S35` - wrap each of the seven `except Exception` clauses in `_record_unhandled` with `build_error_envelope`; `assign a synthetic `UNHANDLED_INTERNAL` `ErrorCode`; `src/aeat/application/workflow/_engine.py`.
