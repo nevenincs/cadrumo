@@ -152,7 +152,7 @@ Migrate sensitive JSON and JSONL stores to secure objects or persist accepted ex
 Constrain remote providers to encrypted object mirroring with revision and integrity metadata, never plaintext application state.
 
 - [x] `W05.P10.S41` - add remote mirror policy fields to namespace registry entries; `src/aeat/adapters/persistence/storage`.
-- [ ] `W05.P10.S42` - store remote mirror manifests with ciphertext hashes and revision watermarks; `src/aeat/adapters`.
+- [x] `W05.P10.S42` - store remote mirror manifests with ciphertext hashes and revision watermarks; `src/aeat/adapters`.
 - [ ] `W05.P10.S43` - detect partial upload, partial download, stale mirror, and revision conflicts; `src/aeat/adapters`.
 - [ ] `W05.P10.S44` - add real-behavior remote mirror tests using opaque encrypted payloads; `src/aeat/adapters`.
 
