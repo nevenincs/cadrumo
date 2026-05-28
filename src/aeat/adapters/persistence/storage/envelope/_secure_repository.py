@@ -23,7 +23,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, ClassVar, cast
+from typing import ClassVar, cast
 
 from pydantic import BaseModel
 
@@ -171,7 +171,15 @@ class SecureBoundRepository[T: BaseModel]:
                 f"{envelope.schema_version}; consumer supports up to "
                 f"{self.schema_version}",
             )
-        return cast(T, envelope.payload)
+        # Safe: _envelope_cls() returns Envelope[self.payload_type] which equals
+        # Envelope[T] for this repository's concrete T. Pydantic's model_validate_json
+        # has already validated payload against the T schema, so the runtime type
+        # of envelope.payload IS T. The cast bridges the ClassVar[type[BaseModel]]
+        # declaration (required for cross-subclass compatibility) to the generic T
+        # visible to type checkers at the call site. Wave 2 follow-up: replace the
+        # ClassVar[type[BaseModel]] with a class-level generic alias to eliminate
+        # this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
+        return cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
 
     def save(self, payload: T) -> None:
         """Persist ``payload`` as an encrypted envelope row.
@@ -222,7 +230,11 @@ class SecureBoundRepository[T: BaseModel]:
             max_supported_version=self.schema_version,
         ):
             envelope = self._envelope_cls().model_validate_json(record.payload.decode("utf-8"))
-            identifiers.append(self.extract_identifier(cast(T, envelope.payload)))
+            # Safe: same rationale as the load() path — envelope was validated by
+            # model_validate_json against Envelope[self.payload_type] == Envelope[T].
+            # Wave 2 follow-up: eliminate via generic ClassVar alias
+            # (see: CAST-RATIONALE-SECURE-REPOSITORY-ITER).
+            identifiers.append(self.extract_identifier(cast(T, envelope.payload)))  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
         yield from sorted(identifiers)
 
     def iter_records(self) -> Iterator[T]:
@@ -239,14 +251,20 @@ class SecureBoundRepository[T: BaseModel]:
     def _envelope_cls(self) -> type[Envelope[BaseModel]]:
         """Return the parameterised ``Envelope[payload_type]`` class.
 
-        ``Envelope[T]`` is parameterised via :pep:`695` generic syntax;
-        subscripting it with the subclass's concrete payload type
-        produces the validator Pydantic needs at the JSON boundary.
+        Delegates to :meth:`Envelope.for_payload_type` which encapsulates the
+        typed generic parameterisation. The return type is widened to
+        ``Envelope[BaseModel]`` because the method signature must be invariant
+        across all concrete subclasses (which each supply a different ``T``).
+        Wave 2 follow-up: make the class truly generic so this method returns
+        ``Envelope[T]`` directly (see: CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS).
         """
-        return cast(
-            type[Envelope[BaseModel]],
-            cast(Any, Envelope).__class_getitem__(self.payload_type),
-        )
+        # The widening to Envelope[BaseModel] is the only remaining escape hatch
+        # here. Envelope.for_payload_type returns type[Envelope[self.payload_type]];
+        # the mismatch is between the invariant return annotation and the
+        # covariant usage at call sites. Safe at runtime because Pydantic enforces
+        # the concrete type during model_validate_json.
+        # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (Wave 2 follow-up)
+        return Envelope.for_payload_type(self.payload_type)  # type: ignore[return-value]
 
 
 __all__ = ["SecureBoundRepository"]

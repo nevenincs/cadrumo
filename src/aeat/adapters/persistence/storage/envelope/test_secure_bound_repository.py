@@ -232,3 +232,118 @@ def test_secure_bound_repository_underlying_iterator_still_reports_partial_failu
             assert len([item for item in outcomes if isinstance(item, SecureObjectUnreadable)]) == 1
         finally:
             engine.dispose()
+
+
+# ---------------------------------------------------------------------------
+# S190: envelope payload type preservation across the generic boundary
+# ---------------------------------------------------------------------------
+
+
+def test_envelope_payload_type_is_preserved_across_generic_boundary(
+    tmp_path: Path,
+) -> None:
+    """Payload type identity is preserved through the save -> load cycle.
+
+    Asserts that the object returned by ``repo.load()`` is a real
+    ``_DummyPayload`` instance (not a plain dict or BaseModel), confirming
+    that ``_envelope_cls()`` produces a validating ``Envelope[_DummyPayload]``
+    and that the cast at the load boundary is genuinely safe.
+    """
+    provider = EphemeralMasterKeyProvider()
+    with provider:
+        repo, engine = _bound_repo_with_engine(tmp_path)
+        try:
+            original = _DummyPayload(id="type-check", value=7)
+            repo.save(original)
+            loaded = repo.load("type-check")
+
+            assert loaded is not None
+            # Runtime type must be the concrete payload model, not a supertype.
+            assert type(loaded) is _DummyPayload
+            assert isinstance(loaded, _DummyPayload)
+            # Field equality confirms Pydantic validated the JSON correctly.
+            assert loaded == original
+        finally:
+            engine.dispose()
+
+
+# ---------------------------------------------------------------------------
+# S192: typed factory yields the correct envelope subtype per payload
+# ---------------------------------------------------------------------------
+
+
+def test_envelope_for_payload_type_returns_correct_parameterised_class() -> None:
+    """``Envelope.for_payload_type`` returns a class that validates the payload.
+
+    Asserts:
+    - The returned class is a subclass/alias of ``Envelope``.
+    - ``model_validate_json`` on the returned class accepts valid JSON.
+    - ``model_validate_json`` rejects JSON whose payload does not match.
+    """
+    from datetime import UTC, datetime
+
+    from pydantic import ValidationError
+
+    env_cls = Envelope.for_payload_type(_DummyPayload)
+
+    # The factory must return a class, not an instance.
+    assert isinstance(env_cls, type)
+
+    # A valid envelope round-trips cleanly.
+    import json
+
+    valid_json = json.dumps(
+        {
+            "schema_version": 1,
+            "written_at": datetime.now(UTC).isoformat(),
+            "classification": SensitivityClass.AUDIT.value,
+            "payload": {"id": "x", "value": 3},
+            "encryption": None,
+        }
+    )
+    loaded = env_cls.model_validate_json(valid_json)
+    assert isinstance(loaded.payload, _DummyPayload)
+    assert loaded.payload.id == "x"
+
+    # A payload with wrong field types must be rejected by Pydantic.
+    bad_json = json.dumps(
+        {
+            "schema_version": 1,
+            "written_at": datetime.now(UTC).isoformat(),
+            "classification": SensitivityClass.AUDIT.value,
+            "payload": {"id": "x", "value": "not-an-int"},
+            "encryption": None,
+        }
+    )
+    with pytest.raises(ValidationError):
+        env_cls.model_validate_json(bad_json)
+
+
+# ---------------------------------------------------------------------------
+# S196: CI assertion that cast rationale markers are present in source
+# ---------------------------------------------------------------------------
+
+
+def test_cast_rationale_markers_present_in_secure_repository_source() -> None:
+    """Assert that rationale-marker comments survive refactoring.
+
+    Each ``cast()`` call in ``_secure_repository.py`` that cannot yet be
+    eliminated must carry a CAST-RATIONALE-* marker. This test reads the
+    source file and asserts the markers are present, acting as a CI gate
+    that blocks silent removal of documented safety rationale.
+    """
+    import pathlib
+
+    source = pathlib.Path(__file__).parent / "_secure_repository.py"
+    text = source.read_text(encoding="utf-8")
+
+    required_markers = [
+        "CAST-RATIONALE-SECURE-REPOSITORY-LOAD",
+        "CAST-RATIONALE-SECURE-REPOSITORY-ITER",
+        "CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS",
+    ]
+    for marker in required_markers:
+        assert marker in text, (
+            f"Cast rationale marker {marker!r} is missing from "
+            f"{source}. Either restore the comment or remove the cast."
+        )
