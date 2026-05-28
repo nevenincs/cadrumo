@@ -217,12 +217,12 @@ payloads.
 - [x] `W01.P04.S124` - add roundtrip test asserting GROI replay payload validates strictly; `src/aeat/domain/calculations/registry/test_groi_oracle.py`.
 - [x] `W01.P04.S125` - replace manual dict unpacking with `RentaWebOpenReplayPayload.model_validate`; `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`.
 - [x] `W01.P04.S126` - add roundtrip test asserting Renta WEB Open replay payload validates strictly; `src/aeat/domain/calculations/registry/test_renta_web_open_oracle.py`.
-- [ ] `W01.P04.S127` - verify `_entry_from_payload` enforces `CachedEntry.model_validate` before consuming fields; `src/aeat/adapters/outbound/llm/_cache.py`.
-- [ ] `W01.P04.S128` - add roundtrip test asserting LLM cache entries reject malformed persisted payloads; `src/aeat/adapters/outbound/llm/test_cache.py`.
-- [ ] `W01.P04.S129` - confirm Google Sheets / Drive `dict[str, Any]` returns retain their inline rationale; `add audit-note assertion test that the rationale comment survives refactors; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
-- [ ] `W01.P04.S130` - add real-behavior test asserting Google Sheets / Drive boundary comments remain present per the third-party-rationale policy; `src/aeat/adapters/outbound/google/test_calc_sheets_apply.py`.
-- [ ] `W01.P04.S131` - confirm Playwright `_build_context_kwargs` / `storage_state` retain their boundary rationale; `src/aeat/adapters/outbound/aeat/browser/session.py`.
-- [ ] `W01.P04.S132` - add real-behavior test asserting Playwright kwargs boundary annotation remains present; `src/aeat/adapters/outbound/aeat/browser/test_session.py`.
+- [x] `W01.P04.S127` - verify `_entry_from_payload` enforces `CachedEntry.model_validate` before consuming fields; `src/aeat/adapters/outbound/llm/_cache.py`.
+- [x] `W01.P04.S128` - add roundtrip test asserting LLM cache entries reject malformed persisted payloads; `src/aeat/adapters/outbound/llm/test_cache.py`.
+- [x] `W01.P04.S129` - confirm Google Sheets / Drive `dict[str, Any]` returns retain their inline rationale; `add audit-note assertion test that the rationale comment survives refactors; `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`.
+- [x] `W01.P04.S130` - add real-behavior test asserting Google Sheets / Drive boundary comments remain present per the third-party-rationale policy; `src/aeat/adapters/outbound/google/test_calc_sheets_apply.py`.
+- [x] `W01.P04.S131` - confirm Playwright `_build_context_kwargs` / `storage_state` retain their boundary rationale; `src/aeat/adapters/outbound/aeat/browser/session.py`.
+- [x] `W01.P04.S132` - add real-behavior test asserting Playwright kwargs boundary annotation remains present; `src/aeat/adapters/outbound/aeat/browser/test_session.py`.
 - [x] `W01.P04.S133` - wrap the auth-diagnostics raw JSON payload return in `DiagnosticPayload(BaseModel)`; `src/aeat/application/auth/_diagnostics.py`.
 - [x] `W01.P04.S134` - add roundtrip test asserting diagnostic payload validates and round-trips; `src/aeat/application/auth/test_diagnostics.py`.
 - [x] `W01.P04.S135` - audit every `dict[str, Any]` return signature under `src/aeat/adapters/` for missing boundary rationale; `flag each unannotated case as a follow-up Step in Wave 2; `src/aeat/adapters`.
