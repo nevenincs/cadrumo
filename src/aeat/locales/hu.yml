@@ -1,6 +1,6 @@
 access_gate:
   errors:
-    default_translatable: access_gate.errors.default_translatable
+    default_translatable: 'Az élő AEAT-benyújtás véglegesen tiltott; használja a létrehozás -> ellenőrzés -> exportálás folyamatot, és töltse fel maga a fájlt az AEAT portálon.'
 adapters:
   aeat:
     clave_movil:
@@ -71,39 +71,39 @@ adapters:
 aggregation:
   iva_ledger:
     errors:
-      bucket_mismatch: aggregation.iva_ledger.errors.bucket_mismatch
-      candidate_outside_period: aggregation.iva_ledger.errors.candidate_outside_period
-      unsupported_iva_category: aggregation.iva_ledger.errors.unsupported_iva_category
+      bucket_mismatch: 'A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.'
+      candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon kívül esik.'
+      unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
   modelo_bindings:
     errors:
-      unsupported_period: aggregation.modelo_bindings.errors.unsupported_period
+      unsupported_period: 'Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.'
   models:
     errors:
-      annual_period_mixed: aggregation.models.errors.annual_period_mixed
-      month_required: aggregation.models.errors.month_required
-      period_type_ambiguous: aggregation.models.errors.period_type_ambiguous
-      quarter_required: aggregation.models.errors.quarter_required
+      annual_period_mixed: 'Az időszak nem vegyítheti az éves és az alévenkénti (negyed/hónap) értékeket.'
+      month_required: 'A havi időszaktípushoz hónap értéke szükséges.'
+      period_type_ambiguous: 'Az időszaktípus kétértelmű; adja meg egyértelműen: negyedév vagy hónap.'
+      quarter_required: 'A negyedéves időszaktípushoz negyedév értéke szükséges.'
   per_modelo:
     errors:
-      unsupported_modelo: aggregation.per_modelo.errors.unsupported_modelo
+      unsupported_modelo: 'Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.'
     registry:
       errors:
-        invalid_accrued_on: aggregation.per_modelo.registry.errors.invalid_accrued_on
-        unsupported_provider: aggregation.per_modelo.registry.errors.unsupported_provider
+        invalid_accrued_on: 'Érvénytelen elhatárolási dátum a(z) %{source_object_id} megfigyelésnél: %{accrued_on}'
+        unsupported_provider: 'Nem támogatott aggregálási szolgáltató a(z) %{modelo} nyomtatványhoz: %{provider}'
   period:
-    parse_error: aggregation.period.parse_error
+    parse_error: 'Az időszak formátuma nem ismerhető fel.'
   renta_ledger:
     errors:
-      annual_period_required: aggregation.renta_ledger.errors.annual_period_required
-      bucket_mismatch: aggregation.renta_ledger.errors.bucket_mismatch
-      modelo_mismatch: aggregation.renta_ledger.errors.modelo_mismatch
-      period_mismatch: aggregation.renta_ledger.errors.period_mismatch
-      quarterly_period_required: aggregation.renta_ledger.errors.quarterly_period_required
+      annual_period_required: 'A Renta főkönyvi aggregáláshoz éves időszak szükséges.'
+      bucket_mismatch: 'A tranzakciós tár vödre nem egyezik a kért Renta főkönyvi vödörrel.'
+      modelo_mismatch: 'Az adónyomtatvány nem egyezik a várt Renta főkönyvi nyomtatvánnyal.'
+      period_mismatch: 'Az időszak nem egyezik a várt Renta főkönyvi időszakkal.'
+      quarterly_period_required: 'Az M130 jövedelemaggregáláshoz negyedéves időszak szükséges (pl. 2024Q1).'
   source_mesh:
     errors:
-      duplicate_binding_owner: aggregation.source_mesh.errors.duplicate_binding_owner
-      duplicate_bound_casilla_owner: aggregation.source_mesh.errors.duplicate_bound_casilla_owner
-      duplicate_relation_owner: aggregation.source_mesh.errors.duplicate_relation_owner
+      duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
+      duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos a forráshálon.'
+      duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
 application:
   auth:
     acquisition_lock:
@@ -202,8 +202,8 @@ application:
           nem lehetséges.
         no_session: Nincs tárolt AEAT munkamenet-token a lemezen; futtassa az `aeat
           config auth login` parancsot egy megszerzéséhez.
-        session_expired: application.auth.operator.probe.session_expired
-        session_live: application.auth.operator.probe.session_live
+        session_expired: 'Munkamenet lejárt'
+        session_live: 'Munkamenet aktív'
     provider_impact:
       certificate_ready: A tanúsítvány-hitelesítés kész. Az operátor az AEAT-alapú
         olvasásokhoz ugyanazt a CLI bevallási folyamatot használja; minden szolgáltató
@@ -270,7 +270,7 @@ application:
         előzményt.
       reconcile_declaration_unsupported: A bevallás-PDF egyeztetési forrás még nincs
         implementálva; addig használja a --from-justificante ÚTVONAL paramétert.
-      reconcile_no_active_bucket: application.modelo.errors.reconcile_no_active_bucket
+      reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config profile create NÉV` az egyeztetés előtt.'
       verification_report_not_found: 'Nem található ellenőrzési jelentés ezzel az
         azonosítóval: %{verification_report_id}.'
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
@@ -327,19 +327,19 @@ application:
       state_unreadable: A helyi konfigurációs állapot nem olvasható.
 auth:
   catalogue:
-    certificate_description: auth.catalogue.certificate_description
-    certificate_label: auth.catalogue.certificate_label
-    clave_movil_description: auth.catalogue.clave_movil_description
-    clave_movil_label: auth.catalogue.clave_movil_label
-    clave_permanente_description: auth.catalogue.clave_permanente_description
-    clave_permanente_label: auth.catalogue.clave_permanente_label
-    clave_pin_description: auth.catalogue.clave_pin_description
-    clave_pin_label: auth.catalogue.clave_pin_label
-    dnie_pkcs_description: auth.catalogue.dnie_pkcs_description
-    dnie_pkcs_label: auth.catalogue.dnie_pkcs_label
+    certificate_description: 'X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy bármely elismert hatóság). Minden Sede-folyamatot támogat.'
+    certificate_label: 'Digitális tanúsítvány'
+    clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
+    clave_movil_label: 'Cl@ve Móvil'
+    clave_permanente_description: 'Fenntartott zárt szolgáltatói hely a Cl@ve Permanente számára.'
+    clave_permanente_label: 'Cl@ve Permanente'
+    clave_pin_description: 'Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.'
+    clave_pin_label: 'Cl@ve PIN'
+    dnie_pkcs_description: 'Fenntartott zárt szolgáltatói hely a DNI-e PKCS számára.'
+    dnie_pkcs_label: 'DNI-e PKCS'
 categories:
   test_profile:
-    display_label_851219: categories.test_profile.display_label_851219
+    display_label_851219: 'Megjelenítési felirat 851219'
 cli:
   app:
     ledger:
@@ -1887,7 +1887,7 @@ cli:
     opts:
       slug: cli.topic.opts.slug
 dotted:
-  key: dotted.key
+  key: 'Pontozott kulcs'
 entries:
   portal_calendario_contribuyente:
     label: 'Adófizetői naptár'
@@ -2774,15 +2774,15 @@ errors:
       szolgáltatók: {providers}.'
 filing:
   validation:
-    deadline_missed: filing.validation.deadline_missed
-    formula_divergence: filing.validation.formula_divergence
-    out_of_range: filing.validation.out_of_range
-    required_missing: filing.validation.required_missing
-    schema_mismatch: filing.validation.schema_mismatch
+    deadline_missed: 'A benyújtási határidő lejárt.'
+    formula_divergence: 'Eltérés a képletszámításban.'
+    out_of_range: 'Az érték kívül esik az engedélyezett tartományon.'
+    required_missing: 'Kötelező mező hiányzik.'
+    schema_mismatch: 'Eltérés a várt sémától.'
 profile:
   descendiente:
-    custodia_compartida_prorrata_applied: profile.descendiente.custodia_compartida_prorrata_applied
-    deduccion_maternidad_applied: profile.descendiente.deduccion_maternidad_applied
+    custodia_compartida_prorrata_applied: '50%-os arányosítás alkalmazva (LIRPF 59. cikk) megosztott felügyelet esetén %{count} eltartott(ak)nál. Minden szülő a vonatkozó minimum felét vallja be (0513/0514. mező, és ahol alkalmazható, 0515/0516. mező).'
+    deduccion_maternidad_applied: 'LIRPF 81. cikk szerinti anyasági levonás számítva: %{amount} € (0611. mező). A képlet: összeg(min(hónapok × 100; 1 200)) eltartottanként, akik 3 évesnél fiatalabbak és bejelentett munkahónapokkal rendelkeznek.'
     incremento_guarderia_applied: 'Bölcsőde Art. 81 bis LIRPF pótlék kiszámítva: %{amount}
       € (0613 rovatszám). Korlát: min(tényleges kiadások, 3 évesnél fiatalabb gyermekek
       × 1.000 €, tb-járulék 2024).'
@@ -2792,106 +2792,106 @@ profile:
       Ez a CLI nem kezeli a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya),
       gipuzkoa.eus/ogasuna (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es
       (Navarra) az Ön területének megfelelően.'
-    not_configured: profile.errors.not_configured
+    not_configured: 'Nincs RENTA-hoz konfigurált adóilletékességi profil.'
   keys:
-    description: profile.keys.description
+    description: 'Profilkonfigurációs kulcsok és leírásaik'
     tax:
-      id: profile.keys.tax.id
+      id: 'Adóazonosító (NIF/NIE/CIF)'
 review:
   filing:
-    draft_placeholder_summary: review.filing.draft_placeholder_summary
-    finding_summary: review.filing.finding_summary
-    stale_approval_summary: review.filing.stale_approval_summary
+    draft_placeholder_summary: 'Tervezet függőben'
+    finding_summary: 'Érvényesítési megállapítás a tervezeten'
+    stale_approval_summary: 'A tervezet jóváhagyása elavult.'
   invoice:
-    summary: review.invoice.summary
+    summary: 'Számla felülvizsgálatra vár'
   transaction:
-    summary: review.transaction.summary
+    summary: 'Tranzakció besorolásra vár'
 sheets:
   detalle:
     headers:
-      acquisition_date: sheets.detalle.headers.acquisition_date
-      amount: sheets.detalle.headers.amount
-      asset_class_code: sheets.detalle.headers.asset_class_code
-      asset_identifier: sheets.detalle.headers.asset_identifier
-      base_imponible: sheets.detalle.headers.base_imponible
-      base_imponible_assigned: sheets.detalle.headers.base_imponible_assigned
-      clave: sheets.detalle.headers.clave
-      counterparty_legal_name: sheets.detalle.headers.counterparty_legal_name
-      counterparty_tax_id: sheets.detalle.headers.counterparty_tax_id
-      country_code: sheets.detalle.headers.country_code
-      currency_code: sheets.detalle.headers.currency_code
-      ingreso_a_cuenta: sheets.detalle.headers.ingreso_a_cuenta
-      member_legal_name: sheets.detalle.headers.member_legal_name
-      member_state_code: sheets.detalle.headers.member_state_code
-      member_tax_id: sheets.detalle.headers.member_tax_id
-      operation_date: sheets.detalle.headers.operation_date
-      operation_kind_code: sheets.detalle.headers.operation_kind_code
-      party_legal_name: sheets.detalle.headers.party_legal_name
-      party_tax_id: sheets.detalle.headers.party_tax_id
-      perceptor_legal_name: sheets.detalle.headers.perceptor_legal_name
-      perceptor_tax_id: sheets.detalle.headers.perceptor_tax_id
-      percibido_dinerario: sheets.detalle.headers.percibido_dinerario
-      percibido_especie: sheets.detalle.headers.percibido_especie
-      rectified_base_previous: sheets.detalle.headers.rectified_base_previous
-      rectified_period: sheets.detalle.headers.rectified_period
-      rectified_year: sheets.detalle.headers.rectified_year
-      refund_amount: sheets.detalle.headers.refund_amount
-      retencion_practicada: sheets.detalle.headers.retencion_practicada
-      share_percentage: sheets.detalle.headers.share_percentage
-      subclave: sheets.detalle.headers.subclave
-      supplier_tax_id: sheets.detalle.headers.supplier_tax_id
-      transfer_pricing_method_code: sheets.detalle.headers.transfer_pricing_method_code
-      valuation_amount: sheets.detalle.headers.valuation_amount
+      acquisition_date: 'Szerzés dátuma'
+      amount: 'Összeg'
+      asset_class_code: 'Eszközosztály kód'
+      asset_identifier: 'Eszközazonosító'
+      base_imponible: 'Adóalap'
+      base_imponible_assigned: 'Hozzárendelt adóalap'
+      clave: 'Kulcs'
+      counterparty_legal_name: 'Szerződő fél neve'
+      counterparty_tax_id: 'Szerződő fél adóazonosítója'
+      country_code: 'Országkód'
+      currency_code: 'Pénznemkód'
+      ingreso_a_cuenta: 'Természetbeni adójóváírás'
+      member_legal_name: 'Tag neve'
+      member_state_code: 'Tagállam'
+      member_tax_id: 'Tag adóazonosítója'
+      operation_date: 'Művelet dátuma'
+      operation_kind_code: 'Művelettípus'
+      party_legal_name: 'Fél neve'
+      party_tax_id: 'Fél adóazonosítója'
+      perceptor_legal_name: 'Kedvezményezett neve'
+      perceptor_tax_id: 'Kedvezményezett adóazonosítója'
+      percibido_dinerario: 'Készpénzes bevétel'
+      percibido_especie: 'Természetbeni bevétel'
+      rectified_base_previous: 'Korábbi alap (helyesbítés)'
+      rectified_period: 'Helyesbített időszak'
+      rectified_year: 'Helyesbített év'
+      refund_amount: 'Visszatérítési összeg'
+      retencion_practicada: 'Alkalmazott visszatartás'
+      share_percentage: 'Részesedési arány'
+      subclave: 'Alkulcs'
+      supplier_tax_id: 'Szállító adóazonosítója'
+      transfer_pricing_method_code: 'Transzferár-módszer'
+      valuation_amount: 'Értékelés'
 topic:
   authentication:
-    body: topic.authentication.body
-    title: topic.authentication.title
+    body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális tanúsítvány (FNMT / azzal egyenértékű) segítségével működik. Konfiguráljon egy szolgáltatót: `aeat config auth configure --provider certificate`, majd ellenőrizze: `aeat config auth test`.'
+    title: 'Hitelesítés az AEAT-nál'
   calendar:
-    body: topic.calendar.body
-    title: topic.calendar.title
+    body: 'A naptár adott időtartományon belül mutatja a benyújtási kötelezettségeket (nyomtatványok és időszakok). Az IVA-rezsim beállított profil szükséges, különben a motor csendben alapértelmezésre vált.'
+    title: 'Kötelezettségek naptára'
   casilla:
-    body: topic.casilla.body
-    title: topic.casilla.title
+    body: 'A mező egy nyomtatvány számozott rovata. A mezők lehetnek manuálisak, számítottak vagy kötésből származtatottak. Az `aeat app modelo casillas <nyomtatvány>` parancs felsorolja azokat.'
+    title: 'Mezők (casillák)'
   formats:
-    body: topic.formats.body
-    title: topic.formats.title
+    body: 'A CLI szöveges, JSON-, táblázatos vagy CSV-formátumban adja ki a kimenetet a `--format` kapcsoló alapján. Automatizáláshoz a JSON ajánlott, emberi olvasáshoz a szöveges.'
+    title: 'Kimeneti formátumok'
   irpf-regime:
-    body: topic.irpf-regime.body
-    title: topic.irpf-regime.title
+    body: 'Önálló vállalkozó IRPF-rezsimje. Közvetlen becslés (normál vagy egyszerűsített) vagy objektív becslés (módszer). Meghatározza, hogy melyik előlegfizetési nyomtatvány alkalmazandó (130 vs. 131).'
+    title: 'IRPF-rezsim'
   iva-regime:
-    body: topic.iva-regime.body
-    title: topic.iva-regime.title
+    body: 'Az adóalanynál alkalmazandó ÁFA-rezsim. Általános, egyszerűsített, equivalencia-felár, mentes, REAGP vagy REBU. Meghatározza a negyedéves 303-as és az éves 390-es összesítő nyomtatványt.'
+    title: 'IVA-rezsim (ÁFA)'
   modelos:
-    body: topic.modelos.body
-    title: topic.modelos.title
+    body: 'Az AEAT adónyomtatványainak katalógusa (303, 130, 100, 347, 349, 111, 115, 184 stb.). Mindegyiknek saját naptára, mezői és alkalmazhatósági szabályai vannak. Az `aeat app modelo list` parancs felsorolja az elérhető nyomtatványokat.'
+    title: 'Adónyomtatványok (modelók)'
   pago-fraccionado:
-    body: topic.pago-fraccionado.body
-    title: topic.pago-fraccionado.title
+    body: 'Önálló vállalkozók negyedéves IRPF-előleg-fizetése. Közvetlen becslésnél a 130-as nyomtatvány, objektív becslésnél a 131-es alkalmazandó. A számítás a negyedév adatait és bizonyos esetekben az előző évet veszi alapul.'
+    title: 'IRPF-előlegfizetés'
   profile:
-    body: topic.profile.body
-    title: topic.profile.title
+    body: 'A helyi profil tartalmazza az adóazonosítót (NIF), a fő tevékenységet, az IVA/IRPF-rezsimet és az opcionális regisztrációkat (SII, Verifactu, intrakomunitáris). Szerkessze: `aeat config profile edit NÉV`.'
+    title: 'Adóalany profilja'
   providers:
-    body: topic.providers.body
-    title: topic.providers.title
+    body: 'Támogatott hitelesítési szolgáltatók; mindegyiknek eltérő előfeltételei vannak. Az `aeat config auth providers` parancs felsorolja azokat a követelményekkel együtt.'
+    title: 'Hitelesítési szolgáltatók'
   recargo-extemporaneo:
-    body: topic.recargo-extemporaneo.body
-    title: topic.recargo-extemporaneo.title
+    body: 'A határidő utáni benyújtás – előzetes AEAT-értesítés nélkül – az első évben havonta 1%-os pótdíjat von maga után (legfeljebb 12%-ot), 12 hónap elteltével 15%-ot plusz kamatot. Jogalap: Ley 58/2003 27. cikk.'
+    title: 'Késedelmi pótdíj'
   regimens:
-    body: topic.regimens.body
-    title: topic.regimens.title
+    body: 'Az önálló vállalkozóra vonatkozó adórezsimek összessége. A két fő tengely: ÁFA (általános, egyszerűsített, equivalencia-felár, mentes) és IRPF (közvetlen, objektív).'
+    title: 'Adórezsimek'
   sii-verifactu:
-    body: topic.sii-verifactu.body
-    title: topic.sii-verifactu.title
+    body: 'Elektronikus számlaküldési rendszerek az AEAT-nak. A SII (Suministro Inmediato de Información) nagyvállalatoknak kötelező; a Verifactu (RD 1007/2023) a számlázó rendszerekre vonatkozó fokozatos követelmény.'
+    title: 'SII és Verifactu'
 transactions:
   import:
-    message_053465: transactions.import.message_053465
-    message_082074: transactions.import.message_082074
-    message_185962: transactions.import.message_185962
-    message_829073: transactions.import.message_829073
-    unreadable: transactions.import.unreadable
-    verified: transactions.import.verified
+    message_053465: 'Ismétlődő tranzakció észlelve az importált fájlban.'
+    message_082074: 'Ismétlődő tranzakció már szerepel a főkönyvben.'
+    message_185962: 'A forrásfájl nem tartalmaz érvényes tranzakciót.'
+    message_829073: 'Lehetséges hiány: a tranzakciók között több mint 35 nap telt el.'
+    unreadable: 'Olvashatatlan fájl vagy nem támogatott formátum.'
+    verified: 'Az import sikeresen ellenőrizve.'
   test_diagnostics:
-    message: transactions.test_diagnostics.message
+    message: 'A 2026-03-as hónap hiányzik az importált fájlból.'
 wizard:
   choices:
     general: Általános
