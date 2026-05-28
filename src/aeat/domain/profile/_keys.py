@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core.i18n import Translatable as tr
-from ._errors import ProfileValidationError
+from ._errors import ProfileKeysRegistrationError, ProfileValidationError
 from ._normalise import normalise_key
 
 if TYPE_CHECKING:
@@ -119,7 +119,7 @@ def register_profile_keys(keys: tuple[ProfileKey, ...]) -> None:
     if _PROFILE_KEYS_CACHE:
         if _PROFILE_KEYS_CACHE[0] == keys:
             return
-        raise RuntimeError("profile keys already registered with a different tuple")
+        raise ProfileKeysRegistrationError()
     _PROFILE_KEYS_CACHE.append(keys)
     _BY_KEY_CACHE.append({entry.key: entry for entry in keys})
 

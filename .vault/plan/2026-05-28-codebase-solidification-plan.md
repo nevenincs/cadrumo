@@ -79,8 +79,8 @@ envelope.
 - [ ] `W01.P01.S18` - add real-behavior test asserting observation-key-error envelope for each replaced raise; `src/aeat/application/calculations/test_observations_repository.py`.
 - [ ] `W01.P01.S19` - introduce `AuthDiagnosticPhoneStateError(CoreValidationError)`; `replace the raw `ValueError(phone_state)`; `src/aeat/application/auth/_diagnostics.py`.
 - [ ] `W01.P01.S20` - add real-behavior test asserting auth-diagnostic phone-state envelope; `src/aeat/application/auth/test_diagnostics.py`.
-- [ ] `W01.P01.S21` - introduce `ProfileKeysRegistrationError(CoreError)`; `replace the `RuntimeError`; `src/aeat/domain/profile/_keys.py`.
-- [ ] `W01.P01.S22` - add real-behavior test asserting profile-keys-registration envelope on double registration; `src/aeat/domain/profile/test_keys.py`.
+- [x] `W01.P01.S21` - introduce `ProfileKeysRegistrationError(CoreError)`; `replace the `RuntimeError`; `src/aeat/domain/profile/_keys.py`.
+- [x] `W01.P01.S22` - add real-behavior test asserting profile-keys-registration envelope on double registration; `src/aeat/domain/profile/test_keys.py`.
 - [ ] `W01.P01.S23` - introduce `PensionReduccionError(CoreValidationError)`; `replace the six `ValueError` raises at pension reducción computation; `src/aeat/entrypoints/cli/_modelo.py`.
 - [ ] `W01.P01.S24` - add real-behavior test asserting pension-reducción error envelope at every replaced raise; `src/aeat/entrypoints/cli/test_modelo.py`.
 - [ ] `W01.P01.S25` - introduce `BindingPrefillTypeError(CoreValidationError)`; `replace the `TypeError`; `src/aeat/application/calculations/_binding_prefill.py`.

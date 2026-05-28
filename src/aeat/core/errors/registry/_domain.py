@@ -1027,6 +1027,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.domain.calculations.registry._workbook_parity._BinaryXlsConversionError",
+        ErrorCode(
+            code="INTERNAL_CALCULATIONS_BINARY_XLS_CONVERSION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_calculations_binary_xls_conversion",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.domain.renta.errors.RentaError",
         ErrorCode(
             code="ERROR_RENTA",
@@ -1356,6 +1367,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_PROFILE_VALIDATION",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_profile_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.domain.profile._errors.ProfileKeysRegistrationError",
+        ErrorCode(
+            code="INTERNAL_PROFILE_KEYS_REGISTRATION",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_profile_keys_registration",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.i18n import Translatable as tr
 from . import (
     PROFILE_KEYS,
@@ -13,6 +14,8 @@ from . import (
     optional_profile_keys,
     required_profile_keys,
 )
+from ._errors import ProfileKeysRegistrationError
+from ._keys import register_profile_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -123,6 +126,33 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
         assert entry.requirement is ProfileKeyRequirement.OPTIONAL
         assert entry.required_when_key is None
         assert entry.required_when_value is None
+
+
+def test_profile_keys_registration_error_is_in_error_registry() -> None:
+    """ProfileKeysRegistrationError must be present in ERROR_REGISTRY."""
+    assert "INTERNAL_PROFILE_KEYS_REGISTRATION" in ERROR_REGISTRY
+
+
+def test_profile_keys_registration_error_round_trips_through_build_error_envelope() -> None:
+    """build_error_envelope must produce a well-formed envelope for ProfileKeysRegistrationError."""
+    error = ProfileKeysRegistrationError()
+    envelope = build_error_envelope(error)
+    assert envelope.code == "INTERNAL_PROFILE_KEYS_REGISTRATION"
+    assert envelope.category == "INTERNAL"
+    assert envelope.message
+    assert not envelope.retryable
+
+
+def test_double_registration_with_conflicting_tuple_raises_profile_keys_registration_error() -> None:
+    """register_profile_keys must raise ProfileKeysRegistrationError when a
+    second conflicting tuple is supplied.
+
+    The cache is already populated from the PROFILE_KEYS import above.
+    Supplying an empty tuple is guaranteed to differ from the real registry.
+    """
+    assert PROFILE_KEYS, "pre-condition: registry must be non-empty"
+    with pytest.raises(ProfileKeysRegistrationError):
+        register_profile_keys(())  # empty tuple != real registry tuple
 
 
 def test_renta_family_profile_keys_cover_official_scalar_family_fields() -> None:
