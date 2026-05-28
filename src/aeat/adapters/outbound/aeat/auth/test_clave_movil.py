@@ -40,6 +40,7 @@ from ._clave_movil import (
     _classify_identity,
     _ClaveMovilSessionMetadata,
     _extract_verification_code_from_html,
+    _render_progress_banner,
 )
 from ._providers import AuthProviderKind, ClaveMovilSessionDetail
 
@@ -969,3 +970,59 @@ class TestResume:
             await resumed_provider.close()
 
         asyncio.run(run_resume())
+
+
+# ── S66: auth waiting banner routes through structured logger ─────────────────
+
+
+def test_render_progress_banner_emits_via_logger_not_stdout(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """_render_progress_banner must write to the logger, not to stdout/stderr."""
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
+        _render_progress_banner(
+            verification_code="ABC123",
+            timeout_seconds=120,
+            used_non_qr_fallback=False,
+        )
+
+    # Nothing must leak to the real stdout or stderr streams.
+    captured = capsys.readouterr()
+    assert captured.out == "", "progress banner must not write to stdout"
+    assert captured.err == "", "progress banner must not write to stderr"
+
+    # The structured log record must carry the banner text.
+    assert any("auth.waiting_banner" in r.message for r in caplog.records), (
+        "expected an 'auth.waiting_banner' log record"
+    )
+
+
+def test_render_progress_banner_qr_branch_logged(caplog: pytest.LogCaptureFixture) -> None:
+    """QR-branch banner must appear in the structured log record."""
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
+        _render_progress_banner(
+            verification_code=None,
+            timeout_seconds=60,
+            used_non_qr_fallback=False,
+        )
+
+    assert any("auth.waiting_banner" in r.message for r in caplog.records)
+
+
+def test_render_progress_banner_non_qr_branch_logged(caplog: pytest.LogCaptureFixture) -> None:
+    """Non-QR-branch banner must appear in the structured log record."""
+    import logging
+
+    with caplog.at_level(logging.INFO, logger="aeat.adapters.outbound.aeat.auth._clave_movil"):
+        _render_progress_banner(
+            verification_code="XYZ",
+            timeout_seconds=300,
+            used_non_qr_fallback=True,
+        )
+
+    assert any("auth.waiting_banner" in r.message for r in caplog.records)

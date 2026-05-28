@@ -179,13 +179,12 @@ class QuestionaryPrompter:
         """Emit a progress line (section header or question prefix).
 
         Called by the runtime between question prompts so operators see
-        their position in the flow. Writes to ``sys.stdout`` directly so
-        the line is readable on every TTY shape the prompter supports
-        without an additional CLI-layer dependency.
+        their position in the flow. Routes through the structured logger
+        so the message is handled by the configured logging pipeline and
+        any registered secret-scrubbing filters.
         """
 
-        sys.stdout.write(f"{text}\n")
-        sys.stdout.flush()
+        _log.info("wizard.progress text=%r", text)
 
     def _ensure_interactive_environment(self) -> None:
         """Fail before progress when this process cannot host an interactive prompt."""
