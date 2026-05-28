@@ -210,8 +210,18 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     """
 
     existing = _WRAPPED_CALLBACKS.get(id(callback))
-    if existing is not None:
-        return cast(Callable[P, R], existing)
+    if existing is not None and _is_memoised_wrapper(existing):
+        # Safe: _WRAPPED_CALLBACKS stores only the _wrapped closure produced
+        # by THIS function from a callback[P, R] argument. The memo key is
+        # id(callback), which uniquely identifies the object at this call site.
+        # Both the forward and reverse entries are written atomically at the end
+        # of this function, so a hit guarantees the stored callable has exactly
+        # the same ParamSpec P and return type R as callback. The widening to
+        # Callable[..., object] in the dict value type is the only escape hatch;
+        # it cannot be eliminated without making _WRAPPED_CALLBACKS generic over
+        # P and R, which the stdlib dict does not support.
+        # CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER (Wave 2 follow-up: typed cache)
+        return cast(Callable[P, R], existing)  # CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER
 
     @functools.wraps(callback)
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
@@ -396,6 +406,17 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
     if inspect.isfunction(callback):
         return callback.__name__
     return callback.__class__.__name__
+
+
+def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:
+    """Narrow ``obj`` to a callable when it was produced by :func:`command_error_boundary`.
+
+    A hit in ``_WRAPPED_CALLBACKS`` guarantees the stored value is the ``_wrapped``
+    closure returned by this module; all such closures satisfy ``Callable[..., object]``.
+    The full ``Callable[P, R]`` refinement is recovered at the call site via a
+    documented cast (CAST-RATIONALE-ERRORS-MEMOISED-WRAPPER).
+    """
+    return callable(obj)
 
 
 def _is_wrap_candidate(callback: object) -> TypeGuard[Callable[..., object]]:
