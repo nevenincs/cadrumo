@@ -77,10 +77,15 @@ def test_combined_acquisition_records_authenticated_success_outcome(tmp_path: Pa
 
 
 def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) -> None:
+    diagnostic_id = "clave-diagnostic-private-object-key"
     auth_error = ClaveMovilApprovalTimeoutError(
         "operator reported no prompt",
         failure_mode="auth_completion_timeout",
-        context={"phone_state": "app_did_not_prompt", "auth_mode": "non_qr"},
+        context={
+            "phone_state": "app_did_not_prompt",
+            "auth_mode": "non_qr",
+            "diagnostic_id": diagnostic_id,
+        },
     )
 
     report = build_iva_remote_state_acquisition_report(
@@ -94,6 +99,9 @@ def test_auth_failure_blocks_surface_outcomes_with_typed_mode(tmp_path: Path) ->
 
     assert report.auth.status is LiveIvaReadStatus.FAILED
     assert report.auth.failure_mode is LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT
+    assert report.auth.diagnostic_ref is not None
+    assert report.auth.diagnostic_ref.startswith("sha256:")
+    assert diagnostic_id not in report.model_dump_json()
     assert tuple(outcome.failure_mode for outcome in report.outcomes) == (
         LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
         LiveIvaAcquisitionFailureMode.NO_CLAVE_PROMPT,
@@ -219,6 +227,7 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         assert acquisition_row.auth_outcome_mode == "unknown"
         assert acquisition_row.auth_failure_mode == "unknown"
         assert acquisition_row.auth_failure_type == "MissingAuthResult"
+        assert acquisition_row.auth_diagnostic_ref is None
         assert acquisition_row.filed_history_succeeded is True
         assert acquisition_row.wallet_succeeded is False
         assert any(
@@ -244,6 +253,38 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         database_bytes = db_path.read_bytes()
         assert b"AEAT wallet auth gate" not in database_bytes
         assert b"remote-state" not in database_bytes
+
+
+def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Path) -> None:
+    diagnostic_id = "clave-diagnostic-private-object-key"
+    auth_error = ClaveMovilApprovalTimeoutError(
+        "operator reported no prompt",
+        failure_mode="auth_completion_timeout",
+        context={
+            "phone_state": "app_did_not_prompt",
+            "auth_mode": "non_qr",
+            "diagnostic_id": diagnostic_id,
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="session"):
+        report = build_iva_remote_state_acquisition_report(
+            output_root=tmp_path / "remote-state",
+            year_from=2024,
+            year_to=2024,
+            target_year=2026,
+            target_period="1T",
+            auth_error=auth_error,
+        )
+
+        manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
+        remote_state = load_iva_remote_state(as_of_year=2026)
+
+    assert manifest.auth.diagnostic_ref is not None
+    assert manifest.auth.diagnostic_ref.startswith("sha256:")
+    assert remote_state.acquisition_manifests[0].auth_diagnostic_ref == manifest.auth.diagnostic_ref
+    assert diagnostic_id not in manifest.model_dump_json()
+    assert diagnostic_id not in remote_state.model_dump_json()
 
 
 def test_legacy_acquisition_manifest_without_auth_outcome_still_loads() -> None:
