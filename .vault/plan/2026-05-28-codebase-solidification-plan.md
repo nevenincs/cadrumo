@@ -63,8 +63,8 @@ envelope.
 - [x] `W01.P01.S02` - add real-behavior test asserting `TaxationComparisonError` is in `ERROR_REGISTRY` and round-trips through `build_error_envelope`; `src/aeat/application/modelo/test_taxation_comparison.py`.
 - [x] `W01.P01.S03` - subclass `_BinaryXlsConversionError` from `CoreError`; `src/aeat/domain/calculations/registry/_workbook_parity.py`.
 - [x] `W01.P01.S04` - add real-behavior test asserting `_BinaryXlsConversionError` registry binding; `src/aeat/domain/calculations/registry/test_workbook_parity.py`.
-- [ ] `W01.P01.S05` - introduce `ExportFormatError(CoreError)` and `ExportFieldError(CoreValidationError)`; `replace the seven `ValueError` / `raise` sites; `src/aeat/application/export/_tabular.py`.
-- [ ] `W01.P01.S06` - add real-behavior test asserting export error envelope and i18n for every fixed raise; `src/aeat/application/export/test_tabular.py`.
+- [x] `W01.P01.S05` - introduce `ExportFormatError(CoreError)` and `ExportFieldError(CoreValidationError)`; `replace the seven `ValueError` / `raise` sites; `src/aeat/application/export/_tabular.py`.
+- [x] `W01.P01.S06` - add real-behavior test asserting export error envelope and i18n for every fixed raise; `src/aeat/application/export/test_tabular.py`.
 - [x] `W01.P01.S07` - introduce `IvaCompensationModeloError(CoreError)`; `replace the `ValueError`; `src/aeat/application/calculations/_iva_compensation_history.py`.
 - [x] `W01.P01.S08` - add real-behavior test asserting IVA compensation modelo error envelope; `src/aeat/application/calculations/test_iva_compensation_history.py`.
 - [ ] `W01.P01.S09` - introduce `WorkflowInputMismatchError(CoreError)` or reuse `CoreValidationError`; `src/aeat/application/modelo/_actions.py`.
