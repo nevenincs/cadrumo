@@ -614,6 +614,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.modelo._taxation_comparison.TaxationComparisonError",
+        ErrorCode(
+            code="REFUSED_TAXATION_COMPARISON",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_taxation_comparison",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.modelo._borrador_binding.Modelo100BorradorBindingError",
         ErrorCode(
             code="REFUSED_MODELO_100_BORRADOR_BINDING",
@@ -807,6 +818,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_profile_cross_store_drift",
             default_suggestion="aeat config repair profile",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._errors.IvaCompensationModeloError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_MODELO",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.error.error_calculations_registry",
+            default_suggestion="aeat app live iva-wallet history",
             retryable=False,
             runbook_id=None,
         ),

@@ -10,9 +10,13 @@ from pydantic import AnyHttpUrl, ValidationError
 
 from ...adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL
 from ...adapters.outbound.aeat.sede._schema import (
+    FiledDeclaracionArtefact,
+    FiledDeclaracionObservation,
     IvaCompensationWalletObservation,
     IvaCompensationWalletRow,
 )
+from ...core.errors import ERROR_REGISTRY, build_error_envelope
+from ._errors import IvaCompensationModeloError
 from ._iva_compensation_history import (
     IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardPolicyError,
@@ -20,6 +24,7 @@ from ._iva_compensation_history import (
     IvaCompensationPeriodState,
     build_iva_compensation_carry_forward_report,
     enforce_iva_compensation_four_year_window,
+    iva_compensation_state_from_filed_observation,
 )
 from ._iva_wallet_reconciliation import reconcile_iva_compensation_wallet
 
@@ -195,3 +200,46 @@ def test_iva_compensation_carry_forward_lot_rejects_unbalanced_amounts() -> None
             expiry_review_state=IvaCompensationExpiryReviewState.ACTIVE,
             source_observation_key="303:2026:1T:EXP",
         )
+
+
+def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
+    """Construct a minimal valid FiledDeclaracionObservation for the given modelo."""
+    return FiledDeclaracionObservation(
+        modelo=modelo,
+        ejercicio=2024,
+        period="4T",
+        expediente_id="202410013522456T",
+        status="filed",
+        presented_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
+        authenticated_identity=_TAXPAYER_REF,
+        artefacts=(
+            FiledDeclaracionArtefact(
+                kind="register_row",
+                source_url=AnyHttpUrl("https://sede.agenciatributaria.gob.es/expedientes/test"),
+                content_type="text/html",
+                byte_count=0,
+                sha256="a" * 64,
+                captured_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
+            ),
+        ),
+    )
+
+
+def test_iva_compensation_modelo_error_is_registered_in_error_registry() -> None:
+    assert "REFUSED_IVA_COMPENSATION_MODELO" in ERROR_REGISTRY
+
+
+def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope() -> None:
+    exc = IvaCompensationModeloError(
+        "IVA compensation history only accepts Modelo 303 observations"
+    )
+    envelope = build_error_envelope(exc, trace_id=None)
+    assert envelope.code == "REFUSED_IVA_COMPENSATION_MODELO"
+    assert envelope.retryable is False
+    assert envelope.suggestion == "aeat app live iva-wallet history"
+
+
+def test_iva_compensation_state_from_filed_observation_raises_for_non_303_modelo() -> None:
+    observation = _filed_observation(modelo="130")
+    with pytest.raises(IvaCompensationModeloError, match="Modelo 303"):
+        iva_compensation_state_from_filed_observation(observation)
