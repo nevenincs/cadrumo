@@ -46,8 +46,11 @@ import pytest
 
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
+    CasillaObservation,
+    RegistryModeloObservation,
     RegistryValidationError,
     calculate_registry_snapshot,
+    resolve_relation_values_from_observations,
 )
 from aeat.tests import FIXTURES_DIR
 
@@ -631,10 +634,8 @@ def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> N
 
     The M180 formulas aggregate M115 quarterly relation values — the
     decl.retenciones-total formula uses { relation = "modelo-180-rel-115-retenciones-anual" }.
-    The engine cannot recompute this without M115 filing observations as
-    relation_values. Verdict: BINDING-GAP for formula verification — deferred
-    until the M115 relation supply chain is in scope. This test verifies the
-    extraction side only.
+    Extraction verdict: VERIFIED.  Engine verdict: see the companion test
+    test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relation_values.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
 
@@ -657,6 +658,129 @@ def test_verification_chain_m180_parser_extracts_declaracion_pdf_casillas() -> N
     for casilla_id, value in extracted.items():
         assert isinstance(value, Decimal), (
             f"PARSER-GAP [M180/2024-0A]: casilla {casilla_id!r} not Decimal: {type(value).__name__!r}"
+        )
+
+
+def test_verification_chain_m180_engine_recomputes_closure_casillas_from_m115_relation_values() -> None:
+    """Engine recomputes M180 annual closure casillas from M115 quarterly relation values.
+
+    GROUNDED authority: synthetic M180 fixture at
+    src/aeat/tests/fixtures/justificantes/180/2024-0A.pdf, derived from
+    AEAT Orden HAP/1732/2014 printed form structure.  The fixture prints:
+      decl.total-perceptores = 3    (sum of M115 casilla 01 across 4 quarters)
+      decl.base-total        = 12 000.00  (sum of M115 casilla 02 across 4 quarters)
+      decl.retenciones-total =  2 280.00  (sum of M115 casilla 03 across 4 quarters)
+
+    Legal grounding: Ley 35/2006 art.99; RD 439/2007 arts.100,108,109;
+    Orden HAP/1732/2014 art.2; Orden HFP/1284/2023 art.7.
+
+    Chain:
+      1. Parse the 2024-0A M180 fixture → extracted closure values.
+      2. Build M115 quarterly observations (4 quarters, filing year 2024)
+         whose sum matches each extracted M180 total:
+           Q1 casilla 01=1, 02=3 000.00, 03=570.00
+           Q2 casilla 01=1, 02=3 000.00, 03=570.00
+           Q3 casilla 01=1, 02=3 000.00, 03=570.00
+           Q4 casilla 01=0, 02=3 000.00, 03=570.00   ← sum 01=3, 02=12000, 03=2280
+      3. Resolve relation_values via resolve_relation_values_from_observations.
+      4. calculate_registry_snapshot(M180 snapshot, inputs={}, relation_values=...).
+      5. Assert engine values == extracted values for all 3 closure casillas.
+
+    Verdict: VERIFIED — the M115→M180 cross-modelo relation binding resolves
+    and the engine aggregation formula chain is functionally correct.
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "180" / "2024-0A.pdf"
+
+    # Step 1: parse the printed M180 form — these are the AEAT-grounded expected values.
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="180",
+            año_override=2024,
+            period_override="0A",
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(f"PARSER-GAP [M180/2024-0A engine]: parse_declaracion raised.\n  error: {exc}")
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+
+    # Step 2: build M115 quarterly observations whose sum matches the M180 fixture totals.
+    # Values chosen so that sum(Q1..Q4) equals each extracted M180 closure value.
+    # M115 casilla 01 (integer): 1+1+1+0 = 3 == extracted["decl.total-perceptores"]
+    # M115 casilla 02 (money):   3000+3000+3000+3000 = 12000.00 == extracted["decl.base-total"]
+    # M115 casilla 03 (money):   570+570+570+570 = 2280.00 == extracted["decl.retenciones-total"]
+    _m115_quarterly: dict[str, dict[str, Decimal]] = {
+        "1T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
+        "2T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
+        "3T": {"01": Decimal("1"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
+        "4T": {"01": Decimal("0"), "02": Decimal("3000.00"), "03": Decimal("570.00")},
+    }
+    observations = tuple(
+        RegistryModeloObservation(
+            modelo="115",
+            filing_year=2024,
+            period=period,
+            observations=tuple(
+                CasillaObservation(casilla_id=cid, value=val)
+                for cid, val in casilla_values.items()
+            ),
+        )
+        for period, casilla_values in sorted(_m115_quarterly.items())
+    )
+
+    # Step 3: resolve relation_values for the M180 2023-y-siguientes snapshot.
+    snapshot = _registry_snapshot("180", 2024, "0A")
+    try:
+        relation_values = resolve_relation_values_from_observations(
+            snapshot.revision,
+            observations,
+            filing_year=2024,
+            period="0A",
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [M180/2024-0A engine]: resolve_relation_values_from_observations raised "
+            f"RegistryValidationError — M115→M180 relation chain is structurally broken.\n"
+            f"  error: {exc}"
+        )
+
+    # Step 4: run the calculation engine.
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            date_context={"filing_period": date(2024, 12, 31)},
+            relation_values=relation_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [M180/2024-0A engine]: calculate_registry_snapshot raised "
+            f"RegistryValidationError — engine could not recompute from supplied relation_values.\n"
+            f"  error: {exc}\n"
+            f"  relation_values keys: {sorted(relation_values)}"
+        )
+
+    # Step 5: assert engine closure values == AEAT-grounded extracted values.
+    engine_values = dict(result.values)
+
+    for casilla_id in ("decl.total-perceptores", "decl.base-total", "decl.retenciones-total"):
+        extracted_value = extracted.get(casilla_id)
+        engine_value = engine_values.get(casilla_id)
+        assert extracted_value is not None, (
+            f"PARSER-GAP [M180/2024-0A engine]: closure casilla {casilla_id!r} absent from extracted values"
+        )
+        assert isinstance(extracted_value, Decimal), (
+            f"PARSER-GAP [M180/2024-0A engine]: {casilla_id!r} is not Decimal: {type(extracted_value).__name__!r}"
+        )
+        assert engine_value is not None, (
+            f"FORMULA-MISMATCH [M180/2024-0A engine]: casilla {casilla_id!r} absent from engine result — "
+            f"formula evaluation order issue or casilla missing from revision."
+        )
+        assert engine_value == extracted_value, (
+            f"FORMULA-MISMATCH [M180/2024-0A engine]: engine recomputed {casilla_id!r} as "
+            f"{engine_value!r} but AEAT-printed fixture shows {extracted_value!r}.\n"
+            f"  diff: {engine_value - extracted_value!r}\n"
+            f"  relation_values supplied: {relation_values}"
         )
 
 
