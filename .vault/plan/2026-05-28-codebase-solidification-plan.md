@@ -75,8 +75,8 @@ envelope.
 - [ ] `W01.P01.S14` - add real-behavior test asserting browser-adapter-type-error envelope and registry binding; `src/aeat/adapters/outbound/aeat/sede/test_browser_errors.py`.
 - [x] `W01.P01.S15` - introduce `StorageCorruptionError(CoreError)`; `replace the `TypeError`; `src/aeat/adapters/outbound/storage/_local.py`.
 - [x] `W01.P01.S16` - add real-behavior test asserting storage-corruption-error envelope round-trip; `src/aeat/adapters/outbound/storage/test_local.py`.
-- [ ] `W01.P01.S17` - introduce `ObservationKeyError(CoreValidationError)`; `replace the five `ValueError` raises at observation-key validation; `src/aeat/application/calculations/_observations_repository.py`.
-- [ ] `W01.P01.S18` - add real-behavior test asserting observation-key-error envelope for each replaced raise; `src/aeat/application/calculations/test_observations_repository.py`.
+- [x] `W01.P01.S17` - introduce `ObservationKeyError(CoreValidationError)`; `replace the five `ValueError` raises at observation-key validation; `src/aeat/application/calculations/_observations_repository.py`.
+- [x] `W01.P01.S18` - add real-behavior test asserting observation-key-error envelope for each replaced raise; `src/aeat/application/calculations/test_observations_repository.py`.
 - [ ] `W01.P01.S19` - introduce `AuthDiagnosticPhoneStateError(CoreValidationError)`; `replace the raw `ValueError(phone_state)`; `src/aeat/application/auth/_diagnostics.py`.
 - [ ] `W01.P01.S20` - add real-behavior test asserting auth-diagnostic phone-state envelope; `src/aeat/application/auth/test_diagnostics.py`.
 - [x] `W01.P01.S21` - introduce `ProfileKeysRegistrationError(CoreError)`; `replace the `RuntimeError`; `src/aeat/domain/profile/_keys.py`.
@@ -97,8 +97,8 @@ envelope.
 - [ ] `W01.P01.S36` - add real-behavior test asserting `_record_unhandled` envelopes carry an `ErrorCode` for every original exception class; `src/aeat/application/workflow/test_engine.py`.
 - [ ] `W01.P01.S37` - narrow the four config-CLI `except Exception` catches to `AeatError`; `wrap unexpected exceptions in `ConfigBoundaryError(CoreError)`; `src/aeat/entrypoints/cli/_config/__init__.py`.
 - [ ] `W01.P01.S38` - add real-behavior test asserting config-CLI envelope on AeatError and ConfigBoundaryError on unexpected; `src/aeat/entrypoints/cli/_config/test_config.py`.
-- [x] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
-- [x] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
+- [ ] `W01.P01.S39` - introduce `NamespaceRegistryError(CoreError)`; `replace the twelve `ValueError` raises at boot-time invariant checks; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
+- [ ] `W01.P01.S40` - add real-behavior test asserting namespace-registry-error envelope at every replaced invariant; `src/aeat/adapters/persistence/storage/test_namespace_registry.py`.
 - [ ] `W01.P01.S41` - introduce `IvaWalletReconciliationError(CoreError)`; `replace the four `ValueError` raises; `src/aeat/application/calculations/_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S42` - add real-behavior test asserting IVA-wallet-reconciliation envelope at every replaced raise; `src/aeat/application/calculations/test_iva_wallet_reconciliation.py`.
 - [ ] `W01.P01.S43` - introduce `AggregationConfigError(CoreError)`; `replace the nine `ValueError` raises at aggregation-service composition; `src/aeat/application/aggregation/_service.py`.
