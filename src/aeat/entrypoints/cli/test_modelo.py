@@ -118,7 +118,10 @@ def test_work_calculate_binding_help_points_at_bindings_list() -> None:
 
     result = invoke_cached_cli(["app", "modelo", "work", "calculate", "--help"])
     assert result.exit_code == 0, result.output
-    assert "bindings list --missing" in result.output
+    # The CliRunner wraps long help text across multiple lines; collapse
+    # whitespace before asserting on the embedded phrase.
+    collapsed = " ".join(result.output.split())
+    assert "bindings list --missing" in collapsed
 
 
 def test_work_calculate_enters_bucket_source_mesh_calculation_boundary() -> None:
