@@ -634,7 +634,7 @@ cli:
         json_not_object: '{flag} ha de ser un objecte JSON.'
         json_parse_error: '{flag} ha de ser un objecte JSON; JSON no vàlid al byte
           {pos}.'
-        json_validation_error: cli.app.modelo.aggregate.json_validation_error
+        json_validation_error: 'El valor de {flag} no és un objecte d''observació vàlid: {details}.'
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: Període enviat al servei d'agregació
@@ -708,7 +708,7 @@ cli:
       export:
         actor_help: Etiqueta de l'operador registrada a l'esdeveniment MODELO_EXPORTED.
         errors:
-          no_exportable_revision: cli.app.modelo.export.errors.no_exportable_revision
+          no_exportable_revision: 'No hi ha cap revisió exportable: la unitat de treball no té cap revisió verificada-completa o presentada.'
         help: Exporta una revisió de modelo verificada o presentada a un fitxer local
           compatible amb AEAT (fichero-BOE). Local; mai contacta amb AEAT.
         output_help: Ruta on escriure l'artefacte fichero-BOE.
@@ -753,27 +753,27 @@ cli:
         balance_help: Mostra el saldo acumulat del crèdit IVA per compensació calculat
           a partir de l'historial local del Model 303.
         group_help: Ordres de saldo local de la cartera de compensació IVA.
-        seed_amount_help: cli.app.modelo.iva_wallet.seed_amount_help
-        seed_confirm_help: cli.app.modelo.iva_wallet.seed_confirm_help
-        seed_confirm_required: cli.app.modelo.iva_wallet.seed_confirm_required
-        seed_conflict: cli.app.modelo.iva_wallet.seed_conflict
-        seed_filing_year_help: cli.app.modelo.iva_wallet.seed_filing_year_help
-        seed_help: cli.app.modelo.iva_wallet.seed_help
-        seed_invalid_amount: cli.app.modelo.iva_wallet.seed_invalid_amount
-        seed_negative_amount: cli.app.modelo.iva_wallet.seed_negative_amount
-        seed_no_nif: cli.app.modelo.iva_wallet.seed_no_nif
-        seed_period_help: cli.app.modelo.iva_wallet.seed_period_help
+        seed_amount_help: 'Import inicial de la compensació d''IVA en decimal.'
+        seed_confirm_help: 'Confirmeu l''operació d''import inicial.'
+        seed_confirm_required: 'Proporcioneu el modificador --confirm per confirmar l''operació d''import inicial.'
+        seed_conflict: 'Error intern: conflicte amb un registre d''import inicial de compensació d''IVA existent.'
+        seed_filing_year_help: 'Any fiscal de l''import inicial.'
+        seed_help: 'Creació d''un registre d''import inicial del moneder de compensació d''IVA per inicialitzar el saldo anterior del moneder.'
+        seed_invalid_amount: 'L''import inicial ha de ser un decimal vàlid i no negatiu.'
+        seed_negative_amount: 'L''import inicial no pot ser negatiu.'
+        seed_no_nif: 'No hi ha NIF definit per a l''operació d''import inicial; associeu-lo al perfil actiu.'
+        seed_period_help: 'Període de l''import inicial (p. ex. 2024N4).'
       list:
         year_help: Filtrar el catàleg de models per un únic exercici fiscal
       project:
-        binding_help: cli.app.modelo.project.binding_help
-        casilla_help: cli.app.modelo.project.casilla_help
-        ccaa_help: cli.app.modelo.project.ccaa_help
-        m100_calculation_error: cli.app.modelo.project.m100_calculation_error
-        no_m130_revisions: cli.app.modelo.project.no_m130_revisions
-        no_m130_units: cli.app.modelo.project.no_m130_units
-        year_help: cli.app.modelo.project.year_help
-      project_help: cli.app.modelo.project_help
+        binding_help: 'Valor d''enllaç amb la sintaxi KEY=VALUE (repetible).'
+        casilla_help: 'Valor de casilla amb la sintaxi CASILLA=DECIMAL (repetible).'
+        ccaa_help: 'Codi de comunitat autònoma per a la projecció territorial.'
+        m100_calculation_error: 'Error intern: el càlcul del Modelo 100 ha fallat.'
+        no_m130_revisions: 'No hi ha revisions M130 per a l''exercici indicat.'
+        no_m130_units: 'No hi ha unitats de treball M130 per a l''exercici i el període indicats.'
+        year_help: 'Any fiscal per a la projecció.'
+      project_help: 'Executar projeccions agregades de models (p. ex. agregació anual del Modelo 130).'
       readiness:
         modelo_help: Codi de model (p. ex. 303).
         period_help: Token de període (p. ex. Q1, annual).
@@ -857,7 +857,7 @@ cli:
           casilla numèrica correcta.
         casilla_not_decimal: 'El valor de --casilla per a {key} no és un decimal:
           {value}.'
-        causante_ccaa_help: cli.app.modelo.work.causante_ccaa_help
+        causante_ccaa_help: 'CCAA de residència habitual del causant (ISD Modelo 650/660) o CCAA on s''ubica el bé transmès (ITPyAJD Modelo 600/620). Determina la Hisenda competent (Llei 22/2009 Art. 32). País Basc i Navarra són règims forals; consulteu la Hisenda autonòmica corresponent.'
         compare_taxation_error: 'La comparació conjunta vs. individual no és disponible:
           {detail}'
         compare_taxation_help: 'Compara la quota IRPF en tributació conjunta (art.
@@ -1359,15 +1359,15 @@ cli:
       export_out_help: Ruta de destinació per al paquet JSON
       help: Gestionar valors de configuració del perfil actiu
       import_help: Registra un paquet portable de perfil des d'un JSON
-      import_invalid_bundle: cli.config.profile.import_invalid_bundle
+      import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema del paquet de perfil.'
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir per importar una segona còpia amb un altre nom.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
         amb `--label NOM_NOU` per importar-lo amb un nom diferent.
-      import_label_taken_different_id: cli.config.profile.import_label_taken_different_id
+      import_label_taken_different_id: 'L''etiqueta especificada pertany a un perfil amb un identificador diferent. Useu --label NOU_NOM per importar amb un nom diferent.'
       import_missing_bundle: No s'ha trobat el paquet de perfil a %{path}
       import_path_help: Ruta al paquet JSON del perfil
-      import_uuid_collision: cli.config.profile.import_uuid_collision
+      import_uuid_collision: 'El UUID del paquet entra en conflicte amb un perfil existent.'
       logout_help: Tanca la sessió del perfil actiu netejant el punter local
       logout_session_warning: El tancament de sessió ha esborrat el punter del perfil
         actiu. Els verbs posteriors en aquest terminal seran rebutjats amb NoActiveBucketSessionError
@@ -1681,8 +1681,8 @@ cli:
       mixed_requires_business_pct: Rebutjat. --classification MIXED necessita un percentatge
         professional. Passa --business-pct amb un valor de 0 a 1, o classifica la
         fila com a BUSINESS o PERSONAL.
-      reaffirm_help: cli.ledger.classify.reaffirm_help
-      reaffirmed: cli.ledger.classify.reaffirmed
+      reaffirm_help: 'Reafirmar la classificació d''una transacció ja classificada.'
+      reaffirmed: 'Classificació reafirmada.'
       taxable_base_help: Import de base imposable
     errors:
       command_input_invalid: 'Rebutjat. La transacció no és vàlida: {details}'
@@ -2051,7 +2051,7 @@ cli:
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
-      show_suppressed_help: cli.overview.calendar.show_suppressed_help
+      show_suppressed_help: 'Mostra també les entrades suprimides (no aplicables) al calendari.'
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).
     calendar_refused_incomplete: 'El perfil no declara les claus: %{keys}. Executeu
       ''aeat config profile edit NAME'' o useu --allow-incomplete per veure el calendari
@@ -2230,33 +2230,33 @@ cli:
       bucket: Bucket
       id: ID
       kind: Tipus
-      legal_refs: cli.review.labels.legal_refs
+      legal_refs: 'Referències legals'
       next: Següent
       period: Període
       severity: Severitat
       source_kind: Tipus d'origen
     queue:
       empty: No hi ha elements de revisió
-      explain_help: cli.review.queue.explain_help
+      explain_help: 'Inclou les referències legals que fonamenten cada troballa a la sortida de text. La càrrega JSON sempre les inclou.'
       help: Llistar files de la cua de revisió
       kind_help: Filtrar per tipus d'origen
       modelo_help: Filtrar per model
       source_kind_help: Filtrar per tipus d'origen
       state_help: Filtrar estat (pending o all)
     show:
-      explain_help: cli.review.show.explain_help
+      explain_help: 'Inclou les referències legals que fonamenten aquesta troballa a la sortida de text. La càrrega JSON sempre les inclou.'
       help: Mostrar un element de la cua de revisió
       id_help: Identificador de l'element de revisió
   root:
-    app_app_help: cli.root.app_app_help
-    app_help: cli.root.app_help
-    app_help_help: cli.root.app_help_help
-    debug_help: cli.root.debug_help
-    detail_help: cli.root.detail_help
+    app_app_help: 'Ordres de l''aplicació fiscal (ledger, modelo, overview, registry).'
+    app_help: 'Accedir als comandos de nivell d''aplicació.'
+    app_help_help: 'Mostra l''ajuda dels comandos de l''aplicació.'
+    debug_help: 'Habilita la sortida detallada de depuració.'
+    detail_help: 'Habilita la sortida detallada.'
     errors:
       did_you_mean_command: Volíeu dir '%{command}'?
-    format_help: cli.root.format_help
-    help_help: cli.root.help_help
+    format_help: 'Format de sortida: text, json, table, csv.'
+    help_help: 'Mostra l''ajuda.'
     landing:
       headline: Assistent fiscal AEAT
       help_line: 'Mes ajuda: executeu `aeat --help`, `aeat config --help` o `aeat
@@ -2288,13 +2288,13 @@ cli:
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuracio.
       welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
-    language_help: cli.root.language_help
-    profile_help: cli.root.profile_help
-    quiet_help: cli.root.quiet_help
-    startup_import_error: cli.root.startup_import_error
-    unavailable_app_help: cli.root.unavailable_app_help
-    verbose_help: cli.root.verbose_help
-    version_help: cli.root.version_help
+    language_help: 'Llengua de la interfície (p. ex. ca, es, en).'
+    profile_help: 'Nom del perfil actiu.'
+    quiet_help: 'Mostra només els errors.'
+    startup_import_error: 'Error intern: el mòdul de l''aplicació no s''ha pogut carregar a l''inici.'
+    unavailable_app_help: 'Aquesta ordre no està disponible en la configuració actual.'
+    verbose_help: 'Habilita la sortida detallada.'
+    version_help: 'Mostra el número de versió i surt.'
   topic:
     app_help: Mostrar ajuda conceptual sobre règims, models i processos AEAT
     errors:
@@ -3076,7 +3076,8 @@ errors:
       del període sense classificar. Classifica-les totes abans d'agregar.
     refused_financial_aggregation_unsupported_modelo: No hi ha cap contracte d'agregació
       disponible per al model sol·licitat.
-    refused_financial_bank_statement_parse: 'L''anàlisi de l''extracte bancari financer ha fallat.'
+    refused_financial_bank_statement_parse: L'anàlisi de l'extracte bancari financer
+      ha fallat.
     refused_financial_ledger_no_active_bucket: L'operació del llibre necessita un
       perfil actiu. Crea o selecciona un perfil i torna-ho a provar.
     refused_financial_ledger_transaction_id_prefix: El prefix d'identificador de transacció
