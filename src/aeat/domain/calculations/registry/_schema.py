@@ -599,6 +599,7 @@ FormulaOperator = Literal[
     "lookup_parameter",
     "lookup_bracket",
     "lookup_bracket_by_ccaa",
+    "m210_resolve_rate",
     "lookup_parameter_by_entity_type",
     "lookup_bracket_by_entity_type",
     "previous_period_value",
