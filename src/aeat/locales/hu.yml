@@ -708,11 +708,11 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         label_bindings: cli.app.modelo.describe.label_bindings
         label_cadence: 'Gyakoriság'
-        label_casillas: cli.app.modelo.describe.label_casillas
+        label_casillas: 'Mezők'
         label_formulas: cli.app.modelo.describe.label_formulas
         label_modelo: 'Modelo'
         label_official_name: 'Hivatalos név'
-        label_periods: cli.app.modelo.describe.label_periods
+        label_periods: 'Időszakok'
         label_revision: 'Verzió'
         label_revision_ids: 'Verzióazonosítók'
         label_tax_domain: 'Adózási terület'
