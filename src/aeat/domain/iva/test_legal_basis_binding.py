@@ -198,7 +198,7 @@ def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
 
 
 def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
-    from aeat.domain.calculations.registry._loader import load_legal_parameters_only
+    from aeat.domain.calculations.registry import load_legal_parameters_only
     from aeat.domain.iva._recargo_equivalencia import _rates_from_catalogue
 
     parameters = dict(load_legal_parameters_only(bundled_path("registry", "aeat")))

@@ -48,7 +48,7 @@ contract while preserving current registry object loading semantics.
 
 - [x] `P01.S01` - Add continuity identifiers, evolution declarations, and opt-in flags; `src/aeat/domain/calculations/registry/_schema.py`.
 - [x] `P01.S02` - Add fragment-loader support for continuity record arrays without special-casing modelos; `src/aeat/domain/calculations/registry/_loader.py`.
-- [ ] `P01.S03` - Export only stable public continuity report types and keep helper modules private; `src/aeat/domain/calculations/registry`.
+- [x] `P01.S03` - Export only stable public continuity report types and keep helper modules private; `src/aeat/domain/calculations/registry`.
 
 ### Phase `P02` - Validator and tests
 
