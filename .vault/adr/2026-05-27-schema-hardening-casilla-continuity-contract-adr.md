@@ -79,6 +79,9 @@ identity.
 - Every non-trivial continuity/evolution decision must carry source and legal
   grounding.
 - Existing overlap-aware hard validation remains mandatory and is not weakened.
+- Implementation modules that encode continuity semantics must carry a short
+  governing-ADR comment naming this ADR and the specific decision it implements.
+  Loader-fragment comments must also name the fragment architecture ADR.
 
 ## Implementation
 
@@ -114,23 +117,40 @@ Initial evolution kinds:
 The exact enum names may be adjusted during implementation to match project
 Spanish-stem naming, but the categories are fixed by this ADR.
 
-### D3 - Enforce only when a modelo opts in
+### D3 - Enforce declared continuity surfaces when a revision opts in
 
-Add a modelo or revision-level opt-in flag for non-overlapping continuity
-validation. Before opt-in, non-overlap drift remains advisory through the
-existing inventory function.
+Add a revision-level opt-in flag for non-overlapping continuity validation. The
+flag is **surface-scoped strictness**, not a declaration that every repeated
+numeric casilla id in the revision pair has been reviewed.
 
-After opt-in:
+Before opt-in, non-overlap drift remains advisory through the existing
+inventory function. After opt-in, the validator must hard-fail drift on every
+declared continuity surface:
 
-- A repeated casilla id with drift across non-overlapping revisions must either
-  share a continuity id with an allowed evolution declaration, or be explicitly
-  marked as repurposed.
-- A shared continuity id with incompatible `data_type` or `semantic_role` is a
-  hard error unless an explicit allowed evolution kind covers it.
+- If either side of a repeated casilla id declares `continuidad_id`, any drift
+  in the validator-owned fields must be covered by an allowed evolution record
+  or fail.
+- If an evolution record names a continuity id for the revision pair, drift on
+  that surface must be checked even when only one side currently carries the
+  casilla-level `continuidad_id`.
+- A shared continuity id with incompatible `data_type`, `section`, or
+  `semantic_role` is a hard error unless an explicit allowed evolution kind
+  covers it.
 - `repurposed` requires source and legal grounding and prevents template
   sharing across the repurposed boundary.
 - `retired` prevents a missing later casilla from being treated as an
   accidental omission in continuity-aware reports.
+
+Unannotated repeated-id drift remains advisory during staged rollout, even if
+one of the revisions has opted into surface-scoped strictness. This is
+deliberate: the opt-in flag makes authored continuity surfaces irreversible
+without pretending the whole repeated-id corpus has been manually reviewed.
+
+Corpus-wide strictness is a later state, not the meaning of this flag. A modelo
+can claim corpus-wide continuity coverage only after every repeated-id drift
+has either a continuity/evolution decision or a repurposing/retirement
+decision. That completeness gate requires separate rollout evidence and must
+not be inferred from `continuidad_validation = "strict"` alone.
 
 ### D4 - Keep template expansion downstream
 
@@ -166,8 +186,9 @@ same continuity metadata.
 
 The staged opt-in is required because current M100 drift is known to be mixed.
 The schema must first let authors record decisions, then enforce those
-decisions. Advisory reporting remains useful during migration and for modelos
-that do not yet have enough evidence to opt in.
+decisions. Advisory reporting remains useful during migration, including for
+unannotated surfaces inside revisions that have already opted into
+surface-scoped strictness for a smaller authored subset.
 
 ## Consequences
 
@@ -180,9 +201,12 @@ template support. The first data rollout should sample M100 repeated ids into
 continuous, evolved, repurposed, and retired buckets, then author continuity
 metadata only where evidence supports the decision.
 
-The continuity validator will add another hard snapshot-build gate, but only
-for opted-in modelos. This keeps current corpus loading stable while making
-future hardening irreversible once a modelo declares itself continuity-aware.
+The continuity validator adds another hard snapshot-build gate, but only for
+declared continuity surfaces in opted-in revisions. This keeps current corpus
+loading stable while making authored continuity hardening irreversible. A
+separate corpus-wide completeness gate may later prove that a modelo has no
+remaining advisory repeated-id drift, but this ADR does not treat that state as
+implemented.
 
 No runtime consumer should need to understand fragment files or template
 sources. Snapshot, calculation, export, and application code continue to consume
