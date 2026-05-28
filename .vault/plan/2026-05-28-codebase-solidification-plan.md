@@ -143,10 +143,10 @@ through the affected logger.
 - [x] `W01.P02.S70` - add real-behavior test asserting importing `aeat.domain.normatives` produces no stdout output; `src/aeat/domain/normatives/test_init.py`.
 - [x] `W01.P02.S71` - guard the LLM-adapter docstring example `print(response.text)` behind `if __name__ == "__main__":`; `src/aeat/adapters/outbound/llm/__init__.py`.
 - [x] `W01.P02.S72` - add real-behavior test asserting importing `aeat.adapters.outbound.llm` produces no stdout output; `src/aeat/adapters/outbound/llm/test_init.py`.
-- [ ] `W01.P02.S73` - add `pikepdf._core` to `configure_logging()` `loggers` block; `remove the bootstrap-time mutation; `src/aeat/__init__.py`.
-- [ ] `W01.P02.S74` - add real-behavior test asserting `pikepdf._core` level survives a `configure_logging()` re-call; `src/aeat/core/test_logging.py`.
-- [ ] `W01.P02.S75` - attach `SecretScrubbingFilter` to the `root_logger.getLogger()` sink path; `src/aeat/core/observability/_context.py`.
-- [ ] `W01.P02.S76` - add real-behavior test asserting run-scoped records pass through scrubbing before reaching the JSONL directory; `src/aeat/core/observability/test_sink_redaction.py`.
+- [x] `W01.P02.S73` - add `pikepdf._core` to `configure_logging()` `loggers` block; `remove the bootstrap-time mutation; `src/aeat/__init__.py`.
+- [x] `W01.P02.S74` - add real-behavior test asserting `pikepdf._core` level survives a `configure_logging()` re-call; `src/aeat/core/test_logging.py`.
+- [x] `W01.P02.S75` - attach `SecretScrubbingFilter` to the `root_logger.getLogger()` sink path; `src/aeat/core/observability/_context.py`.
+- [x] `W01.P02.S76` - add real-behavior test asserting run-scoped records pass through scrubbing before reaching the JSONL directory; `src/aeat/core/observability/test_sink_redaction.py`.
 
 ### Phase `W01.P03` - enroll the centralized locale surface
 
@@ -352,14 +352,14 @@ strengthens the test, never weakens or skips it.
 - [x] `W01.P09.S210` - add real-behavior test asserting monkeypatch inventory matches the classification; `src/aeat/test_monkeypatch_inventory.py`.
 - [x] `W01.P09.S211` - enumerate every `assert True` / `assert 1 == 1` / `assert var == var` shape under `src/aeat/`; `remove or replace each with a real assertion; `src/aeat`.
 - [x] `W01.P09.S212` - add real-behavior test asserting zero tautological assertion shapes survive in the test surface; `src/aeat/test_no_tautology.py`.
-- [ ] `W01.P09.S213` - enumerate every calculation test that hand-computes an expected value from the registry formula under test; `record each as a follow-up Step to re-ground against an external authority; `src/aeat/domain/calculations`.
-- [ ] `W01.P09.S214` - add real-behavior test asserting calculation-test expected values are sourced from registry fixtures, AEAT workbooks, BOE worked examples, or live oracle replay (per `no-tautological-calculation-tests.md`); `src/aeat/domain/calculations/test_calculation_grounding.py`.
-- [ ] `W01.P09.S215` - diff `pytest` collection inventory against the production module inventory under `src/aeat/`; `record every module without a paired `test_*.py` as a Wave 2 follow-up Step; `src/aeat`.
-- [ ] `W01.P09.S216` - add real-behavior test asserting every production module under `src/aeat/.../` has at least one paired test file (excluding legitimate test-only modules); `src/aeat/test_coverage_inventory.py`.
-- [ ] `W01.P09.S217` - enumerate every persistence boundary touched by a W01.P01..P08 fix Step and confirm a roundtrip test exists per `aeat-roundtrip-discipline.md`; `src/aeat`.
-- [ ] `W01.P09.S218` - add real-behavior test asserting persistence boundary inventory matches roundtrip-test inventory; `src/aeat/test_roundtrip_coverage.py`.
-- [ ] `W01.P09.S219` - sample 20 random production-test pairings for semantic-intent drift (test asserts incidental shape rather than behaviour); `record each as a follow-up Step; `src/aeat`.
-- [ ] `W01.P09.S220` - add real-behavior test asserting the sample-review process runs against a deterministic seed and produces reproducible output; `src/aeat/test_semantic_intent_sampler.py`.
+- [x] `W01.P09.S213` - enumerate every calculation test that hand-computes an expected value from the registry formula under test; `record each as a follow-up Step to re-ground against an external authority; `src/aeat/domain/calculations`.
+- [x] `W01.P09.S214` - add real-behavior test asserting calculation-test expected values are sourced from registry fixtures, AEAT workbooks, BOE worked examples, or live oracle replay (per `no-tautological-calculation-tests.md`); `src/aeat/domain/calculations/test_calculation_grounding.py`.
+- [x] `W01.P09.S215` - diff `pytest` collection inventory against the production module inventory under `src/aeat/`; `record every module without a paired `test_*.py` as a Wave 2 follow-up Step; `src/aeat`.
+- [x] `W01.P09.S216` - add real-behavior test asserting every production module under `src/aeat/.../` has at least one paired test file (excluding legitimate test-only modules); `src/aeat/test_coverage_inventory.py`.
+- [x] `W01.P09.S217` - enumerate every persistence boundary touched by a W01.P01..P08 fix Step and confirm a roundtrip test exists per `aeat-roundtrip-discipline.md`; `src/aeat`.
+- [x] `W01.P09.S218` - add real-behavior test asserting persistence boundary inventory matches roundtrip-test inventory; `src/aeat/test_roundtrip_coverage.py`.
+- [x] `W01.P09.S219` - sample 20 random production-test pairings for semantic-intent drift (test asserts incidental shape rather than behaviour); `record each as a follow-up Step; `src/aeat`.
+- [x] `W01.P09.S220` - add real-behavior test asserting the sample-review process runs against a deterministic seed and produces reproducible output; `src/aeat/test_semantic_intent_sampler.py`.
 - [ ] `W01.P09.S221` - enumerate every `try: ... except: pass` shape in test files; `replace each with a specific exception assertion; `src/aeat`.
 - [ ] `W01.P09.S222` - add real-behavior test asserting zero bare-except shapes survive in the test surface; `src/aeat/test_no_bare_except.py`.
 - [ ] `W01.P09.S223` - enumerate every test that constructs a pydantic model with only the required fields populated (per `aeat-roundtrip-discipline.md`'s "populate every defaultable field" rule); `record each as a follow-up Step; `src/aeat`.
