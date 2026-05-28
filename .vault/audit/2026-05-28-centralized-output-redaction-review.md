@@ -18,6 +18,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S09]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S10]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P02-S11]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P02-S12]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -138,3 +139,13 @@ No HIGH/CRITICAL findings in the scoped S10/S11 implementation.
 ### Residual risks
 
 - `emit_json_success` still inherits `emit_json_document`'s `default=str` fallback for unsupported non-schema objects. That appears unchanged for the generic JSON contract, but future hardening may want a stricter success-envelope serialization gate if this path is expected to match `render_command_output`'s fail-fast behavior.
+
+## W01.P02.S12 Review
+
+No HIGH/CRITICAL findings in the scoped S12 implementation.
+
+`_emit_envelope` text mode now delegates to `render_command_output` with `format_name="text"` before calling `typer.echo`, so envelope text lines no longer bypass the central redacted renderer. JSON mode still branches to `emit_json_success`, preserving the schema-envelope path and the S10/S11 redaction behavior. The new test is a real transport-level regression: it builds a Click context, calls `_emit_envelope`, captures stdout from `typer.echo`, and asserts a profile UUID is absent from emitted text rather than duplicating the redaction helper logic.
+
+### Residual risks
+
+- The focused S12 test covers text-mode profile-id redaction only. JSON-mode coverage remains provided by the S10/S11 envelope tests rather than by a dedicated `_emit_envelope` JSON branch test in `test_common_output.py`.
