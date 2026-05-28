@@ -125,7 +125,10 @@ class RentaWebOpenReplayDriver:
         expected: Mapping[str, object],
     ) -> RentaWebOpenObservation:
         document = decode_replay_json_payload(payload, surface_label="Renta WEB Open replay")
-        return RentaWebOpenObservation(values=dict(document.observed), raw_evidence_locator=document.raw_evidence_locator)
+        return RentaWebOpenObservation(
+            values=dict(document.observed),
+            raw_evidence_locator=document.raw_evidence_locator,
+        )
 
 
 class RentaWebOpenOracle:

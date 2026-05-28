@@ -485,7 +485,7 @@ def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() 
     from aeat.domain.calculations.registry import applicable_filing_schedules
     from aeat.domain.deadlines._models import IVARegime, ModeloIVAProfile, TaxpayerProfile
 
-    modelo, catalogues = _load_modelo_303()
+    modelo, _catalogues = _load_modelo_303()
     revision = modelo.revisions["2023-y-siguientes"]
 
     sii_profile = TaxpayerProfile(
@@ -507,7 +507,9 @@ def test_modelo_303_sii_monthly_filing_schedule_matches_sii_enrolled_profiles() 
     quarterly_schedules = applicable_filing_schedules(revision, quarterly_profile)
     quarterly_ids = {s.id for s in quarterly_schedules}
     assert "modelo-303-trimestral" in quarterly_ids, "quarterly schedule must match standard quarterly profile"
-    assert "modelo-303-mensual-sii" not in quarterly_ids, "monthly SII schedule must NOT match standard quarterly profile"
+    assert "modelo-303-mensual-sii" not in quarterly_ids, (
+        "monthly SII schedule must NOT match standard quarterly profile"
+    )
 
 
 def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuota() -> None:
@@ -515,7 +517,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     to his rental estate.  Art. 9.1.c LISIVA triggers the autoconsumo; Art. 79.4
     LISIVA sets the base at cost; Art. 90 LISIVA sets the tipo at 21%.
 
-    Expected cuota = 1,400,000 × 0.21 = 294,000.00.
+    Expected cuota = 1,400,000 x 0.21 = 294,000.00.
 
     The expected value is derived from the statutory formula (Art. 90 LISIVA:
     tipo general = 21%), NOT from the registry implementation under test; this
@@ -543,12 +545,12 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         date_context={"filing_period": date(2025, 3, 31)},
     )
 
-    # Art. 90 LISIVA tipo general 21%: 1,400,000 × 0.21 = 294,000.00
+    # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
     assert result.values["iva.autoconsumo.promotor.base"] == Decimal("1400000"), (
         "base casilla must carry the supplied construction cost"
     )
     assert result.values["iva.autoconsumo.promotor.cuota"] == Decimal("294000.00"), (
-        "cuota must equal 1,400,000 × 21% = 294,000.00 per Art. 90 LISIVA"
+        "cuota must equal 1,400,000 x 21% = 294,000.00 per Art. 90 LISIVA"
     )
     # The autoconsumo cuota must also flow into the total devengada.
     cuota_devengada_total = result.values["iva.cuota-devengada-total"]
@@ -590,7 +592,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
         return r.values["iva.autoconsumo.promotor.cuota"]
 
     # Statutory expectation from Art. 90 LISIVA (tipo general 21%):
-    #   700,000 × 0.21 = 147,000.00
+    #   700,000 x 0.21 = 147,000.00
     assert _run(Decimal("700000")) == Decimal("147000.00")
     # Cross-check: result at 1,400,000 is exactly double — if the registry formula
     # were wrong the ratio would differ.

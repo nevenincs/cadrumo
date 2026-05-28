@@ -375,10 +375,10 @@ def test_registry_validator_corpus_strict_false_does_not_abort(tmp_path: Path) -
 
     # Strict validator returns the corpus failure — gated functions raise from this.
     strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=True)
-    strict_failures = strict._validate_catalogues()  # noqa: SLF001
+    strict_failures = strict._validate_catalogues()
     assert any("corpus text missing required text" in f for f in strict_failures), strict_failures
 
     # Non-strict validator (production authority path) returns no failures.
     non_strict = RegistryValidator(minimal_catalogues, source_root=tmp_path, catalogue_corpus_strict=False)
-    failures = non_strict._validate_catalogues()  # noqa: SLF001
+    failures = non_strict._validate_catalogues()
     assert failures == ()

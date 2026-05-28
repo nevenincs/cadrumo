@@ -9,7 +9,7 @@ import pytest
 
 from aeat.core.resources import bundled_path
 
-from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_modelo_directory, load_registry_tree
+from . import RegistryValidator, build_snapshot, calculate_registry_snapshot, load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -102,7 +102,14 @@ def _snapshot_2024(filing_year: int = 2024):
     )
 
 
-def _calculate_2024(snapshot, *, nperceptores_dividendos: int, nperceptores_resto: int, base_dividendos: Decimal, base_resto: Decimal):
+def _calculate_2024(
+    snapshot,
+    *,
+    nperceptores_dividendos: int,
+    nperceptores_resto: int,
+    base_dividendos: Decimal,
+    base_resto: Decimal,
+):
     """Drive calculate_registry_snapshot with M123 2024+ manual inputs.
 
     All retenciones, periodificacion, and liquidacion inputs are zeroed so
