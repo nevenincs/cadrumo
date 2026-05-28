@@ -4,7 +4,7 @@ S168: ``_IVA_LEDGER_EXEMPT_REGIMES`` uses ``IVARegime`` enum members rather
 than raw strings, so the frozenset membership check is typed at the schema
 boundary and cannot silently drift from the canonical enum.
 
-S85–S96: verification finding messages and next_action strings are routed
+S85-S96: verification finding messages and next_action strings are routed
 through ``tr()`` so the operator-facing surface is localised.
 """
 
@@ -18,7 +18,11 @@ import pytest
 
 from ...domain.calculations.registry._schema import VerificationPredicateDefinition
 from ...domain.deadlines import IVARegime
-from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id,
+)
 from ...domain.modelos._codes import ModeloCode
 from ...domain.modelos._work_unit import WorkUnit, derive_work_unit_id
 from ._actions import (
@@ -38,7 +42,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 # ---------------------------------------------------------------------------
 
 _T0 = datetime(2026, 1, 10, 10, 0, tzinfo=UTC)
-_FAKE_HEX64 = "a" * 64
 
 
 def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int = 2026) -> WorkUnit:
@@ -63,8 +66,14 @@ def _minimal_work_unit(modelo: str = "999", period: str = "0A", filing_year: int
 
 
 def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        inputs_snapshot={},
+        binding_overrides={},
+        casilla_values={},
+    )
     return CalculationRevision(
-        calculation_revision_id=_FAKE_HEX64,
+        calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
         inputs_snapshot={},
@@ -166,7 +175,7 @@ def test_registry_snapshot_unresolved_finding_is_localised() -> None:
     work_unit = _minimal_work_unit(modelo="999", period="0A", filing_year=2026)
     target = _minimal_calculation_revision(work_unit)
 
-    findings, resolved, missing = _collect_revision_verification_findings(
+    findings, _resolved, _missing = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
     )
@@ -227,16 +236,21 @@ def test_iva_wallet_blocking_finding_next_action_is_localised() -> None:
         taxpayer_nif="12345678Z",
         divergence="wallet_missing",
         blocked=True,
+        selected_authority="missing",
         selected_amount=None,
+        stale_wallet=False,
+        decided_at=_T0,
         reason="No AEAT wallet observation or local recurrence is available.",
     )
     finding = _iva_wallet_blocking_verification_finding(decision)
 
     assert finding.next_action is not None
-    assert "IVA wallet" in finding.next_action
-    assert "Modelo 303" in finding.next_action
     # Must not be None or trivially empty.
     assert len(finding.next_action) > 10
+    # Must not be the raw locale key (self-referencing fallback).
+    assert finding.next_action != "application.modelo.findings.iva_wallet_next_action"
+    # Must reference Modelo 303 (invariant across all authored locales).
+    assert "303" in finding.next_action
 
 
 # ---------------------------------------------------------------------------
@@ -254,9 +268,13 @@ def test_iva_wallet_blocked_message_is_localised() -> None:
 
     message = _iva_wallet_blocked_message(decision)
 
+    # The divergence and reason tokens must appear in the rendered message.
     assert "wallet_missing" in message
     assert "No history available." in message
-    assert "Modelo 303" in message
+    # Must not be the raw locale key (self-referencing fallback).
+    assert message != "application.modelo.errors.iva_wallet_blocked"
+    # Must reference the model number (invariant across all authored locales).
+    assert "303" in message
 
 
 def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:

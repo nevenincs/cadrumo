@@ -34,6 +34,10 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import (
+    M210_CONVENIO_MISSING_SENTINEL,
+    M210_DEFERRED_TIPO_SENTINEL,
+    M210_NOT_YET_AUTHORED_SENTINEL,
+    M210_RATE_SENTINELS,
     CasillaDefinition,
     CasillaObservation,
     ConvenioRateRow,
@@ -2572,6 +2576,52 @@ def _resolve_m210_rate(
         return None, [finding]
 
     return Decimal(matched_row.rate), []
+
+
+def _rewrite_m210_sentinels(
+    observations: tuple[CasillaObservation, ...],
+    *,
+    profile: TaxpayerProfile,
+    snapshot: RegistrySnapshot,
+    year: int,
+    tipo_renta: str,
+) -> tuple[tuple[CasillaObservation, ...], list[ModeloVerificationFinding]]:
+    """Sweep engine observations for M210 rate sentinels and rewrite them.
+
+    The ``m210_resolve_rate`` formula op emits one of the
+    ``M210_RATE_SENTINELS`` Decimals (``-1``, ``-2``, ``-3``) when the
+    rate cannot be deterministically resolved from registry parameters
+    at evaluation time. The verification sweep here:
+
+    1. Finds every observation whose ``value`` matches a sentinel.
+    2. Re-invokes :func:`_resolve_m210_rate` to compute the
+       authoritative ``(rate, finding)`` pair from the profile +
+       snapshot.
+    3. Replaces the sentinel observation with one carrying the
+       resolved rate (or ``Decimal(0)`` when the helper returns
+       ``rate is None``, which is the safe operator-facing default
+       for a rate the registry could not determine).
+    4. Aggregates every emitted finding into the returned list.
+
+    A pure function over the inputs; no state mutation. The non-
+    sentinel observations pass through unchanged. The ``tipo_renta``
+    argument is the text input the operator declared for the M210
+    work unit; it is the discriminator the formula op consumed
+    upstream and is therefore the discriminator the resolution
+    helper must consume here.
+    """
+
+    findings: list[ModeloVerificationFinding] = []
+    rewritten: list[CasillaObservation] = []
+    for obs in observations:
+        if obs.value not in M210_RATE_SENTINELS:
+            rewritten.append(obs)
+            continue
+        rate, obs_findings = _resolve_m210_rate(profile, tipo_renta, year, snapshot)
+        findings.extend(obs_findings)
+        new_value = rate if rate is not None else Decimal(0)
+        rewritten.append(obs.model_copy(update={"value": new_value}))
+    return tuple(rewritten), findings
 
 
 def _evaluate_advisory_predicate_fires(
