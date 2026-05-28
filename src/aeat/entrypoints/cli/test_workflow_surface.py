@@ -212,7 +212,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     assert status_result.exit_code == 0, status_result.output
     status_payload = json.loads(_json_output(status_result))
     assert status_payload["active_profile"] == "operator"
-    assert status_payload["profile_id"] == operator_profile_id
+    assert status_payload["profile_id"] == "<profile-id>"
     assert status_payload["iva_regime"] == "GENERAL"
 
     with activate_master_key_provider(get_master_key_provider()):
@@ -341,6 +341,17 @@ def test_startup_import_failure_points_to_config_repair_without_traceback() -> N
     assert "xlrd" in result.output
     assert "aeat config repair" in result.output
     assert "Traceback" not in result.output
+
+
+def test_startup_import_failure_redacts_sensitive_dependency_name() -> None:
+    profile_id = "123e4567-e89b-12d3-a456-426614174000"
+    error = ModuleNotFoundError(f"No module named {profile_id!r}", name=profile_id)
+
+    text = _startup_import_error_text(error)
+
+    assert profile_id not in text
+    assert "<profile-id>" in text
+    assert "aeat config repair" in text
 
 
 def test_version_flag_renders_backend_registry_summary() -> None:
@@ -588,9 +599,9 @@ def test_ledger_import_persists_transactions_as_ciphertext_envelope(encrypted_us
 
     assert imported.exit_code == 0, imported.output
     import_payload = json.loads(_json_output(imported))
-    assert import_payload["bucket_id"] == "default"
+    assert import_payload["bucket_id"] == "<bucket-id>"
     assert len(import_payload["bucket_event_ids"]) == 1
-    assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "default"
+    assert import_payload["imported_transaction_refs"][0]["bucket_id"] == "<bucket-id>"
     assert not (tmp_path / "txs" / "transactions.envelope.json").exists()
     _assert_secure_database_payload(tmp_path, canary, transaction_ref)
     from aeat.adapters.persistence.storage import activate_master_key_provider, get_master_key_provider
@@ -705,7 +716,7 @@ def test_read_only_status_commands_use_isolated_local_state(encrypted_user_cli: 
     # the UUID-identity cutover; ``profile_id`` carries the immutable
     # bucket identity that ``_seed_profile`` registered as ``default``.
     assert config_payload["active_profile"] == "operator"
-    assert config_payload["profile_id"] == "default"
+    assert config_payload["profile_id"] == "<profile-id>"
     assert config_payload["tax_id_present"] is True
     assert config_payload["activity_present"] is True
     assert json.loads(_json_output(overview))["transactions"] == 0
