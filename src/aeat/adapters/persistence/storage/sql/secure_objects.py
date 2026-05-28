@@ -795,6 +795,7 @@ class SecureObjectRepository:
         *,
         expected_class: SensitivityClass,
         max_supported_version: int,
+        batch_size: int = 256,
     ) -> Iterator[SecureObjectListItem]:
         """Yield a typed outcome per stored row under ``namespace``.
 
@@ -807,7 +808,14 @@ class SecureObjectRepository:
         The iterator is fault-isolated: a failure on row ``N`` does not
         prevent rows ``> N`` from being inspected. Consumers count the
         failures and decide how to report them; nothing is auto-deleted.
+
+        Args:
+            batch_size: SQLAlchemy `yield_per` chunk size for the raw row
+                scan. The default keeps memory bounded for large namespaces
+                while preserving deterministic `(object_key ASC)` order.
         """
+        if batch_size < 1:
+            raise StorageValidationError(f"batch_size must be at least 1; got {batch_size}")
         namespace_definition = self._enforce_registered_read_policy(
             namespace=namespace,
             expected_class=expected_class,
@@ -828,94 +836,94 @@ class SecureObjectRepository:
                     schema_version=_orm.SecureObjectRow.__table__.c.schema_version.type,
                     written_at=_orm.SecureObjectRow.__table__.c.written_at.type,
                 )
+                .execution_options(stream_results=True, yield_per=batch_size)
             )
-            rows = session.execute(stmt).all()
-        for raw in rows:
-            row_id = int(raw.id)
-            object_key = bytes(raw.object_key)
-            classification_str = str(raw.classification)
-            schema_version = int(raw.schema_version)
-            written_at = raw.written_at
-            payload_wire = bytes(raw.payload)
-            try:
-                classification = SensitivityClass(classification_str)
-            except ValueError:
-                yield SecureObjectUnreadable(
+            for raw in session.execute(stmt):
+                row_id = int(raw.id)
+                object_key = bytes(raw.object_key)
+                classification_str = str(raw.classification)
+                schema_version = int(raw.schema_version)
+                written_at = raw.written_at
+                payload_wire = bytes(raw.payload)
+                try:
+                    classification = SensitivityClass(classification_str)
+                except ValueError:
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason=f"unknown classification {classification_str!r}",
+                    )
+                    continue
+                if classification is not expected_class:
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason=(
+                            f"classification {classification.value!r} does not match "
+                            f"expected {expected_class.value!r}"
+                        ),
+                    )
+                    continue
+                if schema_version > max_supported_version:
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason=(
+                            f"schema version {schema_version} exceeds supported "
+                            f"{max_supported_version}"
+                        ),
+                    )
+                    continue
+                try:
+                    self._enforce_registered_row_schema(
+                        namespace=namespace,
+                        schema_version=schema_version,
+                        definition=namespace_definition,
+                    )
+                except EnvelopeVersionError as exc:
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason=str(exc),
+                    )
+                    continue
+                try:
+                    payload_plain = decrypt_encrypted_bytes_column(payload_wire)
+                except DecryptionError as exc:
+                    yield SecureObjectUnreadable(
+                        namespace=namespace,
+                        row_id=row_id,
+                        object_key=object_key,
+                        classification=classification_str,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        reason=str(exc),
+                    )
+                    continue
+                yield SecureObjectRecord(
                     namespace=namespace,
-                    row_id=row_id,
                     object_key=object_key,
-                    classification=classification_str,
+                    classification=classification,
                     schema_version=schema_version,
                     written_at=written_at,
-                    reason=f"unknown classification {classification_str!r}",
+                    payload=payload_plain,
                 )
-                continue
-            if classification is not expected_class:
-                yield SecureObjectUnreadable(
-                    namespace=namespace,
-                    row_id=row_id,
-                    object_key=object_key,
-                    classification=classification_str,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    reason=(
-                        f"classification {classification.value!r} does not match "
-                        f"expected {expected_class.value!r}"
-                    ),
-                )
-                continue
-            if schema_version > max_supported_version:
-                yield SecureObjectUnreadable(
-                    namespace=namespace,
-                    row_id=row_id,
-                    object_key=object_key,
-                    classification=classification_str,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    reason=(
-                        f"schema version {schema_version} exceeds supported "
-                        f"{max_supported_version}"
-                    ),
-                )
-                continue
-            try:
-                self._enforce_registered_row_schema(
-                    namespace=namespace,
-                    schema_version=schema_version,
-                    definition=namespace_definition,
-                )
-            except EnvelopeVersionError as exc:
-                yield SecureObjectUnreadable(
-                    namespace=namespace,
-                    row_id=row_id,
-                    object_key=object_key,
-                    classification=classification_str,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    reason=str(exc),
-                )
-                continue
-            try:
-                payload_plain = decrypt_encrypted_bytes_column(payload_wire)
-            except DecryptionError as exc:
-                yield SecureObjectUnreadable(
-                    namespace=namespace,
-                    row_id=row_id,
-                    object_key=object_key,
-                    classification=classification_str,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    reason=str(exc),
-                )
-                continue
-            yield SecureObjectRecord(
-                namespace=namespace,
-                object_key=object_key,
-                classification=classification,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload=payload_plain,
-            )
 
     def load(
         self,
