@@ -1330,7 +1330,11 @@ def test_keyed_bracket_table_rejects_duplicate_key_within_same_window() -> None:
     lookup is exact-match and a duplicate would make the result
     non-deterministic.
     """
-    with pytest.raises(RegistryValidationError, match="duplicate"):
+    # Pydantic wraps the inner RegistryValidationError raised from
+    # @model_validator(mode="after") into its ValidationError because
+    # RegistryValidationError does not extend ValueError. The substring
+    # match still asserts the inner message text reaches the surface.
+    with pytest.raises(ValidationError, match="duplicate"):
         ParameterDefinition(
             id="test-keyed-rate-table-duplicate",
             data_type="keyed_bracket_table",
@@ -1363,7 +1367,7 @@ def test_keyed_bracket_table_rejects_mixed_brackets_and_keyed_brackets() -> None
         valid_from=date(2025, 1, 1),
         valid_to=date(2025, 12, 31),
     )
-    with pytest.raises(RegistryValidationError, match="cannot mix"):
+    with pytest.raises(ValidationError, match="cannot mix"):
         ParameterDefinition(
             id="test-keyed-rate-table-mixed",
             data_type="keyed_bracket_table",
