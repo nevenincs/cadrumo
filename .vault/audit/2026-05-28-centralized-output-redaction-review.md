@@ -11,6 +11,7 @@ related:
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S02]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S03]]'
   - '[[2026-05-28-centralized-output-redaction-W01-P01-S04]]'
+  - '[[2026-05-28-centralized-output-redaction-W01-P01-S05]]'
 ---
 
 # `centralized-output-redaction` Code Review
@@ -58,3 +59,12 @@ No HIGH/CRITICAL findings in the scoped S04 implementation.
 
 - Logging still maintains a local sensitive-key list in `SCRUB_FIELD_PATTERNS`; only those keys drive key-aware assignment redaction. If central redaction policy grows keys without corresponding logging taxonomy updates, key-form leaks (e.g., `..._secret=...`, `..._token=...`) can bypass shape-only matching.
 - `W01.P01.S05` (logging scrubber regression coverage) remains pending, so this step leaves a temporary verification gap for shared-rule migration effects despite `S04` being marked complete.
+
+## W01.P01.S05 Review
+
+No HIGH/CRITICAL findings in the scoped S05 implementation.
+
+### Residual risks
+
+- The new regression test proves plain-text shape redaction for NIF/URL/JWT in log message arguments, but shared-shape coverage is still thin for non-message surfaces (e.g., sensitive values in `extra` mappings/containers), so an ordering regression could reappear outside the tested tuple-argument path without immediate detection.
+- Local `SCRUB_FIELD_PATTERNS` key matching remains in `src/aeat/core/logging.py`, so adding sensitive key names in the shared redaction policy without updating this local list can still create key-form blind spots unless another canary or sync step catches it.

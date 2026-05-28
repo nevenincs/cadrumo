@@ -106,15 +106,15 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     if _looks_sensitive_key(key):
         return _redacted_value(key, value)
 
+    scrubbed = redact_for_log(value)
     scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
         lambda match: (
             match.group(0)
             if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(match.group("value"))
             else f"{match.group('key')}={_redacted_value(match.group('key'), match.group('value'))}"
         ),
-        value,
+        scrubbed,
     )
-    scrubbed = redact_for_log(scrubbed)
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
     return scrubbed
