@@ -27,6 +27,15 @@ class ProviderKind(StrEnum):
     GOOGLE_DRIVE = "google_drive"
 
 
+class RemoteMirrorIssueKind(StrEnum):
+    """Remote ciphertext mirror degradation classes."""
+
+    PARTIAL_UPLOAD = "partial_upload"
+    PARTIAL_DOWNLOAD = "partial_download"
+    STALE_MIRROR = "stale_mirror"
+    REVISION_CONFLICT = "revision_conflict"
+
+
 class ProviderObjectMetadata(BaseModel):
     """Per-object metadata returned by the storage provider listing API.
 
@@ -98,10 +107,37 @@ class RemoteMirrorNamespaceManifest(BaseModel):
     objects: tuple[RemoteMirrorObjectManifest, ...]
 
 
+class RemoteMirrorIssue(BaseModel):
+    """One detected remote mirror degradation."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: RemoteMirrorIssueKind
+    namespace: str = Field(min_length=1)
+    object_key_hmac: str | None = Field(default=None, min_length=64, max_length=64)
+    detail: str = Field(min_length=1)
+
+
+class RemoteMirrorInspection(BaseModel):
+    """Typed result of comparing or probing a remote mirror namespace."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace: str = Field(min_length=1)
+    issues: tuple[RemoteMirrorIssue, ...] = ()
+
+    @property
+    def ok(self) -> bool:
+        return not self.issues
+
+
 __all__ = [
     "ProviderKind",
     "ProviderObjectMetadata",
     "ProviderProbeReport",
+    "RemoteMirrorInspection",
+    "RemoteMirrorIssue",
+    "RemoteMirrorIssueKind",
     "RemoteMirrorNamespaceManifest",
     "RemoteMirrorObjectManifest",
 ]
