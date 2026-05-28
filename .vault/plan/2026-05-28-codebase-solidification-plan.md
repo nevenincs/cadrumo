@@ -344,14 +344,14 @@ A1..A8 fix Step, and `pytest` collection coverage versus production
 module inventory. Each finding becomes its own Step; remediation
 strengthens the test, never weakens or skips it.
 
-- [ ] `W01.P09.S205` - enumerate every `pytest.mark.skip` / `pytest.mark.xfail` under `src/aeat/`; `record each as a Wave 1 follow-up Step requiring removal or replacement with a real-behavior test; `src/aeat`.
-- [ ] `W01.P09.S206` - add real-behavior test asserting the enumeration result is zero (a `git grep`-style assertion that survives in CI); `src/aeat/test_no_skip_xfail.py`.
-- [ ] `W01.P09.S207` - enumerate every `unittest.mock` / `pytest-mock` import under `src/aeat/`; `classify each as legitimate boundary mock or drift; record drift sites as follow-up Steps; `src/aeat`.
-- [ ] `W01.P09.S208` - add real-behavior test asserting the classification result holds across the test inventory; `src/aeat/test_mock_inventory.py`.
-- [ ] `W01.P09.S209` - enumerate every `monkeypatch` use under `src/aeat/`; `classify each as test-isolation fixture or production-state mutation; record drift as follow-up Steps; `src/aeat`.
-- [ ] `W01.P09.S210` - add real-behavior test asserting monkeypatch inventory matches the classification; `src/aeat/test_monkeypatch_inventory.py`.
-- [ ] `W01.P09.S211` - enumerate every `assert True` / `assert 1 == 1` / `assert var == var` shape under `src/aeat/`; `remove or replace each with a real assertion; `src/aeat`.
-- [ ] `W01.P09.S212` - add real-behavior test asserting zero tautological assertion shapes survive in the test surface; `src/aeat/test_no_tautology.py`.
+- [x] `W01.P09.S205` - enumerate every `pytest.mark.skip` / `pytest.mark.xfail` under `src/aeat/`; `record each as a Wave 1 follow-up Step requiring removal or replacement with a real-behavior test; `src/aeat`.
+- [x] `W01.P09.S206` - add real-behavior test asserting the enumeration result is zero (a `git grep`-style assertion that survives in CI); `src/aeat/test_no_skip_xfail.py`.
+- [x] `W01.P09.S207` - enumerate every `unittest.mock` / `pytest-mock` import under `src/aeat/`; `classify each as legitimate boundary mock or drift; record drift sites as follow-up Steps; `src/aeat`.
+- [x] `W01.P09.S208` - add real-behavior test asserting the classification result holds across the test inventory; `src/aeat/test_mock_inventory.py`.
+- [x] `W01.P09.S209` - enumerate every `monkeypatch` use under `src/aeat/`; `classify each as test-isolation fixture or production-state mutation; record drift as follow-up Steps; `src/aeat`.
+- [x] `W01.P09.S210` - add real-behavior test asserting monkeypatch inventory matches the classification; `src/aeat/test_monkeypatch_inventory.py`.
+- [x] `W01.P09.S211` - enumerate every `assert True` / `assert 1 == 1` / `assert var == var` shape under `src/aeat/`; `remove or replace each with a real assertion; `src/aeat`.
+- [x] `W01.P09.S212` - add real-behavior test asserting zero tautological assertion shapes survive in the test surface; `src/aeat/test_no_tautology.py`.
 - [ ] `W01.P09.S213` - enumerate every calculation test that hand-computes an expected value from the registry formula under test; `record each as a follow-up Step to re-ground against an external authority; `src/aeat/domain/calculations`.
 - [ ] `W01.P09.S214` - add real-behavior test asserting calculation-test expected values are sourced from registry fixtures, AEAT workbooks, BOE worked examples, or live oracle replay (per `no-tautological-calculation-tests.md`); `src/aeat/domain/calculations/test_calculation_grounding.py`.
 - [ ] `W01.P09.S215` - diff `pytest` collection inventory against the production module inventory under `src/aeat/`; `record every module without a paired `test_*.py` as a Wave 2 follow-up Step; `src/aeat`.
