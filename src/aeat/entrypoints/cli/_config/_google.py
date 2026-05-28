@@ -73,13 +73,18 @@ from ....adapters.outbound.google._session_store import (
 )
 from ....adapters.outbound.storage import (
     OutboundStorageError,
+    StorageProvider,
+    build_remote_mirror_namespace_manifest,
     get_storage_provider,
+    put_remote_mirror_namespace_manifest,
+    remote_mirror_object_key_hmac,
 )
 from ....adapters.outbound.storage._factory import (
     _build_google_credentials,
     _resolve_drive_root_folder_id,
 )
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRawRow, SecureObjectRepository
 from ....application.storage.calc_sheets import (
     OperatorInputs,
     RelationValues,
@@ -558,11 +563,7 @@ def _object_key_hmac(namespace: str, object_key: bytes) -> str:
     unlinkability lands alongside P04 (snapshot escrow + HKDF).
     """
 
-    hasher = hashlib.sha256()
-    hasher.update(namespace.encode("utf-8"))
-    hasher.update(b"\x00")
-    hasher.update(object_key)
-    return hasher.hexdigest()
+    return remote_mirror_object_key_hmac(namespace, object_key)
 
 
 def _label_for(namespace: str) -> str:
@@ -576,6 +577,71 @@ def _label_for(namespace: str) -> str:
     leaf = namespace.rsplit(".", 1)[-1] or "obj"
     safe = "".join(c if c.isalnum() or c in "-_." else "-" for c in leaf)
     return safe[:32] or "obj"
+
+
+def _push_secure_object_mirror_rows(
+    *,
+    provider: StorageProvider,
+    repository: SecureObjectRepository,
+    namespace_filter: str | None,
+    limit: int | None,
+    dry_run: bool,
+) -> dict[str, object]:
+    pushed_by_ns: dict[str, int] = {}
+    skipped_by_ns: dict[str, int] = {}
+    failed: list[tuple[str, str, str]] = []
+    pushed_rows_by_ns: dict[str, list[SecureObjectRawRow]] = {}
+    failed_namespaces: set[str] = set()
+    manifest_pushed_by_ns: dict[str, int] = {}
+    manifest_failed: list[tuple[str, str]] = []
+    total_seen = 0
+
+    for raw_row in repository.iter_all_records_raw():
+        if namespace_filter is not None and raw_row.namespace != namespace_filter:
+            continue
+        total_seen += 1
+        if limit is not None and total_seen > limit:
+            break
+        hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
+        label = _label_for(raw_row.namespace)
+        content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
+        if dry_run:
+            skipped_by_ns[raw_row.namespace] = skipped_by_ns.get(raw_row.namespace, 0) + 1
+            continue
+        try:
+            provider.put(
+                raw_row.namespace,
+                hmac_hex,
+                raw_row.payload,
+                content_hash=content_hash,
+                label=label,
+            )
+        except OutboundStorageError as exc:
+            failed.append((raw_row.namespace, hmac_hex, str(exc)))
+            failed_namespaces.add(raw_row.namespace)
+            continue
+        pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+        pushed_rows_by_ns.setdefault(raw_row.namespace, []).append(raw_row)
+
+    if not dry_run and limit is None:
+        for namespace, rows in pushed_rows_by_ns.items():
+            if namespace in failed_namespaces:
+                continue
+            manifest = build_remote_mirror_namespace_manifest(namespace, rows)
+            try:
+                put_remote_mirror_namespace_manifest(provider, manifest)
+            except OutboundStorageError as exc:
+                manifest_failed.append((namespace, str(exc)))
+                continue
+            manifest_pushed_by_ns[namespace] = manifest.object_count
+
+    return {
+        "pushed_by_namespace": pushed_by_ns,
+        "skipped_by_namespace": skipped_by_ns,
+        "failed_objects": failed,
+        "manifest_pushed_by_namespace": manifest_pushed_by_ns,
+        "failed_manifests": manifest_failed,
+    }
 
 
 @sync_app.command("push", help=tr("cli.config.google.sync.push_help"))
@@ -623,35 +689,18 @@ def google_sync_push(
     resolved_root_folder_id = getattr(provider, "root_folder_id", "")
 
     repository = secure_object_repository_for_active_bucket()
-    pushed_by_ns: dict[str, int] = {}
-    skipped_by_ns: dict[str, int] = {}
-    failed: list[tuple[str, str, str]] = []
-    total_seen = 0
-
-    for raw_row in repository.iter_all_records_raw():
-        if namespace_filter is not None and raw_row.namespace != namespace_filter:
-            continue
-        total_seen += 1
-        if limit is not None and total_seen > limit:
-            break
-        hmac_hex = _object_key_hmac(raw_row.namespace, raw_row.object_key)
-        label = _label_for(raw_row.namespace)
-        content_hash = f"sha256-{hashlib.sha256(raw_row.payload).hexdigest()}"
-        if dry_run:
-            skipped_by_ns[raw_row.namespace] = skipped_by_ns.get(raw_row.namespace, 0) + 1
-            continue
-        try:
-            provider.put(
-                raw_row.namespace,
-                hmac_hex,
-                raw_row.payload,
-                content_hash=content_hash,
-                label=label,
-            )
-        except OutboundStorageError as exc:
-            failed.append((raw_row.namespace, hmac_hex, str(exc)))
-            continue
-        pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
+    mirror_result = _push_secure_object_mirror_rows(
+        provider=provider,
+        repository=repository,
+        namespace_filter=namespace_filter,
+        limit=limit,
+        dry_run=dry_run,
+    )
+    pushed_by_ns = mirror_result["pushed_by_namespace"]
+    skipped_by_ns = mirror_result["skipped_by_namespace"]
+    failed = mirror_result["failed_objects"]
+    manifest_pushed_by_ns = mirror_result["manifest_pushed_by_namespace"]
+    manifest_failed = mirror_result["failed_manifests"]
 
     payload: dict[str, object] = {
         "operation": "config.google.sync.push",
@@ -663,9 +712,13 @@ def google_sync_push(
         "pushed_total": sum(pushed_by_ns.values()),
         "skipped_total": sum(skipped_by_ns.values()),
         "failed_total": len(failed),
+        "manifest_pushed_total": len(manifest_pushed_by_ns),
+        "manifest_failed_total": len(manifest_failed),
         "pushed_by_namespace": pushed_by_ns,
         "skipped_by_namespace": skipped_by_ns,
         "failed_objects": [{"namespace": ns, "hmac": h, "error": err} for ns, h, err in failed],
+        "manifest_pushed_by_namespace": manifest_pushed_by_ns,
+        "failed_manifests": [{"namespace": ns, "error": err} for ns, err in manifest_failed],
     }
     lines: list[str] = [
         "operation\tconfig.google.sync.push",
@@ -677,6 +730,8 @@ def google_sync_push(
         f"pushed_total\t{sum(pushed_by_ns.values())}",
         f"skipped_total\t{sum(skipped_by_ns.values())}",
         f"failed_total\t{len(failed)}",
+        f"manifest_pushed_total\t{len(manifest_pushed_by_ns)}",
+        f"manifest_failed_total\t{len(manifest_failed)}",
     ]
     for ns in sorted(set(pushed_by_ns) | set(skipped_by_ns)):
         pushed = pushed_by_ns.get(ns, 0)

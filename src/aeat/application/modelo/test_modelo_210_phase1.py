@@ -33,9 +33,23 @@ from decimal import Decimal
 
 import pytest
 
-from aeat.application.modelo._actions import _resolve_m210_rate
+from aeat.application.modelo._actions import (
+    _evaluate_applicability_filter,
+    _evaluate_predicate_expression,
+    _evaluate_verification_predicates,
+    _resolve_m210_rate,
+    _rewrite_m210_sentinels,
+)
+from aeat.domain.calculations.registry._schema import VerificationPredicateDefinition
+from aeat.domain.modelos._verification_report import (
+    ModeloVerificationFindingKind,
+)
 from aeat.core.resources import resources
 from aeat.domain.calculations.registry import (
+    M210_CONVENIO_MISSING_SENTINEL,
+    M210_DEFERRED_TIPO_SENTINEL,
+    M210_NOT_YET_AUTHORED_SENTINEL,
+    CasillaObservation,
     ConvenioRateRow,
     RegistrySnapshot,
 )
@@ -251,3 +265,271 @@ def test_resident_pension_deferred_baseline_emits_blocking_finding(
     assert "m210-baseline-tipo-deferred" in finding.message
     message_lower = finding.message.lower()
     assert "pension" in message_lower
+
+
+def _observation(casilla_id: str, value: Decimal) -> CasillaObservation:
+    """Build a minimal CasillaObservation carrying just a casilla_id + value."""
+
+    return CasillaObservation(
+        casilla_id=casilla_id,
+        value=value,
+        legal_refs=("trlirnr-rdleg-5-2004:art-25.1.a",),
+        source_refs=("aeat-modelo-210-procedure",),
+    )
+
+
+def test_rewrite_m210_sentinels_passes_through_non_sentinel_observations(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """Observations carrying real rates / zero values pass through unchanged."""
+
+    observations = (
+        _observation("base_imponible", Decimal("12000")),
+        _observation("tipo_gravamen", Decimal("0.24")),
+        _observation("cuota_integra", Decimal("2880.00")),
+    )
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("GB"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="general",
+    )
+
+    assert rewritten == observations
+    assert findings == []
+
+
+def test_rewrite_m210_sentinels_replaces_not_yet_authored_with_zero_and_emits_finding(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A NOT_YET_AUTHORED sentinel observation gets rewritten and emits a finding.
+
+    Felipe (AR / pension) is the canonical case where the Convenio row
+    carries the NOT_YET_AUTHORED placeholder. The helper rewrites the
+    sentinel value to ``Decimal(0)`` (the operator-facing safe default
+    when no authoritative rate exists) and emits the
+    ``m210-convenio-rate-not-yet-authored`` BLOCKING finding.
+    """
+
+    observations = (
+        _observation("base_imponible", Decimal("15000")),
+        _observation("tipo_gravamen", M210_NOT_YET_AUTHORED_SENTINEL),
+        _observation("cuota_integra", Decimal("-45000.00")),
+    )
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("AR"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="pension",
+    )
+
+    rewritten_by_id = {obs.casilla_id: obs for obs in rewritten}
+    assert rewritten_by_id["tipo_gravamen"].value == Decimal("0")
+    # Non-sentinel observations preserved as-is.
+    assert rewritten_by_id["base_imponible"].value == Decimal("15000")
+    assert rewritten_by_id["cuota_integra"].value == Decimal("-45000.00")
+    assert len(findings) == 1
+    assert "m210-convenio-rate-not-yet-authored" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_replaces_convenio_missing_sentinel(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A CONVENIO_MISSING sentinel is rewritten and the missing-row finding is emitted."""
+
+    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("ZW"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="general",
+    )
+
+    assert rewritten[0].value == Decimal("0")
+    assert len(findings) == 1
+    assert "m210-convenio-rate-missing" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_replaces_deferred_tipo_sentinel(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A DEFERRED_TIPO sentinel + resident profile rewrites to zero and emits a finding."""
+
+    observations = (_observation("tipo_gravamen", M210_DEFERRED_TIPO_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_resident_profile(),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="pension",
+    )
+
+    assert rewritten[0].value == Decimal("0")
+    assert len(findings) == 1
+    assert "m210-baseline-tipo-deferred" in findings[0].message
+
+
+def test_rewrite_m210_sentinels_resolves_known_rate_in_place(
+    m210_snapshot: RegistrySnapshot,
+) -> None:
+    """A sentinel observation paired with a resolvable Convenio row rewrites to the real rate.
+
+    Khadija (MA / interest) has a real 0.10 Convenio row. If the
+    engine emitted a sentinel for any reason (e.g. text_inputs were
+    not yet threaded into the application calculation path), the
+    verification sweep would re-resolve and rewrite the observation
+    to the canonical rate without emitting a BLOCKING finding.
+    """
+
+    observations = (_observation("tipo_gravamen", M210_CONVENIO_MISSING_SENTINEL),)
+    rewritten, findings = _rewrite_m210_sentinels(
+        observations,
+        profile=_irnr_profile("MA"),
+        snapshot=m210_snapshot,
+        year=2025,
+        tipo_renta="interest",
+    )
+
+    assert rewritten[0].value == Decimal("0.10")
+    assert findings == []
+
+
+# ---------------------------------------------------------------------------
+# representante-fiscal gate (profile_field_required operator)
+#
+# TRLIRNR Art 10 letter applies only to non-EU residents. Per
+# m210-irnr-full-engine ADR §D2.5 the implementation uses the broader
+# ue_eee_status filter as the escape hatch — EEA-resident IRNR filers
+# are exempt because of the bilateral mutual-assistance regime.
+# ---------------------------------------------------------------------------
+
+
+def _irnr_profile_without_representante(country_code: str) -> TaxpayerProfile:
+    """Build a NON_RESIDENT_IRNR profile without a fiscal representative.
+
+    EEA countries (e.g. FR) are exempt per ADR D2.5 so the
+    TaxpayerProfile model validator does not require the representante
+    fields. For non-EEA countries (e.g. AR) the validator would refuse
+    construction without ``representante_fiscal_nif``; callers that
+    need that case build it via field-level assignment on a frozen
+    copy or via ``model_construct``.
+    """
+
+    return TaxpayerProfile(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence=country_code,
+    )
+
+
+_REPRESENTANTE_PREDICATE_EXPRESSION = (
+    'profile_field_required("representante_fiscal_nif", "non_resident_irnr_non_eea")'
+)
+
+
+def test_representante_predicate_holds_for_eea_resident_without_representante() -> None:
+    """EEA-resident IRNR profile is exempt; predicate holds despite missing representante."""
+
+    profile = _irnr_profile_without_representante("FR")
+    assert profile.ue_eee_status is True
+
+    assert (
+        _evaluate_predicate_expression(
+            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
+        )
+        is True
+    )
+
+
+def test_representante_predicate_holds_for_eea_resident_with_representante() -> None:
+    """EEA-resident IRNR profile with a representante — rule does not apply; predicate holds."""
+
+    profile = _irnr_profile("FR")  # carries representante_fiscal_nif
+    assert profile.ue_eee_status is True
+
+    assert (
+        _evaluate_predicate_expression(
+            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
+        )
+        is True
+    )
+
+
+def test_representante_predicate_violated_for_non_eea_resident_without_representante() -> None:
+    """Non-EEA IRNR profile without representante — rule applies; predicate violated."""
+
+    profile = TaxpayerProfile.model_construct(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="AR",
+        representante_fiscal_nif=None,
+    )
+    assert profile.ue_eee_status is False
+
+    assert (
+        _evaluate_predicate_expression(
+            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
+        )
+        is False
+    )
+
+
+def test_representante_predicate_holds_for_non_eea_resident_with_representante() -> None:
+    """Non-EEA IRNR profile with representante — rule applies and is satisfied; predicate holds."""
+
+    profile = _irnr_profile("AR")  # AR is non-EEA, _irnr_profile sets representante
+    assert profile.ue_eee_status is False
+    assert profile.representante_fiscal_nif == "12345678Z"
+
+    assert (
+        _evaluate_predicate_expression(
+            _REPRESENTANTE_PREDICATE_EXPRESSION, {}, profile
+        )
+        is True
+    )
+
+
+def test_representante_predicate_emits_blocking_finding_via_evaluator() -> None:
+    """The M210 representante predicate fires a BLOCKING_RULE finding with TRLIRNR Art 10 cited."""
+
+    predicate = VerificationPredicateDefinition(
+        predicate_id="m210-representante-fiscal-required",
+        legal_refs=("trlirnr-rdleg-5-2004:art-10",),
+        expression=_REPRESENTANTE_PREDICATE_EXPRESSION,
+        finding_kind="BLOCKING_RULE",
+    )
+    profile = TaxpayerProfile.model_construct(
+        tax_id="X1234567L",
+        iva_regime=IVARegime.GENERAL,
+        fiscal_residency=FiscalResidency.NON_RESIDENT_IRNR,
+        country_of_fiscal_residence="AR",
+        representante_fiscal_nif=None,
+    )
+
+    findings = _evaluate_verification_predicates((predicate,), {}, profile)
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert "m210-representante-fiscal-required" in finding.message
+    assert "trlirnr-rdleg-5-2004:art-10" in finding.legal_refs
+
+
+def test_applicability_filter_unknown_name_raises_value_error() -> None:
+    """An unknown applicability filter raises ValueError rather than silently passing.
+
+    Anti-tautology proof: the dispatch path is the single source of
+    truth for applicability filters; a typo or an absent entry must
+    surface loudly. If this test ever passes with the dispatch table
+    bypassed (e.g. a generic ``return True`` catch-all), every
+    applicability-gated predicate would silently no-op.
+    """
+
+    profile = _irnr_profile("AR")
+    with pytest.raises(ValueError, match="Unknown applicability filter"):
+        _evaluate_applicability_filter("non_resident_irnr_eea_only", profile)

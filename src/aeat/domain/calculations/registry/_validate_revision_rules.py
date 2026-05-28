@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import date, timedelta
 
-from ._schema import DatedValue, ModeloDefinition, ModeloRevision, ParameterDefinition
+from ._schema import DatedValue, InputKind, ModeloDefinition, ModeloRevision, ParameterDefinition
 from ._validate_relation_sources import period_selectors_overlap
 
 _FAR_FUTURE = date(9999, 12, 31)
@@ -43,7 +43,7 @@ def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
                 f"(got {len(revision.relations)})"
             )
         for casilla in revision.casillas:
-            if casilla.input_kind not in {"informational", "manual"}:
+            if casilla.input_kind not in {InputKind.INFORMATIONAL, InputKind.MANUAL}:
                 failures.append(
                     f"{prefix}: informative modelo casilla {casilla.id!r} "
                     f"has input_kind={casilla.input_kind!r}; "

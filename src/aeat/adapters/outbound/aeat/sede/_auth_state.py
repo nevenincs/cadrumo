@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from .....core.i18n import tr
 from ..auth import _session_store
 from ._errors import SedeNavigationError
 
@@ -15,8 +16,14 @@ def storage_state_for_session(session: AeatSession) -> dict[str, object]:
     """Return decrypted Playwright storage state for an authenticated session."""
 
     if session.storage_state_path is None:
-        raise SedeNavigationError("AeatSession has no persisted auth session; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            "AeatSession has no persisted auth session; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     persisted = _session_store.load(session.storage_state_path)
     if persisted is None:
-        raise SedeNavigationError("AEAT auth session is not persisted; run `aeat config auth status` first")
+        raise SedeNavigationError(
+            "AEAT auth session is not persisted; run `aeat config auth status` first",
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
+        )
     return dict(persisted.storage_state)

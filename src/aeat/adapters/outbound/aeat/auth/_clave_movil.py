@@ -27,13 +27,12 @@ import contextlib
 import hashlib
 import json
 import re
-import sys
 import time
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import IO, TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final
 from urllib.parse import quote, urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -245,9 +244,8 @@ def _render_progress_banner(
     verification_code: str | None,
     timeout_seconds: int,
     used_non_qr_fallback: bool,
-    stream: IO[str] = sys.stderr,
 ) -> None:
-    """Print operator instructions while waiting for AEAT browser auth completion."""
+    """Log operator instructions while waiting for AEAT browser auth completion."""
     lines = [
         "",
         "─────────────────────────────────────────────────────────────",
@@ -285,8 +283,8 @@ def _render_progress_banner(
             "",
         )
     )
-    for line in lines:
-        print(line, file=stream, flush=True)
+    banner = "\n".join(lines)
+    log.info("auth.waiting_banner banner=%r", banner)
 
 
 class ClaveMovilAuthProvider:

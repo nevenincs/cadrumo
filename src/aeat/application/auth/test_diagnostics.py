@@ -13,7 +13,7 @@ from ...adapters.persistence.storage import SensitivityClass
 from ...core.errors import ERROR_REGISTRY, build_error_envelope
 from ...core.external_constants import load_external_constants
 from ...tests.secure_sql import isolated_runtime_profile
-from ._diagnostics import list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
+from ._diagnostics import _DiagnosticPayload, list_auth_diagnostics, load_auth_diagnostic, record_auth_diagnostic_phone_state
 from ._errors import AuthDiagnosticPhoneStateError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -167,3 +167,53 @@ def test_auth_diagnostic_phone_state_error_round_trips_through_build_error_envel
     assert envelope.code == "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE"
     assert envelope.category == "REFUSED"
     assert envelope.message
+
+
+def test_diagnostic_payload_round_trips_through_json() -> None:
+    """_DiagnosticPayload validates from JSON and serialises back to an equivalent dict."""
+    raw = {
+        "diagnostic_id": "diag-rt-001",
+        "reason": "push-wait-state-not-reached",
+        "url": "https://www2.agenciatributaria.gob.es/wlpl/CLMV-CLAV/Movil?op=Login",
+        "captured_at": "2026-05-28T10:00:00+00:00",
+        "html": "<html><body>page</body></html>",
+        "screenshot_png_base64": "aW1hZ2U=",
+        "auth_attempt": {
+            "auth_mode": "non_qr",
+            "headless": True,
+            "timeout_ms": 120000,
+        },
+        "operator_report": {
+            "phone_state": "app_did_not_prompt",
+            "reported_at": "2026-05-28T11:00:00+00:00",
+        },
+        "phone_state": "",
+        # Extra field unknown to the current schema — must survive round-trip
+        "future_extension": "value",
+    }
+
+    payload_a = _DiagnosticPayload.model_validate(raw)
+    serialised = payload_a.model_dump(mode="json")
+    payload_b = _DiagnosticPayload.model_validate(serialised)
+
+    assert payload_a == payload_b
+    assert payload_a.diagnostic_id == "diag-rt-001"
+    assert payload_a.reason == "push-wait-state-not-reached"
+    assert payload_a.html == "<html><body>page</body></html>"
+    assert payload_a.auth_attempt["auth_mode"] == "non_qr"
+    assert payload_a.operator_report["phone_state"] == "app_did_not_prompt"
+
+    # Anti-tautology: mutate the serialised blob and confirm inequality is detected
+    serialised["diagnostic_id"] = "diag-rt-MUTATED"
+    payload_mutated = _DiagnosticPayload.model_validate(serialised)
+    assert payload_mutated != payload_a
+
+
+def test_diagnostic_payload_rejects_non_object_json() -> None:
+    """_payload() raises ValueError when the JSON root is not an object."""
+    import json as _json
+
+    from ._diagnostics import _payload
+
+    with pytest.raises(ValueError, match="not a JSON object"):
+        _payload(_json.dumps([1, 2, 3]).encode("utf-8"))

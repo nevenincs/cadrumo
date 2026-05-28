@@ -293,6 +293,8 @@ cache/
 /*.b64
 /write_*.py
 /C\:*
+/*_keys.txt
+/translate_*.py
 
 
 # >>> vaultspec-managed (do not edit this block) >>>

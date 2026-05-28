@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
@@ -95,6 +94,27 @@ class AuthDiagnosticReportResult(BaseModel):
     reported_at: datetime
 
 
+class _DiagnosticPayload(BaseModel):
+    """Typed envelope for a raw encrypted auth diagnostic JSON blob.
+
+    Replaces the internal ``Mapping[str, object]`` boundary to give callers
+    a stable typed contract instead of an untyped dict.  Fields are optional
+    so validation does not reject payloads written by older schema versions.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    diagnostic_id: str | None = None
+    reason: str = ""
+    url: str = ""
+    captured_at: str = ""
+    html: str | None = None
+    screenshot_png_base64: str | None = None
+    auth_attempt: dict[str, object] = {}
+    operator_report: dict[str, object] = {}
+    phone_state: str = ""
+
+
 def list_auth_diagnostics() -> AuthDiagnosticListReport:
     """List readable encrypted Cl@ve auth diagnostics without exposing page bodies."""
 
@@ -121,9 +141,9 @@ def load_auth_diagnostic(diagnostic_id: str) -> AuthDiagnosticDetail | None:
         return None
     payload = _payload(record.payload)
     summary = _summary_from_payload(payload)
-    html = payload.get("html")
+    html = payload.html
     excerpt = None
-    if isinstance(html, str) and html.strip():
+    if html and html.strip():
         excerpt = f"[redacted html captured: {len(html)} chars]"
     return AuthDiagnosticDetail(
         **summary.model_dump(),
@@ -153,17 +173,25 @@ def record_auth_diagnostic_phone_state(
         return None
     payload = _payload(record.payload)
     reported_at = datetime.now(UTC)
-    payload["operator_report"] = {
-        "phone_state": phone_state,
-        "reported_at": reported_at.isoformat(),
-    }
+    updated = payload.model_copy(
+        update={
+            "operator_report": {
+                "phone_state": phone_state,
+                "reported_at": reported_at.isoformat(),
+            }
+        }
+    )
     objects.save(
         namespace=_DIAGNOSTIC_NAMESPACE,
         object_key=diagnostic_id,
         classification=_DIAGNOSTIC_SENSITIVITY,
         schema_version=_DIAGNOSTIC_SCHEMA_VERSION,
         written_at=reported_at,
-        payload=json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8"),
+        payload=json.dumps(
+            updated.model_dump(mode="json"),
+            ensure_ascii=False,
+            sort_keys=True,
+        ).encode("utf-8"),
     )
     return AuthDiagnosticReportResult(
         diagnostic_id=diagnostic_id,
@@ -184,50 +212,39 @@ def _secure_objects() -> SecureObjectRepository:
     return secure_object_repository_for_active_bucket()
 
 
-def _payload(raw: bytes) -> Mapping[str, object]:
-    # Legitimate internal boundary: deserializes encrypted JSON blob; dict[str, object]
-    # is the correct structural type from json.loads, exposed as Mapping to callers.
-    payload = json.loads(raw.decode("utf-8"))
-    if not isinstance(payload, dict):
+def _payload(raw: bytes) -> _DiagnosticPayload:
+    """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
+    data = json.loads(raw.decode("utf-8"))
+    if not isinstance(data, dict):
         raise ValueError("auth diagnostic payload is not a JSON object")
-    return {str(key): value for key, value in payload.items()}
+    return _DiagnosticPayload.model_validate(data)
 
 
-def _json_object(value: object) -> Mapping[str, object]:
-    """Narrow a JSON value to a string-keyed object, or an empty one."""
-
-    if not isinstance(value, dict):
-        return {}
-    return {str(key): item for key, item in value.items()}
-
-
-def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummary:
-    captured_at = payload.get("captured_at")
-    if not isinstance(captured_at, str):
+def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
+    captured_at = payload.captured_at
+    if not captured_at:
         raise ValueError("auth diagnostic payload is missing captured_at")
-    auth_attempt = _json_object(payload.get("auth_attempt"))
-    operator_report = _json_object(payload.get("operator_report"))
+    auth_attempt = payload.auth_attempt
+    operator_report = payload.operator_report
     phone_state_reported_at = None
     raw_reported_at = operator_report.get("reported_at")
     if isinstance(raw_reported_at, str) and raw_reported_at:
         phone_state_reported_at = datetime.fromisoformat(raw_reported_at)
-    raw_diagnostic_id = payload.get("diagnostic_id")
     raw_headless = auth_attempt.get("headless")
     summary = AuthDiagnosticSummary(
-        diagnostic_id=raw_diagnostic_id if isinstance(raw_diagnostic_id, str) else None,
-        reason=str(payload.get("reason") or ""),
-        url=_redacted_url_summary(str(payload.get("url") or "")),
+        diagnostic_id=payload.diagnostic_id,
+        reason=payload.reason,
+        url=_redacted_url_summary(payload.url),
         captured_at=datetime.fromisoformat(captured_at),
-        html_captured=isinstance(payload.get("html"), str) and bool(str(payload.get("html")).strip()),
-        screenshot_captured=isinstance(payload.get("screenshot_png_base64"), str)
-        and bool(str(payload.get("screenshot_png_base64")).strip()),
+        html_captured=bool(payload.html and payload.html.strip()),
+        screenshot_captured=bool(payload.screenshot_png_base64 and payload.screenshot_png_base64.strip()),
         auth_mode=str(auth_attempt.get("auth_mode") or ""),
         auth_route=str(auth_attempt.get("auth_route") or ""),
         identity_kind=str(auth_attempt.get("identity_kind") or ""),
         headless=raw_headless if isinstance(raw_headless, bool) else None,
         prefer_non_qr=_optional_bool(auth_attempt.get("prefer_non_qr")),
         timeout_ms=_optional_int(auth_attempt.get("timeout_ms")),
-        route_label=_diagnostic_route_label(str(payload.get("url") or "")),
+        route_label=_diagnostic_route_label(payload.url),
         active_profile_id="",
         active_profile_ref=_redacted_ref(
             auth_attempt.get("active_profile_ref") or auth_attempt.get("active_profile_id")
@@ -245,7 +262,7 @@ def _summary_from_payload(payload: Mapping[str, object]) -> AuthDiagnosticSummar
         certificate_password_configured=_optional_bool(auth_attempt.get("certificate_password_configured")),
         certificate_file_present=_optional_bool(auth_attempt.get("certificate_file_present")),
         certificate_backend=str(auth_attempt.get("certificate_backend") or ""),
-        phone_state=str(operator_report.get("phone_state") or payload.get("phone_state") or ""),
+        phone_state=str(operator_report.get("phone_state") or payload.phone_state or ""),
         phone_state_reported_at=phone_state_reported_at,
     )
     return summary
@@ -268,11 +285,8 @@ def _optional_int(value: object) -> int | None:
     return value if isinstance(value, int) and not isinstance(value, bool) else None
 
 
-def _detail_fingerprints_from_payload(payload: Mapping[str, object]) -> dict[str, str]:
-    raw_auth_attempt = payload.get("auth_attempt")
-    if not isinstance(raw_auth_attempt, dict):
-        return {}
-    auth_attempt = _json_object(raw_auth_attempt)
+def _detail_fingerprints_from_payload(payload: _DiagnosticPayload) -> dict[str, str]:
+    auth_attempt = payload.auth_attempt
     keys = (
         "profile_tax_id_fingerprint",
         "clave_identity_fingerprint",

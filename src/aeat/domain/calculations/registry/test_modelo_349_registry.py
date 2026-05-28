@@ -23,6 +23,7 @@ from . import (
 )
 from ._export import resolve_export_layout
 from ._export_parse import parse_export_payload
+from ._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -731,7 +732,7 @@ def test_committed_modelo_349_declarant_summary_casillas_are_bound_to_invoice_bi
     }
     for casilla_id, expected_binding in expected_bindings.items():
         casilla = casillas_by_id[casilla_id]
-        assert casilla.input_kind == "bound"
+        assert casilla.input_kind == InputKind.BOUND
         assert casilla.binding == expected_binding
 
 

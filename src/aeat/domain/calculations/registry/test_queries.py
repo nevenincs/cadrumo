@@ -9,6 +9,7 @@ from aeat.core.resources import bundled_path
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistryValidationError
 from ._queries import RegistryQueryService, parse_modelo_period
+from ._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -70,7 +71,7 @@ def test_query_service_exposes_casillas_bindings_and_formulas_from_same_revision
 
     assert casillas.code == "303"
     assert casillas.rows
-    assert all(row.input_kind == "computed" for row in casillas.rows)
+    assert all(row.input_kind == InputKind.COMPUTED for row in casillas.rows)
     assert all(row.formula for row in casillas.rows)
     assert bindings.code == "130"
     assert any(row.binding_id == "irpf.previous_year_economic_activity_net_income" for row in bindings.rows)

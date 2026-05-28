@@ -106,6 +106,16 @@ adapters:
         template_not_detected: No se pudo detectar automáticamente la plantilla de
           {path}; indica --modelo y --año para forzarla.
         year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+  sede:
+    errors:
+      empty_identity_nif: El NIF de identidad de la sesión AEAT está vacío; no se
+        puede vincular la observación de presentación.
+      iva_wallet_empty_amount_cell: La celda de importe de la cartera de compensación
+        de IVA está vacía.
+      iva_wallet_empty_period_cell: La celda de periodo de la cartera de compensación
+        de IVA está vacía.
+      no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
+        ejecute primero `aeat config auth status`.
 aggregation:
   iva_ledger:
     errors:
@@ -322,6 +332,8 @@ application:
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
+      iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo
+        303 (%{divergence}): %{reason}'
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
@@ -341,8 +353,25 @@ application:
         mismo modelo, ejercicio y periodo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
     findings:
+      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
+        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
+        --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
+        IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la
+        casilla correspondiente (ley-35-2006:dt-12).
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
+        = %{ingreso_value} pero casilla %{reduccion_id} (reduccion trabajo) es cero.
+        Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones
+        anteriores al 31-dic-2006, puede aplicar la reduccion del 40%% DT 12a LIRPF.'
+      iva_wallet_next_action: Revise la decision de conciliacion del saldo IVA antes
+        de verificar o exportar este Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable, o espere a que el corpus baseline incorpore esta fila.'
+        next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
+          aplazado a una Fase futura bajo task #229 (corpus BOE pendiente). Establezca
+          profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
+          o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_rate_missing:
         next_action: Autorice la fila Convenio España-{cc} en m210-convenio-rates
           para tipo_renta={tipo_renta}, o desestablezca profile.convenio_doble_imposicion_country
@@ -352,9 +381,18 @@ application:
           el marcador NOT_YET_AUTHORED según ADR D2.4. Autorice la tarifa verificada
           del corpus BOE antes de poder completar la declaración; abra una tarea de
           seguimiento bloqueada por corpus citando el artículo del Convenio.
+      missing_required_casilla: La casilla requerida %{casilla_id} no está presente
+        en los datos de entrada del cálculo.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exento de
         presentar M130 este trimestre porque las retenciones e ingresos a cuenta acumulados
         en el año representan el 70% o más de los rendimientos íntegros.'
+      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
+        period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Designe un representante fiscal en Espana estableciendo profile.representante_fiscal_nif
+          mediante el comando `aeat config profile set`. El TRLIRNR Art. 10 exige
+          que los declarantes IRNR no residentes en la UE/EEE designen un representante
+          para comunicaciones con la AEAT.
   overview:
     explain:
       errors:
@@ -713,7 +751,19 @@ cli:
       describe:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
+        label_bindings: Vinculaciones
+        label_cadence: Periodicidad
+        label_casillas: Casillas
+        label_formulas: Fórmulas
+        label_modelo: Modelo
+        label_official_name: Nombre oficial
+        label_periods: Períodos
+        label_revision: Revisión
+        label_revision_ids: Ids de revisión
+        label_tax_domain: Ámbito fiscal
+        label_title: Título
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
+        period_error: 'Error de registro: %{message}'
         period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
           1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
           o baja.'
@@ -956,6 +1006,7 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
+        dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         from_filing_record_help: Identificador estable del filing record base a amendar.
@@ -1105,6 +1156,7 @@ cli:
           Art. 14). Denominador del test del 50%: la dotación se anula cuando la reserva
           acumulada alcanza el 50% del capital social. Necesario junto con --sal-beneficio-neto
           y --sal-reserva-dotada.'
+        sal_computation_error: 'Error de cómputo SAL: %{message}'
         sal_reserva_casilla_not_found: --sal-beneficio-neto no está soportado para
           esta revisión de modelo; no se ha declarado ninguna casilla de reserva especial
           de Sociedad Laboral. Usa --casilla para suministrar los valores directamente.
@@ -1130,10 +1182,14 @@ cli:
           un año entre %{minimum} y %{maximum}.
   common:
     errors:
+      draft_id_not_found: ID de borrador %{draft_id} no encontrado
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
+      no_active_profile_error_value: sin-perfil-activo
       period_empty: El periodo fiscal no puede estar vacío
       period_unrecognised: 'Periodo no reconocido: %{raw}.'
+    next:
+      create_profile_command: aeat config profile create NOMBRE
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -1554,6 +1610,7 @@ cli:
       set_help: Escribe el valor de una clave de perfil, validado con el descriptor
         del asistente.
       unset_help: Borra el valor de una clave de perfil.
+      unset_placeholder: <no establecido>
       value_help: Valor que se va a guardar.
     repair:
       audience_internal: problema interno de la aplicación
@@ -1740,6 +1797,7 @@ cli:
         (permitidos: 0-9, a-f).'
       id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
         un SHA-256 completo.
+      id_prefix_unknown: 'Error inesperado en el prefijo de id de transacción: %{message}'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}'
       unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
         sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
@@ -2342,7 +2400,8 @@ cli:
     language_help: Idioma de la interfaz (p. ej. es, en, ca).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar al inicio (%{dependency}). Ejecuta aeat config repair.'
+    startup_import_error: 'Error interno: el módulo de la aplicación no se pudo cargar
+      al inicio (%{dependency}). Ejecuta aeat config repair.'
     unavailable_app_help: Este comando no está disponible en la configuración actual.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
@@ -2596,7 +2655,9 @@ errors:
       sea una hoja de tipo {expected_kind}.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: errors.calc.unsupported_comparison_op
     unsupported_op: errors.calc.unsupported_op
   censo:
@@ -2619,6 +2680,8 @@ errors:
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
+    error_application_live_iva_surface_timeout: La superficie de lectura de IVA en
+      vivo agotó el tiempo antes de devolver evidencia de la AEAT.
     error_application_registry: La orquestación del registro de modelos falló o fue
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
@@ -2633,6 +2696,7 @@ errors:
       están incompletas o son contradictorias.
     error_categories: Se produjo un error en las categorías de gasto.
     error_categories_validation: Un registro de categoría no superó la validación.
+    error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
     error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
@@ -2802,7 +2866,6 @@ errors:
     error_workflow: Se produjo un error en el flujo de trabajo.
     error_workflow_component: Un componente del flujo de trabajo lanzó una excepción
       inesperada.
-    error_application_live_iva_surface_timeout: 'La superficie de lectura de IVA en vivo agotó el tiempo antes de devolver evidencia de la AEAT.'
   fail:
     census_sync: La sincronización del censo del Modelo 036 falló.
     currency_error: Falló la normalización de la moneda.
@@ -3197,6 +3260,8 @@ errors:
     refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
       no superaron la validación.
     refused_output_format: El formato de salida solicitado no es compatible.
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: Ya existe un perfil con esos datos.
     refused_profile_asset_validation: Un registro de activo del perfil no superó la
       validación.
@@ -3259,6 +3324,9 @@ errors:
     refused_wizard_validation: Una respuesta del asistente no superó la validación.
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
@@ -3316,6 +3384,18 @@ filing:
     out_of_range: Valor fuera de rango permitido
     required_missing: Falta campo obligatorio
     schema_mismatch: Discrepancia con el esquema esperado
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 %% (Art. 59 LIRPF)
@@ -3463,6 +3543,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Simplified
+  commands:
+    status:
+      created: creado
+      updated: actualizado
   demo:
     description: A demonstration section to test wizard functionality
     section:

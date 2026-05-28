@@ -34,9 +34,14 @@ from ...domain.buckets import (
     derive_bucket_event_id,
 )
 from ...domain.calculations.registry import (
+    M210_CONVENIO_MISSING_SENTINEL,
+    M210_DEFERRED_TIPO_SENTINEL,
+    M210_NOT_YET_AUTHORED_SENTINEL,
+    M210_RATE_SENTINELS,
     CasillaDefinition,
     CasillaObservation,
     ConvenioRateRow,
+    InputKind,
     ModeloRevision,
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -48,7 +53,7 @@ from ...domain.calculations.registry import (
     input_casilla_alias_map,
     materialize_relation_binding_values,
 )
-from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
+from ...domain.deadlines import DeadlineEngine, FiscalResidency, IVARegime, TaxpayerProfile
 from ...domain.filing import ModeloDraftStatus
 from ...domain.invoices import InvoiceCatalogueRepository
 from ...domain.modelos._calculation_repository import (
@@ -62,6 +67,7 @@ from ...domain.modelos._calculation_revision import (
     derive_calculation_revision_id,
 )
 from ...domain.modelos._codes import ModeloCode
+from ...core.errors import CoreValidationError
 from ...domain.modelos._errors import ModeloError
 from ...domain.modelos._filing_record import (
     ExternalEvidence,
@@ -184,6 +190,17 @@ def _emit_bucket_event(
     catalogue = repository.load()
     repository.save(append_bucket_event(catalogue, event))
     return event
+
+
+class WorkflowInputMismatchError(CoreValidationError):
+    """Raised when a workflow input request does not match the calculation revision.
+
+    The :class:`_RevisionInputsProvider` gate enforces that the modelo code
+    and period supplied by the workflow engine at runtime equal the values
+    baked into the revision when it was created.  Any deviation signals a
+    programming error or a stale work-unit reference and must be rejected
+    before the inputs are handed to the engine.
+    """
 
 
 class WorkUnitNotFoundError(ModeloError, KeyError):
@@ -393,7 +410,15 @@ class _RevisionInputsProvider:
     ) -> ModeloInputs:
         del profile
         if modelo != self._modelo or period != self._period:
-            raise ValueError("workflow input request does not match calculation revision")
+            raise WorkflowInputMismatchError(
+                "workflow input request does not match calculation revision",
+                context={
+                    "expected_modelo": self._modelo,
+                    "expected_period": self._period,
+                    "requested_modelo": modelo,
+                    "requested_period": period,
+                },
+            )
         return {
             **dict(self._revision.inputs_snapshot),
             **dict(self._revision.binding_overrides),
@@ -1273,13 +1298,16 @@ def _raise_if_persisted_iva_compensation_decision_blocks_work_unit(
 ) -> None:
     decision = _persisted_blocked_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
     if decision is not None:
-        raise ModeloIvaWalletReconciliationBlocked(_iva_wallet_blocked_message(decision))
+        raise ModeloIvaWalletReconciliationBlocked(
+            _iva_wallet_blocked_message(decision),
+            translated_message="application.modelo.errors.iva_wallet_blocked",
+        )
 
 
 def _iva_wallet_blocked_message(decision: Any) -> str:
     divergence = str(decision.divergence)
     reason = str(decision.reason)
-    return f"IVA wallet reconciliation is blocked for Modelo 303 ({divergence}): {reason}"
+    return tr("application.modelo.errors.iva_wallet_blocked", divergence=divergence, reason=reason)
 
 
 def _taxpayer_nif_for_bucket(bucket_id: str) -> str | None:
@@ -1322,7 +1350,7 @@ _LEDGER_PREFLIGHT_BINDING_SOURCES = frozenset(
 # IVA regimes that do not use ledger aggregation for IVA repercutido; these
 # clients supply régimen-simplificado casillas (47-58) directly as manual
 # inputs rather than deriving them from the transaction ledger.
-_IVA_LEDGER_EXEMPT_REGIMES = frozenset({"SIMPLIFICADO"})
+_IVA_LEDGER_EXEMPT_REGIMES = frozenset({IVARegime.SIMPLIFICADO})
 _ANNUAL_REGISTRY_PERIODS = frozenset(("0A",))
 
 
@@ -1644,7 +1672,7 @@ def _resolve_bound_casilla_inputs_for_available_bindings(
 ) -> dict[str, Decimal]:
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind != "bound" or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
         value = binding_values.get(casilla.binding)
         if value is not None:
@@ -1678,7 +1706,7 @@ def _lift_previous_filing_casilla_overrides_to_bindings(
     promoted: dict[str, Decimal] = {}
     for casilla_id, value in casilla_inputs.items():
         casilla = casillas_by_id.get(casilla_id)
-        if casilla is None or casilla.input_kind != "bound" or not casilla.binding:
+        if casilla is None or casilla.input_kind != InputKind.BOUND or not casilla.binding:
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != "previous_filing":
@@ -1755,7 +1783,7 @@ def _resolve_declaration_period_inputs(
 
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind != "informational":
+        if casilla.input_kind != InputKind.INFORMATIONAL:
             continue
         if casilla.semantic_role == "filing_year":
             resolved[casilla.id] = Decimal(filing_year)
@@ -1780,7 +1808,7 @@ def _merge_bucket_bound_inputs(
     computed = sorted(
         casilla_id
         for casilla_id in bound_inputs
-        if casilla_id in casillas and casillas[casilla_id].input_kind == "computed"
+        if casilla_id in casillas and casillas[casilla_id].input_kind == InputKind.COMPUTED
     )
     if computed:
         raise ModeloAggregationBindingError(
@@ -1798,7 +1826,7 @@ def _source_owned_bound_casilla_ids(revision: ModeloRevision, owned_sources: fro
     return frozenset(
         casilla.id
         for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding in source_owned_binding_ids
+        if casilla.input_kind == InputKind.BOUND and casilla.binding in source_owned_binding_ids
     )
 
 
@@ -2215,9 +2243,9 @@ def _required_input_casillas_for_revision(
     optional: list[str] = []
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
-        if casilla.input_kind == "manual" and casilla.required:
+        if casilla.input_kind == InputKind.MANUAL and casilla.required:
             required.append(casilla_id)
-        elif casilla.input_kind in ("manual", "bound", "computed"):
+        elif casilla.input_kind in (InputKind.MANUAL, InputKind.BOUND, InputKind.COMPUTED):
             optional.append(casilla_id)
     return tuple(required), tuple(optional)
 
@@ -2322,6 +2350,27 @@ _PREDICATE_CAP_LE_WHEN_POSITIVE = _re.compile(
 _PREDICATE_IMPLIES_NONZERO = _re.compile(
     r"^implies_nonzero\(\[(?P<ids>[^\]]*)\]\)$"
 )
+# profile_field_required("field_name", "applicability_filter") —
+# profile-state-aware conditional non-zero requirement; sibling of
+# implies_nonzero per the dsl-conditional-predicate ADR. The
+# applicability filter is dispatched via _evaluate_applicability_filter
+# against the TaxpayerProfile threaded through the verification pipeline.
+# First use site: M210 representante-fiscal gate per
+# m210-irnr-full-engine ADR §D2.5 (TRLIRNR Art 10).
+_PREDICATE_PROFILE_FIELD_REQUIRED = _re.compile(
+    r'^profile_field_required\("(?P<field>[^"]+)", "(?P<filter>[^"]+)"\)$'
+)
+
+# Per-predicate next_action dispatch. Predicates listed here emit their
+# dedicated next_action prose via a direct tr() call (so the locale
+# scaffold AST scanner can pick up the literal key); predicates absent
+# from this dispatch fall back to the generic cross-casilla template.
+
+
+def _resolve_predicate_next_action(predicate_id: str) -> str | None:
+    if predicate_id == "m210-representante-fiscal-required":
+        return tr("application.modelo.findings.representante_fiscal_required.next_action")
+    return None
 # advisory_when_ratio_ge(["numerator_id", "denominator_id", "threshold"]) —
 # fires a WARNING-severity ADVISORY finding when numerator/denominator >= threshold
 # and denominator > 0. Used for Art. 110.3.b RIRPF M130 high-retention exemption.
@@ -2340,9 +2389,34 @@ def _parse_predicate_casilla_ids(ids_fragment: str) -> list[str]:
     return ids
 
 
+def _evaluate_applicability_filter(
+    filter_name: str, profile: TaxpayerProfile
+) -> bool:
+    """Return True iff the profile state matches the named applicability filter.
+
+    Used by ``profile_field_required`` predicates to gate whether the
+    field-presence requirement applies to a given profile. Adding a
+    new filter is a deliberate authoring decision: the dispatch table
+    here is the single source of truth, and an unknown filter name
+    raises ``ValueError`` rather than silently passing (mirrors the
+    KNOWN_VERIFICATION_PREDICATE_OPERATORS gate).
+    """
+    if filter_name == "non_resident_irnr_non_eea":
+        # TRLIRNR Art 10 letter applies only to non-EU residents.
+        # Phase 1 uses the broader ue_eee_status per m210-irnr-full-engine
+        # ADR §D2.5 escape hatch: EEA residents are exempt because of the
+        # bilateral mutual-assistance regime.
+        return (
+            profile.fiscal_residency is FiscalResidency.NON_RESIDENT_IRNR
+            and not profile.ue_eee_status
+        )
+    raise ValueError(f"Unknown applicability filter: {filter_name!r}")
+
+
 def _evaluate_predicate_expression(
     expression: str,
     casilla_values: Mapping[str, Decimal],
+    profile: TaxpayerProfile,
 ) -> bool:
     """Return True when the predicate holds, False when it is violated.
 
@@ -2356,6 +2430,9 @@ def _evaluate_predicate_expression(
     - ``implies_nonzero(["antecedent_id", "consequent_id"])`` — material
       implication with strictly-positive antecedent: predicate holds iff
       antecedent <= 0 OR consequent != 0.
+    - ``profile_field_required("field_name", "applicability_filter")`` —
+      profile-state-aware conditional non-zero requirement; sibling of
+      ``implies_nonzero`` per the dsl-conditional-predicate ADR.
 
     An expression that does not match any registered pattern is treated as
     holding (i.e. unknown predicates do not block the operator). The
@@ -2417,6 +2494,22 @@ def _evaluate_predicate_expression(
             return True
         consequent = casilla_values.get(consequent_id, Decimal(0))
         return consequent != Decimal(0)
+
+    m = _PREDICATE_PROFILE_FIELD_REQUIRED.match(expr)
+    if m:
+        field_name = m.group("field")
+        filter_name = m.group("filter")
+        # Applicability dispatch: filter_name -> profile-predicate function.
+        # An unknown filter raises ValueError (single source of truth in the
+        # dispatch table) rather than silently passing the predicate.
+        if not _evaluate_applicability_filter(filter_name, profile):
+            return True  # rule doesn't apply; predicate trivially holds
+        field_value = getattr(profile, field_name, None)
+        if field_value is None or (
+            isinstance(field_value, str) and not field_value.strip()
+        ):
+            return False  # rule applies but field is empty / missing
+        return True
 
     return True
 
@@ -2570,6 +2663,52 @@ def _resolve_m210_rate(
     return Decimal(matched_row.rate), []
 
 
+def _rewrite_m210_sentinels(
+    observations: tuple[CasillaObservation, ...],
+    *,
+    profile: TaxpayerProfile,
+    snapshot: RegistrySnapshot,
+    year: int,
+    tipo_renta: str,
+) -> tuple[tuple[CasillaObservation, ...], list[ModeloVerificationFinding]]:
+    """Sweep engine observations for M210 rate sentinels and rewrite them.
+
+    The ``m210_resolve_rate`` formula op emits one of the
+    ``M210_RATE_SENTINELS`` Decimals (``-1``, ``-2``, ``-3``) when the
+    rate cannot be deterministically resolved from registry parameters
+    at evaluation time. The verification sweep here:
+
+    1. Finds every observation whose ``value`` matches a sentinel.
+    2. Re-invokes :func:`_resolve_m210_rate` to compute the
+       authoritative ``(rate, finding)`` pair from the profile +
+       snapshot.
+    3. Replaces the sentinel observation with one carrying the
+       resolved rate (or ``Decimal(0)`` when the helper returns
+       ``rate is None``, which is the safe operator-facing default
+       for a rate the registry could not determine).
+    4. Aggregates every emitted finding into the returned list.
+
+    A pure function over the inputs; no state mutation. The non-
+    sentinel observations pass through unchanged. The ``tipo_renta``
+    argument is the text input the operator declared for the M210
+    work unit; it is the discriminator the formula op consumed
+    upstream and is therefore the discriminator the resolution
+    helper must consume here.
+    """
+
+    findings: list[ModeloVerificationFinding] = []
+    rewritten: list[CasillaObservation] = []
+    for obs in observations:
+        if obs.value not in M210_RATE_SENTINELS:
+            rewritten.append(obs)
+            continue
+        rate, obs_findings = _resolve_m210_rate(profile, tipo_renta, year, snapshot)
+        findings.extend(obs_findings)
+        new_value = rate if rate is not None else Decimal(0)
+        rewritten.append(obs.model_copy(update={"value": new_value}))
+    return tuple(rewritten), findings
+
+
 def _evaluate_advisory_predicate_fires(
     expression: str,
     casilla_values: Mapping[str, Decimal],
@@ -2603,8 +2742,15 @@ def _evaluate_advisory_predicate_fires(
 def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
     casilla_values: Mapping[str, Decimal],
+    profile: TaxpayerProfile,
 ) -> list[ModeloVerificationFinding]:
-    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories."""
+    """Evaluate Layer 2 cross-casilla predicates; return findings for violations or advisories.
+
+    ``profile`` is threaded through to support profile-state-aware
+    predicate operators such as ``profile_field_required`` (m210
+    representante-fiscal gate per ADR §D2.5). Casilla-only operators
+    ignore the parameter.
+    """
     if not predicates:
         return []
 
@@ -2624,16 +2770,25 @@ def _evaluate_verification_predicates(
                     )
                 )
         else:
-            if not _evaluate_predicate_expression(predicate.expression, casilla_values):
+            if not _evaluate_predicate_expression(
+                predicate.expression, casilla_values, profile
+            ):
+                next_action = _resolve_predicate_next_action(predicate.predicate_id)
+                if next_action is None:
+                    next_action = tr(
+                        "application.modelo.findings.cross_casilla_invariant_next_action",
+                        predicate_id=predicate.predicate_id,
+                    )
                 findings.append(
                     ModeloVerificationFinding(
                         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                         severity=ModeloVerificationFindingSeverity.BLOCKING,
-                        message=(f"cross-casilla invariant {predicate.predicate_id!r} violated: {predicate.expression}"),
-                        next_action=(
-                            f"Ensure all casillas required by predicate "
-                            f"{predicate.predicate_id!r} are non-zero before verifying."
+                        message=tr(
+                            "application.modelo.findings.cross_casilla_invariant_violated",
+                            predicate_id=predicate.predicate_id,
+                            expression=predicate.expression,
                         ),
+                        next_action=next_action,
                         legal_refs=tuple(str(r) for r in predicate.legal_refs),
                     )
                 )
@@ -2741,6 +2896,7 @@ def verify_modelo_revision(
     findings, resolved_casillas, missing_required = _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
+        profile=workflow_profile,
     )
     blocked_iva_wallet_decision = _persisted_blocked_iva_compensation_decision_for_work_unit(
         work_unit,
@@ -2834,6 +2990,7 @@ def _collect_revision_verification_findings(
     *,
     work_unit: WorkUnit,
     target: CalculationRevision,
+    profile: TaxpayerProfile,
 ) -> tuple[list[ModeloVerificationFinding], list[str], list[str]]:
     """Build the verification finding list for one calculation revision.
 
@@ -2868,10 +3025,11 @@ def _collect_revision_verification_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.BLOCKING_RULE,
                 severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    f"registry snapshot for modelo={work_unit.modelo!r} "
-                    f"year={work_unit.filing_year} period={work_unit.period!r} "
-                    f"could not be resolved"
+                message=tr(
+                    "application.modelo.findings.registry_snapshot_unresolved",
+                    modelo=str(work_unit.modelo),
+                    filing_year=str(work_unit.filing_year),
+                    period=str(work_unit.period),
                 ),
                 next_action="aeat app registry verify",
             )
@@ -2881,7 +3039,7 @@ def _collect_revision_verification_findings(
     revision_keys = set(target.inputs_snapshot)
     for casilla in snapshot.revision.casillas:
         casilla_id = str(casilla.id)
-        if casilla.input_kind == "manual" and casilla.required:
+        if casilla.input_kind == InputKind.MANUAL and casilla.required:
             if casilla_id in revision_keys:
                 resolved_casillas.append(casilla_id)
             else:
@@ -2899,6 +3057,7 @@ def _collect_revision_verification_findings(
         _evaluate_verification_predicates(
             snapshot.revision.verification_predicates,
             target.casilla_values,
+            profile,
         )
     )
 
@@ -2953,19 +3112,13 @@ def _dt12_reduccion_advisory_finding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=reduccion_id,
-            message=(
-                f"DT_12A_REDUCCION_POSSIBLE: casilla {ingreso_id} = {ingreso_value} "
-                f"but casilla {reduccion_id} (reducción trabajo) is zero. "
-                f"If this income includes a plan-de-pensiones capital rescate with "
-                f"pre-31-Dec-2006 aportaciones, a 40%% DT 12ª LIRPF reducción may apply."
+            message=tr(
+                "application.modelo.findings.dt12a_reduccion_possible",
+                ingreso_id=ingreso_id,
+                ingreso_value=str(ingreso_value),
+                reduccion_id=reduccion_id,
             ),
-            next_action=(
-                "Supply --rescate-plan-pensiones-capital IMPORTE "
-                "--rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE "
-                "--rescate-plan-pensiones-aportaciones-totales IMPORTE "
-                "to aeat app modelo work calculate to auto-inject the DT 12ª reducción "
-                "into casilla 0011 (ley-35-2006:dt-12)."
-            ),
+            next_action=tr("application.modelo.findings.dt12a_reduccion_next_action"),
             legal_refs=("ley-35-2006:dt-12",),
         )
     return None
@@ -2983,7 +3136,7 @@ def _missing_required_casilla_finding(
         kind=ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         casilla_id=casilla_id,
-        message=(f"required casilla {casilla_id!r} is not present in the calculation revision's inputs_snapshot"),
+        message=tr("application.modelo.findings.missing_required_casilla", casilla_id=casilla_id),
         next_action=(f"aeat app modelo work calculate {work_unit_id} --casilla {casilla_id}=VALUE"),
         legal_refs=legal_refs,
         source_refs=source_refs,
@@ -2995,7 +3148,7 @@ def _iva_wallet_blocking_verification_finding(decision: object) -> ModeloVerific
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message=_iva_wallet_blocked_message(decision),
-        next_action="Review the IVA wallet reconciliation decision before verifying or exporting this Modelo 303.",
+        next_action=tr("application.modelo.findings.iva_wallet_next_action"),
     )
 
 

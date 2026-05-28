@@ -28,6 +28,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ...core.i18n import tr
+from ...domain.modelos._ids import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
 
@@ -47,7 +48,7 @@ class WorkflowEvent(BaseModel):
 
     action: str = Field(min_length=1)
     reason: str = ""
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     object_id: str | None = None
     at: datetime = Field(default_factory=utc_now)
 
@@ -146,7 +147,7 @@ class ProfileBucketPointer(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     label: str = Field(min_length=1, max_length=160)
     status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
 

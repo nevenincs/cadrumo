@@ -22,7 +22,7 @@ import re
 from collections.abc import Mapping
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 if TYPE_CHECKING:
     from .observability._context import RunContextInfo
@@ -118,6 +118,30 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
     return scrubbed
+
+
+@overload
+def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
+
+
+@overload
+def _scrub_value(value: Mapping[str, Any], *, key: str | None = ...) -> dict[str, Any]: ...
+
+
+@overload
+def _scrub_value(value: tuple[Any, ...], *, key: str | None = ...) -> tuple[Any, ...]: ...
+
+
+@overload
+def _scrub_value(value: list[Any], *, key: str | None = ...) -> list[Any]: ...
+
+
+@overload
+def _scrub_value(value: set[Any], *, key: str | None = ...) -> set[Any]: ...
+
+
+@overload
+def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
 
 
 def _scrub_value(value: object, *, key: str | None = None) -> Any:
@@ -304,6 +328,10 @@ def configure_logging() -> None:
                     "level": "WARNING",
                     "propagate": True,
                 },
+                "pikepdf._core": {
+                    "level": "WARNING",
+                    "propagate": True,
+                },
             },
         }
     )
@@ -322,6 +350,54 @@ def configure_logging() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
     _CONFIGURED = True
+
+
+def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
+    """Apply ``level`` to the root logger and every attached handler.
+
+    The root logger itself is always set to ``logging.DEBUG`` so no
+    record is discarded before reaching a handler; each handler then
+    applies its own level gate.  ``FileHandler`` instances receive
+    ``file_level`` (default ``DEBUG``) to keep the diagnostic log
+    comprehensive.  All other handlers (typically the stderr stream
+    handler) receive ``level``.
+
+    :func:`configure_logging` is called first so the dictConfig contract
+    is in place before any level mutation.
+
+    Args:
+        level: The effective level for non-file handlers (e.g.
+            ``logging.INFO`` for verbose mode).
+        file_level: The level applied to :class:`logging.FileHandler`
+            instances (default ``logging.DEBUG``).
+    """
+    configure_logging()
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)
+    for handler in root_logger.handlers:
+        if isinstance(handler, logging.FileHandler):
+            handler.setLevel(file_level)
+        else:
+            handler.setLevel(level)
+
+
+def attach_run_sink(sink: logging.Handler) -> None:
+    """Install ``SecretScrubbingFilter`` on ``sink`` then attach it to root.
+
+    Ensures every record flowing through the JSONL run sink is scrubbed
+    before it reaches the serialiser, even when the root-logger filter
+    has already scrubbed the shared record in-place.  The filter is
+    idempotent: a second call with the same sink is a no-op because the
+    guard checks ``root_logger.handlers`` for an existing instance.
+
+    Args:
+        sink: The :class:`logging.Handler` (typically
+            :class:`aeat.core.observability._sink.JsonlRunSink`) to
+            attach to the root logger.
+    """
+    if not any(isinstance(f, SecretScrubbingFilter) for f in sink.filters):
+        sink.addFilter(SecretScrubbingFilter())
+    logging.getLogger().addHandler(sink)
 
 
 def get_logger(name: str) -> logging.Logger:

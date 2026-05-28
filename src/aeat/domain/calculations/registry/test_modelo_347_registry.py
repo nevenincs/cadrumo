@@ -10,6 +10,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import (
+    InputKind,
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
@@ -64,7 +65,7 @@ def test_committed_modelo_347_is_informative_only() -> None:
         assert revision.formulas == (), revision.id
         assert revision.relations == (), revision.id
         for casilla in revision.casillas:
-            assert casilla.input_kind in {"informational", "manual"}, casilla.id
+            assert casilla.input_kind in {InputKind.INFORMATIONAL, InputKind.MANUAL}, casilla.id
 
 
 def test_committed_modelo_347_workbook_parity_refs_resolve_to_corpus() -> None:

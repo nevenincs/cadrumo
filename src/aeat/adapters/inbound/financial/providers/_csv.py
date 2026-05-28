@@ -35,6 +35,7 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from ._constants import CSV_EXTENSIONS
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _logger = get_logger(__name__)
@@ -176,7 +177,7 @@ class CsvProvider(FinancialProvider):
     """
 
     name = "CSV provider"
-    supported_extensions = frozenset({".csv", ".txt"})
+    supported_extensions = CSV_EXTENSIONS
     source_format = SourceFormat.CSV
     # Corpus fixtures are synthetic CSVs modelled on real bank export schemas;
     # column-mapping fidelity is confirmed against published specifications.

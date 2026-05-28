@@ -42,6 +42,9 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
     failures.extend(_validate_semantic_role_cardinality(modelo_tuple))
     failures.extend(_validate_required_role_declarations(modelo_tuple))
     failures.extend(_validate_cross_revision_casilla_consistency(modelo_tuple))
+    # Governing ADR: 2026-05-27-schema-hardening-casilla-continuity-contract-adr
+    # D3. This is the surface-scoped strict continuity gate; it complements,
+    # but does not replace, the overlap-aware repeated-id hard gate above.
     failures.extend(_validate_strict_cross_revision_casilla_continuity(modelo_tuple))
     failures.extend(validate_no_label_artifacts(modelo_tuple))
     _emit_semantic_role_typo_twin_warnings(modelo_tuple)

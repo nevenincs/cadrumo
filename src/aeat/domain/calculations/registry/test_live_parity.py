@@ -20,6 +20,7 @@ from pydantic import AnyUrl, ValidationError
 from ._errors import RegistryValidationError
 from ._live_parity import (
     LiveParityCatalogue,
+    OracleEnvironment,
     OracleSurfaceKind,
     ParityFieldComparison,
     ParityResult,
@@ -290,6 +291,80 @@ def test_catalogue_ids_filter_by_environment() -> None:
     assert catalogue.ids() == ("both", "prod", "test")
     assert catalogue.ids(environment="production") == ("both", "prod")
     assert catalogue.ids(environment="test_environment") == ("both", "test")
+
+
+# ── S174: OracleEnvironment StrEnum round-trip ───────────────────────────────
+
+
+def test_oracle_environment_members_are_str_subclass() -> None:
+    """Every OracleEnvironment member must be a str subclass (StrEnum contract)."""
+    for member in OracleEnvironment:
+        assert isinstance(member, str), f"{member!r} is not a str instance"
+
+
+@pytest.mark.parametrize(
+    ("member", "expected_value"),
+    [
+        (OracleEnvironment.PRODUCTION, "production"),
+        (OracleEnvironment.TEST_ENVIRONMENT, "test_environment"),
+        (OracleEnvironment.BOTH, "both"),
+    ],
+)
+def test_oracle_environment_member_values(member: OracleEnvironment, expected_value: str) -> None:
+    """Each member's string value must match the canonical AEAT environment name."""
+    assert member == expected_value
+    assert str(member) == expected_value
+
+
+def test_oracle_environment_default_round_trips_through_catalogue_register() -> None:
+    """OracleEnvironment.PRODUCTION default must survive a full register→lookup cycle."""
+    catalogue = LiveParityCatalogue()
+    oracle = _CannedOracle(
+        oracle_id="env-roundtrip",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(oracle_id="env-roundtrip", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    # Use the enum member as the explicit environment value.
+    catalogue.register(oracle, environment=OracleEnvironment.PRODUCTION)
+
+    # Default lookup (OracleEnvironment.PRODUCTION) must resolve the oracle.
+    resolved = catalogue.lookup("env-roundtrip")
+    assert resolved is oracle
+    assert catalogue.environment_of("env-roundtrip") == OracleEnvironment.PRODUCTION
+    assert catalogue.environment_of("env-roundtrip") == "production"
+
+
+def test_oracle_environment_test_environment_round_trips_through_catalogue() -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _CannedOracle(
+        oracle_id="env-test-rt",
+        surface_kind="file_validator",
+        operations=(),
+        verdict=ParityResult(oracle_id="env-test-rt", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    catalogue.register(oracle, environment=OracleEnvironment.TEST_ENVIRONMENT)
+
+    resolved = catalogue.lookup("env-test-rt", environment=OracleEnvironment.TEST_ENVIRONMENT)
+    assert resolved is oracle
+    assert catalogue.environment_of("env-test-rt") == OracleEnvironment.TEST_ENVIRONMENT
+    assert catalogue.environment_of("env-test-rt") == "test_environment"
+
+
+def test_oracle_environment_both_round_trips_through_catalogue() -> None:
+    catalogue = LiveParityCatalogue()
+    oracle = _CannedOracle(
+        oracle_id="env-both-rt",
+        surface_kind="vat_id_check",
+        operations=(),
+        verdict=ParityResult(oracle_id="env-both-rt", cross_reference_id="c", verdict="match", narrative="x"),
+    )
+    catalogue.register(oracle, environment=OracleEnvironment.BOTH)
+
+    assert catalogue.lookup("env-both-rt", environment=OracleEnvironment.PRODUCTION) is oracle
+    assert catalogue.lookup("env-both-rt", environment=OracleEnvironment.TEST_ENVIRONMENT) is oracle
+    assert catalogue.environment_of("env-both-rt") == OracleEnvironment.BOTH
+    assert catalogue.environment_of("env-both-rt") == "both"
 
 
 def test_pre_flight_passes_when_planned_operations_are_read_only() -> None:

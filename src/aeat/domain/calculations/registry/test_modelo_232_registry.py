@@ -11,6 +11,7 @@ import pytest
 from aeat.core.resources import bundled_path
 
 from . import (
+    InputKind,
     RegistryValidator,
     build_snapshot,
     load_registry_tree,
@@ -75,7 +76,7 @@ def test_committed_modelo_232_is_informative_only() -> None:
             "Modelo 232 is informative-only and Modelo 200 dependency is evidence-only"
         )
         for casilla in revision.casillas:
-            assert casilla.input_kind in {"informational", "manual"}, (
+            assert casilla.input_kind in {InputKind.INFORMATIONAL, InputKind.MANUAL}, (
                 f"casilla {casilla.id!r} has input_kind={casilla.input_kind!r}; "
                 "Modelo 232 casillas must be informational/manual without computation"
             )

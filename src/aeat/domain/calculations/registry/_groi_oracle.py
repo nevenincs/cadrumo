@@ -225,7 +225,7 @@ class GroiOracle(BaseCheckerOracle[GroiObservation]):
 def register_default(
     catalogue: LiveParityCatalogue,
     *,
-    environment: OracleEnvironment = "production",
+    environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> None:
     """Register the GROI Spanish-ROI oracle under the requested environment."""
 

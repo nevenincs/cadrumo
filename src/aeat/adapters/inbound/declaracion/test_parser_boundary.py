@@ -595,16 +595,17 @@ def test_parser_extracts_modelo_303_targets_from_real_redacted_declaration_copy(
         "iva.resultado",
         "71",
     }
-    assert values["27"] == Decimal("1000.00")
-    assert values["29"] == Decimal("1000.00")
-    assert values["37"] == Decimal("1000.00")
-    assert values["45"] == Decimal("1000.00")
-    assert values["iva.resultado-regimen-general"] == Decimal("1000.00")
-    assert values["64"] == Decimal("1000.00")
-    assert values["66"] == Decimal("1000.00")
-    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("1000.00")
-    assert values["iva.resultado"] == Decimal("1000.00")
-    assert values["71"] == Decimal("1000.00")
+    # 2024-1T synthetic fixture: c27=13200, c29=8400, c37=0, c45=8400, c46=c69=4800
+    assert values["27"] == Decimal("13200.00")
+    assert values["29"] == Decimal("8400.00")
+    assert values["37"] == Decimal("0.00")
+    assert values["45"] == Decimal("8400.00")
+    assert values["iva.resultado-regimen-general"] == Decimal("4800.00")
+    assert values["64"] == Decimal("4800.00")
+    assert values["66"] == Decimal("4800.00")
+    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00")
+    assert values["iva.resultado"] == Decimal("4800.00")
+    assert values["71"] == Decimal("4800.00")
     assert filing.registry_snapshot_ref is not None
     assert filing.registry_snapshot_ref.modelo == "303"
     assert filing.registry_snapshot_ref.modelo_year == 2024
@@ -669,14 +670,23 @@ def test_parser_extracts_tax_id_from_all_m303_corpus_pdfs(pdf_stem: str) -> None
 def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, year: int, period: str) -> None:
     """Round-trip: parse all 8 corpus M303 PDFs and verify casilla coverage.
 
-    Ground truth is derived from reading the printed declaracion form text
-    directly. The sanitised corpus replaces all real amounts with 1.000,00
-    synthetic values; the 8 stable casillas that always print their value
-    adjacent to the label text are asserted at Decimal('1000.00').
-    Two casillas (78, 87) may capture the box number rather than 1.000,00
-    depending on sanitiser placement — those are asserted to be valid Decimal
-    instances only.
+    Ground truth is derived from the synthetic fixture values in _generate.py.
+    Each specimen uses formula-consistent values: c46 = c27 - c45, c69 = c46.
+    Box 37 (intracomunitarias) is always 0.00; compensation boxes are all 0.00.
     """
+    # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
+    _expected: dict[str, dict[str, Decimal]] = {
+        "2023-1T": {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "37": Decimal("0.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00"), "c69": Decimal("4500.00")},
+        "2023-2T": {"27": Decimal("13800.00"), "29": Decimal("8700.00"), "37": Decimal("0.00"), "45": Decimal("8700.00"), "c46": Decimal("5100.00"), "c69": Decimal("5100.00")},
+        "2023-3T": {"27": Decimal("15000.00"), "29": Decimal("9300.00"), "37": Decimal("0.00"), "45": Decimal("9300.00"), "c46": Decimal("5700.00"), "c69": Decimal("5700.00")},
+        "2023-4T": {"27": Decimal("16800.00"), "29": Decimal("10500.00"), "37": Decimal("0.00"), "45": Decimal("10500.00"), "c46": Decimal("6300.00"), "c69": Decimal("6300.00")},
+        "2024-1T": {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "37": Decimal("0.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00"), "c69": Decimal("4800.00")},
+        "2024-2T": {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "37": Decimal("0.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00"), "c69": Decimal("5400.00")},
+        "2024-3T": {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "37": Decimal("0.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00"), "c69": Decimal("6000.00")},
+        "2024-4T": {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "37": Decimal("0.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00"), "c69": Decimal("6600.00")},
+    }
+    exp = _expected[pdf_stem]
+
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -710,39 +720,21 @@ def test_parser_extracts_modelo_303_profile_targets_from_corpus(pdf_stem: str, y
         "71",
     }
 
-    # These 9 casillas always carry 1.000,00 directly adjacent to their label
-    # line in every corpus specimen (confirmed by reading printed PDF text);
-    # ground truth is the printed form, not the parser output.
-    # Box 29 (cuota IVA soportado interiores corrientes): the printed label row
-    # always ends with the cuota value 1.000,00 as the last token across all 8
-    # 2023-2024 corpus specimens.
-    # Box 37 (cuota IVA deducible adquisiciones intracomunitarias corrientes):
-    # the printed label row always ends with the cuota value 1.000,00 as the last
-    # token across all 8 2023-2024 corpus specimens.
-    for stable_id in (
-        "27",
-        "29",
-        "37",
-        "45",
-        "iva.resultado-regimen-general",
-        "64",
-        "66",
-        "iva.resultado",
-        "71",
-    ):
-        assert values[stable_id] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla {stable_id!r} expected Decimal('1000.00') "
-            f"from corpus PDF text, got {values[stable_id]!r}"
-        )
+    # Stable casillas: formula-consistent values derived from _generate.py fixtures.
+    assert values["27"] == exp["27"], f"{pdf_stem}: casilla '27' got {values['27']!r}"
+    assert values["29"] == exp["29"], f"{pdf_stem}: casilla '29' got {values['29']!r}"
+    assert values["37"] == exp["37"], f"{pdf_stem}: casilla '37' got {values['37']!r}"
+    assert values["45"] == exp["45"], f"{pdf_stem}: casilla '45' got {values['45']!r}"
+    assert values["iva.resultado-regimen-general"] == exp["c46"], f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
+    assert values["64"] == exp["c46"], f"{pdf_stem}: casilla '64' got {values['64']!r}"
+    assert values["66"] == exp["c46"], f"{pdf_stem}: casilla '66' got {values['66']!r}"
+    assert values["iva.resultado"] == exp["c69"], f"{pdf_stem}: iva.resultado got {values['iva.resultado']!r}"
+    assert values["71"] == exp["c69"], f"{pdf_stem}: casilla '71' got {values['71']!r}"
 
-    # Casillas 78, 87, and 110: the sanitiser may place 1.000,00 next to the
-    # label in some corpus specimens but not others (sanitiser places exactly one
-    # 1.000,00 per result row, alternating between the two compensation boxes).
-    # The parser extracts a valid Decimal in every case — either 1.000,00 or the
-    # box number itself when no synthetic value is adjacent.
-    assert isinstance(values["iva.compensacion-pendiente-periodos-anteriores"], Decimal)
-    assert isinstance(values["iva.compensacion-aplicada-periodo"], Decimal)
-    assert isinstance(values["iva.compensacion-pendiente-periodos-posteriores"], Decimal)
+    # Compensation boxes are all 0.00 in synthetic fixtures
+    assert values["iva.compensacion-pendiente-periodos-anteriores"] == Decimal("0.00"), f"{pdf_stem}: comp-ant got {values['iva.compensacion-pendiente-periodos-anteriores']!r}"
+    assert values["iva.compensacion-aplicada-periodo"] == Decimal("0.00"), f"{pdf_stem}: comp-ap got {values['iva.compensacion-aplicada-periodo']!r}"
+    assert values["iva.compensacion-pendiente-periodos-posteriores"] == Decimal("0.00"), f"{pdf_stem}: comp-post got {values['iva.compensacion-pendiente-periodos-posteriores']!r}"
 
 
 @pytest.mark.parametrize(
@@ -762,24 +754,21 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
 ) -> None:
     """Round-trip: parse all 7 corpus M303 PDFs from the 2021-2022 printed-form template.
 
-    The 2021-2022 M303 form uses a different layout from 2023+: box numbers and
-    amounts appear on isolated lines without adjacent labels in the results section,
-    and formula brackets use [N] notation instead of bare N. The 2009-y-siguientes
-    revision extraction profile covers only the four closure casillas whose label
-    and value co-appear on the same text line in every 2021-2022 specimen:
-
-    - 27 (cuota devengada total): label row always carries box number + value
-    - 29 (cuota IVA soportado interiores corrientes): label row carries value
-    - 45 (total a deducir): label row carries value
-    - iva.resultado-regimen-general (46): label includes [27]-[45] bracket notation
-
-    Ground truth is derived from reading the printed PDF text lines directly.
-    Casilla 27 captures Decimal("1000.00") in 2021-2T and 2021-3T/4T/2022-2T
-    specimens where the sanitiser placed 1.000,00 adjacent to the label; in
-    2022-1T, 2022-3T and 2022-4T the sanitiser did not place a value on the
-    casilla-27 line so the parser captures the trailing box number "27" as a
-    Decimal — asserted as isinstance only for those specimens.
+    The 2009-y-siguientes revision profile covers 4 closure casillas. Ground truth
+    is derived from the synthetic fixture values in _generate.py: c46 = c27 - c45.
     """
+    # Per-specimen expected values derived from _MODELO_303_CORPUS_FIXTURES in _generate.py
+    _expected: dict[str, dict[str, Decimal]] = {
+        "2021-2T": {"27": Decimal("12000.00"), "29": Decimal("7800.00"), "45": Decimal("7800.00"), "c46": Decimal("4200.00")},
+        "2021-3T": {"27": Decimal("13200.00"), "29": Decimal("8400.00"), "45": Decimal("8400.00"), "c46": Decimal("4800.00")},
+        "2021-4T": {"27": Decimal("14400.00"), "29": Decimal("9000.00"), "45": Decimal("9000.00"), "c46": Decimal("5400.00")},
+        "2022-1T": {"27": Decimal("12600.00"), "29": Decimal("8100.00"), "45": Decimal("8100.00"), "c46": Decimal("4500.00")},
+        "2022-2T": {"27": Decimal("15000.00"), "29": Decimal("9600.00"), "45": Decimal("9600.00"), "c46": Decimal("5400.00")},
+        "2022-3T": {"27": Decimal("16200.00"), "29": Decimal("10200.00"), "45": Decimal("10200.00"), "c46": Decimal("6000.00")},
+        "2022-4T": {"27": Decimal("18000.00"), "29": Decimal("11400.00"), "45": Decimal("11400.00"), "c46": Decimal("6600.00")},
+    }
+    exp = _expected[pdf_stem]
+
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -807,23 +796,12 @@ def test_parser_extracts_modelo_303_old_template_profile_targets_from_corpus(
         "iva.resultado-regimen-general",
     }
 
-    # Casillas 29, 45, iva.resultado-regimen-general always carry 1.000,00
-    # directly adjacent to their label in every 2021-2022 corpus specimen;
-    # ground truth derived from reading the printed form text, not re-running
-    # the parser.
-    for stable_id in ("29", "45", "iva.resultado-regimen-general"):
-        assert values[stable_id] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla {stable_id!r} expected Decimal('1000.00') "
-            f"from corpus PDF text, got {values[stable_id]!r}"
-        )
-
-    # Casilla 27: the sanitiser places 1.000,00 adjacent to the label in
-    # 2021-2T, 2021-3T, 2021-4T and 2022-2T; in 2022-1T, 2022-3T, 2022-4T
-    # no value is placed on that line so the parser captures "27" (the box
-    # number token), which parse_spanish_decimal converts to Decimal("27").
-    # Either is a valid Decimal — assert isinstance only.
-    assert isinstance(values["27"], Decimal), (
-        f"{pdf_stem}: casilla '27' expected a Decimal instance, got {values['27']!r}"
+    # Formula-consistent values from _generate.py synthetic fixtures.
+    assert values["27"] == exp["27"], f"{pdf_stem}: casilla '27' got {values['27']!r}"
+    assert values["29"] == exp["29"], f"{pdf_stem}: casilla '29' got {values['29']!r}"
+    assert values["45"] == exp["45"], f"{pdf_stem}: casilla '45' got {values['45']!r}"
+    assert values["iva.resultado-regimen-general"] == exp["c46"], (
+        f"{pdf_stem}: iva.resultado-regimen-general got {values['iva.resultado-regimen-general']!r}"
     )
 
 
@@ -858,31 +836,44 @@ def test_parser_extracts_modelo_190_targets_from_real_redacted_declaration_copy(
     ],
 )
 def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, year: int) -> None:
-    """Round-trip: parse Spanish-language M390 corpus PDFs and verify covered closure casillas.
+    """Round-trip: parse synthetic M390 corpus fixtures and verify formula-consistent casilla values.
 
-    Ground truth is derived from reading the printed declaracion-resumen anual text
-    directly. The sanitised corpus replaces real amounts with 1.000,00 synthetic
-    values.
+    Ground truth is derived from the _Modelo390CorpusFixture leaf inputs in _generate.py.
+    The fixtures are synthetic formula-consistent PDFs (verification_source =
+    synthetic_from_aeat_published_text) replacing the earlier sanitised-real-form PDFs
+    that carried uniform 1.000,00 amounts making resultado-regimen-general inconsistent.
 
-    The 2021 corpus PDF is in English (non-standard AEAT account language) and uses
-    English-language labels that do not match the Spanish named_label patterns; it is
-    excluded from this parametrised test.
+    All five bbox_anchored leaf casillas are printed (boxes 02/04/06/26/49), including
+    zero-value ones, so the extractor captures all five inputs.
 
-    Casilla identity mapped from the printed form (named_label targets):
-    - iva.anual.cuota-devengada-total  (box 47): "Total cuotas IVA y recargo de equivalencia"
-    - iva.anual.cuota-deducible-total  (box 64): "Suma de deducciones"
-    - iva.anual.resultado-regimen-general (box 65): "Resultado régimen general (47 - 64)"
-    - iva.anual.compensacion-ultimo-periodo-97 (box 97): "A compensar"
-    - iva.anual.compensacion-generada-ejercicio-no-97 (box 662):
-      "Cuotas pendientes de compensación generadas en el ejercicio"
-
-    bbox_anchored targets extracted at anchor_x≈407–425 (right cuota column):
-    - iva.anual.repercutido.general (box 06, 21% rate): present in corpus (value 1.000,00)
-    - iva.anual.soportado.interiores (box 49): present in corpus (value 1.000,00)
-    - iva.anual.repercutido.super-reducido (box 02, 4% rate): blank in corpus — absent
-    - iva.anual.repercutido.reducido (box 04, 10% rate): blank in corpus — absent
-    - iva.anual.autorepercutido.intracomunitaria (box 26): blank in corpus — absent
+    Per-specimen expected values (derived from _compute_m390_closure leaf inputs):
+      2022-0A: c06=10500, c04=0, c02=0, c26=0, c49=8400 → c47=10500, c64=8400, c65=2100
+      2023-0A: c06=12600, c04=0, c02=0, c26=0, c49=9800 → c47=12600, c64=9800, c65=2800
     """
+    _EXPECTED: dict[str, dict[str, Decimal]] = {
+        "2022-0A": {
+            "iva.anual.repercutido.general": Decimal("10500.00"),
+            "iva.anual.repercutido.reducido": Decimal("0.00"),
+            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+            "iva.anual.soportado.interiores": Decimal("8400.00"),
+            "iva.anual.cuota-devengada-total": Decimal("10500.00"),
+            "iva.anual.cuota-deducible-total": Decimal("8400.00"),
+            "iva.anual.resultado-regimen-general": Decimal("2100.00"),
+        },
+        "2023-0A": {
+            "iva.anual.repercutido.general": Decimal("12600.00"),
+            "iva.anual.repercutido.reducido": Decimal("0.00"),
+            "iva.anual.repercutido.super-reducido": Decimal("0.00"),
+            "iva.anual.autorepercutido.intracomunitaria": Decimal("0.00"),
+            "iva.anual.soportado.interiores": Decimal("9800.00"),
+            "iva.anual.cuota-devengada-total": Decimal("12600.00"),
+            "iva.anual.cuota-deducible-total": Decimal("9800.00"),
+            "iva.anual.resultado-regimen-general": Decimal("2800.00"),
+        },
+    }
+    expected = _EXPECTED[pdf_stem]
+
     pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
 
     filing = parse_declaracion(
@@ -902,32 +893,16 @@ def test_parser_extracts_modelo_390_profile_targets_from_corpus(pdf_stem: str, y
 
     values = {v.casilla_id: v.printed_value for v in filing.values}
 
-    assert set(values.keys()) == {
-        "iva.anual.cuota-devengada-total",
-        "iva.anual.cuota-deducible-total",
-        "iva.anual.resultado-regimen-general",
-        "iva.anual.compensacion-ultimo-periodo-97",
-        "iva.anual.compensacion-generada-ejercicio-no-97",
-        "iva.anual.soportado.interiores",
-        "iva.anual.repercutido.general",
-    }
+    assert set(values.keys()) == set(expected.keys()), (
+        f"{pdf_stem}: extracted casilla set mismatch.\n"
+        f"  expected: {sorted(expected)}\n"
+        f"  got:      {sorted(values)}"
+    )
 
-    # All 7 present casillas carry 1.000,00 in both corpus specimens; ground truth
-    # derived from reading the printed form text. The three bbox_anchored leaf casillas
-    # (boxes 02/04/26) are blank in the corpus — partial extraction is expected and
-    # accepted (min_coverage = "0").
-    for casilla_id in (
-        "iva.anual.cuota-devengada-total",
-        "iva.anual.cuota-deducible-total",
-        "iva.anual.resultado-regimen-general",
-        "iva.anual.compensacion-ultimo-periodo-97",
-        "iva.anual.compensacion-generada-ejercicio-no-97",
-        "iva.anual.soportado.interiores",
-        "iva.anual.repercutido.general",
-    ):
-        assert values[casilla_id] == Decimal("1000.00"), (
-            f"{pdf_stem}: casilla {casilla_id!r} expected Decimal('1000.00') "
-            f"from corpus PDF text, got {values[casilla_id]!r}"
+    for casilla_id, expected_value in expected.items():
+        assert values[casilla_id] == expected_value, (
+            f"{pdf_stem}: casilla {casilla_id!r} expected {expected_value!r}, "
+            f"got {values[casilla_id]!r}"
         )
 
 

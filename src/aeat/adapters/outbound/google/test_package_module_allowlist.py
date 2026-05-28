@@ -31,7 +31,10 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "_records.py",
         "_refresh.py",
         "_session_store.py",
+        "test_api.py",  # S198: execute_request typed response + error-translation contract
         "test_apply_adapter_helpers.py",
+        "test_calc_sheets_apply.py",
+        "test_calc_sheets_pull_typing.py",  # S200: _ValueRange / _GoogleResource type-narrowing contract
         "test_calc_sheets_row_set_headers.py",
         "test_column_index_to_letters.py",
         "test_compute_from_pull.py",

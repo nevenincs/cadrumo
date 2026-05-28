@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal, localcontext
 from pathlib import Path
@@ -18,6 +18,7 @@ from ._schema import (
     DataBindingDefinition,
     DatedValue,
     FormulaExpression,
+    InputKind,
     ModeloRevision,
     ParameterDefinition,
     RegistrySnapshot,
@@ -25,6 +26,34 @@ from ._schema import (
 
 _ZERO = Decimal("0")
 _ONE = Decimal("1")
+
+# M210 IRNR Phase 1 sentinel rate values. Emitted by
+# ``m210_resolve_rate`` when a deterministic rate cannot be resolved
+# from the registry parameters at evaluation time. The verification
+# layer rewrites these sentinels into BLOCKING findings post-engine
+# (see ``_rewrite_m210_sentinels`` in the application layer); they
+# never leak past the verification boundary into a draft / export.
+# Negative magnitudes guarantee no collision with a real registry-
+# authored rate, which is always in ``[0, 1]`` per TRLIRNR Art 25.
+_M210_DEFERRED_TIPO_SENTINEL = Decimal("-1")
+_M210_CONVENIO_MISSING_SENTINEL = Decimal("-2")
+_M210_NOT_YET_AUTHORED_SENTINEL = Decimal("-3")
+_M210_RATE_SENTINELS = frozenset(
+    {
+        _M210_DEFERRED_TIPO_SENTINEL,
+        _M210_CONVENIO_MISSING_SENTINEL,
+        _M210_NOT_YET_AUTHORED_SENTINEL,
+    }
+)
+
+# Public-aliased re-exports for the application-layer verification
+# sweep. The private module-internal names stay primary so the engine
+# implementation can be reorganised without forcing every caller to
+# track the rename.
+M210_DEFERRED_TIPO_SENTINEL = _M210_DEFERRED_TIPO_SENTINEL
+M210_CONVENIO_MISSING_SENTINEL = _M210_CONVENIO_MISSING_SENTINEL
+M210_NOT_YET_AUTHORED_SENTINEL = _M210_NOT_YET_AUTHORED_SENTINEL
+M210_RATE_SENTINELS = _M210_RATE_SENTINELS
 
 
 class RegistryCalculationEntry(BaseModel):
@@ -135,6 +164,7 @@ def calculate_registry_snapshot(
     enum_binding_values: Mapping[str, str] | None = None,
     relation_values: Mapping[str, Decimal] | None = None,
     date_binding_values: Mapping[str, date] | None = None,
+    text_inputs: Mapping[str, str] | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas in a validated registry snapshot.
 
@@ -160,6 +190,8 @@ def calculate_registry_snapshot(
     resolved_relations = relation_values or {}
     _reject_non_decimal(resolved_relations, "relation")
     resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
+    resolved_text_inputs: Mapping[str, str] = text_inputs or {}
+    _reject_non_string(resolved_text_inputs, "text_input")
 
     revision = snapshot.revision
     _reject_unknown_external_values(resolved_bindings, {binding.id for binding in revision.bindings}, "binding")
@@ -181,6 +213,30 @@ def calculate_registry_snapshot(
     formulas = {formula.target: formula for formula in revision.formulas}
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
+    # Text-input casillas (e.g. an IRNR ``tipo_renta`` enum string) flow
+    # through a dedicated string-keyed channel into the eval context;
+    # the Decimal ``values`` map carries a Decimal(0) placeholder for
+    # the same casilla via ``_initial_values`` so existing
+    # value-coverage invariants stay intact. Reject unknown casilla ids
+    # and ids that point at non-text casillas so a caller's typo cannot
+    # silently strand the input.
+    text_casilla_ids = {
+        casilla_id for casilla_id, casilla in casillas_by_id.items() if casilla.data_type == "text"
+    }
+    unknown_text_inputs = sorted(set(resolved_text_inputs).difference(casillas_by_id))
+    if unknown_text_inputs:
+        raise RegistryValidationError(
+            f"unknown text_input casilla ids: {unknown_text_inputs!r}",
+            translated_message="errors.calc.unknown_text_input_casillas",
+            context={"casilla_ids": ",".join(unknown_text_inputs)},
+        )
+    mistyped_text_inputs = sorted(set(resolved_text_inputs).difference(text_casilla_ids))
+    if mistyped_text_inputs:
+        raise RegistryValidationError(
+            f"text_input supplied for non-text casilla ids: {mistyped_text_inputs!r}",
+            translated_message="errors.calc.text_input_non_text_casillas",
+            context={"casilla_ids": ",".join(mistyped_text_inputs)},
+        )
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
@@ -204,6 +260,7 @@ def calculate_registry_snapshot(
                 enum_binding_values=resolved_enum_bindings,
                 date_binding_values=resolved_date_bindings,
                 filing_year=snapshot.filing_year,
+                text_values=resolved_text_inputs,
             )
             value = _apply_rounding(value, formula.rounding)
             target_casilla = casillas_by_id.get(target)
@@ -309,7 +366,7 @@ def _initial_values(
     computed = sorted(
         casilla_id
         for casilla_id in inputs
-        if casillas[casilla_id].input_kind == "computed" or casilla_id in formula_targets
+        if casillas[casilla_id].input_kind == InputKind.COMPUTED or casilla_id in formula_targets
     )
     if computed:
         raise RegistryValidationError(
@@ -340,7 +397,7 @@ def _initial_values(
     smuggled_previous_filing_bound = sorted(
         casilla_id
         for casilla_id in inputs
-        if casillas[casilla_id].input_kind == "bound"
+        if casillas[casilla_id].input_kind == InputKind.BOUND
         and casillas[casilla_id].binding is not None
         and (binding_def := bindings_by_id.get(casillas[casilla_id].binding or "")) is not None
         and binding_def.source == "previous_filing"
@@ -366,7 +423,7 @@ def _initial_values(
     inconsistent_previous_filing_projections: list[str] = []
     for casilla_id, input_value in inputs.items():
         casilla = casillas[casilla_id]
-        if casilla.input_kind != "bound" or casilla.binding is None:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
             continue
         binding = bindings_by_id.get(casilla.binding)
         if binding is None or binding.source != "previous_filing":
@@ -394,7 +451,7 @@ def _initial_values(
     values: dict[str, Decimal] = {}
     absent_by_design: set[str] = set()
     for casilla in revision.casillas:
-        if casilla.input_kind == "computed":
+        if casilla.input_kind == InputKind.COMPUTED:
             continue
         # Previous-filing bound casillas MUST resolve through the binding
         # pipeline because the silent zero fallback masked dead-binding
@@ -402,7 +459,7 @@ def _initial_values(
         # under this rule still receive a Decimal("0") placeholder via the
         # absent-by-design path; the string value is consumed through a
         # parallel provenance channel.
-        if casilla.input_kind == "bound":
+        if casilla.input_kind == InputKind.BOUND:
             binding_id = casilla.binding
             binding = bindings_by_id.get(binding_id or "")
             if binding is not None and binding.source == "previous_filing":
@@ -483,9 +540,11 @@ def _evaluate_expression(
     enum_binding_values: Mapping[str, str] | None = None,
     date_binding_values: Mapping[str, date] | None = None,
     filing_year: int = 0,
+    text_values: Mapping[str, str] | None = None,
 ) -> Decimal:
     resolved_enum_bindings: Mapping[str, str] = enum_binding_values or {}
     resolved_date_bindings: Mapping[str, date] = date_binding_values or {}
+    resolved_text_values: Mapping[str, str] = text_values or {}
     if expression.op is None:
         return _evaluate_leaf(
             expression,
@@ -510,12 +569,15 @@ def _evaluate_expression(
         enum_binding_values=resolved_enum_bindings,
         date_binding_values=resolved_date_bindings,
         filing_year=filing_year,
+        text_values=resolved_text_values,
     )
     op = expression.op
     if op == "lookup_bracket":
         return _evaluate_lookup_bracket(expression, ctx)
     if op == "lookup_bracket_by_ccaa":
         return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
+    if op == "m210_resolve_rate":
+        return _evaluate_m210_resolve_rate(expression, ctx)
     if op == "lookup_parameter_by_entity_type":
         return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
     if op == "lookup_bracket_by_entity_type":
@@ -548,6 +610,7 @@ class _EvalContext:
     enum_binding_values: Mapping[str, str]
     date_binding_values: Mapping[str, date]
     filing_year: int
+    text_values: Mapping[str, str] = field(default_factory=dict)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -564,6 +627,7 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         enum_binding_values=ctx.enum_binding_values,
         date_binding_values=ctx.date_binding_values,
         filing_year=ctx.filing_year,
+        text_values=ctx.text_values,
     )
 
 
@@ -625,6 +689,107 @@ def _evaluate_lookup_bracket_by_ccaa(expression: FormulaExpression, ctx: _EvalCo
     result = _resolve_bracket(bracket_param, base, ctx.date_context)
     ctx.operand_values.append(result)
     return result
+
+
+def _evaluate_m210_resolve_rate(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
+    """Resolve the M210 IRNR tipo de gravamen rate from registry parameters.
+
+    Four leaf args: ``(tipo_renta_casilla, baseline_param,
+    convenio_param, country_binding)``. The handler reads the text
+    casilla via ``ctx.text_values``, the baseline / convenio
+    parameters via ``ctx.parameters``, and the country binding via
+    ``ctx.enum_binding_values``. Returns the resolved Decimal rate, or
+    one of the M210 rate-sentinel constants when a deterministic rate
+    cannot be produced (deferred baseline, missing Convenio row,
+    NOT_YET_AUTHORED placeholder). The verification layer rewrites
+    the sentinels into BLOCKING findings post-engine.
+    """
+    op = "m210_resolve_rate"
+    if len(expression.args) != 4:
+        raise RegistryValidationError(
+            f"formula op {op!r} expects 4 args, got {len(expression.args)}"
+        )
+    tipo_arg, baseline_arg, convenio_arg, country_arg = expression.args
+    if tipo_arg.casilla is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[0] to be a casilla leaf"
+        )
+    if baseline_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[1] to be a parameter leaf"
+        )
+    if convenio_arg.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[2] to be a parameter leaf"
+        )
+    if country_arg.binding is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[3] to be a binding leaf"
+        )
+
+    tipo_renta = ctx.text_values.get(tipo_arg.casilla, "")
+    ctx.operand_refs.append(tipo_arg.casilla)
+    if not tipo_renta:
+        ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+        return _M210_DEFERRED_TIPO_SENTINEL
+
+    baseline_param = ctx.parameters.get(baseline_arg.parameter)
+    convenio_param = ctx.parameters.get(convenio_arg.parameter)
+    ctx.operand_refs.append(baseline_arg.parameter)
+    ctx.operand_refs.append(convenio_arg.parameter)
+    ctx.operand_refs.append(country_arg.binding)
+
+    year = ctx.filing_year
+
+    baseline_rate: Decimal | None = None
+    if baseline_param is not None:
+        for entry in baseline_param.keyed_brackets:
+            if (
+                entry.key == tipo_renta
+                and entry.valid_from.year <= year
+                and (entry.valid_to is None or entry.valid_to.year >= year)
+            ):
+                try:
+                    baseline_rate = Decimal(entry.value)
+                except (ArithmeticError, ValueError):
+                    baseline_rate = None
+                break
+
+    country = ctx.enum_binding_values.get(country_arg.binding) or ""
+
+    if not country:
+        if baseline_rate is None:
+            ctx.operand_values.append(_M210_DEFERRED_TIPO_SENTINEL)
+            return _M210_DEFERRED_TIPO_SENTINEL
+        ctx.operand_values.append(baseline_rate)
+        return baseline_rate
+
+    cc = country.upper()
+    matched_row = None
+    if convenio_param is not None:
+        for row in convenio_param.convenio_rates:
+            if (
+                row.country_code == cc
+                and row.tipo_renta == tipo_renta
+                and row.valid_from.year <= year
+                and (row.valid_to is None or row.valid_to.year >= year)
+            ):
+                matched_row = row
+                break
+
+    if matched_row is None:
+        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
+        return _M210_CONVENIO_MISSING_SENTINEL
+    if matched_row.rate == "NOT_YET_AUTHORED":
+        ctx.operand_values.append(_M210_NOT_YET_AUTHORED_SENTINEL)
+        return _M210_NOT_YET_AUTHORED_SENTINEL
+    try:
+        rate = Decimal(matched_row.rate)
+    except (ArithmeticError, ValueError):
+        ctx.operand_values.append(_M210_CONVENIO_MISSING_SENTINEL)
+        return _M210_CONVENIO_MISSING_SENTINEL
+    ctx.operand_values.append(rate)
+    return rate
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

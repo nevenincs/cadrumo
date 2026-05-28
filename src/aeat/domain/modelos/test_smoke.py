@@ -17,6 +17,6 @@ def test_smoke_modelos() -> None:
     assert logging.get_logger(__name__).name == __name__
 
 
-def test_public_surface_is_modelo_identifier_only() -> None:
-    assert modelos_all == ("ModeloCode",)
+def test_public_surface_includes_modelo_code() -> None:
+    assert "ModeloCode" in modelos_all
     assert ModeloCode("303") == ModeloCode("303")

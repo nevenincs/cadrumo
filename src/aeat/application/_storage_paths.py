@@ -10,7 +10,7 @@ Usage::
 
     from aeat.application._storage_paths import storage_path
 
-    path = storage_path(settings.aeat_audit_dir / "live" / "expedientes", bucket_id)
+    path = storage_path(settings.aeat_invoices_dir / "payable", bucket_id)
 """
 
 from __future__ import annotations
@@ -26,9 +26,8 @@ def storage_path(root: Path, bucket_id: str, *, extension: str = ".jsonl") -> Pa
             domain.  Created (with all parents) if absent.
         bucket_id: The opaque bucket identifier that becomes the file stem.
         extension: File extension including the leading dot.  Defaults to
-            ``.jsonl`` — the standard for append-friendly record stores.
-            Pass ``.json`` for stores that write a single JSON document per
-            bucket (e.g. ``inventory``).
+            ``.jsonl`` — the standard for the remaining append-friendly
+            ledger record stores.
 
     Returns:
         ``root / f"{bucket_id}{extension}"`` — the path is not guaranteed to

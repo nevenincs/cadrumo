@@ -18,7 +18,7 @@ from ...iva import (
 )
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._errors import RegistryValidationError
-from ._schema import DataBindingDefinition, ModeloRevision
+from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
 
@@ -203,7 +203,7 @@ def resolve_bound_casilla_inputs(
         raise RegistryValidationError(f"unknown binding fact ids: {unknown!r}")
     resolved: dict[str, Decimal] = {}
     for casilla in revision.casillas:
-        if casilla.input_kind != "bound":
+        if casilla.input_kind != InputKind.BOUND:
             continue
         if casilla.binding is None:
             raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")

@@ -266,16 +266,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "_save",
         "path.write_text",
     ): "per-bucket business-operation-invoice record store; typed pydantic JSONL in the bucket directory",
-    (
-        "src/aeat/application/live/_verify.py",
-        "_save",
-        "path.write_text",
-    ): "per-bucket live-verify observation record store; typed pydantic JSONL in the bucket directory",
-    (
-        "src/aeat/application/live/_snapshot_base.py",
-        "_write_all",
-        "path.write_text",
-    ): "per-bucket live-snapshot record store; typed pydantic JSONL in the operator-local bucket directory",
 }
 
 

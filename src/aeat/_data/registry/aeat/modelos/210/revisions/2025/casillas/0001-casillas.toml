@@ -1,20 +1,22 @@
-# Modelo 210 Phase 1 casilla skeleton (W04.P19.S387).
+# Modelo 210 Phase 1 casilla skeleton.
 #
-# Six casillas implementing the base / rate / cuota chain for the
+# Eight casillas implementing the base / rate / cuota chain for the
 # general (Art 25.1.a, 24%) and ue_residente (Art 25.1.f, 19%) tipos
-# de renta. The remaining tipos (pension, inmobiliaria,
-# ganancia_patrimonial) are out of Phase 1 scope and are handled by
-# Phase 2 per the m210-irnr-full-engine ADR §D2.3.
+# de renta plus the Convenio-override dispatch. The remaining tipos
+# (pension, inmobiliaria, ganancia_patrimonial) are out of Phase 1
+# scope and handled by Phase 2 per the m210-irnr-full-engine ADR
+# §D2.3.
 #
-# Phase 1 ships every casilla as input_kind = "manual" because the
-# formula registry is not authored yet — S388 lands the formula
-# TOMLs (base = rendimientos_integros for Art 25.1.a; tipo_gravamen
-# = bracket-table lookup; cuota_integra = base × rate;
-# cuota_diferencial = cuota_integra - pagos a cuenta). When S388
-# ships, every casilla currently marked manual flips back to
-# input_kind = "computed" with its formula id wired through.
-# Until then the engine produces no values and the Path-B refusal
-# stub on the M210 work-create surface stays active per ADR §D5.
+# Phase 1 wiring:
+#  - tipo_renta            manual text (operator-supplied enum key)
+#  - rendimientos_integros manual money input
+#  - gastos_deducibles     manual money input (placeholder; Art 24.5
+#                          / 24.6 deduction routing is Phase 2)
+#  - retencion_practicada  manual money input (pagos a cuenta)
+#  - base_imponible        computed via `m210-base-imponible-2025`
+#  - tipo_gravamen         computed via `m210-tipo-gravamen-2025-resolve`
+#  - cuota_integra         computed via `m210-cuota-integra-2025`
+#  - cuota_diferencial     computed via `m210-cuota-diferencial-2025`
 
 [[revisions."2025".casillas]]
 id = "tipo_renta"
@@ -41,6 +43,30 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
 
 [[revisions."2025".casillas]]
+id = "gastos_deducibles"
+number = "gastos_deducibles"
+label = "Gastos deducibles"
+section = ["rendimientos"]
+data_type = "money"
+semantic_role = "irnr_gastos_deducibles"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
+id = "retencion_practicada"
+number = "retencion_practicada"
+label = "Retención practicada"
+section = ["liquidacion"]
+data_type = "money"
+semantic_role = "irnr_retencion_practicada"
+required = false
+input_kind = "manual"
+legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".casillas]]
 id = "base_imponible"
 number = "base_imponible"
 label = "Base imponible"
@@ -48,7 +74,8 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_base_imponible"
 required = true
-input_kind = "manual"
+input_kind = "computed"
+formula = "m210-base-imponible-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]
 
@@ -60,7 +87,8 @@ section = ["liquidacion"]
 data_type = "ratio"
 semantic_role = "irnr_tipo_gravamen"
 required = true
-input_kind = "manual"
+input_kind = "computed"
+formula = "m210-tipo-gravamen-2025-resolve"
 legal_refs = ["trlirnr-rdleg-5-2004:art-25.1.a", "trlirnr-rdleg-5-2004:art-25.1.f"]
 source_refs = ["aeat-modelo-210-procedure"]
 
@@ -72,7 +100,8 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_integra"
 required = true
-input_kind = "manual"
+input_kind = "computed"
+formula = "m210-cuota-integra-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a"]
 source_refs = ["aeat-modelo-210-procedure"]
 
@@ -84,6 +113,7 @@ section = ["liquidacion"]
 data_type = "money"
 semantic_role = "irnr_cuota_diferencial"
 required = true
-input_kind = "manual"
+input_kind = "computed"
+formula = "m210-cuota-diferencial-2025"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 source_refs = ["aeat-modelo-210-procedure"]

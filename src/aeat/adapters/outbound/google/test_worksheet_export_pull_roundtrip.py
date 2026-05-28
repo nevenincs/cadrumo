@@ -30,6 +30,7 @@ from ....application.storage.calc_sheets import (
 from ....application.storage.calc_sheets._engine import _registry_sha
 from ....application.storage.calc_sheets._records import OperatorInput
 from ....core.resources import resources
+from ....domain.calculations.registry._schema import InputKind
 from ._calc_sheets_pull import (
     BindingEdit,
     OperatorEdit,
@@ -66,7 +67,7 @@ def _operator_edits_from_export_plan(plan, snapshot) -> tuple[OperatorEdit, ...]
         by_casilla[cell.casilla] = cell.value
     edits: list[OperatorEdit] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind in ("computed", "informational"):
+        if casilla.input_kind in (InputKind.COMPUTED, InputKind.INFORMATIONAL):
             continue
         edits.append(
             OperatorEdit(
@@ -188,7 +189,7 @@ def test_workbook_input_count_matches_pulled_edit_count() -> None:
     declared_inputs = tuple(
         casilla
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind not in ("computed", "informational")
+        if casilla.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL)
     )
     assert len(operator_edits) == len(declared_inputs), (
         f"export/pull casilla count drift: plan produced {len(operator_edits)} "

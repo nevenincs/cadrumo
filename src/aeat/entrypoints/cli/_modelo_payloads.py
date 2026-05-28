@@ -14,6 +14,12 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from ...domain.modelos._ids import (
+    BucketId,
+    CalculationRevisionId,
+    FilingRecordId,
+    WorkUnitId,
+)
 from ._schemas import OutputSchema, register_schema
 
 # ---------------------------------------------------------------------------
@@ -24,8 +30,8 @@ from ._schemas import OutputSchema, register_schema
 class WorkUnitPayload(OutputSchema):
     """Work unit fields shared across create / status / rename / discard."""
 
-    work_unit_id: str
-    bucket_id: str
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -64,8 +70,8 @@ class ResultSummaryRowPayload(OutputSchema):
 class CalculationRevisionPayload(OutputSchema):
     """Calculation revision fields surfaced by calculate / revisions commands."""
 
-    calculation_revision_id: str
-    work_unit_id: str
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
     state: str
     casilla_values: dict[str, str]  # casilla_id → str(Decimal)
     observations: tuple[ObservationPayload, ...]
@@ -102,7 +108,7 @@ class VerificationReportPayload(OutputSchema):
     """Verification report fields returned by verify / verification-report commands."""
 
     verification_report_id: str
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
     resolved_casillas: list[str]
@@ -123,10 +129,10 @@ class ExternalEvidencePayload(OutputSchema):
 class ModeloRecordPayload(OutputSchema):
     """Filing record fields returned by file / filing-record commands."""
 
-    filing_record_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    bucket_id: str
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -136,9 +142,9 @@ class ModeloRecordPayload(OutputSchema):
     aeat_accepted: bool | None = None
     status: str
     superseded_at: str | None = None
-    superseded_by_filing_record_id: str | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidencePayload | None = None
-    amends_filing_record_id: str | None = None
+    amends_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -174,8 +180,8 @@ class WorkCreateResult(OutputSchema):
     status_message: str
     name_applied: str | None = None
     applicability_guard_bypassed: bool
-    work_unit_id: str
-    bucket_id: str
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -201,8 +207,8 @@ class WorkListResult(OutputSchema):
 @register_schema("modelo.work.status")
 class WorkStatusResult(OutputSchema):
     operation: str = "modelo.work.status"
-    work_unit_id: str
-    bucket_id: str
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -219,8 +225,8 @@ class WorkStatusResult(OutputSchema):
 @register_schema("modelo.work.rename")
 class WorkRenameResult(OutputSchema):
     operation: str = "modelo.work.rename"
-    work_unit_id: str
-    bucket_id: str
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -237,8 +243,8 @@ class WorkRenameResult(OutputSchema):
 @register_schema("modelo.work.discard")
 class WorkDiscardResult(OutputSchema):
     operation: str = "modelo.work.discard"
-    work_unit_id: str
-    bucket_id: str
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -259,8 +265,8 @@ class WorkCalculateResult(OutputSchema):
     # consumers see the same signal the text-mode confirmation line carries.
     saved: bool = True
     saved_confirmation: str
-    calculation_revision_id: str
-    work_unit_id: str
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
     state: str
     casilla_values: dict[str, str]
     observations: tuple[ObservationPayload, ...]
@@ -301,8 +307,8 @@ class WorkRevisionResult(OutputSchema):
     """
 
     operation: str = "modelo.work.revision"
-    calculation_revision_id: str
-    work_unit_id: str
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
     state: str
     casilla_values: dict[str, str]
     observations: tuple[ObservationPayload, ...]
@@ -324,7 +330,7 @@ class WorkRevisionResult(OutputSchema):
 class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
     verification_report_id: str
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
     resolved_casillas: list[str]
@@ -337,10 +343,10 @@ class WorkVerifyResult(OutputSchema):
 @register_schema("modelo.work.file")
 class WorkFileResult(OutputSchema):
     operation: str = "modelo.work.file"
-    filing_record_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    bucket_id: str
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -350,7 +356,7 @@ class WorkFileResult(OutputSchema):
     aeat_accepted: bool | None = None
     status: str
     superseded_at: str | None = None
-    superseded_by_filing_record_id: str | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -359,13 +365,13 @@ class WorkFileResult(OutputSchema):
 class WorkAmendResult(OutputSchema):
     operation: str = "modelo.work.amend"
     amendment_kind: str
-    amends_filing_record_id: str
+    amends_filing_record_id: FilingRecordId
     # amend uses the same filing-record body as work.file but always
     # carries the amendment metadata pair above.
-    filing_record_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    bucket_id: str
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -375,7 +381,7 @@ class WorkAmendResult(OutputSchema):
     aeat_accepted: bool | None = None
     status: str
     superseded_at: str | None = None
-    superseded_by_filing_record_id: str | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -392,10 +398,10 @@ class ModeloRecordListResult(OutputSchema):
 @register_schema("modelo.filing_record.show")
 class ModeloRecordShowResult(OutputSchema):
     operation: str = "modelo.filing_record.show"
-    filing_record_id: str
-    work_unit_id: str
-    calculation_revision_id: str
-    bucket_id: str
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: str
@@ -405,7 +411,7 @@ class ModeloRecordShowResult(OutputSchema):
     aeat_accepted: bool | None = None
     status: str
     superseded_at: str | None = None
-    superseded_by_filing_record_id: str | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     kind: str = "internal_filing"
     live_submission: bool = False
 
@@ -422,7 +428,7 @@ class VerificationReportListResult(OutputSchema):
 class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: str
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
     resolved_casillas: list[str]

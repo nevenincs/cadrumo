@@ -151,3 +151,57 @@ def test_timestamp_not_redacted_away(tmp_path: Path) -> None:
     line = target.read_text(encoding="utf-8").strip()
     decoded = json.loads(line)
     assert decoded["timestamp"].startswith("2026-04-30")
+
+
+def test_run_scoped_records_scrubbed_before_reaching_jsonl_via_attach_run_sink(
+    tmp_path: Path,
+) -> None:
+    """Records flowing through attach_run_sink must be scrubbed before on-disk write.
+
+    Verifies S76: the full pipeline — root logger -> SecretScrubbingFilter
+    (attached by attach_run_sink) -> JsonlRunSink -> JSONL file — redacts
+    sensitive values.  The sink is attached via the real attach_run_sink
+    helper (no mocks); a log record with a plaintext NIF in a form-fill
+    event must not appear verbatim in the written JSONL.
+    """
+    import logging
+
+    from aeat.core.logging import SecretScrubbingFilter, attach_run_sink
+
+    _RUN_ID = "0123456789abcdef"
+    target = tmp_path / "run_events.jsonl"
+    sink = JsonlRunSink(target, run_id=_RUN_ID)
+
+    # attach_run_sink installs SecretScrubbingFilter on the sink and adds
+    # it to the root logger — this is the path run_context uses in production.
+    attach_run_sink(sink)
+    root_logger = logging.getLogger()
+    try:
+        # Confirm the scrubbing filter is now present on the sink.
+        assert any(isinstance(f, SecretScrubbingFilter) for f in sink.filters), (
+            "attach_run_sink must install SecretScrubbingFilter on the sink"
+        )
+
+        # Emit a run event carrying a plaintext NIF.  Use run_id matching the
+        # sink so the event is not filtered by the run-id guard.
+        event = _build_form_fill_event(value=_NIF_CANARY)
+        record = logging.LogRecord(
+            name="aeat.test",
+            level=logging.INFO,
+            pathname=__file__,
+            lineno=0,
+            msg="test",
+            args=None,
+            exc_info=None,
+        )
+        record.run_event = event
+        sink.emit(record)
+        sink.close()
+    finally:
+        root_logger.removeHandler(sink)
+
+    text = target.read_text(encoding="utf-8")
+    assert _NIF_CANARY not in text, (
+        f"Plaintext NIF {_NIF_CANARY!r} must not appear in the JSONL after "
+        f"passing through SecretScrubbingFilter via attach_run_sink"
+    )

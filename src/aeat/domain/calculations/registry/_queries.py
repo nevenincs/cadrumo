@@ -19,7 +19,7 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import ModeloDefinition, ModeloRevision
+from ._schema import InputKind, ModeloDefinition, ModeloRevision
 
 _PERIOD_RE = re.compile(r"^(?P<year>\d{4})(?:[-]?Q(?P<quarter>[1-4])|-(?P<month>0[1-9]|1[0-2]))?$", re.I)
 
@@ -91,7 +91,7 @@ class ModeloCasillaRow(BaseModel):
     label: str
     section: tuple[str, ...]
     data_type: str
-    input_kind: str
+    input_kind: InputKind
     required: bool
     formula: str | None
     binding: str | None
@@ -219,9 +219,9 @@ class RegistryQueryService:
             valid_to=revision.valid_to,
             periods=tuple(revision.period_selector.periods),
             casilla_count=len(revision.casillas),
-            manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == "manual"),
-            bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == "bound"),
-            computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == "computed"),
+            manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
+            bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),
+            computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
             binding_count=len(revision.bindings),
             formula_count=len(revision.formulas),
             legal_refs=tuple(str(ref) for ref in revision.legal_refs),
@@ -234,7 +234,7 @@ class RegistryQueryService:
         *,
         period: str | None = None,
         as_of: date | None = None,
-        input_kind: Literal["manual", "bound", "computed", "informational"] | None = None,
+        input_kind: InputKind | None = None,
         required: bool | None = None,
         form_number: str | None = None,
     ) -> ModeloCasillasReport:

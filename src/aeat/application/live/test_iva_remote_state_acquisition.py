@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from playwright._impl._errors import TargetClosedError
 
 from aeat.adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from aeat.adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
@@ -25,6 +26,7 @@ from . import (
     LiveIvaReadSurface,
     LiveIvaSurfaceTimeoutError,
     _await_live_iva_surface,
+    _suppress_live_iva_playwright_cancellation_noise,
     build_iva_remote_state_acquisition_report,
     classify_live_iva_acquisition_failure,
     list_iva_remote_state_acquisition_manifests,
@@ -239,6 +241,36 @@ def test_surface_timeout_does_not_collapse_to_success(tmp_path: Path) -> None:
     assert filed_outcome.failure_type == "LiveIvaSurfaceTimeoutError"
     assert filed_outcome.captured_count is None
     assert wallet_outcome.status is LiveIvaReadStatus.FAILED
+
+
+def test_live_surface_timeout_suppresses_playwright_target_closed_loop_noise() -> None:
+    async def run() -> list[dict[str, object]]:
+        loop = asyncio.get_running_loop()
+        delegated: list[dict[str, object]] = []
+
+        def previous_handler(_loop: asyncio.AbstractEventLoop, context: dict[str, object]) -> None:
+            delegated.append(context)
+
+        original_handler = loop.get_exception_handler()
+        loop.set_exception_handler(previous_handler)
+        try:
+            async with _suppress_live_iva_playwright_cancellation_noise():
+                loop.call_exception_handler(
+                    {
+                        "exception": TargetClosedError(
+                            "Target page, context or browser has been closed\nCall log:\n  - navigating"
+                        )
+                    }
+                )
+                loop.call_exception_handler({"exception": RuntimeError("unrelated live exception")})
+        finally:
+            loop.set_exception_handler(original_handler)
+        return delegated
+
+    delegated = asyncio.run(run())
+
+    assert len(delegated) == 1
+    assert isinstance(delegated[0]["exception"], RuntimeError)
 
 
 def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_path: Path) -> None:

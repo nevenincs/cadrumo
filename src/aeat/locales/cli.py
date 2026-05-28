@@ -35,13 +35,20 @@ def audit() -> None:
         extra = sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
         if missing or extra:
             failed = True
-            typer.echo(f"{locale_path.name}: missing={len(missing)} extra={len(extra)}")
+            typer.echo(
+                tr(
+                    "locales.cli.audit.file_drift",
+                    locale_file=locale_path.name,
+                    missing_count=len(missing),
+                    extra_count=len(extra),
+                )
+            )
             for key in missing:
-                typer.echo(f"  missing {key}")
+                typer.echo(tr("locales.cli.audit.key_missing", key=key))
             for key in extra:
-                typer.echo(f"  extra {key}")
+                typer.echo(tr("locales.cli.audit.key_extra", key=key))
         else:
-            typer.echo(f"{locale_path.name}: ok")
+            typer.echo(tr("locales.cli.audit.file_ok", locale_file=locale_path.name))
     if failed:
         raise typer.Exit(code=1)
 
@@ -59,7 +66,7 @@ def scaffold(
         audit()
         return
     _default_manager().scaffold()
-    typer.echo("locale scaffold updated")
+    typer.echo(tr("locales.cli.scaffold_updated"))
 
 
 @app.command("set")
@@ -83,7 +90,7 @@ def set_value(
         path = _default_manager().set_locale_value(locale, key, value)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(f"updated {path.name}:{key}")
+    typer.echo(tr("locales.cli.set.updated", locale_file=path.name, key=key))
 
 
 @app.command("remove")
@@ -103,7 +110,7 @@ def remove_value(
         path = _default_manager().remove_locale_value(locale, key)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(f"removed {path.name}:{key}")
+    typer.echo(tr("locales.cli.remove.removed", locale_file=path.name, key=key))
 
 
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:

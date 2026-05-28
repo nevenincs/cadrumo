@@ -119,6 +119,7 @@ from ._models import (
     SplitTransactionResult,
 )
 from ._preflight import preflight_ledger_tax_readiness
+from ..review import LedgerReviewStatus
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 _MANUAL_PROVIDER_NAME = "manual-ledger"
@@ -1049,18 +1050,18 @@ def _ledger_review_filter_labels(query: LedgerReviewQuery) -> tuple[str, ...]:
     )
 
 
-def ledger_transaction_review_status(transaction: Transaction) -> str:
+def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewStatus:
     """Return the operator review status for a bucket-local transaction fact."""
 
     if transaction.business_classification is BusinessClassification.SKIPPED_BY_RULE:
-        return "skipped"
+        return LedgerReviewStatus.SKIPPED
     if transaction.business_classification in {
         BusinessClassification.BUSINESS,
         BusinessClassification.PERSONAL,
         BusinessClassification.MIXED,
     }:
-        return "reviewed"
-    return "pending"
+        return LedgerReviewStatus.REVIEWED
+    return LedgerReviewStatus.PENDING
 
 
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
@@ -1176,7 +1177,11 @@ def summarize_manual_transactions(
 
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     transactions = tuple(repository.load().values())
-    status_counts = {"pending": 0, "reviewed": 0, "skipped": 0}
+    status_counts: dict[LedgerReviewStatus, int] = {
+        LedgerReviewStatus.PENDING: 0,
+        LedgerReviewStatus.REVIEWED: 0,
+        LedgerReviewStatus.SKIPPED: 0,
+    }
     for transaction in transactions:
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -1200,9 +1205,9 @@ def summarize_manual_transactions(
         archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
         stashed_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.STASHED),
         split_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.SPLIT),
-        pending_review_count=status_counts["pending"],
-        reviewed_count=status_counts["reviewed"],
-        skipped_count=status_counts["skipped"],
+        pending_review_count=status_counts[LedgerReviewStatus.PENDING],
+        reviewed_count=status_counts[LedgerReviewStatus.REVIEWED],
+        skipped_count=status_counts[LedgerReviewStatus.SKIPPED],
         period=period,
         checked_transaction_count=checked,
         readiness_issue_count=issue_count,

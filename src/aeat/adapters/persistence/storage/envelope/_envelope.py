@@ -139,6 +139,23 @@ class Envelope[PayloadT: BaseModel](BaseModel):
             raise StorageValidationError("written_at must be timezone-aware")
         return value
 
+    @classmethod
+    def for_payload_type(cls, payload_cls: type[PayloadT]) -> type[Envelope[PayloadT]]:
+        """Return the parameterised ``Envelope[payload_cls]`` class.
+
+        This typed factory avoids a bare ``cast(Any, Envelope).__class_getitem__(...)``
+        at call sites. The returned class is the concrete generic alias Pydantic
+        needs at the JSON validation boundary. The cast to ``type[Envelope[PayloadT]]``
+        is safe because ``__class_getitem__`` on a PEP-695 generic model returns
+        exactly the parameterised subtype; Pydantic registers it as a model class
+        whose ``payload`` field is constrained to ``payload_cls``.
+        """
+        # ``__class_getitem__`` on a pydantic generic model produces a
+        # concrete parameterised class. The type: ignore is the only escape
+        # hatch from the unparameterised return annotation of __class_getitem__;
+        # the runtime object IS type[Envelope[PayloadT]].
+        return cls.__class_getitem__(payload_cls)  # type: ignore[return-value]
+
 
 @runtime_checkable
 class EnvelopeMigrator[PayloadT: BaseModel](Protocol):

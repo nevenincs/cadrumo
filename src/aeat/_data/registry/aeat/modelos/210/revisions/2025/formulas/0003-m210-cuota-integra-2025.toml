@@ -1,0 +1,23 @@
+# M210 IRNR Phase 1 cuota-íntegra formula.
+#
+# `cuota_integra = base_imponible × tipo_gravamen` per TRLIRNR Art 24
+# combined with the resolved rate from Art 25.1.a / 25.1.f / Convenio
+# override (see formula `m210-tipo-gravamen-2025-resolve`).
+
+[[revisions."2025".formulas]]
+id = "m210-cuota-integra-2025"
+target = "cuota_integra"
+expression = { op = "multiply", args = [
+    { casilla = "base_imponible" },
+    { casilla = "tipo_gravamen" },
+] }
+rounding = "money-2"
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "rendimientos"]

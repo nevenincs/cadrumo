@@ -108,3 +108,44 @@ def test_questionary_prompter_translates_no_console_error() -> None:
     message = str(raised.value)
     assert "aeat config profile create NAME" in message
     assert "No console screen buffer attached" not in message
+
+
+# ── S68: QuestionaryPrompter.emit_progress routes through structured logger ───
+
+
+def test_emit_progress_routes_through_logger_not_stdout(
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """emit_progress must use the structured logger; nothing must reach stdout."""
+    import logging
+
+    from aeat.application.wizard._prompter import QuestionaryPrompter
+
+    prompter = QuestionaryPrompter()
+
+    with caplog.at_level(logging.INFO, logger="aeat.application.wizard._prompter"):
+        prompter.emit_progress("Sección 1 de 3")
+
+    captured = capsys.readouterr()
+    assert captured.out == "", "emit_progress must not write to stdout"
+    assert captured.err == "", "emit_progress must not write to stderr"
+
+    assert any("wizard.progress" in r.message for r in caplog.records), (
+        "expected a 'wizard.progress' log record from emit_progress"
+    )
+
+
+def test_emit_progress_log_record_carries_text(caplog: pytest.LogCaptureFixture) -> None:
+    """The log record emitted by emit_progress must carry the progress text."""
+    import logging
+
+    from aeat.application.wizard._prompter import QuestionaryPrompter
+
+    prompter = QuestionaryPrompter()
+
+    with caplog.at_level(logging.INFO, logger="aeat.application.wizard._prompter"):
+        prompter.emit_progress("Hello wizard progress")
+
+    records = [r for r in caplog.records if "wizard.progress" in r.message]
+    assert records, "expected at least one wizard.progress log record"

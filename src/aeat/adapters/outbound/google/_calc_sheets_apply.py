@@ -164,6 +164,8 @@ def _create_folder(
     parent_id: str,
     name: str,
 ) -> dict[str, Any]:
+    # ``dict[str, Any]`` is the irreducible Google Drive API shape;
+    # see the rationale on ``_find_folder`` above.
     body = {
         "name": name,
         "mimeType": _FOLDER_MIME,
@@ -195,6 +197,8 @@ def _find_spreadsheet(
     parent_id: str,
     name: str,
 ) -> dict[str, Any] | None:
+    # ``dict[str, Any]`` is the irreducible Google Drive API shape;
+    # see the rationale on ``_find_folder`` above.
     safe_name = name.replace("'", "\\'")
     query = (
         f"'{parent_id}' in parents and name = '{safe_name}' and mimeType = '{_SPREADSHEET_MIME}' and trashed = false"
@@ -233,6 +237,8 @@ def _create_spreadsheet(
     title: str,
     tab_names: Iterable[str],
 ) -> dict[str, Any]:
+    # ``dict[str, Any]`` is the irreducible Google Sheets API shape;
+    # see the rationale on ``_find_folder`` above.
     body = {
         # Locale `en_US` keeps the formula argument separator as ",".
         # Spanish-style display formatting (1.234,56) is applied at the
@@ -494,6 +500,9 @@ def _condition_for_constraint(constraint: SheetCellConstraint) -> dict[str, Any]
     Sheets supports `NUMBER_BETWEEN`, `NUMBER_GREATER_THAN_EQ`,
     `NUMBER_LESS_THAN_EQ`. We pick the strictest combination that
     matches the constraint's sign + range bounds.
+
+    ``dict[str, Any]`` is the irreducible Sheets API request shape;
+    see the rationale on ``_find_folder`` above.
     """
 
     lower = constraint.min_value

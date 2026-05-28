@@ -39,6 +39,7 @@ from ....application.wizard._catalogue import SETUP_FLOW as _SETUP_FLOW
 from ....application.wizard._commands import build_wizard_command as _build_wizard_command
 from ....application.workflow._models import resolve_active_bucket_id as _resolve_active_bucket_id
 from ....application.workflow._profile_bucket_scan import read_profile_bucket as _read_profile_bucket
+from ....core.errors import AeatError as _AeatError
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
@@ -46,6 +47,7 @@ from .._command_suggestions import AeatTyperGroup as _AeatTyperGroup
 from .._common import _emit
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 
 if typing.TYPE_CHECKING:
     from ....domain.buckets import BucketEvent, BucketEventType
@@ -458,7 +460,7 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             ),
         )
         raise typer.Exit(code=2) from None
-    except Exception as exc:
+    except _AeatError as exc:
         payload = {
             "profile_id": "<profile-id>",
             "bucket_id": "<profile-id>",
@@ -483,6 +485,32 @@ def _emit_profile_record_status(ctx: typer.Context, label: str) -> None:
             ),
         )
         raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        boundary = _ConfigBoundaryError(exc)
+        payload = {
+            "profile_id": "<profile-id>",
+            "bucket_id": "<profile-id>",
+            "display_name": pointer.label,
+            "registered_bucket": True,
+            "profile_record_present": False,
+            "status": "profile_record_unreadable",
+            "error": f"{type(exc).__name__}: {str(exc).splitlines()[0] if str(exc) else type(exc).__name__}",
+            "next_action": _profile_record_unreadable_next_action(profile_id, label=pointer.label),
+        }
+        _emit(
+            ctx,
+            payload,
+            (
+                "readiness\tprofile_record_unreadable",
+                "profile_id\t<profile-id>",
+                "bucket_id\t<profile-id>",
+                f"display_name\t{pointer.label}",
+                "registered_bucket\tpresent",
+                "profile_record\tunreadable",
+                f"next_action\t{payload['next_action']}",
+            ),
+        )
+        raise typer.Exit(code=2) from boundary
     payload = {
         "profile_id": "<profile-id>",
         "bucket_id": "<profile-id>",
@@ -806,9 +834,13 @@ def _assert_profile_record_present(
     except ProfileNotFoundError:
         _emit_profile_record_missing(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label)
         raise typer.Exit(code=2) from None
-    except Exception as exc:
+    except _AeatError as exc:
         _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=exc)
         raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        boundary = _ConfigBoundaryError(exc)
+        _emit_profile_record_unreadable(ctx, profile_id=profile_id, bucket_id=bucket_id, label=label, error=boundary)
+        raise typer.Exit(code=2) from boundary
 
 
 def _emit_profile_record_missing(ctx: typer.Context, *, profile_id: str, bucket_id: str, label: str) -> None:
@@ -937,11 +969,17 @@ def config_profile_show(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label
         )
         raise typer.Exit(code=2) from exc
-    except Exception as exc:
+    except _AeatError as exc:
         _emit_profile_record_unreadable(
             ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=exc
         )
         raise typer.Exit(code=2) from exc
+    except Exception as exc:
+        boundary = _ConfigBoundaryError(exc)
+        _emit_profile_record_unreadable(
+            ctx, profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id, label=pointer.label, error=boundary
+        )
+        raise typer.Exit(code=2) from boundary
     from ....domain.user_profile import UserProfileStatus
 
     report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
@@ -1288,6 +1326,8 @@ def config_profile_import(
         )
     try:
         bundle = UserProfilePortableExport.model_validate_json(path.read_text(encoding="utf-8"))
+    except _AeatError:
+        raise
     except Exception as exc:
         raise _CliRefusedBoundaryError(
             tr("cli.config.profile.import_invalid_bundle", default=f"bundle parse error: {exc}", error=str(exc))

@@ -4,6 +4,17 @@ from aeat.core.errors._registry import ErrorCategory, ErrorCode
 
 _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
+        "aeat.entrypoints.cli._config._errors.ConfigBoundaryError",
+        ErrorCode(
+            code="ERROR_CONFIG_BOUNDARY",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_config_boundary",
+            default_suggestion="aeat config repair",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.entrypoints.cli._errors.CliRefusedBoundaryError",
         ErrorCode(
             code="REFUSED_CLI_BOUNDARY",

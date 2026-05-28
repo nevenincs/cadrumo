@@ -11,7 +11,7 @@ from . import build_snapshot, discover_modelo_sources, load_registry_tree
 from ._coverage import build_model_law_coverage_ledger
 from ._errors import RegistrySnapshotError
 from ._loader import load_modelo_directory
-from ._schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ._schema import InputKind, ModeloDefinition, RegistryCatalogues, RegistrySnapshot
 from ._sources import verify_source_file
 from ._temporal import select_revision
 
@@ -54,7 +54,7 @@ def test_committed_modelo_036_binds_census_status_from_profile() -> None:
     assert binding.source == "profile"
     assert binding.selector == {"profile_key": "census.status"}
     assert binding.typed_enum == "census_event_kind"
-    assert casilla.input_kind == "bound"
+    assert casilla.input_kind == InputKind.BOUND
     assert casilla.binding == binding.id
 
 

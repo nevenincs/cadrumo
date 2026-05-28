@@ -25,6 +25,8 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 
 | Modelo | Revisions                  | Specimens         | Closure formulas | Verdict                             |
 |--------|----------------------------|-------------------|------------------|-------------------------------------|
+| M036   | 2025-02-03-y-siguientes    | 1 synthetic PDF   | none             | EXTRACTION-ONLY — censal (ad-hoc);  |
+|        |                            |                   |                  | only decl.event-kind extracted       |
 | M100   | 2021, 2022, 2023           | 3 real PDFs       | yes (complex)    | EXTRACTION-ONLY (CORPUS-LIMITED) —  |
 |        |                            |                   |                  | 0171 leaf added (W10.P50); only one  |
 |        |                            |                   |                  | 017x leaf is printed on the form;   |
@@ -40,7 +42,8 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | 06-legacy=03+05, 08-legacy=06-07;   |
 |        |                            |                   |                  | 2024-1T: casillas 03=01+02,         |
 |        |                            |                   |                  | 06=04+05, 09=07+08, 12=..., 14=...) |
-| M130   | 2021-y-siguientes          | 15 synthetic PDFs | yes              | VERIFIED (casilla 19, 2021–2024)    |
+| M130   | 2021-y-siguientes          | 15 synthetic PDFs | yes              | VERIFIED (casillas 03=01-02,        |
+|        |                            |                   |                  | 19=f(01..18); full DAG exercised)   |
 | M131   | 2026 (fixture mislabeled)  | 1 synthetic PDF   | yes              | VERIFIED (casillas 07=02+04+06,     |
 |        |                            |                   |                  | 10=07-08-09, 13=10-11-12, 15=13-14) |
 | M180   | 2023-y-siguientes          | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M115→M180 relations    |
@@ -48,7 +51,12 @@ Comprehensive per-modelo verdict table (W10 close, 2026-05-28):
 |        |                            |                   |                  | only decl.ejercicio extracted        |
 | M190   | 2023-y-siguientes          | 1 real PDF        | none             | EXTRACTION-ONLY — no formulas       |
 | M193   | 2024-y-siguientes          | 1 synthetic PDF   | yes (cross-mod.) | VERIFIED via M123→M193 relations    |
-| M303   | 2023-y-siguientes          | 8 real PDFs       | none             | EXTRACTION-ONLY — 12 casillas        |
+| M303   | 2023-y-siguientes          | 8 synthetic PDFs  | yes (box 46)     | VERIFIED — engine resultado ==      |
+|        |                            |                   |                  | extracted box 46 for all 8 new-     |
+|        |                            |                   |                  | template specimens (2023-2024)      |
+| M303   | 2009-y-siguientes (legacy) | 7 synthetic PDFs  | yes (box 46)     | VERIFIED — engine resultado ==      |
+|        |                            |                   |                  | extracted box 46 for all 7 legacy   |
+|        |                            |                   |                  | specimens (2021-2022)               |
 | M347   | 2008-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — informativa;      |
 |        |                            |                   |                  | only decl.ejercicio extracted        |
 | M349   | 2020-y-siguientes          | 1 synthetic PDF   | none             | EXTRACTION-ONLY — summary casillas  |
@@ -70,16 +78,19 @@ Follow-up tasks surfaced by this sweep:
     Full ED verification blocked by corpus sanitisation artefact: all amounts
     replaced with ~1.001.000,00 plus merged box numbers, so no formula closure
     can be arithmetic-verified. CORPUS-LIMITED, not a profile gap.
-  - M036: registry has no revision for year 2025, period 0A — the fixture
-    filename 2025-0A.pdf does not match any revision selector. Needs either
-    a revision extension or a corrected fixture year.
-  - M303 formula coverage: the 2023-y-siguientes revision carries no registry
-    formulas; formula verification is a deferred follow-up.
+  - M036: fixture misnamed 2025-0A.pdf used a time-code period that does not
+    match any revision period_selector (M036 declares ["alta", "modificacion",
+    "baja"]). Resolved by renaming to 2025-alta.pdf and adding test with
+    period_override="alta". Verdict upgraded NOT-CHAIN-READY → EXTRACTION-ONLY.
+  - M303 corpus regenerated with formula-consistent synthetic PDFs (W10.P52).
+    Both revisions (2023-y-siguientes: 8 specimens; 2009-y-siguientes: 7 legacy
+    specimens) now use synthetic PDFs with c46 = c27 - c45, so engine resultado
+    == extracted resultado. Verdict upgraded FORMULA-MISMATCH → VERIFIED.
 
-Summary: 7 modelos VERIFIED (M111, M115, M123, M130, M131, M180, M190-engine
-via M115 chain, M193, M390 partial); 8 modelos EXTRACTION-ONLY (M100
-CORPUS-LIMITED, M184, M190, M303, M347, M349, M369, M720, M840);
-1 modelo NOT-CHAIN-READY (M036).
+Summary: 8 modelos VERIFIED (M111, M115, M123, M130, M131, M180, M190-engine
+via M115 chain, M193, M303, M390 partial); 8 modelos EXTRACTION-ONLY (M036,
+M100 CORPUS-LIMITED, M184, M190, M347, M349, M369, M720, M840);
+0 modelos NOT-CHAIN-READY.
 """
 
 from __future__ import annotations
@@ -107,9 +118,13 @@ pytestmark = [
 ]
 
 _COMPUTED_CASILLAS_M130 = frozenset(
-    {"04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"}
+    {"03", "04", "07", "09", "11", "12", "13", "14", "17", "19", "saldo-negativo-fin-periodo"}
 )
-"""M130 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
+"""M130 casillas whose input_kind is 'computed' — must NOT appear in engine inputs.
+
+Box 03 (rendimiento neto = 01 - 02) is computed; the engine derives it from
+the leaf inputs 01 (bound, ingresos) and 02 (manual, gastos).
+"""
 
 _COMPUTED_CASILLAS_M111 = frozenset({"28", "30"})
 """M111 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
@@ -154,18 +169,26 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
     (rendimiento neto) and casilla 19 (resultado final, engine-derived closure).
     Values satisfy the M130 formula chain (see _MODELO_130_CORPUS_FIXTURES).
 
+    The fixtures pre-date the rendimiento-neto formula landing (box 03 = 01 - 02).
+    They print c03 directly as the leaf rendimiento neto with all other casillas
+    absent.  The test reconstructs the canonical leaf decomposition as:
+      c01 (ingresos) = extracted c03   (all income, zero expenses)
+      c02 (gastos)   = 0
+    so the engine computes c03 = c01 - c02 = extracted c03.  The art-110.3.b
+    high-retention branch fires only when c06/c01 >= 0.70; with c06=0 both the
+    c01=0 and c01>0 paths of the c17 formula reduce to (c14 - c15) - c16,
+    giving identical c19 output.
+
     Chain:
-      1. parse_declaracion → DeclaracionObservation with extracted casillas
-      2. Filter to non-computed casillas → inputs dict for the engine
+      1. parse_declaracion → DeclaracionObservation (extracts c03 and c19 only)
+      2. Reconstruct leaf inputs: c01 = extracted_c03, c02 = 0
       3. Supply previous-filing binding values:
          - modelo-130-resultados-negativos-anteriores = 0 (no prior negative)
          - irpf.previous_year_economic_activity_net_income = 0
            (unknown from corpus → conservative 0 → casilla 13 = 0)
-         - modelo-130-actividad-economica-rendimiento-neto-cumulative = extracted["03"]
-           (03 is a bound casilla; must be in binding_values to avoid
-            the smuggling check when it also appears in inputs)
       4. calculate_registry_snapshot with inputs + binding_values
-      5. Assert engine.values["19"] == extracted["19"]
+      5. Assert engine.values["03"] == c01 - c02 == extracted["03"] (formula check)
+      6. Assert engine.values["19"] == extracted["19"]
 
     Verdict: VERIFIED when engine == extracted; PARSER-GAP when parse fails;
     BINDING-GAP when engine raises RegistryValidationError; FORMULA-MISMATCH
@@ -203,45 +226,34 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
         )
         closure_extracted = extracted["19"]
 
-    # Step 3: build inputs — exclude computed casillas
+    # Step 3: build leaf inputs.
+    # The fixture prints only c03 (rendimiento neto) and c19 (closure).  Box 03 is
+    # now computed (03 = 01 - 02) so it cannot go into engine inputs.  Reconstruct
+    # the canonical leaf decomposition: c01 = extracted_c03 (all income, no expenses),
+    # c02 = 0 (gastos absent from fixture).  The art-110.3.b branch of c17 is safe:
+    # with c06=0 both paths yield (c14 - c15) - c16, so c19 is unaffected.
+    # Other extracted non-computed casillas (absent in these fixtures) pass through.
+    extracted_c03 = extracted.get("03")
     inputs: dict[str, Decimal] = {}
     for casilla_id, value in extracted.items():
         if casilla_id in _COMPUTED_CASILLAS_M130:
             continue
         if not isinstance(value, Decimal):
             continue
-        # Casilla 01 and 03 are bound (ledger_renta_income_aggregation) — NOT
-        # previous_filing. They are legitimate inputs. See _initial_values: bound
-        # non-previous_filing casillas default to inputs.get(casilla_id, ZERO).
         inputs[casilla_id] = value
+    # Inject the reconstructed leaf decomposition for box 03.
+    if isinstance(extracted_c03, Decimal):
+        inputs["01"] = extracted_c03  # c01 = rendimiento neto (c03), no gastos
+        # c02 defaults to 0 (absent from fixture — not injected here)
 
-    # Casilla 03 is bound to modelo-130-actividad-economica-rendimiento-neto-cumulative.
-    # The smuggling check blocks previous_filing bound casillas supplied via inputs
-    # without binding_values, but ledger_renta_income_aggregation is NOT previous_filing.
-    # However, casilla 01 is also bound to a ledger binding; supply via inputs.
-    #
-    # For the previous_filing bindings (casilla 15 comes from 0002-bindings.toml and
-    # 0001-bindings.toml), we supply explicit values to satisfy the runtime:
-    extracted_c03 = extracted.get("03", Decimal("0"))
-    if not isinstance(extracted_c03, Decimal):
-        extracted_c03 = Decimal("0")
-
+    # Only previous_filing bindings must be supplied via binding_values:
     binding_values: dict[str, Decimal] = {
         # Prior-quarter carry-forward; 0 = no prior negative result (safe default
         # for corpus specimens where we don't know prior-quarter saldo).
         "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         # Prior-year net income; 0 → casilla 13 = 0 (minoración rendimientos netos).
-        # This is conservative but honest: corpus PDFs don't print casilla 13
-        # (computed) so we can't verify it independently.
+        # Conservative but honest: corpus PDFs don't print casilla 13 (computed).
         "irpf.previous_year_economic_activity_net_income": Decimal("0"),
-        # Rendimiento neto cumulative — extracted casilla 03 as the binding source.
-        # This resolves the ledger_renta_income_aggregation bound casilla 03.
-        "modelo-130-actividad-economica-rendimiento-neto-cumulative": extracted_c03,
-        # Ingresos cumulative — extracted casilla 01 as the binding source.
-        "modelo-130-actividad-economica-ingresos-cumulative": extracted.get("01", Decimal("0"))
-        if isinstance(extracted.get("01"), Decimal)
-        else Decimal("0"),
-        "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": Decimal("0"),
     }
 
     # Step 4: resolve snapshot and run engine
@@ -267,9 +279,22 @@ def test_verification_chain_m130_engine_recomputes_closure_casilla_19(pdf_stem: 
             f"  binding_values supplied: {sorted(binding_values)}"
         )
 
-    # Step 5: compare engine result against extracted value
+    # Step 5: verify engine computes casilla 03 = 01 - 02
     engine_values = dict(result.values)
 
+    input_01 = inputs.get("01", Decimal("0"))
+    input_02 = inputs.get("02", Decimal("0"))
+    engine_03 = engine_values.get("03")
+    assert engine_03 is not None, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: casilla '03' absent from engine result "
+        f"— formula modelo-130-rendimiento-neto evaluation failed."
+    )
+    assert engine_03 == input_01 - input_02, (
+        f"FORMULA-MISMATCH [{pdf_stem}]: engine casilla '03' = {engine_03!r}, "
+        f"expected 01({input_01!r}) - 02({input_02!r}) = {input_01 - input_02!r}"
+    )
+
+    # Step 6: compare engine casilla 19 against extracted value
     if closure_extracted is not None:
         engine_19 = engine_values.get("19")
         assert engine_19 is not None, (
@@ -415,7 +440,7 @@ def test_verification_chain_m111_engine_recomputes_closure_casillas_28_and_30(
 
 
 # ---------------------------------------------------------------------------
-# M303 parser-only verification — no registry formulas in this revision
+# M303 parser-only verification — extraction chain gate (all 12 profile casillas)
 # ---------------------------------------------------------------------------
 
 
@@ -438,13 +463,14 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
     GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
     set committed at src/aeat/tests/fixtures/justificantes/303/.
 
-    Verdict: PARSER-GAP when extraction fails; the M303 2023-y-siguientes
-    revision carries no registry formulas — formula verification is a
-    BINDING-GAP deferred to a future campaign when M303 formula coverage
-    is extended. This test verifies the extraction side of the chain only.
+    Verdict: PARSER-GAP when extraction fails. This test verifies the
+    extraction side of the chain only. The companion test
+    test_verification_chain_m303_engine_recomputes_resultado_regimen_general
+    exercises the formula engine (box 46 = box 27 − box 45, Orden
+    EHA/3786/2008 art. 1).
 
     The M303 2009-y-siguientes revision (2021-2022 PDFs) is excluded here;
-    it covers a different profile with 4 closure casillas only.
+    it covers a different profile.
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
 
@@ -488,6 +514,264 @@ def test_verification_chain_m303_parser_extracts_all_profile_casillas(pdf_stem: 
 
 
 # ---------------------------------------------------------------------------
+# M303 engine verification — resultado-régimen-general (box 46 = 27 − 45)
+# ---------------------------------------------------------------------------
+
+_COMPUTED_CASILLAS_M303 = frozenset(
+    {
+        "iva.cuota-devengada-total",
+        "iva.cuota-deducible-total",
+        "iva.resultado-regimen-general",
+        "iva.compensacion-aplicada-periodo",
+        "iva.compensacion-pendiente-periodos-posteriores",
+        "iva.resultado",
+        "iva.compensacion-generada-periodo",
+        "iva.compensacion-disponible-fin-periodo",
+    }
+)
+"""M303 casillas whose input_kind is 'computed' — must NOT appear in engine inputs."""
+
+
+@pytest.mark.parametrize(
+    "pdf_stem,year,period",
+    [
+        ("2023-1T", 2023, "1T"),
+        ("2023-2T", 2023, "2T"),
+        ("2023-3T", 2023, "3T"),
+        ("2023-4T", 2023, "4T"),
+        ("2024-1T", 2024, "1T"),
+        ("2024-2T", 2024, "2T"),
+        ("2024-3T", 2024, "3T"),
+        ("2024-4T", 2024, "4T"),
+    ],
+)
+def test_verification_chain_m303_engine_recomputes_resultado_regimen_general(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine resultado-regimen-general matches the extracted printed box 46.
+
+    GROUNDED authority: Orden EHA/3786/2008 art. 1 — box 46 = box 27 − box 45.
+      box 27 = Total cuota devengada (LIVA art. 88)
+      box 45 = Total a deducir (LIVA arts. 92-94)
+      box 46 = Resultado régimen general
+
+    The 2023-y-siguientes corpus PDFs are synthetic fixtures generated by
+    _generate.py with formula-consistent values: c46 = c27 - c45, so the
+    engine result matches the printed value exactly.
+
+    Verdict: VERIFIED — engine resultado == extracted resultado for all
+    8 new-template specimens (2023-2024). W10.P52 corpus regen.
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="303",
+            año_override=year,
+            period_override=period,
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 extraction failed.\n  error: {exc}"
+        )
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+
+    for required_id in ("27", "45", "iva.resultado-regimen-general"):
+        assert required_id in extracted, (
+            f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
+            f"  got: {sorted(extracted)}"
+        )
+
+    # Build inputs — supply only non-computed Decimal casillas.
+    inputs: dict[str, Decimal] = {}
+    for casilla_id, value in extracted.items():
+        if casilla_id in _COMPUTED_CASILLAS_M303:
+            continue
+        if not isinstance(value, Decimal):
+            continue
+        inputs[casilla_id] = value
+
+    # The previous_filing binding for compensacion-pendiente-anteriores is
+    # required by the engine. Supply the extracted value from the corpus PDF
+    # if available (box iva.compensacion-pendiente-periodos-anteriores), else zero.
+    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
+    binding_values: dict[str, Decimal] = {
+        "modelo-303-compensacion-pendiente-anteriores": _comp,
+    }
+
+    # filing_period: first day of the period's quarter.
+    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
+    snapshot = _registry_snapshot("303", year, period)
+
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, _period_month, 1)},
+            binding_values=binding_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
+            f"RegistryValidationError — a required binding is missing.\n"
+            f"  error: {exc}\n"
+            f"  inputs supplied: {sorted(inputs)}\n"
+            f"  binding_values supplied: {sorted(binding_values)}"
+        )
+
+    engine_values = dict(result.values)
+
+    # VERIFIED gate: engine resultado must equal extracted printed box 46.
+    # The synthetic corpus PDFs were generated with c46 = c27 - c45, matching
+    # the registry formula. Any future registry formula change that breaks this
+    # will cause a loud test failure.
+    engine_resultado = engine_values.get("iva.resultado-regimen-general")
+    assert engine_resultado is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado-regimen-general' absent from engine result"
+    )
+    extracted_resultado = extracted.get("iva.resultado-regimen-general")
+    assert isinstance(extracted_resultado, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: "
+        f"{extracted_resultado!r}"
+    )
+    assert engine_resultado == extracted_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != extracted {extracted_resultado!r}\n"
+        f"  (engine formula or fixture inconsistency — box 46 = box 27 − box 45,\n"
+        f"   Orden EHA/3786/2008 art. 1)"
+    )
+    # Internal consistency cross-check: engine resultado == c27 - c45.
+    input_27 = inputs.get("27", Decimal("0"))
+    input_45 = inputs.get("45", Decimal("0"))
+    expected_resultado = input_27 - input_45
+    assert engine_resultado == expected_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
+        f"  (internal formula consistency broken — registry formula defect)"
+    )
+
+
+# ---------------------------------------------------------------------------
+# M303 legacy verification — 2009-y-siguientes revision (2021-2T through 2022-4T)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "pdf_stem,year,period",
+    [
+        ("2021-2T", 2021, "2T"),
+        ("2021-3T", 2021, "3T"),
+        ("2021-4T", 2021, "4T"),
+        ("2022-1T", 2022, "1T"),
+        ("2022-2T", 2022, "2T"),
+        ("2022-3T", 2022, "3T"),
+        ("2022-4T", 2022, "4T"),
+    ],
+)
+def test_verification_chain_m303_legacy_engine_recomputes_resultado_regimen_general(
+    pdf_stem: str, year: int, period: str
+) -> None:
+    """Engine resultado-regimen-general matches the extracted printed box 46 (legacy revision).
+
+    GROUNDED authority: Orden EHA/3786/2008 art. 1 — box 46 = box 27 − box 45.
+    The 2009-y-siguientes revision covers ejercicios 2009-2022 and uses the same
+    formula. The legacy extraction profile extracts 4 casillas: 27, 29, 45, and
+    iva.resultado-regimen-general.
+
+    The legacy corpus PDFs are synthetic fixtures generated by _generate.py
+    with formula-consistent values: c46 = c27 - c45.
+
+    Verdict: VERIFIED — engine resultado == extracted resultado for all 7
+    legacy specimens (2021-2022). W10.P52 corpus regen.
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "303" / f"{pdf_stem}.pdf"
+
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="303",
+            año_override=year,
+            period_override=period,
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(
+            f"PARSER-GAP [{pdf_stem}]: parse_declaracion raised — M303 legacy extraction failed.\n  error: {exc}"
+        )
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+
+    for required_id in ("27", "45", "iva.resultado-regimen-general"):
+        assert required_id in extracted, (
+            f"PARSER-GAP [{pdf_stem}]: required casilla {required_id!r} not in extracted values.\n"
+            f"  got: {sorted(extracted)}"
+        )
+
+    # Build inputs — supply only non-computed Decimal casillas.
+    inputs: dict[str, Decimal] = {}
+    for casilla_id, value in extracted.items():
+        if casilla_id in _COMPUTED_CASILLAS_M303:
+            continue
+        if not isinstance(value, Decimal):
+            continue
+        inputs[casilla_id] = value
+
+    _extracted_comp = extracted.get("iva.compensacion-pendiente-periodos-anteriores", Decimal("0"))
+    _comp = _extracted_comp if isinstance(_extracted_comp, Decimal) else Decimal("0")
+    binding_values: dict[str, Decimal] = {
+        "modelo-303-compensacion-pendiente-anteriores": _comp,
+    }
+
+    _period_month = {"1T": 1, "2T": 4, "3T": 7, "4T": 10}[period]
+    snapshot = _registry_snapshot("303", year, period)
+
+    try:
+        result = calculate_registry_snapshot(
+            snapshot,
+            inputs=inputs,
+            date_context={"filing_period": date(year, _period_month, 1)},
+            binding_values=binding_values,
+        )
+    except RegistryValidationError as exc:
+        pytest.fail(
+            f"BINDING-GAP [{pdf_stem}]: calculate_registry_snapshot raised "
+            f"RegistryValidationError — a required binding is missing.\n"
+            f"  error: {exc}\n"
+            f"  inputs supplied: {sorted(inputs)}\n"
+            f"  binding_values supplied: {sorted(binding_values)}"
+        )
+
+    engine_values = dict(result.values)
+
+    # VERIFIED gate: engine resultado must equal extracted printed box 46.
+    engine_resultado = engine_values.get("iva.resultado-regimen-general")
+    assert engine_resultado is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: 'iva.resultado-regimen-general' absent from engine result"
+    )
+    extracted_resultado = extracted.get("iva.resultado-regimen-general")
+    assert isinstance(extracted_resultado, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted 'iva.resultado-regimen-general' is not Decimal: "
+        f"{extracted_resultado!r}"
+    )
+    assert engine_resultado == extracted_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != extracted {extracted_resultado!r}\n"
+        f"  (engine formula or fixture inconsistency — box 46 = box 27 − box 45,\n"
+        f"   Orden EHA/3786/2008 art. 1)"
+    )
+    input_27 = inputs.get("27", Decimal("0"))
+    input_45 = inputs.get("45", Decimal("0"))
+    expected_resultado = input_27 - input_45
+    assert engine_resultado == expected_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} != box27({input_27!r}) - box45({input_45!r}) = {expected_resultado!r}\n"
+        f"  (internal formula consistency broken — registry formula defect)"
+    )
+
+
+# ---------------------------------------------------------------------------
 # M390 verification — engine recomputes cuota-devengada and cuota-deducible
 # ---------------------------------------------------------------------------
 
@@ -521,10 +805,12 @@ is conservative but honest for the corpus-fixture verification context.
     ],
 )
 def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf_stem: str, year: int) -> None:
-    """Engine recomputes iva.anual.cuota-devengada-total and iva.anual.cuota-deducible-total.
+    """Engine recomputes all three M390 closure casillas and they match the printed values.
 
-    GROUNDED authority: AEAT corpus PDFs from the sanitised real-form fixture
-    set committed at src/aeat/tests/fixtures/justificantes/390/.
+    GROUNDED authority: synthetic formula-consistent corpus fixtures generated by
+    _generate.py (_Modelo390CorpusFixture) at src/aeat/tests/fixtures/justificantes/390/.
+    Fixtures replaced the sanitised-real-form PDFs (which had uniform 1.000,00
+    for all amounts, making resultado-regimen-general arithmetically inconsistent).
 
     Formula DAG:
       iva.anual.cuota-devengada-total =
@@ -540,20 +826,13 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
       iva.anual.resultado-regimen-general =
           iva.anual.cuota-devengada-total - iva.anual.cuota-deducible-total
 
-    The leaf casillas (boxes 02/04/06/26/49) are now extracted via bbox_anchored
+    The leaf casillas (boxes 02/04/06/26/49) are extracted via bbox_anchored
     targets in the declaracion_pdf profile and supplied as engine inputs.
 
-    Verdict per casilla:
+    Verdict per casilla (both 2022-0A and 2023-0A specimens):
       iva.anual.cuota-devengada-total  (box 47): VERIFIED
-          corpus: box06=1000, box04/02/26=blank → engine computes 1000 = box47 ✓
       iva.anual.cuota-deducible-total  (box 64): VERIFIED
-          corpus: box49=1000, box26=blank → engine computes 1000 = box64 ✓
-      iva.anual.resultado-regimen-general (box 65): FORMULA-MISMATCH — documented,
-          not a defect. The sanitiser replaced every real value in the corpus PDFs
-          with the uniform synthetic amount 1.000,00, including box 65. The formula
-          gives devengada(1000) - deducible(1000) = 0, but box 65 was independently
-          overwritten to 1000. This inconsistency is an artefact of the sanitisation
-          process, not a registry or extraction defect.
+      iva.anual.resultado-regimen-general (box 65): VERIFIED
     """
     pdf_path = FIXTURES_DIR / "justificantes" / "390" / f"{pdf_stem}.pdf"
 
@@ -656,22 +935,23 @@ def test_verification_chain_m390_engine_recomputes_cuota_devengada_deducible(pdf
         f"autorepercutido={inputs.get('iva.anual.autorepercutido.intracomunitaria', Decimal('0'))!r}"
     )
 
-    # FORMULA-MISMATCH (documented): resultado-regimen-general (box 65).
-    # The sanitiser overwrote every real amount in the corpus PDFs — including both the
-    # leaf inputs AND box 65 — with 1.000,00. This makes box65 arithmetically
-    # inconsistent: devengada(1000) - deducible(1000) = 0 ≠ 1000. The mismatch is an
-    # artefact of the sanitisation process and is NOT a registry or formula defect.
-    # Both intermediate closures (devengada + deducible) verified above prove the
-    # formula chain is correct; the resultado mismatch is documented here for honesty.
+    # VERIFIED: resultado-regimen-general (box 65).
+    # The synthetic fixtures are formula-consistent: leaf inputs are chosen so that
+    # resultado = devengada - deducible matches the printed box 65 value exactly.
     engine_resultado = engine_values.get("iva.anual.resultado-regimen-general")
     extracted_resultado = extracted.get("iva.anual.resultado-regimen-general")
-    if engine_resultado is not None and isinstance(extracted_resultado, Decimal):
-        expected_formula_resultado = engine_devengada - engine_deducible
-        assert engine_resultado == expected_formula_resultado, (
-            f"FORMULA-MISMATCH [{pdf_stem}]: engine resultado-regimen-general "
-            f"{engine_resultado!r} ≠ devengada - deducible = {expected_formula_resultado!r} "
-            f"(internal formula consistency broken)"
-        )
+    assert engine_resultado is not None, (
+        f"VERIFIED-FAIL [{pdf_stem}]: 'iva.anual.resultado-regimen-general' absent from engine result"
+    )
+    assert isinstance(extracted_resultado, Decimal), (
+        f"VERIFIED-FAIL [{pdf_stem}]: extracted resultado-regimen-general is not Decimal: "
+        f"{extracted_resultado!r}"
+    )
+    assert engine_resultado == extracted_resultado, (
+        f"VERIFIED-FAIL [{pdf_stem}]: engine resultado-regimen-general "
+        f"{engine_resultado!r} ≠ extracted printed box65 {extracted_resultado!r}.\n"
+        f"  engine devengada={engine_devengada!r} engine deducible={engine_deducible!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -1741,6 +2021,52 @@ def test_verification_chain_m369_parser_extracts_declaracion_pdf_casillas() -> N
     )
     assert "decl.periodo" in extracted, (
         f"PARSER-GAP [M369/2024-1T]: 'decl.periodo' not extracted.\n  got: {sorted(extracted)}"
+    )
+
+
+def test_verification_chain_m036_parser_extracts_event_kind_casilla() -> None:
+    """Parser extracts decl.event-kind from the M036 2025-alta synthetic fixture.
+
+    GROUNDED authority: synthetic fixture committed at
+    src/aeat/tests/fixtures/justificantes/036/2025-alta.pdf (Alta censal).
+    The fixture reproduces the AEAT-published section heading
+    "Causas de presentacion de la declaracion" so the named_label parser
+    can locate and extract the event-kind enum value.
+    Source: sede.agenciatributaria.gob.es -- Anexo 3 Instrucciones Modelo 036,
+    Pagina 1, fetched 2026-05-27 (aeat-dr-036-2025, aeat-modelo-036-procedure).
+
+    M036 is a censal (ad-hoc) modelo: its period_selector declares
+    ["alta", "modificacion", "baja"], not calendar time-codes.  The fixture
+    period is "alta"; the previous misnamed fixture "2025-0A.pdf" used a
+    time-code that did not match any revision period, causing NOT-CHAIN-READY.
+
+    Extraction verdict: EXTRACTION-ONLY -- M036 is a census registration form;
+    the registry has no numeric closure formula over decl.event-kind.
+    decl.vigencia-2025 is informational only and not extractable from the
+    printed-form PDF (absent from target_casillas in the extraction profile).
+    """
+    pdf_path = FIXTURES_DIR / "justificantes" / "036" / "2025-alta.pdf"
+
+    try:
+        filing = parse_declaracion(
+            pdf_path,
+            modelo_override="036",
+            año_override=2025,
+            period_override="alta",
+        )
+    except DeclaracionParseError as exc:
+        pytest.fail(f"PARSER-GAP [M036/2025-alta]: parse_declaracion raised.\n  error: {exc}")
+
+    extracted = {v.casilla_id: v.printed_value for v in filing.values}
+    assert "decl.event-kind" in extracted, (
+        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not extracted.\n  got: {sorted(extracted)}"
+    )
+    assert isinstance(extracted["decl.event-kind"], str), (
+        f"PARSER-GAP [M036/2025-alta]: 'decl.event-kind' not str: "
+        f"{type(extracted['decl.event-kind']).__name__!r}"
+    )
+    assert extracted["decl.event-kind"] == "Alta", (
+        f"PARSER-GAP [M036/2025-alta]: expected 'Alta', got {extracted['decl.event-kind']!r}"
     )
 
 

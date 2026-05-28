@@ -18,6 +18,7 @@ from . import (
     load_registry_tree,
 )
 from ._relations import relation_source_requirements, resolve_relation_values_from_observations
+from ._schema import InputKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_model]
 
@@ -151,9 +152,9 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
     assert result.values["decl.retenciones-total"] >= Decimal("0")
 
 
-def _value_for(data_type: str, input_kind: str, period_index: int) -> Decimal:
+def _value_for(data_type: str, input_kind: InputKind, period_index: int) -> Decimal:
     quarter = Decimal(period_index + 1)
-    if input_kind == "computed":
+    if input_kind == InputKind.COMPUTED:
         return Decimal("42") * quarter
     if data_type == "integer":
         return quarter

@@ -15,6 +15,7 @@ from ._relations import relation_source_requirements
 from ._runtime_graph import expression_relation_refs
 from ._schema import (
     DependencyClassificationDefinition,
+    InputKind,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -206,7 +207,7 @@ def test_formula_relation_dependencies_are_attached_to_computed_casillas() -> No
                 for relation_id in expression_relation_refs(formula.expression):
                     relation = relations[relation_id]
                     casilla = casillas[formula.target]
-                    assert casilla.input_kind == "computed", f"{modelo.id}/{revision.id}/{formula.id}"
+                    assert casilla.input_kind == InputKind.COMPUTED, f"{modelo.id}/{revision.id}/{formula.id}"
                     assert casilla.formula == formula.id, f"{modelo.id}/{revision.id}/{formula.id}"
                     assert relation.target_binding in bindings, f"{modelo.id}/{revision.id}/{relation.id}"
 
@@ -289,7 +290,7 @@ def test_relation_source_outputs_are_filing_grade_source_outputs() -> None:
                         for output in algorithm_binding.outputs.values()
                     }
                     if relation.source_output in casillas:
-                        assert casillas[relation.source_output].input_kind != "informational", (
+                        assert casillas[relation.source_output].input_kind != InputKind.INFORMATIONAL, (
                             f"{modelo.id}/{revision.id}/{relation.id}"
                         )
                     else:

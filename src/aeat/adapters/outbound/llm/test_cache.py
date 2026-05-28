@@ -122,4 +122,56 @@ def test_cache_payload_canary_is_encrypted_in_database(tmp_path: Path) -> None:
     cache.write(request, response)
 
     assert not (tmp_path / "cache").exists()
-    assert b"CACHE-CANARY-123" not in (tmp_path / "aeat.db").read_bytes()
+    # The encrypted store lives under the secure-object bucket layout, not
+    # directly at tmp_path.  Search all .db files under tmp_path to
+    # confirm the canary text is absent from every encrypted file.
+    db_files = list(tmp_path.rglob("*.db"))
+    assert db_files, "expected at least one database file under tmp_path after cache write"
+    for db_path in db_files:
+        assert b"CACHE-CANARY-123" not in db_path.read_bytes(), (
+            f"canary text found unencrypted in {db_path.relative_to(tmp_path)}"
+        )
+
+
+@pytest.mark.parametrize(
+    "corrupted_payload",
+    [
+        b"not-json-at-all",
+        b"",
+        b"{]",
+        b'{"logical_root": "/some/path", "entry": "not-a-dict"}',
+        b'{"logical_root": "/some/path", "entry": {"response": {}}}',
+    ],
+)
+def test_entry_from_payload_rejects_malformed_bytes(
+    tmp_path: Path, corrupted_payload: bytes
+) -> None:
+    # ``_entry_from_payload`` calls ``CachedEntry.model_validate_json``
+    # before consuming any field; malformed or structurally invalid
+    # payloads must raise rather than silently producing a corrupt entry.
+    from . import LLMCacheError
+
+    cache = LLMCache(root_dir=tmp_path)
+    with pytest.raises((LLMCacheError, ValueError, KeyError)):
+        cache._entry_from_payload(corrupted_payload)
+
+
+def test_entry_from_payload_rejects_wrong_logical_root(tmp_path: Path) -> None:
+    # A payload that belongs to a different logical partition must be
+    # rejected: the ``_entry_from_payload`` guard checks
+    # ``logical_root`` equality before re-validating the entry.
+    import json as _json
+
+    from . import LLMCacheError
+
+    request = LLMRequest(prompt="Hello", temperature=0.0, language="es")
+    cache = LLMCache(root_dir=tmp_path)
+    cache.write(request, _response())
+
+    # Build a syntactically valid payload whose logical_root points
+    # at a different partition so the guard fires.
+    foreign_payload = _json.dumps(
+        {"logical_root": "/entirely/different/partition", "entry": {}}
+    ).encode("utf-8")
+    with pytest.raises(LLMCacheError, match="different logical partition"):
+        cache._entry_from_payload(foreign_payload)

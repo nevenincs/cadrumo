@@ -13,3 +13,15 @@ consumer = "aeat.application.filing"
 requires_snapshot = true
 legal_refs = ["trlirnr-rdleg-5-2004:art-24", "trlirnr-rdleg-5-2004:art-25.1.a"]
 source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".application_links]]
+id = "modelo-210-2025-calculation"
+surface = "calculation"
+consumer = "aeat.domain.calculations.registry.calculate_registry_snapshot"
+requires_snapshot = true
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-24",
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]

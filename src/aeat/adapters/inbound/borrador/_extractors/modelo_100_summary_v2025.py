@@ -107,11 +107,15 @@ class Modelo100ObservedV2025Extractor:
         if extraction_profile is not None:
             coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
             if coverage < extraction_profile.min_coverage:
-                missing = sorted(target_casilla_ids - matched_targets if target_casilla_ids else set())
+                missing_ids = tuple(
+                    sorted(target_casilla_ids - matched_targets if target_casilla_ids else set())
+                )
                 raise BorradorParseError(
                     "registry extraction profile coverage below minimum: "
                     f"profile={extraction_profile.id!r} coverage={coverage} "
-                    f"minimum={extraction_profile.min_coverage} missing={missing!r}"
+                    f"minimum={extraction_profile.min_coverage} missing={list(missing_ids)!r}",
+                    missing=missing_ids,
+                    coverage=coverage,
                 )
 
         return BorradorObservation(

@@ -14,7 +14,7 @@
 [[revisions."2025".bindings]]
 id = "m210-2025-profile-country-of-fiscal-residence"
 source = "profile"
-selector = { profile_model = "TaxpayerProfile", field = "country_of_fiscal_residence" }
+selector = { profile_model = "taxpayer", field = "country_of_fiscal_residence" }
 aggregation = { op = "copy" }
 legal_refs = [
     "trlirnr-rdleg-5-2004:art-2",

@@ -99,6 +99,14 @@ adapters:
         template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
           felülbíráláshoz adja meg a --modelo és --año értékeket.
         year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
+  sede:
+    errors:
+      empty_identity_nif: Az AEAT munkamenet azonosító NIF-je üres; nem lehet kötni
+        az élő benyújtási megfigyelést.
+      iva_wallet_empty_amount_cell: Az IVA kompenzációs tárca összeg cellája üres.
+      iva_wallet_empty_period_cell: Az IVA kompenzációs tárca időszak cellája üres.
+      no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
+        futtassa először az `aeat config auth status` parancsot.
 aggregation:
   iva_ledger:
     errors:
@@ -303,6 +311,8 @@ application:
         egy mező értéke szükséges; a megadott leképezés üres.
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
+        %{reason}'
       iva_wallet_not_seeded: A Modelo 303 számításához feltöltött IVA-kompenzáció
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
         előzményt.
@@ -321,8 +331,24 @@ application:
       work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
     findings:
+      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
+        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
+        --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
+        ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
+        (ley-35-2006:dt-12).
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
+        = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
+      iva_wallet_next_action: Review the IVA wallet reconciliation decision before
+        verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben). Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti ezt a sort.'
+        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs
+          egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben).
+          Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato
+          Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti
+          ezt a sort.'
       m210_convenio_rate_missing:
         next_action: Hozzon létre Convenio España-{cc} sort a m210-convenio-rates
           paraméterben tipo_renta={tipo_renta} értékhez, vagy állítsa vissza profile.convenio_doble_imposicion_country
@@ -332,9 +358,18 @@ application:
           NOT_YET_AUTHORED jelölővel rendelkezik az ADR D2.4 szerint. Az ellenőrzött
           BOE-korpusz tarifa szerzői joga szükséges, mielőtt a bevallás befejeződhetne;
           nyisson korpusz-blokkolt nyomon követési feladatot a Convenio cikkének megadásával.
+      missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
+        revízió bemeneti adataiból.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: mentesülön
         az M130 benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
         és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
+      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
+        period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Jeloljon ki egy spanyolorszagi adougyi kepviselot a profile.representante_fiscal_nif
+          beallitasaval az `aeat config profile set` paranccsal. A TRLIRNR 10. cikke
+          megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
+          ki az AEAT kommunikaciohoz.
   overview:
     explain:
       errors:
@@ -694,7 +729,19 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
+        label_bindings: Kötések
+        label_cadence: Gyakoriság
+        label_casillas: Mezők
+        label_formulas: Képletek
+        label_modelo: Modelo
+        label_official_name: Hivatalos név
+        label_periods: Időszakok
+        label_revision: Verzió
+        label_revision_ids: Verzióazonosítók
+        label_tax_domain: Adózási terület
+        label_title: Cím
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
+        period_error: 'Nyilvántartási hiba: %{message}'
         period_help: 'A nyomtatvány-revíziót feloldó időszaktokent: 0A éves, 1T-4T
           negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta,
           modificacion vagy baja.'
@@ -934,6 +981,7 @@ cli:
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
+        dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         from_filing_record_help: A módosítandó alap-benyújtási rekord stabil azonosítója.
@@ -1085,6 +1133,7 @@ cli:
           (44/2015. törvény 14. cikk). Az 50%-os teszt nevezője: a dotáció nulla,
           amikor a felhalmozott tartalék eléri a jegyzett tőke 50%-át. Szükséges a
           --sal-beneficio-neto és --sal-reserva-dotada opciókkal együtt.'
+        sal_computation_error: 'SAL számítási hiba: %{message}'
         sal_reserva_casilla_not_found: A --sal-beneficio-neto nem támogatott ennél
           a modelo-revíziónál; nincs deklarált munkavállalói tulajdonú társasági külön
           tartalék casilla. Add meg az értékeket közvetlenül a --casilla opcióval.
@@ -1111,9 +1160,13 @@ cli:
           meg évet %{minimum} és %{maximum} között.
   common:
     errors:
+      draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
       invalid_iso_date: Érvénytelen dátumformátum. ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.
+      no_active_profile_error_value: nincs-aktiv-profil
       period_empty: Az adóidőszak nem lehet üres.
       period_unrecognised: Ismeretlen időszak.
+    next:
+      create_profile_command: aeat config profile create NEV
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
@@ -1544,6 +1597,7 @@ cli:
       profile_help: Profile to use; defaults to the active profile.
       set_help: Write one profile key value, validated against the wizard descriptor.
       unset_help: Clear one profile key value.
+      unset_placeholder: <nincs beállítva>
       value_help: Value to store.
     repair:
       audience_internal: belső alkalmazáshiba
@@ -1726,6 +1780,7 @@ cli:
         karaktert tartalmaz (engedélyezett: 0-9, a-f).'
       id_prefix_too_long: A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64
         karakternél (teljes SHA-256 kivonat).
+      id_prefix_unknown: 'Váratlan tranzakcióazonosító-előtag hiba: %{message}'
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}'
       unknown_category: 'Ismeretlen --category-id {category!r}. Adjon meg egyszerű
         kategóriaazonosítót, pl. {example!r} – nem kategóriacsaládos vagy összetett
@@ -2339,7 +2394,8 @@ cli:
     language_help: A felület nyelve (pl. hu, en, es).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor (%{dependency}). Futtasd: aeat config repair.'
+    startup_import_error: 'Belső hiba: az alkalmazásmodul betöltése sikertelen indításkor
+      (%{dependency}). Futtasd: aeat config repair.'
     unavailable_app_help: Ez a parancs az aktuális konfigurációban nem érhető el.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
@@ -2596,7 +2652,9 @@ errors:
       {expected_kind} levélnek kell lennie.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Ismeretlen nyilvántartási bemeneti mező-azonosítók: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: Nem tamogatott osszehasonlito muvelet.
     unsupported_op: Nem tamogatott muvelet.
   censo:
@@ -2618,6 +2676,8 @@ errors:
     error_aeat_observability: Hiba történt az alkalmazás telemetriájában.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
+    error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
+      mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modelo-nyilvántartás vezénylése meghiúsult vagy
       el lett utasítva.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
@@ -2631,6 +2691,7 @@ errors:
       vagy ellentmondásosak.
     error_categories: Hiba történt a kiadáskategóriákban.
     error_categories_validation: Egy kategória-rekord nem ment át az érvényesítésen.
+    error_config_boundary: A konfigurációs parancs váratlan belső hibát észlelt.
     error_deadlines_deadline: Hiba történt a határidő-számítás során.
     error_deadlines_missing_windows: Hianyoznak a hatarido-ablakok.
     error_deadlines_profile: Az önálló vállalkozói profilt nem sikerült betölteni
@@ -2775,7 +2836,6 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    error_application_live_iva_surface_timeout: 'Az élő IVA-olvasási felület időtúllépett, mielőtt AEAT-bizonyítékot adott volna vissza.'
   fail:
     census_sync: A Modelo 036 census-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -3145,6 +3205,8 @@ errors:
     refused_outbound_storage_validation: A tárolási művelet paraméterei nem mentek
       át az érvényesítésen.
     refused_output_format: A kért kimeneti formátum nem támogatott.
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: Ilyen adatokkal rendelkező profil már létezik.
     refused_profile_asset_validation: Egy profil vagyonelem-rekordja nem ment át az
       érvényesítésen.
@@ -3205,6 +3267,9 @@ errors:
     refused_wizard_validation: Egy varázsló-válasz nem ment át az érvényesítésen.
       Javítsa a megjelenített értéket.
     refused_workflow_aborted: A munkafolyamatot megszakították.
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
   snapshot:
@@ -3261,6 +3326,18 @@ filing:
     out_of_range: Az érték kívül esik az engedélyezett tartományon.
     required_missing: Kötelező mező hiányzik.
     schema_mismatch: Eltérés a várt sémától.
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 59.
@@ -3413,6 +3490,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Egyszerűsített
+  commands:
+    status:
+      created: létrehozva
+      updated: frissítve
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:

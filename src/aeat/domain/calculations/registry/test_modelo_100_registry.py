@@ -19,6 +19,7 @@ from aeat.domain.profile.family import RentaAscendantProfile, RentaDescendantPro
 from . import (
     CasillaDefinition,
     DataBindingDefinition,
+    InputKind,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -425,7 +426,7 @@ def _assert_casillas_are_bound_input(casillas_by_id: Mapping[str, CasillaDefinit
     non_bound = [
         f"{casilla_id}: input_kind={casillas_by_id[casilla_id].input_kind!r}"
         for casilla_id in _CASILLA_TO_PROFILE_BINDING
-        if casillas_by_id[casilla_id].input_kind != "bound"
+        if casillas_by_id[casilla_id].input_kind != InputKind.BOUND
     ]
     assert not non_bound, "casillas not marked bound:\n  " + "\n  ".join(non_bound)
 

@@ -27,6 +27,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections.abc import Iterable, Mapping
+from enum import StrEnum
 from json import JSONDecodeError, loads
 from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
@@ -78,7 +79,19 @@ OracleSurfaceKind = Literal[
     "pre_filing_validator",
     "integration_test_service",
 ]
-OracleEnvironment = Literal["production", "test_environment", "both"]
+class OracleEnvironment(StrEnum):
+    """Runtime environment classification for oracle catalogue entries.
+
+    ``PRODUCTION`` — the oracle is safe to call against the live AEAT surface.
+    ``TEST_ENVIRONMENT`` — the oracle targets a sandboxed / integration-test
+    surface only and must not be invoked from production callers.
+    ``BOTH`` — the oracle is safe under either classification (e.g., public
+    read-only surfaces that carry no production-state side-effect).
+    """
+
+    PRODUCTION = "production"
+    TEST_ENVIRONMENT = "test_environment"
+    BOTH = "both"
 
 # Allow-list of compatible (cross-reference surface, oracle surface_kind)
 # pairs. Bindings whose pair is not listed here are flagged by the boot-time
@@ -226,7 +239,7 @@ class LiveParityCatalogue:
         self,
         oracle_id: str,
         *,
-        environment: OracleEnvironment = "production",
+        environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
     ) -> LiveParityOracle:
         """Return the registered oracle for the requested environment.
 
@@ -431,7 +444,7 @@ def resolve_cross_reference_oracle(
     cross_reference_id: str,
     oracle_id: str | None,
     catalogue: LiveParityCatalogue,
-    environment: OracleEnvironment = "production",
+    environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
     decision: LiveCrossReferenceDecision | None = None,
     profile_facts: Mapping[str, object] | object | None = None,
 ) -> LiveParityOracle:
@@ -478,7 +491,7 @@ def audit_oracle_bindings(
     modelo: ModeloDefinition,
     catalogue: LiveParityCatalogue,
     *,
-    environment: OracleEnvironment = "production",
+    environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> tuple[str, ...]:
     """Inspect every cross-reference binding in a modelo against the catalogue.
 
@@ -762,7 +775,7 @@ def audit_registry_oracle_bindings(
     modelos: Iterable[ModeloDefinition],
     catalogue: LiveParityCatalogue,
     *,
-    environment: OracleEnvironment = "production",
+    environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> tuple[str, ...]:
     """Aggregate ``audit_oracle_bindings`` over an iterable of modelos.
 

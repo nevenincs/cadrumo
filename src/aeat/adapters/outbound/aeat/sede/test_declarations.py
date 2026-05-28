@@ -35,6 +35,7 @@ from aeat.application.filing import (
 from aeat.core.config import Settings
 from aeat.core.resources import bundled_path, resources
 from aeat.domain.calculations.registry import (
+    InputKind,
     RegistryValidationError,
     calculate_registry_snapshot,
     parse_export_payload,
@@ -774,7 +775,7 @@ class TestSubmittedFileObservation:
         input_values = {
             casilla.id: observed_values[casilla.id]
             for casilla in snapshot.revision.casillas
-            if casilla.input_kind != "computed"
+            if casilla.input_kind != InputKind.COMPUTED
         }
         binding = next(
             item for item in snapshot.revision.bindings if item.id == "irpf.previous_year_economic_activity_net_income"
@@ -803,7 +804,7 @@ class TestSubmittedFileObservation:
             filing_year=2026,
             period="1T",
         )
-        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == "computed"}
+        computed_casillas = {casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == InputKind.COMPUTED}
         assert computed_casillas == _MODELO_130_COMPUTED_CASILLAS | {"saldo-negativo-fin-periodo"}
 
         calculated = calculate_registry_snapshot(
@@ -1646,3 +1647,88 @@ def _renta_2025_relation_observations() -> tuple[FiledDeclaracionObservation, ..
         )
     )
     return tuple(observations)
+
+
+# ---------------------------------------------------------------------------
+# S102: empty-NIF raise carries translated_message (offline)
+# ---------------------------------------------------------------------------
+
+
+def _whitespace_nif_session() -> "AeatSession":
+    """Build a minimal AeatSession with an all-whitespace NIF.
+
+    AeatSession.identity_nif has min_length=1, so a single space satisfies
+    the validator but strips to an empty string inside the live adapter,
+    triggering the empty-NIF guard before any IO.
+    """
+    from datetime import timedelta
+
+    from aeat.adapters.outbound.aeat.auth._authenticator import (
+        AeatSession,
+        CertificateSessionDetail,
+        HandshakeResult,
+    )
+    from aeat.adapters.outbound.aeat.auth._providers import AuthProviderKind
+
+    now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
+    return AeatSession(
+        provider_kind=AuthProviderKind.CERTIFICATE,
+        authenticated_at=now,
+        idle_deadline=now + timedelta(hours=8),
+        storage_state_path=Path("/synthetic/does_not_exist.json"),
+        identity_nif=" ",
+        provider_detail=CertificateSessionDetail(
+            certificate_thumbprint="aabbcc",
+            certificate_subject="CN=test",
+            handshake=HandshakeResult(
+                success=True,
+                status_code=200,
+                server_cert_chain=(),
+                elapsed_ms=10,
+                attempted_at=now,
+                error_message=None,
+            ),
+        ),
+    )
+
+
+def test_capture_filed_declaration_empty_nif_carries_translated_message() -> None:
+    """S102-A: capture_filed_declaration_observation raises SedeNavigationError with
+    translated_message when AeatSession.identity_nif is whitespace-only."""
+    import asyncio
+
+    from aeat.adapters.outbound.aeat.sede._declarations import (
+        Declaracion,
+        capture_filed_declaration_observation,
+    )
+    from aeat.adapters.outbound.aeat.sede._errors import SedeNavigationError
+
+    session = _whitespace_nif_session()
+    declaration = Declaracion(
+        modelo="130",
+        ejercicio=2026,
+        period="1T",
+        expediente_id="EXP000000000001",
+        estado="ALTA",
+        tipo_solicitud=None,
+        observaciones=None,
+        presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        justificante_link_text="Ver",
+        archive_link_text=None,
+        declaration_copy_link_text=None,
+    )
+
+    with pytest.raises(SedeNavigationError) as exc_info:
+        asyncio.run(capture_filed_declaration_observation(session, declaration))
+
+    assert exc_info.value.translated_message is not None
+    assert "adapters.sede.errors.empty_identity_nif" not in exc_info.value.translated_message
+
+
+def test_capture_filed_declaration_empty_nif_locale_key_resolves_to_real_copy() -> None:
+    """S102-B: the empty-identity-nif locale key resolves to non-placeholder copy."""
+    from aeat.core.i18n import tr
+
+    resolved = tr("adapters.sede.errors.empty_identity_nif")
+    assert "adapters.sede.errors.empty_identity_nif" not in resolved
+    assert len(resolved) > 10

@@ -207,7 +207,7 @@ class AeatNifIvaCheckerOracle(BaseCheckerOracle[AeatNifIvaObservation]):
 def register_default(
     catalogue: LiveParityCatalogue,
     *,
-    environment: OracleEnvironment = "production",
+    environment: OracleEnvironment = OracleEnvironment.PRODUCTION,
 ) -> None:
     """Register the AEAT NIF-IVA adapter under the requested environment."""
 

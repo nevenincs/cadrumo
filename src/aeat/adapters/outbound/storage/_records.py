@@ -27,6 +27,15 @@ class ProviderKind(StrEnum):
     GOOGLE_DRIVE = "google_drive"
 
 
+class RemoteMirrorIssueKind(StrEnum):
+    """Remote ciphertext mirror degradation classes."""
+
+    PARTIAL_UPLOAD = "partial_upload"
+    PARTIAL_DOWNLOAD = "partial_download"
+    STALE_MIRROR = "stale_mirror"
+    REVISION_CONFLICT = "revision_conflict"
+
+
 class ProviderObjectMetadata(BaseModel):
     """Per-object metadata returned by the storage provider listing API.
 
@@ -68,8 +77,67 @@ class ProviderProbeReport(BaseModel):
     detail: str = ""
 
 
+class RemoteMirrorObjectManifest(BaseModel):
+    """One ciphertext object entry recorded in a remote mirror manifest."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace: str = Field(min_length=1)
+    object_key_hmac: str = Field(min_length=64, max_length=64)
+    classification: str = Field(min_length=1)
+    schema_version: int = Field(ge=1)
+    byte_length: int = Field(ge=0)
+    ciphertext_hash: str = Field(min_length=64, max_length=64)
+    storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    previous_storage_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    row_written_at: datetime
+    revision_written_at: datetime | None = None
+
+
+class RemoteMirrorNamespaceManifest(BaseModel):
+    """Manifest persisted beside remote ciphertext objects for one namespace."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    manifest_schema_version: int = Field(default=1, ge=1)
+    namespace: str = Field(min_length=1)
+    object_count: int = Field(ge=0)
+    latest_revision_id: str | None = Field(default=None, min_length=64, max_length=64)
+    latest_revision_written_at: datetime | None = None
+    objects: tuple[RemoteMirrorObjectManifest, ...]
+
+
+class RemoteMirrorIssue(BaseModel):
+    """One detected remote mirror degradation."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    kind: RemoteMirrorIssueKind
+    namespace: str = Field(min_length=1)
+    object_key_hmac: str | None = Field(default=None, min_length=64, max_length=64)
+    detail: str = Field(min_length=1)
+
+
+class RemoteMirrorInspection(BaseModel):
+    """Typed result of comparing or probing a remote mirror namespace."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
+
+    namespace: str = Field(min_length=1)
+    issues: tuple[RemoteMirrorIssue, ...] = ()
+
+    @property
+    def ok(self) -> bool:
+        return not self.issues
+
+
 __all__ = [
     "ProviderKind",
     "ProviderObjectMetadata",
     "ProviderProbeReport",
+    "RemoteMirrorInspection",
+    "RemoteMirrorIssue",
+    "RemoteMirrorIssueKind",
+    "RemoteMirrorNamespaceManifest",
+    "RemoteMirrorObjectManifest",
 ]

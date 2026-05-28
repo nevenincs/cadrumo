@@ -11,6 +11,7 @@ from ...core._time import utc_now as _utc_now
 from ...core.errors import BaseSeverity as _BaseSeverity
 from ...core.resources import resources as _resources
 from ...domain.calculations.registry import (
+    InputKind as _InputKind,
     RegistrySnapshot as _RegistrySnapshot,
     RegistrySnapshotError as _RegistrySnapshotError,
     RegistrySnapshotRef as _RegistrySnapshotRef,
@@ -158,7 +159,7 @@ def build_draft(
     schema_ids = {casilla.id for casilla in collection.all()}
     values: list[ModeloValue] = []
     for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == "computed":
+        if casilla.input_kind == _InputKind.COMPUTED:
             entry = entries[casilla.id]
             trace = tuple(ref for ref in entry.operand_refs if ref in schema_ids)
             values.append(
@@ -171,7 +172,7 @@ def build_draft(
                 )
             )
             continue
-        if casilla.input_kind == "bound":
+        if casilla.input_kind == _InputKind.BOUND:
             value = result.values.get(casilla.id)
             if value is not None:
                 values.append(
@@ -285,7 +286,7 @@ def _bound_casilla_binding_ids(snapshot: _RegistrySnapshot) -> set[str]:
     return {
         casilla.binding
         for casilla in snapshot.revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding is not None
+        if casilla.input_kind == _InputKind.BOUND and casilla.binding is not None
     }
 
 

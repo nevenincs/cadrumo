@@ -48,9 +48,11 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...core.errors import resolve_error_message
+from ...application.calculations._errors import PensionReduccionError
+from ...core.errors import AeatError, resolve_error_message
+from ...core.logging import get_logger
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from ...domain.calculations.registry import RegistryQueryService
+from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
@@ -70,6 +72,8 @@ from ...domain.modelos._work_unit import WorkUnit
 from ...domain.profile import parse_tax_region
 from ._common import _emit, _parse_iso_date, _profile_to_taxpayer, activate_subcommand_output_language
 
+_log = get_logger(__name__)
+
 if TYPE_CHECKING:
     from ...application.modelo._reconcile import ModeloReconciliationReport
     from ...domain.calculations.registry._schema import ModeloRevision
@@ -80,8 +84,6 @@ if TYPE_CHECKING:
         VerificationReportPayload,
         WorkUnitPayload,
     )
-
-InputKind = Literal["manual", "bound", "computed", "informational"]
 
 _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 """SHA-256 hex digest expected as the canonical work-unit identifier."""
@@ -361,22 +363,22 @@ def describe_modelo(
         message = str(exc)
         if period is not None and "period" in message.lower():
             raise typer.BadParameter(_bare_period_error(modelo, period, fallback=message)) from exc
-        raise typer.BadParameter(message) from exc
+        raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
     _emit(
         ctx,
         report,
         [
-            f"Modelo\t{report.code}",
-            f"Title\t{report.title}",
-            f"Official name\t{report.official_name}",
-            f"Tax domain\t{report.tax_domain}",
-            f"Cadence\t{report.cadence}",
-            f"Revision\t{report.revision}",
-            f"Revision ids\t{', '.join(report.revision_ids)}",
-            f"Periods\t{', '.join(report.periods)}",
-            f"Casillas\t{report.casilla_count}",
-            f"Bindings\t{report.binding_count}",
-            f"Formulas\t{report.formula_count}",
+            f"{tr('cli.app.modelo.describe.label_modelo')}\t{report.code}",
+            f"{tr('cli.app.modelo.describe.label_title')}\t{report.title}",
+            f"{tr('cli.app.modelo.describe.label_official_name')}\t{report.official_name}",
+            f"{tr('cli.app.modelo.describe.label_tax_domain')}\t{report.tax_domain}",
+            f"{tr('cli.app.modelo.describe.label_cadence')}\t{report.cadence}",
+            f"{tr('cli.app.modelo.describe.label_revision')}\t{report.revision}",
+            f"{tr('cli.app.modelo.describe.label_revision_ids')}\t{', '.join(report.revision_ids)}",
+            f"{tr('cli.app.modelo.describe.label_periods')}\t{', '.join(report.periods)}",
+            f"{tr('cli.app.modelo.describe.label_casillas')}\t{report.casilla_count}",
+            f"{tr('cli.app.modelo.describe.label_bindings')}\t{report.binding_count}",
+            f"{tr('cli.app.modelo.describe.label_formulas')}\t{report.formula_count}",
         ],
     )
 
@@ -561,7 +563,14 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
 
         authority = resources().modelos.authority
         definition = authority.validate_modelo(modelo.strip())
+    except AeatError:
+        return ()
     except Exception:
+        _log.debug(
+            "_declared_period_tokens: unexpected non-AeatError suppressed for modelo=%r",
+            modelo,
+            exc_info=True,
+        )
         return ()
     return tuple(
         sorted({token for revision in definition.revisions.values() for token in revision.period_selector.periods})
@@ -2498,13 +2507,20 @@ def _compute_dt12_reduccion_plan_pensiones(
     """
 
     if aportaciones_totales <= Decimal(0):
-        raise ValueError(
-            f"aportaciones_totales must be positive; got {aportaciones_totales}"
+        raise PensionReduccionError(
+            f"aportaciones_totales must be positive; got {aportaciones_totales}",
+            context={"field": "aportaciones_totales", "value": str(aportaciones_totales)},
         )
     if gross_rescate < Decimal(0):
-        raise ValueError(f"gross_rescate must be non-negative; got {gross_rescate}")
+        raise PensionReduccionError(
+            f"gross_rescate must be non-negative; got {gross_rescate}",
+            context={"field": "gross_rescate", "value": str(gross_rescate)},
+        )
     if aportaciones_pre_2007 < Decimal(0):
-        raise ValueError(f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}")
+        raise PensionReduccionError(
+            f"aportaciones_pre_2007 must be non-negative; got {aportaciones_pre_2007}",
+            context={"field": "aportaciones_pre_2007", "value": str(aportaciones_pre_2007)},
+        )
 
     reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
     # money-2 rounding matches the registry convention for all M100 casillas.
@@ -2564,16 +2580,19 @@ def _compute_sal_reserva_especial_dotacion(
     """
 
     if capital_social <= Decimal(0):
-        raise ValueError(
-            f"capital_social must be positive; got {capital_social}"
+        raise PensionReduccionError(
+            f"capital_social must be positive; got {capital_social}",
+            context={"field": "capital_social", "value": str(capital_social)},
         )
     if beneficio_neto < Decimal(0):
-        raise ValueError(
-            f"beneficio_neto must be non-negative; got {beneficio_neto}"
+        raise PensionReduccionError(
+            f"beneficio_neto must be non-negative; got {beneficio_neto}",
+            context={"field": "beneficio_neto", "value": str(beneficio_neto)},
         )
     if reserva_dotada < Decimal(0):
-        raise ValueError(
-            f"reserva_dotada must be non-negative; got {reserva_dotada}"
+        raise PensionReduccionError(
+            f"reserva_dotada must be non-negative; got {reserva_dotada}",
+            context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 
     cap = (capital_social * Decimal("0.50")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
@@ -3017,7 +3036,7 @@ def work_calculate(
                 aportaciones_totales=dt12_totales,
             )
         except ValueError as exc:
-            raise typer.BadParameter(str(exc)) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.dt12_computation_error", message=str(exc))) from exc
         reduccion_casilla_id = _resolve_reduccion_trabajo_casilla_id(work_unit_id)
         casilla_inputs[reduccion_casilla_id] = dt12_reduccion
 
@@ -3055,7 +3074,7 @@ def work_calculate(
                 capital_social=sal_cs,
             )
         except ValueError as exc:
-            raise typer.BadParameter(str(exc)) from exc
+            raise typer.BadParameter(tr("cli.app.modelo.work.sal_computation_error", message=str(exc))) from exc
         sal_casilla_id = _resolve_sal_reserva_especial_casilla_id(work_unit_id)
         casilla_inputs[sal_casilla_id] = sal_dotacion
 

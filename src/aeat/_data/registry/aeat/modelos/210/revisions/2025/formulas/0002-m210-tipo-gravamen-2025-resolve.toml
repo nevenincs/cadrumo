@@ -1,0 +1,33 @@
+# M210 IRNR Phase 1 tipo-de-gravamen resolution formula.
+#
+# Dispatches through the `m210_resolve_rate` formula op (S400):
+# - args[0]: text casilla `tipo_renta` (operator-supplied enum)
+# - args[1]: baseline TRLIRNR rate table `m210-tipo-gravamen-2025`
+# - args[2]: Convenio override table `m210-convenio-rates`
+# - args[3]: profile-bound `country_of_fiscal_residence`
+#
+# Returns the resolved Decimal rate, or one of the M210 rate-
+# sentinel constants when a deterministic rate cannot be produced
+# (deferred baseline, missing Convenio row, NOT_YET_AUTHORED).
+# The application-layer verification sweep rewrites the sentinels
+# into BLOCKING findings post-engine per ADR §D2.4 self-execution
+# doctrine.
+
+[[revisions."2025".formulas]]
+id = "m210-tipo-gravamen-2025-resolve"
+target = "tipo_gravamen"
+expression = { op = "m210_resolve_rate", args = [
+    { casilla = "tipo_renta" },
+    { parameter = "m210-tipo-gravamen-2025" },
+    { parameter = "m210-convenio-rates" },
+    { binding = "m210-2025-profile-country-of-fiscal-residence" },
+] }
+legal_refs = [
+    "trlirnr-rdleg-5-2004:art-25.1.a",
+    "trlirnr-rdleg-5-2004:art-25.1.f",
+]
+source_refs = ["aeat-modelo-210-procedure"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-modelo-210-procedure"
+required_text = ["tipo de gravamen", "no residentes"]

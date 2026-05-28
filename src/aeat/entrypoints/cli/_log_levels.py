@@ -15,9 +15,9 @@ import logging
 from collections.abc import Mapping
 from enum import StrEnum
 
-from ...core import logging as aeat_logging
 from ...core.errors import AeatError
 from ...core.i18n import tr
+from ...core.logging import set_log_level
 
 
 class LogLevelResolutionError(AeatError):
@@ -119,7 +119,8 @@ def resolve_log_level(
 def apply_to_root_logger(level: LogLevel) -> None:
     """Apply the resolved CLI log level to the configured root logger.
 
-    Calls :func:`aeat.core.logging.configure_logging` first so the
+    Delegates to :func:`aeat.core.logging.set_log_level` which calls
+    :func:`aeat.core.logging.configure_logging` first so the
     project-wide logging contract is in place, then sets the level on
     the root logger and every attached handler.
 
@@ -127,15 +128,7 @@ def apply_to_root_logger(level: LogLevel) -> None:
         level: Target CLI log level.
     """
 
-    aeat_logging.configure_logging()
-    stderr_level = _STDERR_LOG_LEVEL_BY_CLI_LEVEL[level]
-    root_logger = logging.getLogger()
-    root_logger.setLevel(logging.DEBUG)
-    for handler in root_logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            handler.setLevel(logging.DEBUG)
-        else:
-            handler.setLevel(stderr_level)
+    set_log_level(_STDERR_LOG_LEVEL_BY_CLI_LEVEL[level])
 
 
 __all__ = ["LogLevel", "LogLevelResolutionError", "apply_to_root_logger", "resolve_log_level"]

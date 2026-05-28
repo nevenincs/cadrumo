@@ -94,6 +94,14 @@ adapters:
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
           and --año to override.
         year_conflict: --año {year} conflicts with detected {detected}.
+  sede:
+    errors:
+      empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing
+        observation.
+      iva_wallet_empty_amount_cell: IVA compensation wallet amount cell is empty.
+      iva_wallet_empty_period_cell: IVA compensation wallet period cell is empty.
+      no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
+        auth status` first.
 aggregation:
   iva_ledger:
     errors:
@@ -289,6 +297,8 @@ application:
       external_filing_no_casilla_values: External-filing import requires at least
         one casilla value; the supplied mapping is empty.
       filing_record_not_found: No filing record found with id=%{filing_record_id}.
+      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
+        %{reason}'
       iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
         history. For the first M303 filing of a fresh profile, seed the opening balance
         with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
@@ -306,8 +316,25 @@ application:
         period to continue.
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
+      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
+        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+        %{expression}'
+      dt12a_reduccion_next_action: Supply --rescate-plan-pensiones-capital IMPORTE
+        --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
+        IMPORTE to aeat app modelo work calculate to auto-inject the DT 12a reduccion
+        into the reduccion casilla (ley-35-2006:dt-12).
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
+        = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.
+        If this income includes a plan-de-pensiones capital rescate with pre-31-Dec-2006
+        aportaciones, a 40%% DT 12a LIRPF reduccion may apply.'
+      iva_wallet_next_action: Review the IVA wallet reconciliation decision before
+        verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence to claim the applicable Convenio rate, or wait for the baseline corpus to incorporate this row.'
+        next_action: 'The baseline rate for tipo_renta={tipo_renta} is deferred to
+          a future Phase under task #229 (BOE corpus pending). Set profile.country_of_fiscal_residence
+          to claim the applicable Convenio rate, or wait for the baseline corpus to
+          incorporate this row.'
       m210_convenio_rate_missing:
         next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
           tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
@@ -317,9 +344,17 @@ application:
           carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified
           BOE corpus rate before this filing can complete; file a corpus-blocked follow-up
           task referencing the Convenio article number.
+      missing_required_casilla: Required casilla %{casilla_id} is not present in the
+        calculation revision inputs.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
+      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
+        period=%{period} could not be resolved
+      representante_fiscal_required:
+        next_action: Designate a fiscal representative in Spain by setting profile.representante_fiscal_nif
+          via the `aeat config profile set` command. TRLIRNR Art. 10 requires non-EEA
+          IRNR filers to declare a representative for AEAT communications.
   overview:
     explain:
       errors:
@@ -652,7 +687,19 @@ cli:
         Emits per-casilla delta rows (year_b - year_a) grouped by section.
       describe:
         as_of_help: Resolve the modelo revision active on the supplied ISO date (YYYY-MM-DD)
+        label_bindings: Bindings
+        label_cadence: Cadence
+        label_casillas: Casillas
+        label_formulas: Formulas
+        label_modelo: Modelo
+        label_official_name: Official name
+        label_periods: Periods
+        label_revision: Revision
+        label_revision_ids: Revision ids
+        label_tax_domain: Tax domain
+        label_title: Title
         modelo_help: Tax form code (e.g. 303, 130, 100)
+        period_error: 'Registry error: %{message}'
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
           1T-4T quarters, 01-12 months; for census modelos (036) use alta, modificacion,
           or baja.'
@@ -885,6 +932,7 @@ cli:
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
         discard_yes_help: Explicitly confirm the discard operation
+        dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         from_filing_record_help: Stable id of the baseline filing record to amend.
@@ -1024,6 +1072,7 @@ cli:
           Art. 14). Denominator for the 50% test: the allocation is zero once accumulated
           reserve reaches 50% of share capital. Required with --sal-beneficio-neto
           and --sal-reserva-dotada.'
+        sal_computation_error: 'SAL computation error: %{message}'
         sal_reserva_casilla_not_found: --sal-beneficio-neto is not supported for this
           modelo revision; no worker-owned company special reserve casilla is declared.
           Use --casilla to supply inputs directly.
@@ -1049,9 +1098,13 @@ cli:
           %{minimum} and %{maximum}.
   common:
     errors:
+      draft_id_not_found: Draft ID %{draft_id} not found
       invalid_iso_date: Invalid date format. ISO 8601 (YYYY-MM-DD) is required
+      no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
       period_unrecognised: Unrecognized period
+    next:
+      create_profile_command: aeat config profile create NAME
   config:
     app_help: Manage local configuration and diagnostics
     auth:
@@ -1449,6 +1502,7 @@ cli:
       profile_help: Profile to use; defaults to the active profile.
       set_help: Write one profile key value, validated against the wizard descriptor.
       unset_help: Clear one profile key value.
+      unset_placeholder: <unset>
       value_help: Value to store.
     repair:
       audience_internal: internal application issue
@@ -1628,6 +1682,7 @@ cli:
         (allowed: 0-9, a-f).'
       id_prefix_too_long: Transaction id prefix %{prefix!r} is longer than 64 characters
         (a full SHA-256 digest).
+      id_prefix_unknown: 'Unexpected transaction id prefix error: %{message}'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}'
       unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
         id such as {example!r} - not a family-prefixed or compound key. Run `aeat
@@ -2225,7 +2280,8 @@ cli:
     language_help: Interface language (e.g. en, es, ca).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    startup_import_error: 'Internal error: application module failed to load at startup (%{dependency}). Run aeat config repair.'
+    startup_import_error: 'Internal error: application module failed to load at startup
+      (%{dependency}). Run aeat config repair.'
     unavailable_app_help: This command is not available in the current configuration.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
@@ -2471,7 +2527,9 @@ errors:
       leaf.
     parameter_unknown: Parameter {parameter_id} is not registered.
     relation_value_missing: Relation {relation_id} has no supplied value.
+    text_input_non_text_casillas: errors.calc.text_input_non_text_casillas
     unknown_input_casillas: 'Unknown registry input casilla ids: {casilla_ids}.'
+    unknown_text_input_casillas: errors.calc.unknown_text_input_casillas
     unsupported_comparison_op: errors.calc.unsupported_comparison_op
     unsupported_op: errors.calc.unsupported_op
   censo:
@@ -2489,6 +2547,8 @@ errors:
     error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
+    error_application_live_iva_surface_timeout: Live IVA read surface timed out before
+      returning AEAT evidence.
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
@@ -2502,6 +2562,7 @@ errors:
       incomplete or contradictory.
     error_categories: An error occurred in the expense categories.
     error_categories_validation: A category record failed validation.
+    error_config_boundary: The config command encountered an unexpected internal error.
     error_deadlines_deadline: An error occurred in the deadline calculation.
     error_deadlines_missing_windows: errors.error.error_deadlines_missing_windows
     error_deadlines_profile: The self-employed profile could not be loaded or validated
@@ -2654,7 +2715,6 @@ errors:
     error_wizard_compile: The wizard catalogue is malformed and could not be compiled.
     error_workflow: A workflow error occurred.
     error_workflow_component: A workflow component raised an unexpected exception.
-    error_application_live_iva_surface_timeout: 'Live IVA read surface timed out before returning AEAT evidence.'
   fail:
     census_sync: The Modelo 036 census sync failed.
     currency_error: Currency normalization failed.
@@ -3019,6 +3079,8 @@ errors:
       the quota is exhausted.
     refused_outbound_storage_validation: The storage operation parameters failed validation.
     refused_output_format: The requested output format is not supported.
+    refused_pension_reduccion_computation: A pension reducción computation input violated
+      a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: A profile with those details already exists.
     refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
@@ -3078,6 +3140,9 @@ errors:
     refused_wizard_validation: A wizard answer failed validation. Correct the value
       shown.
     refused_workflow_aborted: The workflow was aborted.
+    refused_workflow_input_mismatch: The workflow input request does not match the
+      calculation revision. Run aeat app modelo work calculate to produce a fresh
+      revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
   snapshot:
@@ -3132,6 +3197,18 @@ filing:
     out_of_range: Value out of allowed range
     required_missing: Required field missing
     schema_mismatch: Mismatch with expected schema
+locales:
+  cli:
+    audit:
+      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
+      file_ok: '%{locale_file}: ok'
+      key_extra: '  extra %{key}'
+      key_missing: '  missing %{key}'
+    remove:
+      removed: removed %{locale_file}:%{key}
+    scaffold_updated: locale scaffold updated
+    set:
+      updated: updated %{locale_file}:%{key}
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 %% prorrata (Art. 59 LIRPF) applied for
@@ -3275,6 +3352,10 @@ wizard:
     irpf: IRPF
     iva: IVA
     simplificado: Simplified
+  commands:
+    status:
+      created: created
+      updated: updated
   demo:
     description: A demonstration section to test wizard functionality
     section:

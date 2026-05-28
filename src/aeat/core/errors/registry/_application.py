@@ -878,6 +878,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.calculations._errors.PensionReduccionError",
+        ErrorCode(
+            code="REFUSED_PENSION_REDUCCION_COMPUTATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_pension_reduccion_computation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.calculations._errors.IvaCompensationModeloError",
         ErrorCode(
             code="REFUSED_IVA_COMPENSATION_MODELO",
@@ -983,6 +994,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTEGRITY,
             message_key="errors.storage.stored_data_validation_boundary",
             default_suggestion="aeat config repair",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.WorkflowInputMismatchError",
+        ErrorCode(
+            code="REFUSED_WORKFLOW_INPUT_MISMATCH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_workflow_input_mismatch",
+            default_suggestion="aeat app modelo work calculate",
             retryable=False,
             runbook_id=None,
         ),

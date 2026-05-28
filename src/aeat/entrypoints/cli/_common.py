@@ -134,10 +134,12 @@ def _active_profile_or_exit(ctx: typer.Context) -> tuple[WorkflowState, str]:
 
     active = resolve_active_bucket_id()
     if active is None:
+        _error_value = tr("cli.common.errors.no_active_profile_error_value")
+        _next_value = tr("cli.common.next.create_profile_command")
         _emit(
             ctx,
-            {"error": "no-active-profile", "next": "aeat config profile create NAME"},
-            ["error\tno-active-profile", "next\taeat config profile create NAME"],
+            {"error": _error_value, "next": _next_value},
+            [f"error\t{_error_value}", f"next\t{_next_value}"],
         )
         _exit(2)
     return _state(), active
@@ -260,7 +262,7 @@ def _draft_by_id(draft_id: str) -> ModeloDraft:
     for draft in _load_drafts():
         if draft.draft_id == draft_id:
             return draft
-    raise _bad(f"draft id {draft_id!r} not found")
+    raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))
 
 
 def _aggregate_filing_inputs(modelo: str, period: str, state: WorkflowState) -> dict[str, object]:
@@ -314,10 +316,12 @@ def _bound_inputs_from_available_bindings(
     revision: ModeloRevision,
     binding_values: dict[str, Decimal],
 ) -> dict[str, object]:
+    from ...domain.calculations.registry import InputKind
+
     return {
         casilla.id: binding_values[casilla.binding]
         for casilla in revision.casillas
-        if casilla.input_kind == "bound" and casilla.binding is not None and casilla.binding in binding_values
+        if casilla.input_kind == InputKind.BOUND and casilla.binding is not None and casilla.binding in binding_values
     }
 
 
