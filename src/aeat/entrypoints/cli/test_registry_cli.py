@@ -262,7 +262,7 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
         ],
     )
 
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"CLI command failed:\n{result.output}"
     payload = json.loads(result.output)
     registry_surfaces = _registry_application_surfaces()
     assert payload["verified"] is True
@@ -440,7 +440,7 @@ def test_registry_commands_refuse_unsupported_root_output_format() -> None:
 
     assert result.exit_code == 2
     assert "Refused." in result.output
-    assert "unsupported output format" in result.output
+    assert "output format is not supported" in result.output
     assert "unexpected internal error" not in result.output.lower()
 
 
@@ -831,7 +831,10 @@ def _modelo_130_filed_state_observations() -> tuple[FiledDeclaracionObservation,
         snapshot,
         inputs=_modelo_130_inputs(),
         date_context={"filing_period": datetime(2026, 3, 31, tzinfo=UTC).date()},
-        binding_values={"irpf.previous_year_economic_activity_net_income": Decimal("13000")},
+        binding_values={
+            "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            "modelo-130-resultados-negativos-anteriores": Decimal("0"),
+        },
     )
     primary_values = {**_modelo_130_inputs(), **calculation.values}
     return (
