@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Iterator
 from datetime import datetime
 from typing import cast
@@ -31,6 +32,8 @@ from .session import session_scope
 _log = get_logger(__name__)
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
+_DEFAULT_WRITE_PROVENANCE = "secure-object-repository"
+_DEFAULT_CONFLICT_POLICY = "last-write-wins"
 _SECURE_OBJECT_REVISION_METADATA_COLUMNS: tuple[tuple[str, str], ...] = (
     ("revision_id", "VARCHAR(64)"),
     ("previous_revision_id", "VARCHAR(64)"),
@@ -92,6 +95,8 @@ class SecureObjectWrite(BaseModel):
     schema_version: int = Field(ge=1)
     written_at: datetime
     payload: bytes = Field(min_length=1)
+    write_provenance: str = Field(default=_DEFAULT_WRITE_PROVENANCE, min_length=1, max_length=255)
+    source_event_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class SecureObjectUnreadable(BaseModel):
@@ -918,6 +923,8 @@ class SecureObjectRepository:
         schema_version: int,
         written_at: datetime,
         payload: bytes,
+        write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
+        source_event_id: str | None = None,
     ) -> None:
         """Encrypt and upsert one byte payload keyed by a natural string id.
 
@@ -934,6 +941,8 @@ class SecureObjectRepository:
             schema_version=schema_version,
             written_at=written_at,
             payload=payload,
+            write_provenance=write_provenance,
+            source_event_id=source_event_id,
         )
 
     def save_many(self, writes: tuple[SecureObjectWrite, ...]) -> None:
@@ -958,6 +967,8 @@ class SecureObjectRepository:
                     schema_version=write.schema_version,
                     written_at=write.written_at,
                     payload=write.payload,
+                    write_provenance=write.write_provenance,
+                    source_event_id=write.source_event_id,
                 )
 
     def save_with_raw_key(
@@ -969,6 +980,8 @@ class SecureObjectRepository:
         schema_version: int,
         written_at: datetime,
         payload: bytes,
+        write_provenance: str = _DEFAULT_WRITE_PROVENANCE,
+        source_event_id: str | None = None,
     ) -> None:
         """Encrypt and upsert one byte payload keyed by a pre-computed digest.
 
@@ -1004,6 +1017,8 @@ class SecureObjectRepository:
             schema_version=schema_version,
             written_at=written_at,
             payload=payload,
+            write_provenance=write_provenance,
+            source_event_id=source_event_id,
         )
 
     def _save_internal(
@@ -1015,6 +1030,8 @@ class SecureObjectRepository:
         schema_version: int,
         written_at: datetime,
         payload: bytes,
+        write_provenance: str,
+        source_event_id: str | None,
     ) -> None:
         """Shared upsert backing :meth:`save` and :meth:`save_with_raw_key`."""
         self._enforce_registered_write_policy(
@@ -1031,6 +1048,8 @@ class SecureObjectRepository:
                 schema_version=schema_version,
                 written_at=written_at,
                 payload=payload,
+                write_provenance=write_provenance,
+                source_event_id=source_event_id,
             )
 
     def _save_internal_in_session(
@@ -1043,40 +1062,144 @@ class SecureObjectRepository:
         schema_version: int,
         written_at: datetime,
         payload: bytes,
+        write_provenance: str,
+        source_event_id: str | None,
     ) -> None:
+        previous_revision_id: str | None = None
+        previous_payload_hash: str | None = None
         row_id = session.execute(
             select(_orm.SecureObjectRow.id).where(
                 _orm.SecureObjectRow.namespace == namespace,
                 _orm.SecureObjectRow.object_key == key,
             )
         ).scalar_one_or_none()
-        if row_id is None:
-            row = _orm.SecureObjectRow(
-                namespace=namespace,
-                object_key=key,
-                classification=classification.value,
-                schema_version=schema_version,
-                written_at=written_at,
-                payload=payload,
-            )
-            session.add(row)
-        else:
-            session.execute(
-                update(_orm.SecureObjectRow)
-                .where(_orm.SecureObjectRow.id == row_id)
-                .values(
+        if row_id is not None:
+            previous_metadata = session.execute(
+                select(
+                    _orm.SecureObjectRow.revision_id,
+                    _orm.SecureObjectRow.payload_hash,
+                    _orm.SecureObjectRow.payload,
+                ).where(_orm.SecureObjectRow.id == row_id)
+            ).one()
+            previous_revision_id = previous_metadata.revision_id
+            previous_payload_hash = previous_metadata.payload_hash or hashlib.sha256(
+                previous_metadata.payload,
+            ).hexdigest()
+        try:
+            if row_id is None:
+                row = _orm.SecureObjectRow(
+                    namespace=namespace,
+                    object_key=key,
                     classification=classification.value,
                     schema_version=schema_version,
                     written_at=written_at,
                     payload=payload,
                 )
+                session.add(row)
+                session.flush()
+                row_id = row.id
+            else:
+                session.execute(
+                    update(_orm.SecureObjectRow)
+                    .where(_orm.SecureObjectRow.id == row_id)
+                    .values(
+                        classification=classification.value,
+                        schema_version=schema_version,
+                        written_at=written_at,
+                        payload=payload,
+                    )
+                )
+                session.flush()
+            self._write_revision_metadata(
+                session,
+                row_id=int(row_id),
+                namespace=namespace,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload=payload,
+                previous_revision_id=previous_revision_id,
+                previous_payload_hash=previous_payload_hash,
+                write_provenance=write_provenance,
+                source_event_id=source_event_id,
             )
-        try:
             session.flush()
         except IntegrityError as exc:
             raise RepositoryError(
                 f"secure object upsert failed for {namespace}/<key>: {exc.orig}",
             ) from exc
+
+    def _write_revision_metadata(
+        self,
+        session: Session,
+        *,
+        row_id: int,
+        namespace: str,
+        schema_version: int,
+        written_at: datetime,
+        payload: bytes,
+        previous_revision_id: str | None,
+        previous_payload_hash: str | None,
+        write_provenance: str,
+        source_event_id: str | None,
+    ) -> None:
+        raw = session.execute(
+            text("SELECT object_key, payload FROM secure_objects WHERE id = :row_id").bindparams(
+                bindparam("row_id", value=row_id),
+            )
+        ).one()
+        object_key = raw.object_key if isinstance(raw.object_key, bytes) else bytes(raw.object_key)
+        ciphertext = raw.payload if isinstance(raw.payload, bytes) else bytes(raw.payload)
+        payload_hash = hashlib.sha256(payload).hexdigest()
+        ciphertext_hash = hashlib.sha256(ciphertext).hexdigest()
+        revision_id = self._derive_revision_id(
+            namespace=namespace,
+            object_key=object_key,
+            schema_version=schema_version,
+            written_at=written_at,
+            payload_hash=payload_hash,
+            ciphertext_hash=ciphertext_hash,
+            previous_revision_id=previous_revision_id,
+            previous_payload_hash=previous_payload_hash,
+        )
+        session.execute(
+            update(_orm.SecureObjectRow)
+            .where(_orm.SecureObjectRow.id == row_id)
+            .values(
+                revision_id=revision_id,
+                previous_revision_id=previous_revision_id,
+                previous_payload_hash=previous_payload_hash,
+                payload_hash=payload_hash,
+                ciphertext_hash=ciphertext_hash,
+                revision_written_at=written_at,
+                write_provenance=write_provenance,
+                source_event_id=source_event_id,
+                conflict_policy=_DEFAULT_CONFLICT_POLICY,
+            )
+        )
+
+    def _derive_revision_id(
+        self,
+        *,
+        namespace: str,
+        object_key: bytes,
+        schema_version: int,
+        written_at: datetime,
+        payload_hash: str,
+        ciphertext_hash: str,
+        previous_revision_id: str | None,
+        previous_payload_hash: str | None,
+    ) -> str:
+        parts = (
+            namespace,
+            object_key.hex(),
+            str(schema_version),
+            written_at.isoformat(),
+            payload_hash,
+            ciphertext_hash,
+            previous_revision_id or "",
+            previous_payload_hash or "",
+        )
+        return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
 
     def peek_metadata(self, namespace: str, object_key: str) -> SecureObjectMetadata | None:
         """Return row-level metadata for one object without decrypting it.
