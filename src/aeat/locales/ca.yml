@@ -342,9 +342,14 @@ application:
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
     findings:
       m210_convenio_rate_missing:
-        next_action: 'Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country per usar el baseline TRLIRNR Art 25.'
+        next_action: Autoritzeu la fila Convenio España-{cc} a m210-convenio-rates
+          per a tipo_renta={tipo_renta}, o desestableixi profile.convenio_doble_imposicion_country
+          per usar el baseline TRLIRNR Art 25.
       m210_convenio_rate_not_yet_authored:
-        next_action: 'La fila Convenio España-{cc} per a tipo_renta={tipo_renta} conté el marcador NOT_YET_AUTHORED segons ADR D2.4. Autoritzeu la tarifa verificada del corpus BOE abans que aquesta declaració pugui completar-se; obriu una tasca de seguiment bloquejada per corpus citant l''article del Convenio.'
+        next_action: La fila Convenio España-{cc} per a tipo_renta={tipo_renta} conté
+          el marcador NOT_YET_AUTHORED segons ADR D2.4. Autoritzeu la tarifa verificada
+          del corpus BOE abans que aquesta declaració pugui completar-se; obriu una
+          tasca de seguiment bloquejada per corpus citant l'article del Convenio.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt de
         presentar M130 aquest trimestre perquè les retencions i ingressos a compte
         acumulats a l''any representen el 70% o més dels rendiments íntegres.'
@@ -3036,6 +3041,8 @@ errors:
       pot executar amb les dades indicades.
     refused_auth_configure_dangling_active_profile: El punter de perfil actiu no resol
       a un bucket registrat.
+    refused_auth_diagnostic_phone_state: El valor d’estat del telèfon proporcionat
+      no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.
     refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
     refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
@@ -3069,6 +3076,7 @@ errors:
       del període sense classificar. Classifica-les totes abans d'agregar.
     refused_financial_aggregation_unsupported_modelo: No hi ha cap contracte d'agregació
       disponible per al model sol·licitat.
+    refused_financial_bank_statement_parse: 'L''anàlisi de l''extracte bancari financer ha fallat.'
     refused_financial_ledger_no_active_bucket: L'operació del llibre necessita un
       perfil actiu. Crea o selecciona un perfil i torna-ho a provar.
     refused_financial_ledger_transaction_id_prefix: El prefix d'identificador de transacció
@@ -3206,7 +3214,6 @@ errors:
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    refused_auth_diagnostic_phone_state: 'El valor d’estat del telèfon proporcionat no es reconeix. Utilitzeu un dels valors vàlids d’estat de telèfon de l’operador.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

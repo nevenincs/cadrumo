@@ -307,9 +307,14 @@ application:
       work_unit_not_found: No modelo work unit found with id=%{work_unit_id}.
     findings:
       m210_convenio_rate_missing:
-        next_action: 'Author Convenio España-{cc} rate row in m210-convenio-rates for tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country to fall back to the TRLIRNR Art 25 baseline.'
+        next_action: Author Convenio España-{cc} rate row in m210-convenio-rates for
+          tipo_renta={tipo_renta}, or unset profile.convenio_doble_imposicion_country
+          to fall back to the TRLIRNR Art 25 baseline.
       m210_convenio_rate_not_yet_authored:
-        next_action: 'The Convenio España-{cc} rate row for tipo_renta={tipo_renta} carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified BOE corpus rate before this filing can complete; file a corpus-blocked follow-up task referencing the Convenio article number.'
+        next_action: The Convenio España-{cc} rate row for tipo_renta={tipo_renta}
+          carries the NOT_YET_AUTHORED placeholder per ADR D2.4. Author the verified
+          BOE corpus rate before this filing can complete; file a corpus-blocked follow-up
+          task referencing the Convenio article number.
       modelo_130_art110_3b_exencion_alta_retencion: 'Art. 110.3.b RIRPF: exempt from
         filing M130 this quarter because accumulated withholdings and payments on
         account for the year represent 70% or more of gross income.'
@@ -2888,6 +2893,8 @@ errors:
       with the input provided.
     refused_auth_configure_dangling_active_profile: The active-profile pointer does
       not resolve to a registered bucket.
+    refused_auth_diagnostic_phone_state: The phone state value provided is not recognised.
+      Use one of the valid operator phone-state values.
     refused_auth_login_live_tests_disabled: errors.refused.refused_auth_login_live_tests_disabled
     refused_auth_login_precondition: errors.refused.refused_auth_login_precondition
     refused_auth_provider_reserved: The selected authentication provider is reserved
@@ -2920,6 +2927,7 @@ errors:
       still need classification. Classify them all before aggregating.
     refused_financial_aggregation_unsupported_modelo: No aggregation contract is available
       for the requested modelo.
+    refused_financial_bank_statement_parse: 'Financial bank statement parsing failed.'
     refused_financial_ledger_no_active_bucket: The ledger operation requires an active
       profile. Create or select a profile and try again.
     refused_financial_ledger_transaction_id_prefix: The transaction-id prefix matches
@@ -3046,7 +3054,6 @@ errors:
     refused_workflow_aborted: The workflow was aborted.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
-    refused_auth_diagnostic_phone_state: 'The phone state value provided is not recognised. Use one of the valid operator phone-state values.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
