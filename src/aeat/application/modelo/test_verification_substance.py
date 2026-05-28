@@ -56,43 +56,43 @@ _T2 = datetime(2026, 4, 14, 14, 0, 0, tzinfo=UTC)
 def test_all_nonzero_passes_when_all_present_and_nonzero() -> None:
     """all_nonzero([...]) returns True when every listed casilla is non-zero."""
     values: dict[str, Decimal] = {"01": Decimal("1000"), "02": Decimal("500")}
-    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values) is True
+    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values, _workflow_profile()) is True
 
 
 def test_all_nonzero_fails_when_one_zero() -> None:
     """all_nonzero([...]) returns False when any listed casilla is zero."""
     values: dict[str, Decimal] = {"01": Decimal("1000"), "02": Decimal("0")}
-    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values) is False
+    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values, _workflow_profile()) is False
 
 
 def test_all_nonzero_fails_when_absent() -> None:
     """all_nonzero([...]) treats an absent casilla as zero."""
     values: dict[str, Decimal] = {"01": Decimal("1000")}
-    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values) is False
+    assert _evaluate_predicate_expression('all_nonzero(["01", "02"])', values, _workflow_profile()) is False
 
 
 def test_any_nonzero_passes_when_one_nonzero() -> None:
     """any_nonzero([...]) returns True when at least one listed casilla is non-zero."""
     values: dict[str, Decimal] = {"01": Decimal("0"), "02": Decimal("500")}
-    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values) is True
+    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values, _workflow_profile()) is True
 
 
 def test_any_nonzero_fails_when_all_zero() -> None:
     """any_nonzero([...]) returns False when every listed casilla is zero or absent."""
     values: dict[str, Decimal] = {"01": Decimal("0"), "02": Decimal("0")}
-    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values) is False
+    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values, _workflow_profile()) is False
 
 
 def test_any_nonzero_fails_when_all_absent() -> None:
     """any_nonzero([...]) treats absent casillas as zero."""
     values: dict[str, Decimal] = {}
-    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values) is False
+    assert _evaluate_predicate_expression('any_nonzero(["01", "02"])', values, _workflow_profile()) is False
 
 
 def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
     """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
     values: dict[str, Decimal] = {"11": Decimal("300"), "10": Decimal("500")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is True
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is True
 
 
 def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
@@ -104,7 +104,7 @@ def test_cap_le_when_positive_fails_when_limited_exceeds_ceiling() -> None:
     a la cantidad positiva consignada en la casilla 10".
     """
     values: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("500")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values) is False
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values, _workflow_profile()) is False
 
 
 def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate() -> None:
@@ -126,7 +126,7 @@ def test_cap_le_when_positive_emits_blocking_rule_finding_for_violated_predicate
     # C14 = 1000 (positive ceiling), C15 = 1500 (exceeds cap)
     casilla_values = {"14": Decimal("1000"), "15": Decimal("1500")}
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
@@ -144,7 +144,7 @@ def test_cap_le_when_positive_emits_no_finding_when_within_cap() -> None:
     # C14 = 1000, C15 = 600 — within cap
     casilla_values = {"14": Decimal("1000"), "15": Decimal("600")}
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
     assert findings == []
 
 
@@ -156,16 +156,16 @@ def test_cap_le_when_positive_holds_when_ceiling_is_zero_or_negative() -> None:
     enforce; the predicate must NOT block in that case.
     """
     values_zero: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("0")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero) is True
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_zero, _workflow_profile()) is True
     values_negative: dict[str, Decimal] = {"11": Decimal("750"), "10": Decimal("-50")}
-    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative) is True
+    assert _evaluate_predicate_expression('cap_le_when_positive(["11", "10"])', values_negative, _workflow_profile()) is True
 
 
 def test_unknown_expression_does_not_block() -> None:
     """An unrecognised expression pattern does not produce a blocking finding."""
     values: dict[str, Decimal] = {}
     # Passes through — unknown DSL extensions do not block in W04
-    assert _evaluate_predicate_expression('threshold(["01"], 100)', values) is True
+    assert _evaluate_predicate_expression('threshold(["01"], 100)', values, _workflow_profile()) is True
 
 
 # ---------------------------------------------------------------------------
@@ -181,7 +181,7 @@ def test_predicate_implies_nonzero_holds_when_antecedent_zero() -> None:
     does not engage the implication, regardless of the consequent's value.
     """
     values: dict[str, Decimal] = {"01": Decimal("0"), "07": Decimal("0")}
-    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is True
 
 
 def test_predicate_implies_nonzero_holds_when_antecedent_negative() -> None:
@@ -193,7 +193,7 @@ def test_predicate_implies_nonzero_holds_when_antecedent_negative() -> None:
     the defensive contract spelled out in ADR §C (constraints).
     """
     values: dict[str, Decimal] = {"01": Decimal("-100"), "07": Decimal("0")}
-    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is True
 
 
 def test_predicate_implies_nonzero_holds_when_both_positive() -> None:
@@ -204,7 +204,7 @@ def test_predicate_implies_nonzero_holds_when_both_positive() -> None:
     satisfied.
     """
     values: dict[str, Decimal] = {"01": Decimal("500"), "07": Decimal("200")}
-    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is True
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is True
 
 
 def test_predicate_implies_nonzero_violated_when_consequent_zero() -> None:
@@ -216,7 +216,7 @@ def test_predicate_implies_nonzero_violated_when_consequent_zero() -> None:
     zero. The new operator does not have that false-positive surface.
     """
     values: dict[str, Decimal] = {"01": Decimal("500"), "07": Decimal("0")}
-    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is False
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is False
 
 
 def test_predicate_implies_nonzero_unknown_consequent_treated_as_zero() -> None:
@@ -227,12 +227,12 @@ def test_predicate_implies_nonzero_unknown_consequent_treated_as_zero() -> None:
     therefore fires the BLOCKING finding rather than silently passing.
     """
     values: dict[str, Decimal] = {"01": Decimal("500")}
-    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values) is False
+    assert _evaluate_predicate_expression('implies_nonzero(["01", "07"])', values, _workflow_profile()) is False
 
 
 def test_evaluate_verification_predicates_empty_returns_no_findings() -> None:
     """Empty predicate tuple yields empty findings list."""
-    findings = _evaluate_verification_predicates((), {})
+    findings = _evaluate_verification_predicates((), {}, _workflow_profile())
     assert findings == []
 
 
@@ -245,7 +245,7 @@ def test_evaluate_verification_predicates_violation_produces_blocking_rule() -> 
         finding_kind="BLOCKING_RULE",
     )
     values: dict[str, Decimal] = {"01": Decimal("1000"), "02": Decimal("0")}
-    findings = _evaluate_verification_predicates((predicate,), values)
+    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
     assert "test-invariant" in findings[0].message
@@ -260,7 +260,7 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
         finding_kind="BLOCKING_RULE",
     )
     values: dict[str, Decimal] = {"01": Decimal("1000"), "02": Decimal("500")}
-    findings = _evaluate_verification_predicates((predicate,), values)
+    findings = _evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert findings == []
 
 
@@ -330,7 +330,7 @@ def test_advisory_predicate_emits_warning_advisory_finding_when_condition_met() 
 
     from aeat.domain.modelos._verification_report import ModeloVerificationFindingSeverity
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
@@ -349,7 +349,7 @@ def test_advisory_predicate_emits_no_finding_when_condition_not_met() -> None:
     # 60% ratio: retenciones 9000 / rendimientos 15000
     casilla_values: dict[str, Decimal] = {"06": Decimal("9000"), "01": Decimal("15000")}
 
-    findings = _evaluate_verification_predicates((predicate,), casilla_values)
+    findings = _evaluate_verification_predicates((predicate,), casilla_values, _workflow_profile())
     assert findings == []
 
 
