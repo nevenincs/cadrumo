@@ -14,6 +14,7 @@ from ._counterpart import (
 )
 from ._errors import (
     AggregationCategoryCoverageError,
+    AggregationConfigError,
     AggregationError,
     AggregationMissingClassificationError,
     AggregationPeriodError,
@@ -117,6 +118,7 @@ __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "ERROR_CODES",
     "AggregationCategoryCoverageError",
+    "AggregationConfigError",
     "AggregationError",
     "AggregationMissingClassificationError",
     "AggregationPeriodError",
