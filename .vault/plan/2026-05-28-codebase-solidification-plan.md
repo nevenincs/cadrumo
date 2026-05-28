@@ -65,8 +65,8 @@ envelope.
 - [ ] `W01.P01.S04` - add real-behavior test asserting `_BinaryXlsConversionError` registry binding; `src/aeat/domain/calculations/registry/test_workbook_parity.py`.
 - [ ] `W01.P01.S05` - introduce `ExportFormatError(CoreError)` and `ExportFieldError(CoreValidationError)`; `replace the seven `ValueError` / `raise` sites; `src/aeat/application/export/_tabular.py`.
 - [ ] `W01.P01.S06` - add real-behavior test asserting export error envelope and i18n for every fixed raise; `src/aeat/application/export/test_tabular.py`.
-- [ ] `W01.P01.S07` - introduce `IvaCompensationModeloError(CoreError)`; `replace the `ValueError`; `src/aeat/application/calculations/_iva_compensation_history.py`.
-- [ ] `W01.P01.S08` - add real-behavior test asserting IVA compensation modelo error envelope; `src/aeat/application/calculations/test_iva_compensation_history.py`.
+- [x] `W01.P01.S07` - introduce `IvaCompensationModeloError(CoreError)`; `replace the `ValueError`; `src/aeat/application/calculations/_iva_compensation_history.py`.
+- [x] `W01.P01.S08` - add real-behavior test asserting IVA compensation modelo error envelope; `src/aeat/application/calculations/test_iva_compensation_history.py`.
 - [ ] `W01.P01.S09` - introduce `WorkflowInputMismatchError(CoreError)` or reuse `CoreValidationError`; `src/aeat/application/modelo/_actions.py`.
 - [ ] `W01.P01.S10` - add real-behavior test asserting workflow-input-mismatch envelope and registry binding; `src/aeat/application/modelo/test_actions.py`.
 - [ ] `W01.P01.S11` - introduce `AdapterTypeError(CoreError)` or reuse `McpLaunchError`; `replace the `TypeError`; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
