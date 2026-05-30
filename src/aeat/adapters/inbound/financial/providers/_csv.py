@@ -301,7 +301,7 @@ class CsvProvider(FinancialProvider):
 
     def _decode_bytes(self, source_bytes: bytes) -> tuple[str, str]:
         """Decode bytes using the configured preference order."""
-        preferred = load_settings().financial_default_csv_encoding.strip() or "utf-8"
+        preferred = load_settings().financial_default_csv_encoding.strip()
         candidates = (preferred, *CSV_ENCODING_FALLBACK_CHAIN)
         seen: set[str] = set()
         for candidate in candidates:

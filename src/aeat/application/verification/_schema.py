@@ -17,6 +17,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...domain.calculations.registry._ids import CasillaId
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 """Shared :class:`pydantic.ConfigDict` enforcing strict, frozen, no-extras."""
 
@@ -74,7 +76,7 @@ class ClassifiedDiscrepancy(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_id: str = Field(min_length=1)
+    casilla_id: CasillaId
     expected: Decimal
     actual: Decimal
     delta: Decimal

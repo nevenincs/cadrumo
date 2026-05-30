@@ -47,6 +47,7 @@ from .....core.config import Settings
 from .....core.time._clock import _now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
 from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
+from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
@@ -78,6 +79,7 @@ from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+    SEDE_BODY_ENCODING as _SEDE_BODY_ENCODING,
 )
 from ._errors import (
     JustificanteFetchError,
@@ -518,7 +520,10 @@ async def _drive_search(
             )
         )
     except PlaywrightError as exc:
-        raise SedeNavigationError(f"clicking Buscar failed: {exc}") from exc
+        raise SedeNavigationError(
+            f"clicking Buscar failed: {exc}",
+            translated_message="adapters.sede.errors.playwright_buscar_click_failed",
+        ) from exc
     await page.wait_for_timeout(_BUSCAR_SETTLE_MS)
     return True
 
@@ -537,7 +542,10 @@ async def _select_combobox_value(
         _assert_read_browser_action(f"select-{label_text.split()[0].lower()}", policy=read_policy)
         await button.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
-        raise SedeNavigationError(f"opening combobox after label {label_text!r} failed: {exc}") from exc
+        raise SedeNavigationError(
+            f"opening combobox after label {label_text!r} failed: {exc}",
+            translated_message="adapters.sede.errors.playwright_combobox_open_failed",
+        ) from exc
     await page.wait_for_timeout(400)
 
     options = page.locator(".z-comboitem-text")
@@ -555,7 +563,10 @@ async def _select_combobox_value(
         _assert_read_browser_action(f"select-option-{option_match}", policy=read_policy)
         await target.click(timeout=_FORM_INTERACTION_TIMEOUT_MS)
     except PlaywrightError as exc:
-        raise SedeNavigationError(f"selecting option {option_match!r} for {label_text!r} failed: {exc}") from exc
+        raise SedeNavigationError(
+            f"selecting option {option_match!r} for {label_text!r} failed: {exc}",
+            translated_message="adapters.sede.errors.playwright_combobox_select_failed",
+        ) from exc
     await page.wait_for_timeout(300)
     return True
 
@@ -588,7 +599,10 @@ async def _continue_alert_modal(
             """
         )
     except PlaywrightError as exc:
-        raise SedeNavigationError(f"continuing AEAT alert modal failed: {exc}") from exc
+        raise SedeNavigationError(
+            f"continuing AEAT alert modal failed: {exc}",
+            translated_message="adapters.sede.errors.playwright_alert_modal_failed",
+        ) from exc
     if result == "continued":
         await page.wait_for_timeout(500)
 
@@ -889,7 +903,7 @@ async def capture_declaration(
         body = await pdf_response.body()
         if not body:
             raise JustificanteFetchError(f"empty PDF body for CSV={csv!r}")
-        if "pdf" not in content_type.lower():
+        if _PDF_MIME_TYPE not in content_type.lower():
             raise JustificanteFetchError(
                 f"unexpected content-type {content_type!r} for CSV={csv!r}",
             )
@@ -1396,7 +1410,7 @@ def _observed_modelo_303_casillas_from_submitted_file(
 ) -> tuple[ObservedCasillaValue, ...]:
     """Parse official Modelo 303 page-03 fixed-width result fields."""
 
-    text = body.decode("latin-1", errors="replace")
+    text = body.decode(_SEDE_BODY_ENCODING, errors="replace")
     page_start = text.find(_MODELO_303_PAGE_03_TAG)
     if page_start < 0:
         raise SedeParseError(f"submitted Modelo 303 file for {declaration.expediente_id!r} has no page-03 record")

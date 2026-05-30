@@ -37,10 +37,11 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
-from .....core.parsing._dates import _parse_ddmmyyyy_date
+from .....core.parsing._dates import _parse_date
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
+from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
@@ -273,10 +274,10 @@ def _row_from_cells(
     emision_raw = _safe_cell(cells, header_index.get("fecha_emision"))
     notif_raw = _safe_cell(cells, header_index.get("fecha_notificacion"))
 
-    fecha_emision = _parse_date(emision_raw)
+    fecha_emision = _parse_date_local(emision_raw)
     if fecha_emision is None:
         return None
-    fecha_notificacion = _parse_date(notif_raw)
+    fecha_notificacion = _parse_date_local(notif_raw)
 
     titular_nif, titular_nombre = _split_nif_name(titular_raw)
     destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
@@ -313,12 +314,9 @@ def _safe_cell(cells: list[str], idx: int | None) -> str | None:
     return value or None
 
 
-def _parse_date(raw: str | None) -> date | None:
+def _parse_date_local(raw: str | None) -> date | None:
     """Parse a Spanish ``DD-MM-YYYY`` date string, returning ``None`` on any failure."""
-    try:
-        return _parse_ddmmyyyy_date(raw)
-    except ValueError:
-        return None
+    return _parse_date(raw, fmt="ddmmyyyy", on_error="none")
 
 
 def _split_nif_name(raw: str) -> tuple[str, str]:
@@ -447,7 +445,7 @@ async def _fetch_and_parse(
             page = await context.new_page()
             # Warm the cookie jar on the authenticated landing.
             try:
-                await page.goto(_RESUMEN_URL, wait_until="domcontentloaded")
+                await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
             except Exception as exc:
                 log.debug(
                     "fetch_notifications: warm-up navigation to %s suppressed: %s",
@@ -456,7 +454,7 @@ async def _fetch_and_parse(
                     exc_info=True,
                 )
             try:
-                await page.goto(url, wait_until="domcontentloaded")
+                await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
             except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
             html = await page.content()

@@ -158,6 +158,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.auth._errors.AuthDiagnosticPayloadError",
+        ErrorCode(
+            code="REFUSED_AUTH_DIAGNOSTIC_PAYLOAD",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_auth_diagnostic_payload",
+            default_suggestion="aeat app auth diagnostics --help",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.auth._errors.AuthDiagnosticPhoneStateError",
         ErrorCode(
             code="REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE",
@@ -186,6 +197,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_topic_not_found",
             default_suggestion="aeat app registry citations",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.aggregation._source_mesh.SourceMeshError",
+        ErrorCode(
+            code="REFUSED_SOURCE_MESH_INVARIANT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_source_mesh_invariant",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),
@@ -505,6 +527,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.auth_profile_identity_mismatch",
             default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.auth._sessions.SessionDeserializationError",
+        ErrorCode(
+            code="AUTH_SESSION_DESERIALIZATION",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_session_deserialization",
+            default_suggestion="aeat config auth test --provider certificate",
             retryable=False,
             runbook_id=None,
         ),
@@ -972,6 +1005,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_iva_wallet_reconciliation_invariant",
             default_suggestion="aeat app live iva-wallet pull",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_compensation_history.IvaCompensationYearRangeError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_YEAR_RANGE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_compensation_year_range",
+            default_suggestion="aeat app live iva-wallet history",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.calculations._iva_compensation_history.IvaCompensationDecimalParseError",
+        ErrorCode(
+            code="REFUSED_IVA_COMPENSATION_DECIMAL_PARSE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_iva_compensation_decimal_parse",
+            default_suggestion="aeat app live iva-wallet history",
             retryable=False,
             runbook_id=None,
         ),

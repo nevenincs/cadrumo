@@ -20,6 +20,9 @@ from pdfplumber.page import Page
 from pydantic import ConfigDict
 from xlrd.sheet import Sheet as XlrdSheet
 
+from ....core.external_constants import PDF_EXTENSION as _PDF_EXTENSION
+from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
+from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._runtime_graph import expression_casilla_refs
@@ -88,9 +91,9 @@ def _extract_record_design_cached(
     del byte_count, modified_ns
     source_path = Path(path)
     suffix = source_path.suffix.lower()
-    if suffix == ".pdf":
+    if suffix == _PDF_EXTENSION:
         return extract_record_design_pdf(source_path)
-    if suffix in {".xlsx", ".xlsm"}:
+    if suffix in {_XLSX_EXTENSION, _XLSM_EXTENSION}:
         return extract_record_design_workbook(source_path)
     if suffix == ".xls":
         return extract_record_design_xls_workbook(source_path)

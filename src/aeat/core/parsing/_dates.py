@@ -1,4 +1,5 @@
-"""Date string parsers for the two distinct input formats used across AEAT adapters.
+"""Date string parsers for the two distinct input formats used across AEAT adapters, plus a
+unified :func:`_parse_date` helper that combines format selection with an error-policy axis.
 
 The two variants are intentionally separate because they accept *different*
 wire formats:
@@ -20,7 +21,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
-from typing import Final
+from typing import Final, Literal, overload
 
 from ..logging import get_logger
 
@@ -103,3 +104,61 @@ def _parse_ddmmyyyy_date(raw: str | None) -> date | None:
         raise ValueError(
             f"date value {cleaned!r} is not a valid calendar date"
         )
+
+
+# ── Unified parse-date surface ────────────────────────────────────────────────
+
+_DateFmt = Literal["iso8601", "ddmmyyyy"]
+_OnError = Literal["raise", "none"]
+
+
+@overload
+def _parse_date(
+    raw: str | None,
+    *,
+    fmt: _DateFmt,
+    on_error: Literal["none"],
+) -> date | None: ...
+
+
+@overload
+def _parse_date(
+    raw: str | None,
+    *,
+    fmt: _DateFmt,
+    on_error: Literal["raise"] = ...,
+) -> date | None: ...
+
+
+def _parse_date(
+    raw: str | None,
+    *,
+    fmt: _DateFmt = "iso8601",
+    on_error: _OnError = "raise",
+) -> date | None:
+    """Parse *raw* using the nominated format, applying the requested error policy.
+
+    Args:
+        raw: Input string; ``None`` and blank strings return ``None`` regardless
+             of *on_error*.
+        fmt: ``"iso8601"`` delegates to :func:`_parse_iso8601_date`;
+             ``"ddmmyyyy"`` delegates to :func:`_parse_ddmmyyyy_date`.
+        on_error: ``"raise"`` re-raises the :exc:`ValueError` from the delegate
+                  (callers wrap it in their domain exception); ``"none"``
+                  silently returns ``None`` on any parse failure.
+
+    Returns:
+        Parsed :class:`datetime.date`, or ``None`` when *raw* is absent or
+        (when *on_error* is ``"none"``) when parsing fails.
+
+    Raises:
+        ValueError: When *on_error* is ``"raise"`` and *raw* is non-empty but
+                    cannot be parsed by the selected format delegate.
+    """
+    delegate = _parse_iso8601_date if fmt == "iso8601" else _parse_ddmmyyyy_date
+    try:
+        return delegate(raw)
+    except ValueError:
+        if on_error == "none":
+            return None
+        raise

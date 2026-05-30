@@ -32,7 +32,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.time import _now as _utc_now
 from ....core.time._utc import _validate_utc_aware
-from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
+from ....domain.calculations.registry._ids import (
+    BindingId,
+    CasillaId,
+    FormulaId,
+    ParameterId,
+    RelationId,
+    RevisionId,
+)
 from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
 
 # `DecimalValue` is the registry's annotated `Decimal` with a
@@ -270,7 +277,7 @@ class SheetProvenanceRow(BaseModel):
     casilla_id: CasillaId
     casilla_number: str
     casilla_label: str
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     rounding_rule: Literal["money", "integer", "none"]
     legal_refs: tuple[str, ...] = Field(min_length=1)
     source_refs: tuple[str, ...] = Field(min_length=1)
@@ -429,7 +436,7 @@ class SheetExportMetadata(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo_id: str = Field(min_length=1)
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=16)
     engine_version: str = Field(min_length=1)

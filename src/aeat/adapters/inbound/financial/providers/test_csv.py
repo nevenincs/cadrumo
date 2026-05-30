@@ -13,6 +13,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.config import override_settings
 from aeat.core.external_constants import CSV_ENCODING_FALLBACK_CHAIN
 from aeat.tests import FIXTURES_DIR
 
@@ -123,13 +124,6 @@ def test_csv_provider_ignores_invalid_configured_encoding_name() -> None:
 _INVALID_PREFERRED = "definitely-not-a-codec"
 
 
-def _with_invalid_preferred(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Force the preferred codec to an invalid name so the chain drives decoding."""
-    monkeypatch.setenv("FINANCIAL_DEFAULT_CSV_ENCODING", _INVALID_PREFERRED)
-    # load_settings() constructs a fresh Settings() each call (no lru_cache),
-    # so the monkeypatched env var is visible immediately — no cache bust needed.
-
-
 @pytest.mark.parametrize(
     ("raw_bytes", "expected_encoding", "expected_char"),
     [
@@ -158,7 +152,6 @@ def _with_invalid_preferred(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_csv_provider_decode_bytes_follows_fallback_chain(
-    monkeypatch: pytest.MonkeyPatch,
     raw_bytes: bytes,
     expected_encoding: str,
     expected_char: str,
@@ -172,9 +165,9 @@ def test_csv_provider_decode_bytes_follows_fallback_chain(
     decoded text round-trips correctly.  No mocks or stubs — _decode_bytes is
     exercised directly on a real CsvProvider instance.
     """
-    _with_invalid_preferred(monkeypatch)
-    provider = CsvProvider()
-    text, winning_encoding = provider._decode_bytes(raw_bytes)
+    with override_settings(financial_default_csv_encoding=_INVALID_PREFERRED):
+        provider = CsvProvider()
+        text, winning_encoding = provider._decode_bytes(raw_bytes)
     assert winning_encoding == expected_encoding, (
         f"Expected encoding {expected_encoding!r} but got {winning_encoding!r}; "
         f"chain is {CSV_ENCODING_FALLBACK_CHAIN}"
@@ -184,9 +177,7 @@ def test_csv_provider_decode_bytes_follows_fallback_chain(
     )
 
 
-def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain() -> None:
     """When the preferred codec is valid it must win before the fallback chain is tried.
 
     Encodes ASCII-only content as utf-8 (no BOM) then sets the preferred codec
@@ -194,9 +185,9 @@ def test_csv_provider_decode_bytes_preferred_codec_wins_over_chain(
     encoding, not 'utf-8-sig' (the first chain member), because the preferred
     is prepended ahead of the chain and succeeds on its first attempt.
     """
-    monkeypatch.setenv("FINANCIAL_DEFAULT_CSV_ENCODING", "utf-8")
-    provider = CsvProvider()
-    raw = "hello".encode("utf-8")
-    text, winning_encoding = provider._decode_bytes(raw)
+    with override_settings(financial_default_csv_encoding="utf-8"):
+        provider = CsvProvider()
+        raw = "hello".encode("utf-8")
+        text, winning_encoding = provider._decode_bytes(raw)
     assert winning_encoding == "utf-8"
     assert text == "hello"

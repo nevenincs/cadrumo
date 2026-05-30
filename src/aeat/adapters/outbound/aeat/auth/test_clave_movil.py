@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from pydantic import SecretStr
 
 from .....application.user_profile._orchestration import profile_create_storage_span
 from .....application.user_profile._testing import register_minimal_profile
@@ -304,23 +305,14 @@ class _SelectorDispatchBrowserSession(_RecordingBrowserSession):
         return context
 
 
-def _settings_for(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **env: str) -> Settings:
-    from pydantic_settings import SettingsConfigDict
-
-    for name in Settings.env_var_names():
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(tmp_path))
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(tmp_path / "storage"))
+def _settings_for(tmp_path: Path, **env: str) -> Settings:
+    env_overrides = {
+        "aeat_token_dir": str(tmp_path),
+        "aeat_local_storage_root": str(tmp_path / "storage"),
+    }
     for key, value in env.items():
-        monkeypatch.setenv(key, value)
-
-    # Pydantic-settings reads env/.env by default; a developer who ran
-    # `aeat config auth configure` would then leak their real DNI/NIE into
-    # the test suite. Point the test Settings at a non-existent file.
-    class _IsolatedSettings(Settings):
-        model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
-
-    return _IsolatedSettings()
+        env_overrides[key.lower()] = value
+    return Settings(**env_overrides)
 
 
 # ── identity classification ──────────────────────────────────────────────────
@@ -356,8 +348,8 @@ class TestAttemptDiagnostics:
             )
             settings = Settings().model_copy(
                 update={
-                    "aeat_clave_movil_dni_nie": "X1234567L",
-                    "aeat_clave_movil_nie_soporte": "support-marker",
+                    "aeat_clave_movil_dni_nie": SecretStr("X1234567L"),
+                    "aeat_clave_movil_nie_soporte": SecretStr("support-marker"),
                     "aeat_clave_prefer_non_qr": True,
                     "aeat_clave_movil_timeout_ms": 120_000,
                 }
@@ -388,8 +380,8 @@ class TestAttemptDiagnostics:
 
 
 class TestDescribe:
-    def test_describe_unconfigured(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        settings = _settings_for(tmp_path, monkeypatch)
+    def test_describe_unconfigured(self, tmp_path: Path) -> None:
+        settings = _settings_for(tmp_path)
         provider = ClaveMovilAuthProvider(settings)
         description = provider.describe()
         assert description.configured is False
@@ -401,8 +393,8 @@ class TestDescribe:
         assert description.health_severity == "info"
         assert "DNI" in (description.health_summary or "") or "NIE" in (description.health_summary or "")
 
-    def test_describe_configured(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+    def test_describe_configured(self, tmp_path: Path) -> None:
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         description = provider.describe()
         assert description.configured is True
@@ -410,8 +402,8 @@ class TestDescribe:
         assert description.identity_nif == "12345678Z"
         assert description.kind == AuthProviderKind.CLAVE_MOVIL
 
-    def test_describe_invalid_identity(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="BAD")
+    def test_describe_invalid_identity(self, tmp_path: Path) -> None:
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="BAD")
         provider = ClaveMovilAuthProvider(settings)
         description = provider.describe()
         assert description.configured is True
@@ -566,7 +558,7 @@ class TestAuthenticateFresh:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch)
+        settings = _settings_for(tmp_path)
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
@@ -585,7 +577,7 @@ class TestPostAuthLanding:
     ) -> None:
         from ._authenticator import AeatSession
 
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
@@ -622,7 +614,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
@@ -642,7 +634,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
         landing_url = f"{external.aeat.domains.www6}{external.aeat.sede_paths.expedientes_resumen}"
@@ -661,7 +653,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         external = settings.external_constants()
 
@@ -694,7 +686,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _RecordingPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
@@ -713,7 +705,7 @@ class TestPostAuthLanding:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _RepresentationAlertPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www6, _CLAVE_SURFACE.dialogo_representacion_path)
@@ -735,7 +727,7 @@ class TestPendingPetitionRefusal:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
 
@@ -769,7 +761,7 @@ class TestPendingPetitionRefusal:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _PendingPetitionPage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
@@ -788,7 +780,7 @@ class TestPendingPetitionRefusal:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path)
 
@@ -805,7 +797,7 @@ class TestPendingPetitionRefusal:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _CancelableClavePage(target_path=settings.aeat_sede_expedientes_path, status=500)
 
@@ -830,7 +822,7 @@ class TestClaveWaitState:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
@@ -856,7 +848,7 @@ class TestClaveWaitState:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         page = _NoPushWaitStatePage(target_path=settings.aeat_sede_expedientes_path)
         page.url = _aeat_url(_DOMAINS.www12, _CLAVE_SURFACE.autentica_dni_nie_contraste_path)
@@ -883,7 +875,7 @@ class TestProbePersistedSession:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         browser_session = _RecordingBrowserSession(target_path=settings.aeat_sede_expedientes_path)
 
@@ -900,7 +892,7 @@ class TestProbePersistedSession:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        settings = _settings_for(tmp_path, monkeypatch, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
+        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
         provider = ClaveMovilAuthProvider(settings)
         target_path = settings.aeat_sede_expedientes_path
         # Seed a session via a fresh login.

@@ -12,8 +12,10 @@ from xml.etree.ElementTree import Element
 
 from defusedxml import ElementTree
 
+from ....core.external_constants import LATIN_1_ENCODING as _LATIN_1_ENCODING
 from ....core.parsing._utils import _parse_bool as _core_parse_bool
 from ._errors import RegistryValidationError
+from ._ids import BindingId, CasillaId, ExportFieldId, ExportLayoutId, RecordId
 from ._schema import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -31,10 +33,10 @@ _DICTIONARY_LINE_RE = re.compile(
 class ParsedExportFieldValue(RegistryModel):
     """One field value read from an AEAT payload using a registry export field."""
 
-    record_id: str
-    field_id: str
-    casilla_id: str | None = None
-    binding_id: str | None = None
+    record_id: RecordId
+    field_id: ExportFieldId
+    casilla_id: CasillaId | None = None
+    binding_id: BindingId | None = None
     raw: str
     value: Decimal | str | bool | None
     source_locator: str
@@ -43,7 +45,7 @@ class ParsedExportFieldValue(RegistryModel):
 class ParsedExportPayload(RegistryModel):
     """Casilla and field values parsed from a complete registry export layout."""
 
-    layout_id: str
+    layout_id: ExportLayoutId
     fields: tuple[ParsedExportFieldValue, ...]
     casillas: tuple[ParsedExportFieldValue, ...]
 
@@ -205,7 +207,7 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
     try:
         return body.decode("utf-8")
     except UnicodeDecodeError:
-        return body.decode("latin-1")
+        return body.decode(_LATIN_1_ENCODING)
 
 
 def _normalize_dictionary_casilla(value: str) -> str | None:

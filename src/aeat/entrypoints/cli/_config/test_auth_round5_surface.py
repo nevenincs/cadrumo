@@ -166,7 +166,7 @@ def test_login_refuses_with_user_prose_citing_live_tests_gate(
 
 
 def test_login_refuses_when_certificate_path_unset(
-    _isolated_application_layer: None, monkeypatch: pytest.MonkeyPatch
+    _isolated_application_layer: None,
 ) -> None:
     """Round-5 B2: with the live-tests gate enabled, an unset cert path is refused with prose."""
 
@@ -176,11 +176,11 @@ def test_login_refuses_when_certificate_path_unset(
         lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID)
     )
     configure_operator_auth("certificate")  # no --file persisted
-    # Enable the live-tests gate via the env var the Settings class reads.
-    monkeypatch.setenv("AEAT_LIVE_TESTS_ENABLED", "1")
 
-    with pytest.raises(AuthLoginPreconditionError) as exc_info:
-        asyncio.run(login_operator_auth("certificate"))
+    # Enable the live-tests gate via the canonical Settings override.
+    with override_settings(aeat_live_tests_enabled="1"):
+        with pytest.raises(AuthLoginPreconditionError) as exc_info:
+            asyncio.run(login_operator_auth("certificate"))
 
     message = str(exc_info.value)
     assert "AEAT_CERTIFICATE_PATH" not in message
@@ -269,7 +269,7 @@ def test_auth_test_runs_real_certificate_probe(
 
 
 def test_severity_for_clave_movil_pending_is_not_error(
-    _isolated_application_layer: None, monkeypatch: pytest.MonkeyPatch
+    _isolated_application_layer: None,
 ) -> None:
     """Round-5 M5: a Cl@ve Móvil pending state must not pair with ``error``.
 
@@ -277,13 +277,13 @@ def test_severity_for_clave_movil_pending_is_not_error(
     (operator-mediated completion required) surfaces with ``info``.
     """
 
-    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "12345678Z")
     workflow_state_repository().update(
         lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, overrides={"identity.tax_id": "12345678Z"})
     )
-    configure_operator_auth("clave_movil")
+    with override_settings(aeat_clave_movil_dni_nie="12345678Z"):
+        configure_operator_auth("clave_movil")
 
-    status = inspect_operator_auth()
+        status = inspect_operator_auth()
 
     assert status.provider == "clave_movil"
     assert status.health_severity != "error", (
@@ -299,7 +299,7 @@ def test_severity_for_clave_movil_pending_is_not_error(
 
 
 def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
-    _isolated_application_layer: None, monkeypatch: pytest.MonkeyPatch
+    _isolated_application_layer: None,
 ) -> None:
     """Round-5 M6: the mismatch next_action does not drop into English.
 
@@ -309,11 +309,13 @@ def test_clave_movil_mismatch_next_action_is_localised_in_catalan(
     catalogue.
     """
 
-    monkeypatch.setenv("AEAT_CLAVE_MOVIL_DNI_NIE", "00000001R")
     workflow_state_repository().update(
         lambda state: register_minimal_profile(state, profile_id=_BUCKET_ID, overrides={"identity.tax_id": "99999999Z"})
     )
-    with override_settings(aeat_output_language="ca"):
+    with override_settings(
+        aeat_clave_movil_dni_nie="00000001R",
+        aeat_output_language="ca",
+    ):
         from aeat.core.i18n._render import clear_output_language_cache
 
         clear_output_language_cache()

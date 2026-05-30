@@ -17,12 +17,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture
-def isolated_language_state(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[None]:
+def isolated_language_state(tmp_path: Path) -> Iterator[None]:
+    """Use override_settings (live-tests-friendly) instead of
+    monkeypatch.delenv per the project no-monkeypatch mandate
+    (CLAUDE.md). Empty-string aeat_output_language pins the unset
+    state via ContextVar; ambient env values are shadowed.
+    """
+
     from aeat.adapters.persistence.storage.sql import dispose_engine
 
     dispose_engine()
-    monkeypatch.delenv("AEAT_OUTPUT_LANGUAGE", raising=False)
     with (
+        override_settings(aeat_output_language=""),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("default"),
     ):

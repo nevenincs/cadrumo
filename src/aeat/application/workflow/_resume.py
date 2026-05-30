@@ -78,21 +78,23 @@ def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
 
     if prior.final_stage is not WorkflowStage.ABORTED:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is in final_stage={prior.final_stage.value!r}; only ABORTED runs may be resumed",
+            translated_message="application.workflow.errors.resume_refused_not_aborted",
+            context={"run_id": run_id, "final_stage": prior.final_stage.value},
         )
     if prior.aborted_reason is None:  # defensive: validator enforces this
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} is ABORTED without aborted_reason; refusing to resume an inconsistent record",
+            translated_message="application.workflow.errors.resume_refused_no_aborted_reason",
+            context={"run_id": run_id},
         )
     if prior.aborted_reason in _NON_RESUMABLE_REASONS:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} aborted for "
-            f"{prior.aborted_reason.value}; this reason is terminal by "
-            f"design and may not be resumed",
+            translated_message="application.workflow.errors.resume_refused_terminal_reason",
+            context={"run_id": run_id, "reason": prior.aborted_reason.value},
         )
     if prior.obligation is None:
         raise WorkflowResumeRefusedError(
-            f"workflow run {run_id!r} carries no obligation; cannot determine (modelo, period) for a retry",
+            translated_message="application.workflow.errors.resume_refused_no_obligation",
+            context={"run_id": run_id},
         )
 
     return WorkflowResumeContext(
@@ -137,8 +139,8 @@ def find_latest_run_for_period(*, modelo: str, period: str) -> WorkflowResult:
     ]
     if not matches:
         raise WorkflowError(
-            f"no persisted workflow run for modelo={modelo} period={period}; "
-            "drive the workflow at least once before resuming",
+            translated_message="application.workflow.errors.no_run_for_period",
+            context={"modelo": modelo, "period": period},
         )
     # list_runs() already sorts newest-first; be explicit so the
     # contract does not depend on that ordering.

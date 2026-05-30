@@ -41,7 +41,13 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
+from ....domain.calculations.registry._ids import (
+    BindingId,
+    CasillaId,
+    ParameterId,
+    RelationId,
+    RevisionId,
+)
 from ....domain.calculations.registry._schema import (
     BracketEntry,
     CasillaDefinition,
@@ -109,7 +115,7 @@ class SheetLayout(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId
     entradas_cells: Mapping[CasillaId, SheetCellAddress]
     calculos_cells: Mapping[CasillaId, SheetCellAddress]
     binding_cells: Mapping[BindingId, SheetCellAddress]

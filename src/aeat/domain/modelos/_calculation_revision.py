@@ -78,8 +78,7 @@ class CalculationRevisionAmendmentKind(StrEnum):
     SUSTITUTIVA = "sustitutiva"
 
 
-from ._ids import CalculationRevisionId as _CalculationRevisionId
-from ._ids import WorkUnitId as _WorkUnitId
+from ._ids import CalculationRevisionId, WorkUnitId
 _ActorLabel = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=64),
@@ -258,12 +257,12 @@ class CalculationRevision(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    calculation_revision_id: _CalculationRevisionId
-    work_unit_id: _WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
     state: CalculationRevisionState
     inputs_snapshot: Mapping[str, str] = Field(default_factory=dict)
     binding_overrides: Mapping[str, str] = Field(default_factory=dict)
-    source_transaction_ids: tuple[_CalculationRevisionId, ...] = Field(default_factory=tuple)
+    source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
     borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     bindings_sourced_from_borrador: tuple[str, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[str, Decimal] = Field(default_factory=dict)
@@ -293,7 +292,7 @@ class CalculationRevision(BaseModel):
     discarded_by: _ActorLabel | None = None
     discard_reason: _DiscardReason | None = None
     amendment_kind: CalculationRevisionAmendmentKind | None = None
-    amends_filing_record_id: _CalculationRevisionId | None = None
+    amends_filing_record_id: CalculationRevisionId | None = None
     amendment_reason: _DiscardReason | None = None
 
     @model_validator(mode="after")

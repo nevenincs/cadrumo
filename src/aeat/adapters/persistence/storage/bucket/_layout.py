@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
-from .....domain.modelos._ids import BucketId
+from .....core.identity import BucketId
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,

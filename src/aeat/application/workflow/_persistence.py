@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import date
+from enum import StrEnum
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -27,7 +28,6 @@ from ...adapters.persistence.storage.runtime_repository import (
 )
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
-from ...core.i18n import tr
 from ...core.logging import get_logger
 from ._errors import WorkflowError
 from ._events import (
@@ -37,6 +37,20 @@ from ._events import (
 from ._models import WorkflowResult, WorkflowState, utc_now
 
 _logger = get_logger(__name__)
+
+
+class WorkflowEnvelopeReasonClass(StrEnum):
+    """Classification of the workflow-state envelope's readability.
+
+    Carried in :attr:`~._events.WorkflowStateResetFingerprint.reason_class`
+    to distinguish a healthy envelope (``READABLE``), a row that cannot
+    be decrypted (``UNREADABLE``), and an absent row (``ABSENT``).
+    """
+
+    READABLE = "readable"
+    UNREADABLE = "unreadable"
+    ABSENT = "absent"
+
 
 _STATE_VERSION = WORKFLOW_STATE_STORAGE_NAMESPACE.schema_version
 _STATE_NAMESPACE = WORKFLOW_STATE_STORAGE_NAMESPACE.namespace
@@ -88,7 +102,8 @@ class WorkflowStateRepository:
             envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
         except ValidationError as exc:
             raise WorkflowError(
-                tr("application.workflow.errors.state_unreadable"),
+                translated_message="application.workflow.errors.state_unreadable",
+                context={"detail": str(exc)},
             ) from exc
         if envelope.classification is not _STATE_SENSITIVITY:
             raise ClassificationError(
@@ -123,7 +138,10 @@ class WorkflowStateRepository:
         try:
             payload = WorkflowState.model_validate({**state.__dict__, "updated_at": utc_now()})
         except ValueError as exc:
-            raise WorkflowError(f"workflow state refused invalid payload: {exc}") from exc
+            raise WorkflowError(
+                translated_message="application.workflow.errors.state_write_invalid_payload",
+                context={"detail": str(exc)},
+            ) from exc
         envelope = Envelope[WorkflowState](
             schema_version=_STATE_VERSION,
             written_at=utc_now(),
@@ -177,7 +195,7 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class or "absent",
+                reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
                 recovered_bucket_id=None,
             )
         recovered_bucket_id: str | None = None
@@ -208,10 +226,10 @@ class WorkflowStateRepository:
                 schema_version=None,
                 written_at=None,
                 byte_length=None,
-                reason_class=reason_class or "absent",
+                reason_class=reason_class or WorkflowEnvelopeReasonClass.ABSENT,
                 recovered_bucket_id=recovered_bucket_id,
             )
-        derived_reason = "readable" if envelope_readable else "unreadable"
+        derived_reason = WorkflowEnvelopeReasonClass.READABLE if envelope_readable else WorkflowEnvelopeReasonClass.UNREADABLE
         return WorkflowStateResetFingerprint(
             schema_version=metadata.schema_version,
             written_at=metadata.written_at,
@@ -293,7 +311,10 @@ class WorkflowRunRepository:
             max_supported_version=_RUN_VERSION,
         )
         if record is None:
-            raise WorkflowError(f"workflow run not found: {safe_run_id}")
+            raise WorkflowError(
+                translated_message="application.workflow.errors.run_not_found",
+                context={"run_id": safe_run_id},
+            )
         envelope = Envelope[WorkflowResult].model_validate_json(record.payload.decode("utf-8"))
         if envelope.classification is not _RUN_SENSITIVITY:
             raise ClassificationError(
@@ -371,10 +392,14 @@ def fingerprint_workflow_state(*, reason_class: str | None = None) -> WorkflowSt
 
 def _validate_run_id(run_id: str) -> str:
     if "/" in run_id or "\\" in run_id:
-        raise WorkflowError("run_id must not contain path separators")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.run_id_invalid_separators",
+        )
     trimmed = run_id.strip()
     if not trimmed:
-        raise WorkflowError("run_id must not be blank")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.run_id_invalid_blank",
+        )
     return trimmed
 
 

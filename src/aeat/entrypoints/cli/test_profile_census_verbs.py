@@ -89,17 +89,22 @@ def test_census_help_lists_four_verbs(cli_runner: CliRunner) -> None:
         assert verb in result.output
 
 
-def test_refresh_refuses_without_live_gate(
-    cli_runner: CliRunner, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_refresh_refuses_without_live_gate(cli_runner: CliRunner) -> None:
     """Live refresh requires AEAT_LIVE_TESTS_ENABLED=1 to pass the
     access-gate. With the gate off (default), the CLI surfaces the
-    refusal without ever touching a browser session."""
+    refusal without ever touching a browser session.
+
+    Uses ``override_settings(aeat_live_tests_enabled=False)`` to pin the
+    gate-off state per the project no-monkeypatch mandate (CLAUDE.md);
+    ContextVar-backed override shadows any ambient env value.
+    """
+
+    from aeat.core.config import override_settings
 
     _seed_active_profile()
-    monkeypatch.delenv("AEAT_LIVE_TESTS_ENABLED", raising=False)
 
-    result = cli_runner.invoke(profile_app, ["census", "refresh"])
+    with override_settings(aeat_live_tests_enabled=""):
+        result = cli_runner.invoke(profile_app, ["census", "refresh"])
 
     assert result.exit_code != 0
 

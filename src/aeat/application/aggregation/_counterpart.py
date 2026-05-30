@@ -18,19 +18,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
 from aeat.core.aggregation import AggregationSourceKind
-
-CounterpartSourceKind = Literal[
-    "ledger_transaction",
-    "purchase_invoice_evidence",
-    "payable_invoice",
-    "collectible_invoice",
-]
+from aeat.domain.calculations.registry._bindings import CounterpartSourceKind
 
 _CANONICAL_SOURCE_KINDS: frozenset[AggregationSourceKind] = frozenset(
     {

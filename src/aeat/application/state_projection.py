@@ -33,6 +33,8 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core.config import Settings
+from ..core.errors import AeatError
+from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..domain.deadlines import (
     DeadlineEngine,
@@ -354,7 +356,7 @@ def _build_auth_readiness(
             health_summary = description.health_summary or ""
             health_severity = description.health_severity or ""
             configured = configured and description.configured
-        except Exception:
+        except (AeatError, OSError, ValueError, AttributeError):
             _log.warning(
                 "auth backend probe failed for provider %s; reporting unavailable",
                 provider,
@@ -496,7 +498,7 @@ def _build_pending_obligations(
         schedule: Schedule = compute_obligation_schedule(
             DeadlineEngine(), profile, today=today
         )
-    except Exception:
+    except (AeatError, ValueError, LookupError, AttributeError):
         _log.warning(
             "deadline schedule computation failed; reporting no pending obligations",
             exc_info=True,
@@ -535,7 +537,7 @@ class ProjectionModeloReadiness(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)

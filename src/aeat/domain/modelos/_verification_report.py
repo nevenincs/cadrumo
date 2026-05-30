@@ -26,6 +26,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from ._errors import ModeloValidationError
+from ._ids import VerificationReportId
 
 _HEX_64_PATTERN = r"^[0-9a-f]{64}$"
 
@@ -132,7 +133,7 @@ class VerificationReport(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    verification_report_id: _ReportId
+    verification_report_id: VerificationReportId
     calculation_revision_id: _CalculationRevisionId
     completeness_status: VerificationCompletenessStatus
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)

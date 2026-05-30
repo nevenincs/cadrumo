@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from ..config import override_settings
 from ..logging import get_logger
 from . import run_context
 
@@ -46,30 +47,29 @@ class TestRunContextLoggingFilter:
     def test_attributes_present_inside_and_outside_run_context(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        logger = get_logger("aeat.core.observability.test_logging_filter")
-        capture = _CaptureHandler()
-        logging.getLogger().addHandler(capture)
-        try:
-            logger.info("outside")
-            with run_context(entrypoint="aeat test", arguments=()) as info:
-                logger.info("inside")
-                inside_run_id = info.run_id
-        finally:
-            logging.getLogger().removeHandler(capture)
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            logger = get_logger("aeat.core.observability.test_logging_filter")
+            capture = _CaptureHandler()
+            logging.getLogger().addHandler(capture)
+            try:
+                logger.info("outside")
+                with run_context(entrypoint="aeat test", arguments=()) as info:
+                    logger.info("inside")
+                    inside_run_id = info.run_id
+            finally:
+                logging.getLogger().removeHandler(capture)
 
-        outside_records = [r for r in capture.records if r.getMessage() == "outside"]
-        inside_records = [r for r in capture.records if r.getMessage() == "inside"]
-        assert outside_records, "outside log record was not captured"
-        assert inside_records, "inside log record was not captured"
-        for record in outside_records:
-            assert getattr(record, "run_id", None) == ""
-            assert getattr(record, "step_id", None) == ""
-        for record in inside_records:
-            assert getattr(record, "run_id", None) == inside_run_id
-            assert getattr(record, "step_id", None) != ""
+            outside_records = [r for r in capture.records if r.getMessage() == "outside"]
+            inside_records = [r for r in capture.records if r.getMessage() == "inside"]
+            assert outside_records, "outside log record was not captured"
+            assert inside_records, "inside log record was not captured"
+            for record in outside_records:
+                assert getattr(record, "run_id", None) == ""
+                assert getattr(record, "step_id", None) == ""
+            for record in inside_records:
+                assert getattr(record, "run_id", None) == inside_run_id
+                assert getattr(record, "step_id", None) != ""
 
 
 class TestStderrRunEventFilter:
@@ -112,19 +112,18 @@ class TestStderrRunEventFilter:
     def test_events_still_reach_jsonl_sink_end_to_end(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """The filter must NOT accidentally drop events from the sink."""
         from . import GenericPayload, RunEventKind, RunEventPayload, load_events, record_event
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:
-            record_event(
-                RunEventKind.NAVIGATION,
-                payload=RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
-            )
-        events = load_events(info.run_id)
-        # STEP_START + NAVIGATION + STEP_END = 3 events.
-        assert len(events) == 3
-        kinds = {e.kind for e in events}
-        assert RunEventKind.NAVIGATION in kinds
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with run_context(entrypoint="aeat test stderr-filter", arguments=()) as info:
+                record_event(
+                    RunEventKind.NAVIGATION,
+                    payload=RunEventPayload(generic=GenericPayload(fields=(("k", "v"),))),
+                )
+            events = load_events(info.run_id)
+            # STEP_START + NAVIGATION + STEP_END = 3 events.
+            assert len(events) == 3
+            kinds = {e.kind for e in events}
+            assert RunEventKind.NAVIGATION in kinds

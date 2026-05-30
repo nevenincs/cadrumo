@@ -9,8 +9,11 @@ import json
 from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, NamedTuple
+
+from pydantic import ValidationError
 
 if TYPE_CHECKING:
     from ...domain.transactions._classification_rule import LedgerClassificationRule
@@ -27,10 +30,11 @@ from ...adapters.inbound.financial.providers import (
 )
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
-from ...core.errors import resolve_error_message
+from ...core.aggregation import AggregationSourceKind
+from ...core.errors import AeatError, resolve_error_message
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
-from ...core.time._utc import _coerce_utc_aware
 from ...core.i18n import tr
+from ...core.time._utc import _coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets import (
@@ -83,6 +87,7 @@ from ...domain.usage_ratios import (
 )
 from ..aggregation import Period
 from ..export import serialize_tabular_rows
+from ..review import LedgerReviewStatus
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
@@ -119,7 +124,21 @@ from ._models import (
     SplitTransactionResult,
 )
 from ._preflight import preflight_ledger_tax_readiness
-from ..review import LedgerReviewStatus
+
+
+class LedgerProviderID(StrEnum):
+    """Canonical provider ID strings accepted by the ledger import dispatch."""
+
+    AUTO = "auto"
+    CSV = "csv"
+    OFX = "ofx"
+    QFX = "qfx"
+    XLSX = "xlsx"
+    EXCEL = "excel"
+    N26 = "n26"
+    PDF = "pdf"
+    PDF_N26 = "pdf-n26"
+
 
 _BUCKET_EVENT_PAYLOAD_VERSION = 1
 _MANUAL_PROVIDER_NAME = "manual-ledger"
@@ -229,7 +248,10 @@ def attach_manual_transaction_evidence(
     normalized_purchase_evidence_id = purchase_invoice_evidence_id.strip() if purchase_invoice_evidence_id else None
     normalized_attachment_ids = _normalise_attachment_patch_ids(attachment_ids)
     if normalized_purchase_evidence_id is None and not normalized_attachment_ids:
-        raise TransactionValidationError("ledger evidence attachment requires purchase evidence or attachment ids")
+        raise TransactionValidationError(
+            "ledger evidence attachment requires purchase evidence or attachment ids",
+            translated_message="application.ledger.errors.evidence_attachment_requires_ids",
+        )
     if (
         normalized_purchase_evidence_id is not None
         and current.purchase_invoice_evidence_id is not None
@@ -237,7 +259,8 @@ def attach_manual_transaction_evidence(
     ):
         raise TransactionValidationError(
             "ledger transaction already has purchase_invoice_evidence_id; "
-            "remove or replace through attachments workflow"
+            "remove or replace through attachments workflow",
+            translated_message="application.ledger.errors.purchase_evidence_already_set",
         )
     patch_values: dict[str, object] = {}
     if normalized_purchase_evidence_id is not None:
@@ -2052,30 +2075,32 @@ def _direction_from_amount(raw: RawTransaction) -> TransactionDirection:
 
 
 def _resolve_financial_provider(provider: str, path: Path) -> FinancialProvider:
-    provider_id = provider.strip().lower()
-    if provider_id == "auto":
+    try:
+        provider_id = LedgerProviderID(provider.strip().lower())
+    except ValueError:
+        known = ", ".join(p.value for p in LedgerProviderID)
+        raise TransactionValidationError(
+            translated_message="errors.transaction.unknown_ledger_provider",
+            context={"provider": provider, "providers": known},
+        )
+    if provider_id is LedgerProviderID.AUTO:
         detected = detect_provider(path)
         if detected is None:
             raise TransactionValidationError(f"auto-detection of ledger format failed for {path}")
         return detected
-    if provider_id == "csv":
+    if provider_id is LedgerProviderID.CSV:
         return CsvProvider()
-    if provider_id in {"ofx", "qfx"}:
+    if provider_id in {LedgerProviderID.OFX, LedgerProviderID.QFX}:
         return OfxProvider()
-    if provider_id in {"xlsx", "excel"}:
+    if provider_id in {LedgerProviderID.XLSX, LedgerProviderID.EXCEL}:
         return XlsxProvider()
-    if provider_id == "n26":
+    if provider_id is LedgerProviderID.N26:
         detected = detect_provider(path)
         if detected is None:
             raise TransactionValidationError(f"auto-detection of N26 format failed for {path}")
         return detected
-    if provider_id in {"pdf", "pdf-n26"}:
-        return PdfN26Provider()
-    known = "auto, csv, ofx, qfx, xlsx, excel, n26, pdf, pdf-n26"
-    raise TransactionValidationError(
-        translated_message="errors.transaction.unknown_ledger_provider",
-        context={"provider": provider, "providers": known},
-    )
+    # PDF and PDF_N26
+    return PdfN26Provider()
 
 
 def _validate_import_source(provider: FinancialProvider, path: Path) -> ProviderValidation:
@@ -3119,7 +3144,7 @@ def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: date
 
 def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
     values = {
-        "source_kind": "ledger_transaction",
+        "source_kind": AggregationSourceKind.LEDGER_TRANSACTION,
         "source_command": command.source_command,
         "actor": command.actor,
         "business_classification": command.business_classification.value,
@@ -3415,7 +3440,7 @@ def bulk_classify_from_csv(
                     strict=False,
                 )
             )
-        except Exception as exc:
+        except (ValidationError, ValueError, KeyError) as exc:
             parse_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,
@@ -3452,7 +3477,7 @@ def bulk_classify_from_csv(
                 # update_manual_transaction_fields returned without events:
                 # classification was already identical — treat as skipped.
                 skipped += 1
-        except Exception as exc:
+        except (AeatError, ValidationError) as exc:
             apply_failures.append(
                 BulkClassifyFailure(
                     row_index=idx,

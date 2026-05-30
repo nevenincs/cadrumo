@@ -35,10 +35,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Final
 from urllib.parse import quote, urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
+from .....core.config import unwrap_optional_secret
 from .....core.time._clock import _now
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -233,6 +234,13 @@ def _url_diagnostic(value: str) -> dict[str, object]:
 
 
 def _diagnostic_fingerprint(value: object) -> str:
+    # Unwrap SecretStr before stringifying — `str(SecretStr(...))` returns
+    # the redacted repr `"SecretStr('**********')"`, not the secret value,
+    # so every fingerprint would collide on the same digest of the redacted
+    # placeholder. Callers may legitimately pass either a raw string or the
+    # SecretStr-typed Settings field.
+    if isinstance(value, SecretStr):
+        value = value.get_secret_value()
     text = str(value or "").strip().upper()
     if not text:
         return ""
@@ -332,7 +340,8 @@ class ClaveMovilAuthProvider:
         async with self._lock:
             if self._active_session is not None:
                 raise AeatLoginAssertionError(
-                    "ClaveMovilAuthProvider already has an active session; call close() before authenticating again"
+                    "ClaveMovilAuthProvider already has an active session; call close() before authenticating again",
+                    translated_message="adapters.auth.clave_movil.errors.already_active",
                 )
             dni_nie = self._require_identity()
             resume_path = self._storage_state_path()
@@ -486,7 +495,8 @@ class ClaveMovilAuthProvider:
         context = self._context
         if context is None:
             raise AeatLoginAssertionError(
-                "ClaveMovilAuthProvider.verify() requires an active browser context; call authenticate() first"
+                "ClaveMovilAuthProvider.verify() requires an active browser context; call authenticate() first",
+                translated_message="adapters.auth.clave_movil.errors.verify_requires_active_context",
             )
         session_landing_url = (
             session.provider_detail.landing_url
@@ -568,7 +578,7 @@ class ClaveMovilAuthProvider:
         fault and surfaces as ``warning``; the no-identity case is an
         undeclared state and surfaces as ``info``.
         """
-        dni_nie = (self._settings.aeat_clave_movil_dni_nie or "").strip()
+        dni_nie = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
         if not dni_nie:
             return AuthProviderDescription(
                 kind=self.kind,
@@ -613,11 +623,12 @@ class ClaveMovilAuthProvider:
     # ── Identity + target helpers ───────────────────────────────────────────
 
     def _require_identity(self) -> str:
-        raw = self._settings.aeat_clave_movil_dni_nie
+        raw = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie)
         if not raw:
             raise ClaveMovilConfigurationError(
                 "AEAT_CLAVE_MOVIL_DNI_NIE is not set; set it to your DNI or NIE "
-                "before running `aeat config auth configure --provider clave_movil`."
+                "before running `aeat config auth configure --provider clave_movil`.",
+                translated_message="adapters.auth.clave_movil.errors.dni_nie_not_set",
             )
         _classify_identity(raw)
         return raw.strip().upper()
@@ -689,7 +700,7 @@ class ClaveMovilAuthProvider:
         return False
 
     def _attempt_context(self) -> dict[str, object]:
-        identity = (self._settings.aeat_clave_movil_dni_nie or "").strip()
+        identity = unwrap_optional_secret(self._settings.aeat_clave_movil_dni_nie).strip()
         try:
             identity_kind = _classify_identity(identity)
         except ClaveMovilConfigurationError:
@@ -708,7 +719,7 @@ class ClaveMovilAuthProvider:
             "clave_identity_fingerprint": _diagnostic_fingerprint(identity),
             "dni_fecha_configured": bool((self._settings.aeat_clave_movil_dni_fecha or "").strip()),
             "dni_fecha_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_dni_fecha),
-            "nie_soporte_configured": bool((self._settings.aeat_clave_movil_nie_soporte or "").strip()),
+            "nie_soporte_configured": bool(unwrap_optional_secret(self._settings.aeat_clave_movil_nie_soporte).strip()),
             "nie_soporte_fingerprint": _diagnostic_fingerprint(self._settings.aeat_clave_movil_nie_soporte),
             "prefer_non_qr": self._settings.aeat_clave_prefer_non_qr,
             "headless": self._settings.aeat_browser_headless,
@@ -882,7 +893,10 @@ class ClaveMovilAuthProvider:
         try:
             return _ClaveMovilSessionMetadata.model_validate_json(json.dumps(persisted.metadata, default=str))
         except (ValueError, ValidationError) as exc:
-            raise AeatLoginAssertionError(f"Cl@ve Móvil metadata invalid for {storage_state_path}: {exc}") from exc
+            raise AeatLoginAssertionError(
+                f"Cl@ve Móvil metadata invalid for {storage_state_path}: {exc}",
+                translated_message="adapters.auth.clave_movil.errors.metadata_invalid",
+            ) from exc
 
     def _invalidate_persisted(self, storage_state_path: Path) -> None:
         _session_store.delete(storage_state_path)
@@ -953,6 +967,7 @@ class ClaveMovilAuthProvider:
                 raise ClaveMovilApprovalTimeoutError(
                     f"Cl@ve Móvil browser authentication did not complete after {timeout_ms // 1000} seconds. "
                     "The driver observed the AEAT browser page but cannot infer the phone/app state.",
+                    translated_message="adapters.auth.clave_movil.errors.approval_timeout",
                     failure_mode=ClaveMovilFailureMode.AUTH_COMPLETION_TIMEOUT,
                     context={
                         "timeout_ms": timeout_ms,
@@ -1216,7 +1231,7 @@ class ClaveMovilAuthProvider:
             await type_text(surface.dni_fecha_input_selector, fecha)
         else:
             await wait_for(surface.nie_soporte_visible_selector, timeout=self._navigation_timeout_ms)
-            soporte = (self._settings.aeat_clave_movil_nie_soporte or "").strip()
+            soporte = unwrap_optional_secret(self._settings.aeat_clave_movil_nie_soporte).strip()
             if not soporte:
                 raise ClaveMovilConfigurationError(
                     "AEAT_CLAVE_MOVIL_NIE_SOPORTE is required for the non-QR NIE fallback."

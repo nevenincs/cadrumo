@@ -35,6 +35,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.identity import ProfileId
 from ...domain.user_profile._values import UserProfileFact, UserProfileRecord
 from ..live._censo import (
     CensoSnapshot,
@@ -86,7 +87,7 @@ class CensoProfileComparison(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1)
-    profile_id: str = Field(min_length=1)
+    profile_id: ProfileId
     captured_at: datetime
     rows: tuple[CensoFieldComparison, ...] = Field(default_factory=tuple)
 
@@ -109,7 +110,7 @@ class CensoApplyResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1)
-    profile_id: str = Field(min_length=1)
+    profile_id: ProfileId
     written_paths: tuple[str, ...] = Field(default_factory=tuple)
     unchanged_paths: tuple[str, ...] = Field(default_factory=tuple)
     seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)

@@ -704,7 +704,8 @@ def _validate_bundle_schema_version(bundle: object) -> None:
     if version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise UnsupportedBundleSchemaVersionError(
             f"bundle_schema_version {version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}"
+            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
 
 

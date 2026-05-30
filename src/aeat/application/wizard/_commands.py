@@ -923,7 +923,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             _typer.echo(f"status\t{verb_label}")
             if mode == "create":
                 _typer.echo(f"active_profile\t{profile_name}")
-            _typer.echo("next\taeat app modelo work create")
+            _typer.echo(f"next\t{tr('application.wizard.next_hint.modelo_work_create')}")
 
     # CAST-RATIONALE-WIZARD-COMMAND-INJECT: Typer resolves CLI parameters
     # from ``__signature__`` at decoration time; the cast to ``Any`` is the

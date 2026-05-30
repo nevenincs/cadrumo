@@ -20,6 +20,7 @@ from pathlib import Path
 
 import pytest
 
+from aeat.core.config import override_settings
 from aeat.tests.cli_runner import invoke_cached_cli
 from aeat.tests.secure_sql import isolated_sessionless_storage_root
 
@@ -45,12 +46,17 @@ _LEAK_MARKERS: tuple[str, ...] = (
 
 
 @pytest.fixture
-def _fresh_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """A pristine storage root: no pointer, no database, no buckets."""
+def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
+    """A pristine storage root: no pointer, no database, no buckets.
 
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
+    Uses ``override_settings`` (ContextVar-backed, live-tests-friendly)
+    instead of monkeypatch.setenv per the project no-monkeypatch mandate
+    in CLAUDE.md (aeat-local-execution + aeat-quality-gates rules).
+    """
+
+    with override_settings(aeat_output_language="en"):
+        with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
+            yield storage_root
 
 
 @pytest.mark.parametrize("verb", _COLD_START_VERBS, ids=lambda v: " ".join(v))

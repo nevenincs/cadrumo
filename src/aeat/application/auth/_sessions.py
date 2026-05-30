@@ -10,13 +10,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, SkipValidation, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
 from ...adapters.outbound.aeat.auth import _session_store
 from ...core.errors import AeatError
 from ...core.i18n import tr
-from ...core.time._utc import _validate_utc_aware
 from ...core.logging import get_logger
+from ...core.time._utc import _validate_utc_aware
 from . import AuthProviderKind, select_provider
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
@@ -80,6 +80,17 @@ class CorruptAuthSessionError(AeatError):
 
 class AuthSessionUnavailableError(AeatError):
     """Raised when no verified active AEAT session can be supplied."""
+
+
+class SessionDeserializationError(AuthSessionUnavailableError):
+    """Raised when a persisted session field cannot be deserialized to the expected type.
+
+    Replaces the bare :exc:`TypeError` raised by :func:`_session_metadata_datetime`
+    so callers catch a typed, registry-bound error that inherits from
+    :class:`AuthSessionUnavailableError`.  Inheriting from
+    :class:`AuthSessionUnavailableError` preserves backward compatibility with
+    any ``except AuthSessionUnavailableError`` guard at the call site.
+    """
 
 
 class AuthProfileIdentityMismatchError(AeatError):
@@ -405,7 +416,10 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
         parsed = datetime.fromisoformat(text)
         _validate_utc_aware(parsed)
         return parsed
-    raise TypeError(f"persisted session {field} must be a datetime or ISO-8601 string")
+    raise SessionDeserializationError(
+        translated_message="application.auth.errors.session_field_not_datetime",
+        context={"field": field},
+    )
 
 
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
@@ -417,6 +431,8 @@ def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) ->
 
 
 def _normalise_tax_identity(value: object) -> str:
+    if isinstance(value, SecretStr):
+        value = value.get_secret_value()
     return str(value or "").strip().upper()
 
 

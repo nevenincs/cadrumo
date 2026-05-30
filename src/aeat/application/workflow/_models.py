@@ -28,7 +28,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_valida
 from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStatus
 from ...core._bucket_pointer_io import resolve_active_bucket_id
 from ...core.i18n import tr
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ..auth._models import AuthState
 from ._utils import utc_now
 

@@ -45,12 +45,18 @@ _FAST_REPAIR_VERBS: tuple[tuple[str, ...], ...] = (
 
 
 @pytest.fixture
-def _fresh_storage_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
-    """A pristine storage root: no pointer, no database, no buckets."""
+def _fresh_storage_root(tmp_path: Path) -> Iterator[Path]:
+    """A pristine storage root: no pointer, no database, no buckets.
 
-    monkeypatch.setenv("AEAT_OUTPUT_LANGUAGE", "en")
-    with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
-        yield storage_root
+    Uses ``override_settings`` (ContextVar-backed, live-tests-friendly)
+    per the project no-monkeypatch mandate (CLAUDE.md).
+    """
+
+    from aeat.core.config import override_settings
+
+    with override_settings(aeat_output_language="en"):
+        with isolated_sessionless_storage_root(tmp_path=tmp_path) as storage_root:
+            yield storage_root
 
 
 @pytest.mark.parametrize("verb", _FAST_REPAIR_VERBS, ids=lambda v: " ".join(v))

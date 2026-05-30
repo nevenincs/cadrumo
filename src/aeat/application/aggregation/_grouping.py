@@ -102,7 +102,8 @@ def filter_observations_for_modelo[T, AttrValue](
     """
     if modelo not in catalogue:
         raise AggregationUnsupportedModeloError(
-            t(f"{aggregator_label} for modelo {modelo!r} is not registered"),
+            t("aggregation.grouping.errors.unsupported_modelo"),
+            context={"aggregator_label": aggregator_label, "modelo": modelo},
         )
     eligible = catalogue[modelo]
     return tuple(o for o in observations if attribute_fn(o) in eligible)

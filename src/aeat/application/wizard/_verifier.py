@@ -18,8 +18,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core.profile import SetupAnswers
 from ...domain.profile._renta_codes import SituacionFamiliar
-from ._setup_answers import SetupAnswers
 
 
 class WizardCheckSeverity(StrEnum):

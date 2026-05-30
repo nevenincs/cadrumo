@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ....core.aggregation import AggregationSourceKind
+from ....core.external_constants import DEFAULT_CURRENCY
 from ...iva import (
     EUMemberState,
     InvoiceKind,
@@ -16,8 +18,8 @@ from ...iva import (
     OssIossRegime,
     TransactionKind,
 )
-from ....core.external_constants import DEFAULT_CURRENCY
 from ._errors import RegistryValidationError
+from ._ids import CasillaId, FormulaId, OracleId
 from ._schema import DataBindingDefinition, InputKind, ModeloRevision
 
 _RectificationScope = Literal["only_rectifications", "exclude_rectifications", "any"]
@@ -87,9 +89,9 @@ class CasillaObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    casilla_id: str = Field(min_length=1)
+    casilla_id: CasillaId
     value: Decimal
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     # ``op`` is the formula's top-level operator label (``add``, ``multiply``,
     # ``lookup_bracket_by_ccaa`` …). Carried alongside ``formula_id`` so the
     # full :class:`RegistryCalculationEntry` shape projects back from a typed
@@ -162,7 +164,7 @@ class OracleModeloObservation(RegistryModeloObservation):
     every other invariant is inherited unchanged.
     """
 
-    oracle_id: str = Field(min_length=1, max_length=128)
+    oracle_id: OracleId
 
 
 class RegistryModeloObservationRequirement(BaseModel):
@@ -1645,7 +1647,9 @@ class CounterpartAggregationObservation(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    source_kind: CounterpartSourceKind = Field(default="ledger_transaction")
+    source_kind: CounterpartSourceKind = Field(
+        default=cast(CounterpartSourceKind, AggregationSourceKind.LEDGER_TRANSACTION),
+    )
     source_id: str = Field(min_length=1, max_length=128)
     party_tax_id: str = Field(min_length=1, max_length=64)
     country_code: str = Field(min_length=2, max_length=2)

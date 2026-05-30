@@ -15,8 +15,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .....core.errors import CoreValidationError
+from .....core.identity import BucketId
 from .....core.time._utc import _validate_utc_aware
-from .....domain.modelos._ids import BucketId
 from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")

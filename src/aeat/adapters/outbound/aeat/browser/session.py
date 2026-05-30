@@ -137,9 +137,9 @@ class BrowserSession:
         if not self.settings.aeat_proxy_url:
             return None
         proxy = ProxySettings(server=self.settings.aeat_proxy_url)
-        if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret:
+        if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret is not None:
             proxy["username"] = self.settings.aeat_proxy_username
-            proxy["password"] = self.settings.aeat_proxy_password_secret
+            proxy["password"] = self.settings.aeat_proxy_password_secret.get_secret_value()
         if self.settings.aeat_proxy_bypass:
             proxy["bypass"] = self.settings.aeat_proxy_bypass
         return proxy

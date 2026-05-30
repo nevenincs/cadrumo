@@ -14,6 +14,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core._time import utc_now
+from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ...core.parsing._dates import _parse_iso8601_date
 from ...core.parsing._utils import _parse_bool
 from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
@@ -131,7 +132,7 @@ class UserProfileFact(BaseModel):
 
     path: _FieldPath
     value: ProfileFactValue
-    source: _Source = "manual_cli"
+    source: _Source = _PROVENANCE_SOURCE_MANUAL_CLI
     valid_from: date | None = None
     valid_to: date | None = None
 

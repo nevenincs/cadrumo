@@ -16,10 +16,11 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.errors import CoreValidationError
+from ...core.identity import BucketId
 from ...core.time._utc import _validate_utc_aware
-from ..modelos._ids import BucketId
 from ._enums import AttachmentKind, AttachmentSource
 from ._errors import AttachmentValidationError
+from ._ids import AttachmentId
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -104,7 +105,7 @@ class Attachment(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    attachment_id: str = Field(min_length=64, max_length=64)
+    attachment_id: AttachmentId
     kind: AttachmentKind
     source: AttachmentSource
     source_reference: str = Field(min_length=1)

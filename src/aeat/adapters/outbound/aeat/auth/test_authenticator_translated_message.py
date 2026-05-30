@@ -29,7 +29,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from .....core.config import Settings
+from .....core.config import Settings, override_settings
 from .....core.i18n import tr
 from .....tests.secure_sql import isolated_runtime_profile
 from . import (
@@ -118,22 +118,22 @@ def _load_cert(tmp_path: Path) -> LoadedCertificate:
     return load_certificate(bundle)
 
 
-def _settings_for(bundle_path: Path, monkeypatch: pytest.MonkeyPatch) -> Settings:
-    from pydantic_settings import SettingsConfigDict
+def _settings_for(bundle_path: Path) -> Settings:
+    """Create Settings with certificate path and token directory overrides.
 
-    for name in Settings.env_var_names():
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(bundle_path))
-    monkeypatch.setenv("AEAT_CERTIFICATE_PASSWORD_SECRET", _SECRET)
-    monkeypatch.setenv("AEAT_CERTIFICATE_BACKEND", CertificateBackend.PLAYWRIGHT_CONTEXT.value)
-    monkeypatch.setenv("AEAT_CERTIFICATE_VERIFY_URL", "https://127.0.0.1:1/")
-    monkeypatch.setenv("AEAT_TOKEN_DIR", str(bundle_path.parent / ".tokens"))
-    monkeypatch.setenv("AEAT_LOCAL_STORAGE_ROOT", str(bundle_path.parent / "storage"))
-
-    class _IsolatedSettings(Settings):
-        model_config = SettingsConfigDict(env_file=None, env_file_encoding="utf-8", env_ignore_empty=True)
-
-    return _IsolatedSettings()
+    Uses override_settings (ContextVar-backed, live-tests-friendly) instead of
+    monkeypatch.setenv per the project no-monkeypatch mandate in CLAUDE.md
+    (aeat-local-execution + aeat-quality-gates rules). Callers must wrap the
+    returned Settings context within override_settings().
+    """
+    return Settings(
+        aeat_certificate_path=str(bundle_path),
+        aeat_certificate_password_secret=_SECRET,
+        aeat_certificate_backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
+        aeat_certificate_verify_url="https://127.0.0.1:1/",
+        aeat_token_dir=str(bundle_path.parent / ".tokens"),
+        aeat_local_storage_root=str(bundle_path.parent / "storage"),
+    )
 
 
 def _successful_handshake() -> HandshakeResult:
@@ -256,12 +256,11 @@ def _certificate_session(
 
 def test_authenticate_already_active_carries_translated_message(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """authenticate raises AeatLoginAssertionError with already_active key
     when _active_session is set before the call."""
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_for(bundle_path)
     authenticator = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
 
     now = datetime.now(UTC)
@@ -288,12 +287,11 @@ def test_authenticate_already_active_carries_translated_message(
 
 def test_authenticate_assertion_failed_carries_translated_message(
     tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """authenticate raises AeatLoginAssertionError with assertion_failed key
     when the browser context is missing the AEAT certificate marker."""
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_for(bundle_path, monkeypatch)
+    settings = _settings_for(bundle_path)
     # Use a failing handshake so the probe is_valid=False, but the context marker check passes.
     authenticator = AeatAuthenticator(settings, handshake_verifier=_FailingHandshakeVerifier())
 

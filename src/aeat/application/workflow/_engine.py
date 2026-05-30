@@ -14,6 +14,7 @@ Safety invariants enforced by this module:
 from __future__ import annotations
 
 from datetime import date, datetime
+from enum import StrEnum
 from typing import Literal, NoReturn, cast
 
 from ...application.auth import describe_provider_operator_impact
@@ -60,6 +61,21 @@ from ._protocols import (
 _CertificateSeverityValue = Literal["OK", "WARN", "CRITICAL", "EXPIRED"]
 
 
+class DeadlineRole(StrEnum):
+    """Role of a deadline within workflow step metadata."""
+
+    INFORMATIONAL = "informational"
+    BINDING = "binding"
+
+
+class FilingWindowState(StrEnum):
+    """State of the filing window for a given (modelo, period) at workflow time."""
+
+    ABSENT = "absent"
+    OPEN = "open"
+    CLOSED = "closed"
+
+
 def _period_to_year(period: str) -> int | None:
     """Extract the leading 4-digit calendar year from a period string.
 
@@ -78,7 +94,10 @@ def _period_to_year(period: str) -> int | None:
 def _registry_period_token(period: str) -> tuple[int, str]:
     year = _period_to_year(period)
     if year is None:
-        raise WorkflowError(f"cannot derive registry year from workflow period {period!r}")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.period_registry_year_unresolvable",
+            context={"period": period},
+        )
     if period == str(year) or period == f"{year}A":
         return year, "0A"
     if len(period) == 6 and period.startswith(f"{year}Q") and period[-1] in "1234":
@@ -92,7 +111,10 @@ def _registry_period_token(period: str) -> tuple[int, str]:
     # Pago-fraccionado: ``"2026P1"`` / ``"2026P2"`` / ``"2026P3"`` → ``(2026, "1P")`` etc.
     if len(period) == 6 and period.startswith(f"{year}P") and period[-1] in "123":
         return year, f"{period[-1]}P"
-    raise WorkflowError(f"cannot map workflow period {period!r} to a registry period")
+    raise WorkflowError(
+        translated_message="application.workflow.errors.period_registry_unmappable",
+        context={"period": period},
+    )
 
 
 _logger = get_logger(__name__)
@@ -622,7 +644,7 @@ class WorkflowEngine:
                         "opens_on": obligation.opens_on.isoformat(),
                         "closes_on": obligation.closes_on.isoformat(),
                         "filing_window": window_state,
-                        "deadline_role": "informational",
+                        "deadline_role": DeadlineRole.INFORMATIONAL,
                     },
                 )
             )
@@ -658,7 +680,7 @@ class WorkflowEngine:
                 details={
                     "modelo": target_modelo,
                     "period": target_period,
-                    "filing_window": "absent",
+                    "filing_window": FilingWindowState.ABSENT,
                     "deadline_role": "informational",
                 },
             )

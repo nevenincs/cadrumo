@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ....domain.fincas._rounding import _round_to_cents
 from ._bindings import CasillaObservation, _PreviousModeloSelector
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
+from ._ids import FormulaId
 from ._runtime_graph import formula_evaluation_order
 from ._schema import (
     CasillaDefinition,
@@ -72,7 +73,7 @@ class RegistryCalculationEntry(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    formula_id: str
+    formula_id: FormulaId
     target: str
     op: str
     operand_refs: tuple[str, ...]

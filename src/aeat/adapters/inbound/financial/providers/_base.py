@@ -59,6 +59,12 @@ from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
 LOGGER = get_logger(__name__)
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+# Defensive ceiling on financial-source ingest size. Real bank statements
+# (PDF, XLSX, CSV) for a full fiscal year are well under 10 MiB; this 64 MiB
+# cap rejects oversized inputs (including XLSX zip-bomb payloads) before
+# they reach openpyxl / pdfplumber / the csv reader.
+_MAX_SOURCE_BYTES = 64 * 1024 * 1024
+
 #: Allowed values for :attr:`FinancialProvider.verification_source`.
 CorpusVerificationSource = Literal[
     "real_bank_corpus_pdf",
@@ -196,6 +202,56 @@ class FinancialProvider(ABC):
     verification_source: ClassVar[CorpusVerificationSource]
     provisional_pending_specimen: ClassVar[bool]
 
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Enforce corpus-discipline declarations at subclass definition time.
+
+        ``verification_source`` and ``provisional_pending_specimen`` are
+        declared as :class:`ClassVar` annotations on the ABC but Python does
+        not enforce unset ``ClassVar`` attributes.  ``__init_subclass__`` runs
+        once per concrete subclass at class-creation time (i.e. at import),
+        giving the same guarantee as ``@abstractmethod`` without changing the
+        class-variable declaration syntax that every concrete provider already
+        uses.
+
+        Raises:
+            TypeError: When a concrete (non-abstract) subclass does not declare
+                       ``verification_source`` or ``provisional_pending_specimen``,
+                       or when ``verification_source`` carries an unknown literal.
+        """
+        super().__init_subclass__(**kwargs)
+        # Skip enforcement for abstract subclasses (those that still have
+        # abstract methods remaining — they are intermediary ABCs, not leaf
+        # providers).
+        if getattr(cls, "__abstractmethods__", None):
+            return
+        _VALID_SOURCES: frozenset[str] = frozenset(
+            {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
+        )
+        if not hasattr(cls, "verification_source"):
+            raise TypeError(
+                f"{cls.__qualname__} must declare a 'verification_source' class variable"
+            )
+        vs = cls.verification_source  # type: ignore[attr-defined]
+        if vs not in _VALID_SOURCES:
+            raise TypeError(
+                f"{cls.__qualname__}.verification_source={vs!r} is not one of "
+                f"{sorted(_VALID_SOURCES)}"
+            )
+        if not hasattr(cls, "provisional_pending_specimen"):
+            raise TypeError(
+                f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
+            )
+        pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]
+        if not isinstance(pps, bool):
+            raise TypeError(
+                f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
+            )
+        if vs == "no_corpus" and pps is not True:
+            raise TypeError(
+                f"{cls.__qualname__}: verification_source='no_corpus' requires "
+                "provisional_pending_specimen=True"
+            )
+
     def can_handle(self, path: Path) -> bool:
         """Return whether the provider is a plausible match for ``path``.
 
@@ -243,11 +299,26 @@ class FinancialProvider(ABC):
 
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read the raw source bytes once for validation and provenance."""
+        if path.is_symlink():
+            raise InvalidFinancialSourceError(
+                translated_message="errors.financial.source_file_is_symlink",
+                context={"path": str(path)},
+            )
         resolved = path.resolve()
         if not resolved.exists() or not resolved.is_file():
             raise InvalidFinancialSourceError(
                 translated_message="errors.financial.source_file_not_found",
                 context={"path": str(resolved)},
+            )
+        size = resolved.stat().st_size
+        if size > _MAX_SOURCE_BYTES:
+            raise InvalidFinancialSourceError(
+                translated_message="errors.financial.source_file_too_large",
+                context={
+                    "path": str(resolved),
+                    "size_bytes": size,
+                    "max_bytes": _MAX_SOURCE_BYTES,
+                },
             )
         return resolved.read_bytes()
 
@@ -407,6 +478,12 @@ def parse_amount_value(
         amount = Decimal(normalized)
     except InvalidOperation as exc:
         raise FinancialValidationError(f"unsupported amount value: {raw!r}") from exc
+    if not amount.is_finite():
+        # Defence-in-depth: _sanitise_amount_text already strips letters,
+        # so NaN / Infinity literals cannot reach Decimal() through normal
+        # flow. This guard catches any future sanitiser regression that
+        # would otherwise admit non-finite values into the ledger.
+        raise FinancialValidationError(f"non-finite amount value: {raw!r}")
     return -amount if negative else amount
 
 

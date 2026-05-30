@@ -23,13 +23,13 @@ from typing import TYPE_CHECKING, Self
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator, model_validator
 
 from ...core.decimal import coerce_decimal
-from ...core.identity import validate_spanish_tax_id
+from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
 from ..iva import EUMemberState, IvaCategory
-from ..modelos._ids import BucketId
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
+from ._ids import InvoiceId
 
 if TYPE_CHECKING:
     from ..iva._invoice_classification import IvaInvoiceClassification
@@ -41,8 +41,6 @@ from ._validators import (
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 _LINE_TOLERANCE = Decimal("0.01")
-_HEX_TRANSACTION_ID_LENGTH = 64
-_HEX_INVOICE_ID_LENGTH = 64
 
 
 def derive_invoice_id(
@@ -231,7 +229,7 @@ def _normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, objec
     if not normalized:
         payload["payment_id"] = None
         return payload
-    if not _is_hex_digest(normalized, length=_HEX_TRANSACTION_ID_LENGTH):
+    if not _is_hex_digest(normalized, length=64):
         raise InvoiceValidationError("payment_id must be a 64-character lowercase hex digest")
     payload["payment_id"] = normalized
     return payload
@@ -319,7 +317,7 @@ class Invoice(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str = Field(min_length=_HEX_INVOICE_ID_LENGTH, max_length=_HEX_INVOICE_ID_LENGTH)
+    invoice_id: InvoiceId
     bucket_id: BucketId | None = Field(default=None)
     kind: InvoiceKind
     invoice_number: str = Field(min_length=1)
@@ -368,13 +366,6 @@ class Invoice(BaseModel):
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
         if value < Decimal("0"):
             raise InvoiceValidationError("invoice totals must be non-negative")
-        return value
-
-    @field_validator("invoice_id")
-    @classmethod
-    def _validate_invoice_id_shape(cls, value: str) -> str:
-        if not _is_hex_digest(value, length=_HEX_INVOICE_ID_LENGTH):
-            raise InvoiceValidationError("invoice_id must be a 64-character lowercase hex digest")
         return value
 
     @field_validator("lines")
@@ -487,7 +478,7 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
         if not isinstance(item, str):
             raise InvoiceValidationError("each linked_transaction_id must be a string")
         normalized = item.strip().lower()
-        if not _is_hex_digest(normalized, length=_HEX_TRANSACTION_ID_LENGTH):
+        if not _is_hex_digest(normalized, length=64):
             raise InvoiceValidationError("each linked_transaction_id must be a 64-character lowercase hex digest")
         if normalized not in seen:
             seen[normalized] = None

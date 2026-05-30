@@ -1216,6 +1216,26 @@ required_text = [
     "módulos",
 ]
 
+[legal."orden-hac-819-2024:art-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hac-819-2024-art-1.html#a1"
+document_id = "BOE-A-2024-6840"
+article = "1"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-6840#a1"
+published_at = 2024-04-09
+effective_from = 2024-04-10
+review_status = "reviewed"
+reviewed_at = 2026-05-30
+reviewed_by = "wgergely"
+notes = "Articulo 1 de la Orden HAC/819/2024: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion' para los ejercicios 2023 y siguientes. Modifica la Orden EHA/3786/2008 introduciendo las casillas del nuevo formulario: [64] suma de resultados ([46]+[58]+[76]), [65] porcentaje atribuible Administracion del Estado, [66] importe atribuible Administracion del Estado ([64]x[65]/100), [69] resultado autoliquidacion ([66]+[77]+[68]-[78]), [71] resultado final ([69]-[70]+[109])."
+required_text = [
+    "Aprobación del modelo 303",
+    "Impuesto sobre el Valor Añadido",
+    "Autoliquidación",
+]
+
 [legal."ley-37-1992:art-124"]
 evidence_tier = "legal_authority"
 authority = "boe"

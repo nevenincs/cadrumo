@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from ...core.errors import AeatError
+
 from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, BUCKETS_DIRNAME
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.bucket._keystore_paths import keystore_path
@@ -50,6 +52,7 @@ from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import pointer_path, write_pointer
 from ...core.config import load_settings
 from ...core.i18n import tr
+from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...domain.user_profile import (
     ProfileNotFoundError,
@@ -124,7 +127,7 @@ class ProfileSummary(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     label: str = Field(min_length=1, max_length=160)
     status: UserProfileStatus
 
@@ -305,7 +308,7 @@ class ProfileRepository:
                 )
             )
             record = result.profile
-        except Exception:
+        except (AeatError, OSError, ValidationError):
             # Roll back every store this create touched: the staged
             # directory + manifest are removed and the pointer is
             # restored to its pre-create state. The per-bucket

@@ -36,7 +36,7 @@ samples captured 2026-05-07.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Awaitable, Callable, Mapping
 from typing import TYPE_CHECKING, Literal
 from urllib.parse import urlsplit
 
@@ -263,6 +263,7 @@ async def collect_groi_observations(
     expected: Mapping[str, object],
     settings: Settings | None = None,
     timeout_ms: int = DEFAULT_GROI_TIMEOUT_MS,
+    browser_session_factory: Callable[[Settings], Awaitable[object]] | None = None,
 ) -> GroiResult:
     """Drive the GROI form per declared NIF and return one observation each."""
 
@@ -271,7 +272,8 @@ async def collect_groi_observations(
         raise RegistryValidationError("collect_groi_observations requires at least one expected NIF")
     nifs = tuple(sorted(str(key) for key in expected))
 
-    browser_session = await default_browser_session_factory(settings or Settings())
+    factory = browser_session_factory or default_browser_session_factory
+    browser_session = await factory(settings or Settings())
     context = None
     try:
         context = await browser_session.create_context()

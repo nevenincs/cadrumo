@@ -41,7 +41,6 @@ from . import (
 )
 from ._active_session import get_active_master_key
 from ._master_key import (
-    PASSPHRASE_ENV_VAR,
     _b64decode,
     _KdfParameters,
 )
@@ -401,11 +400,11 @@ class TestFileFallbackProvider:
                 passphrase_callback=lambda: "wrong-passphrase",
             ).get_master_key()
 
-    def test_passphrase_via_env_var(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "from-env-var")
-        provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
-        key = provider.provision_master_key()
-        assert len(key) == KEY_SIZE
+    def test_passphrase_via_settings(self, tmp_path: Path) -> None:
+        with override_settings(aeat_secret_passphrase="from-env-var"):
+            provider = FileFallbackMasterKeyProvider(store_dir=tmp_path / "secrets")
+            key = provider.provision_master_key()
+            assert len(key) == KEY_SIZE
 
     def test_empty_passphrase_rejected(self, tmp_path: Path) -> None:
         with pytest.raises(SecretStoreError):
@@ -531,11 +530,11 @@ class TestTornStateGate:
     """
 
     @pytest.fixture
-    def store_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    def store_dir(self, tmp_path: Path):
         store = tmp_path / "secrets"
         store.mkdir()
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "torn-state-passphrase")
-        return store
+        with override_settings(aeat_secret_passphrase="torn-state-passphrase"):
+            yield store
 
     def test_torn_state_master_key_only_raises(
         self,
@@ -610,45 +609,41 @@ class TestTornStateGate:
 class TestSecurityHardening:
     """Audit-driven hardening fixes."""
 
-    def test_passphrase_env_var_persists_across_callbacks(
+    def test_passphrase_persists_across_callbacks(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """The callback must NOT pop the env var.
+        """The callback must NOT clear the resolved passphrase.
 
         The cache in ``FileFallbackMasterKeyProvider`` is reset under
         legitimate flows (recover re-mints, test sessions cycle the
-        cache between sub-tests), and a popped env var blocks the
+        cache between sub-tests), and a popped source would block the
         second cache-miss read on ``getpass`` in non-TTY contexts.
         """
+        from .....core.config import load_settings
         from ._master_key import _default_passphrase_callback
 
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "smoke-passphrase")
-        assert _default_passphrase_callback() == "smoke-passphrase"
-        # The env var must survive — subsequent callbacks resolve
-        # consistently against the same value.
-        assert os.environ.get(PASSPHRASE_ENV_VAR) == "smoke-passphrase"
-        assert _default_passphrase_callback() == "smoke-passphrase"
+        with override_settings(aeat_secret_passphrase="smoke-passphrase"):
+            assert _default_passphrase_callback() == "smoke-passphrase"
+            # The Settings entry must survive — subsequent callbacks
+            # resolve consistently against the same value.
+            stored = load_settings().aeat_secret_passphrase
+            assert stored is not None
+            assert stored.get_secret_value() == "smoke-passphrase"
+            assert _default_passphrase_callback() == "smoke-passphrase"
 
-    def test_passphrase_env_var_strips_trailing_crlf(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_passphrase_strips_trailing_crlf(self) -> None:
         from ._master_key import _default_passphrase_callback
 
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "value-with-newline\n")
-        assert _default_passphrase_callback() == "value-with-newline"
+        with override_settings(aeat_secret_passphrase="value-with-newline\n"):
+            assert _default_passphrase_callback() == "value-with-newline"
 
-    def test_passphrase_env_var_whitespace_only_rejected(
-        self,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_passphrase_whitespace_only_rejected(self) -> None:
         from ._master_key import _default_passphrase_callback
 
-        monkeypatch.setenv(PASSPHRASE_ENV_VAR, "\r\n")
-        with pytest.raises(SecretStoreError):
-            _default_passphrase_callback()
+        with override_settings(aeat_secret_passphrase="\r\n"):
+            with pytest.raises(SecretStoreError):
+                _default_passphrase_callback()
 
     def test_master_key_files_are_mode_0o600(self, tmp_path: Path) -> None:
         """The wrapped master key + KDF params + salt land mode 0o600 on POSIX."""

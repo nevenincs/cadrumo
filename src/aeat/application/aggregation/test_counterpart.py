@@ -158,7 +158,7 @@ class TestInvariants:
         from aeat.application.aggregation._errors import AggregationUnsupportedModeloError
         from aeat.application.aggregation._grouping import filter_observations_for_modelo
 
-        with pytest.raises(AggregationUnsupportedModeloError, match="modelo '720'"):
+        with pytest.raises(AggregationUnsupportedModeloError) as exc_info:
             filter_observations_for_modelo(
                 (),
                 modelo="720",
@@ -166,6 +166,10 @@ class TestInvariants:
                 attribute_fn=lambda obs: obs.operation_kind,
                 aggregator_label="counterpart aggregator",
             )
+        exc = exc_info.value
+        assert exc.translated_message == "aggregation.grouping.errors.unsupported_modelo"
+        assert exc.context is not None
+        assert exc.context["modelo"] == "720"
 
     def test_totals_must_match_rollups(self) -> None:
         from pydantic import ValidationError

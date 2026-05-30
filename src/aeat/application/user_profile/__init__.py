@@ -23,6 +23,8 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import BaseSeverity as _BaseSeverity
+from ...core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
+from ...core.identity import ProfileId
 from ...domain.user_profile import (
     ProfileFactValue,
     UserProfileFact,
@@ -63,6 +65,17 @@ if TYPE_CHECKING:
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
+# Sha-256 content-fingerprint shape shared by the profile-snapshot canonical
+# hash, the stored-hash snapshot pointer, and the current-hash recompute
+# result. Stays bare-str under ADR Rule 7 (fingerprint, not identity);
+# factored to a single module-local constraint kwargs mapping to remove
+# the three-way duplication of the shape literal.
+_PROFILE_SNAPSHOT_HASH_KWARGS: dict[str, object] = {
+    "min_length": 64,
+    "max_length": 64,
+    "pattern": r"^[0-9a-f]{64}$",
+}
+
 
 # ---------------------------------------------------------------------------
 # Lifecycle commands
@@ -74,7 +87,7 @@ class RegisterProfileCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     display_name: str = Field(min_length=1, max_length=160)
     facts: tuple[UserProfileFact, ...] = ()
 
@@ -84,12 +97,12 @@ class EditProfileFieldCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     path: str = Field(min_length=3, max_length=192)
     value: ProfileFactValue
     valid_from: date | None = None
     valid_to: date | None = None
-    source: str = Field(default="manual_cli", min_length=1, max_length=80)
+    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
 
 
 class EditProfileSectionCommand(BaseModel):
@@ -97,10 +110,10 @@ class EditProfileSectionCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     section_key: str = Field(min_length=1, max_length=64)
     facts: tuple[UserProfileFact, ...]
-    source: str = Field(default="manual_cli", min_length=1, max_length=80)
+    source: str = Field(default=_PROVENANCE_SOURCE_MANUAL_CLI, min_length=1, max_length=80)
 
 
 class RemoveProfileCommand(BaseModel):
@@ -108,7 +121,7 @@ class RemoveProfileCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
 
 
 class DuplicateProfileCommand(BaseModel):
@@ -116,8 +129,8 @@ class DuplicateProfileCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    source_profile_id: str = Field(min_length=1, max_length=96)
-    target_profile_id: str = Field(min_length=1, max_length=96)
+    source_profile_id: ProfileId
+    target_profile_id: ProfileId
     target_display_name: str = Field(min_length=1, max_length=160)
 
 
@@ -134,7 +147,7 @@ class RenameProfileCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     target_display_name: str = Field(min_length=1, max_length=160)
 
 
@@ -157,7 +170,7 @@ class ProfileListing(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     display_name: str = Field(min_length=1, max_length=160)
     status: UserProfileStatus
     created_at: datetime
@@ -193,7 +206,7 @@ class ProfileValidationReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     schema_version: int = Field(ge=1)
     issues: tuple[ProfileValidationIssue, ...] = ()
 
@@ -213,7 +226,7 @@ class ProfilePreflightReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
@@ -232,7 +245,7 @@ class ProfileSnapshotRequest(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
@@ -245,13 +258,13 @@ class ProfileSnapshot(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: str = Field(min_length=1, max_length=96)
+    profile_id: ProfileId
     schema_version: int = Field(ge=1)
     modelo: str = Field(min_length=1, max_length=16)
     revision_id: str = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: str = Field(min_length=1, max_length=8)
-    canonical_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    canonical_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     created_at: datetime
     facts: tuple[UserProfileFact, ...]
 
@@ -262,9 +275,9 @@ class ProfileStaleCheckReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1, max_length=128)
-    profile_id: str = Field(min_length=1, max_length=96)
-    stored_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
-    current_hash: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    profile_id: ProfileId
+    stored_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
+    current_hash: str = Field(**_PROFILE_SNAPSHOT_HASH_KWARGS)
     stale: bool
 
 

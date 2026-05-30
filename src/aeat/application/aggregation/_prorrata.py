@@ -153,7 +153,10 @@ def aggregate_prorrata_inputs(
     """
 
     if year < 2000 or year > 2100:
-        raise AggregationPeriodError(t(f"prorrata aggregation year out of supported range 2000..2100: {year}"))
+        raise AggregationPeriodError(
+            t("aggregation.prorrata.errors.year_out_of_range"),
+            context={"year": year},
+        )
 
     con_derecho = Decimal("0")
     sin_derecho = Decimal("0")
@@ -221,14 +224,13 @@ def aggregate_provisional_prorrata(
 
     if current_year <= prior_year:
         raise AggregationValidationError(
-            t(
-                f"current_year must be strictly greater than prior_year; "
-                f"got prior_year={prior_year} current_year={current_year}"
-            )
+            t("aggregation.prorrata.errors.current_year_not_after_prior"),
+            context={"prior_year": prior_year, "current_year": current_year},
         )
     if not (period.startswith("Q") or period.startswith("M")):
         raise AggregationValidationError(
-            t(f"provisional period must be a quarterly (Qn) or monthly (Mnn) token; got {period!r}")
+            t("aggregation.prorrata.errors.invalid_provisional_period"),
+            context={"period": period},
         )
 
     aggregation = aggregate_prorrata_inputs(prior_year_operations, year=prior_year)

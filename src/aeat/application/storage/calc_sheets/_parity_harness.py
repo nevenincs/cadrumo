@@ -53,7 +53,7 @@ from ....core.config import Settings as _Settings
 from ....domain.calculations.registry._formula_runtime import (
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._ids import CasillaId
+from ....domain.calculations.registry._ids import CasillaId, RevisionId
 from ....domain.calculations.registry._schema import CasillaDefinition, InputKind
 from ....domain.calculations.registry._schema import RegistrySnapshot
 from ._engine import build_export_plan
@@ -102,7 +102,7 @@ class ParityReport(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     period: str
     filing_year: int
     spreadsheet_id: str

@@ -191,11 +191,17 @@ def default_engine(
     """
     cfg = settings or load_settings()
     if deadline_engine is None:
-        raise WorkflowError("default_engine requires a deadline_engine adapter")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.adapter_missing_deadline_engine",
+        )
     if filing_draft_builder is None:
-        raise WorkflowError("default_engine requires a filing_draft_builder adapter")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.adapter_missing_filing_draft_builder",
+        )
     if inputs_provider is None:
-        raise WorkflowError("default_engine requires a bucket-backed filing inputs provider")
+        raise WorkflowError(
+            translated_message="application.workflow.errors.adapter_missing_inputs_provider",
+        )
     return WorkflowEngine(
         deadline_engine=deadline_engine,
         filing_draft_builder=filing_draft_builder,

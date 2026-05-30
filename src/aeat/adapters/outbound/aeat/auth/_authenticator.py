@@ -686,7 +686,8 @@ class AeatAuthenticator:
                 redact_for_log(
                     f"session for nif={session.identity_nif} is stale "
                     f"(idle_deadline={session.idle_deadline.isoformat()})"
-                )
+                ),
+                translated_message="adapters.auth.authenticator.errors.session_stale",
             )
 
         # Snapshot-and-register the context under the lock so that
@@ -695,10 +696,16 @@ class AeatAuthenticator:
         # TOCTOU window between close()'s drain-wait and its teardown.
         async with self._lock:
             if self._closing:
-                raise AeatLoginAssertionError("authenticator is closing; no new verify_login allowed")
+                raise AeatLoginAssertionError(
+                    "authenticator is closing; no new verify_login allowed",
+                    translated_message="adapters.auth.authenticator.errors.closing",
+                )
             context = self._context
             if context is None:
-                raise AeatLoginAssertionError("no active browser context; call authenticate() first")
+                raise AeatLoginAssertionError(
+                    "no active browser context; call authenticate() first",
+                    translated_message="adapters.auth.authenticator.errors.no_active_context",
+                )
             self._inflight_pages += 1
             self._inflight_drained.clear()
 
@@ -727,7 +734,8 @@ class AeatAuthenticator:
         async with self._lock:
             if self._active_session != session:
                 raise AeatLoginAssertionError(
-                    "capture_storage_state() requires the currently active authenticated session"
+                    "capture_storage_state() requires the currently active authenticated session",
+                    translated_message="adapters.auth.authenticator.errors.capture_requires_active_session",
                 )
             return await self._capture_storage_state_locked(session)
 
@@ -742,7 +750,8 @@ class AeatAuthenticator:
         async with self._lock:
             if self._context is not None:
                 raise AuthValidationError(
-                    "AeatAuthenticator already has an active session; call close() before resuming another one"
+                    "AeatAuthenticator already has an active session; call close() before resuming another one",
+                    translated_message="adapters.auth.authenticator.errors.already_active_before_resume",
                 )
             return await self._resume_from_storage_state_locked(
                 path,
@@ -950,7 +959,10 @@ class AeatAuthenticator:
         """Persist the active Playwright storage-state and metadata."""
         context = self._context
         if context is None:
-            raise AeatLoginAssertionError("no active browser context; cannot capture storage_state")
+            raise AeatLoginAssertionError(
+                "no active browser context; cannot capture storage_state",
+                translated_message="adapters.auth.authenticator.errors.no_context_capture_storage",
+            )
 
         storage_state_path = session.storage_state_path or self._resolve_storage_state_path(self._browser_session)
         storage_state: Mapping[str, object] = await context.storage_state()
@@ -960,7 +972,8 @@ class AeatAuthenticator:
         handshake = session.handshake
         if certificate_thumbprint is None or certificate_subject is None or handshake is None:
             raise AeatLoginAssertionError(
-                "capture_storage_state() requires a certificate-backed session with handshake metadata"
+                "capture_storage_state() requires a certificate-backed session with handshake metadata",
+                translated_message="adapters.auth.authenticator.errors.capture_requires_certificate",
             )
         metadata = _PersistedSessionMetadata(
             certificate_thumbprint=certificate_thumbprint,
@@ -1040,7 +1053,10 @@ class AeatAuthenticator:
             )
             assertion = await self._run_login_probe(context, session, target_url)
             if not assertion.is_valid:
-                raise _PersistedSessionInvalidError("persisted AEAT browser session failed live verification")
+                raise _PersistedSessionInvalidError(
+                    "persisted AEAT browser session failed live verification",
+                    translated_message="adapters.auth.authenticator.errors.persisted_session_verification_failed",
+                )
             session = session.model_copy(
                 update={
                     "authenticated_at": assertion.attempted_at,
@@ -1113,7 +1129,8 @@ class AeatAuthenticator:
         marker = getattr(context, CERTIFICATE_CONTEXT_MARKER, None)
         if marker != cert.sha256_thumbprint:
             raise AeatLoginAssertionError(
-                f"browser context was not tagged with the expected {CERTIFICATE_CONTEXT_MARKER} marker; cannot continue"
+                f"browser context was not tagged with the expected {CERTIFICATE_CONTEXT_MARKER} marker; cannot continue",
+                translated_message="adapters.auth.authenticator.errors.context_marker_missing",
             )
 
     def _resolve_storage_state_path(

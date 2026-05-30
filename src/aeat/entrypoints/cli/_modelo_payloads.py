@@ -14,10 +14,16 @@ from __future__ import annotations
 
 from pydantic import Field
 
+from ...core.identity import BucketId
+from ...domain.calculations.registry._ids import (
+    CasillaId,
+    FormulaId,
+    RevisionId,
+)
 from ...domain.modelos._ids import (
-    BucketId,
     CalculationRevisionId,
     FilingRecordId,
+    VerificationReportId,
     WorkUnitId,
 )
 from ._schemas import OutputSchema, register_schema
@@ -35,7 +41,7 @@ class WorkUnitPayload(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -49,9 +55,9 @@ class WorkUnitPayload(OutputSchema):
 class ObservationPayload(OutputSchema):
     """One typed casilla observation with full provenance."""
 
-    casilla_id: str
+    casilla_id: CasillaId
     value: str  # serialised Decimal
-    formula_id: str | None = None
+    formula_id: FormulaId | None = None
     operand_refs: tuple[str, ...] = ()
     operand_values: tuple[str, ...] = ()
     legal_refs: tuple[str, ...] = ()
@@ -62,7 +68,7 @@ class ResultSummaryRowPayload(OutputSchema):
     """One headline-result summary row (registry-declared lead figure)."""
 
     role: str
-    casilla_id: str
+    casilla_id: CasillaId
     value: str  # serialised Decimal
     label: str
 
@@ -81,7 +87,7 @@ class CalculationRevisionPayload(OutputSchema):
     # revision has no values to summarise.
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -96,7 +102,7 @@ class FindingPayload(OutputSchema):
 
     kind: str
     severity: str
-    casilla_id: str | None = None
+    casilla_id: CasillaId | None = None
     expectation_id: str | None = None
     message: str
     next_action: str | None = None
@@ -107,7 +113,7 @@ class FindingPayload(OutputSchema):
 class VerificationReportPayload(OutputSchema):
     """Verification report fields returned by verify / verification-report commands."""
 
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
@@ -152,7 +158,7 @@ class ModeloRecordPayload(OutputSchema):
 class FormulaPayload(OutputSchema):
     """One formula row in the formulas command output."""
 
-    formula_id: str
+    formula_id: FormulaId
     target: str
     input_casillas: tuple[str, ...]
     input_bindings: tuple[str, ...]
@@ -185,7 +191,7 @@ class WorkCreateResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -212,7 +218,7 @@ class WorkStatusResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -230,7 +236,7 @@ class WorkRenameResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -248,7 +254,7 @@ class WorkDiscardResult(OutputSchema):
     modelo: str
     filing_year: int
     period: str
-    revision_id: str
+    revision_id: RevisionId
     name: str
     state: str
     created_at: str
@@ -272,7 +278,7 @@ class WorkCalculateResult(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -314,7 +320,7 @@ class WorkRevisionResult(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -329,7 +335,7 @@ class WorkRevisionResult(OutputSchema):
 @register_schema("modelo.work.verify")
 class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool
@@ -427,7 +433,7 @@ class VerificationReportListResult(OutputSchema):
 @register_schema("modelo.verification_report.show")
 class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
-    verification_report_id: str
+    verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
     completeness_status: str
     granted_verificado_completo: bool

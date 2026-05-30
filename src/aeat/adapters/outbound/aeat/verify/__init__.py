@@ -109,19 +109,27 @@ VerifyBrowserSessionFactory = Callable[[], Awaitable[VerifyBrowserSessionLike]]
 """Callable that builds a self-owned browser session."""
 
 
-async def _build_default_browser_session() -> VerifyBrowserSessionLike:
+async def _build_default_browser_session(
+    factory: Callable[..., Awaitable[object]] | None = None,
+) -> VerifyBrowserSessionLike:
     """Construct the default :class:`VerifyBrowserSessionLike`.
 
     Loads :func:`aeat.core.config.load_settings`, materialises the
     central :func:`aeat.adapters.outbound.aeat.browser.default_browser_session_factory`,
     and returns a session the caller is responsible for closing.
+
+    The ``factory`` parameter is a DI seam for the type-guard test that
+    asserts the boundary raises :class:`_BrowserAdapterTypeError` when
+    the factory returns an incompatible type; production callers omit
+    it and the central browser factory is used.
     """
 
     from .....core.config import load_settings
     from ..browser import default_browser_session_factory
 
     settings = load_settings()
-    session = await default_browser_session_factory(settings)
+    resolved_factory = factory or default_browser_session_factory
+    session = await resolved_factory(settings)
     if not isinstance(session, VerifyBrowserSessionLike):
         raise _BrowserAdapterTypeError(
             f"default_browser_session_factory returned an incompatible type: {type(session)}"

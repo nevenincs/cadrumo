@@ -22,6 +22,7 @@ from pydantic import BaseModel
 
 from ...core.profile import register_project_answers as _register_project_answers
 from ..user_profile._orchestration import register_active_profile, set_active_fields
+from ..workflow._errors import WorkflowInputMismatchError
 from ..workflow._models import WorkflowState
 from ._models import WizardFlow, WizardQuestion
 
@@ -138,7 +139,7 @@ def persist_answers(
         )
 
     if supplied_question_ids is None:
-        raise ValueError("persist_answers(mode='edit') requires supplied_question_ids — edit is a patch, not a rewrite")
+        raise WorkflowInputMismatchError("persist_answers(mode='edit') requires supplied_question_ids — edit is a patch, not a rewrite")
     canonical = serialise_answers(flow, answers, only_question_ids=supplied_question_ids)
     facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
     return set_active_fields(state, facts)

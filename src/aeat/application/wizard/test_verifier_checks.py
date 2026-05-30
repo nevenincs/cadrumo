@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from aeat.application.wizard._setup_answers import SetupAnswers
+from aeat.core.profile import SetupAnswers
 from aeat.application.wizard._verifier import (
     WizardCheckFinding,
     WizardCheckSeverity,

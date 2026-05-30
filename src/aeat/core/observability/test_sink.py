@@ -28,7 +28,7 @@ from pathlib import Path
 
 import pytest
 
-from ..config import Settings
+from ..config import Settings, override_settings
 from . import (
     NavigationPayload,
     RunEvent,
@@ -63,38 +63,37 @@ class TestJsonlStoreRoundTrip:
             module="aeat.core.observability.test_sink",
         )
 
-    def test_append_and_load(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        events = tuple(self._make_event(i) for i in range(3))
-        for evt in events:
-            save_events_append(evt.run_id, evt)
-        loaded = load_events(events[0].run_id)
-        # URL host-only redaction at DIAGNOSTIC class strips the path
-        # component but preserves the rest of the event shape; compare
-        # everything except the redacted URL.
-        assert len(loaded) == len(events)
-        for restored, original in zip(loaded, events, strict=True):
-            assert restored.run_id == original.run_id
-            assert restored.step_id == original.step_id
-            assert restored.kind == original.kind
-            # Path-stripped URL ("https://example.test/0") survives as
-            # "https://example.test" — the host stays intact.
-            assert restored.payload.navigation is not None
-            assert restored.payload.navigation.url.startswith("https://example.test")
+    def test_append_and_load(self, tmp_path: Path) -> None:
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            events = tuple(self._make_event(i) for i in range(3))
+            for evt in events:
+                save_events_append(evt.run_id, evt)
+            loaded = load_events(events[0].run_id)
+            # URL host-only redaction at DIAGNOSTIC class strips the path
+            # component but preserves the rest of the event shape; compare
+            # everything except the redacted URL.
+            assert len(loaded) == len(events)
+            for restored, original in zip(loaded, events, strict=True):
+                assert restored.run_id == original.run_id
+                assert restored.step_id == original.step_id
+                assert restored.kind == original.kind
+                # Path-stripped URL ("https://example.test/0") survives as
+                # "https://example.test" — the host stays intact.
+                assert restored.payload.navigation is not None
+                assert restored.payload.navigation.url.startswith("https://example.test")
 
     def test_load_rejects_corrupted_line(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        evt = self._make_event(1)
-        save_events_append(evt.run_id, evt)
-        target = runs_dir() / evt.run_id / _EVENTS_FILENAME
-        with target.open("a", encoding="utf-8") as handle:
-            handle.write('{"not_a": "valid_run_event"}\n')
-        with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
-            load_events(evt.run_id)
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            evt = self._make_event(1)
+            save_events_append(evt.run_id, evt)
+            target = runs_dir() / evt.run_id / _EVENTS_FILENAME
+            with target.open("a", encoding="utf-8") as handle:
+                handle.write('{"not_a": "valid_run_event"}\n')
+            with pytest.raises(RunTraceValidationError, match=r"failed strict validation"):
+                load_events(evt.run_id)
 
 
 class TestJsonlRunSinkRunIdFilter:
@@ -173,54 +172,51 @@ class TestStoreRunIdValidation:
     def test_load_trace_rejects_path_traversal(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from . import load_events, load_trace
         from ._store import _validate_run_id
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        for bad in (
-            "../escape",
-            "../../etc/passwd",
-            "/absolute/path",
-            "00000000000000001",  # 17 chars — one too many
-            "0123456789ABCDEF",  # uppercase rejected
-            "contains/slash",
-            "",
-            "..",
-        ):
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                _validate_run_id(bad)
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                load_trace(bad)
-            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-                load_events(bad)
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            for bad in (
+                "../escape",
+                "../../etc/passwd",
+                "/absolute/path",
+                "00000000000000001",  # 17 chars — one too many
+                "0123456789ABCDEF",  # uppercase rejected
+                "contains/slash",
+                "",
+                "..",
+            ):
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    _validate_run_id(bad)
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    load_trace(bad)
+                with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                    load_events(bad)
 
     def test_load_trace_rejects_run_id_shape_without_creating_dir(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from . import load_trace
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-            load_trace("not-a-valid-run")
-        # The crafted run_id must never have resulted in a new directory.
-        assert not any(tmp_path.iterdir()), "rejected run_id must not create dirs"
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                load_trace("not-a-valid-run")
+            # The crafted run_id must never have resulted in a new directory.
+            assert not any(tmp_path.iterdir()), "rejected run_id must not create dirs"
 
     def test_load_trace_missing_does_not_pollute_runs_dir(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         from . import load_trace
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        # 16 hex chars — passes validation, but nothing on disk.
-        with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
-            load_trace("0" * 16)
-        assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            # 16 hex chars — passes validation, but nothing on disk.
+            with pytest.raises(RunTraceValidationError, match=r"trace\.json not found"):
+                load_trace("0" * 16)
+            assert not any(tmp_path.iterdir()), "missing trace lookup must not create dirs"
 
 
 class TestStorePersistenceErrors:
@@ -300,60 +296,57 @@ class TestIterEvents:
     def test_bad_run_id_raises_at_call_site(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Validation must be eager — not deferred until iteration."""
         from . import iter_events
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        # No .iter(), no .__next__() — the call itself must raise.
-        with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
-            iter_events("../escape")
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            # No .iter(), no .__next__() — the call itself must raise.
+            with pytest.raises(RunTraceValidationError, match=r"invalid run_id"):
+                iter_events("../escape")
 
     def test_streams_without_materialising_all(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Consuming n events pulls exactly n lines off disk."""
         from . import iter_events
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        run_id = "0123456789abcdef"
-        for i in range(5):
-            save_events_append(run_id, self._event(run_id, i))
-        it = iter_events(run_id)
-        first = next(it)
-        second = next(it)
-        assert first.step_id == "s0"
-        assert second.step_id == "s1"
-        # Three more remain; iteration is lazy.
-        remaining = list(it)
-        assert len(remaining) == 3
-        assert [e.step_id for e in remaining] == ["s2", "s3", "s4"]
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            run_id = "0123456789abcdef"
+            for i in range(5):
+                save_events_append(run_id, self._event(run_id, i))
+            it = iter_events(run_id)
+            first = next(it)
+            second = next(it)
+            assert first.step_id == "s0"
+            assert second.step_id == "s1"
+            # Three more remain; iteration is lazy.
+            remaining = list(it)
+            assert len(remaining) == 3
+            assert [e.step_id for e in remaining] == ["s2", "s3", "s4"]
 
     def test_corrupt_line_raises_mid_stream(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """A validation error fires during iteration, not at call time."""
         from . import iter_events
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        run_id = "abcdef0123456789"
-        save_events_append(run_id, self._event(run_id, 0))
-        # Append a malformed line after the valid one.
-        target = runs_dir() / run_id / _EVENTS_FILENAME
-        with target.open("a", encoding="utf-8", newline="") as handle:
-            handle.write('{"invalid": "event"}\n')
-        save_events_append(run_id, self._event(run_id, 2))
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            run_id = "abcdef0123456789"
+            save_events_append(run_id, self._event(run_id, 0))
+            # Append a malformed line after the valid one.
+            target = runs_dir() / run_id / _EVENTS_FILENAME
+            with target.open("a", encoding="utf-8", newline="") as handle:
+                handle.write('{"invalid": "event"}\n')
+            save_events_append(run_id, self._event(run_id, 2))
 
-        # Call succeeds — validation for the bad line is deferred.
-        it = iter_events(run_id)
-        assert next(it).step_id == "s0"
-        with pytest.raises(RunTraceValidationError, match="line 2"):
-            next(it)
+            # Call succeeds — validation for the bad line is deferred.
+            it = iter_events(run_id)
+            assert next(it).step_id == "s0"
+            with pytest.raises(RunTraceValidationError, match="line 2"):
+                next(it)
 
 
 class TestSinkEmitFailureWarningIsScrubbed:

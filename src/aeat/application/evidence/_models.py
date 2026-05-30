@@ -9,13 +9,14 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 from ...core.errors import AeatError
+from ...core.identity import BucketId
 from ...domain.buckets._event import BucketEventObjectType
 from ...domain.modelos._ids import (
-    BucketId,
     CalculationRevisionId,
     FilingRecordId,
     WorkUnitId,
 )
+from ._ids import BundleId
 
 
 class EvidenceBundleNotFoundError(AeatError):
@@ -78,7 +79,7 @@ class EvidenceBundle(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bundle_id: str = Field(min_length=64, max_length=64)
+    bundle_id: BundleId
     manifest_version: int = Field(ge=1)
     bucket_id: BucketId
     work_unit_id: WorkUnitId

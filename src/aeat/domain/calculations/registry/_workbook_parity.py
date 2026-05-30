@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
@@ -24,6 +25,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ....core.config import Settings as _Settings
 from ....core.errors import CoreError
+from ....core.external_constants import XLS_EXTENSION as _XLS_EXTENSION
+from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
 from ._formula_runtime import calculate_registry_snapshot
@@ -41,7 +44,13 @@ WorkbookKind = Literal[
     "unsupported_binary_xls",
     "unreadable",
 ]
-WorkbookScanStatus = Literal["scanned", "unsupported", "timeout", "failed"]
+class WorkbookScanStatus(StrEnum):
+    """Observable status codes for a single workbook scan attempt."""
+
+    SCANNED = "scanned"
+    UNSUPPORTED = "unsupported"
+    TIMEOUT = "timeout"
+    FAILED = "failed"
 WorkbookConversionStatus = Literal["converted", "failed"]
 WorkbookRunnerStatus = Literal["available"]
 WorkbookRunnerEngine = Literal["libreoffice-headless", "excel-com"]
@@ -53,7 +62,7 @@ EvidenceTier = Literal[
     "layout_authority",
 ]
 
-_WORKBOOK_SUFFIXES = {".xlsx", ".xls"}
+_WORKBOOK_SUFFIXES = {_XLSX_EXTENSION, _XLS_EXTENSION}
 _MODELO_PATTERN = re.compile(r"(?:^|[\\/])modelo[_-](?P<modelo>\d{3})(?:[\\/]|$)", re.IGNORECASE)
 _CELL_REF_PATTERN = re.compile(r"(?<![A-Z0-9_])(?:'[^']+'!)?\$?[A-Z]{1,3}\$?\d+(?![A-Z0-9_])")
 _CELL_REF_VALUE_PATTERN = re.compile(r"^(?:(?P<sheet>'[^']+'|[^!]+)!)?(?P<coordinate>\$?[A-Z]{1,3}\$?\d+)$")
@@ -280,7 +289,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     suffix = resolved_path.suffix.lower()
     modelo = _infer_modelo(relative)
 
-    if suffix == ".xls":
+    if suffix == _XLS_EXTENSION:
         return _unsupported_binary_xls_report(
             relative=relative,
             modelo=modelo,
@@ -295,10 +304,10 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=".xlsx",
+            suffix=_XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
-            status="timeout",
+            status=WorkbookScanStatus.TIMEOUT,
             error=str(exc),
             started=started,
         )
@@ -312,10 +321,10 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         return _failed_report(
             relative=relative,
             modelo=modelo,
-            suffix=".xlsx",
+            suffix=_XLSX_EXTENSION,
             byte_count=byte_count,
             digest=digest,
-            status="failed",
+            status=WorkbookScanStatus.FAILED,
             error=f"{type(exc).__name__}: {exc}",
             started=started,
         )
@@ -324,7 +333,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
     return WorkbookArtefactReport(
         path=relative,
         modelo=modelo,
-        extension=".xlsx",
+        extension=_XLSX_EXTENSION,
         bytes=byte_count,
         sha256=digest,
         sheets=tuple(sheets),
@@ -334,7 +343,7 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
         workbook_kind=kind,
         evidence_tier=evidence_tier,
         not_evidence_for=not_evidence_for,
-        scan_status="scanned",
+        scan_status=WorkbookScanStatus.SCANNED,
         elapsed_seconds=_elapsed_decimal(started),
     )
 
@@ -358,7 +367,7 @@ def _unsupported_binary_xls_report(
         workbook_kind="unsupported_binary_xls",
         evidence_tier=evidence_tier,
         not_evidence_for=not_evidence_for,
-        scan_status="unsupported",
+        scan_status=WorkbookScanStatus.UNSUPPORTED,
         formula_cells=0,
         error="binary XLS requires isolated conversion before workbook formula inspection",
         elapsed_seconds=_elapsed_decimal(started),
@@ -498,7 +507,7 @@ def run_workbook_with_libreoffice(
     resolved = workbook_path.resolve()
     if not resolved.is_file():
         raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
-    if resolved.suffix.lower() != ".xlsx":
+    if resolved.suffix.lower() != _XLSX_EXTENSION:
         raise RegistryValidationError("LibreOffice runner currently accepts only XLSX workbooks")
 
     with TemporaryDirectory(prefix="aeat-workbook-") as tmp:
@@ -598,7 +607,7 @@ def convert_binary_xls_with_libreoffice(
         modelo=context.modelo,
         bytes=context.byte_count,
         sha256=context.digest,
-        converted_extension=".xlsx",
+        converted_extension=_XLSX_EXTENSION,
         sheets=sheets,
         formula_cells=len(formulas),
         input_candidates=tuple(_dedupe_cells(references)),
@@ -848,7 +857,7 @@ def run_workbook_with_excel_com(
     resolved = workbook_path.resolve()
     if not resolved.is_file():
         raise RegistryValidationError(f"workbook does not exist: {workbook_path}")
-    if resolved.suffix.lower() != ".xlsx":
+    if resolved.suffix.lower() != _XLSX_EXTENSION:
         raise RegistryValidationError("Excel COM runner currently accepts only XLSX workbooks")
 
     import pythoncom
@@ -1120,7 +1129,7 @@ def _failed_report(
     suffix: Literal[".xlsx", ".xls"],
     byte_count: int,
     digest: str,
-    status: Literal["timeout", "failed"],
+    status: WorkbookScanStatus,
     error: str,
     started: float,
 ) -> WorkbookArtefactReport:

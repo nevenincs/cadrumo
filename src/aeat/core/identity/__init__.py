@@ -27,12 +27,16 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
+from ._bucket import BucketId
 from ._documents import (
     IdentityDocument,
     IdentityError,
     validate_identity,
 )
+from ._profile import ProfileId
+from ._snapshot import SnapshotId
 from ._tax_id import validate_spanish_tax_id
+from ._transaction import TransactionId
 
 
 def _subject_tax_id_validator(value: str) -> str:
@@ -64,9 +68,13 @@ malformed identifier fails fast at the model boundary with an
 """
 
 __all__ = [
+    "BucketId",
     "IdentityDocument",
     "IdentityError",
+    "ProfileId",
+    "SnapshotId",
     "SubjectTaxId",
+    "TransactionId",
     "validate_identity",
     "validate_spanish_tax_id",
 ]

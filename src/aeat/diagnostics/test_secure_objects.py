@@ -49,8 +49,10 @@ def test_secure_objects_list_empty_namespace_emits_zero_count(runner: CliRunner)
     result = runner.invoke(app, ["secure-objects", "list", "aeat.test.empty"])
 
     assert result.exit_code == 0
-    assert "namespace\taeat.test.empty" in result.output
-    assert "count\t0" in result.output
+    # The namespace label is localised; assert the value portion is present.
+    assert "aeat.test.empty" in result.output
+    # The count label is localised; assert the count value 0 appears in a tab-delimited row.
+    assert "\t0" in result.output
 
 
 def test_secure_objects_list_rejects_conflicting_flags(runner: CliRunner) -> None:

@@ -161,8 +161,14 @@ def _google_refusal(exc: GoogleAuthError | OutboundStorageError) -> CliRefusedBo
     """
 
     suffix = _GOOGLE_ERROR_KEY_SUFFIX.get(type(exc).__name__, "auth_failed")
+    # Static-key inventory: cli.config.google.errors.{validation,client_not_registered,
+    # client_revoked,token_revoked,token_expired,scope_insufficient,network,
+    # loopback_bind,browser_open,unsecured_mode,keychain_locked,profile_unbound,
+    # storage,auth_failed} — all suffixes are from the bounded _GOOGLE_ERROR_KEY_SUFFIX
+    # table above, so each key is a compile-time constant reachable by the locale scanner.
     return CliRefusedBoundaryError(
-        tr(f"cli.config.google.errors.{suffix}", detail=_refusal_detail(exc))
+        translated_message=f"cli.config.google.errors.{suffix}",
+        context={"detail": _refusal_detail(exc)},
     )
 
 

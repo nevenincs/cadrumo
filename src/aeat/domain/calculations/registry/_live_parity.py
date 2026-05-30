@@ -35,6 +35,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ....core.logging import get_logger
 from ._errors import RegistryValidationError
+from ._ids import CrossReferenceId, OracleId, RevisionId
 from ._remote_state_guard import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -141,8 +142,8 @@ class ParityResult(_ParityModel):
     remote-state guard (``blocked``).
     """
 
-    oracle_id: str = Field(min_length=1, max_length=128)
-    cross_reference_id: str = Field(min_length=1, max_length=128)
+    oracle_id: OracleId
+    cross_reference_id: CrossReferenceId
     verdict: ParityVerdict
     narrative: str = Field(min_length=1, max_length=2048)
     fields: tuple[ParityFieldComparison, ...] = ()
@@ -395,7 +396,7 @@ class CrossReferenceApplicability(_ParityModel):
     binding declared before the applicability gate landed).
     """
 
-    cross_reference_id: str = Field(min_length=1, max_length=128)
+    cross_reference_id: CrossReferenceId
     applicable: bool
     matched_explanations: tuple[str, ...] = ()
     unmet_predicate_fields: tuple[str, ...] = ()
@@ -542,8 +543,8 @@ class CrossReferenceApplicabilityDeclaracion(_ParityModel):
     """
 
     modelo_id: str = Field(min_length=1, max_length=128)
-    revision_id: str = Field(min_length=1, max_length=128)
-    cross_reference_id: str = Field(min_length=1, max_length=128)
+    revision_id: RevisionId
+    cross_reference_id: CrossReferenceId
     applicability_condition_mode: Literal["all", "any"]
     predicate_fields: tuple[str, ...]
 

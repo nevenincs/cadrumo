@@ -9,7 +9,7 @@ predicate table.
 
 from __future__ import annotations
 
-from ...core.errors import BaseSeverity
+from ...core.errors import AeatError, BaseSeverity
 from datetime import UTC, datetime, time
 from decimal import Decimal
 from pathlib import Path
@@ -314,13 +314,13 @@ def _resolve_active_tax_id(settings: Settings) -> str | None:
     try:
         from ..user_profile._orchestration import fact_value
         from ..workflow import workflow_state_repository
-    except Exception:
+    except ImportError:
         _LOGGER.debug("review adapters could not import workflow status helpers", exc_info=True)
         return None
     try:
         state = workflow_state_repository().load()
         record = state.active_profile_record()
-    except Exception:
+    except (AeatError, AttributeError):
         _LOGGER.debug("review adapters could not resolve active workflow status", exc_info=True)
         return None
     return fact_value(record, "identity.tax_id") or None

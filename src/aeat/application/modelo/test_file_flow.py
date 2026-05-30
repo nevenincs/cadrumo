@@ -1841,33 +1841,38 @@ def test_calculate_runs_registry_formula_engine(repos) -> None:
 def test_calculate_works_when_cwd_is_not_the_repo_root(
     repos,
     tmp_path,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The registry root resolves via ``PROJECT_ROOT`` from
     ``aeat.core.config``, not via a CWD-relative ``"registry/aeat"``
     string. Running the action from any other directory must still
     work — production deploys, background daemons, and wheel
-    installs all run from non-repo CWDs."""
+    installs all run from non-repo CWDs.
 
+    Uses ``contextlib.chdir`` (stdlib, live-tests-friendly) instead of
+    monkeypatch.chdir per the project no-monkeypatch mandate (CLAUDE.md).
+    """
+
+    import contextlib
     import os as _os
 
     alien_cwd = tmp_path / "alien-working-dir"
     alien_cwd.mkdir()
-    monkeypatch.chdir(alien_cwd)
-    assert _os.getcwd() == str(alien_cwd)
 
-    wu_repo, cr_repo, _, _, bv_repo = repos
-    work_unit = _seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        actor="operator-A",
-        casilla_inputs={"01": Decimal("10000"), "02": Decimal("3000")},
-        binding_values=_DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=_T1,
-    )
+    with contextlib.chdir(alien_cwd):
+        assert _os.getcwd() == str(alien_cwd)
+
+        wu_repo, cr_repo, _, _, bv_repo = repos
+        work_unit = _seed_work_unit(wu_repo)
+        revision = calculate_modelo_revision(
+            work_unit.work_unit_id,
+            actor="operator-A",
+            casilla_inputs={"01": Decimal("10000"), "02": Decimal("3000")},
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
 
     # Sanity: engine ran (formula casilla 03 computed = 01 - 02).
     assert revision.casilla_values["03"] == Decimal("7000.00")
