@@ -667,3 +667,61 @@ from 32 tests (Phase 2 baseline) to 45 tests (W10 close).
 1. **M100 leaf profile extension**: add actividades-económicas leaf casillas (017x series) to the declaracion_pdf extraction profile to enable full ED formula chain verification.
 2. **M036 revision gap**: the synthetic fixture `2025-0A.pdf` does not match any revision selector. Investigate `2025-02-03-y-siguientes` period_selector and either extend it for period=0A or regenerate the fixture for the correct year.
 3. **M303 formula coverage**: the 2023-y-siguientes revision carries no registry formulas; formula verification requires a dedicated future campaign.
+
+---
+
+## 2026-05-30 amendment — OCR research closure (W10.P44)
+
+### W10 wave structural mission-complete
+
+The W10 wave (`W10.P41` through `W10.P49`) reached structural mission-complete on
+text-layer PDF extraction. Four PDF parser surfaces now carry discipline parity:
+
+- `declaracion_pdf` — registry-profile-driven, three match strategies
+  (`numeric_casilla`, `named_label`, `bbox_anchored`), 18 modelos enrolled,
+  45+ verified chain proof points.
+- `justificante_pdf` — hardcoded regex extraction, sidecar corpus discipline,
+  structured `JustificanteParseError` attributes.
+- `borrador_pdf` — per-año class dispatch, accepted architectural exception,
+  structured `BorradorParseError` attributes.
+- Bank PDF — `FinancialProvider` ABC, `CorpusVerificationSource` provenance enum,
+  `BankStatementParseError` structured attributes.
+
+The two gate fields (`provisional_pending_specimen`, `corpus_round_trip_verified`)
+and the structured exception pattern (`missing/malformed/ambiguous/coverage`)
+are now consistently applied across all text-layer surfaces.
+
+### OCR deferred extension: research now landed
+
+The W02 ADR (`2026-05-21` decision section, "Still deferred") explicitly named
+OCR fallback for image-only PDFs as a future extension. `W10.P44.S201` tracked
+this as the deferred research deliverable, intentionally held back during the
+active declaration-extraction campaign to avoid displacing text-layer work.
+
+Research has now been authored at
+`2026-05-30-declaracion-extraction-architecture-research.md`
+and is the canonical input for the next-campaign ADR. Key findings:
+
+- The OCR evidence path (`src/aeat/application/ledger/_evidence.py`) is
+  **entirely unimplemented**. `PurchaseInvoiceEvidence` stores file hashes and
+  manual overrides; there is no OCR pipeline, no extraction confidence field,
+  no extraction method field, and no OCR library dependency.
+- The 2026-05-12 receipt-OCR-pdf-evidence ADR mandated OCR confidence and
+  extraction-method tracking; neither has been delivered.
+- OCR introduces seven silent-failure classes that the text-layer discipline
+  does not address (image quality degradation, supplier-layout variation,
+  multi-page continuation, thermal-paper fading, non-Spanish-locale number
+  formats, OCR engine version drift, aggregate-confidence false floors).
+- The discipline analogue transfers — `InvoiceCorpusSource` provenance enum,
+  `InvoiceOcrExtractionError` structured attributes, confidence-threshold
+  gate — but requires a **separate ADR** because the surface layer
+  (application/ledger), document class (operator-uploaded supplier invoices),
+  and extraction technology (OCR vs text-layer) are all distinct from what
+  this ADR governs.
+
+### Decision
+
+A separate ADR titled `purchase-invoice-ocr-extraction-discipline` is the
+correct next-campaign vehicle. This ADR does not govern the OCR surface; it
+formally documents the research closure and points at the durable artefact.
+No changes to this ADR's existing decisions are required.

@@ -487,7 +487,7 @@ Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extra
 
 Tracked rollout item per 2026-05-28 user-directed gradual extension of PDF extraction discipline. Tasks ledger holds the detailed scope. Plan step granularity will be added when this phase is picked up for execution.
 
-- [ ] `W10.P44.S201` - Future research ADR for OCR evidence invoice path discipline deferred per W02 (tasklist #70); `.vault/research/`.
+- [x] `W10.P44.S201` - OCR evidence invoice path discipline research (tasklist #70) — research landed at `.vault/research/2026-05-30-declaracion-extraction-architecture-research.md`; seven OCR-specific silent-failure classes documented; discipline analogue proposed (`InvoiceCorpusSource`, `InvoiceOcrExtractionError`, engine-version gate); verdict: separate ADR `purchase-invoice-ocr-extraction-discipline` warranted; follow-up phases: ADR authoring, model/error implementation, OCR pipeline, gate enforcement.
 
 ### Phase `W10.P45` - M130 corpus regeneration with formula-consistent values
 
