@@ -70,10 +70,6 @@ _OptionalHex64 = Annotated[
     ),
 ]
 
-_HEX_WORK_UNIT_ID_LENGTH = 64
-"""Length of the SHA-256 hex digest used as the work-unit identifier."""
-
-
 from ...core.identity import BucketId as _BucketId
 from ._ids import WorkUnitId as _WorkUnitId
 _Period = Annotated[
