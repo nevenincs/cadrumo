@@ -77,7 +77,6 @@ dependencies = [
   # Persistence
   "sqlalchemy>=2.0.36",
   # CLI
-  "torch>=2.4",
   "typer>=0.20.0",
   # IANA tz database (bundled on Linux/macOS, missing on Windows
   # CPython — required by aeat.status._parsers.expedientes to
@@ -540,7 +539,6 @@ ignore_decorators = [
 ignore_unused = [
   "tzdata",         # IANA db, only matters at runtime on Windows; runtime-required.
   "python-dotenv",  # loaded by core.config when AEAT_DOTENV is set; deptry can't see runtime use.
-  "torch",          # transformers fallback when device=cpu; loaded by transformers.
 ]
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
