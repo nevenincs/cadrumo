@@ -7,6 +7,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
+from ...domain.modelos._ids import BucketId
+
 
 class InitializeWorkspaceCommand(BaseModel):
     """Command to initialize a new active workspace profile and bucket."""
@@ -66,5 +68,5 @@ class InitializeWorkspaceResult(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     profile_id: str
-    bucket_id: str
+    bucket_id: BucketId
     auth_configured: bool
