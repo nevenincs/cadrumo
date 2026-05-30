@@ -408,11 +408,11 @@ Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeErro
 - [x] `W02.P11.S252` - migrate TypeError in _zeroise.py:46 to MasterKeyTypeError or StorageValidationError; `src/aeat/adapters/persistence/storage/master_key/_zeroise.py`.
 - [x] `W02.P11.S253` - migrate ValueError in _recovery_record.py:34 to RecoveryVerificationError or RecoveryRecordParseError; `src/aeat/adapters/persistence/storage/master_key/_recovery_record.py`.
 - [x] `W02.P11.S254` - add real-behavior test asserting master_key cluster errors all envelope-round-trip; `src/aeat/adapters/persistence/storage/master_key/test_cluster_envelopes.py`.
-- [ ] `W02.P11.S255` - migrate ValueError raises in bucket/_manifest.py:58,72,147 to BucketError or BucketValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest.py`.
-- [ ] `W02.P11.S256` - migrate ValueError raises in bucket/_export_header.py:24-53 to BucketError or BucketExportHeaderError; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
-- [ ] `W02.P11.S257` - migrate TypeError in bucket/_manifest_io.py:45 to BucketError or StorageValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
-- [ ] `W02.P11.S258` - migrate ValueError raises in bucket/_layout.py:60,62 and bucket/_keystore_paths.py:40,42 to BucketError; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
-- [ ] `W02.P11.S259` - add real-behavior test asserting bucket cluster errors envelope-round-trip; `src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py`.
+- [x] `W02.P11.S255` - migrate ValueError raises in bucket/_manifest.py:58,72,147 to BucketError or BucketValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest.py`.
+- [x] `W02.P11.S256` - migrate ValueError raises in bucket/_export_header.py:24-53 to BucketError or BucketExportHeaderError; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
+- [x] `W02.P11.S257` - migrate TypeError in bucket/_manifest_io.py:45 to BucketError or StorageValidationError; `src/aeat/adapters/persistence/storage/bucket/_manifest_io.py`.
+- [x] `W02.P11.S258` - migrate ValueError raises in bucket/_layout.py:60,62 and bucket/_keystore_paths.py:40,42 to BucketError; `src/aeat/adapters/persistence/storage/bucket/_layout.py`.
+- [x] `W02.P11.S259` - add real-behavior test asserting bucket cluster errors envelope-round-trip; `src/aeat/adapters/persistence/storage/bucket/test_cluster_envelopes.py`.
 - [ ] `W02.P11.S260` - replace ValueError at _namespace_registry.py:119 with NamespaceRegistryError survivor; `src/aeat/adapters/persistence/storage/_namespace_registry.py`.
 - [ ] `W02.P11.S261` - replace ValueError at workflow/_engine.py:282 with WorkflowInputMismatchError survivor; `src/aeat/application/workflow/_engine.py`.
 - [ ] `W02.P11.S262` - replace ValueError at core/config.py:1249,1252 with ConfigBoundaryError survivor; `src/aeat/core/config.py`.
