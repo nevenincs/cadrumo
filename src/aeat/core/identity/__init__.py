@@ -36,6 +36,7 @@ from ._documents import (
 from ._profile import ProfileId
 from ._snapshot import SnapshotId
 from ._tax_id import validate_spanish_tax_id
+from ._transaction import TransactionId
 
 
 def _subject_tax_id_validator(value: str) -> str:
@@ -73,6 +74,7 @@ __all__ = [
     "ProfileId",
     "SnapshotId",
     "SubjectTaxId",
+    "TransactionId",
     "validate_identity",
     "validate_spanish_tax_id",
 ]
