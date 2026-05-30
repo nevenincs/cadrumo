@@ -114,16 +114,11 @@ class TestReplayRun:
             with pytest.raises(AeatObservabilityError, match="removed flag"):
                 replay_run(legacy_trace.run_id)
 
-    def test_replay_of_propagated_via_env_var(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_replay_of_propagated_via_env_var(self, tmp_path: Path) -> None:
         """The re-entered run context must label its trace with ``replay_of``."""
         from ..config import PROJECT_ROOT as _PROJECT_ROOT
         from ..config import Settings as _Settings
         from . import (
-            REPLAY_ACTIVE_ENV_VAR,
             run_context,
         )
         from . import (
@@ -131,45 +126,42 @@ class TestReplayRun:
         )
         from ._store import load_trace
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        current_corpus = _compute_corpus_sha256(_PROJECT_ROOT / ".vault", _Settings())
-        original = RunTrace(
-            run_id="1111222233334444",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat test replay",
-            arguments=(),
-            corpus_sha256=current_corpus,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(original)
+        with override_settings(aeat_runs_dir=tmp_path):
+            current_corpus = _compute_corpus_sha256(_PROJECT_ROOT / ".vault", _Settings())
+            original = RunTrace(
+                run_id="1111222233334444",
+                started_at=datetime(2026, 4, 14, tzinfo=UTC),
+                finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+                entrypoint="aeat test replay",
+                arguments=(),
+                corpus_sha256=current_corpus,
+                db_sha256="b" * 64,
+                cert_fingerprint="",
+                outcome=RunOutcome.OK,
+            )
+            save_trace(original)
 
-        # Simulate the env var set during a replay (monkeypatch auto-cleans on teardown):
-        monkeypatch.setenv(REPLAY_ACTIVE_ENV_VAR, original.run_id)
-        with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
-            child_run_id = info.run_id
+            # Simulate the env var set during a replay — the canonical
+            # Settings field is consulted by ``run_context`` via
+            # ``load_settings()`` at re-entry.
+            with override_settings(aeat_runs_dir=tmp_path, aeat_replay_active=original.run_id):
+                with run_context(entrypoint="aeat test replay-child", arguments=()) as info:
+                    child_run_id = info.run_id
 
-        child_trace = load_trace(child_run_id)
-        assert child_trace.replay_of == original.run_id, "replay-originated traces must carry the original run id"
+            child_trace = load_trace(child_run_id)
+            assert child_trace.replay_of == original.run_id, "replay-originated traces must carry the original run id"
 
-    def test_replay_of_ignored_when_env_is_non_canonical(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
+    def test_replay_of_ignored_when_env_is_non_canonical(self, tmp_path: Path) -> None:
         """Legacy sentinel ``"1"`` must not pollute the trace."""
-        from . import REPLAY_ACTIVE_ENV_VAR, run_context
+        from . import run_context
         from ._store import load_trace
 
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        monkeypatch.setenv(REPLAY_ACTIVE_ENV_VAR, "1")
-        with run_context(entrypoint="aeat test", arguments=()) as info:
-            rid = info.run_id
+        with override_settings(aeat_runs_dir=tmp_path, aeat_replay_active="1"):
+            with run_context(entrypoint="aeat test", arguments=()) as info:
+                rid = info.run_id
 
-        trace = load_trace(rid)
-        assert trace.replay_of is None, "non-16-hex env value must be ignored"
+            trace = load_trace(rid)
+            assert trace.replay_of is None, "non-16-hex env value must be ignored"
 
     def test_false_value_not_detected_as_live_mode(self) -> None:
         """A removed flag name with value 'False' is ignored.
@@ -199,38 +191,35 @@ class TestReplayEndToEndBooleanFlag:
     has to emit the bare ``--json`` form instead.
     """
 
-    def test_replay_of_workflow_list_json(
-        self,
-        tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
-    ) -> None:
-
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        # A fresh workflow-runs dir so list has nothing to render.
-        monkeypatch.setenv("AEAT_WORKFLOW_RUNS_DIR", str(tmp_path / "workflow-runs"))
-        current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-        recorded = RunTrace(
-            run_id="deadbeefcafe0001",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat workflow list",
-            # NOTE: ``name="json"`` here matches how the real
-            # wrapped command (cli/workflow/list_cmd.py) builds its
-            # arguments dict — using the CLI flag spelling as the
-            # dict key. This makes the replay argv derivation
-            # (``--json``) correct without needing a ``cli_flag``
-            # override. See ``TestArgvReconstruction`` for the
-            # coverage of the override path.
-            arguments=(ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
-            corpus_sha256=current_corpus,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(recorded)
-        # Must not raise — replay round-trip through the real CLI.
-        result = replay_run(recorded.run_id)
-        assert result.run_id == recorded.run_id
+    def test_replay_of_workflow_list_json(self, tmp_path: Path) -> None:
+        with override_settings(
+            aeat_runs_dir=tmp_path,
+            # A fresh workflow-runs dir so list has nothing to render.
+            aeat_workflow_runs_dir=tmp_path / "workflow-runs",
+        ):
+            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            recorded = RunTrace(
+                run_id="deadbeefcafe0001",
+                started_at=datetime(2026, 4, 14, tzinfo=UTC),
+                finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+                entrypoint="aeat workflow list",
+                # NOTE: ``name="json"`` here matches how the real
+                # wrapped command (cli/workflow/list_cmd.py) builds its
+                # arguments dict — using the CLI flag spelling as the
+                # dict key. This makes the replay argv derivation
+                # (``--json``) correct without needing a ``cli_flag``
+                # override. See ``TestArgvReconstruction`` for the
+                # coverage of the override path.
+                arguments=(ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
+                corpus_sha256=current_corpus,
+                db_sha256="b" * 64,
+                cert_fingerprint="",
+                outcome=RunOutcome.OK,
+            )
+            save_trace(recorded)
+            # Must not raise — replay round-trip through the real CLI.
+            result = replay_run(recorded.run_id)
+            assert result.run_id == recorded.run_id
 
 
 class TestEnvFileFingerprint:
