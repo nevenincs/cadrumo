@@ -202,6 +202,56 @@ class FinancialProvider(ABC):
     verification_source: ClassVar[CorpusVerificationSource]
     provisional_pending_specimen: ClassVar[bool]
 
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        """Enforce corpus-discipline declarations at subclass definition time.
+
+        ``verification_source`` and ``provisional_pending_specimen`` are
+        declared as :class:`ClassVar` annotations on the ABC but Python does
+        not enforce unset ``ClassVar`` attributes.  ``__init_subclass__`` runs
+        once per concrete subclass at class-creation time (i.e. at import),
+        giving the same guarantee as ``@abstractmethod`` without changing the
+        class-variable declaration syntax that every concrete provider already
+        uses.
+
+        Raises:
+            TypeError: When a concrete (non-abstract) subclass does not declare
+                       ``verification_source`` or ``provisional_pending_specimen``,
+                       or when ``verification_source`` carries an unknown literal.
+        """
+        super().__init_subclass__(**kwargs)
+        # Skip enforcement for abstract subclasses (those that still have
+        # abstract methods remaining — they are intermediary ABCs, not leaf
+        # providers).
+        if getattr(cls, "__abstractmethods__", None):
+            return
+        _VALID_SOURCES: frozenset[str] = frozenset(
+            {"real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"}
+        )
+        if not hasattr(cls, "verification_source"):
+            raise TypeError(
+                f"{cls.__qualname__} must declare a 'verification_source' class variable"
+            )
+        vs = cls.verification_source  # type: ignore[attr-defined]
+        if vs not in _VALID_SOURCES:
+            raise TypeError(
+                f"{cls.__qualname__}.verification_source={vs!r} is not one of "
+                f"{sorted(_VALID_SOURCES)}"
+            )
+        if not hasattr(cls, "provisional_pending_specimen"):
+            raise TypeError(
+                f"{cls.__qualname__} must declare a 'provisional_pending_specimen' class variable"
+            )
+        pps = cls.provisional_pending_specimen  # type: ignore[attr-defined]
+        if not isinstance(pps, bool):
+            raise TypeError(
+                f"{cls.__qualname__}.provisional_pending_specimen must be bool, got {type(pps)}"
+            )
+        if vs == "no_corpus" and pps is not True:
+            raise TypeError(
+                f"{cls.__qualname__}: verification_source='no_corpus' requires "
+                "provisional_pending_specimen=True"
+            )
+
     def can_handle(self, path: Path) -> bool:
         """Return whether the provider is a plausible match for ``path``.
 

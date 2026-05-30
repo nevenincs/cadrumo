@@ -19,7 +19,7 @@ import pytest
 
 from ...core.errors import ERROR_REGISTRY, ProfileAnswerTypeError, build_error_envelope
 from ._errors import WizardAnswerTypeError
-from ._setup_answers import SetupAnswers
+from aeat.core.profile import SetupAnswers
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -44,78 +44,78 @@ def test_wizard_answer_type_error_round_trips_through_build_error_envelope() -> 
 
 
 def test_iva_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="iva_regime"):
+    with pytest.raises(ProfileAnswerTypeError, match="iva_regime"):
         SetupAnswers._parse_iva_regime(42)  # type: ignore[arg-type]
 
 
 def test_entity_type_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="entity_type"):
+    with pytest.raises(ProfileAnswerTypeError, match="entity_type"):
         SetupAnswers._parse_entity_type(42)  # type: ignore[arg-type]
 
 
 def test_legal_entity_form_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="legal_entity_form"):
+    with pytest.raises(ProfileAnswerTypeError, match="legal_entity_form"):
         SetupAnswers._parse_legal_entity_form(42)  # type: ignore[arg-type]
 
 
 def test_irpf_estimation_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="irpf_estimation_regime"):
+    with pytest.raises(ProfileAnswerTypeError, match="irpf_estimation_regime"):
         SetupAnswers._parse_irpf_estimation_regime(42)  # type: ignore[arg-type]
 
 
 def test_situacion_familiar_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="situacion_familiar"):
+    with pytest.raises(ProfileAnswerTypeError, match="situacion_familiar"):
         SetupAnswers._parse_situacion_familiar(42)  # type: ignore[arg-type]
 
 
 def test_unidad_familiar_descendientes_exclusivos_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="unidad_familiar_descendientes_exclusivos"):
+    with pytest.raises(ProfileAnswerTypeError, match="unidad_familiar_descendientes_exclusivos"):
         SetupAnswers._parse_unidad_familiar_descendientes_exclusivos(42)  # type: ignore[arg-type]
 
 
 def test_irpf_special_regime_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="irpf_special_regime"):
+    with pytest.raises(ProfileAnswerTypeError, match="irpf_special_regime"):
         SetupAnswers._parse_irpf_special_regime(42)  # type: ignore[arg-type]
 
 
 def test_fiscal_residency_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="fiscal_residency"):
+    with pytest.raises(ProfileAnswerTypeError, match="fiscal_residency"):
         SetupAnswers._parse_fiscal_residency(42)  # type: ignore[arg-type]
 
 
 def test_taxation_type_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="taxation_type"):
+    with pytest.raises(ProfileAnswerTypeError, match="taxation_type"):
         SetupAnswers._parse_taxation_type(42)  # type: ignore[arg-type]
 
 
 def test_taxpayer_sex_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="sex code"):
+    with pytest.raises(ProfileAnswerTypeError, match="sex code"):
         SetupAnswers._parse_sex_code(42)  # type: ignore[arg-type]
 
 
 def test_spouse_sex_raises_wizard_answer_type_error_for_invalid_type() -> None:
     # _parse_sex_code handles both taxpayer_sex and spouse_sex; any non-str/enum
     # input from either field hits the same raise site.
-    with pytest.raises(WizardAnswerTypeError, match="sex code"):
+    with pytest.raises(ProfileAnswerTypeError, match="sex code"):
         SetupAnswers._parse_sex_code(object())  # type: ignore[arg-type]
 
 
 def test_taxpayer_marital_status_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="taxpayer_marital_status"):
+    with pytest.raises(ProfileAnswerTypeError, match="taxpayer_marital_status"):
         SetupAnswers._parse_marital_status(42)  # type: ignore[arg-type]
 
 
 def test_taxpayer_disability_grade_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="disability grade"):
+    with pytest.raises(ProfileAnswerTypeError, match="disability grade"):
         SetupAnswers._parse_disability_grade(42)  # type: ignore[arg-type]
 
 
 def test_spouse_disability_grade_raises_wizard_answer_type_error_for_invalid_type() -> None:
     # _parse_disability_grade handles both taxpayer_ and spouse_ fields.
-    with pytest.raises(WizardAnswerTypeError, match="disability grade"):
+    with pytest.raises(ProfileAnswerTypeError, match="disability grade"):
         SetupAnswers._parse_disability_grade(object())  # type: ignore[arg-type]
 
 
 def test_tax_residence_ccaa_raises_wizard_answer_type_error_for_invalid_type() -> None:
-    with pytest.raises(WizardAnswerTypeError, match="tax_residence_ccaa"):
+    with pytest.raises(ProfileAnswerTypeError, match="tax_residence_ccaa"):
         SetupAnswers._parse_tax_residence_ccaa(42)  # type: ignore[arg-type]

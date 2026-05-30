@@ -17,10 +17,11 @@ only depends on the structural type, not the concrete class.
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Protocol, runtime_checkable
 
-_log = logging.getLogger(__name__)
+from .logging import get_logger
+
+_log = get_logger(__name__)
 
 
 class WizardCatalogueNotRegisteredError(RuntimeError):
