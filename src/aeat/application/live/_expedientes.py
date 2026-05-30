@@ -34,7 +34,7 @@ from ...adapters.persistence.storage import LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
 from ...core.time import _now
-from ...core.identity import BucketId
+from ...core.identity import BucketId, SnapshotId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,
@@ -68,7 +68,7 @@ class PersistedExpedientesSnapshot(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    snapshot_id: str = Field(min_length=64, max_length=64)
+    snapshot_id: SnapshotId
     bucket_id: BucketId
     captured_at: datetime
     source_url: str = Field(min_length=1)

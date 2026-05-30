@@ -34,6 +34,7 @@ from ._documents import (
     validate_identity,
 )
 from ._profile import ProfileId
+from ._snapshot import SnapshotId
 from ._tax_id import validate_spanish_tax_id
 
 
@@ -70,6 +71,7 @@ __all__ = [
     "IdentityDocument",
     "IdentityError",
     "ProfileId",
+    "SnapshotId",
     "SubjectTaxId",
     "validate_identity",
     "validate_spanish_tax_id",
