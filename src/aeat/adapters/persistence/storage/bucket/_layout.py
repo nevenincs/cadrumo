@@ -26,6 +26,7 @@ from .._namespace_registry import (
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
 )
+from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
@@ -58,9 +59,9 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     """
 
     if not bucket_id:
-        raise ValueError("bucket_id must be non-empty")
+        raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
-        raise ValueError("bucket_id must not contain a path separator")
+        raise BucketValidationError("bucket_id must not contain a path separator")
 
     bucket_dir = root / BUCKETS_DIRNAME / bucket_id
     return BucketPaths(

@@ -20,6 +20,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from .._namespace_registry import BUCKETS_DIRNAME, KEYSTORE_DIRNAME
+from ._errors import BucketValidationError
 from ._layout import BucketPaths, bucket_paths
 
 
@@ -37,9 +38,9 @@ def keystore_path(root: Path, bucket_id: str) -> Path:
     """
 
     if not bucket_id:
-        raise ValueError("bucket_id must be non-empty")
+        raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
-        raise ValueError("bucket_id must not contain a path separator")
+        raise BucketValidationError("bucket_id must not contain a path separator")
     return keystore_root(root) / bucket_id
 
 
@@ -90,11 +91,11 @@ def validate_keystore_separation(
 
     buckets_parent = root / BUCKETS_DIRNAME
     if _is_under(target, buckets_parent):
-        raise ValueError(
+        raise BucketValidationError(
             f"keystore path {target!s} resolves under buckets parent {buckets_parent!s}",
         )
     if _is_under(target, paths.db_dir):
-        raise ValueError(
+        raise BucketValidationError(
             f"keystore path {target!s} resolves under bucket db dir {paths.db_dir!s}",
         )
 

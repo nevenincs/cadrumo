@@ -15,6 +15,7 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .....domain.modelos._ids import BucketId
+from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -23,9 +24,9 @@ _SHA256_HEX_LEN = 64
 
 def _ensure_utc(value: datetime) -> datetime:
     if value.tzinfo is None:
-        raise ValueError("datetime must be timezone-aware UTC")
+        raise BucketValidationError("datetime must be timezone-aware UTC")
     if value.utcoffset() != UTC.utcoffset(value):
-        raise ValueError("datetime must be in UTC")
+        raise BucketValidationError("datetime must be in UTC")
     return value
 
 
@@ -46,13 +47,13 @@ class ExportArchiveHeader(BaseModel):
         """Reject anything other than a lowercase hex SHA-256 digest."""
 
         if len(value) != _SHA256_HEX_LEN:
-            raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
+            raise BucketValidationError("manifest_digest must be a 64-char SHA-256 hex string")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise ValueError("manifest_digest must be hex") from exc
+            raise BucketValidationError("manifest_digest must be hex") from exc
         if value != value.lower():
-            raise ValueError("manifest_digest must be lowercase hex")
+            raise BucketValidationError("manifest_digest must be lowercase hex")
         return value
 
     @field_validator("created_at")
