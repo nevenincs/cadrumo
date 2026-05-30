@@ -2856,6 +2856,7 @@ errors:
       freshness window.
   financial:
     source_file_not_found: 'Source file does not exist: {path}'
+    source_file_too_large: 'Source file is too large: {path} ({size_bytes} bytes; maximum {max_bytes} bytes)'
   identity:
     cif_check_char_mismatch_mixed: 'CIF check character is incorrect (kind {kind}):
       expected {expected} or {alt}, got {got}.'
