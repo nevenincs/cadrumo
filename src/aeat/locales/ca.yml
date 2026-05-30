@@ -2988,6 +2988,7 @@ errors:
   financial:
     source_file_not_found: 'El fitxer d''origen no existeix: {path}'
     source_file_too_large: 'El fitxer origen és massa gran: {path} ({size_bytes} bytes; màxim {max_bytes} bytes)'
+    source_file_is_symlink: 'El camí del fitxer origen és un enllaç simbòlic, la qual cosa no està permesa per a la ingesta de dades fiscals: {path}'
   identity:
     cif_check_char_mismatch_mixed: 'El caràcter de control del CIF és incorrecte (tipus
       {kind}): s''esperava {expected} o {alt}, s''ha obtingut {got}.'

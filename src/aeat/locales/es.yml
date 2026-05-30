@@ -3018,6 +3018,7 @@ errors:
   financial:
     source_file_not_found: 'El archivo de origen no existe: {path}'
     source_file_too_large: 'El archivo origen es demasiado grande: {path} ({size_bytes} bytes; máximo {max_bytes} bytes)'
+    source_file_is_symlink: 'La ruta del archivo origen es un enlace simbólico, lo cual no está permitido para la ingesta de datos fiscales: {path}'
   identity:
     cif_check_char_mismatch_mixed: 'El carácter de control del CIF es incorrecto (tipo
       {kind}): se esperaba {expected} o {alt}, se obtuvo {got}.'
