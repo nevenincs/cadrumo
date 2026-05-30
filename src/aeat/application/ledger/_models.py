@@ -10,7 +10,7 @@ from typing import Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.modelos._ids import BucketId
+from ...domain.modelos._ids import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
@@ -610,8 +610,8 @@ class LedgerRemovalBlocker(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    work_unit_id: str = Field(min_length=64, max_length=64)
-    calculation_revision_id: str = Field(min_length=64, max_length=64)
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
     revision_state: str = Field(min_length=1)
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)

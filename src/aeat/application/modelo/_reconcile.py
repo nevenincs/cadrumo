@@ -24,7 +24,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core.errors import AeatError
 from ...core.i18n import tr
-from ...domain.modelos._ids import BucketId
+from ...domain.modelos._ids import BucketId, WorkUnitId
 from ._actions import WorkUnitNotFoundError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -72,7 +72,7 @@ class ModeloReconciliationCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    work_unit_id: str = Field(min_length=1, max_length=128)
+    work_unit_id: WorkUnitId
     source_kind: ModeloReconciliationSourceKind
     source_path: Path
     actor: str = Field(default="operator", min_length=1, max_length=64)
@@ -90,7 +90,7 @@ class ModeloReconciliationReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    work_unit_id: str = Field(min_length=1, max_length=128)
+    work_unit_id: WorkUnitId
     bucket_id: BucketId
     source_kind: ModeloReconciliationSourceKind
     source_path: str
