@@ -478,3 +478,86 @@ Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state 
 - [x] `W02.P13.S312` - add real-behavior test asserting all production cast() calls carry CAST-RATIONALE marker; `src/aeat/test_cast_rationale_inventory.py`.
 - [x] `W02.P13.S313` - enroll _pdf_n26.py:287,288 to DEFAULT_CURRENCY (the 2 sites missed in Wave 1 currency sweep); `src/aeat/adapters/inbound/financial/providers/_pdf_n26.py`.
 - [x] `W02.P13.S314` - add real-behavior test asserting financial provider DEFAULT_CURRENCY enrollment is complete; `src/aeat/adapters/inbound/financial/providers/test_pdf_n26.py`.
+
+## Wave `W03` - aeat.core adoption: relocate cross-hexagonal canonicals + enroll bypass sites
+
+Wave 3 closes the architectural pattern that produced Wave 2 regressions: every cross-hexagonal canonical relocates to aeat.core, and every production bypass site (datetime.now, fromisoformat, quantize, _ensure_utc, _coerce_decimal, etc.) enrolls into the canonical aeat.core symbol. Audit findings: 2 cross-hexagonal relocations (W3 task #11), ~54 enrollment bypasses (W3 task #13). The aeat.core surface itself is clean (zero hexagonal-direction violations per W3 task #12). Authorising audit findings tracked in W3 task list #10-#13.
+
+### Phase `W03.P14` - cross-hexagonal canonical relocations
+
+Relocate SETUP_FLOW/WIZARD_FLOWS and project_answers/SetupAnswers from aeat.application.wizard to aeat.core so domain modules stop reaching upward via deferred lazy imports. Same structural fix as the W02 CLASSIFIED_BY_MANUAL relocation. Plus proactive AggregationSourceKind relocation.
+
+- [ ] `W03.P14.S315` - introduce aeat.core.profile_catalogue with SETUP_FLOW and WIZARD_FLOWS Protocol or move the descriptors themselves; `src/aeat/core/profile_catalogue.py`.
+- [ ] `W03.P14.S316` - migrate aeat.application.wizard._catalogue to import canonical from aeat.core.profile_catalogue; `relocate SETUP_FLOW/WIZARD_FLOWS definitions; `src/aeat/application/wizard/_catalogue.py`.
+- [ ] `W03.P14.S317` - update aeat.domain.deadlines._profiles to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/deadlines/_profiles.py`.
+- [ ] `W03.P14.S318` - update aeat.domain.profile._keys to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue and remove deferred lazy import; `src/aeat/domain/profile/_keys.py`.
+- [ ] `W03.P14.S319` - update aeat.entrypoints.cli._config to import SETUP_FLOW/WIZARD_FLOWS from aeat.core.profile_catalogue; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [ ] `W03.P14.S320` - add real-behavior test asserting SETUP_FLOW/WIZARD_FLOWS canonical home is aeat.core and no deferred lazy upward imports survive; `src/aeat/core/test_profile_catalogue.py`.
+- [ ] `W03.P14.S321` - introduce SetupAnswers model in aeat.core (or a Protocol it satisfies) so domain can consume the typed projection without reaching into application.wizard; `src/aeat/core/profile.py`.
+- [ ] `W03.P14.S322` - relocate project_answers function to aeat.core.profile or expose its result type via Protocol; `aeat.application.wizard._persistence keeps the implementation but routes through the core interface; `src/aeat/core/profile.py`.
+- [ ] `W03.P14.S323` - update aeat.domain.deadlines._profiles to import project_answers/SetupAnswers from aeat.core.profile and remove deferred upward imports; `src/aeat/domain/deadlines/_profiles.py`.
+- [ ] `W03.P14.S324` - add real-behavior test asserting project_answers/SetupAnswers canonical home and domain importer purity; `src/aeat/core/test_profile.py`.
+- [ ] `W03.P14.S325` - proactively relocate AggregationSourceKind from aeat.application.aggregation._source_kinds to aeat.core (or a domain-reachable home) before a domain consumer materialises the deferred Wave 1 finding; `src/aeat/core/aggregation.py`.
+- [ ] `W03.P14.S326` - migrate 5 application-layer importers of AggregationSourceKind to the new canonical home; `src/aeat/application/aggregation/_service.py`.
+- [ ] `W03.P14.S327` - add real-behavior test asserting AggregationSourceKind canonical home and importer enrollment; `src/aeat/core/test_aggregation.py`.
+
+### Phase `W03.P15` - _clock._now enrollment sweep
+
+Replace 19+ inline datetime.now(UTC) sites across adapters, application, domain, and core/observability with _now from aeat.core.time._clock. Highest blast radius bypass cluster from W3 audit task #13.
+
+- [ ] `W03.P15.S328` - enroll datetime.now(UTC) sites in adapters/outbound/storage/_local.py:202,269,271,337,339 to _now from aeat.core.time._clock; `src/aeat/adapters/outbound/storage/_local.py`.
+- [ ] `W03.P15.S329` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/sede/_declarations.py:919,1243,1692,1739 to _now; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [ ] `W03.P15.S330` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_authenticator.py:550,906,1000 to _now; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [ ] `W03.P15.S331` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_clave_movil.py:387,506,1002,1057,1454,1460,1488 to _now; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [ ] `W03.P15.S332` - enroll datetime.now(UTC) in adapters/outbound/aeat/browser/_site_health_parsers.py:66 to _now; `src/aeat/adapters/outbound/aeat/browser/_site_health_parsers.py`.
+- [ ] `W03.P15.S333` - enroll datetime.now(UTC) sites in adapters/persistence/storage/_rotation.py:333,349 to _now; `src/aeat/adapters/persistence/storage/_rotation.py`.
+- [ ] `W03.P15.S334` - enroll datetime.now(UTC) in domain/transactions/_service.py:115 to _now; `src/aeat/domain/transactions/_service.py`.
+- [ ] `W03.P15.S335` - enroll datetime.now(UTC) in domain/filing/_complementaria_repository.py:100 to _now; `src/aeat/domain/filing/_complementaria_repository.py`.
+- [ ] `W03.P15.S336` - enroll datetime.now(tz=UTC) in domain/filing/_validator.py:220 to _now; `src/aeat/domain/filing/_validator.py`.
+- [ ] `W03.P15.S337` - enroll datetime.now(UTC) sites in core/observability/_context.py:128,296 to _now (noting this is intra-core); `src/aeat/core/observability/_context.py`.
+- [ ] `W03.P15.S338` - add real-behavior test asserting zero datetime.now(UTC) inline calls survive in production code under src/aeat/ (excluding aeat.core.time._clock and documented escapes); `src/aeat/test_clock_enrollment_inventory.py`.
+
+### Phase `W03.P16` - UTC validator enrollment sweep
+
+Replace 9 inline 'if tzinfo is None or utcoffset is None' guards across persistence/storage, domain/transactions, application/review, core/corpus_manifest, core/observability with _validate_utc_aware from aeat.core.time._utc. Plus the _ensure_utc reimpl in bucket/_export_header.py and the _utc coerce variant in auth/_acquisition_lock.py.
+
+- [ ] `W03.P16.S339` - replace _ensure_utc full reimpl in bucket/_export_header.py:25 with _validate_utc_aware from aeat.core.time._utc; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
+- [ ] `W03.P16.S340` - replace inline tzinfo guards in envelope/_envelope.py:138 and :342 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/envelope/_envelope.py`.
+- [ ] `W03.P16.S341` - replace inline tzinfo guard in secret_store/_secret_store.py:99 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
+- [ ] `W03.P16.S342` - replace inline tzinfo guard in application/review/_models.py:65 with _validate_utc_aware (also migrate the bare ValueError to a typed error); `src/aeat/application/review/_models.py`.
+- [ ] `W03.P16.S343` - replace inline tzinfo guard in domain/transactions/_raw_transaction.py:88 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_raw_transaction.py`.
+- [ ] `W03.P16.S344` - replace inline tzinfo guard in domain/transactions/_models.py:158 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_models.py`.
+- [ ] `W03.P16.S345` - replace inline tzinfo guard in core/corpus_manifest/__init__.py:117 with _validate_utc_aware (preserve CorpusManifestError raise via wrapper); `src/aeat/core/corpus_manifest/__init__.py`.
+- [ ] `W03.P16.S346` - replace inline tzinfo guard in core/observability/_models.py:334 with _validate_utc_aware; `src/aeat/core/observability/_models.py`.
+- [ ] `W03.P16.S347` - replace _utc coerce variant in application/auth/_acquisition_lock.py:259 with _coerce_utc_aware (handle None separately at call-site); `src/aeat/application/auth/_acquisition_lock.py`.
+- [ ] `W03.P16.S348` - add real-behavior test asserting zero inline tzinfo guards survive in production code (canonical helpers carry the contract); `src/aeat/test_utc_validator_enrollment_inventory.py`.
+
+### Phase `W03.P17` - parsing canonical enrollment
+
+Replace 10+ date.fromisoformat() inline + _parse_date reimpl in _notifications.py + 3 inline bool-string parsing sites with the aeat.core.parsing canonicals (_parse_iso8601_date, _parse_ddmmyyyy_date, _parse_bool).
+
+- [ ] `W03.P17.S349` - replace _parse_date full reimpl in sede/_notifications.py:316 with _parse_ddmmyyyy_date from aeat.core.parsing._dates; `src/aeat/adapters/outbound/aeat/sede/_notifications.py`.
+- [ ] `W03.P17.S350` - replace bare date.fromisoformat in application/calculations/_row_set_assembly.py:187 with _parse_iso8601_date; `src/aeat/application/calculations/_row_set_assembly.py`.
+- [ ] `W03.P17.S351` - replace bare date.fromisoformat in domain/profile/_marriage_facts.py:88,99 with _parse_iso8601_date; `src/aeat/domain/profile/_marriage_facts.py`.
+- [ ] `W03.P17.S352` - replace bare date.fromisoformat in domain/profile/_descendant_facts.py:99,101,159,164 with _parse_iso8601_date; `src/aeat/domain/profile/_descendant_facts.py`.
+- [ ] `W03.P17.S353` - replace bare date.fromisoformat in domain/profile/family.py:83,181,211 with _parse_iso8601_date; `src/aeat/domain/profile/family.py`.
+- [ ] `W03.P17.S354` - replace shadow truthy frozenset in registry/_export_parse.py:414 with _parse_bool delegation (no shadow set); `src/aeat/domain/calculations/registry/_export_parse.py`.
+- [ ] `W03.P17.S355` - replace inline value.lower() truthy check in wizard/_setup_answers.py:242 with _parse_bool; `src/aeat/application/wizard/_setup_answers.py`.
+- [ ] `W03.P17.S356` - replace inline value.lower() truthy check in domain/user_profile/_values.py:82 with _parse_bool; `src/aeat/domain/user_profile/_values.py`.
+- [ ] `W03.P17.S357` - add real-behavior test asserting zero inline date.fromisoformat / bool-string-coerce survive in production; `src/aeat/test_parsing_enrollment_inventory.py`.
+
+### Phase `W03.P18` - decimal canonical enrollment
+
+Replace 5 inline value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP) with _round_to_cents from aeat.domain.fincas._rounding. Replace 2 local _coerce_decimal reimpl + 2 bare Decimal(str(...)) with coerce_decimal. Replace 2 format_decimal bypasses.
+
+- [ ] `W03.P18.S358` - replace inline quantize at entrypoints/cli/_modelo.py:2527,2598,2604 with _round_to_cents from aeat.domain.fincas._rounding; `src/aeat/entrypoints/cli/_modelo.py`.
+- [ ] `W03.P18.S359` - replace inline quantize at application/invoices/_projection.py:124 with _round_to_cents; `src/aeat/application/invoices/_projection.py`.
+- [ ] `W03.P18.S360` - replace inline quantize at domain/calculations/registry/_formula_runtime.py:1206 with _round_to_cents; `src/aeat/domain/calculations/registry/_formula_runtime.py`.
+- [ ] `W03.P18.S361` - replace inline quantize at domain/iva/_prorrata.py:430 with _round_to_cents; `src/aeat/domain/iva/_prorrata.py`.
+- [ ] `W03.P18.S362` - replace inline quantize at adapters/outbound/aeat/export/_formats/_deserialise.py:100,110 with _round_to_cents; `src/aeat/adapters/outbound/aeat/export/_formats/_deserialise.py`.
+- [ ] `W03.P18.S363` - replace inline quantize at adapters/outbound/aeat/export/_formats/_record_spec.py:316 with _round_to_cents and route format_decimal through aeat.core.decimal._format; `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`.
+- [ ] `W03.P18.S364` - replace local _coerce_decimal reimpl in application/review/_edit.py:126 with coerce_decimal from aeat.core.decimal._coerce; `src/aeat/application/review/_edit.py`.
+- [ ] `W03.P18.S365` - replace local _coerce_decimal reimpl in domain/calculations/registry/_schema.py:48 with coerce_decimal; `src/aeat/domain/calculations/registry/_schema.py`.
+- [ ] `W03.P18.S366` - replace bare Decimal(str(...)) in adapters/inbound/financial/providers/_base.py:393 with coerce_decimal; `src/aeat/adapters/inbound/financial/providers/_base.py`.
+- [ ] `W03.P18.S367` - replace bare Decimal(str(...)) in application/overview/__init__.py:795 with coerce_decimal; `src/aeat/application/overview/__init__.py`.
+- [ ] `W03.P18.S368` - add real-behavior test asserting zero inline value.quantize(Decimal(0.01),ROUND_HALF_UP) and bare Decimal(str()) coercion survive in production; `src/aeat/test_decimal_enrollment_inventory.py`.
