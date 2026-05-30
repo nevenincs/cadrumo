@@ -505,32 +505,32 @@ Relocate SETUP_FLOW/WIZARD_FLOWS and project_answers/SetupAnswers from aeat.appl
 
 Replace 19+ inline datetime.now(UTC) sites across adapters, application, domain, and core/observability with _now from aeat.core.time._clock. Highest blast radius bypass cluster from W3 audit task #13.
 
-- [ ] `W03.P15.S328` - enroll datetime.now(UTC) sites in adapters/outbound/storage/_local.py:202,269,271,337,339 to _now from aeat.core.time._clock; `src/aeat/adapters/outbound/storage/_local.py`.
-- [ ] `W03.P15.S329` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/sede/_declarations.py:919,1243,1692,1739 to _now; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W03.P15.S330` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_authenticator.py:550,906,1000 to _now; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W03.P15.S331` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_clave_movil.py:387,506,1002,1057,1454,1460,1488 to _now; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W03.P15.S332` - enroll datetime.now(UTC) in adapters/outbound/aeat/browser/_site_health_parsers.py:66 to _now; `src/aeat/adapters/outbound/aeat/browser/_site_health_parsers.py`.
-- [ ] `W03.P15.S333` - enroll datetime.now(UTC) sites in adapters/persistence/storage/_rotation.py:333,349 to _now; `src/aeat/adapters/persistence/storage/_rotation.py`.
-- [ ] `W03.P15.S334` - enroll datetime.now(UTC) in domain/transactions/_service.py:115 to _now; `src/aeat/domain/transactions/_service.py`.
-- [ ] `W03.P15.S335` - enroll datetime.now(UTC) in domain/filing/_complementaria_repository.py:100 to _now; `src/aeat/domain/filing/_complementaria_repository.py`.
-- [ ] `W03.P15.S336` - enroll datetime.now(tz=UTC) in domain/filing/_validator.py:220 to _now; `src/aeat/domain/filing/_validator.py`.
-- [ ] `W03.P15.S337` - enroll datetime.now(UTC) sites in core/observability/_context.py:128,296 to _now (noting this is intra-core); `src/aeat/core/observability/_context.py`.
-- [ ] `W03.P15.S338` - add real-behavior test asserting zero datetime.now(UTC) inline calls survive in production code under src/aeat/ (excluding aeat.core.time._clock and documented escapes); `src/aeat/test_clock_enrollment_inventory.py`.
+- [x] `W03.P15.S328` - enroll datetime.now(UTC) sites in adapters/outbound/storage/_local.py:202,269,271,337,339 to _now from aeat.core.time._clock; `src/aeat/adapters/outbound/storage/_local.py`.
+- [x] `W03.P15.S329` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/sede/_declarations.py:919,1243,1692,1739 to _now; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W03.P15.S330` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_authenticator.py:550,906,1000 to _now; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W03.P15.S331` - enroll datetime.now(UTC) sites in adapters/outbound/aeat/auth/_clave_movil.py:387,506,1002,1057,1454,1460,1488 to _now; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W03.P15.S332` - enroll datetime.now(UTC) in adapters/outbound/aeat/browser/_site_health_parsers.py:66 to _now; `src/aeat/adapters/outbound/aeat/browser/_site_health_parsers.py`.
+- [x] `W03.P15.S333` - enroll datetime.now(UTC) sites in adapters/persistence/storage/_rotation.py:333,349 to _now; `src/aeat/adapters/persistence/storage/_rotation.py`.
+- [x] `W03.P15.S334` - enroll datetime.now(UTC) in domain/transactions/_service.py:115 to _now; `src/aeat/domain/transactions/_service.py`.
+- [x] `W03.P15.S335` - enroll datetime.now(UTC) in domain/filing/_complementaria_repository.py:100 to _now; `src/aeat/domain/filing/_complementaria_repository.py`.
+- [x] `W03.P15.S336` - enroll datetime.now(tz=UTC) in domain/filing/_validator.py:220 to _now; `src/aeat/domain/filing/_validator.py`.
+- [x] `W03.P15.S337` - enroll datetime.now(UTC) sites in core/observability/_context.py:128,296 to _now (noting this is intra-core); `src/aeat/core/observability/_context.py`.
+- [x] `W03.P15.S338` - add real-behavior test asserting zero datetime.now(UTC) inline calls survive in production code under src/aeat/ (excluding aeat.core.time._clock and documented escapes); `src/aeat/test_clock_enrollment_inventory.py`.
 
 ### Phase `W03.P16` - UTC validator enrollment sweep
 
 Replace 9 inline 'if tzinfo is None or utcoffset is None' guards across persistence/storage, domain/transactions, application/review, core/corpus_manifest, core/observability with _validate_utc_aware from aeat.core.time._utc. Plus the _ensure_utc reimpl in bucket/_export_header.py and the _utc coerce variant in auth/_acquisition_lock.py.
 
-- [ ] `W03.P16.S339` - replace _ensure_utc full reimpl in bucket/_export_header.py:25 with _validate_utc_aware from aeat.core.time._utc; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
-- [ ] `W03.P16.S340` - replace inline tzinfo guards in envelope/_envelope.py:138 and :342 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/envelope/_envelope.py`.
-- [ ] `W03.P16.S341` - replace inline tzinfo guard in secret_store/_secret_store.py:99 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
-- [ ] `W03.P16.S342` - replace inline tzinfo guard in application/review/_models.py:65 with _validate_utc_aware (also migrate the bare ValueError to a typed error); `src/aeat/application/review/_models.py`.
-- [ ] `W03.P16.S343` - replace inline tzinfo guard in domain/transactions/_raw_transaction.py:88 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_raw_transaction.py`.
-- [ ] `W03.P16.S344` - replace inline tzinfo guard in domain/transactions/_models.py:158 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_models.py`.
-- [ ] `W03.P16.S345` - replace inline tzinfo guard in core/corpus_manifest/__init__.py:117 with _validate_utc_aware (preserve CorpusManifestError raise via wrapper); `src/aeat/core/corpus_manifest/__init__.py`.
-- [ ] `W03.P16.S346` - replace inline tzinfo guard in core/observability/_models.py:334 with _validate_utc_aware; `src/aeat/core/observability/_models.py`.
-- [ ] `W03.P16.S347` - replace _utc coerce variant in application/auth/_acquisition_lock.py:259 with _coerce_utc_aware (handle None separately at call-site); `src/aeat/application/auth/_acquisition_lock.py`.
-- [ ] `W03.P16.S348` - add real-behavior test asserting zero inline tzinfo guards survive in production code (canonical helpers carry the contract); `src/aeat/test_utc_validator_enrollment_inventory.py`.
+- [x] `W03.P16.S339` - replace _ensure_utc full reimpl in bucket/_export_header.py:25 with _validate_utc_aware from aeat.core.time._utc; `src/aeat/adapters/persistence/storage/bucket/_export_header.py`.
+- [x] `W03.P16.S340` - replace inline tzinfo guards in envelope/_envelope.py:138 and :342 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/envelope/_envelope.py`.
+- [x] `W03.P16.S341` - replace inline tzinfo guard in secret_store/_secret_store.py:99 with _validate_utc_aware; `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`.
+- [x] `W03.P16.S342` - replace inline tzinfo guard in application/review/_models.py:65 with _validate_utc_aware (also migrate the bare ValueError to a typed error); `src/aeat/application/review/_models.py`.
+- [x] `W03.P16.S343` - replace inline tzinfo guard in domain/transactions/_raw_transaction.py:88 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_raw_transaction.py`.
+- [x] `W03.P16.S344` - replace inline tzinfo guard in domain/transactions/_models.py:158 with _validate_utc_aware (preserve TransactionValidationError raise via wrapper); `src/aeat/domain/transactions/_models.py`.
+- [x] `W03.P16.S345` - replace inline tzinfo guard in core/corpus_manifest/__init__.py:117 with _validate_utc_aware (preserve CorpusManifestError raise via wrapper); `src/aeat/core/corpus_manifest/__init__.py`.
+- [x] `W03.P16.S346` - replace inline tzinfo guard in core/observability/_models.py:334 with _validate_utc_aware; `src/aeat/core/observability/_models.py`.
+- [x] `W03.P16.S347` - replace _utc coerce variant in application/auth/_acquisition_lock.py:259 with _coerce_utc_aware (handle None separately at call-site); `src/aeat/application/auth/_acquisition_lock.py`.
+- [x] `W03.P16.S348` - add real-behavior test asserting zero inline tzinfo guards survive in production code (canonical helpers carry the contract); `src/aeat/test_utc_validator_enrollment_inventory.py`.
 
 ### Phase `W03.P17` - parsing canonical enrollment
 
