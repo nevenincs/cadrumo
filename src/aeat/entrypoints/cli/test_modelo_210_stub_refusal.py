@@ -97,3 +97,63 @@ def test_work_create_210_refusal_fires_before_profile_check(
     assert "Traceback" not in result.output
     # Refusal must contain legal citation, not a profile-missing message.
     assert "5/2004" in result.output or "TRLIRNR" in result.output or "G320" in result.output
+
+
+def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """S391: _guard_stub_modelo returns silently for modelo 210 when the
+    aeat_m210_engine_live Settings flag is True. Other stub-only modelos
+    continue to refuse unconditionally.
+
+    Direct-function test (not full CLI cached-invoke): exercises the
+    gate at the unit level so the test is independent of the cached
+    process. The full CLI E2E test for the engine-live path lands at
+    S392 persona-replay.
+
+    Anti-tautology: the test asserts (a) flag-True bypass on 210 AND
+    (b) flag-True still refuses 600/650/660 (other stub-only modelos
+    must not be silently bypassed by an over-broad gate). A future
+    refactor that gated ALL stubs on the flag would fail (b).
+    """
+
+    from aeat.core.config import Settings
+    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+
+    flag_settings = Settings(aeat_m210_engine_live=True)
+    monkeypatch.setattr(
+        "aeat.core.config.load_settings",
+        lambda: flag_settings,
+    )
+
+    # Flag-True: modelo 210 falls through silently (no exception).
+    _guard_stub_modelo("210")
+
+    # Flag-True: other stub-only modelos still refuse.
+    for other in ("151", "600", "620", "650", "660", "714", "721"):
+        with pytest.raises(Exception):
+            _guard_stub_modelo(other)
+
+
+def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """S391 control: with the flag default (False), modelo 210 still
+    refuses with the canonical Path-B stub message. Companion to the
+    flag-True test above; preserves the original-contract assertion.
+    """
+
+    from aeat.core.config import Settings
+    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+
+    default_settings = Settings()
+    assert default_settings.aeat_m210_engine_live is False, (
+        "S391 contract: m210_engine_live must default False until S392 acceptance"
+    )
+    monkeypatch.setattr(
+        "aeat.core.config.load_settings",
+        lambda: default_settings,
+    )
+
+    with pytest.raises(Exception):
+        _guard_stub_modelo("210")
