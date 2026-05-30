@@ -34,12 +34,13 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.decimal import coerce_decimal
 from ._errors import EditParseError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -130,13 +131,13 @@ def _coerce_decimal(clause: EditClause, *, scope: str) -> Decimal:
             f"--set {clause.key}={clause.raw_value}",
             reason=f"invalid-value-{scope}",
         )
-    try:
-        return Decimal(clause.raw_value)
-    except InvalidOperation as exc:
+    result = coerce_decimal(clause.raw_value)
+    if result is None:
         raise EditParseError(
             f"--set {clause.key}={clause.raw_value}",
             reason=f"invalid-value-{scope}",
-        ) from exc
+        )
+    return result
 
 
 _INVOICE_IVA_RATE_ALLOWED: frozenset[Decimal] = frozenset({Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")})

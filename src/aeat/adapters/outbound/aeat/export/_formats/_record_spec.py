@@ -24,11 +24,13 @@ Registry-backed export definitions pin the concrete wire encoding via the
 from __future__ import annotations
 
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from aeat.domain.fincas._rounding import _round_to_cents
 
 from .._errors import ExportFormatError
 
@@ -313,7 +315,7 @@ def encode_currency(
             f"wiring a separate sign field, or inline_sign=True for an "
             f"'N'-prefix field."
         )
-    quantised = abs(value).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    quantised = _round_to_cents(abs(value))
     cents = int(quantised * 100)
 
     if inline_sign:

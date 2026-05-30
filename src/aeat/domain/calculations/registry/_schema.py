@@ -13,6 +13,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from ....core.classification import SensitivityClass
+from ....core.decimal import coerce_decimal
 from ....core.identity._documents import IdentityError
 from ....core.identity._tax_id import validate_spanish_tax_id
 from ._aeat_hosts import first_aeat_host
@@ -46,13 +47,12 @@ from ._record_spec import ENCODING_ALIAS_MAP
 
 
 def _coerce_decimal(value: object) -> object:
-    if isinstance(value, Decimal):
-        return value
     if isinstance(value, bool | float):
         raise RegistryValidationError("decimal values must not be booleans or floats")
-    if isinstance(value, int | str):
-        return Decimal(value)
-    return value
+    if isinstance(value, Decimal):
+        return value
+    result = coerce_decimal(value)
+    return result if result is not None else value
 
 
 DecimalValue = Annotated[Decimal, BeforeValidator(_coerce_decimal)]

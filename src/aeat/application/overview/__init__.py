@@ -54,6 +54,7 @@ from aeat.domain.calculations.registry.applicability import (
     taxpayer_model_is_declared as _taxpayer_model_is_declared,
 )
 
+from ...core.decimal import coerce_decimal as _coerce_decimal
 from ...core.i18n import tr as _tr
 from ...domain.deadlines import (
     DeadlineEngine as _DeadlineEngine,
@@ -787,14 +788,9 @@ def build_filing_obligation_advisories(
             return None
 
     def _to_decimal(v: object) -> object | None:
-        from decimal import Decimal, InvalidOperation
-
         if v is None or str(v).strip() == "":
             return None
-        try:
-            return Decimal(str(v).strip())
-        except InvalidOperation:
-            return None
+        return _coerce_decimal(str(v).strip())
 
     pagadores_count = _to_int(raw_values.get("irpf.pagadores_count"))
     secondary_income = _to_decimal(raw_values.get("irpf.pagadores_secondary_income"))

@@ -23,6 +23,8 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from aeat.domain.fincas._rounding import _round_to_cents
+
 from .._errors import ExportFormatError
 from ._record_spec import (
     DateFmt,
@@ -97,7 +99,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
                 "(use 0000000000 for an explicit zero, not whitespace)"
             )
         cents = int(text)
-        result = (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
+        result = _round_to_cents(Decimal(cents) / Decimal(100))
         return -result if is_negative else result
 
     text = raw.decode("ascii").strip()
@@ -107,7 +109,7 @@ def _decode_currency(raw: bytes, *, inline_sign: bool = False) -> Decimal:
             "(use 0000000000 for an explicit zero, not whitespace)"
         )
     cents = int(text)
-    return (Decimal(cents) / Decimal(100)).quantize(Decimal("0.01"))
+    return _round_to_cents(Decimal(cents) / Decimal(100))
 
 
 def _decode_date(raw: bytes, fmt: DateFmt) -> date:
