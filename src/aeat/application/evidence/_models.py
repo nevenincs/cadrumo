@@ -16,6 +16,7 @@ from ...domain.modelos._ids import (
     FilingRecordId,
     WorkUnitId,
 )
+from ._ids import BundleId
 
 
 class EvidenceBundleNotFoundError(AeatError):
@@ -78,7 +79,7 @@ class EvidenceBundle(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bundle_id: str = Field(min_length=64, max_length=64)
+    bundle_id: BundleId
     manifest_version: int = Field(ge=1)
     bucket_id: BucketId
     work_unit_id: WorkUnitId

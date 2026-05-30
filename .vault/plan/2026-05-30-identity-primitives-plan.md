@@ -112,10 +112,10 @@ Declare the hex-64 AttachmentId alias in the attachment domain identity module p
 
 Declare the hex-64 BundleId and EvidenceId aliases in the evidence application service identity module per Rule 6 application-layer placement, re-export, and lift the bare-string bundle_id and evidence_id field sites in application/evidence/_models, application/evidence/_service, and downstream CLI payloads onto the aliases.
 
-- [ ] `W02.P08.S39` - declare the BundleId and EvidenceId aliases with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 application-layer placement; `src/aeat/application/evidence/_ids.py`.
-- [ ] `W02.P08.S40` - lift the bundle_id and evidence_id bare-string field declarations onto BundleId and EvidenceId per ADR Rule 6 in the evidence models module; `src/aeat/application/evidence/_models.py`.
-- [ ] `W02.P08.S41` - lift the bundle_id and evidence_id bare-string parameters onto BundleId and EvidenceId per ADR Rule 6 in the evidence service module; `src/aeat/application/evidence/_service.py`.
-- [ ] `W02.P08.S42` - add a real-behavior roundtrip test that populates an evidence bundle with non-default BundleId and EvidenceId values, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/application/evidence/test_evidence_roundtrip.py`.
+- [x] `W02.P08.S39` - declare the BundleId and EvidenceId aliases with the hex-64 StringConstraints shape and an __all__ export per ADR Rule 6 application-layer placement; `src/aeat/application/evidence/_ids.py`.
+- [x] `W02.P08.S40` - lift the bundle_id and evidence_id bare-string field declarations onto BundleId and EvidenceId per ADR Rule 6 in the evidence models module; `src/aeat/application/evidence/_models.py`.
+- [x] `W02.P08.S41` - lift the bundle_id and evidence_id bare-string parameters onto BundleId and EvidenceId per ADR Rule 6 in the evidence service module; `src/aeat/application/evidence/_service.py`.
+- [x] `W02.P08.S42` - add a real-behavior roundtrip test that populates an evidence bundle with non-default BundleId and EvidenceId values, persists through the real adapter, reloads, and asserts strict pydantic equality; `src/aeat/application/evidence/test_evidence_roundtrip.py`.
 
 ### Phase `W02.P09` - promote VerificationReportId in domain/modelos/_ids.py
 
