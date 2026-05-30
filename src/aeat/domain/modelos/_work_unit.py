@@ -70,8 +70,8 @@ _OptionalHex64 = Annotated[
     ),
 ]
 
-from ...core.identity import BucketId as _BucketId
-from ._ids import WorkUnitId as _WorkUnitId
+from ...core.identity import BucketId
+from ._ids import WorkUnitId
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
@@ -166,8 +166,8 @@ class WorkUnit(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    work_unit_id: _WorkUnitId
-    bucket_id: _BucketId
+    work_unit_id: WorkUnitId
+    bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: _Period
