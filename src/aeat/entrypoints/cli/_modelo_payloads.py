@@ -81,7 +81,7 @@ class CalculationRevisionPayload(OutputSchema):
     # revision has no values to summarise.
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -272,7 +272,7 @@ class WorkCalculateResult(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
@@ -314,7 +314,7 @@ class WorkRevisionResult(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     binding_overrides: dict[str, str]
-    inputs_snapshot: dict[str, object]
+    inputs_snapshot: dict[str, str]
     created_at: str
     updated_at: str
     verified_at: str | None = None
