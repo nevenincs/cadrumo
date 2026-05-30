@@ -1182,8 +1182,17 @@ def _refuse_unsecured_active_bucket_with_real_profile(session: BucketSession) ->
                 "SELECT payload FROM secure_objects WHERE namespace = ?",
                 (USER_PROFILE_VALUE_NAMESPACE.namespace,),
             ).fetchall()
-    except sqlite3.Error:
-        return
+    except sqlite3.Error as exc:
+        # Fail closed: a malformed, locked, or corrupted bucket DB means
+        # we cannot prove the profile is synthetic, so the deterministic
+        # unsecured backend must be refused. Returning here previously
+        # downgraded the check silently and admitted the published key
+        # on profiles that may have held real tax IDs.
+        raise UnsecuredModeRefusedError(
+            "unsecured master-key backend cannot read the active profile bucket DB "
+            "to prove the profile is synthetic; "
+            "use the file or keyring backend before decrypting or persisting records.",
+        ) from exc
     for (payload_wire,) in rows:
         try:
             payload_plain = decrypt_encrypted_bytes_column(bytes(payload_wire))
