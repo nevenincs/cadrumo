@@ -703,5 +703,5 @@ Fix test_stdio.py bare os.environ['COLUMNS'] regression. Enroll _PDF_EXTENSIONS 
 
 Fix CLI wire-boundary type mismatch in _modelo_payloads.py:84 (dict[str, object] should align with domain dict[str, str] for inputs_snapshot). Defer RevisionValidationContext 17-field cascade to Wave 7 architectural review.
 
-- [ ] `W05.P26.S463` - align CalculationRevisionPayload.inputs_snapshot type at cli/_modelo_payloads.py:84 from dict[str,object] to dict[str,str] (matching domain Mapping[str,str] contract); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
-- [ ] `W05.P26.S464` - add real-behavior test asserting CalculationRevisionPayload inputs_snapshot roundtrips dict[str,str] through CLI JSON channel; `src/aeat/entrypoints/cli/test_modelo_payloads.py`.
+- [x] `W05.P26.S463` - align CalculationRevisionPayload.inputs_snapshot type at cli/_modelo_payloads.py:84 from dict[str,object] to dict[str,str] (matching domain Mapping[str,str] contract); `src/aeat/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W05.P26.S464` - add real-behavior test asserting CalculationRevisionPayload inputs_snapshot roundtrips dict[str,str] through CLI JSON channel; `src/aeat/entrypoints/cli/test_modelo_payloads.py`.
