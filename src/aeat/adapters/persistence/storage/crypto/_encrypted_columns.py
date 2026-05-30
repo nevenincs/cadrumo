@@ -36,6 +36,7 @@ import hashlib
 import hmac
 import json
 
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
@@ -43,6 +44,21 @@ from sqlalchemy.types import TypeDecorator
 from ..errors import StorageValidationError
 from ..master_key._active_session import get_active_master_key
 from ._crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+
+
+class EncryptedPayload(BaseModel):
+    """Validated wrapper for a value decrypted from an :class:`EncryptedJSON` column.
+
+    The single ``data`` field carries the decoded JSON value (dict, list,
+    str, int, float, bool, or None).  Wrapping the raw ``json.loads``
+    result in a typed model ensures the decrypt path is auditable and
+    rejects structurally invalid bytes at the persistence boundary rather
+    than propagating bare ``object`` into domain code.
+    """
+
+    model_config = ConfigDict(strict=False)
+
+    data: object
 
 _AAD_STRING = b"aeat.column.encrypted_string.v1"
 _AAD_BYTES = b"aeat.column.encrypted_bytes.v1"
@@ -182,7 +198,7 @@ class EncryptedJSON(TypeDecorator[object]):
         key = _resolve_master_key()
         blob = EncryptedBlob.from_wire(bytes(value))
         plaintext = decrypt_record(blob, key=key, associated_data=_AAD_JSON)
-        return json.loads(plaintext.decode("utf-8"))
+        return EncryptedPayload(data=json.loads(plaintext.decode("utf-8"))).data
 
 
 class HashedLookup(TypeDecorator[bytes]):

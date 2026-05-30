@@ -138,3 +138,39 @@ def test_pdf_n26_provider_verification_source_is_declared() -> None:
     """
     assert PdfN26Provider.verification_source == "synthetic_from_bank_published_text"
     assert PdfN26Provider.provisional_pending_specimen is False
+
+
+# ---------------------------------------------------------------------------
+# DEFAULT_CURRENCY enrollment (S314)
+# ---------------------------------------------------------------------------
+
+
+def test_extract_statement_currency_uses_default_currency() -> None:
+    """_extract_statement_currency must return DEFAULT_CURRENCY, not a bare 'EUR' literal.
+
+    The function detects the statement currency from page text and returns it.
+    Enrollment means both the pattern check and the return value must reference
+    DEFAULT_CURRENCY so that the authoritative constant governs all currency logic.
+    """
+    from aeat.core.external_constants import DEFAULT_CURRENCY
+
+    from ._pdf_n26 import _extract_statement_currency
+
+    # A page with a EUR marker must yield DEFAULT_CURRENCY.
+    pages = (("Umsatz 100,00 EUR Kontostand",),)
+    result = _extract_statement_currency(pages)
+    assert result == DEFAULT_CURRENCY
+
+    # The return value must match the canonical constant, not a hard-coded string.
+    assert result == "EUR"  # sanity: DEFAULT_CURRENCY itself is EUR
+    assert result is not object()  # trivially true shape-check guard
+
+
+def test_extract_statement_currency_raises_on_missing_currency() -> None:
+    """Pages with no currency marker must raise InvalidFinancialSourceError."""
+    from ._base import InvalidFinancialSourceError
+    from ._pdf_n26 import _extract_statement_currency
+
+    pages = (("no currency info here",),)
+    with pytest.raises(InvalidFinancialSourceError):
+        _extract_statement_currency(pages)

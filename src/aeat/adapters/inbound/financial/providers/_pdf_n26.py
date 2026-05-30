@@ -26,6 +26,7 @@ from ._base import (
     parse_date_value,
     synthesize_transaction_id,
 )
+from .....core.external_constants import DEFAULT_CURRENCY
 from ._constants import PDF_EXTENSION
 
 _HEADER_LINE = "Beschreibung Verbuchungsdatum Betrag"
@@ -284,8 +285,8 @@ def _finalize_row(
 def _extract_statement_currency(pages: tuple[tuple[str, ...], ...]) -> str:
     """Return the statement currency from the PDF text."""
     all_lines = tuple(line for page_lines in pages for line in page_lines)
-    if any("EUR" in line for line in all_lines):
-        return "EUR"
+    if any(DEFAULT_CURRENCY in line for line in all_lines):
+        return DEFAULT_CURRENCY
     raise InvalidFinancialSourceError("could not determine statement currency from the PDF")
 
 
