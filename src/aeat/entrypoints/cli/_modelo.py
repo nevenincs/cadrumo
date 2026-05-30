@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Annotated, Protocol
 
 import click
 import typer
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ...application.aggregation import (
     CounterpartObservation,
@@ -54,7 +54,7 @@ from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
-from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
+from ...domain.calculations.registry._ids import BindingId, CasillaId
 from ...domain.calculations.registry._queries import parse_modelo_period
 from ...domain.fincas._rounding import _round_to_cents
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
@@ -92,6 +92,9 @@ _WORK_UNIT_ID_RE = r"^[0-9a-f]{64}$"
 _CASILLA_MAX_LEN = 64
 _BINDING_MAX_LEN = 128
 _BARE_NUMERIC_RE = re.compile(r"^\d+$")
+
+_BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
+_CASILLA_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(CasillaId)
 
 _OUTPUT_LANGUAGE_CLI = click.Choice(SUPPORTED_OUTPUT_LANGUAGES)
 
@@ -704,17 +707,19 @@ def _bare_period_error(modelo: str, period: str, *, fallback: str) -> str:
 def _validate_binding_key(key: str, spec: str) -> None:
     """Validate a ``--binding`` key against :data:`BindingId` constraints."""
 
-    if len(key) > _BINDING_MAX_LEN or not re.fullmatch(_REF_RE, key):
+    try:
+        _BINDING_ID_ADAPTER.validate_python(key)
+    except ValidationError as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_binding_key",
                 default=(
                     f"--binding key {key!r} is not a valid BindingId "
-                    f"(pattern: {_REF_RE!r}, max {_BINDING_MAX_LEN} chars); "
+                    f"(max {_BINDING_MAX_LEN} chars, lowercase kebab/dotted ref); "
                     f"got {spec!r}"
                 ),
             )
-        )
+        ) from exc
 
 
 def _parse_binding_override(spec: str) -> tuple[str, str]:
@@ -2319,17 +2324,19 @@ def _filing_record_lines(record: ModeloRecord) -> list[str]:
 def _validate_casilla_key(key: str, spec: str) -> None:
     """Validate a ``--casilla`` key against :data:`CasillaId` constraints."""
 
-    if len(key) > _CASILLA_MAX_LEN or not re.fullmatch(_CASILLA_RE, key):
+    try:
+        _CASILLA_ID_ADAPTER.validate_python(key)
+    except ValidationError as exc:
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.work.invalid_casilla_key",
                 default=(
                     f"--casilla key {key!r} is not a valid CasillaId "
-                    f"(pattern: {_CASILLA_RE!r}, max {_CASILLA_MAX_LEN} chars); "
+                    f"(max {_CASILLA_MAX_LEN} chars, alphanumeric/dotted ref); "
                     f"got {spec!r}"
                 ),
             )
-        )
+        ) from exc
 
 
 # Casilla data_types that accept a Decimal override via --casilla.
