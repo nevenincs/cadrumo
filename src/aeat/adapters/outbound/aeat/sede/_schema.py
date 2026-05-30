@@ -22,6 +22,7 @@ from typing import Final, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
+from .....domain.calculations.registry._ids import CasillaId
 from ._errors import SedeValidationError
 
 _STRICT_FROZEN: Final[ConfigDict] = ConfigDict(
@@ -186,7 +187,7 @@ class ObservedCasillaValue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    casilla_id: str = Field(min_length=1, max_length=128, pattern=r"^[0-9A-Za-z_.-]+$")
+    casilla_id: CasillaId
     value: str = Field(min_length=1, max_length=4096)
     source_artefact_kind: Literal["submitted_file", "declaration_pdf", "justificante_pdf", "derived_registry_formula"]
     source_locator: str = Field(min_length=1, max_length=512)
