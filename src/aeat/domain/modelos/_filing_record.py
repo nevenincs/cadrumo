@@ -36,10 +36,8 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_vali
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
 
-from ...core.identity import BucketId as _BucketId
-from ._ids import CalculationRevisionId as _CalculationRevisionId
-from ._ids import FilingRecordId as _FilingRecordId
-from ._ids import WorkUnitId as _WorkUnitId
+from ...core.identity import BucketId
+from ._ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 _Period = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=16),
@@ -136,10 +134,10 @@ class ModeloRecord(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    filing_record_id: _FilingRecordId
-    work_unit_id: _WorkUnitId
-    calculation_revision_id: _CalculationRevisionId
-    bucket_id: _BucketId
+    filing_record_id: FilingRecordId
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
+    bucket_id: BucketId
     modelo: ModeloCode
     filing_year: Annotated[int, Field(ge=2000, le=2099)]
     period: _Period
@@ -149,9 +147,9 @@ class ModeloRecord(BaseModel):
     aeat_accepted: bool = False
     status: ModeloRecordStatus = ModeloRecordStatus.VIGENTE
     superseded_at: datetime | None = None
-    superseded_by_filing_record_id: _FilingRecordId | None = None
+    superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
-    amends_filing_record_id: _FilingRecordId | None = None
+    amends_filing_record_id: FilingRecordId | None = None
 
     @field_validator("modelo", mode="before")
     @classmethod
