@@ -7,7 +7,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 
 
 class InitializeWorkspaceCommand(BaseModel):

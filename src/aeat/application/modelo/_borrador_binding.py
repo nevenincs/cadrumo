@@ -23,7 +23,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Decrypti
 from ...core.i18n import tr
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,

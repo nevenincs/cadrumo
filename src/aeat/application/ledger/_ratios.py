@@ -25,7 +25,7 @@ from ...domain.categories import (
     family_for,
     resolve_category_profiles,
 )
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,

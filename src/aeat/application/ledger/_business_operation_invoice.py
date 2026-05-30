@@ -41,7 +41,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from .._storage_paths import storage_path
 
 

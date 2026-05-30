@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from aeat.core.aggregation import AggregationSourceKind
 from ...core.config import Settings
 from ...core.i18n import tr
-from ...domain.modelos._ids import BucketId
+from ...core.identity import BucketId
 from ._aggregator import ReviewQueue
 from ._enums import ReviewItemKind, ReviewSeverity, ReviewState
 from ._errors import ReviewError

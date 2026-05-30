@@ -9,8 +9,9 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.identity import BucketId
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...domain.modelos._ids import BucketId, CalculationRevisionId, TransactionId, WorkUnitId
+from ...domain.modelos._ids import CalculationRevisionId, TransactionId, WorkUnitId
 from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
