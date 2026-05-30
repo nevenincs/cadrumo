@@ -29,6 +29,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Envelope
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
 from ...core.errors import AeatError
+from ...domain.modelos._ids import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,
@@ -60,7 +61,7 @@ class Borrador100Snapshot(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1, max_length=128)
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     modelo: str = Field(pattern=r"^100$")
     filing_year: int = Field(ge=1900, le=9999)
     period: str = Field(min_length=1, max_length=16)

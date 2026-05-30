@@ -11,6 +11,7 @@ from typing import Literal, Protocol, runtime_checkable
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from ...core.i18n import tr
+from ...domain.modelos._ids import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import ModeloRevision
 from ._errors import AggregationValidationError, t
@@ -33,7 +34,7 @@ class CalculationSourceContext(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)
     period: str = Field(min_length=1, max_length=32)

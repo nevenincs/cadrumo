@@ -8,6 +8,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_serializer, field_validator
 
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...domain.modelos._ids import BucketId
 from ...domain.transactions import (
     BusinessClassification,
     Transaction,
@@ -56,7 +57,7 @@ class LedgerPreflightReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     period: Period
     checked_transaction_count: int = Field(ge=0)
     issues: Sequence[LedgerPreflightIssue] = Field(default_factory=tuple)
