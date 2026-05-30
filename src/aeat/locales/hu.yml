@@ -2981,6 +2981,7 @@ errors:
   financial:
     source_file_not_found: 'A forrásfájl nem létezik: {path}'
     source_file_too_large: 'A forrásfájl túl nagy: {path} ({size_bytes} bytes; maximum {max_bytes} bytes)'
+    source_file_is_symlink: 'A forrásfájl elérési útja szimbolikus link, ami nem engedélyezett adóügyi adatok behozatalához: {path}'
   identity:
     cif_check_char_mismatch_mixed: 'A CIF ellenőrző karaktere helytelen (típus: {kind}):
       {expected} vagy {alt} volt a várt, de {got} érkezett.'

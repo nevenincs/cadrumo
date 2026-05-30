@@ -249,6 +249,11 @@ class FinancialProvider(ABC):
 
     def _read_source_bytes(self, path: Path) -> bytes:
         """Read the raw source bytes once for validation and provenance."""
+        if path.is_symlink():
+            raise InvalidFinancialSourceError(
+                translated_message="errors.financial.source_file_is_symlink",
+                context={"path": str(path)},
+            )
         resolved = path.resolve()
         if not resolved.exists() or not resolved.is_file():
             raise InvalidFinancialSourceError(
