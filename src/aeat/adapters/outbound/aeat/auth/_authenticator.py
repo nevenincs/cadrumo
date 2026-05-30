@@ -496,7 +496,8 @@ class AeatAuthenticator:
                 raise AeatLoginAssertionError(
                     "AeatAuthenticator already has an active session; "
                     "call close() or reauthenticate() before "
-                    "authenticating again"
+                    "authenticating again",
+                    translated_message="adapters.auth.authenticator.errors.already_active",
                 )
             target = target_url or self._settings.aeat_certificate_verify_url
             resume_path = self._resolve_storage_state_path(browser_session)
@@ -572,7 +573,8 @@ class AeatAuthenticator:
                 await self._close_browser_session(session_like)
                 raise AeatLoginAssertionError(
                     "fresh AEAT authentication did not produce a valid login assertion; "
-                    f"status={assertion.status_code} error={assertion.error_message!r}"
+                    f"status={assertion.status_code} error={assertion.error_message!r}",
+                    translated_message="adapters.auth.authenticator.errors.assertion_failed",
                 )
 
             authenticated_at = assertion.attempted_at
@@ -1080,7 +1082,10 @@ class AeatAuthenticator:
             )
 
         if context is None or session is None:
-            raise AeatLoginAssertionError("persisted AEAT session resume did not produce a usable context")
+            raise AeatLoginAssertionError(
+                "persisted AEAT session resume did not produce a usable context",
+                translated_message="adapters.auth.authenticator.errors.resume_failed",
+            )
         self._browser_session = session_like
         self._context = context
         self._active_session = session
@@ -1154,7 +1159,10 @@ class AeatAuthenticator:
                 f"persisted metadata is malformed: {exc}",
             )
         if metadata is None:
-            raise AeatLoginAssertionError("persisted metadata did not produce a parsed model")
+            raise AeatLoginAssertionError(
+                "persisted metadata did not produce a parsed model",
+                translated_message="adapters.auth.authenticator.errors.metadata_parse_failed",
+            )
         if metadata.schema_version != AEAT_STORAGE_STATE_SCHEMA_VERSION:
             self._raise_invalid_persisted_state(
                 storage_state_path,

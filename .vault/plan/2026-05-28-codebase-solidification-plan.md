@@ -430,16 +430,16 @@ Establish master_key/_errors.py with MasterKeyReentrantError / MasterKeyTypeErro
 
 Thread translated_message on every AeatLoginAssertionError raise across _authenticator.py and _clave_movil.py (9 sites). Close 9 SedeNavigationError navigation-flow raises in _declarations.py. Localize PortalNotFoundError.
 
-- [ ] `W02.P12.S272` - thread translated_message=adapters.auth.clave_movil.errors.no_persisted_session on AeatLoginAssertionError at _clave_movil.py:380 and :864; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W02.P12.S273` - thread translated_message=adapters.auth.clave_movil.errors.session_expired on AeatLoginAssertionError at _clave_movil.py:385 and :1049; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W02.P12.S274` - thread translated_message=adapters.auth.clave_movil.errors.storage_state_hash_mismatch on AeatLoginAssertionError at _clave_movil.py:1052; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W02.P12.S275` - thread translated_message=adapters.auth.clave_movil.errors.page_missing_click on AeatLoginAssertionError at _clave_movil.py:1144; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W02.P12.S276` - add real-behavior test asserting all Clave Movil AeatLoginAssertionError raises carry localized translated_message at CLI boundary; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil_locale.py`.
-- [ ] `W02.P12.S277` - thread translated_message=adapters.auth.authenticator.errors.already_active at _authenticator.py:496; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W02.P12.S278` - thread translated_message=adapters.auth.authenticator.errors.assertion_failed at _authenticator.py:573; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W02.P12.S279` - thread translated_message=adapters.auth.authenticator.errors.resume_failed at _authenticator.py:1083; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W02.P12.S280` - thread translated_message=adapters.auth.authenticator.errors.metadata_parse_failed at _authenticator.py:1157; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W02.P12.S281` - add real-behavior test asserting authenticator AeatLoginAssertionError raises carry localized translated_message; `src/aeat/adapters/outbound/aeat/auth/test_authenticator_locale.py`.
+- [x] `W02.P12.S272` - thread translated_message=adapters.auth.clave_movil.errors.no_persisted_session on AeatLoginAssertionError at _clave_movil.py:380 and :864; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W02.P12.S273` - thread translated_message=adapters.auth.clave_movil.errors.session_expired on AeatLoginAssertionError at _clave_movil.py:385 and :1049; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W02.P12.S274` - thread translated_message=adapters.auth.clave_movil.errors.storage_state_hash_mismatch on AeatLoginAssertionError at _clave_movil.py:1052; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W02.P12.S275` - thread translated_message=adapters.auth.clave_movil.errors.page_missing_click on AeatLoginAssertionError at _clave_movil.py:1144; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W02.P12.S276` - add real-behavior test asserting all Clave Movil AeatLoginAssertionError raises carry localized translated_message at CLI boundary; `src/aeat/adapters/outbound/aeat/auth/test_clave_movil_locale.py`.
+- [x] `W02.P12.S277` - thread translated_message=adapters.auth.authenticator.errors.already_active at _authenticator.py:496; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W02.P12.S278` - thread translated_message=adapters.auth.authenticator.errors.assertion_failed at _authenticator.py:573; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W02.P12.S279` - thread translated_message=adapters.auth.authenticator.errors.resume_failed at _authenticator.py:1083; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W02.P12.S280` - thread translated_message=adapters.auth.authenticator.errors.metadata_parse_failed at _authenticator.py:1157; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W02.P12.S281` - add real-behavior test asserting authenticator AeatLoginAssertionError raises carry localized translated_message; `src/aeat/adapters/outbound/aeat/auth/test_authenticator_locale.py`.
 - [x] `W02.P12.S282` - thread translated_message=adapters.sede.errors.session_expired_nav_failed on SedeNavigationError at _declarations.py:463; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [x] `W02.P12.S283` - thread translated_message=adapters.sede.errors.form_render_timeout on SedeNavigationError at _declarations.py:475; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
 - [x] `W02.P12.S284` - thread translated_message=adapters.sede.errors.cotejo_nav_failed on SedeNavigationError at _declarations.py:841; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
