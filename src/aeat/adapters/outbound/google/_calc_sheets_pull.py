@@ -59,7 +59,7 @@ from ....domain.calculations.registry._formula_runtime import (
     RegistryCalculationResult,
     calculate_registry_snapshot,
 )
-from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId
+from ....domain.calculations.registry._ids import BindingId, CasillaId, RelationId, RevisionId
 from ....domain.calculations.registry._schema import CasillaDefinition, InputKind, RegistrySnapshot
 from ...outbound.storage._errors import (
     OutboundStorageConflictError,
@@ -173,7 +173,7 @@ class PullMetadata(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     filing_year: int
     period: str
     engine_version: str
