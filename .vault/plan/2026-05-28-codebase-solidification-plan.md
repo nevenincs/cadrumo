@@ -570,34 +570,34 @@ Wave 4 closes the 53 findings from the 2026-05-30 re-audit: 5 W2 locale-Step sco
 
 Close 5 W2-Step-scope gaps in _clave_movil.py (3 sites), _authenticator.py (6 sites including 4 originally-flagged), _declarations.py (4 Playwright interaction failures). Plus 11 locale survivors (WorkUnit errors, TransactionValidationError, AmendmentVerificationRefusedError, etc) and 4 f-string-as-locale-key in aggregation errors.
 
-- [ ] `W04.P19.S369` - thread translated_message=adapters.auth.clave_movil.errors.already_active on AeatLoginAssertionError at _clave_movil.py:334; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W04.P19.S370` - thread translated_message=adapters.auth.clave_movil.errors.verify_requires_active_context at _clave_movil.py:488; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W04.P19.S371` - thread translated_message=adapters.auth.clave_movil.errors.metadata_invalid at _clave_movil.py:885; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W04.P19.S372` - thread translated_message=adapters.auth.authenticator.errors.closing at _authenticator.py:698; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S373` - thread translated_message=adapters.auth.authenticator.errors.no_active_context at _authenticator.py:701; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S374` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_active_session at _authenticator.py:729; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S375` - thread translated_message=adapters.auth.authenticator.errors.no_context_capture_storage at _authenticator.py:953; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S376` - thread translated_message=adapters.auth.authenticator.errors.session_stale at _authenticator.py:685; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S377` - thread translated_message=adapters.auth.authenticator.errors.already_active_before_resume at _authenticator.py:744 (AuthValidationError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S378` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_certificate at _authenticator.py:962; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S379` - thread translated_message=adapters.auth.authenticator.errors.context_marker_missing at _authenticator.py:1115; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S380` - thread translated_message=adapters.auth.authenticator.errors.persisted_session_verification_failed at _authenticator.py:1043 (_PersistedSessionInvalidError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `W04.P19.S381` - thread translated_message=adapters.auth.clave_movil.errors.approval_timeout at _clave_movil.py:953; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W04.P19.S382` - thread translated_message=adapters.auth.clave_movil.errors.dni_nie_not_set at _clave_movil.py:618; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `W04.P19.S383` - thread translated_message on 4 SedeNavigationError Playwright interaction sites at _declarations.py:521,540,558,591; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W04.P19.S384` - thread translated_message on WorkUnitMutationRefusedError at _actions.py:721; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P19.S385` - thread translated_message on WorkUnitAlreadyDiscardedError at _actions.py:782; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P19.S386` - thread translated_message on AmendmentVerificationRefusedError at _actions.py:2074 and 2081; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P19.S387` - thread translated_message on WorkflowInputMismatchError at _actions.py:404; `src/aeat/application/modelo/_actions.py`.
-- [ ] `W04.P19.S388` - thread translated_message on TransactionValidationError at ledger/_actions.py:232 and 238; `src/aeat/application/ledger/_actions.py`.
-- [ ] `W04.P19.S389` - thread translated_message on UnsupportedBundleSchemaVersionError at _config/__init__.py:705; `src/aeat/entrypoints/cli/_config/__init__.py`.
-- [ ] `W04.P19.S390` - replace f-string-as-locale-key in AggregationPeriodError at _prorrata.py:156 with dotted key + context vars; `src/aeat/application/aggregation/_prorrata.py`.
-- [ ] `W04.P19.S391` - replace f-string-as-locale-key in AggregationUnsupportedModeloError at _grouping.py:105 with dotted key + context vars; `src/aeat/application/aggregation/_grouping.py`.
-- [ ] `W04.P19.S392` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:223 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
-- [ ] `W04.P19.S393` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:231 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
-- [ ] `W04.P19.S394` - wrap _typer.echo next-hint label at wizard/_commands.py:926 in tr; `src/aeat/application/wizard/_commands.py`.
-- [ ] `W04.P19.S395` - wrap typer.echo namespace+count labels at diagnostics/secure_objects.py:50-51 in tr; `src/aeat/diagnostics/secure_objects.py`.
-- [ ] `W04.P19.S396` - add real-behavior test asserting all auth + sede + modelo + aggregation locale Steps localize at the operator surface; `src/aeat/test_locale_coverage_inventory.py`.
+- [x] `W04.P19.S369` - thread translated_message=adapters.auth.clave_movil.errors.already_active on AeatLoginAssertionError at _clave_movil.py:334; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W04.P19.S370` - thread translated_message=adapters.auth.clave_movil.errors.verify_requires_active_context at _clave_movil.py:488; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W04.P19.S371` - thread translated_message=adapters.auth.clave_movil.errors.metadata_invalid at _clave_movil.py:885; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W04.P19.S372` - thread translated_message=adapters.auth.authenticator.errors.closing at _authenticator.py:698; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S373` - thread translated_message=adapters.auth.authenticator.errors.no_active_context at _authenticator.py:701; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S374` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_active_session at _authenticator.py:729; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S375` - thread translated_message=adapters.auth.authenticator.errors.no_context_capture_storage at _authenticator.py:953; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S376` - thread translated_message=adapters.auth.authenticator.errors.session_stale at _authenticator.py:685; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S377` - thread translated_message=adapters.auth.authenticator.errors.already_active_before_resume at _authenticator.py:744 (AuthValidationError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S378` - thread translated_message=adapters.auth.authenticator.errors.capture_requires_certificate at _authenticator.py:962; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S379` - thread translated_message=adapters.auth.authenticator.errors.context_marker_missing at _authenticator.py:1115; `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S380` - thread translated_message=adapters.auth.authenticator.errors.persisted_session_verification_failed at _authenticator.py:1043 (_PersistedSessionInvalidError); `src/aeat/adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `W04.P19.S381` - thread translated_message=adapters.auth.clave_movil.errors.approval_timeout at _clave_movil.py:953; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W04.P19.S382` - thread translated_message=adapters.auth.clave_movil.errors.dni_nie_not_set at _clave_movil.py:618; `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `W04.P19.S383` - thread translated_message on 4 SedeNavigationError Playwright interaction sites at _declarations.py:521,540,558,591; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W04.P19.S384` - thread translated_message on WorkUnitMutationRefusedError at _actions.py:721; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P19.S385` - thread translated_message on WorkUnitAlreadyDiscardedError at _actions.py:782; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P19.S386` - thread translated_message on AmendmentVerificationRefusedError at _actions.py:2074 and 2081; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P19.S387` - thread translated_message on WorkflowInputMismatchError at _actions.py:404; `src/aeat/application/modelo/_actions.py`.
+- [x] `W04.P19.S388` - thread translated_message on TransactionValidationError at ledger/_actions.py:232 and 238; `src/aeat/application/ledger/_actions.py`.
+- [x] `W04.P19.S389` - thread translated_message on UnsupportedBundleSchemaVersionError at _config/__init__.py:705; `src/aeat/entrypoints/cli/_config/__init__.py`.
+- [x] `W04.P19.S390` - replace f-string-as-locale-key in AggregationPeriodError at _prorrata.py:156 with dotted key + context vars; `src/aeat/application/aggregation/_prorrata.py`.
+- [x] `W04.P19.S391` - replace f-string-as-locale-key in AggregationUnsupportedModeloError at _grouping.py:105 with dotted key + context vars; `src/aeat/application/aggregation/_grouping.py`.
+- [x] `W04.P19.S392` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:223 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
+- [x] `W04.P19.S393` - replace f-string-as-locale-key in AggregationValidationError at _prorrata.py:231 with dotted key; `src/aeat/application/aggregation/_prorrata.py`.
+- [x] `W04.P19.S394` - wrap _typer.echo next-hint label at wizard/_commands.py:926 in tr; `src/aeat/application/wizard/_commands.py`.
+- [x] `W04.P19.S395` - wrap typer.echo namespace+count labels at diagnostics/secure_objects.py:50-51 in tr; `src/aeat/diagnostics/secure_objects.py`.
+- [x] `W04.P19.S396` - add real-behavior test asserting all auth + sede + modelo + aggregation locale Steps localize at the operator surface; `src/aeat/test_locale_coverage_inventory.py`.
 
 ### Phase `W04.P20` - A7 hardcoded + enum bypass cleanup
 
