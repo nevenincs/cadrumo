@@ -13,6 +13,7 @@ import pytest
 
 from aeat.application.operator_surface import get_operator_surface_contract
 from aeat.application.wizard._catalogue import SETUP_FLOW
+from aeat.core.config import override_settings
 from aeat.tests.cli_runner import aeat_click_command, invoke_cached_cli
 from aeat.tests.secure_sql import isolated_profile_storage_root
 
@@ -20,24 +21,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
 
 @pytest.fixture(autouse=True)
-def _isolated_cli_backend(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    for name in (
-        "AEAT_AUTH_PROVIDER",
-        "AEAT_CERTIFICATE_PATH",
-        "AEAT_CERTIFICATE_PASSWORD_SECRET",
-        "AEAT_CLAVE_MOVIL_DNI_NIE",
-        "AEAT_CLAVE_MOVIL_DNI_FECHA",
-        "AEAT_CLAVE_MOVIL_NIE_SOPORTE",
-    ):
-        monkeypatch.delenv(name, raising=False)
+def _isolated_cli_backend(tmp_path: Path):
     # The round-trip helper writes its synthetic certificate to
-    # `<tmp_path>/certificate.p12`. The certificate auth backend probes
-    # the path from `Settings.aeat_certificate_path`, so the env var
-    # must name the same file the operator configures — otherwise
-    # `configured` (operational readiness) and the backend health
-    # summary would describe two different paths.
-    monkeypatch.setenv("AEAT_CERTIFICATE_PATH", str(tmp_path / "certificate.p12"))
-    with isolated_profile_storage_root(tmp_path=tmp_path):
+    # ``<tmp_path>/certificate.p12``. The certificate auth backend
+    # probes the path from ``Settings.aeat_certificate_path``, so the
+    # override must name the same file the operator configures —
+    # otherwise ``configured`` (operational readiness) and the backend
+    # health summary would describe two different paths. The other
+    # auth-related fields are pinned to ``None`` so the test always
+    # starts from a clean slate regardless of ambient operator env.
+    with (
+        override_settings(
+            aeat_auth_provider=None,
+            aeat_certificate_path=tmp_path / "certificate.p12",
+            aeat_certificate_password_secret=None,
+            aeat_clave_movil_dni_nie=None,
+            aeat_clave_movil_dni_fecha=None,
+            aeat_clave_movil_nie_soporte=None,
+        ),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
         yield tmp_path
 
 
