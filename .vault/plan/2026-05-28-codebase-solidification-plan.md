@@ -459,15 +459,15 @@ Close A4 JSON-decode boundaries (crypto + master-key), A7 Playwright wait-state 
 - [ ] `W02.P13.S293` - add roundtrip test asserting EncryptedPayload validates and rejects malformed; `src/aeat/adapters/persistence/storage/crypto/test_encrypted_columns.py`.
 - [ ] `W02.P13.S294` - define EnvelopeDocument(BaseModel) and use model_validate_json at master_key/_master_key.py:1117; `src/aeat/adapters/persistence/storage/master_key/_master_key.py`.
 - [ ] `W02.P13.S295` - add roundtrip test asserting EnvelopeDocument validates and rejects malformed; `src/aeat/adapters/persistence/storage/master_key/test_envelope_document.py`.
-- [ ] `W02.P13.S296` - introduce src/aeat/adapters/outbound/aeat/sede/_browser_constants.py with PLAYWRIGHT_WAIT_DOMCONTENTLOADED and PLAYWRIGHT_WAIT_NETWORKIDLE; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
-- [ ] `W02.P13.S297` - migrate 15+ domcontentloaded/networkidle literals across _declarations.py, _iva_compensation_wallet.py, _groi_check.py, _nif_iva_check.py, _censo_live.py, _walker.py to use the constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W02.P13.S298` - add real-behavior test asserting Playwright wait-state constants are the single source of truth across sede adapter; `src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`.
-- [ ] `W02.P13.S299` - extract browser timeout constants (_VISIBLE_PROBE_TIMEOUT_MS, _ELEMENT_WAIT_TIMEOUT_MS) at _renta_web_open.py:273,341 and _walker.py:301 or import _declarations.py canonicals if semantics match; `src/aeat/adapters/outbound/aeat/sede/_renta_web_open.py`.
-- [ ] `W02.P13.S300` - add real-behavior test asserting browser timeout literals are named constants; `src/aeat/adapters/outbound/aeat/sede/test_browser_timeouts.py`.
-- [ ] `W02.P13.S301` - introduce JSON_MIME_TYPE: Final[str] = application/json and CSV_MIME_TYPE: Final[str] = text/csv in aeat.core.external_constants; `src/aeat/core/external_constants.py`.
-- [ ] `W02.P13.S302` - migrate application/json literal at _declarations.py:1223 and text/csv literal at application/export/_tabular.py:69 to constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `W02.P13.S303` - add real-behavior test asserting MIME-type constants are sole source; `src/aeat/core/test_external_constants.py`.
-- [ ] `W02.P13.S304` - document intentional env-write at _replay.py:172,179 with # env-write: intentional scoped context-manager comment; `src/aeat/core/observability/_replay.py`.
+- [x] `W02.P13.S296` - introduce src/aeat/adapters/outbound/aeat/sede/_browser_constants.py with PLAYWRIGHT_WAIT_DOMCONTENTLOADED and PLAYWRIGHT_WAIT_NETWORKIDLE; `src/aeat/adapters/outbound/aeat/sede/_browser_constants.py`.
+- [x] `W02.P13.S297` - migrate 15+ domcontentloaded/networkidle literals across _declarations.py, _iva_compensation_wallet.py, _groi_check.py, _nif_iva_check.py, _censo_live.py, _walker.py to use the constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W02.P13.S298` - add real-behavior test asserting Playwright wait-state constants are the single source of truth across sede adapter; `src/aeat/adapters/outbound/aeat/sede/test_playwright_wait_constants.py`.
+- [x] `W02.P13.S299` - extract browser timeout constants (_VISIBLE_PROBE_TIMEOUT_MS, _ELEMENT_WAIT_TIMEOUT_MS) at _renta_web_open.py:273,341 and _walker.py:301 or import _declarations.py canonicals if semantics match; `src/aeat/adapters/outbound/aeat/sede/_renta_web_open.py`.
+- [x] `W02.P13.S300` - add real-behavior test asserting browser timeout literals are named constants; `src/aeat/adapters/outbound/aeat/sede/test_browser_timeouts.py`.
+- [x] `W02.P13.S301` - introduce JSON_MIME_TYPE: Final[str] = application/json and CSV_MIME_TYPE: Final[str] = text/csv in aeat.core.external_constants; `src/aeat/core/external_constants.py`.
+- [x] `W02.P13.S302` - migrate application/json literal at _declarations.py:1223 and text/csv literal at application/export/_tabular.py:69 to constants; `src/aeat/adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `W02.P13.S303` - add real-behavior test asserting MIME-type constants are sole source; `src/aeat/core/test_external_constants.py`.
+- [x] `W02.P13.S304` - document intentional env-write at _replay.py:172,179 with # env-write: intentional scoped context-manager comment; `src/aeat/core/observability/_replay.py`.
 - [ ] `W02.P13.S305` - wrap _stdio.py:89 os.environ COLUMNS write in a context-manager to scope the mutation; `src/aeat/entrypoints/cli/_stdio.py`.
 - [ ] `W02.P13.S306` - add real-behavior test asserting _stdio.py COLUMNS write is scoped and reverted; `src/aeat/entrypoints/cli/test_stdio.py`.
 - [x] `W02.P13.S307` - swap raw logging.getLogger and replace print() at sede/test_renta_web_open_explore_dom.py:57,175,208 to use get_logger and _log.debug; `src/aeat/adapters/outbound/aeat/sede/test_renta_web_open_explore_dom.py`.
