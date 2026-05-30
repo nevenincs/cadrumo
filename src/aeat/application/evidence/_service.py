@@ -16,6 +16,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.envelope import SecureBoundRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
+from ._ids import BundleId
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -49,7 +50,7 @@ class EvidenceBundleVerificationReport(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bundle_id: str = Field(min_length=64, max_length=64)
+    bundle_id: BundleId
     verification_state: BundleVerificationState
     findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
     completeness_ratio: float = Field(ge=0.0, le=1.0)
