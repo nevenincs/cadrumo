@@ -2920,6 +2920,7 @@ errors:
       or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
+    integrity_storage_bucket_validation: 'A bucket parameter or manifest field failed validation.'
   internal:
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error.
@@ -3178,6 +3179,7 @@ errors:
       revision.
     refused_workflow_resume: The prior workflow run cannot be resumed.
     unsupported_currency: The currency code provided is not supported.
+    refused_modelo_applicability_filter: 'An unknown applicability filter name was encountered in the registry. This is a registry-authoring error; update the filter dispatch table.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

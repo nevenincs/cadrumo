@@ -479,6 +479,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.RepositorySetupError",
+        ErrorCode(
+            code="FAIL_STORAGE_REPOSITORY_SETUP",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_repository_setup",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.SecureObjectRevisionConflictError",
         ErrorCode(
             code="FAIL_STORAGE_SECURE_OBJECT_REVISION_CONFLICT",
@@ -1189,6 +1200,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.LOCKED,
             message_key="errors.locked.locked_storage_bucket_session",
             default_suggestion="aeat config profile switch NAME",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketValidationError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_BUCKET_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_bucket_validation",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

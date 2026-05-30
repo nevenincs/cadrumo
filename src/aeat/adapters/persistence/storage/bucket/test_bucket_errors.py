@@ -47,12 +47,12 @@ def test_every_class_has_a_registered_code() -> None:
 
 def test_no_active_bucket_error_default_suggestion_references_list_buckets() -> None:
     code = get_registered_error_code(NoActiveBucketError)
-    assert code.default_suggestion == "aeat config list-buckets"
+    assert code.default_suggestion == "aeat config profile list"
 
 
 def test_bucket_locked_default_suggestion_references_unlock() -> None:
     code = get_registered_error_code(BucketLockedError)
-    assert code.default_suggestion == "aeat config unlock"
+    assert code.default_suggestion == "aeat config profile switch NAME"
 
 
 def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:

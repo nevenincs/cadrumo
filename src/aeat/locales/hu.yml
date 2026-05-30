@@ -3040,6 +3040,7 @@ errors:
       vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
+    integrity_storage_bucket_validation: 'Egy gyűjtőparaméter vagy manifestmező nem teljesítette az érvényesítést.'
   internal:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt meghiúsult.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3300,6 +3301,7 @@ errors:
       revision.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
     unsupported_currency: A megadott devizakód nem támogatott.
+    refused_modelo_applicability_filter: 'Ismeretlen alkalmazhatósági szűrőnév szerepel a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítse a szűrő diszpécser táblázatot.'
   snapshot:
     modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
   storage:

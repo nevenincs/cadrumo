@@ -3054,6 +3054,7 @@ errors:
       dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
+    integrity_storage_bucket_validation: 'Un paràmetre del dipòsit o camp del manifest no ha superat la validació.'
   internal:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3329,6 +3330,7 @@ errors:
       revision.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     unsupported_currency: El codi de moneda indicat no és compatible.
+    refused_modelo_applicability_filter: 'S''ha trobat un nom de filtre d''aplicabilitat desconegut al registre. Es tracta d''un error d''autoria del registre; actualitzeu la taula de despacho de filtres.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:

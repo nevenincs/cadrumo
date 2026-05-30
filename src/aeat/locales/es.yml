@@ -3086,6 +3086,7 @@ errors:
       de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
+    integrity_storage_bucket_validation: 'Un parámetro del depósito o campo del manifiesto no superó la validación.'
   internal:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -3361,6 +3362,7 @@ errors:
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     unsupported_currency: El código de moneda indicado no es compatible.
+    refused_modelo_applicability_filter: 'Se encontró un nombre de filtro de aplicabilidad desconocido en el registro. Se trata de un error de autoría del registro; actualice la tabla de despacho de filtros.'
   snapshot:
     modelo_not_registered: errors.snapshot.modelo_not_registered
   storage:
