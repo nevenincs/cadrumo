@@ -40,7 +40,7 @@ from ...domain.modelos._calculation_revision import (
     CalculationRevisionState,
 )
 from ...domain.modelos._errors import ModeloError, ModeloExportError
-from ...domain.modelos._ids import BucketId
+from ...domain.modelos._ids import BucketId, CalculationRevisionId, WorkUnitId
 from ...domain.modelos._repository import WorkUnitCatalogueRepository
 from ...domain.modelos._work_unit import WorkUnit
 from ...domain.period import (
@@ -121,7 +121,7 @@ class ModeloExportCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    calculation_revision_id: str = Field(min_length=1, max_length=128)
+    calculation_revision_id: CalculationRevisionId
     output_path: Path
     actor: str = Field(min_length=1, max_length=128)
 
@@ -156,8 +156,8 @@ class ModeloExportResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    calculation_revision_id: str = Field(min_length=1, max_length=128)
-    work_unit_id: str = Field(min_length=1, max_length=128)
+    calculation_revision_id: CalculationRevisionId
+    work_unit_id: WorkUnitId
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=1990, le=2200)
