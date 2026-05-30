@@ -479,6 +479,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.errors.RepositorySetupError",
+        ErrorCode(
+            code="FAIL_STORAGE_REPOSITORY_SETUP",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_storage_repository_setup",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.errors.SecureObjectRevisionConflictError",
         ErrorCode(
             code="FAIL_STORAGE_SECURE_OBJECT_REVISION_CONFLICT",
@@ -1194,6 +1205,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.adapters.persistence.storage.bucket._errors.BucketValidationError",
+        ErrorCode(
+            code="INTEGRITY_STORAGE_BUCKET_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_storage_bucket_validation",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.adapters.persistence.storage.bucket._errors.RecoveryUnavailableError",
         ErrorCode(
             code="FAIL_STORAGE_BUCKET_RECOVERY_UNAVAILABLE",
@@ -1221,6 +1243,28 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTEGRITY_STORAGE_NAMESPACE_REGISTRY",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_storage_namespace_registry",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyReentrantError",
+        ErrorCode(
+            code="INTERNAL_MASTER_KEY_REENTRANT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_master_key_reentrant",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.adapters.persistence.storage.master_key._errors.MasterKeyTypeError",
+        ErrorCode(
+            code="INTERNAL_MASTER_KEY_TYPE",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_master_key_type",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

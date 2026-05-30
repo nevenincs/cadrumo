@@ -36,6 +36,7 @@ from typing import Protocol
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ....core.locks import exclusive_file_lock, fsync_parent_dir
+from ....core.time._clock import _now
 from ....core.logging import get_logger
 from .blob_store._blob_store import EncryptedBlobStore
 from .crypto._crypto import decrypt_record, encrypt_record
@@ -330,7 +331,7 @@ def rotate_master_key(
 
             new_cipher_envelope = CipherEnvelope(
                 cipher_schema_version=cipher_envelope.cipher_schema_version,
-                written_at=datetime.now(UTC),
+                written_at=_now(),
                 classification=cipher_envelope.classification,
                 encryption=EncryptionMetadata.from_blob(new_blob, associated_data=aad),
             )
@@ -346,7 +347,7 @@ def rotate_master_key(
         rotated,
         skipped,
         errors,
-        datetime.now(UTC).isoformat(),
+        _now().isoformat(),
     )
     return RotationSummary(rotated=rotated, skipped=skipped, errors=errors)
 

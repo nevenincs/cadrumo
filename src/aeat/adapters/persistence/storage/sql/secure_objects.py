@@ -1176,6 +1176,10 @@ class SecureObjectRepository:
                 update_stmt = update(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id)
                 if expected_revision_id is not None:
                     update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
+                # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
+                # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``;
+                # a DML UPDATE always yields ``CursorResult`` at runtime and
+                # only ``CursorResult`` exposes ``.rowcount``.
                 result = cast(
                     "CursorResult[object]",
                     session.execute(
@@ -1355,10 +1359,10 @@ class SecureObjectRepository:
 
         self._check_session_freshness()
         with session_scope(self._engine) as session:
-            # SQLAlchemy types Session.execute() as Result[Any]; a DML
-            # statement always yields a CursorResult at runtime, and only
-            # CursorResult exposes .rowcount. Cast at this third-party API
-            # boundary to read the affected-row count.
+            # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-DELETE:
+            # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``; a
+            # DML DELETE always yields ``CursorResult`` at runtime, and only
+            # ``CursorResult`` exposes ``.rowcount``.
             result = cast(
                 "CursorResult[object]",
                 session.execute(

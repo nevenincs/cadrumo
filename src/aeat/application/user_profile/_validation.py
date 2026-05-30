@@ -6,6 +6,8 @@ import re
 from collections.abc import Iterable
 from datetime import date
 
+from ...core.parsing._dates import _parse_iso8601_date
+
 from ...core.errors import BaseSeverity
 from ...domain.user_profile import (
     ProfileFieldDefinition,
@@ -115,7 +117,7 @@ class ProfileValidationService:
             return ()
         if isinstance(fact.value, str) and _ISO_DATE_RE.match(fact.value):
             try:
-                date.fromisoformat(fact.value)
+                _parse_iso8601_date(fact.value)
             except ValueError:
                 return (self._invalid_date_issue(field, fact),)
             return ()

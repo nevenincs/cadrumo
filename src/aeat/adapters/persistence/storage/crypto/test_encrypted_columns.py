@@ -19,7 +19,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ..errors import DecryptionError
 from ..master_key import EphemeralMasterKeyProvider
-from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedString, HashedLookup
+from . import KEY_SIZE, EncryptedBytes, EncryptedJSON, EncryptedPayload, EncryptedString, HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_persistence]
 
@@ -253,6 +253,56 @@ class TestHashedLookup:
         with EphemeralMasterKeyProvider():
             digest_b = HashedLookup.compute("payload")
         assert digest_a != digest_b
+
+
+class TestEncryptedPayload:
+    """``EncryptedPayload`` validates the boundary output of :class:`EncryptedJSON`."""
+
+    def test_roundtrip_dict_produces_encrypted_payload(self, session: Session) -> None:
+        """Saving a dict via EncryptedJSON and reloading must round-trip the value.
+
+        The EncryptedJSON.process_result_value path wraps the decrypted JSON in
+        EncryptedPayload internally before returning .data.  The caller sees the
+        original value; this test confirms the validated payload equals the stored dict.
+        """
+        payload = {"nombre": "Ana", "importe": 1234, "tags": ["iva", "irpf"]}
+        session.add(_CryptoRow(secret_json=payload))
+        session.commit()
+        session.expire_all()
+        loaded = session.execute(select(_CryptoRow)).scalar_one()
+        assert loaded.secret_json == payload
+
+    def test_encrypted_payload_validates_json_value(self) -> None:
+        """EncryptedPayload must accept any JSON-compatible value."""
+        assert EncryptedPayload(data={"k": 1}).data == {"k": 1}
+        assert EncryptedPayload(data=[1, 2, 3]).data == [1, 2, 3]
+        assert EncryptedPayload(data="text").data == "text"
+        assert EncryptedPayload(data=42).data == 42  # noqa: S101 — test assertion
+        assert EncryptedPayload(data=None).data is None
+
+    def test_encrypted_payload_rejects_missing_data_field(self) -> None:
+        """EncryptedPayload.model_validate must raise ValidationError when 'data' is absent."""
+        from pydantic import ValidationError
+
+        with pytest.raises(ValidationError):
+            EncryptedPayload.model_validate({})
+
+    def test_encrypted_columns_write_encrypted_bytes_on_disk(self, engine: Engine) -> None:
+        """The stored wire bytes must NOT contain the plaintext JSON for EncryptedJSON.
+
+        This is an anti-tautology proof: decrypt path wraps in EncryptedPayload,
+        so if the plaintext leaked to disk the round-trip contract would be broken.
+        """
+        payload = {"secret": "should-not-appear-in-storage"}
+        with Session(engine) as sess:
+            sess.add(_CryptoRow(secret_json=payload))
+            sess.commit()
+        with engine.connect() as conn:
+            raw = conn.exec_driver_sql(
+                "SELECT secret_json FROM encrypted_column_smoke",
+            ).scalar()
+        assert raw is not None
+        assert b"should-not-appear-in-storage" not in raw
 
 
 class TestNullSafety:

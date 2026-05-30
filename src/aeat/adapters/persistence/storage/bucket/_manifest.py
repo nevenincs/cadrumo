@@ -26,6 +26,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from .....core.time._utc import _validate_utc_aware
+from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
@@ -55,7 +56,7 @@ class ManifestKdfParams(BaseModel):
     @classmethod
     def _check_salt_length(cls, value: bytes) -> bytes:
         if len(value) != _SALT_BYTES:
-            raise ValueError(f"salt must be exactly {_SALT_BYTES} bytes")
+            raise BucketValidationError(f"salt must be exactly {_SALT_BYTES} bytes")
         return value
 
     @field_serializer("salt")
@@ -69,7 +70,7 @@ class ManifestKdfParams(BaseModel):
             return value
         if isinstance(value, str):
             return base64.b64decode(value.encode("ascii"), validate=True)
-        raise TypeError("salt must be bytes or base64 string")
+        raise BucketValidationError("salt must be bytes or base64 string")
 
 
 class BucketLifecycleStatus(StrEnum):
@@ -144,7 +145,7 @@ class BucketManifest(BaseModel):
             return value
         if isinstance(value, str):
             return BucketLifecycleStatus(value)
-        raise TypeError("status must be a BucketLifecycleStatus or its string value")
+        raise BucketValidationError("status must be a BucketLifecycleStatus or its string value")
 
     @field_validator("key_schedule", mode="before")
     @classmethod
@@ -153,7 +154,7 @@ class BucketManifest(BaseModel):
             return value
         if isinstance(value, str):
             return BucketKeySchedule(value)
-        raise TypeError("key_schedule must be a BucketKeySchedule or its string value")
+        raise BucketValidationError("key_schedule must be a BucketKeySchedule or its string value")
 
     @field_validator("created_at")
     @classmethod

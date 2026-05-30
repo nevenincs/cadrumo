@@ -1,17 +1,23 @@
-"""Real-behavior tests for SetupAnswers coercion raises WizardAnswerTypeError.
+"""Real-behavior tests for SetupAnswers coercion raises ProfileAnswerTypeError.
 
 Pydantic wraps field-validator exceptions in ``ValidationError``. To exercise
 each migrated raise site directly, the tests call the ``@classmethod``
 validator methods on :class:`SetupAnswers` rather than going through the full
 model constructor. This confirms the raise site exists and the typed exception
 class is what gets raised at the coercion boundary, before pydantic wraps it.
+
+Since :class:`SetupAnswers` is now canonical in :mod:`aeat.core.profile`, its
+validators raise :class:`~aeat.core.errors.ProfileAnswerTypeError` directly.
+:class:`~aeat.application.wizard._errors.WizardAnswerTypeError` is a subclass
+of ``ProfileAnswerTypeError`` — the registry / envelope tests below verify that
+the application-layer subclass still resolves correctly.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ...core.errors import ERROR_REGISTRY, build_error_envelope
+from ...core.errors import ERROR_REGISTRY, ProfileAnswerTypeError, build_error_envelope
 from ._errors import WizardAnswerTypeError
 from ._setup_answers import SetupAnswers
 

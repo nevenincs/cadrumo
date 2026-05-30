@@ -8,6 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core.decimal import format_decimal
 from ...core.logging import get_logger
+from ...domain.fincas._rounding import _round_to_cents
 from ...domain.invoices import Invoice, InvoiceCatalogue
 from ...domain.transactions import TransactionCatalogue
 from ..review import InvoiceReviewFilterSpec, InvoiceReviewRecord, InvoiceReviewStatus, update_invoice_review
@@ -121,7 +122,7 @@ def invoice_display_amounts(
     if "iva.amount" in review.fields:
         iva = Decimal(review.fields["iva.amount"])
     elif rate_decimal is not None and base is not None:
-        iva = (base * rate_decimal).quantize(Decimal("0.01"))
+        iva = _round_to_cents(base * rate_decimal)
     return base, iva
 
 

@@ -33,6 +33,9 @@ from pydantic_core import core_schema
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
 from ...core.external_constants import DEFAULT_CURRENCY
+from ..modelos._ids import BucketId, TransactionId
+from ...core.errors import CoreValidationError
+from ...core.time._utc import _validate_utc_aware
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -154,9 +157,10 @@ def _coerce_history(raw: object) -> tuple[object, ...]:
 
 def _require_aware_datetime(value: datetime) -> datetime:
     """Reject naive ``classified_at`` timestamps; enum-safe for both models."""
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise TransactionValidationError("classified_at must be timezone-aware")
-    return value
+    try:
+        return _validate_utc_aware(value)
+    except CoreValidationError as exc:
+        raise TransactionValidationError(str(exc)) from exc
 
 
 def _validate_classified_by_shape(value: str) -> str:
@@ -478,7 +482,7 @@ class TransactionEditLineageEntry(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    previous_transaction_id: str = Field(min_length=64, max_length=64)
+    previous_transaction_id: TransactionId
     actor: str = Field(min_length=1, max_length=64)
     source_command: str = Field(min_length=1, max_length=128)
     edited_at: datetime
@@ -768,7 +772,7 @@ class Transaction(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     raw: RawTransaction
     direction: TransactionDirection
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED
@@ -948,8 +952,8 @@ class BucketTransactionRef(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
-    transaction_id: str = Field(min_length=64, max_length=64)
+    bucket_id: BucketId
+    transaction_id: TransactionId
 
     @field_validator("bucket_id", "transaction_id")
     @classmethod

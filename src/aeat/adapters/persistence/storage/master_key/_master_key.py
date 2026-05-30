@@ -86,6 +86,37 @@ NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 
 _log = get_logger(__name__)
 
+
+class _EnvelopeFact(BaseModel):
+    """A single fact entry within an :class:`EnvelopeDocument` payload."""
+
+    model_config = ConfigDict(extra="allow")
+
+    path: str
+    value: object = None
+
+
+class _EnvelopePayload(BaseModel):
+    """The ``payload`` dict inside an :class:`EnvelopeDocument`."""
+
+    model_config = ConfigDict(extra="allow")
+
+    facts: list[_EnvelopeFact] = Field(default_factory=list)
+
+
+class EnvelopeDocument(BaseModel):
+    """Typed representation of a decrypted user-profile envelope JSON document.
+
+    The envelope is a ``{"payload": {"facts": [...]}}`` blob stored by the
+    master-key persistence layer.  Wrapping the ``json.loads`` result in a
+    model validates the boundary at decryption time and eliminates bare
+    ``dict.get()`` chains from the consumer.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    payload: _EnvelopePayload | None = None
+
 KEYRING_SERVICE: Final[str] = "aeat:secure-persistence"
 """Stable service identifier under which the keyring backend stores the key."""
 
@@ -971,9 +1002,9 @@ class EphemeralMasterKeyProvider:
 
     def __enter__(self) -> object:
         if self._session is not None:
-            raise RuntimeError(
-                "EphemeralMasterKeyProvider context manager is not re-entrant",
-            )
+            from ._errors import MasterKeyReentrantError
+
+            raise MasterKeyReentrantError(type(self).__name__)
         from datetime import UTC, datetime
 
         from ._active_session import activate_session
@@ -1114,24 +1145,16 @@ def _extract_profile_tax_ids(envelope_payload: bytes) -> tuple[str, ...] | None:
     """Extract profile tax-id facts from a decrypted user-profile envelope."""
 
     try:
-        document = json.loads(envelope_payload.decode("utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError):
+        doc = EnvelopeDocument.model_validate_json(envelope_payload)
+    except (UnicodeDecodeError, ValueError):
         return None
-    payload = document.get("payload")
-    if not isinstance(payload, dict):
+    if doc.payload is None:
         return None
-    facts = payload.get("facts")
-    if not isinstance(facts, list):
-        return None
-    tax_ids: list[str] = []
-    for fact in facts:
-        if not isinstance(fact, dict):
-            continue
-        if fact.get("path") != "identity.tax_id":
-            continue
-        value = fact.get("value")
-        if isinstance(value, str):
-            tax_ids.append(value)
+    tax_ids: list[str] = [
+        str(fact.value)
+        for fact in doc.payload.facts
+        if fact.path == "identity.tax_id" and isinstance(fact.value, str)
+    ]
     return tuple(tax_ids) if tax_ids else None
 
 
@@ -1291,9 +1314,9 @@ def _provider_enter(
     from ._bucket_session import BucketSession
 
     if provider._session is not None:
-        raise RuntimeError(
-            f"{type(provider).__name__} context manager is not re-entrant",
-        )
+        from ._errors import MasterKeyReentrantError
+
+        raise MasterKeyReentrantError(type(provider).__name__)
 
     bucket_id = resolve_active_bucket_id() or fallback_bucket_id
     if not bucket_id:

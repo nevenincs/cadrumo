@@ -46,8 +46,8 @@ from ...adapters.outbound.aeat.sede._notifications import (
 from ...adapters.persistence.storage import LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings, load_settings
-from ...core.errors import AeatError
 from ...core.time import _now
+from ...domain.modelos._ids import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SecureSnapshotRepository,
@@ -56,7 +56,7 @@ from ._snapshot_base import (
 )
 
 
-class NotificationsSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+class NotificationsSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a snapshot lookup misses by id."""
 
 
@@ -71,7 +71,7 @@ class PersistedNotificationsSnapshot(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     snapshot_id: str = Field(min_length=64, max_length=64)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     captured_at: datetime
     source_url: str = Field(min_length=1)
     rows: tuple[RemoteNotification, ...]

@@ -14,6 +14,7 @@ from aeat.core.config import (
     classify_storage_route,
     settings_for_active_profile_bucket,
 )
+from aeat.core.errors import CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_core]
 
@@ -111,12 +112,12 @@ def test_settings_for_active_profile_bucket_rejects_explicit_database_url(tmp_pa
         aeat_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     )
 
-    with pytest.raises(ValueError, match="explicit database URL"):
+    with pytest.raises(CoreValidationError, match="explicit database URL"):
         settings_for_active_profile_bucket("operator", source)
 
 
 def test_settings_for_active_profile_bucket_rejects_blank_bucket_id(tmp_path: Path) -> None:
     source = Settings(aeat_local_storage_root=tmp_path)
 
-    with pytest.raises(ValueError, match="bucket_id must not be blank"):
+    with pytest.raises(CoreValidationError, match="bucket_id must not be blank"):
         settings_for_active_profile_bucket("   ", source)

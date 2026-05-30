@@ -37,6 +37,7 @@ from ...adapters.persistence.storage.bucket._manifest import BucketLifecycleStat
 from ...adapters.persistence.storage.bucket._manifest_io import manifest_path, read_manifest
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...core.logging import get_logger
+from ._errors import ProfileLabelAmbiguousError
 from ._models import ProfileBucketPointer
 
 _log = get_logger(__name__)
@@ -100,7 +101,7 @@ def read_profile_bucket(
         live = [p for p in matches if p.status is BucketLifecycleStatus.ACTIVE]
         if len(live) == 1:
             return live[0]
-        raise ValueError(
+        raise ProfileLabelAmbiguousError(
             f"profile label {label!r} is ambiguous: {len(matches)} buckets carry it"
         )
     return matches[0]

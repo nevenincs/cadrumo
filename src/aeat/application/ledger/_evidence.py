@@ -35,6 +35,7 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.modelos._ids import BucketId
 from .._storage_paths import storage_path
 
 _PDF_EXTENSIONS = frozenset({".pdf"})
@@ -57,7 +58,7 @@ class PurchaseInvoiceEvidence(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     evidence_id: str = Field(min_length=1, max_length=64)
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     source_path: str = Field(min_length=1)
     source_sha256: str = Field(min_length=64, max_length=64)
     media_kind: str = Field(pattern=r"^(pdf|image)$")

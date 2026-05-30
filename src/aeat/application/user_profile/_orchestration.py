@@ -24,6 +24,7 @@ from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core._bucket_pointer import BucketPointer
 from ...core._bucket_pointer_io import write_pointer
 from ...core.config import load_settings
+from ...core.errors import AeatError
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...domain.user_profile import (
@@ -140,7 +141,9 @@ def profile_create_storage_span(profile_id: str):
             ),
         ):
             yield profile_id
-    except Exception:
+    except (AeatError, OSError):
+        # AeatError: encrypted-storage or workflow domain failures during profile create.
+        # OSError: filesystem write of the active-profile pointer or bucket directory.
         restore_active_profile_pointer(prior_pointer)
         raise
 

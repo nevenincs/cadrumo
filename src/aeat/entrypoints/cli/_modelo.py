@@ -7,9 +7,9 @@ import re
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import date
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Literal, Protocol
+from typing import TYPE_CHECKING, Annotated, Protocol
 
 import click
 import typer
@@ -22,6 +22,7 @@ from ...application.aggregation import (
     RetencionObservation,
     aggregate_per_modelo,
 )
+from ...application.calculations._errors import PensionReduccionError
 from ...application.modelo import (
     AmendmentEvidenceMissingError,
     AmendmentTargetStateError,
@@ -48,14 +49,14 @@ from ...application.modelo import (
     rename_work_unit,
     verify_modelo_revision,
 )
-from ...application.calculations._errors import PensionReduccionError
 from ...core.errors import AeatError, resolve_error_message
-from ...core.logging import get_logger
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
+from ...core.logging import get_logger
 from ...domain.calculations.registry import InputKind, RegistryQueryService
 from ...domain.calculations.registry._errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry._ids import _CASILLA_RE, _REF_RE
 from ...domain.calculations.registry._queries import parse_modelo_period
+from ...domain.fincas._rounding import _round_to_cents
 from ...domain.modelos._calculation_revision import CalculationRevision, CalculationRevisionAmendmentKind
 from ...domain.modelos._filing_record import ModeloRecord
 from ...domain.modelos._row_models import (
@@ -1667,10 +1668,19 @@ def _guard_stub_modelo(modelo: str) -> None:
     Legal refs carried in the error match the governing statute.
     """
 
+    from ...core.config import load_settings
     from ._errors import CliRefusedBoundaryError
 
     modelo_code = modelo.strip()
     if modelo_code not in _STUB_ONLY_MODELOS:
+        return
+
+    # S391 feature flag — M210 IRNR Phase 1 engine path gates the stub
+    # refusal. When aeat_m210_engine_live is True, modelo 210 falls
+    # through to the engine (S400 m210_resolve_rate + S390
+    # representante-fiscal predicate). Other stub-only modelos continue
+    # to refuse unconditionally per their existing legal-authority paths.
+    if modelo_code == "210" and load_settings().aeat_m210_engine_live:
         return
 
     # Literal tr() call per stub so the locale scaffold can discover each
@@ -2524,7 +2534,7 @@ def _compute_dt12_reduccion_plan_pensiones(
 
     reduccion = (aportaciones_pre_2007 / aportaciones_totales) * gross_rescate * Decimal("0.40")
     # money-2 rounding matches the registry convention for all M100 casillas.
-    return reduccion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return _round_to_cents(reduccion)
 
 
 _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE = "is_sal_reserva_especial_dotacion"
@@ -2595,13 +2605,11 @@ def _compute_sal_reserva_especial_dotacion(
             context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 
-    cap = (capital_social * Decimal("0.50")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    cap = _round_to_cents(capital_social * Decimal("0.50"))
     headroom = max(Decimal("0.00"), cap - reserva_dotada)
-    dotacion_obligatoria = (beneficio_neto * Decimal("0.10")).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
+    dotacion_obligatoria = _round_to_cents(beneficio_neto * Decimal("0.10"))
     dotacion = min(dotacion_obligatoria, headroom)
-    return dotacion.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return _round_to_cents(dotacion)
 
 
 def _parse_meses_trabajo_hijo_spec(spec: str) -> tuple[str, int]:

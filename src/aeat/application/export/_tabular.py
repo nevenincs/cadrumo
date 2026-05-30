@@ -11,6 +11,7 @@ from io import StringIO
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from ...core.external_constants import CSV_MIME_TYPE as _CSV_MIME_TYPE
 from ._errors import ExportFieldError, ExportFormatError
 
 
@@ -66,7 +67,7 @@ def serialize_tabular_rows(
     normalized_rows = tuple(_normalize_row(row, fieldnames=normalized_fields) for row in rows)
     if export_format is ExportSerializationFormat.CSV:
         payload = _serialize_csv(normalized_rows, fieldnames=normalized_fields)
-        media_type = "text/csv"
+        media_type = _CSV_MIME_TYPE
         extension = "csv"
     elif export_format is ExportSerializationFormat.JSONL:
         payload = _serialize_jsonl(normalized_rows, fieldnames=normalized_fields)

@@ -116,7 +116,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
         """Return the singleton object key or raise when the namespace is multi-key."""
 
         if self.default_object_key is None:
-            raise ValueError(f"namespace {self.namespace!r} does not define a singleton object key")
+            raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
 
 

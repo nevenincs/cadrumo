@@ -44,11 +44,14 @@ from pydantic import AnyHttpUrl, AnyUrl, BaseModel, ConfigDict, Field
 import aeat.domain.renta as _renta_snapshot_checks  # noqa: F401
 
 from .....core.config import Settings
+from .....core.time._clock import _now
 from .....core.external_constants import BINARY_MIME_TYPE as _BINARY_MIME_TYPE
+from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.resources import bundled_path
 from .....domain.calculations.registry import (
+    CasillaFieldKind,
     CasillaObservation,
     ExportFieldDefinition,
     ParsedExportFieldValue,
@@ -72,6 +75,10 @@ from .._playwright import BrowserContext, Page, Playwright, PlaywrightError
 from ..browser import Profile, opened_browser_page, shared_playwright_runtime
 from ._adapter_utils import normalize_response_text
 from ._auth_state import storage_state_for_session
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
+    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
 from ._errors import (
     JustificanteFetchError,
     SedeNavigationError,
@@ -271,6 +278,7 @@ class DeclaracionesRegisterSession:
             raise SedeNavigationError(
                 f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
                 f"for modelo {declaration.modelo}",
+                translated_message=tr("adapters.sede.errors.ejercicio_unavailable"),
             )
         row_locator = _row_locator_for_expediente(
             self._page,
@@ -446,11 +454,14 @@ async def _drive_search(
         _assert_read_http("GET", _LISTING_URL, policy=read_policy)
         await page.goto(
             _LISTING_URL,
-            wait_until="networkidle",
+            wait_until=_WAIT_NETWORKIDLE,
             timeout=_NAVIGATION_TIMEOUT_MS,
         )
     except PlaywrightError as exc:
-        raise SedeNavigationError(f"goto {_LISTING_URL!r} failed: {exc}") from exc
+        raise SedeNavigationError(
+            f"goto {_LISTING_URL!r} failed: {exc}",
+            translated_message=tr("adapters.sede.errors.listing_nav_failed"),
+        ) from exc
     await page.wait_for_timeout(1500)
     await _continue_alert_modal(page, read_policy=read_policy)
 
@@ -463,6 +474,7 @@ async def _drive_search(
         raise SedeNavigationError(
             f"declaraciones register did not load (final URL: {final_url!r}); "
             "session likely expired — run `aeat config auth test` and retry",
+            translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
         )
     # Defensive: even when the URL matches, AEAT sometimes serves a
     # blank shell with no Modelo label until the JS finishes booting.
@@ -476,6 +488,7 @@ async def _drive_search(
             "declaraciones register form did not render the 'Modelo (*)' "
             f"label within {_FORM_INTERACTION_TIMEOUT_MS}ms; "
             "session likely expired or AEAT served a maintenance page",
+            translated_message=tr("adapters.sede.errors.form_render_timeout"),
         ) from exc
 
     if not await _select_combobox_value(
@@ -623,11 +636,17 @@ def _parse_listbox(
     try:
         soup = BeautifulSoup(html, "html.parser")
     except Exception as exc:
-        raise SedeParseError(f"failed to parse declaraciones HTML: {exc}") from exc
+        raise SedeParseError(
+            f"failed to parse declaraciones HTML: {exc}",
+            translated_message=tr("adapters.sede.errors.parse_failed"),
+        ) from exc
 
     listbox = soup.find(class_=_has_class("z-listbox"))
     if listbox is None:
-        raise SedeParseError("declaraciones response missing .z-listbox container")
+        raise SedeParseError(
+            "declaraciones response missing .z-listbox container",
+            translated_message=tr("adapters.sede.errors.listbox_missing"),
+        )
 
     action_indexes = _listbox_action_indexes(listbox)
     if action_indexes is None:
@@ -639,7 +658,10 @@ def _parse_listbox(
         archive_index = action_indexes.submitted_file
         declaration_copy_index = action_indexes.declaration_pdf
     if justificante_index is None:
-        raise SedeParseError("declaraciones response missing justificante column")
+        raise SedeParseError(
+            "declaraciones response missing justificante column",
+            translated_message=tr("adapters.sede.errors.justificante_column_missing"),
+        )
     items = listbox.find_all(class_=_has_class("z-listitem"))
 
     rows: list[Declaracion] = []
@@ -804,6 +826,7 @@ async def capture_declaration(
             raise SedeNavigationError(
                 f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
                 f"for modelo {declaration.modelo}",
+                translated_message=tr("adapters.sede.errors.ejercicio_unavailable"),
             )
 
         row_locator = _row_locator_for_expediente(
@@ -824,16 +847,18 @@ async def capture_declaration(
         except PlaywrightError as exc:
             raise SedeNavigationError(
                 f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
+                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
             ) from exc
 
         try:
             await cotejo_page.wait_for_load_state(
-                "domcontentloaded",
+                _WAIT_DOMCONTENTLOADED,
                 timeout=_NAVIGATION_TIMEOUT_MS,
             )
         except PlaywrightError as exc:
             raise SedeNavigationError(
                 f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
+                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
             ) from exc
 
         cotejo_url = cotejo_page.url
@@ -842,6 +867,7 @@ async def capture_declaration(
                 f"Ver button for {declaration.expediente_id!r} did not land on a "
                 f"cotejo URL (final URL: {cotejo_url!r}); "
                 "session likely expired mid-walk — run `aeat config auth test` and retry",
+                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
             )
 
         csv = _extract_csv_from_url(cotejo_url)
@@ -891,7 +917,7 @@ async def capture_declaration(
             ref=ref,
             pdf_bytes=body,
             pdf_sha256=sha256,
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
         )
 
 
@@ -1215,12 +1241,12 @@ def _register_row_artefact(
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    captured_at = datetime.now(UTC)
+    captured_at = _now()
     return (
         FiledDeclaracionArtefact(
             kind="register_row",
             source_url=source_url,
-            content_type="application/json",
+            content_type=_JSON_MIME_TYPE,
             byte_count=len(payload),
             sha256=hashlib.sha256(payload).hexdigest(),
             captured_at=captured_at,
@@ -1468,7 +1494,7 @@ def _verify_submitted_file_context(
     }
     for parsed in parsed_fields:
         field = fields_by_id.get(parsed.field_id)
-        if field is None or field.kind != "draft" or field.draft_attribute not in expected:
+        if field is None or field.kind != CasillaFieldKind.DRAFT or field.draft_attribute not in expected:
             continue
         observed = "" if parsed.value is None else str(parsed.value)
         if observed != expected[field.draft_attribute]:
@@ -1633,7 +1659,7 @@ async def _capture_row_pdf_artefact(
         ) from exc
 
     try:
-        await cotejo_page.wait_for_load_state("domcontentloaded", timeout=_NAVIGATION_TIMEOUT_MS)
+        await cotejo_page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=_NAVIGATION_TIMEOUT_MS)
     except PlaywrightError as exc:
         raise SedeNavigationError(
             f"PDF artefact page did not settle for {declaration.expediente_id!r}: {exc}",
@@ -1664,7 +1690,7 @@ async def _capture_row_pdf_artefact(
             content_type=content_type,
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
         ),
         body,
     )
@@ -1711,7 +1737,7 @@ async def _capture_submitted_file_artefact(
             content_type=_BINARY_MIME_TYPE,
             byte_count=len(body),
             sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime.now(UTC),
+            captured_at=_now(),
         ),
         body,
     )

@@ -25,6 +25,7 @@ from ...domain.categories import (
     family_for,
     resolve_category_profiles,
 )
+from ...domain.modelos._ids import BucketId
 from ...domain.usage_ratios import (
     ELIGIBLE_USAGE_RATIO_CATEGORIES,
     UsageRatioProfile,
@@ -71,7 +72,7 @@ class RatiosValidationReport(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     profile_present: bool
     eligible_count: int = Field(ge=0)
     overrides_count: int = Field(ge=0)

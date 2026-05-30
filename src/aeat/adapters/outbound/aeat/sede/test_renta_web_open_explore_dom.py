@@ -17,7 +17,6 @@ Buscar casilla dialog opens as a virtual widget that doesn't appear in
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import TYPE_CHECKING, Final
 
 import pytest
@@ -28,6 +27,7 @@ from .....core.config import Settings
 from .....core.paths import PROJECT_ROOT
 from .....domain.calculations.registry import RentaWebOpenLivePayload
 from ..browser import default_browser_session_factory
+from .....core.logging import get_logger
 
 pytestmark = [pytest.mark.live_read, pytest.mark.domain_outbound]
 
@@ -54,7 +54,7 @@ _BUTTONS_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-bu
 _A11Y_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-resumen-a11y-tree.txt"
 _BUSCAR_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-buscar-dialog.txt"
 _APARTADOS_DIALOG_OUTPUT = PROJECT_ROOT / ".vault" / "audit" / "renta-web-open-apartados-dialog.txt"
-_log = logging.getLogger(__name__)
+_log = get_logger(__name__)
 
 
 async def _snapshot_zk_layer(page: Page, label: str) -> str:
@@ -171,8 +171,7 @@ async def _try_expand_secondary_toolbar(
         await mostrar_btn.click(timeout=10_000)
         await page.wait_for_timeout(1_500)
     except Exception as exc:
-        _log.debug("explore DOM Mostrar opciones unreachable", exc_info=True)
-        print(f"explore: Mostrar opciones unreachable: {type(exc).__name__}: {exc}")
+        _log.debug("explore DOM Mostrar opciones unreachable: %s: %s", type(exc).__name__, exc, exc_info=True)
 
 
 async def _try_open_and_snapshot_dialog(
@@ -204,8 +203,7 @@ async def _try_open_and_snapshot_dialog(
         await page.wait_for_timeout(wait_after_click_ms)
         return await _snapshot_zk_layer(page, stage)
     except Exception as exc:
-        _log.debug("explore DOM %s unreachable", stage, exc_info=True)
-        print(f"explore: {stage} unreachable: {type(exc).__name__}: {exc}")
+        _log.debug("explore DOM %s unreachable: %s: %s", stage, type(exc).__name__, exc, exc_info=True)
         return f"=== ZK layer snapshot: {stage} ===\n(unreachable: {type(exc).__name__}: {exc})"
 
 

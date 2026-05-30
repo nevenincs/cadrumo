@@ -11,7 +11,6 @@ from pydantic_core import ErrorDetails
 
 from ...application.export import ExportSerializationFormat
 from ...application.ledger import (
-    CLASSIFIED_BY_MANUAL,
     LedgerExportCommand,
     LedgerReviewQuery,
     LedgerSourceImportCommand,
@@ -52,7 +51,7 @@ from ...application.review import (
     LedgerReviewFilterSpec,
 )
 from ...application.workflow._models import resolve_active_bucket_id
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...domain.buckets import (
     BucketEventHistoryRepository,

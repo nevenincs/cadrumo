@@ -193,11 +193,10 @@ def test_help_invocation_below_floor_widens_columns(monkeypatch: pytest.MonkeyPa
     monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "--help"])
     monkeypatch.setenv("COLUMNS", "80")
 
-    _ensure_help_render_width()
+    with _ensure_help_render_width():
+        import os
 
-    import os
-
-    assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
+        assert int(os.environ["COLUMNS"]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_help_invocation_keeps_wider_columns(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -206,11 +205,10 @@ def test_help_invocation_keeps_wider_columns(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "FOO", "-h"])
     monkeypatch.setenv("COLUMNS", "300")
 
-    _ensure_help_render_width()
+    with _ensure_help_render_width():
+        import os
 
-    import os
-
-    assert os.environ["COLUMNS"] == "300"
+        assert os.environ["COLUMNS"] == "300"
 
 
 def test_non_help_invocation_leaves_columns_untouched(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -223,11 +221,10 @@ def test_non_help_invocation_leaves_columns_untouched(monkeypatch: pytest.Monkey
     monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
     monkeypatch.setenv("COLUMNS", "80")
 
-    _ensure_help_render_width()
+    with _ensure_help_render_width():
+        import os
 
-    import os
-
-    assert os.environ["COLUMNS"] == "80"
+        assert os.environ["COLUMNS"] == "80"
 
 
 def test_non_help_invocation_without_columns_set(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -236,11 +233,10 @@ def test_non_help_invocation_without_columns_set(monkeypatch: pytest.MonkeyPatch
     monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "list"])
     monkeypatch.delenv("COLUMNS", raising=False)
 
-    _ensure_help_render_width()
+    with _ensure_help_render_width():
+        import os
 
-    import os
-
-    assert "COLUMNS" not in os.environ
+        assert "COLUMNS" not in os.environ
 
 
 # --- _COLUMNS_ENV_VAR constant (S188) ----------------------------------------
@@ -269,9 +265,8 @@ def test_columns_env_var_used_for_env_write(monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr("sys.argv", ["aeat", "--help"])
     monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
 
-    _ensure_help_render_width()
-
-    assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+    with _ensure_help_render_width():
+        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
 def test_columns_env_var_used_for_env_read(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -287,9 +282,63 @@ def test_columns_env_var_used_for_env_read(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr("sys.argv", ["aeat", "--help"])
     monkeypatch.setenv(_COLUMNS_ENV_VAR, wide)
 
-    _ensure_help_render_width()
+    with _ensure_help_render_width():
+        assert os.environ[_COLUMNS_ENV_VAR] == wide
 
-    assert os.environ[_COLUMNS_ENV_VAR] == wide
+
+# --- COLUMNS env-write scoping (S306) ----------------------------------------
+
+
+def test_columns_write_is_scoped_help_invocation(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The COLUMNS env write must be restored to its original value after the block.
+
+    _ensure_help_render_width widens COLUMNS inside the ``with`` block for
+    help rendering but must restore the original value on exit, preventing
+    the mutation from leaking into sibling processes or subsequent test runs.
+    """
+    import os
+
+    monkeypatch.setattr("sys.argv", ["aeat", "config", "profile", "create", "--help"])
+    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
+
+    before = os.environ[_COLUMNS_ENV_VAR]
+    with _ensure_help_render_width():
+        # Inside the block COLUMNS must be widened to the floor.
+        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+    after = os.environ[_COLUMNS_ENV_VAR]
+
+    assert after == before, (
+        f"COLUMNS not restored after context-manager exit: before={before!r} after={after!r}"
+    )
+
+
+def test_columns_write_is_scoped_unset_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When COLUMNS was absent before the block it must be absent again after exit."""
+    import os
+
+    monkeypatch.setattr("sys.argv", ["aeat", "--help"])
+    monkeypatch.delenv(_COLUMNS_ENV_VAR, raising=False)
+
+    assert _COLUMNS_ENV_VAR not in os.environ
+    with _ensure_help_render_width():
+        # Floor must be set inside the block.
+        assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
+    assert _COLUMNS_ENV_VAR not in os.environ, (
+        "COLUMNS must be removed after context-manager exit when it was originally absent"
+    )
+
+
+def test_columns_write_not_scoped_on_non_help(monkeypatch: pytest.MonkeyPatch) -> None:
+    """On a non-help invocation COLUMNS must not be touched at all."""
+    import os
+
+    monkeypatch.setattr("sys.argv", ["aeat", "app", "status"])
+    monkeypatch.setenv(_COLUMNS_ENV_VAR, "80")
+
+    before = os.environ[_COLUMNS_ENV_VAR]
+    with _ensure_help_render_width():
+        assert os.environ[_COLUMNS_ENV_VAR] == before
+    assert os.environ[_COLUMNS_ENV_VAR] == before
 
 
 # --- SecretScrubbingFilter propagation via stdio logger (S50) ----------------

@@ -23,10 +23,12 @@ which is strictly worse than leaving the stream as-is.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import shutil
 import sys
+from collections.abc import Iterator
 from typing import Final, TextIO
 
 # Minimum render width for the help surface. The wizard `profile
@@ -59,8 +61,9 @@ def _help_surface_requested() -> bool:
     return any(token in _HELP_TOKENS for token in sys.argv[1:])
 
 
-def _ensure_help_render_width() -> None:
-    """Raise the console width floor for ``--help`` so flag names are not truncated.
+@contextlib.contextmanager
+def _ensure_help_render_width() -> Iterator[None]:
+    """Context manager that widens the console width floor for ``--help`` surfaces.
 
     Rich (used by Typer for ``--help``) derives its console width from
     the ``COLUMNS`` environment variable, falling back to the terminal
@@ -70,23 +73,41 @@ def _ensure_help_render_width() -> None:
     surface is being rendered and the resolved width is below the
     floor, so ordinary command output and genuinely wide terminals
     keep their real width.
+
+    The mutation is scoped to the ``with`` block: the original value of
+    ``COLUMNS`` (or its absence) is restored on exit so the environment
+    mutation does not leak into sibling processes or tests.
     """
 
+    _original = os.environ.get(_COLUMNS_ENV_VAR)
+
     if not _help_surface_requested():
+        yield
         return
-    resolved = os.environ.get(_COLUMNS_ENV_VAR)
+
+    resolved = _original
     if resolved is not None:
         try:
             current = int(resolved)
         except ValueError:
             current = 0
         if current >= _MIN_HELP_RENDER_COLUMNS:
+            yield
             return
     else:
         current = shutil.get_terminal_size(fallback=(80, 24)).columns
         if current >= _MIN_HELP_RENDER_COLUMNS:
+            yield
             return
+
     os.environ[_COLUMNS_ENV_VAR] = str(_MIN_HELP_RENDER_COLUMNS)
+    try:
+        yield
+    finally:
+        if _original is None:
+            os.environ.pop(_COLUMNS_ENV_VAR, None)
+        else:
+            os.environ[_COLUMNS_ENV_VAR] = _original
 
 
 def _set_windows_console_utf8() -> None:
@@ -173,9 +194,9 @@ def configure_stdio_for_utf8(
     """
 
     _set_windows_console_utf8()
-    _ensure_help_render_width()
-    _reconfigure_stream(sys.stdout if stdout is None else stdout)
-    _reconfigure_stream(sys.stderr if stderr is None else stderr)
+    with _ensure_help_render_width():
+        _reconfigure_stream(sys.stdout if stdout is None else stdout)
+        _reconfigure_stream(sys.stderr if stderr is None else stderr)
 
 
 __all__ = ["configure_stdio_for_utf8"]

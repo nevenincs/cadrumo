@@ -411,6 +411,50 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "aeat.application.live._snapshot_base.SnapshotNotFoundError",
+        ErrorCode(
+            code="FAIL_SNAPSHOT_NOT_FOUND",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_snapshot_not_found",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.repair_integrity.RepairIntegrityError",
+        ErrorCode(
+            code="INTEGRITY_REPAIR_INTEGRITY",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.integrity_repair_integrity",
+            default_suggestion="aeat config repair integrity",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.repair_integrity.RepairDecisionNotFoundError",
+        ErrorCode(
+            code="FAIL_REPAIR_DECISION_NOT_FOUND",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_repair_decision_not_found",
+            default_suggestion="aeat config repair list --namespace NAMESPACE",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.workflow._errors.ProfileLabelAmbiguousError",
+        ErrorCode(
+            code="REFUSED_PROFILE_LABEL_AMBIGUOUS",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_profile_label_ambiguous",
+            default_suggestion="aeat config profile list",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "aeat.application.workflow._errors.WorkflowAbortSignalError",
         ErrorCode(
             code="INTERNAL_WORKFLOW_ABORT_SIGNAL",
@@ -999,7 +1043,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "aeat.application.modelo._actions.WorkflowInputMismatchError",
+        "aeat.application.workflow._errors.WorkflowInputMismatchError",
         ErrorCode(
             code="REFUSED_WORKFLOW_INPUT_MISMATCH",
             category=ErrorCategory.REFUSED,
@@ -1016,6 +1060,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.INTEGRITY,
             message_key="errors.storage.stored_data_validation_boundary",
             default_suggestion="aeat app modelo work calculate",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "aeat.application.modelo._actions.ModeloApplicabilityFilterError",
+        ErrorCode(
+            code="REFUSED_MODELO_APPLICABILITY_FILTER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_applicability_filter",
+            default_suggestion=None,
             retryable=False,
             runbook_id=None,
         ),

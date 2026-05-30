@@ -10,6 +10,7 @@ gives downstream tooling no stability contract for the emitted JSON.
 
 from __future__ import annotations
 
+from ...domain.modelos._ids import BucketId
 from ._schemas import OutputSchema, register_schema
 
 
@@ -20,7 +21,7 @@ class ReviewQueueRowPayload(OutputSchema):
     kind: str
     source_kind: str | None = None
     affected_object_id: str
-    bucket_id: str
+    bucket_id: BucketId
     modelo: str | None = None
     period: str | None = None
     severity: str

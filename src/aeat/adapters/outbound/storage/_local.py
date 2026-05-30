@@ -22,6 +22,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from ....core.logging import get_logger
+from ....core.time._clock import _now
 from ._errors import (
     OutboundStorageConflictError,
     OutboundStorageIntegrityError,
@@ -199,7 +200,7 @@ class LocalFileSystemProvider:
                 context={"path": str(target_path)},
             ) from exc
 
-        written_at = datetime.now(UTC)
+        written_at = _now()
         sidecar_payload = {
             "namespace": namespace_clean,
             "object_key_hmac": hmac_clean,
@@ -266,9 +267,9 @@ class LocalFileSystemProvider:
 
         written_at_raw = str(sidecar.get("written_at", ""))
         try:
-            written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else datetime.now(UTC)
+            written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else _now()
         except ValueError:
-            written_at = datetime.now(UTC)
+            written_at = _now()
 
         _byte_length_raw = sidecar.get("byte_length", len(payload))
         if not isinstance(_byte_length_raw, (int, str)):
@@ -334,9 +335,9 @@ class LocalFileSystemProvider:
             sidecar = self._load_sidecar(sidecar_path)
             written_at_raw = str(sidecar.get("written_at", ""))
             try:
-                written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else datetime.now(UTC)
+                written_at = datetime.fromisoformat(written_at_raw) if written_at_raw else _now()
             except ValueError:
-                written_at = datetime.now(UTC)
+                written_at = _now()
             _byte_length_raw = sidecar.get("byte_length", 0)
             if not isinstance(_byte_length_raw, (int, str)):
                 _logger.error(

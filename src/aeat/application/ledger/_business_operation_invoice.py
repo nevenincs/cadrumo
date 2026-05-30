@@ -41,6 +41,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
+from ...domain.modelos._ids import BucketId
 from .._storage_paths import storage_path
 
 
@@ -159,7 +160,7 @@ class BusinessOperationInvoice(BaseModel):
 
     invoice_id: str = Field(min_length=1, max_length=64)
     source_kind: BusinessOperationInvoiceSourceKind
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     counterparty_nif: str = Field(min_length=1)
     counterparty_name: str = Field(default="", max_length=200)
     invoice_number: str = Field(min_length=1, max_length=100)

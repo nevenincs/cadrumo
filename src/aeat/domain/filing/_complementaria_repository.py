@@ -16,6 +16,7 @@ from ...adapters.persistence.storage import Envelope, SensitivityClass, safe_rep
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.sql import SecureObjectRepository
 from ...core.logging import get_logger
+from ...core.time._clock import _now
 from ._amendment import (
     BaseAmendment,
     ModeloComplementaria,
@@ -97,7 +98,7 @@ class ModeloAmendmentRepository:
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
-            written_at=datetime.now(UTC),
+            written_at=_now(),
             classification=SensitivityClass.AUDIT,
             payload=amendment,
         )

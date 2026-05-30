@@ -28,7 +28,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.errors import ClassificationError, EnvelopeVersionError
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core.errors import AeatError
+from ...domain.modelos._ids import BucketId
 from ._errors import LiveApplicationInputError
 from ._snapshot_base import (
     SnapshotLifecycleState,
@@ -45,12 +45,14 @@ _BORRADOR_100_SNAPSHOT_SENSITIVITY = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.sen
 type _BorradorValue = Decimal | str
 
 
-class BorradorSnapshotNotFoundError(AeatError, SnapshotNotFoundError):
+class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
     """Raised when a Modelo 100 borrador snapshot lookup misses by id.
 
-    Inherits ``AeatError`` first so MRO routes ``__init__`` through the
-    structured constructor (accepts ``suggestion=`` / ``context=`` kwargs)
-    rather than :class:`KeyError`'s C-level constructor.
+    :class:`SnapshotNotFoundError` inherits ``AeatError`` first, so MRO
+    routes ``__init__`` through the structured constructor (accepts
+    ``suggestion=`` / ``context=`` kwargs) rather than
+    :class:`KeyError`'s C-level constructor. Listing ``AeatError``
+    explicitly here would violate C3 linearization.
     """
 
 
@@ -60,7 +62,7 @@ class Borrador100Snapshot(BaseModel):
     model_config = _STRICT_FROZEN
 
     snapshot_id: str = Field(min_length=1, max_length=128)
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     modelo: str = Field(pattern=r"^100$")
     filing_year: int = Field(ge=1900, le=9999)
     period: str = Field(min_length=1, max_length=16)

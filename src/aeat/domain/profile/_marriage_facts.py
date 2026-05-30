@@ -23,6 +23,8 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from ...core.parsing._dates import _parse_iso8601_date
+
 _MARRIAGE_DATE_PATH = "renta_taxpayer.marriage_date"
 _MONTH_START_PATH = "renta_taxpayer.marriage_month_start"
 _MONTH_END_PATH = "renta_taxpayer.marriage_month_end"
@@ -85,7 +87,7 @@ def marriage_date_from_facts(facts: dict[str, str]) -> date | None:
     raw = facts.get(_MARRIAGE_DATE_PATH)
     if not raw:
         return None
-    return date.fromisoformat(raw)
+    return _parse_iso8601_date(raw)
 
 
 def parse_marriage_date_flag(raw: str) -> date:
@@ -96,7 +98,7 @@ def parse_marriage_date_flag(raw: str) -> date:
     """
     stripped = raw.strip()
     try:
-        return date.fromisoformat(stripped)
+        return _parse_iso8601_date(stripped)
     except ValueError as exc:
         raise ValueError(
             f"--taxpayer-marriage-date must be YYYY-MM-DD; got: {raw!r}"

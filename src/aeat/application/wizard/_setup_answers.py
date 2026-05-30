@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing._utils import _parse_bool
 from ...domain.deadlines._models import (
     EntityType,
     FiscalResidency,
@@ -239,10 +241,9 @@ class SetupAnswers(BaseModel):
         if isinstance(value, bool):
             return value
         if isinstance(value, str):
-            if value.lower() == "true":
-                return True
-            if value.lower() == "false":
-                return False
+            _bool_candidate = _parse_bool(value)
+            if isinstance(_bool_candidate, bool):
+                return _bool_candidate
         raise WizardAnswerTypeError(
             "unidad_familiar_descendientes_exclusivos must be a bool, 'true', 'false', or blank"
         )
@@ -330,12 +331,10 @@ class SetupAnswers(BaseModel):
         resolver can derive the matrimonio-sobrevenido facts.
         """
 
-        from datetime import date
-
         if value == "":
             return value
         try:
-            date.fromisoformat(value)
+            _parse_iso8601_date(value)
         except ValueError as exc:
             raise ValueError(
                 f"taxpayer_marriage_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
@@ -422,12 +421,10 @@ class SetupAnswers(BaseModel):
         engine's pre-registration gate receives a parseable date.
         """
 
-        from datetime import date
-
         if value == "":
             return value
         try:
-            date.fromisoformat(value)
+            _parse_iso8601_date(value)
         except ValueError as exc:
             raise ValueError(
                 f"activity_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"
@@ -444,12 +441,10 @@ class SetupAnswers(BaseModel):
         and ``TaxpayerProfile.beckham_window_active`` receive a parseable date.
         """
 
-        from datetime import date
-
         if value == "":
             return value
         try:
-            date.fromisoformat(value)
+            _parse_iso8601_date(value)
         except ValueError as exc:
             raise ValueError(
                 f"special_regime_start_date must be an ISO-8601 date (YYYY-MM-DD), got {value!r}"

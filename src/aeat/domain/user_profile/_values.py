@@ -14,6 +14,8 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator, model_validator
 
 from ...core._time import utc_now
+from ...core.parsing._dates import _parse_iso8601_date
+from ...core.parsing._utils import _parse_bool
 from ..modelos._calculation_revision import CalculationRevision as _CalculationRevision
 from ..modelos._filing_record import ModeloRecord as _ModeloRecord
 from ..modelos._work_unit import WorkUnit as _WorkUnit
@@ -71,7 +73,7 @@ def _coerce_profile_fact_value(value: object) -> object:
 
     if isinstance(value, str) and _DATE_STRING_RE.fullmatch(value):
         try:
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value) or value
         except ValueError:
             return value
     # JSON has no boolean primitive distinct from integer — pydantic encodes
@@ -79,10 +81,13 @@ def _coerce_profile_fact_value(value: object) -> object:
     # when ``model_dump(mode="json")`` serialises a ``bool``-typed fact. Promote
     # these tokens back to ``bool`` before the decimal check so the union
     # resolves to ``bool`` (not ``str`` or ``Decimal``) on re-parse.
-    if isinstance(value, str) and value.lower() == "true":
-        return True
-    if isinstance(value, str) and value.lower() == "false":
-        return False
+    # Only promote the two JSON-serialized boolean tokens produced by
+    # model_dump(mode="json"). Broader token sets (e.g. "0"/"1") must
+    # not be promoted to bool here because "0" is also a valid Decimal fact.
+    if value in ("true", "false"):
+        _bool_candidate = _parse_bool(value)
+        if isinstance(_bool_candidate, bool):
+            return _bool_candidate
     if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):
         try:
             return Decimal(value)

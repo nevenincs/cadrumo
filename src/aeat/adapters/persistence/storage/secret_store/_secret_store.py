@@ -36,8 +36,10 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from .....core.classification import SensitivityClass, default_policy_for
+from .....core.errors import CoreValidationError
 from .....core.locks import exclusive_file_lock
 from .....core.logging import get_logger
+from .....core.time._utc import _validate_utc_aware
 from .._namespace_registry import SECRET_RECORD_SCHEMA_VERSION
 from ..blob_store._blob_store import BlobReference, EncryptedBlobStore
 from ..crypto._crypto import KEY_SIZE, derive_key
@@ -96,9 +98,10 @@ class SecretRecord(BaseModel):
     def _require_aware(cls, value: datetime | None) -> datetime | None:
         if value is None:
             return None
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise StorageValidationError("datetime fields must be timezone-aware")
-        return value
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise StorageValidationError(str(exc)) from exc
 
     @field_validator("classification")
     @classmethod

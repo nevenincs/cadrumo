@@ -51,6 +51,7 @@ from typing import ClassVar, Literal
 from pydantic import BaseModel, ConfigDict
 
 from .....core.config import load_settings
+from .....core.decimal import coerce_decimal
 from .....core.errors import AeatError
 from .....core.logging import get_logger
 from .....domain.transactions import RawProvenance, RawTransaction, SourceFormat
@@ -390,7 +391,10 @@ def parse_amount_value(
     if isinstance(value, int):
         return Decimal(value)
     if isinstance(value, float):
-        return Decimal(str(value))
+        coerced = coerce_decimal(value)
+        if coerced is None:
+            raise FinancialValidationError(f"unsupported float value: {value!r}")
+        return coerced
     raw = coerce_cell_text(value)
     if not raw:
         raise FinancialValidationError("missing amount value")

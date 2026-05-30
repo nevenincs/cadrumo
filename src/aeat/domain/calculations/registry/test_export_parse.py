@@ -143,6 +143,15 @@ def test_parse_boolean_raises_on_unrecognised_token() -> None:
         _parse_boolean("maybe")
 
 
+def test_parse_boolean_delegates_to_core_parse_bool() -> None:
+    """The wrapper must call _core_parse_bool; tokens that overlap with the
+    core truthy set ("1", "true") must still resolve through the wrapper."""
+    # "1" is in both the registry and core truthy sets — must be True.
+    assert _parse_boolean("1") is True
+    # "no" is in core falsy set and registry falsy set — must be False.
+    assert _parse_boolean("no") is False
+
+
 # ---------------------------------------------------------------------------
 # _parse_xml_dictionary_value
 # ---------------------------------------------------------------------------

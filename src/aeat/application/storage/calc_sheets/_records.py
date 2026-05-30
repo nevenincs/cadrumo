@@ -23,13 +23,15 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core.time import _now as _utc_now
+from ....core.time._utc import _validate_utc_aware
 from ....domain.calculations.registry._ids import BindingId, CasillaId, ParameterId, RelationId
 from ....domain.calculations.registry._schema import DecimalValue as _RegistryDecimalValue
 
@@ -436,10 +438,7 @@ class SheetExportMetadata(BaseModel):
 
     @model_validator(mode="after")
     def _exported_at_is_utc(self) -> SheetExportMetadata:
-        if self.exported_at.tzinfo is None:
-            raise ValueError("exported_at must carry a UTC timezone")
-        if self.exported_at.utcoffset() != UTC.utcoffset(self.exported_at):
-            raise ValueError("exported_at must be in UTC")
+        _validate_utc_aware(self.exported_at)
         return self
 
 
@@ -466,10 +465,6 @@ class SheetExportPlan(BaseModel):
         for cell in self.formula_cells:
             seen.append(cell.address)
         return tuple(seen)
-
-
-def _utc_now() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 __all__ = [

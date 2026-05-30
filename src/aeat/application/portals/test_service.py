@@ -9,6 +9,7 @@ from aeat.application.portals import (
     PortalRow,
     PortalsService,
 )
+from aeat.core.i18n import tr
 from aeat.domain.portals import PORTAL_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
@@ -119,3 +120,35 @@ class TestRegistryInjection:
         rows = svc.list_portals()
         assert len(rows) == 1
         assert rows[0].portal is portal
+
+
+class TestPortalNotFoundErrorLocale:
+    """PortalNotFoundError carries a translated_message resolvable from the locale catalogue."""
+
+    def test_portal_not_found_carries_translated_message(self) -> None:
+        # An empty registry guarantees a miss for any known portal.
+        svc = PortalsService(registry={})
+        portal = next(iter(PORTAL_REGISTRY.keys()))
+        with pytest.raises(PortalNotFoundError) as exc_info:
+            svc.show(portal)
+        err = exc_info.value
+        expected = tr("application.portals.errors.portal_not_found")
+        assert err.translated_message == expected, (
+            f"expected translated_message={expected!r}, got {err.translated_message!r}"
+        )
+
+    def test_portal_not_found_locale_key_resolves_to_real_string(self) -> None:
+        key = "application.portals.errors.portal_not_found"
+        resolved = tr(key)
+        assert resolved != key, f"locale key {key!r} is still a placeholder"
+        assert len(resolved) > 20, f"locale key {key!r} resolved to suspiciously short string: {resolved!r}"
+
+    def test_portal_not_found_translated_message_not_placeholder(self) -> None:
+        # Verify the error's translated_message is not the key path itself.
+        svc = PortalsService(registry={})
+        portal = next(iter(PORTAL_REGISTRY.keys()))
+        with pytest.raises(PortalNotFoundError) as exc_info:
+            svc.show(portal)
+        err = exc_info.value
+        assert err.translated_message is not None
+        assert err.translated_message != "application.portals.errors.portal_not_found"

@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ..errors import KeyDerivationError, StorageValidationError
+
 if TYPE_CHECKING:
     from ..bucket._manifest import ManifestKdfParams
 
@@ -65,7 +67,7 @@ class KdfParams(BaseModel):
     @classmethod
     def _check_salt_length(cls, value: bytes) -> bytes:
         if len(value) != _SALT_BYTES:
-            raise ValueError(f"salt must be exactly {_SALT_BYTES} bytes")
+            raise StorageValidationError(f"salt must be exactly {_SALT_BYTES} bytes")
         return value
 
     @field_serializer("salt")
@@ -79,7 +81,7 @@ class KdfParams(BaseModel):
             return value
         if isinstance(value, str):
             return base64.b64decode(value.encode("ascii"), validate=True)
-        raise TypeError("salt must be bytes or base64 string")
+        raise StorageValidationError("salt must be bytes or base64 string")
 
     @classmethod
     def default(cls) -> KdfParams:

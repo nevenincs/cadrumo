@@ -608,3 +608,264 @@ def test_declarations_filed_artefact_uses_binary_mime_constant() -> None:
     # The module must expose the constant under the local alias used at the call site.
     assert mod._BINARY_MIME_TYPE is BINARY_MIME_TYPE
     assert mod._BINARY_MIME_TYPE == "application/octet-stream"
+
+
+# ---------------------------------------------------------------------------
+# S238 / S239 / S240 — CLASSIFIED_BY_MANUAL single-source-of-truth tests
+# ---------------------------------------------------------------------------
+
+
+def test_classified_by_manual_value() -> None:
+    """``CLASSIFIED_BY_MANUAL`` equals the sentinel stored in persisted records."""
+
+    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+
+    assert CLASSIFIED_BY_MANUAL == "manual"
+
+
+def test_classified_by_manual_is_final_str() -> None:
+    """``CLASSIFIED_BY_MANUAL`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+
+    assert isinstance(CLASSIFIED_BY_MANUAL, str)
+
+
+def test_application_ledger_imports_classified_by_manual_from_core() -> None:
+    """The application ledger public surface re-exports ``CLASSIFIED_BY_MANUAL`` from core.
+
+    The application layer must not define a local copy; it must import the
+    canonical constant from ``aeat.core.external_constants`` and expose it
+    through the package ``__init__``.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+
+    ledger_init = importlib.import_module("aeat.application.ledger")
+
+    # The public surface exposes the constant and it is the same object.
+    assert hasattr(ledger_init, "CLASSIFIED_BY_MANUAL"), (
+        "aeat.application.ledger must expose CLASSIFIED_BY_MANUAL"
+    )
+    assert ledger_init.CLASSIFIED_BY_MANUAL is CLASSIFIED_BY_MANUAL
+
+
+def test_application_ledger_models_does_not_define_classified_by_manual_locally() -> None:
+    """``_models.py`` must not carry a local definition of ``CLASSIFIED_BY_MANUAL``.
+
+    It imports the constant from ``aeat.core.external_constants``; the
+    imported name must be identical to the core constant (not a shadow).
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+
+    models_mod = importlib.import_module("aeat.application.ledger._models")
+
+    # The module still exposes the constant (via import), and it is the same object.
+    assert hasattr(models_mod, "CLASSIFIED_BY_MANUAL"), (
+        "_models must import CLASSIFIED_BY_MANUAL from core"
+    )
+    assert models_mod.CLASSIFIED_BY_MANUAL is CLASSIFIED_BY_MANUAL
+
+
+def test_domain_transactions_service_imports_classified_by_manual_from_core() -> None:
+    """The domain service must not shadow ``CLASSIFIED_BY_MANUAL`` with a local string literal.
+
+    The constant must be imported from ``aeat.core.external_constants`` so
+    that the domain layer reads a single authoritative value.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import CLASSIFIED_BY_MANUAL
+
+    service_mod = importlib.import_module("aeat.domain.transactions._service")
+
+    # The domain service module must import the constant from core (not define its own).
+    assert hasattr(service_mod, "CLASSIFIED_BY_MANUAL"), (
+        "_service must import CLASSIFIED_BY_MANUAL from aeat.core.external_constants"
+    )
+    assert service_mod.CLASSIFIED_BY_MANUAL is CLASSIFIED_BY_MANUAL
+
+
+def test_no_local_classified_by_manual_shadow_in_application_or_domain() -> None:
+    """No production file in application/ or domain/ may define a local ``classified_by``
+    sentinel by assigning the bare string ``"manual"`` to a module-level variable whose
+    name contains ``classified_by`` or ``manual_classified``.
+
+    This is the regression guard against the pattern removed in S238/S239:
+    ``_MANUAL_CLASSIFIED_BY = "manual"`` or ``CLASSIFIED_BY_MANUAL = "manual"`` defined
+    locally instead of imported from ``aeat.core.external_constants``.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    search_roots = (
+        repo_root / "src/aeat/application",
+        repo_root / "src/aeat/domain",
+    )
+
+    # Names that signal a classified_by sentinel re-definition.
+    _SENTINEL_NAME_FRAGMENTS = ("classified_by", "manual_classified")
+
+    offenders: list[str] = []
+    for search_root in search_roots:
+        for py_file in search_root.rglob("*.py"):
+            tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
+            for node in ast.walk(tree):
+                # Look for module-level or function-level simple assignments:
+                # TARGET = "manual"
+                if not isinstance(node, ast.Assign):
+                    continue
+                value = node.value
+                if not isinstance(value, ast.Constant) or value.value != "manual":
+                    continue
+                for target in node.targets:
+                    if not isinstance(target, ast.Name):
+                        continue
+                    name_lower = target.id.lower()
+                    if any(frag in name_lower for frag in _SENTINEL_NAME_FRAGMENTS):
+                        offenders.append(
+                            f"{py_file.relative_to(repo_root)}:{node.lineno}: "
+                            f"local classified_by sentinel '{target.id} = \"manual\"'; "
+                            f"import CLASSIFIED_BY_MANUAL from aeat.core.external_constants"
+                        )
+
+    assert offenders == [], (
+        "Local classified_by manual sentinels found; "
+        "import CLASSIFIED_BY_MANUAL from aeat.core.external_constants instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+# ---------------------------------------------------------------------------
+# S301 / S302 / S303 — JSON_MIME_TYPE and CSV_MIME_TYPE centralisation tests
+# ---------------------------------------------------------------------------
+
+
+def test_json_mime_type_value() -> None:
+    """``JSON_MIME_TYPE`` equals the IANA-registered JSON MIME type."""
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    assert JSON_MIME_TYPE == "application/json"
+
+
+def test_csv_mime_type_value() -> None:
+    """``CSV_MIME_TYPE`` equals the IANA-registered CSV MIME type."""
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    assert CSV_MIME_TYPE == "text/csv"
+
+
+def test_json_mime_type_is_final_str() -> None:
+    """``JSON_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    assert isinstance(JSON_MIME_TYPE, str)
+
+
+def test_csv_mime_type_is_final_str() -> None:
+    """``CSV_MIME_TYPE`` is a ``str`` instance (typed ``Final[str]``)."""
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    assert isinstance(CSV_MIME_TYPE, str)
+
+
+def test_declarations_uses_json_mime_constant() -> None:
+    """``_declarations.py`` imports ``JSON_MIME_TYPE`` rather than a bare literal.
+
+    The module must expose ``_JSON_MIME_TYPE`` and its value must equal
+    ``JSON_MIME_TYPE`` from ``aeat.core.external_constants``, giving an
+    identity guarantee without executing the live AEAT browser path.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import JSON_MIME_TYPE
+
+    mod = importlib.import_module("aeat.adapters.outbound.aeat.sede._declarations")
+
+    assert hasattr(mod, "_JSON_MIME_TYPE"), (
+        "_declarations must import JSON_MIME_TYPE from aeat.core.external_constants "
+        "under the alias _JSON_MIME_TYPE"
+    )
+    assert mod._JSON_MIME_TYPE is JSON_MIME_TYPE
+    assert mod._JSON_MIME_TYPE == "application/json"
+
+
+def test_tabular_export_uses_csv_mime_constant() -> None:
+    """``_tabular.py`` imports ``CSV_MIME_TYPE`` rather than a bare ``"text/csv"`` literal.
+
+    The module must expose ``_CSV_MIME_TYPE`` and its value must equal
+    ``CSV_MIME_TYPE`` from ``aeat.core.external_constants``.
+    """
+
+    import importlib
+
+    from aeat.core.external_constants import CSV_MIME_TYPE
+
+    mod = importlib.import_module("aeat.application.export._tabular")
+
+    assert hasattr(mod, "_CSV_MIME_TYPE"), (
+        "_tabular must import CSV_MIME_TYPE from aeat.core.external_constants "
+        "under the alias _CSV_MIME_TYPE"
+    )
+    assert mod._CSV_MIME_TYPE is CSV_MIME_TYPE
+    assert mod._CSV_MIME_TYPE == "text/csv"
+
+
+def test_no_bare_json_mime_literal_in_declarations() -> None:
+    """No bare ``"application/json"`` literal in ``_declarations.py`` argument positions.
+
+    Anti-tautology: parses the real AST so any future re-introduction of
+    the literal triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    source = (
+        repo_root / "src/aeat/adapters/outbound/aeat/sede/_declarations.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or node.value != "application/json":
+            continue
+        offenders.append(f"_declarations.py:{node.lineno}: bare 'application/json' literal")
+
+    assert offenders == [], (
+        "Bare 'application/json' literals found; use _JSON_MIME_TYPE instead:\n"
+        + "\n".join(offenders)
+    )
+
+
+def test_no_bare_csv_mime_literal_in_tabular() -> None:
+    """No bare ``"text/csv"`` literal in ``_tabular.py`` argument positions.
+
+    Anti-tautology: parses the real AST so any future re-introduction of
+    the literal triggers immediate failure.
+    """
+
+    repo_root = Path(__file__).parents[3]
+    source = (
+        repo_root / "src/aeat/application/export/_tabular.py"
+    ).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+
+    offenders: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or node.value != "text/csv":
+            continue
+        offenders.append(f"_tabular.py:{node.lineno}: bare 'text/csv' literal")
+
+    assert offenders == [], (
+        "Bare 'text/csv' literals found; use _CSV_MIME_TYPE instead:\n"
+        + "\n".join(offenders)
+    )

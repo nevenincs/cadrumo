@@ -18,6 +18,7 @@ from __future__ import annotations
 from argon2.low_level import Type, hash_secret_raw
 
 from ..bucket._manifest import ManifestKdfParams
+from ..errors import KeyDerivationError
 
 _OUTPUT_BYTES = 32
 
@@ -36,16 +37,16 @@ def derive_kek(passphrase: bytes, kdf_params: ManifestKdfParams) -> bytes:
         wrapping of the bucket's data-encryption key.
 
     Raises:
-        ValueError: If `kdf_params.algorithm` is not `argon2id` or
+        KeyDerivationError: If `kdf_params.algorithm` is not `argon2id` or
             `kdf_params.output_length` is not 32.
     """
 
     if kdf_params.algorithm != "argon2id":
-        raise ValueError(
+        raise KeyDerivationError(
             f"unsupported KDF algorithm {kdf_params.algorithm!r}; expected 'argon2id'",
         )
     if kdf_params.output_length != _OUTPUT_BYTES:
-        raise ValueError(
+        raise KeyDerivationError(
             f"unsupported KDF output_length {kdf_params.output_length}; expected {_OUTPUT_BYTES}",
         )
 

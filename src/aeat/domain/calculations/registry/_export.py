@@ -9,6 +9,7 @@ from typing import Literal, TypeGuard
 from ._errors import RegistryValidationError
 from ._ids import CasillaId, ExportFieldId
 from ._schema import (
+    CasillaFieldKind,
     DataBindingDefinition,
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -148,12 +149,12 @@ def _export_field_from_row_binding(
     # Pattern A: the record already hand-authors a kind="binding" field pinned
     # to this binding id — trust the operator-pinned offset/length and skip
     # derivation. base_fields will pass the hand-authored field through.
-    if any(field.kind == "binding" and field.binding == binding.id for field in record.fields):
+    if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
         return None
     # Pattern B: a kind="casilla" template field exists for this casilla — derive
     # a binding-kind field by copying the template's offset/length/data_type.
     template = next(
-        (field for field in record.fields if field.kind == "casilla" and field.casilla == casilla),
+        (field for field in record.fields if field.kind == CasillaFieldKind.CASILLA and field.casilla == casilla),
         None,
     )
     if template is None:
@@ -164,7 +165,7 @@ def _export_field_from_row_binding(
     return template.model_copy(
         update={
             "id": f"{record.id}.{binding.id}",
-            "kind": "binding",
+            "kind": CasillaFieldKind.BINDING,
             "casilla": None,
             "binding": binding.id,
             "legal_refs": binding.legal_refs,
@@ -183,7 +184,7 @@ def _export_field_from_binding(
         id=f"{record.id}.{binding.id}",
         offset=_selector_int(binding, "offset"),
         length=_selector_int(binding, "length"),
-        kind="binding",
+        kind=CasillaFieldKind.BINDING,
         binding=binding.id,
         data_type=data_type,
         required=False,

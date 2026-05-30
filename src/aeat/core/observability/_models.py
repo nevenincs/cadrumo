@@ -43,6 +43,9 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from ..errors import CoreValidationError
+from ..time._utc import _validate_utc_aware
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
@@ -312,7 +315,7 @@ class RunEventPayload(BaseModel):
 
 
 def _require_tz_aware(value: datetime) -> datetime:
-    """Reject naive datetimes at the pydantic boundary.
+    """Reject naive or non-UTC datetimes at the pydantic boundary.
 
     The sort in :func:`aeat.core.observability.iter_runs` crashes with
     ``TypeError: can't compare offset-naive and offset-aware datetimes``
@@ -326,16 +329,12 @@ def _require_tz_aware(value: datetime) -> datetime:
         value: Datetime to validate.
 
     Returns:
-        The same datetime, unmodified, when it is timezone-aware.
+        The same datetime, unmodified, when it is UTC-aware.
 
     Raises:
-        ValueError: When ``value.tzinfo`` is ``None``.
+        CoreValidationError: When ``value`` is naive or not in UTC.
     """
-    if value.tzinfo is None:
-        raise ValueError(
-            "observability datetimes must be timezone-aware; got naive value",
-        )
-    return value
+    return _validate_utc_aware(value)
 
 
 class RunEvent(BaseModel):

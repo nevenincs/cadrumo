@@ -12,6 +12,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from ...core.parsing._dates import _parse_iso8601_date
 from ._errors import ProfileValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -80,7 +81,7 @@ class DescendantInfo(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value)
         return value
 
     @field_validator("nif")
@@ -178,7 +179,7 @@ class RentaDescendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value)
         return value
 
 
@@ -208,7 +209,7 @@ class RentaAscendantProfile(BaseModel):
     @classmethod
     def _parse_date(cls, value: object) -> object:
         if isinstance(value, str):
-            return date.fromisoformat(value)
+            return _parse_iso8601_date(value)
         return value
 
 

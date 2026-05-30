@@ -20,6 +20,8 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from ...core.errors import CoreValidationError
+from ...core.time._utc import _validate_utc_aware
 from ._errors import TransactionValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -85,9 +87,10 @@ class RawProvenance(BaseModel):
     @classmethod
     def _require_aware_timestamp(cls, value: datetime) -> datetime:
         """Reject naive timestamps; ingest must record UTC offsets."""
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise TransactionValidationError("ingested_at must be timezone-aware")
-        return value
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise TransactionValidationError(str(exc)) from exc
 
     @field_validator("provider_name")
     @classmethod

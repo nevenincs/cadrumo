@@ -97,3 +97,56 @@ def test_work_create_210_refusal_fires_before_profile_check(
     assert "Traceback" not in result.output
     # Refusal must contain legal citation, not a profile-missing message.
     assert "5/2004" in result.output or "TRLIRNR" in result.output or "G320" in result.output
+
+
+def test_guard_stub_modelo_210_skipped_when_engine_live_flag_is_set() -> None:
+    """S391: _guard_stub_modelo returns silently for modelo 210 when the
+    aeat_m210_engine_live Settings flag is True. Other stub-only modelos
+    continue to refuse unconditionally.
+
+    Uses the canonical override_settings context manager (live-test
+    friendly per project mandate — no monkeypatch, no mocks). The
+    ContextVar-backed override flows through load_settings() naturally.
+
+    Anti-tautology: the test asserts (a) flag-True bypass on 210 AND
+    (b) flag-True still refuses 600/650/660 (other stub-only modelos
+    must not be silently bypassed by an over-broad gate). A future
+    refactor that gated ALL stubs on the flag would fail (b).
+    """
+
+    from aeat.core.config import override_settings
+    from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
+    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+
+    with override_settings(aeat_m210_engine_live=True):
+        # Flag-True: modelo 210 falls through silently (no exception).
+        _guard_stub_modelo("210")
+
+        # Flag-True: other stub-only modelos still refuse.
+        for other in ("151", "600", "620", "650", "660", "714", "721"):
+            with pytest.raises(CliRefusedBoundaryError):
+                _guard_stub_modelo(other)
+
+
+def test_guard_stub_modelo_210_refuses_when_engine_live_flag_is_unset() -> None:
+    """S391 control: with the flag default (False), modelo 210 still
+    refuses with the canonical Path-B stub message. Companion to the
+    flag-True test above; preserves the original-contract assertion
+    under the default Settings() — no override, real ContextVar state.
+    """
+
+    from aeat.core.config import Settings
+    from aeat.entrypoints.cli._errors import CliRefusedBoundaryError
+    from aeat.entrypoints.cli._modelo import _guard_stub_modelo
+
+    assert Settings().aeat_m210_engine_live is False, (
+        "S391 contract: m210_engine_live must default False until S392 acceptance"
+    )
+
+    # No override; flag flows from the real (default-False) Settings.
+    with pytest.raises(CliRefusedBoundaryError) as exc_info:
+        _guard_stub_modelo("210")
+
+    # Refusal must cite the governing statute, not a generic crash.
+    message = str(exc_info.value)
+    assert "5/2004" in message or "TRLIRNR" in message, message

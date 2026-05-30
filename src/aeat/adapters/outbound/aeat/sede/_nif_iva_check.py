@@ -54,6 +54,9 @@ from ._adapter_utils import (
     normalize_response_text,
     registry_failure_message,
 )
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
+)
 from ._browser_stage import build_playwright_stage_runner
 from ._errors import BrowserAdapterTypeError, SedeError, SedeFailureMode, SedeNavigationError
 
@@ -312,7 +315,7 @@ async def collect_nif_iva_check_observations(
         # Sede entry: acquire the session cookies the form servlet requires.
         await browser_session.navigate(page, str(AEAT_NIF_IVA_ENTRY_URL))
         await _playwright_stage(
-            page.wait_for_load_state("networkidle", timeout=timeout_ms),
+            page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-entry-networkidle",
             description="NIF-IVA sede entry network idle",
             timeout_ms=timeout_ms,
@@ -321,7 +324,7 @@ async def collect_nif_iva_check_observations(
         # Form servlet: now reachable with sede cookies set.
         await browser_session.navigate(page, str(AEAT_NIF_IVA_VERIFICATION_URL))
         await _playwright_stage(
-            page.wait_for_load_state("networkidle", timeout=timeout_ms),
+            page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
             stage="wait-form-networkidle",
             description="NIF-IVA form servlet network idle",
             timeout_ms=timeout_ms,
@@ -419,7 +422,7 @@ async def _check_single_nif(
     await _fill_vat_number(page, vat_number, timeout_ms=timeout_ms)
     await _click_query_button(page, timeout_ms=timeout_ms)
     await _playwright_stage(
-        page.wait_for_load_state("networkidle", timeout=timeout_ms),
+        page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=timeout_ms),
         stage=f"check-nif-{nif}:wait-response",
         description="NIF-IVA response network idle",
         timeout_ms=timeout_ms,

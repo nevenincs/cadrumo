@@ -5,12 +5,13 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Final, Self
+from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...domain.iva._schema import EUMemberState, IvaCategory
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...domain.modelos._ids import BucketId, CalculationRevisionId, TransactionId, WorkUnitId
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
 from ...domain.transactions import (
     BucketTransactionRef,
     BusinessClassification,
@@ -42,7 +43,7 @@ class ManualLedgerTransactionCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     booked_date: date
     value_date: date | None = None
     amount: Decimal
@@ -269,7 +270,7 @@ class LedgerTransactionPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     date: str = Field(min_length=10, max_length=10)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
@@ -312,7 +313,7 @@ class LedgerTransactionReviewPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     date: str = Field(min_length=10, max_length=10)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str | None = None
@@ -356,8 +357,8 @@ class LedgerTransactionResultPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
-    transaction_id: str = Field(min_length=64, max_length=64)
+    bucket_id: BucketId
+    transaction_id: TransactionId
     review_status: str = Field(min_length=1)
     transaction: LedgerTransactionPayload
 
@@ -367,7 +368,7 @@ class LedgerTransactionTrackingPayload(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=64, max_length=64)
+    transaction_id: TransactionId
     created_event_id: str = Field(min_length=1)
     evidence_provenance: tuple[TransactionEvidenceProvenanceEntry, ...]
     edit_lineage: tuple[TransactionEditLineageEntry, ...]
@@ -421,8 +422,8 @@ class SplitTransactionResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
-    parent_transaction_id: str = Field(min_length=64, max_length=64)
+    bucket_id: BucketId
+    parent_transaction_id: TransactionId
     split_group_id: str = Field(min_length=64, max_length=64)
     child_transaction_ids: tuple[str, ...]
     parent_transaction: Transaction
@@ -435,10 +436,10 @@ class MergeTransactionsResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     split_group_id: str = Field(min_length=64, max_length=64)
-    parent_transaction_id: str = Field(min_length=64, max_length=64)
-    merged_transaction_id: str = Field(min_length=64, max_length=64)
+    parent_transaction_id: TransactionId
+    merged_transaction_id: TransactionId
     source_child_ids: tuple[str, ...]
     merged_transaction: Transaction
     parent_transaction: Transaction
@@ -494,7 +495,7 @@ class LedgerSourceImportCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str | None = Field(default=None, min_length=1, max_length=128)
+    bucket_id: BucketId | None = Field(default=None)
     path: Path
     provider: str = Field(min_length=1)
     dry_run: bool = False
@@ -527,7 +528,7 @@ class LedgerSourceImportResult(BaseModel):
     dry_run: bool
     verify: bool
     period: str | None = None
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     import_batch_id: str | None = None
     bucket_event_ids: tuple[str, ...] = ()
     imported_transaction_refs: tuple[BucketTransactionRef, ...] = ()
@@ -543,7 +544,7 @@ class LedgerReviewQuery(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     period: str | None = None
     status: str | None = None
     issue: str | None = None
@@ -579,7 +580,7 @@ class LedgerReviewQueryResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     rows: tuple[LedgerReviewRow, ...]
     filters: tuple[str, ...] = ()
 
@@ -589,7 +590,7 @@ class LedgerStatusReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     total_count: int = Field(ge=0)
     active_count: int = Field(ge=0)
     archived_count: int = Field(ge=0)
@@ -609,8 +610,8 @@ class LedgerRemovalBlocker(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    work_unit_id: str = Field(min_length=64, max_length=64)
-    calculation_revision_id: str = Field(min_length=64, max_length=64)
+    work_unit_id: WorkUnitId
+    calculation_revision_id: CalculationRevisionId
     revision_state: str = Field(min_length=1)
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=2000, le=2099)
@@ -622,8 +623,8 @@ class LedgerTransactionRemovalReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
-    transaction_id: str = Field(min_length=64, max_length=64)
+    bucket_id: BucketId
+    transaction_id: TransactionId
     removed: bool = False
     dry_run: bool = False
     actor: str = Field(min_length=1, max_length=64)
@@ -639,7 +640,7 @@ class LedgerCatalogueResetReport(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     removed_transaction_ids: tuple[str, ...] = ()
     reset: bool = False
     dry_run: bool = False
@@ -656,7 +657,7 @@ class LedgerExportCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     export_format: ExportSerializationFormat = ExportSerializationFormat.CSV
     include_inactive: bool = False
     output_path: Path | None = None
@@ -717,13 +718,6 @@ class BulkClassifyResult(BaseModel):
 
 BULK_CLASSIFY_ALLOWED_COLUMNS: frozenset[str] = frozenset({"transaction_id", "classification", "category_id"})
 
-#: Sentinel value written to ``classified_by`` when the operator provides the
-#: classification directly (no rule engine involved).  The field is open-form
-#: and also accepts ``"rule:<id>"`` payloads, so this is a named constant rather
-#: than an enum member.
-CLASSIFIED_BY_MANUAL: Final[str] = "manual"
-
-
 class ApplyRulesAppliedRow(BaseModel):
     """One successfully rule-applied transaction from ``ledger rule apply``."""
 
@@ -753,8 +747,8 @@ class LedgerExportRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
-    transaction_id: str = Field(min_length=64, max_length=64)
+    bucket_id: BucketId
+    transaction_id: TransactionId
     lifecycle_state: str = Field(min_length=1)
     booked_date: str = Field(min_length=10, max_length=10)
     value_date: str = ""
@@ -786,7 +780,7 @@ class LedgerExportResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     export_id: str = Field(min_length=64, max_length=64)
     export_format: ExportSerializationFormat
     media_type: str = Field(min_length=1)

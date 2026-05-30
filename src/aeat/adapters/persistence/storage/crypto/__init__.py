@@ -25,6 +25,7 @@ from ._crypto import (
 from ._encrypted_columns import (
     EncryptedBytes,
     EncryptedJSON,
+    EncryptedPayload,
     EncryptedString,
     HashedLookup,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "EncryptedBlob",
     "EncryptedBytes",
     "EncryptedJSON",
+    "EncryptedPayload",
     "EncryptedString",
     "HashedLookup",
     "decrypt_record",

@@ -38,6 +38,7 @@ from ...domain.auth.apoderamientos import (
     load_default_catalogue,
     parse_scope_tokens,
 )
+from ...domain.modelos._ids import BucketId
 
 
 class ApoderadoConfigurationNotSetError(AeatError):
@@ -53,7 +54,7 @@ class ApoderadoConfiguration(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     represented_nif: str = Field(min_length=1, max_length=16)
     granted_scopes: tuple[str, ...] = Field(default_factory=tuple)
     catalogue_version: str = Field(min_length=1)
@@ -66,7 +67,7 @@ class ApoderadoStatus(BaseModel):
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     configured: bool
     represented_nif: str | None = Field(default=None)
     granted_scopes: tuple[str, ...] = Field(default_factory=tuple)

@@ -28,7 +28,8 @@ from ...adapters.inbound.financial.providers import (
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...core.errors import resolve_error_message
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import CLASSIFIED_BY_MANUAL, DEFAULT_CURRENCY
+from ...core.time._utc import _coerce_utc_aware
 from ...core.i18n import tr
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments._repository import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -85,7 +86,6 @@ from ..export import serialize_tabular_rows
 from ..transactions import LedgerImportDiagnostic, import_ledger_with_diagnostics
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
-    CLASSIFIED_BY_MANUAL,
     ApplyRulesAppliedRow,
     ApplyRulesResult,
     BulkClassifyFailure,
@@ -3156,9 +3156,7 @@ def _decimal_to_string(value: Decimal) -> str:
 
 def _normalise_timestamp(value: datetime | None) -> datetime:
     timestamp = value or datetime.now(UTC)
-    if timestamp.tzinfo is None or timestamp.utcoffset() is None:
-        return timestamp.replace(tzinfo=UTC)
-    return timestamp.astimezone(UTC)
+    return _coerce_utc_aware(timestamp)
 
 
 def _upsert_transaction(catalogue: TransactionCatalogue, transaction: Transaction) -> TransactionCatalogue:
@@ -3500,6 +3498,9 @@ def add_classification_rule(
     from ._rule_repository import LedgerClassificationRuleRepository
 
     repo: LedgerClassificationRuleRepository = (
+        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: ``rule_repository`` is typed
+        # ``object | None`` to keep the public signature injection-friendly;
+        # the non-None guard ensures narrowing is safe here.
         cast(LedgerClassificationRuleRepository, rule_repository)
         if rule_repository is not None
         else LedgerClassificationRuleRepository()
@@ -3544,6 +3545,9 @@ def apply_classification_rules(
     tx_repo = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repo = bucket_event_repository or BucketEventHistoryRepository()
     rule_repo: LedgerClassificationRuleRepository = (
+        # CAST-RATIONALE-LEDGER-RULE-REPO-INJECT: same injection-friendly
+        # ``object | None`` pattern as ``add_classification_rule``; the
+        # non-None guard ensures the cast is safe at this point.
         cast(LedgerClassificationRuleRepository, rule_repository)
         if rule_repository is not None
         else LedgerClassificationRuleRepository()

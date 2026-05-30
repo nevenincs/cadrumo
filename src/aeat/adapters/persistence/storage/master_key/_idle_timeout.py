@@ -23,6 +23,7 @@ from datetime import datetime, timedelta
 from pydantic import BaseModel, ConfigDict, Field
 
 from .....core.config import Settings as _Settings
+from ..errors import StorageValidationError
 from ._bucket_session import BucketSession
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
@@ -66,7 +67,7 @@ def evaluate_idle(
     """
 
     if configured_minutes <= 0:
-        raise ValueError("configured_minutes must be a strict positive integer")
+        raise StorageValidationError("configured_minutes must be a strict positive integer")
 
     if session.sealed:
         return IdleEvaluation(expired=True, remaining_seconds=0)

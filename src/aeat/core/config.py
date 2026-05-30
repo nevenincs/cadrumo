@@ -864,6 +864,17 @@ class Settings(BaseSettings):
             "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
+    aeat_m210_engine_live: bool = Field(
+        default=False,
+        description=(
+            "Gate the M210 IRNR Phase 1 engine. When False (default) `aeat app modelo "
+            "work create --modelo 210` emits the task-196 Path-B refusal stub. When True "
+            "the stub guard is skipped and the engine path runs (m210_resolve_rate "
+            "dispatch + representante-fiscal predicate + cuota composition shipped at "
+            "S400 + S390). Flipped to True only after S392 persona-replay acceptance "
+            "gates pass per m210-irnr-full-engine ADR section D5."
+        ),
+    )
 
     # ── Status reader ───────────────────────────────────────────────────────
     aeat_status_cache_dir: Path = Field(
@@ -1246,10 +1257,10 @@ def settings_for_active_profile_bucket(bucket_id: str, source: Settings | None =
 
     trimmed = bucket_id.strip()
     if not trimmed:
-        raise ValueError("bucket_id must not be blank")
+        raise CoreValidationError("bucket_id must not be blank")
     base = source or load_settings()
     if "aeat_database_url" in base.model_fields_set:
-        raise ValueError("cannot derive an active profile bucket route from an explicit database URL")
+        raise CoreValidationError("cannot derive an active profile bucket route from an explicit database URL")
     values = base.model_dump()
     values.pop("aeat_database_url", None)
     values["aeat_active_profile"] = trimmed

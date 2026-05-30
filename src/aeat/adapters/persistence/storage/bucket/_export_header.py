@@ -10,21 +10,18 @@ timestamp.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .....core.errors import CoreValidationError
+from .....core.time._utc import _validate_utc_aware
+from .....domain.modelos._ids import BucketId
+from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _SHA256_HEX_LEN = 64
-
-
-def _ensure_utc(value: datetime) -> datetime:
-    if value.tzinfo is None:
-        raise ValueError("datetime must be timezone-aware UTC")
-    if value.utcoffset() != UTC.utcoffset(value):
-        raise ValueError("datetime must be in UTC")
-    return value
 
 
 class ExportArchiveHeader(BaseModel):
@@ -32,7 +29,7 @@ class ExportArchiveHeader(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     manifest_digest: str = Field(min_length=1)
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)
@@ -44,19 +41,22 @@ class ExportArchiveHeader(BaseModel):
         """Reject anything other than a lowercase hex SHA-256 digest."""
 
         if len(value) != _SHA256_HEX_LEN:
-            raise ValueError("manifest_digest must be a 64-char SHA-256 hex string")
+            raise BucketValidationError("manifest_digest must be a 64-char SHA-256 hex string")
         try:
             int(value, 16)
         except ValueError as exc:
-            raise ValueError("manifest_digest must be hex") from exc
+            raise BucketValidationError("manifest_digest must be hex") from exc
         if value != value.lower():
-            raise ValueError("manifest_digest must be lowercase hex")
+            raise BucketValidationError("manifest_digest must be lowercase hex")
         return value
 
     @field_validator("created_at")
     @classmethod
     def _check_created_at(cls, value: datetime) -> datetime:
-        return _ensure_utc(value)
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise BucketValidationError(str(exc)) from exc
 
 
 __all__ = ["ExportArchiveHeader"]

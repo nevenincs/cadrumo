@@ -60,7 +60,7 @@ from . import (
     WorkflowPurpose,
     WorkflowStage,
 )
-from ._errors import UnhandledWorkflowError
+from ._errors import UnhandledWorkflowError, WorkflowInputMismatchError
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -409,7 +409,7 @@ class TestHappyPath:
 
         fx = _fixtures()
         for bad in ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"):
-            with pytest.raises(ValueError, match="resumed_from"):
+            with pytest.raises(WorkflowInputMismatchError, match="resumed_from"):
                 asyncio.run(
                     fx.engine().run_for_period(
                         fx.profile,

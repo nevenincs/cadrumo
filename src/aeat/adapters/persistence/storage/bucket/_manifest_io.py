@@ -17,6 +17,7 @@ from pathlib import Path
 
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
+from ._errors import BucketValidationError
 from ._layout import BucketPaths
 from ._manifest import BucketManifest
 
@@ -42,7 +43,7 @@ def _format_scalar(value: object) -> str:
     if isinstance(value, str):
         escaped = value.replace("\\", "\\\\").replace('"', '\\"')
         return f'"{escaped}"'
-    raise TypeError(f"unsupported TOML scalar type: {type(value)!r}")
+    raise BucketValidationError(f"unsupported TOML scalar type: {type(value)!r}")
 
 
 def _serialise_manifest(manifest: BucketManifest) -> str:

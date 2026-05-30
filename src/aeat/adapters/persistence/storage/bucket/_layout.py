@@ -17,14 +17,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
+from .....domain.modelos._ids import BucketId
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DB_DIRNAME,
     BUCKETS_DIRNAME,
 )
+from ._errors import BucketValidationError
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid", arbitrary_types_allowed=True)
 
@@ -34,7 +36,7 @@ class BucketPaths(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     root: Path
     bucket_dir: Path
     db_dir: Path
@@ -57,9 +59,9 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     """
 
     if not bucket_id:
-        raise ValueError("bucket_id must be non-empty")
+        raise BucketValidationError("bucket_id must be non-empty")
     if "/" in bucket_id or "\\" in bucket_id:
-        raise ValueError("bucket_id must not contain a path separator")
+        raise BucketValidationError("bucket_id must not contain a path separator")
 
     bucket_dir = root / BUCKETS_DIRNAME / bucket_id
     return BucketPaths(

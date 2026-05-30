@@ -19,6 +19,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
+from .....core.time._clock import _now
+from .....core.time._utc import _coerce_utc_aware
 from ._site_health import (
     _URL_ADAPTER,
     SiteHealthEvidence,
@@ -60,10 +62,10 @@ _WAF_CORRELATION_MARKERS: tuple[str, ...] = (
 def _utcnow() -> datetime:
     """Return the current UTC timestamp.
 
-    Factored for deterministic test hooks and to centralise the
-    timezone-aware construction used across the parser suite.
+    Delegates to :func:`aeat.core.time._clock._now` so call-sites remain
+    uniform across the production codebase.
     """
-    return datetime.now(tz=UTC)
+    return _now()
 
 
 def _parse_http_date_retry_after(
@@ -85,11 +87,8 @@ def _parse_http_date_retry_after(
         return None
     if parsed is None:
         return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
-    reference = now if now is not None else datetime.now(tz=UTC)
-    if reference.tzinfo is None:
-        reference = reference.replace(tzinfo=UTC)
+    parsed = _coerce_utc_aware(parsed)
+    reference = _coerce_utc_aware(now) if now is not None else datetime.now(tz=UTC)
     delta = int((parsed - reference).total_seconds())
     return max(delta, 0)
 

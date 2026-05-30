@@ -32,7 +32,7 @@ from ...domain.deadlines import (
 from ...domain.filing import ModeloBuilderError
 from ...domain.submission import ModeloDraftStatus, SubmissionPreflightError
 from ..filing.runtime import build_runtime_schema_provider
-from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError
+from ._errors import UnhandledWorkflowError, WorkflowAbortSignalError, WorkflowError, WorkflowInputMismatchError
 from ._models import (
     DeclaracionPointer,
     SiteHealthAlert,
@@ -279,7 +279,7 @@ class WorkflowEngine:
         if resumed_from is not None:
             stripped = resumed_from.strip()
             if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
-                raise ValueError(
+                raise WorkflowInputMismatchError(
                     f"resumed_from must be a 16-character lowercase hex run id; got {resumed_from!r}",
                 )
             resumed_from = stripped
@@ -1235,6 +1235,7 @@ class WorkflowEngine:
     ) -> NoReturn:
         """Record a site-health failure and abort with ``SITE_UNAVAILABLE``."""
 
+        # CAST-RATIONALE-WORKFLOW-ENGINE-SITE-HEALTH-STATUS:
         # ``SiteHealthError`` types its payload through the structural
         # ``SiteHealthStatusLike`` protocol so ``core.errors`` need not
         # import the browser adapter. Every site-health failure raised

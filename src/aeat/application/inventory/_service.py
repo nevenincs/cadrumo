@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ...core.config import Settings
+from ...core.time import _now as _now_utc
 from ...domain.buckets import (
     BucketEventHistoryRepository,
     BucketEventObjectType,
@@ -92,10 +93,6 @@ class InventoryValuationPreviewResult(BaseModel):
 
 _INVENTORY_EVENT_PAYLOAD_VERSION = 1
 InventoryRepositoryFactory = Callable[[str], InventoryLedgerRepository]
-
-
-def _now_utc() -> datetime:
-    return datetime.now(tz=UTC)
 
 
 def _emit_inventory_event(

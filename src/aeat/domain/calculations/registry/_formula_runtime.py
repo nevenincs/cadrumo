@@ -10,6 +10,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ....domain.fincas._rounding import _round_to_cents
 from ._bindings import CasillaObservation, _PreviousModeloSelector
 from ._errors import CasillaConstraintViolationError, RegistrySnapshotError, RegistryValidationError
 from ._runtime_graph import formula_evaluation_order
@@ -1203,7 +1204,7 @@ def _apply_rounding(value: Decimal, rounding: str | None) -> Decimal:
     if rounding is None:
         return value
     if rounding == "money-2":
-        return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return _round_to_cents(value)
     if rounding == "integer":
         return value.quantize(Decimal("1"), rounding=ROUND_HALF_UP)
     raise RegistryValidationError(f"unsupported rounding rule {rounding!r}")

@@ -36,6 +36,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ...adapters.inbound.pdf._utils import sha256_file
 from ...core.logging import get_logger
 from ...domain.calculations.registry import (
+    CasillaFieldKind,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
@@ -356,7 +357,7 @@ def _record_row_indexes(
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
             return ()
         return (None,)
-    binding_ids = {field.binding for field in record.fields if field.kind == "binding" and field.binding is not None}
+    binding_ids = {field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None}
     row_indexes = sorted(
         row_index for binding_id, row_index in binding_values if binding_id in binding_ids and row_index is not None
     )
@@ -367,7 +368,7 @@ def _record_has_binding_value(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[str, int | None], object],
 ) -> bool:
-    binding_ids = {field.binding for field in record.fields if field.kind == "binding" and field.binding is not None}
+    binding_ids = {field.binding for field in record.fields if field.kind == CasillaFieldKind.BINDING and field.binding is not None}
     return any(
         binding_id in binding_ids and value not in {None, ""} for (binding_id, _), value in binding_values.items()
     )
@@ -459,19 +460,19 @@ def _field_value(
     row_index: int | None,
 ) -> object:
     match field.kind:
-        case "literal":
+        case CasillaFieldKind.LITERAL:
             return field.literal
-        case "filler":
+        case CasillaFieldKind.FILLER:
             return ""
-        case "casilla":
+        case CasillaFieldKind.CASILLA:
             return _casilla_field_value(field, casilla_values)
-        case "binding":
+        case CasillaFieldKind.BINDING:
             return _binding_field_value(field, binding_values, row_index)
-        case "header":
+        case CasillaFieldKind.HEADER:
             return _header_field_value(field, headers)
-        case "draft":
+        case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
-        case "computed":
+        case CasillaFieldKind.COMPUTED:
             return _computed_field_value(field, draft)
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
@@ -622,7 +623,7 @@ def _exported_casilla_provenance(
         field.casilla
         for record in sorted(layout.records, key=lambda item: item.order)
         for field in record.fields
-        if field.kind == "casilla" and field.casilla is not None and field.casilla in draft_casillas
+        if field.kind == CasillaFieldKind.CASILLA and field.casilla is not None and field.casilla in draft_casillas
     )
     return _provenance_for_casillas(draft, layout_casillas)
 

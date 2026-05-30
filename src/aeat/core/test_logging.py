@@ -375,7 +375,7 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
-from .logging import _scrub_value  # noqa: E402 — test-only import after module symbols
+from .logging import _scrub_value, attach_run_sink, detach_run_sink  # noqa: E402 — test-only import after module symbols
 
 
 def test_scrub_value_str_overload_returns_str() -> None:
@@ -451,3 +451,90 @@ def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
     assert isinstance(result, dict)
     assert result["outer"]["token"] == "<redacted>"
     assert result["outer"]["count"] == 3
+
+
+# ---------------------------------------------------------------------------
+# S225 / S226 — attach_run_sink / detach_run_sink symmetry
+# ---------------------------------------------------------------------------
+
+
+def test_attach_and_detach_run_sink_are_symmetric(tmp_path: Path) -> None:
+    """attach_run_sink then detach_run_sink must restore the root logger to its prior state.
+
+    Real-behavior: wire a real JsonlRunSink, observe root-logger handler list and
+    sink filter list before, during, and after the attach/detach cycle.
+    """
+    from .observability._sink import JsonlRunSink
+
+    run_id = "a1b2c3d4e5f60001"
+    sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
+
+    root_logger = logging.getLogger()
+    handlers_before = list(root_logger.handlers)
+    filters_on_sink_before = list(sink.filters)
+
+    # After construction the sink must carry no filters yet.
+    assert filters_on_sink_before == [], "sink should start with no filters"
+    assert sink not in handlers_before, "sink must not be on root logger before attach"
+
+    attach_run_sink(sink)
+
+    handlers_during = list(root_logger.handlers)
+    assert sink in handlers_during, "sink must be on root logger after attach"
+    scrubbing_filters_on_sink = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
+    assert len(scrubbing_filters_on_sink) == 1, (
+        "attach_run_sink must install exactly one SecretScrubbingFilter on the sink"
+    )
+
+    detach_run_sink(sink)
+
+    handlers_after = list(root_logger.handlers)
+    assert sink not in handlers_after, "sink must be removed from root logger after detach"
+    # Root logger's own handler list is restored to the pre-attach state.
+    assert handlers_after == handlers_before, "root logger handlers must be restored after detach"
+    # SecretScrubbingFilter must be removed from the sink's filter list on detach.
+    remaining_scrubbing = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
+    assert remaining_scrubbing == [], (
+        "detach_run_sink must remove SecretScrubbingFilter instances from the sink"
+    )
+
+    sink.close()
+
+
+def test_detach_run_sink_is_idempotent_on_filter_removal(tmp_path: Path) -> None:
+    """detach_run_sink called twice must not raise and must leave the sink filter-clean."""
+    from .observability._sink import JsonlRunSink
+
+    run_id = "b2c3d4e5f6070002"
+    sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
+
+    attach_run_sink(sink)
+    detach_run_sink(sink)
+    # Second detach: handler is already absent from root, filters already gone — no crash.
+    detach_run_sink(sink)
+
+    remaining_scrubbing = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
+    assert remaining_scrubbing == []
+
+    sink.close()
+
+
+def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path) -> None:
+    """Calling attach_run_sink twice must install SecretScrubbingFilter exactly once."""
+    from .observability._sink import JsonlRunSink
+
+    root_logger = logging.getLogger()
+    run_id = "c3d4e5f607080003"
+    sink = JsonlRunSink(tmp_path / "events.jsonl", run_id=run_id)
+
+    try:
+        attach_run_sink(sink)
+        attach_run_sink(sink)  # second call — must be idempotent
+
+        scrubbing_filters = [f for f in sink.filters if isinstance(f, SecretScrubbingFilter)]
+        assert len(scrubbing_filters) == 1, (
+            "SecretScrubbingFilter must appear exactly once even after two attach calls"
+        )
+    finally:
+        root_logger.removeHandler(sink)
+        sink.close()

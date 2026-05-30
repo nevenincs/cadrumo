@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from aeat.core.profile import SetupAnswers
+
 from ...core.i18n import tr
 from ...domain.deadlines._models import (
     IVARegime,
@@ -25,7 +27,6 @@ from . import _compiler as _compiler  # side-effect: registers PROFILE_KEYS befo
 from ._catalogue import SETUP_FLOW
 from ._errors import WizardError
 from ._persistence import project_answers
-from ._setup_answers import SetupAnswers
 
 _ENROLMENT_KEY = "iva.regime"
 """Profile key whose presence flips the operator profile from ``identity-only``

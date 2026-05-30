@@ -24,8 +24,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_valid
 
 from ...core.decimal import coerce_decimal
 from ...core.identity import validate_spanish_tax_id
+from ...core.parsing._dates import _parse_iso8601_date
 from .._identifiers import canonical_decimal_string
 from ..iva import EUMemberState, IvaCategory
+from ..modelos._ids import BucketId
 from ._enums import InvoiceKind, IvaRate, PaymentStatus, iva_rate_percentage
 from ._errors import InvoiceValidationError
 
@@ -95,7 +97,10 @@ def _coerce_date(value: object) -> date:
     if isinstance(value, date):
         return value
     if isinstance(value, str):
-        return date.fromisoformat(value)
+        result = _parse_iso8601_date(value)
+        if result is None:
+            raise TypeError("expected a date or ISO-8601 string")
+        return result
     raise TypeError("expected a date or ISO-8601 string")
 
 
@@ -315,7 +320,7 @@ class Invoice(BaseModel):
     model_config = _STRICT_FROZEN
 
     invoice_id: str = Field(min_length=_HEX_INVOICE_ID_LENGTH, max_length=_HEX_INVOICE_ID_LENGTH)
-    bucket_id: str | None = Field(default=None, min_length=1, max_length=128)
+    bucket_id: BucketId | None = Field(default=None)
     kind: InvoiceKind
     invoice_number: str = Field(min_length=1)
     issued_at: date

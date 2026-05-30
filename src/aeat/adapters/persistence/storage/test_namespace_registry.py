@@ -553,8 +553,12 @@ def _is_test_surface(path: Path) -> bool:
 
 def _collect_namespace_value_bindings(tree: ast.AST) -> dict[str, str]:
     bindings = _collect_imported_registry_namespace_bindings(tree)
-    discovered = True
-    while discovered:
+    # Strictly monotonic fixed-point: each pass may only add new bindings,
+    # never overwrite. Without this, two competing assignments to the same
+    # *NAMESPACE identifier (e.g. shadowed in conditional branches) cause
+    # the original rebind-on-mismatch loop to oscillate forever.
+    max_passes = 64
+    for _ in range(max_passes):
         discovered = False
         for node in ast.walk(tree):
             targets, value = _assignment_parts(node)
@@ -566,10 +570,15 @@ def _collect_namespace_value_bindings(tree: ast.AST) -> dict[str, str]:
             for target in targets:
                 if not isinstance(target, ast.Name) or "NAMESPACE" not in target.id:
                     continue
-                if bindings.get(target.id) != resolved:
+                if target.id not in bindings:
                     bindings[target.id] = resolved
                     discovered = True
-    return bindings
+        if not discovered:
+            return bindings
+    raise RuntimeError(
+        "namespace-binding fixed point did not converge within "
+        f"{max_passes} passes; suspect cyclic NAMESPACE assignments in scanned module",
+    )
 
 
 def _namespace_values_from_assignments(tree: ast.AST, bindings: dict[str, str]) -> set[str]:

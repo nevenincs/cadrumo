@@ -32,7 +32,9 @@ from pathlib import Path, PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
+from ..errors import CoreValidationError
 from ..logging import get_logger as _get_logger
+from ..time._utc import _validate_utc_aware
 from ._errors import CorpusManifestDriftError, CorpusManifestError, CorpusManifestTamperError
 
 _logger = _get_logger(__name__)
@@ -114,9 +116,10 @@ class CorpusManifest(BaseModel):
     @field_validator("generated_at")
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise CorpusManifestError("generated_at must be timezone-aware")
-        return value
+        try:
+            return _validate_utc_aware(value)
+        except CoreValidationError as exc:
+            raise CorpusManifestError(str(exc)) from exc
 
 
 class CorpusManifestDiff(BaseModel):

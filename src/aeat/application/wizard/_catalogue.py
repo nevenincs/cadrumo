@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import Translatable as tr
+from ...core.profile import SetupAnswers
+from ...core.profile_catalogue import register_wizard_catalogue
 from ...domain.deadlines._models import (
     EntityType,
     FiscalResidency,
@@ -36,7 +38,6 @@ from ._models import (
     WizardVisibility,
     WizardWidget,
 )
-from ._setup_answers import SetupAnswers
 
 
 def _confirm(
@@ -854,6 +855,11 @@ SETUP_FLOW = WizardFlow(
 
 
 WIZARD_FLOWS: tuple[WizardFlow, ...] = (SETUP_FLOW,)
+
+# Register the canonical descriptors into the core slot so domain modules
+# that import from aeat.core.profile_catalogue receive the real objects
+# without making upward imports into the application layer.
+register_wizard_catalogue(SETUP_FLOW, WIZARD_FLOWS)
 
 
 __all__ = ["SETUP_FLOW", "WIZARD_FLOWS"]

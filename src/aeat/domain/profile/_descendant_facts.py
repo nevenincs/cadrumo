@@ -26,6 +26,7 @@ import re
 from collections.abc import Sequence
 from datetime import date
 
+from ...core.parsing._dates import _parse_iso8601_date
 from .family import DescendantInfo
 
 _DESCENDANT_FACT_PREFIX = "renta_family.descendiente"
@@ -96,9 +97,9 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         birth_raw = row.get("birth_date")
         if not birth_raw:
             continue
-        birth_date = date.fromisoformat(birth_raw)
+        birth_date = _parse_iso8601_date(birth_raw)
         adoption_raw = row.get("adoption_date")
-        adoption_date = date.fromisoformat(adoption_raw) if adoption_raw else None
+        adoption_date = _parse_iso8601_date(adoption_raw) if adoption_raw else None
         discapacidad_raw = row.get("discapacidad")
         if discapacidad_raw is not None:
             disc_val = int(discapacidad_raw)
@@ -156,12 +157,12 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     nacimiento_raw = parts.get("NACIMIENTO")
     if not nacimiento_raw:
         raise ValueError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
-    birth_date = date.fromisoformat(nacimiento_raw)
+    birth_date = _parse_iso8601_date(nacimiento_raw)
 
     adoption_date: date | None = None
     adopcion_raw = parts.get("ADOPCION")
     if adopcion_raw:
-        adoption_date = date.fromisoformat(adopcion_raw)
+        adoption_date = _parse_iso8601_date(adopcion_raw)
 
     discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")

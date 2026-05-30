@@ -10,7 +10,7 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import AeatError, CoreValidationError
 from ._models import WorkflowAbortReason
 
 
@@ -92,6 +92,28 @@ class UnhandledWorkflowError(WorkflowComponentError):
     so the unhandled path produces a structured :class:`ErrorEnvelope` with
     a stable ``INTERNAL_WORKFLOW_UNHANDLED`` code rather than an opaque
     ``UNHANDLED_EXCEPTION`` abort reason alone.
+    """
+
+
+class ProfileLabelAmbiguousError(WorkflowError):
+    """Raised when a profile label resolves to more than one live bucket.
+
+    The name-uniqueness guard should prevent this among live profiles.
+    When it occurs, the operator must disambiguate by UUID rather than
+    by label. Carries the label and the ambiguous match count so the
+    CLI can render a diagnostic without a second repository round trip.
+    """
+
+
+class WorkflowInputMismatchError(CoreValidationError):
+    """Raised when a workflow input request does not match the expected contract.
+
+    Used both by the engine's ``run_for_period`` gate (malformed
+    ``resumed_from`` run id shape) and by
+    :class:`aeat.application.modelo._actions._RevisionInputsProvider`
+    (modelo code or period mismatch against the baked revision).  Any
+    deviation signals a programming error or a stale work-unit reference
+    and must be rejected before inputs reach the engine.
     """
 
 

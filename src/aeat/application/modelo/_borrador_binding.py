@@ -23,6 +23,7 @@ from ...adapters.persistence.storage.errors import ClassificationError, Decrypti
 from ...core.i18n import tr
 from ...domain.calculations.registry import DataBindingDefinition, RegistrySnapshot
 from ...domain.modelos._errors import ModeloError
+from ...domain.modelos._ids import BucketId
 from ..aggregation._source_mesh import (
     CalculationSourceContext,
     CalculationSourceProvenance,
@@ -50,7 +51,7 @@ class Modelo100BorradorBindingCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: int = Field(ge=1900, le=9999)
     period: str = Field(min_length=1, max_length=16)

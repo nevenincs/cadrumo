@@ -19,7 +19,7 @@ from ...domain.transactions import (
     TransactionDirection,
 )
 from . import CLASSIFIED_BY_MANUAL, ManualLedgerTransactionCommand, ManualLedgerTransactionResult
-from ._models import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_MODELS
+from ...core.external_constants import CLASSIFIED_BY_MANUAL as _CLASSIFIED_BY_MANUAL_FROM_CORE
 
 pytestmark = [pytest.mark.unit, pytest.mark.domain_application]
 
@@ -168,8 +168,7 @@ def test_classified_by_manual_constant_value() -> None:
     assert CLASSIFIED_BY_MANUAL == "manual"
 
 
-def test_classified_by_manual_is_same_object_from_public_and_private_surfaces() -> None:
-    # The public __init__ re-export and the _models source must be the same
-    # object, ensuring callers importing from either surface read the
-    # same constant.
-    assert CLASSIFIED_BY_MANUAL is _CLASSIFIED_BY_MANUAL_FROM_MODELS
+def test_classified_by_manual_is_same_object_from_application_and_core() -> None:
+    # The application-layer public surface and the canonical core source must be
+    # the same object; any caller importing from either surface reads the same constant.
+    assert CLASSIFIED_BY_MANUAL is _CLASSIFIED_BY_MANUAL_FROM_CORE

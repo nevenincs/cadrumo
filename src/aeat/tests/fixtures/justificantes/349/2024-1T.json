@@ -1,0 +1,49 @@
+{
+  "source_sha256": "2c8fb8571b9dacc7eaa1b0507e21623c7cb2a59b9eb3d3d2300a8a32a15a6c4b",
+  "output_sha256": "2c8fb8571b9dacc7eaa1b0507e21623c7cb2a59b9eb3d3d2300a8a32a15a6c4b",
+  "source_size_bytes": 2073,
+  "output_size_bytes": 2073,
+  "sanitizer_version": "0.1.0-synthetic",
+  "determinism_flags": {
+    "deterministic_id": true,
+    "static_id": false,
+    "object_stream_mode": "preserve",
+    "linearize": false,
+    "recompress_flate": false,
+    "compress_streams": true
+  },
+  "replacements_applied": [
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        0
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "01-01-1900",
+      "encoding": "literal"
+    },
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        1
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "SANITIZED3492024",
+      "encoding": "literal"
+    },
+    {
+      "surface": "content_stream",
+      "surface_index": [
+        0,
+        2
+      ],
+      "real_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "synthetic": "Y0000001S",
+      "encoding": "literal"
+    }
+  ],
+  "surfaces_scrubbed": [],
+  "warnings": []
+}

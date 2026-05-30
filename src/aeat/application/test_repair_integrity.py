@@ -28,6 +28,8 @@ from aeat.adapters.persistence.storage.sql.engine import dispose_engine
 from aeat.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from aeat.application.repair_integrity import (
     _REPAIR_DECISION_NAMESPACE,
+    RepairDecisionNotFoundError,
+    RepairIntegrityError,
     RepairRemediationDecision,
     RepairRemediationDecisionRepository,
     build_repair_integrity_report,
@@ -203,7 +205,7 @@ class TestBuildListReport:
     def test_list_refuses_when_both_flags_passed(self) -> None:
         with (
             EphemeralMasterKeyProvider(key=_KEY_A),
-            pytest.raises(ValueError, match="cannot combine"),
+            pytest.raises(RepairIntegrityError, match="cannot combine"),
         ):
             build_repair_list_report(
                 namespace="aeat.workflow",
@@ -265,5 +267,5 @@ class TestRepairRemediationDecisionRepository:
                 written_at=decided_at,
                 payload=tampered.model_dump_json().encode("utf-8"),
             )
-            with pytest.raises(ValueError, match="re-derived"):
+            with pytest.raises(RepairIntegrityError, match="re-derived"):
                 RepairRemediationDecisionRepository(repository=secure_repository).load_decision(original_id)

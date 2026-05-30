@@ -24,10 +24,14 @@ from typing import TYPE_CHECKING, Any
 
 from .....core.config import Settings
 from .....core.decimal import format_decimal
+from .....core.i18n import tr
 from .....core.logging import get_logger
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
+from ._browser_constants import (
+    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
+)
 from ._censo import CensoFactSet, parse_g313_html
 from ._errors import SedeFailureMode, SedeNavigationError
 
@@ -81,6 +85,7 @@ async def fetch_g313_census(
             "AeatSession has no persisted auth session; "
             "run `aeat config auth configure` to acquire one",
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     storage_state = storage_state_for_session(session)
     return await _fetch_g313_census_with_storage_state(
@@ -125,7 +130,7 @@ async def _fetch_g313_census_with_storage_state(
         try:
             page = await context.new_page()
             try:
-                await page.goto(G313_LAUNCHER_URL, wait_until="domcontentloaded")
+                await page.goto(G313_LAUNCHER_URL, wait_until=_WAIT_DOMCONTENTLOADED)
             except PlaywrightError as exc:
                 raise SedeNavigationError(
                     f"goto {G313_LAUNCHER_URL!r} failed: {exc}",
