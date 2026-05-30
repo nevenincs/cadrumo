@@ -23,6 +23,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ..config import PROJECT_ROOT, load_settings
 from ..logging import attach_run_sink, detach_run_sink, get_logger
+from ..time._clock import _now
 from ._fingerprint import (
     compute_corpus_sha256,
     compute_db_sha256,
@@ -125,7 +126,7 @@ def _build_initial_context(
     # bypasses the context-var so test-side corpus-sha overrides never
     # propagate to the run-context fingerprint.
     settings = load_settings()
-    started_at = datetime.now(UTC)
+    started_at = _now()
     effective_run_id = _validate_run_id(run_id) if run_id is not None else _mint_run_id()
     return RunContextInfo(
         run_id=effective_run_id,
@@ -293,7 +294,7 @@ def run_context(
             trace = RunTrace(
                 run_id=info.run_id,
                 started_at=info.started_at,
-                finished_at=datetime.now(UTC),
+                finished_at=_now(),
                 entrypoint=info.entrypoint,
                 arguments=info.arguments,
                 corpus_sha256=info.corpus_sha256,

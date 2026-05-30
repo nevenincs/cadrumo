@@ -39,6 +39,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .....core.classification import SensitivityClass
 from .....core.config import Settings as _Settings
+from .....core.time._clock import _now
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteOperation, RemoteStateGuardPolicy, assert_remote_operation_allowed
@@ -384,7 +385,7 @@ class ClaveMovilAuthProvider:
 
             persisted = self._load_persisted(storage_state_path)
             metadata = self._load_metadata(storage_state_path, persisted)
-            if metadata.idle_deadline <= datetime.now(UTC):
+            if metadata.idle_deadline <= _now():
                 raise AeatLoginAssertionError(
                     "Cl@ve Móvil session past idle deadline",
                     translated_message="adapters.auth.clave_movil.errors.session_expired",
@@ -503,7 +504,7 @@ class ClaveMovilAuthProvider:
             resolved_target_url=resolved_target_url,
             target_path=target_path,
         )
-        attempted_at = datetime.now(UTC)
+        attempted_at = _now()
         start = time.perf_counter()
         status_code = 0
         landing_url: str | None = None
@@ -999,7 +1000,7 @@ class ClaveMovilAuthProvider:
                 await self._close_browser_session(session_like)
             raise
 
-        authenticated_at = datetime.now(UTC)
+        authenticated_at = _now()
         idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
         try:
             metadata = _ClaveMovilSessionMetadata(
@@ -1054,7 +1055,7 @@ class ClaveMovilAuthProvider:
     ) -> AeatSession:
         persisted = self._load_persisted(storage_state_path)
         metadata = self._load_metadata(storage_state_path, persisted)
-        if metadata.idle_deadline <= datetime.now(UTC):
+        if metadata.idle_deadline <= _now():
             raise AeatLoginAssertionError(
                 "Cl@ve Móvil session past idle deadline",
                 translated_message="adapters.auth.clave_movil.errors.session_expired",
@@ -1451,13 +1452,13 @@ class ClaveMovilAuthProvider:
         plaintext files.
         """
         try:
-            ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+            ts = _now().strftime("%Y%m%dT%H%M%SZ")
             url = getattr(page, "url", "") or ""
             payload: dict[str, object] = {
                 "diagnostic_id": ts,
                 "reason": reason,
                 "url": url,
-                "captured_at": datetime.now(UTC).isoformat(),
+                "captured_at": _now().isoformat(),
                 "auth_attempt": self._attempt_context(),
             }
             content = getattr(page, "content", None)
@@ -1485,7 +1486,7 @@ class ClaveMovilAuthProvider:
                 object_key=ts,
                 classification=SensitivityClass.SESSION,
                 schema_version=1,
-                written_at=datetime.now(UTC),
+                written_at=_now(),
                 payload=json.dumps(payload, sort_keys=True, default=str).encode("utf-8"),
             )
             log.warning(
