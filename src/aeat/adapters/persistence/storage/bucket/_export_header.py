@@ -14,6 +14,8 @@ from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .....domain.modelos._ids import BucketId
+
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 _SHA256_HEX_LEN = 64
@@ -32,7 +34,7 @@ class ExportArchiveHeader(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     manifest_digest: str = Field(min_length=1)
     recovery_wrap_present: bool
     archive_schema_version: int = Field(ge=1)

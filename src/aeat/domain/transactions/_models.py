@@ -33,6 +33,7 @@ from pydantic_core import core_schema
 from .._identifiers import canonical_decimal_string
 from ..iva._schema import EUMemberState, IvaCategory
 from ...core.external_constants import DEFAULT_CURRENCY
+from ..modelos._ids import BucketId
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
 from ._errors import TransactionValidationError
 from ._raw_transaction import RawTransaction
@@ -948,7 +949,7 @@ class BucketTransactionRef(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1, max_length=128)
+    bucket_id: BucketId
     transaction_id: str = Field(min_length=64, max_length=64)
 
     @field_validator("bucket_id", "transaction_id")

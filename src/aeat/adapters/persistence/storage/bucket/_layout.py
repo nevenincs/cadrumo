@@ -17,8 +17,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
+from .....domain.modelos._ids import BucketId
 from .._namespace_registry import (
     BUCKET_AUDIT_DIRNAME,
     BUCKET_BLOBS_DIRNAME,
@@ -34,7 +35,7 @@ class BucketPaths(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     root: Path
     bucket_dir: Path
     db_dir: Path
