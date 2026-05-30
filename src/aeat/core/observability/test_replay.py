@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ..config import PROJECT_ROOT, Settings
+from ..config import PROJECT_ROOT, Settings, override_settings
 from . import (
     AeatCorpusDriftError,
     AeatObservabilityError,
@@ -62,60 +62,57 @@ class TestReplayRun:
     def test_clean_replay_round_trip(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-        trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
-        save_trace(trace)
-        result = replay_run(trace.run_id)
-        assert result.run_id == trace.run_id
-        assert result.entrypoint == "aeat hello"
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
+            save_trace(trace)
+            result = replay_run(trace.run_id)
+            assert result.run_id == trace.run_id
+            assert result.entrypoint == "aeat hello"
 
     def test_refuses_on_corpus_drift(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
-        save_trace(trace)
-        with pytest.raises(AeatCorpusDriftError, match=r"aeat|corpus|drift") as excinfo:
-            replay_run(trace.run_id)
-        assert excinfo.value.run_id == trace.run_id
-        assert excinfo.value.recorded == "0" * 64
-        assert excinfo.value.observed != "0" * 64
-        # ASCII ellipsis only — Windows cp1252 consoles can encode it
-        # without errors="replace".
-        message = str(excinfo.value)
-        assert "…" not in message, "error message must not use unicode ellipsis"
-        assert "..." in message
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            trace = _build_trace("fedcba9876543210", corpus_sha256="0" * 64)
+            save_trace(trace)
+            with pytest.raises(AeatCorpusDriftError, match=r"aeat|corpus|drift") as excinfo:
+                replay_run(trace.run_id)
+            assert excinfo.value.run_id == trace.run_id
+            assert excinfo.value.recorded == "0" * 64
+            assert excinfo.value.observed != "0" * 64
+            # ASCII ellipsis only — Windows cp1252 consoles can encode it
+            # without errors="replace".
+            message = str(excinfo.value)
+            assert "…" not in message, "error message must not use unicode ellipsis"
+            assert "..." in message
 
     def test_refuses_replay_of_removed_write_flag_recording(
         self,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Replay must refuse traces captured with the removed write flag."""
-        monkeypatch.setenv("AEAT_RUNS_DIR", str(tmp_path))
-        current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
-        legacy_trace = RunTrace(
-            run_id="aaaabbbbccccdddd",
-            started_at=datetime(2026, 4, 14, tzinfo=UTC),
-            finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-            entrypoint="aeat workflow run",
-            arguments=(
-                ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
-                ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG),
-            ),
-            corpus_sha256=current_corpus,
-            db_sha256="b" * 64,
-            cert_fingerprint="",
-            outcome=RunOutcome.OK,
-        )
-        save_trace(legacy_trace)
-        with pytest.raises(AeatObservabilityError, match="removed flag"):
-            replay_run(legacy_trace.run_id)
+        with override_settings(aeat_runs_dir=str(tmp_path)):
+            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            legacy_trace = RunTrace(
+                run_id="aaaabbbbccccdddd",
+                started_at=datetime(2026, 4, 14, tzinfo=UTC),
+                finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
+                entrypoint="aeat workflow run",
+                arguments=(
+                    ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
+                    ArgumentRecord(name="no-dry-run", value="True", source=ArgumentSource.FLAG),
+                ),
+                corpus_sha256=current_corpus,
+                db_sha256="b" * 64,
+                cert_fingerprint="",
+                outcome=RunOutcome.OK,
+            )
+            save_trace(legacy_trace)
+            with pytest.raises(AeatObservabilityError, match="removed flag"):
+                replay_run(legacy_trace.run_id)
 
     def test_replay_of_propagated_via_env_var(
         self,
